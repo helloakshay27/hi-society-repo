@@ -18,6 +18,7 @@ import { ZxDynamicHeader } from "./ZxDynamicHeader";
 import { saveToken, saveUser, saveBaseUrl } from "../utils/auth";
 import { ProtectionLayer } from "./ProtectionLayer";
 import { SetupSidebar } from "./SetupSidebar";
+import { FmDashboardSidebar } from "./FmDashboardSidebar";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -58,6 +59,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     const storedToken = localStorage.getItem("token");
     const hasToken = hasTokenParam || storedToken;
 
+    // Check if current path is a maintenance route (FM Dashboard)
+    const isMaintenance = location.pathname.startsWith("/maintenance");
+
     // Domain-based logic takes precedence for backward compatibility
     if (isOmanSite) {
       return <OmanSidebar />;
@@ -70,6 +74,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     if (isViSite) {
       return <ViSidebar />;
+    }
+
+    // Show FM Dashboard Sidebar for maintenance routes
+    if (isMaintenance) {
+      return <FmDashboardSidebar />;
     }
 
     // Company-specific logic
@@ -202,11 +211,16 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       />
 
       <Header />
-      {/* Setup Sidebar */}
-      <SetupSidebar />
+      
+      {/* Conditionally render sidebars based on route */}
+      {location.pathname.startsWith("/maintenance") ? (
+        renderSidebar()
+      ) : (
+        <SetupSidebar />
+      )}
 
       <main
-        className="ml-56 pt-16 transition-all duration-300"
+        className={"pt-16 transition-all duration-300 ml-56"}
       >
         <Outlet />
       </main>

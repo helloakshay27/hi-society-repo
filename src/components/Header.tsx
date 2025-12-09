@@ -350,16 +350,19 @@ export const Header = () => {
             )}
             {!isViSite && (
               <button
-                onClick={() =>
-                (window.location.href = "/maintenance/ticket")
-                }
+                onClick={() => {
+                  // Toggle between FM Dashboard and Hi-Society Dashboard
+                  if (currentPath.startsWith("/maintenance")) {
+                    window.location.href = "/setup-member/loyalty-members-list";
+                  } else {
+                    window.location.href = "/maintenance/ticket";
+                  }
+                }}
                 className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#1a1a1a] hover:text-[#C72030] hover:bg-[#f6f4ee] rounded-lg transition-colors"
               >
                 <ChartAreaIcon className="w-4 h-4" />
-                FM Dashboard
+                {currentPath.startsWith("/maintenance") ? "Hi-Society Dashboard" : "FM Dashboard"}
               </button>
-
-
             )}
 
             {isViSite && (

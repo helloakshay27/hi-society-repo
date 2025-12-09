@@ -191,12 +191,12 @@ export const SetupSidebar = () => {
       icon: <Calendar className="w-5 h-5" />,
       path: "/setup-member/event-list",
     },
-    {
-      id: "broadcast",
-      label: "Broadcast",
-      icon: <Bell className="w-5 h-5" />,
-      path: "/setup-member/noticeboard-list",
-    },
+    // {
+    //   id: "broadcast",
+    //   label: "Broadcast",
+    //   icon: <Bell className="w-5 h-5" />,
+    //   path: "/setup-member/noticeboard-list",
+    // },
     {
       id: "specification",
       label: "Specification",
