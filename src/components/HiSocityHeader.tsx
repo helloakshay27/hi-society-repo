@@ -54,7 +54,7 @@ export interface Site {
   name: string;
 }
 
-export const Header = () => {
+export const HiSocityHeader = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState<string | null>(null);
   const [userRoleName, setUserRoleName] = useState<string | null>(null);
@@ -149,8 +149,6 @@ export const Header = () => {
 
   // Fetch VI account from baseUrl for vi-web (and localhost for dev)
 
-  const tempSwitchToAdmin =
-    localStorage.getItem("tempType") === "pms_organization_admin";
   useEffect(() => {
     if (!isViSite) return;
     try {
@@ -266,11 +264,12 @@ export const Header = () => {
    */
   const userType = localStorage.getItem("userType");
 
-  const tempType = localStorage.getItem("tempType");
+  const canSwitchToAdmin = userType === "pms_organization_admin";
 
-  const canSwitchToEmployee = userType === "pms_organization_admin";
+  const tempSwitchToAdmin =
+    localStorage.getItem("tempType") === "pms_organization_admin";
 
-  const tempSwitchToEmployee = tempType === "pms_organization_admin";
+  // Check if it's Oman site
 
   return (
     <header className="h-16 bg-white border-b border-[#D5DbDB] fixed top-0 right-0 left-0 z-20 w-full shadow-sm">
@@ -615,33 +614,35 @@ export const Header = () => {
               </div>
 
               {/* View Switcher - Only shown for admin users (pms_organization_admin) */}
-              {(canSwitchToEmployee || tempSwitchToEmployee) && isLocalhost && (
-                <div className="px-3 py-3 bg-gray-50 border-b border-gray-200">
-                  <p className="text-xs font-medium text-gray-700 mb-2 uppercase tracking-wide">
-                    Switch View
-                  </p>
-                  <button
-                    onClick={() => {
-                      localStorage.setItem("userType", "pms_occupant");
-                      localStorage.setItem("selectedView", "employee");
-                      localStorage.setItem(
-                        "tempType",
-                        "pms_organization_admin"
-                      );
-                      window.location.href = "/vas/projects";
-                    }}
-                    className="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm bg-white hover:bg-[#C72030] text-gray-700 hover:text-white transition-all duration-200 border border-gray-200 hover:border-[#C72030] group shadow-sm"
-                  >
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4" />
-                      <span className="font-medium">Hi Society View</span>
-                    </div>
-                    <ChevronDown className="w-4 h-4 -rotate-90 group-hover:translate-x-0.5 transition-transform" />
-                  </button>
-                  <p className="text-xs text-gray-500 mt-2 px-1">
-                    Access simplified employee interface
-                  </p>
-                </div>
+              {tempSwitchToAdmin && (
+                <>
+                  <div className="px-3 py-3 bg-gray-50 border-b border-gray-200">
+                    <p className="text-xs font-medium text-gray-700 mb-2 uppercase tracking-wide">
+                      Switch View
+                    </p>
+                    <button
+                      onClick={() => {
+                        localStorage.setItem(
+                          "userType",
+                          "pms_organization_admin"
+                        );
+                        localStorage.setItem("selectedView", "admin");
+                        localStorage.removeItem("tempType");
+                        window.location.href = "/maintenance/asset";
+                      }}
+                      className="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm bg-white hover:bg-[#C72030] text-gray-700 hover:text-white transition-all duration-200 border border-gray-200 hover:border-[#C72030] group shadow-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4" />
+                        <span className="font-medium">PMS View</span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 -rotate-90 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                    <p className="text-xs text-gray-500 mt-2 px-1">
+                      Access full system controls and settings
+                    </p>
+                  </div>
+                </>
               )}
 
               {/* Menu Items */}

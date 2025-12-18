@@ -23,6 +23,7 @@ import { ViewSelectionModal } from "./ViewSelectionModal";
 
 import { SetupHeader } from "./SetupHeader";
 import { SetupSidebar } from "./SetupSidebar";
+import { HiSocityHeader } from "./hiSocityHeader";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -283,7 +284,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       />
 
       {/* Conditional Header - Use EmployeeHeader for employee users */}
-      {isEmployeeUser  ? <SetupHeader /> : <Header />}
+      {isEmployeeUser  ? <HiSocityHeader /> : <Header />}
 
       {renderSidebar()}
       {renderDynamicHeader()}
