@@ -220,7 +220,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       )}
 
       <main
-        className={"pt-16 transition-all duration-300 ml-56"}
+        className={`pt-16 transition-all duration-300 ${isSidebarCollapsed ? 'ml-16' : 'ml-64'}`}
       >
         <Outlet />
       </main>
