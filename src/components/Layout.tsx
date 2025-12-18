@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -15,27 +15,74 @@ import { StacticSidebar } from "./StacticSidebar";
 import ViSidebarWithToken from "./ViSidebarWithToken";
 import { ZxSidebar } from "./ZxSidebar";
 import { ZxDynamicHeader } from "./ZxDynamicHeader";
-import { saveToken, saveUser, saveBaseUrl } from "../utils/auth";
+import { saveToken, saveUser, saveBaseUrl, getUser } from "../utils/auth";
 import { ProtectionLayer } from "./ProtectionLayer";
+
+
+import { ViewSelectionModal } from "./ViewSelectionModal";
+
+import { SetupHeader } from "./SetupHeader";
 import { SetupSidebar } from "./SetupSidebar";
-import { FmDashboardSidebar } from "./FmDashboardSidebar";
 
 interface LayoutProps {
   children?: React.ReactNode;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { isSidebarCollapsed, getLayoutByCompanyId } = useLayout();
+  const {
+    isSidebarCollapsed,
+    getLayoutByCompanyId,
+    currentSection,
+    setCurrentSection,
+  } = useLayout();
   const { selectedCompany } = useSelector((state: RootState) => state.project);
+  const { selectedSite } = useSelector((state: RootState) => state.site);
   const location = useLocation();
 
-  // Handle token-based authentication from URL parameters
+  /**
+   * EMPLOYEE VIEW DETECTION
+   *
+   * Determine if user is in Employee View based on:
+   * 1. Route pattern: /employee/* routes trigger employee layout
+   * 2. localStorage fallback: userType === "pms_occupant"
+   *
+   * Employee routes: /employee/portal, /vas/projects, etc.
+   * Admin routes: /admin/*, / (root), and all other routes
+   */
+  const isEmployeeRoute = location.pathname.startsWith("/employee");
+  const userType = localStorage.getItem("userType");
+  const isEmployeeUser = isEmployeeRoute || userType === "pms_occupant";
 
-  // Get current domain for backward compatibility
+  // Check if user needs to select a view (Admin or Employee)
+  const [showViewModal, setShowViewModal] = useState(false);
+
+  useEffect(() => {
+    // Check if user has already selected a view
+    const selectedView = localStorage.getItem("selectedView");
+    const storedUserType = localStorage.getItem("userType");
+
+    // If no view is selected, show the view selection modal
+    if (!selectedView || !storedUserType) {
+      setShowViewModal(true);
+    } else {
+      setShowViewModal(false);
+    }
+  }, []);
+
+  // Check if non-employee user needs to select project/site
   const hostname = window.location.hostname;
-  const isOmanSite = hostname.includes("oig.gophygital.work");
   const isViSite =
     hostname.includes("vi-web.gophygital.work") ||
+    hostname.includes("localhost:5174");
+
+  // Removed project selection modal logic - now handled by view selection
+
+  // Handle token-based authentication from URL parameters
+  // Get current domain for backward compatibility
+  const isOmanSite = hostname.includes("oig.gophygital.work");
+
+  const isLockatedSite =
+    hostname.includes("lockated.gophygital.work") ||
     hostname.includes("localhost:5174");
 
   // Get layout configuration based on company ID
@@ -45,6 +92,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       : null
   );
 
+  const isLocalhost =
+    hostname.includes("localhost") ||
+    hostname.includes("lockated.gophygital.work") ||
+    hostname.includes("fm-matrix.lockated.com");
+
   // Layout behavior:
   // - Company ID 189 (Lockated HO): Default layout (Sidebar + DynamicHeader)
   // - Company ID 199 (Customer Support): Default layout (Sidebar + DynamicHeader)
@@ -53,14 +105,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Render sidebar component based on configuration
   const renderSidebar = () => {
+    // Check if user is employee (pms_occupant) - Employee layout takes priority
+    // Only show sidebar for "Project Task" module, hide for other modules
+    if (isEmployeeUser ) {
+      // Only render sidebar for Project Task module
+        return <SetupSidebar />;
+     
+      // For other modules (Ticket, MOM, Visitors), don't render sidebar
+    }
+
     // Check for token-based VI access first
     const urlParams = new URLSearchParams(window.location.search);
     const hasTokenParam = urlParams.has("access_token");
     const storedToken = localStorage.getItem("token");
     const hasToken = hasTokenParam || storedToken;
-
-    // Check if current path is a maintenance route (FM Dashboard)
-    const isMaintenance = location.pathname.startsWith("/maintenance");
 
     // Domain-based logic takes precedence for backward compatibility
     if (isOmanSite) {
@@ -76,22 +134,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       return <ViSidebar />;
     }
 
-    // Show FM Dashboard Sidebar for maintenance routes
-    if (isMaintenance) {
-      return <FmDashboardSidebar />;
-    }
-
-    // Company-specific logic
+    // Company-specific logic (Admin layout)
     if (selectedCompany?.id === 189) {
       return <ZxSidebar />;
     }
 
+   
+
+
     if (
+      selectedCompany?.id === 300 ||
       selectedCompany?.id === 295 ||
       selectedCompany?.id === 298 ||
       selectedCompany?.id === 199 ||
-      selectedCompany?.id === 199  
-
+      selectedCompany?.id === 298
     ) {
       return <Sidebar />;
     }
@@ -112,6 +168,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Render header component based on configuration
   const renderDynamicHeader = () => {
+    // Check if user is employee (pms_occupant) - Employee layout takes priority
+    // Employees don't need dynamic header, they use EmployeeHeader instead
+    if (isEmployeeUser ) {
+      return <SetupHeader />; // No dynamic header for employees
+    }
+
     // Domain-based logic takes precedence for backward compatibility
     if (isOmanSite) {
       return <OmanDynamicHeader />;
@@ -120,15 +182,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       return <ViDynamicHeader />;
     }
 
-    // Company-specific logic
+    // Company-specific logic (Admin layout)
     if (selectedCompany?.id === 189) {
       return <ZxDynamicHeader />;
     }
+
+   
     if (
+      selectedCompany?.id === 300 ||
       selectedCompany?.id === 295 ||
       selectedCompany?.id === 298 ||
       selectedCompany?.id === 199 ||
-      selectedCompany?.id === 199  
+      selectedCompany?.id === 298
     ) {
       return <DynamicHeader />;
     }
@@ -210,17 +275,32 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         allowedDomains={["vi-web.gophygital.work"]}
       />
 
-      <Header />
-      
-      {/* Conditionally render sidebars based on route */}
-      {location.pathname.startsWith("/maintenance") ? (
-        renderSidebar()
-      ) : (
-        <SetupSidebar />
-      )}
+      {/* View Selection Modal - Choose Admin or Employee View */}
+
+      <ViewSelectionModal
+        isOpen={!isEmployeeUser ? showViewModal : false}
+        onComplete={() => setShowViewModal(false)}
+      />
+
+      {/* Conditional Header - Use EmployeeHeader for employee users */}
+      {isEmployeeUser  ? <SetupHeader /> : <Header />}
+
+      {renderSidebar()}
+      {renderDynamicHeader()}
 
       <main
-        className={`pt-16 transition-all duration-300 ${isSidebarCollapsed ? 'ml-16' : 'ml-64'}`}
+        className={`${
+          // For employee users, only add left margin if on Project Task module
+          isEmployeeUser 
+            ? currentSection === "Project Task"
+              ? isSidebarCollapsed
+                ? "ml-16"
+                : "ml-64"
+              : "ml-0" // No margin for other modules
+            : isSidebarCollapsed
+              ? "ml-16"
+              : "ml-64"
+        } ${isEmployeeUser ? "pt-16" : "pt-28"} transition-all duration-300`}
       >
         <Outlet />
       </main>
