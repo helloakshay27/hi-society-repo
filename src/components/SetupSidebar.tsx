@@ -539,165 +539,217 @@ export const SetupSidebar = () => {
 
   return (
     <div
-      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-[#f6f4ee] shadow-lg z-40 overflow-y-auto overflow-x-hidden border-r border-[#DBC2A9] transition-all duration-300 ${
+      className={`${
         isSidebarCollapsed ? "w-16" : "w-64"
-      }`}
+      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      style={{ top: "4rem", height: "91vh" }}
     >
-      {/* Collapse Button */}
-      <div
-        className={`flex items-center border-b border-[#DBC2A9] bg-[#f6f4ee] overflow-hidden ${
-          isSidebarCollapsed ? "justify-center py-4" : "justify-between px-4 py-4"
-        }`}
-      >
-        {!isSidebarCollapsed && (
-          <span className="font-semibold text-[#1a1a1a] truncate">Menu</span>
-        )}
+      <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="p-2 hover:bg-[#DBC2A9] rounded-lg transition-colors flex-shrink-0"
+          className="absolute right-2 top-2 p-1 rounded-md hover:bg-[#DBC2A9] z-10"
         >
           {isSidebarCollapsed ? (
-            <ChevronRight className="w-5 h-5 text-[#1a1a1a]" />
+            <div className="flex justify-center items-center w-8 h-8 bg-[#f6f4ee] border border-[#e5e1d8] mx-auto">
+              <ChevronRight className="w-4 h-4" />
+            </div>
           ) : (
-            <ChevronLeft className="w-5 h-5 text-[#1a1a1a]" />
+            <ChevronLeft className="w-4 h-4" />
           )}
         </button>
-      </div>
+        {/* Add background and border below the collapse button */}
+        <div className="w-full h-4 bg-[#f6f4ee] border-[#e5e1d8] mb-2"></div>
 
-      {/* Home Section */}
-      {homeMenuItems.length > 0 && (
-        <>
-          <div className="px-2 pt-2">
-            <button
-              onClick={() => !isSidebarCollapsed && setIsHomeExpanded(!isHomeExpanded)}
-              className="flex items-center justify-between w-full gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-            >
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                {isSidebarCollapsed ? (
-                  <HomeIcon className="w-5 h-5 flex-shrink-0" />
-                ) : (
-                  <>
-                    <HomeIcon className="w-5 h-5 flex-shrink-0" />
-                    <span className="truncate">Home</span>
-                  </>
+        <div className={`mb-4 ${isSidebarCollapsed ? "text-center" : ""}`}>
+          <h3
+            className={`text-sm font-medium text-[#1a1a1a] opacity-70 uppercase ${
+              isSidebarCollapsed ? "text-center" : "tracking-wide"
+            }`}
+          >
+            {isSidebarCollapsed ? "" : "Hi-Society Dashboard"}
+          </h3>
+        </div>
+
+        <nav className="space-y-2">
+          {/* Home Section */}
+          {homeMenuItems.length > 0 && (
+            <>
+              <button
+                onClick={() => !isSidebarCollapsed && setIsHomeExpanded(!isHomeExpanded)}
+                className="flex items-center justify-between w-full gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+              >
+                {isParentActive(homeMenuItems) && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]"></div>
                 )}
-              </div>
-              {!isSidebarCollapsed && (
-                isHomeExpanded ? (
-                  <ChevronDown className="w-4 h-4 flex-shrink-0" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 flex-shrink-0" />
-                )
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  {isSidebarCollapsed ? (
+                    <HomeIcon className={`w-5 h-5 flex-shrink-0 ${isParentActive(homeMenuItems) ? "text-[#C72030]" : "text-[#1a1a1a]"}`} />
+                  ) : (
+                    <>
+                      <HomeIcon className={`w-5 h-5 flex-shrink-0 ${isParentActive(homeMenuItems) ? "text-[#C72030]" : "text-[#1a1a1a]"}`} />
+                      <span className="truncate">Home</span>
+                    </>
+                  )}
+                </div>
+                {!isSidebarCollapsed && (
+                  isHomeExpanded ? (
+                    <ChevronDown className="w-4 h-4 flex-shrink-0" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 flex-shrink-0" />
+                  )
+                )}
+              </button>
+
+              {(isHomeExpanded || isSidebarCollapsed) && (
+                <div className="space-y-1">
+                  {homeMenuItems.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => navigate(item.path!)}
+                      className="flex items-center gap-3 w-full pl-11 pr-3 py-2 rounded-lg text-sm font-normal transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+                    >
+                      {isActive(item.path!) && (
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]"></div>
+                      )}
+                      <div className={`flex-shrink-0 ${isActive(item.path!) ? "text-[#C72030]" : "text-[#1a1a1a]"}`}>
+                        {item.icon}
+                      </div>
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
               )}
-            </button>
-          </div>
-
-          {(isHomeExpanded || isSidebarCollapsed) && (
-            <nav className="py-2 px-2">
-              {homeMenuItems.map((item) => renderMenuItem(item))}
-            </nav>
+            </>
           )}
-        </>
-      )}
 
-      {/* Setup Header */}
-      <div className="px-2">
-        <button
-          onClick={() => !isSidebarCollapsed && setIsSetupExpanded(!isSetupExpanded)}
-          className="flex items-center justify-between w-full gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-        >
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            {isSidebarCollapsed ? (
-              <Settings className="w-5 h-5 flex-shrink-0" />
-            ) : (
-              <>
-                <Settings className="w-5 h-5 flex-shrink-0" />
-                <span className="truncate">Setup</span>
-              </>
+          {/* Setup Section */}
+          <button
+            onClick={() => !isSidebarCollapsed && setIsSetupExpanded(!isSetupExpanded)}
+            className="flex items-center justify-between w-full gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+          >
+            {isParentActive(setupMenuItems) && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]"></div>
             )}
-          </div>
-          {!isSidebarCollapsed && (
-            isSetupExpanded ? (
-              <ChevronDown className="w-4 h-4 flex-shrink-0" />
-            ) : (
-              <ChevronRight className="w-4 h-4 flex-shrink-0" />
-            )
-          )}
-        </button>
-      </div>
-
-      {/* Setup Menu Items */}
-      {(isSetupExpanded || isSidebarCollapsed) && (
-        <nav className="py-2 px-2">
-          {setupMenuItems.map((item) => renderMenuItem(item))}
-        </nav>
-      )}
-
-      {/* Communication Header */}
-      <div className="px-2">
-        <button
-          onClick={() => !isSidebarCollapsed && setIsCommunicationExpanded(!isCommunicationExpanded)}
-          className="flex items-center justify-between w-full gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-        >
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            {isSidebarCollapsed ? (
-              <MessageCircle className="w-5 h-5 flex-shrink-0" />
-            ) : (
-              <>
-                <MessageCircle className="w-5 h-5 flex-shrink-0" />
-                <span className="truncate">Communication</span>
-              </>
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              {isSidebarCollapsed ? (
+                <Settings className={`w-5 h-5 flex-shrink-0 ${isParentActive(setupMenuItems) ? "text-[#C72030]" : "text-[#1a1a1a]"}`} />
+              ) : (
+                <>
+                  <Settings className={`w-5 h-5 flex-shrink-0 ${isParentActive(setupMenuItems) ? "text-[#C72030]" : "text-[#1a1a1a]"}`} />
+                  <span className="truncate">Setup</span>
+                </>
+              )}
+            </div>
+            {!isSidebarCollapsed && (
+              isSetupExpanded ? (
+                <ChevronDown className="w-4 h-4 flex-shrink-0" />
+              ) : (
+                <ChevronRight className="w-4 h-4 flex-shrink-0" />
+              )
             )}
-          </div>
-          {!isSidebarCollapsed && (
-            isCommunicationExpanded ? (
-              <ChevronDown className="w-4 h-4 flex-shrink-0" />
-            ) : (
-              <ChevronRight className="w-4 h-4 flex-shrink-0" />
-            )
+          </button>
+
+          {(isSetupExpanded || isSidebarCollapsed) && (
+            <div className="space-y-1">
+              {setupMenuItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(item.path!)}
+                  className="flex items-center gap-3 w-full pl-11 pr-3 py-2 rounded-lg text-sm font-normal transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+                >
+                  {isActive(item.path!) && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]"></div>
+                  )}
+                  <div className={`flex-shrink-0 ${isActive(item.path!) ? "text-[#C72030]" : "text-[#1a1a1a]"}`}>
+                    {item.icon}
+                  </div>
+                  <span className="truncate">{item.label}</span>
+                </button>
+              ))}
+            </div>
           )}
-        </button>
-      </div>
 
-      {/* Communication Menu Items */}
-      {(isCommunicationExpanded || isSidebarCollapsed) && (
-        <nav className="py-2 px-2">
-          {communicationMenuItems.map((item) => renderMenuItem(item))}
-        </nav>
-      )}
-
-      {/* Setup Member Header */}
-      <div className="px-2">
-        <button
-          onClick={() => !isSidebarCollapsed && setIsSetupMemberExpanded(!isSetupMemberExpanded)}
-          className="flex items-center justify-between w-full gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-        >
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            {isSidebarCollapsed ? (
-              <Wrench className="w-5 h-5 flex-shrink-0" />
-            ) : (
-              <>
-                <Wrench className="w-5 h-5 flex-shrink-0" />
-                <span className="truncate">Setup Member</span>
-              </>
+          {/* Communication Section */}
+          <button
+            onClick={() => !isSidebarCollapsed && setIsCommunicationExpanded(!isCommunicationExpanded)}
+            className="flex items-center justify-between w-full gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+          >
+            {isParentActive(communicationMenuItems) && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]"></div>
             )}
-          </div>
-          {!isSidebarCollapsed && (
-            isSetupMemberExpanded ? (
-              <ChevronDown className="w-4 h-4 flex-shrink-0" />
-            ) : (
-              <ChevronRight className="w-4 h-4 flex-shrink-0" />
-            )
-          )}
-        </button>
-      </div>
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              {isSidebarCollapsed ? (
+                <MessageCircle className={`w-5 h-5 flex-shrink-0 ${isParentActive(communicationMenuItems) ? "text-[#C72030]" : "text-[#1a1a1a]"}`} />
+              ) : (
+                <>
+                  <MessageCircle className={`w-5 h-5 flex-shrink-0 ${isParentActive(communicationMenuItems) ? "text-[#C72030]" : "text-[#1a1a1a]"}`} />
+                  <span className="truncate">Communication</span>
+                </>
+              )}
+            </div>
+            {!isSidebarCollapsed && (
+              isCommunicationExpanded ? (
+                <ChevronDown className="w-4 h-4 flex-shrink-0" />
+              ) : (
+                <ChevronRight className="w-4 h-4 flex-shrink-0" />
+              )
+            )}
+          </button>
 
-      {/* Setup Member Menu Items */}
-      {(isSetupMemberExpanded || isSidebarCollapsed) && (
-        <nav className="py-2 px-2">
-          {setupMemberMenuItems.map((item) => renderMenuItem(item))}
+          {(isCommunicationExpanded || isSidebarCollapsed) && (
+            <div className="space-y-1">
+              {communicationMenuItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(item.path!)}
+                  className="flex items-center gap-3 w-full pl-11 pr-3 py-2 rounded-lg text-sm font-normal transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+                >
+                  {isActive(item.path!) && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]"></div>
+                  )}
+                  <div className={`flex-shrink-0 ${isActive(item.path!) ? "text-[#C72030]" : "text-[#1a1a1a]"}`}>
+                    {item.icon}
+                  </div>
+                  <span className="truncate">{item.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Setup Member Section */}
+          <button
+            onClick={() => !isSidebarCollapsed && setIsSetupMemberExpanded(!isSetupMemberExpanded)}
+            className="flex items-center justify-between w-full gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+          >
+            {isParentActive(setupMemberMenuItems) && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]"></div>
+            )}
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              {isSidebarCollapsed ? (
+                <Wrench className={`w-5 h-5 flex-shrink-0 ${isParentActive(setupMemberMenuItems) ? "text-[#C72030]" : "text-[#1a1a1a]"}`} />
+              ) : (
+                <>
+                  <Wrench className={`w-5 h-5 flex-shrink-0 ${isParentActive(setupMemberMenuItems) ? "text-[#C72030]" : "text-[#1a1a1a]"}`} />
+                  <span className="truncate">Setup Member</span>
+                </>
+              )}
+            </div>
+            {!isSidebarCollapsed && (
+              isSetupMemberExpanded ? (
+                <ChevronDown className="w-4 h-4 flex-shrink-0" />
+              ) : (
+                <ChevronRight className="w-4 h-4 flex-shrink-0" />
+              )
+            )}
+          </button>
+
+          {(isSetupMemberExpanded || isSidebarCollapsed) && (
+            <div className="space-y-1">
+              {setupMemberMenuItems.map((item) => renderMenuItem(item))}
+            </div>
+          )}
         </nav>
-      )}
-    </div>
+      </div>
+      </div>
   );
-};
+}

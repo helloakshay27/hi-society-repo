@@ -349,20 +349,35 @@ export const Header = () => {
 
             )}
             {!isViSite && (
-              <button
-                onClick={() => {
-                  // Toggle between FM Dashboard and Hi-Society Dashboard
-                  if (currentPath.startsWith("/maintenance")) {
-                    navigate("/setup-member/loyalty-members-list");
-                  } else {
-                    navigate("/maintenance/ticket");
-                  }
-                }}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#1a1a1a] hover:text-[#C72030] hover:bg-[#f6f4ee] rounded-lg transition-colors"
-              >
-                <ChartAreaIcon className="w-4 h-4" />
-                {currentPath.startsWith("/maintenance") ? "Hi-Society Dashboard" : "FM Dashboard"}
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#1a1a1a] hover:text-[#C72030] hover:bg-[#f6f4ee] rounded-lg transition-colors outline-none">
+                  <ChartAreaIcon className="w-4 h-4" />
+                  {currentPath.startsWith("/maintenance") ? "FM Dashboard" : "Hi-Society Dashboard"}
+                  <ChevronDown className="w-3 h-3" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg">
+                  <DropdownMenuItem
+                    onClick={() => navigate("/setup-member/loyalty-members-list")}
+                    className={
+                      !currentPath.startsWith("/maintenance")
+                        ? "bg-[#f6f4ee] text-[#C72030]"
+                        : ""
+                    }
+                  >
+                    Hi-Society Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate("/maintenance/ticket")}
+                    className={
+                      currentPath.startsWith("/maintenance")
+                        ? "bg-[#f6f4ee] text-[#C72030]"
+                        : ""
+                    }
+                  >
+                    FM Dashboard
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
             {isViSite && (
