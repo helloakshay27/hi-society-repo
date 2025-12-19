@@ -119,7 +119,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       // Determine which sidebar to show based on route
       if (path.startsWith('/communication')) {
         return <CommunicationSidebar />;
-      } else if (path.startsWith('/setup-member/loyalty')) {
+      } else if (path.startsWith('/loyalty')) {
         return <LoyaltySidebar />;
       } else if (path.startsWith('/setup-member')) {
         // Check if it's a home menu item
@@ -331,12 +331,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           // For employee users (Hi Society), always show sidebar
           isEmployeeUser 
             ? isSidebarCollapsed
-              ? "ml-16"
+              ? "ml-16" 
               : "ml-64"
             : isSidebarCollapsed
               ? "ml-16"
               : "ml-64"
-        } ${isEmployeeUser ? "pt-16" : "pt-28"} transition-all duration-300`}
+        } ${isEmployeeUser ? "pt-12" : "pt-16"} transition-all duration-300`}
       >
         <Outlet />
       </main>

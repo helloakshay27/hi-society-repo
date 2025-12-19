@@ -272,7 +272,7 @@ export const HiSocityHeader = () => {
   // Check if it's Oman site
 
   return (
-    <header className="h-16 bg-white border-b border-[#D5DbDB] fixed top-0 right-0 left-0 z-20 w-full shadow-sm">
+    <header className="h-12 bg-white border-b border-[#D5DbDB] fixed top-0 right-0 left-0 z-20 w-full shadow-sm">
       <div className="flex items-center justify-between h-full px-6">
         <div className="flex align-items-center gap-14">
           {isOmanSite ? (

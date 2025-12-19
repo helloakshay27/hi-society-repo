@@ -163,9 +163,9 @@ export const setupMemberRoutes = (
     <Route path="/setup-member/banks/create" element={withSuspense(BanksCreate)} />
 
     {/* Banner Routes */}
-    <Route path="/setup-member/banner-add" element={withSuspense(BannerAdd)} />
-    <Route path="/setup-member/banner-edit/:id" element={withSuspense(BannerEdit)} />
-    <Route path="/setup-member/banner-list" element={withSuspense(BannerList)} />
+    <Route path="/maintenance/banner-add" element={withSuspense(BannerAdd)} />
+    <Route path="/maintenance/banner-edit/:id" element={withSuspense(BannerEdit)} />
+    <Route path="/maintenance/banner-list" element={withSuspense(BannerList)} />
 
     {/* Category Types Routes */}
     <Route path="/setup-member/category-types" element={withSuspense(CategoryTypes)} />
@@ -176,9 +176,9 @@ export const setupMemberRoutes = (
     <Route path="/setup-member/common-files" element={withSuspense(CommonFiles)} />
 
     {/* Company Routes */}
-    <Route path="/setup-member/company-create" element={withSuspense(CompanyCreate)} />
-    <Route path="/setup-member/company-edit/:id" element={withSuspense(CompanyEdit)} />
-    <Route path="/setup-member/company-list" element={withSuspense(CompanyList)} />
+    <Route path="/maintenance/company-create" element={withSuspense(CompanyCreate)} />
+    <Route path="/maintenance/company-edit/:id" element={withSuspense(CompanyEdit)} />
+    <Route path="/maintenance/company-list" element={withSuspense(CompanyList)} />
 
     {/* Construction Status Routes */}
     <Route path="/setup-member/construction-status" element={withSuspense(ConstructionStatus)} />
@@ -191,25 +191,25 @@ export const setupMemberRoutes = (
     <Route path="/setup-member/construction-updates-list" element={withSuspense(ConstructionUpdatesList)} />
 
     {/* Rule Engine Routes */}
-    <Route path="/setup-member/create-rule-engine" element={withSuspense(CreateRuleEngine)} />
+    <Route path="/loyalty/create-rule-engine" element={withSuspense(CreateRuleEngine)} />
 
     {/* Enquiry Routes */}
     <Route path="/setup-member/enquiry-list" element={withSuspense(EnquiryList)} />
 
     {/* Event Routes */}
-    <Route path="/setup-member/event-create" element={withSuspense(EventCreate)} />
-    <Route path="/setup-member/event-edit/:id" element={withSuspense(EventEdit)} />
-    <Route path="/setup-member/event-list" element={withSuspense(EventList)} />
+    <Route path="/maintenance/event-create" element={withSuspense(EventCreate)} />
+    <Route path="/maintenance/event-edit/:id" element={withSuspense(EventEdit)} />
+    <Route path="/maintenance/event-list" element={withSuspense(EventList)} />
 
     {/* FAQ Routes */}
-    <Route path="/setup-member/faq-category-form" element={withSuspense(FaqCategoryForm)} />
-    <Route path="/setup-member/faq-category-list" element={withSuspense(FaqCategoryList)} />
-    <Route path="/setup-member/faq-create" element={withSuspense(FaqCreate)} />
-    <Route path="/setup-member/faq-edit/:id" element={withSuspense(FaqEdit)} />
-    <Route path="/setup-member/faq-list" element={withSuspense(FaqList)} />
-    <Route path="/setup-member/faq-subcategory" element={withSuspense(FaqSubCategory)} />
-    <Route path="/setup-member/faq-subcategory/:faqSubId/edit" element={<FaqSubCategory />} />
-    <Route path="/setup-member/faq-subcategory-list" element={withSuspense(FaqSubCategoryList)} />
+    <Route path="/maintenance/faq-category-form" element={withSuspense(FaqCategoryForm)} />
+    <Route path="/maintenance/faq-category-list" element={withSuspense(FaqCategoryList)} />
+    <Route path="/maintenance/faq-create" element={withSuspense(FaqCreate)} />
+    <Route path="/maintenance/faq-edit/:id" element={withSuspense(FaqEdit)} />
+    <Route path="/maintenance/faq-list" element={withSuspense(FaqList)} />
+    <Route path="/maintenance/faq-subcategory" element={withSuspense(FaqSubCategory)} />
+    <Route path="/maintenance/faq-subcategory/:faqSubId/edit" element={<FaqSubCategory />} />
+    <Route path="/maintenance/faq-subcategory-list" element={withSuspense(FaqSubCategoryList)} />
 
     {/* Gallery Routes */}
     <Route path="/setup-member/gallery" element={withSuspense(Gallery)} />
@@ -245,24 +245,24 @@ export const setupMemberRoutes = (
     <Route path="/setup-member/lock-role-list" element={withSuspense(LockRoleList)} />
 
     {/* Loyalty Manager Routes */}
-    <Route path="/setup-member/loyalty-managers-create" element={withSuspense(LoyaltyManagersCreate)} />
-    <Route path="/setup-member/loyalty-managers-edit/:id" element={withSuspense(LoyaltyManagersEdit)} />
-    <Route path="/setup-member/loyalty-managers-list" element={withSuspense(LoyaltyManagersList)} />
+    <Route path="/loyalty/loyalty-managers-create" element={withSuspense(LoyaltyManagersCreate)} />
+    <Route path="/loyalty/loyalty-managers-edit/:id" element={withSuspense(LoyaltyManagersEdit)} />
+    <Route path="/loyalty/loyalty-managers-list" element={withSuspense(LoyaltyManagersList)} />
 
     {/* Noticeboard Routes */}
-    <Route path="/setup-member/noticeboard-create" element={withSuspense(NoticeboardCreate)} />
-    <Route path="/setup-member/noticeboard-list" element={withSuspense(NoticeboardList)} />
+    <Route path="/communication/noticeboard-create" element={withSuspense(NoticeboardCreate)} />
+    <Route path="/communication/noticeboard-list" element={withSuspense(NoticeboardList)} />
 
     {/* Organization Routes */}
-    <Route path="/setup-member/organization-create" element={withSuspense(OrganizationCreate)} />
-    <Route path="/setup-member/organization-list" element={withSuspense(OrganizationList)} />
-    <Route path="/setup-member/organization-update/:id" element={withSuspense(OrganizationUpdate)} />
+    <Route path="/maintenance/organization-create" element={withSuspense(OrganizationCreate)} />
+    <Route path="/maintenance/organization-list" element={withSuspense(OrganizationList)} />
+    <Route path="/maintenance/organization-update/:id" element={withSuspense(OrganizationUpdate)} />
 
     {/* Project Details Routes */}
-    <Route path="/setup-member/project-details-create" element={withSuspense(ProjectDetailsCreate)} />
-    <Route path="/setup-member/project-details-edit/:id" element={withSuspense(ProjectDetailsEdit)} />
-    <Route path="/setup-member/project-details-view/:id" element={withSuspense(ProjectDetails)} />
-    <Route path="/setup-member/project-details-list" element={withSuspense(ProjectDetailsList)} />
+    <Route path="/maintenance/project-details-create" element={withSuspense(ProjectDetailsCreate)} />
+    <Route path="/maintenance/project-details-edit/:id" element={withSuspense(ProjectDetailsEdit)} />
+    <Route path="/maintenance/project-details-view/:id" element={withSuspense(ProjectDetails)} />
+    <Route path="/maintenance/project-details-list" element={withSuspense(ProjectDetailsList)} />
 
 
     <Route path="/setup-member/project-building-type" element={withSuspense(ProjectBuildingType)} />
@@ -276,9 +276,9 @@ export const setupMemberRoutes = (
     <Route path="/setup-member/property-type-list" element={withSuspense(PropertyTypeList)} />
 
     {/* Referral Routes */}
-    <Route path="/setup-member/referral-create" element={withSuspense(ReferralCreate)} />
-    <Route path="/setup-member/referral-edit/:id" element={withSuspense(ReferralEdit)} />
-    <Route path="/setup-member/referral-list" element={withSuspense(ReferralList)} />
+    <Route path="/loyalty/referral-create" element={withSuspense(ReferralCreate)} />
+    <Route path="/loyalty/referral-edit/:id" element={withSuspense(ReferralEdit)} />
+    <Route path="/loyalty/referral-list" element={withSuspense(ReferralList)} />
 
     {/* Referral Program Routes */}
     <Route path="/setup-member/referral-program-create" element={withSuspense(ReferralProgramCreate)} />
@@ -291,9 +291,9 @@ export const setupMemberRoutes = (
     <Route path="/setup-member/service-category-list" element={withSuspense(ServiceCategoryList)} />
 
     {/* Site Routes */}
-    <Route path="/setup-member/site-create" element={withSuspense(SiteCreate)} />
-    <Route path="/setup-member/site-edit/:id" element={withSuspense(SiteEdit)} />
-    <Route path="/setup-member/site-list" element={withSuspense(SiteList)} />
+    <Route path="/maintenance/site-create" element={withSuspense(SiteCreate)} />
+    <Route path="/maintenance/site-edit/:id" element={withSuspense(SiteEdit)} />
+    <Route path="/maintenance/site-list" element={withSuspense(SiteList)} />
 
     {/* Site Visit Routes */}
     <Route path="/setup-member/site-visit-create" element={withSuspense(SiteVisitCreate)} />
@@ -309,9 +309,9 @@ export const setupMemberRoutes = (
     <Route path="/setup-member/smtp-settings-list" element={withSuspense(SmtpSettingsList)} />
 
     {/* Specification Routes */}
-    <Route path="/setup-member/specification" element={withSuspense(Specification)} />
-    <Route path="/setup-member/specification-list" element={withSuspense(SpecificationList)} />
-    <Route path="/setup-member/specification-update/:id" element={withSuspense(SpecificationUpdate)} />
+    <Route path="/maintenance/specification" element={withSuspense(Specification)} />
+    <Route path="/maintenance/specification-list" element={withSuspense(SpecificationList)} />
+    <Route path="/maintenance/specification-update/:id" element={withSuspense(SpecificationUpdate)} />
 
     {/* Support Service Routes */}
     <Route path="/setup-member/support-service-list" element={withSuspense(SupportServiceList)} />
@@ -325,9 +325,9 @@ export const setupMemberRoutes = (
     <Route path="/setup-member/tds-tutorials-list" element={withSuspense(TdsTutorialsList)} />
 
     {/* Testimonial Routes */}
-    <Route path="/setup-member/testimonials" element={withSuspense(Testimonials)} />
-    <Route path="/setup-member/testimonial-edit/:id" element={withSuspense(TestimonialEdit)} />
-    <Route path="/setup-member/testimonial-list" element={withSuspense(TestimonialList)} />
+    <Route path="/maintenance/testimonials" element={withSuspense(Testimonials)} />
+    <Route path="/maintenance/testimonial-edit/:id" element={withSuspense(TestimonialEdit)} />
+    <Route path="/maintenance/testimonial-list" element={withSuspense(TestimonialList)} />
 
     {/* User Routes */}
     <Route path="/setup-member/user-create" element={withSuspense(UserCreate)} />
@@ -341,20 +341,20 @@ export const setupMemberRoutes = (
     <Route path="/setup-member/user-groups-list" element={withSuspense(UserGroupsList)} />
 
     {/* Press Releases Routes */}
-    <Route path="/setup-member/press-releases-create" element={withSuspense(PressReleasesCreate)} />
-    <Route path="/setup-member/press-releases-edit/:id" element={withSuspense(PressReleasesEdit)} />
-    <Route path="/setup-member/press-releases-list" element={withSuspense(PressReleasesList)} />
+    <Route path="/maintenance/press-releases-create" element={withSuspense(PressReleasesCreate)} />
+    <Route path="/maintenance/press-releases-edit/:id" element={withSuspense(PressReleasesEdit)} />
+    <Route path="/maintenance/press-releases-list" element={withSuspense(PressReleasesList)} />
 
     {/* Loyalty Module Routes */}
-    <Route path="/setup-member/loyalty-members-list" element={withSuspense(LoyaltyMembersList)} />
-    <Route path="/setup-member/loyalty-tiers-list" element={withSuspense(LoyaltyTiersList)} />
-    <Route path="/setup-member/new-tier" element={withSuspense(NewTier)} />
-    <Route path="/setup-member/rule-engine-list" element={withSuspense(RuleEngineList)} />
-    <Route path="/setup-member/lock-payments-list" element={withSuspense(LockPaymentsList)} />
-    <Route path="/setup-member/home-loan-requests-list" element={withSuspense(HomeLoanRequestsList)} />
-    <Route path="/setup-member/demand-notes-list" element={withSuspense(DemandNotesList)} />
-    <Route path="/setup-member/orders-list" element={withSuspense(OrdersList)} />
-    <Route path="/setup-member/encash-list" element={withSuspense(EncashList)} />
+    <Route path="/loyalty/loyalty-members-list" element={withSuspense(LoyaltyMembersList)} />
+    <Route path="/loyalty/loyalty-tiers-list" element={withSuspense(LoyaltyTiersList)} />
+    <Route path="/loyalty/new-tier" element={withSuspense(NewTier)} />
+    <Route path="/loyalty/rule-engine-list" element={withSuspense(RuleEngineList)} />
+    <Route path="/loyalty/lock-payments-list" element={withSuspense(LockPaymentsList)} />
+    <Route path="/loyalty/home-loan-requests-list" element={withSuspense(HomeLoanRequestsList)} />
+    <Route path="/loyalty/demand-notes-list" element={withSuspense(DemandNotesList)} />
+    <Route path="/loyalty/orders-list" element={withSuspense(OrdersList)} />
+    <Route path="/loyalty/encash-list" element={withSuspense(EncashList)} />
 
     {/* Project Configuration Routes */}
     <Route path="/setup-member/project-configuration" element={withSuspense(ProjectConfiguration)} />

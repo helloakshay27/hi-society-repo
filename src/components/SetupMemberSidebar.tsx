@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useLayout } from '../contexts/LayoutContext';
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useLayout } from "../contexts/LayoutContext";
 import {
   Users,
   Shield,
@@ -19,16 +19,16 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface MenuItem {
   id: string;
   label: string;
-  icon: React.ReactNode;
+  icon: React.ElementType;
   path: string;
 }
 
-export const SetupMemberSidebar = () => {
+export const SetupMemberSidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
@@ -37,189 +37,200 @@ export const SetupMemberSidebar = () => {
     {
       id: "user-list",
       label: "User Module",
-      icon: <Users className="w-5 h-5" />,
+      icon: Users,
       path: "/setup-member/user-list",
     },
     {
       id: "lock-role-list",
       label: "User Role",
-      icon: <Shield className="w-5 h-5" />,
+      icon: Shield,
       path: "/setup-member/lock-role-list",
     },
     {
       id: "lock-function-list",
       label: "Lock Function",
-      icon: <Shield className="w-5 h-5" />,
+      icon: Shield,
       path: "/setup-member/lock-function-list",
     },
     {
       id: "banks-list",
       label: "Banks",
-      icon: <Database className="w-5 h-5" />,
+      icon: Database,
       path: "/setup-member/banks-list",
     },
     {
       id: "home-loan-list",
       label: "Home Loans",
-      icon: <Home className="w-5 h-5" />,
+      icon: Home,
       path: "/setup-member/home-loan-list",
     },
     {
       id: "loan-manager-list",
       label: "Loan Managers",
-      icon: <Users className="w-5 h-5" />,
+      icon: Users,
       path: "/setup-member/loan-manager-list",
     },
     {
       id: "property-type-list",
       label: "Property Types",
-      icon: <Home className="w-5 h-5" />,
+      icon: Home,
       path: "/setup-member/property-type-list",
     },
     {
       id: "project-building-type-list",
       label: "Project Building",
-      icon: <Building2 className="w-5 h-5" />,
+      icon: Building2,
       path: "/setup-member/project-building-type-list",
     },
     {
       id: "construction-status-list",
       label: "Construction Status",
-      icon: <BarChart3 className="w-5 h-5" />,
+      icon: BarChart3,
       path: "/setup-member/construction-status-list",
     },
     {
       id: "construction-updates-list",
       label: "Construction Updates",
-      icon: <FileText className="w-5 h-5" />,
+      icon: FileText,
       path: "/setup-member/construction-updates-list",
     },
     {
       id: "project-configuration-list",
       label: "Project Config",
-      icon: <Settings className="w-5 h-5" />,
+      icon: Settings,
       path: "/setup-member/project-configuration-list",
     },
     {
       id: "amenities-list",
       label: "Amenities",
-      icon: <Gift className="w-5 h-5" />,
+      icon: Gift,
       path: "/setup-member/amenities-list",
     },
     {
       id: "department-list",
       label: "Department",
-      icon: <Building className="w-5 h-5" />,
+      icon: Building,
       path: "/setup-member/department-list",
     },
     {
       id: "visitslot-list",
       label: "Visit Slot",
-      icon: <Calendar className="w-5 h-5" />,
+      icon: Calendar,
       path: "/setup-member/site-visit-slot-config-list",
     },
     {
       id: "tds-tutorials-list",
       label: "TDS Tutorials",
-      icon: <GraduationCap className="w-5 h-5" />,
+      icon: GraduationCap,
       path: "/setup-member/tds-tutorials-list",
     },
     {
       id: "plus-services-list",
       label: "Plus Services",
-      icon: <Headset className="w-5 h-5" />,
+      icon: Headset,
       path: "/setup-member/plus-services-list",
     },
     {
       id: "smtp-settings-list",
       label: "SMTP Settings",
-      icon: <Mail className="w-5 h-5" />,
+      icon: Mail,
       path: "/setup-member/smtp-settings-list",
     },
     {
       id: "faq-category-list",
       label: "FAQ Category",
-      icon: <HelpCircle className="w-5 h-5" />,
+      icon: HelpCircle,
       path: "/setup-member/faq-category-list",
     },
     {
       id: "faq-subcategory-list",
       label: "FAQ SubCategory",
-      icon: <HelpCircle className="w-5 h-5" />,
+      icon: HelpCircle,
       path: "/setup-member/faq-subcategory-list",
     },
   ];
 
-  const isActive = (path: string) => {
-    if (location.pathname === path) return true;
-    
-    const pathSegments = location.pathname.split('/').filter(Boolean);
-    const menuPathSegments = path.split('/').filter(Boolean);
-    
-    if (pathSegments.length >= 2 && menuPathSegments.length >= 2) {
-      return pathSegments[0] === menuPathSegments[0] && 
-             pathSegments[1].includes(menuPathSegments[1].replace('-list', ''));
-    }
-    
-    return false;
-  };
+  const isActive = (path: string) =>
+    location.pathname === path ||
+    location.pathname.startsWith(path + "/");
 
   const handleNavigation = (path: string) => {
     navigate(path);
   };
 
   return (
-    <aside
-      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 transition-all duration-300 ${
-        isSidebarCollapsed ? 'w-16' : 'w-64'
-      } z-30 overflow-y-auto`}
+    <div
+      className={`${
+        isSidebarCollapsed ? "w-16" : "w-64"
+      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      style={{ top: "3rem", height: "100%" }}
     >
-      {/* Toggle Button */}
-      <button
-        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        className="absolute -right-3 top-6 bg-white border border-gray-200 rounded-full p-1 hover:bg-gray-50 transition-colors z-10 shadow-sm"
-      >
-        {isSidebarCollapsed ? (
-          <ChevronRight className="w-4 h-4 text-gray-600" />
-        ) : (
-          <ChevronLeft className="w-4 h-4 text-gray-600" />
-        )}
-      </button>
-
-      {/* Sidebar Header */}
-      <div className="p-4 border-b border-gray-200">
-        <h2
-          className={`text-sm font-semibold text-gray-700 uppercase tracking-wide ${
-            isSidebarCollapsed ? 'hidden' : 'block'
-          }`}
+      <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>
+        {/* Collapse Button */}
+        <button
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className="absolute right-2 top-2 p-1 rounded-md hover:bg-[#DBC2A9] z-10"
         >
-          Setup Member
-        </h2>
-      </div>
+          {isSidebarCollapsed ? (
+            <div className="flex justify-center items-center w-8 h-8 bg-[#f6f4ee] border border-[#e5e1d8] mx-auto">
+              <ChevronRight className="w-4 h-4" />
+            </div>
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
+        </button>
 
-      {/* Menu Items */}
-      <nav className="p-2">
-        {setupMemberMenuItems.map((item) => {
-          const active = isActive(item.path);
-          return (
-            <button
-              key={item.id}
-              onClick={() => handleNavigation(item.path)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-1 ${
-                active
-                  ? 'bg-[#C72030] text-white'
-                  : 'text-gray-700 hover:bg-gray-100'
-              } ${isSidebarCollapsed ? 'justify-center' : ''}`}
-              title={isSidebarCollapsed ? item.label : ''}
-            >
-              {item.icon}
-              {!isSidebarCollapsed && (
-                <span className="text-sm font-medium">{item.label}</span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
-    </aside>
+        {/* Spacer */}
+        <div className="w-full h-4 bg-[#f6f4ee] border-[#e5e1d8] mb-2 mt-4" />
+
+        {/* Header */}
+        <div className={`mb-4 ${isSidebarCollapsed ? "text-center" : ""}`}>
+          <h3
+            className={`text-sm font-medium text-[#1a1a1a] opacity-70 uppercase ${
+              isSidebarCollapsed ? "" : "tracking-wide"
+            }`}
+          >
+            {isSidebarCollapsed ? "" : "Setup Member"}
+          </h3>
+        </div>
+
+        {/* Menu */}
+        <nav className="space-y-2">
+          {setupMemberMenuItems.map((item) => {
+            const active = isActive(item.path);
+            const Icon = item.icon;
+
+            return (
+              <div key={item.id}>
+                <button
+                  onClick={() => handleNavigation(item.path)}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+                  title={item.label}
+                >
+                  {/* Active Indicator */}
+                  {active && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                  )}
+
+                  {/* Icon */}
+                  <Icon
+                    className={`w-5 h-5 flex-shrink-0 ${
+                      active ? "text-[#C72030]" : "text-[#1a1a1a]"
+                    }`}
+                  />
+
+                  {/* Label */}
+                  {!isSidebarCollapsed && (
+                    <span className="truncate">{item.label}</span>
+                  )}
+                </button>
+              </div>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
   );
 };
+
+export default SetupMemberSidebar;

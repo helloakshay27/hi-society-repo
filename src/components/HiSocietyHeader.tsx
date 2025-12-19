@@ -39,31 +39,31 @@ const navigationItems: NavigationItem[] = [
     id: "home",
     label: "Home",
     icon: <Home className="w-4 h-4" />,
-    path: "/setup-member/dashboard",
+    path: "/maintenance/projects",
   },
   {
     id: "communication",
     label: "Communication",
     icon: <MessageSquare className="w-4 h-4" />,
-    path: "/communication/notices",
+    path: "/communication/notice",
   },
   {
     id: "setup",
     label: "Setup",
     icon: <SettingsIcon className="w-4 h-4" />,
-    path: "/setup/society-info",
+    path: "/setup/special-users-category",
   },
   {
     id: "setup-member",
     label: "Setup Member",
     icon: <Users className="w-4 h-4" />,
-    path: "/setup-member/flat",
+    path: "/setup-member/user-list",
   },
   {
     id: "loyalty",
     label: "Loyalty",
     icon: <Gift className="w-4 h-4" />,
-    path: "/setup-member/loyalty/dashboard",
+    path: "/loyalty/loyalty-members-list", 
   },
 ];
 
@@ -111,17 +111,15 @@ export const HiSocietyHeader: React.FC = () => {
       setUserDisplayName(displayName);
       setUserRoleName(roleName);
     };
-
     loadUserInfo();
   }, []);
 
   // Detect active navigation based on current path
   useEffect(() => {
     const path = location.pathname;
-    
     if (path.startsWith("/communication")) {
       setActiveNav("communication");
-    } else if (path.startsWith("/setup-member/loyalty")) {
+    } else if (path.startsWith("/loyalty")) { // <-- FIXED: loyalty path check
       setActiveNav("loyalty");
     } else if (path.startsWith("/setup-member")) {
       setActiveNav("setup-member");
@@ -146,9 +144,13 @@ export const HiSocietyHeader: React.FC = () => {
   const isViSite = hostname.includes("vi-web.gophygital.work");
   const isWebSite = hostname.includes("web.gophygital.work");
 
+  // --- UI/CSS update to match DynamicHeader ---
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-[100] shadow-sm">
-      <div className="flex items-center justify-between h-full px-6 max-w-[1920px] mx-auto">
+    <header
+      className="h-12 border-b border-[#D5DbDB] fixed top-0 left-0 right-0 z-10 transition-all duration-300"
+      style={{ backgroundColor: "#f6f4ee" }}
+    >
+      <div className="flex items-center h-full px-4 max-w-[1920px] mx-auto">
         {/* Left Section - Logo */}
         <div className="flex items-center gap-6 flex-shrink-0">
           {isOmanSite ? (
@@ -211,28 +213,31 @@ export const HiSocietyHeader: React.FC = () => {
           )}
         </div>
 
-        {/* Center Section - Navigation */}
-        <nav className="flex-1 flex justify-center">
-          <ul className="flex items-center gap-1 bg-gray-50 rounded-lg p-1">
-            {navigationItems.map((item) => {
-              const isActive = activeNav === item.id;
-              return (
-                <li key={item.id}>
-                  <button
-                    onClick={() => handleNavClick(item)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                      isActive
-                        ? "bg-white text-[#C72030] shadow-sm"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
-                    }`}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+        {/* Center Section - Navigation (scrollable, like DynamicHeader) */}
+        <nav className="flex justify-center h-full w-[500px] mx-auto">
+          <div className="w-full overflow-x-auto md:overflow-visible no-scrollbar h-full">
+            <ul className="flex w-max lg:w-full space-x-4 md:space-x-6 lg:space-x-0 md:justify-start lg:justify-between whitespace-nowrap items-center h-full">
+              {navigationItems.map((item) => {
+                const isActive = activeNav === item.id;
+                return (
+                  <li key={item.id} className="flex-shrink-0">
+                    <button
+                      onClick={() => handleNavClick(item)}
+                      className={`pb-3 text-sm transition-colors whitespace-nowrap flex items-center gap-2 flex-shrink-0 h-full ${
+                        isActive
+                          ? "text-[#C72030] border-b-2 border-[#C72030] font-medium bg-transparent"
+                          : "text-[#1a1a1a] opacity-70 hover:opacity-100 bg-transparent"
+                      }`}
+                      style={{ background: "none", boxShadow: "none", borderRadius: 0, paddingLeft: 16, paddingRight: 16 }}
+                    >
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </nav>
 
         {/* Right Section - Actions */}
