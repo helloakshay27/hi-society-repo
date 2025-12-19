@@ -198,7 +198,7 @@ const OrganizationCreate = () => {
                   <input
                     type="text"
                     name="name"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                     placeholder="Enter organization name"
                     value={formData.name}
                     onChange={handleChange}
@@ -215,7 +215,7 @@ const OrganizationCreate = () => {
                   <input
                     type="text"
                     name="domain"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                     placeholder="Enter domain"
                     value={formData.domain}
                     onChange={handleChange}
@@ -232,7 +232,7 @@ const OrganizationCreate = () => {
                   <input
                     type="text"
                     name="sub_domain"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                     placeholder="Enter sub-domain"
                     value={formData.sub_domain}
                     onChange={handleChange}
@@ -249,7 +249,7 @@ const OrganizationCreate = () => {
                   <input
                     type="number"
                     name="country_id"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                     placeholder="Enter country ID"
                     value={formData.country_id}
                     onChange={handleChange}
@@ -268,7 +268,7 @@ const OrganizationCreate = () => {
                     inputMode="numeric"
                     pattern="\d{10}"
                     name="mobile"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                     placeholder="Enter 10-digit mobile number"
                     value={formData.mobile}
                     maxLength={10}
@@ -286,7 +286,7 @@ const OrganizationCreate = () => {
                   </label>
                   <div className="space-y-3">
                     {imagePreviews.length === 0 ? (
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#8B0203] transition-colors bg-gray-50 hover:bg-gray-100">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#c72030] transition-colors bg-gray-50 hover:bg-gray-100">
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <Upload className="w-8 h-8 mb-2 text-gray-400" />
                           <p className="text-sm text-gray-600">
@@ -329,7 +329,7 @@ const OrganizationCreate = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`px-8 py-2.5 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors font-medium ${
+                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
                     loading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >

@@ -4050,7 +4050,7 @@ span#required {
 }
 
 .material-boxes .content-box {
-  border: 0.73px solid #8b0203b8;
+  border: 0.73px solid #c72030b8;
   padding: 7px 5px;
   border-radius: 7px;
 }
@@ -4410,7 +4410,7 @@ label {
 }
 
 .pro-radio-tabs__tab__selected {
-  border: 1px solid #8b0203 !important;
+  border: 1px solid #c72030 !important;
   background: rgba(19, 117, 228, 0.05);
 }
 
@@ -5709,7 +5709,7 @@ ul.pagination.justify-content-center {
 }
 
 .nav-link:hover {
-  color: #8B0203; /* Adjust hover color */
+  color: #c72030; /* Adjust hover color */
 }
 
 /* Profile Icon on the Right */
@@ -5836,7 +5836,7 @@ ul.pagination.justify-content-center {
 
 .role-item.active {
   background-color: var(--red);
-  /* border-left: 3px solid #8B0203; */
+  /* border-left: 3px solid #c72030; */
   font-weight: 600;
   
   } 

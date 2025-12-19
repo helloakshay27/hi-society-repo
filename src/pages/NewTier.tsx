@@ -229,16 +229,16 @@ const NewTier = () => {
                     onClick={() => handleTimeframeChange("lifetime")}
                     className={`p-6 rounded-lg border-2 transition-all ${
                       timeframe === "lifetime"
-                        ? "border-[#8B0203] bg-[#8B020308]"
+                        ? "border-[#c72030] bg-[#c7203008]"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        timeframe === "lifetime" ? "border-[#8B0203]" : "border-gray-300"
+                        timeframe === "lifetime" ? "border-[#c72030]" : "border-gray-300"
                       }`}>
                         {timeframe === "lifetime" && (
-                          <div className="w-3 h-3 rounded-full bg-[#8B0203]" />
+                          <div className="w-3 h-3 rounded-full bg-[#c72030]" />
                         )}
                       </div>
                       <div className="text-left">
@@ -255,16 +255,16 @@ const NewTier = () => {
                     onClick={() => handleTimeframeChange("yearly")}
                     className={`p-6 rounded-lg border-2 transition-all ${
                       timeframe === "yearly"
-                        ? "border-[#8B0203] bg-[#8B020308]"
+                        ? "border-[#c72030] bg-[#c7203008]"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        timeframe === "yearly" ? "border-[#8B0203]" : "border-gray-300"
+                        timeframe === "yearly" ? "border-[#c72030]" : "border-gray-300"
                       }`}>
                         {timeframe === "yearly" && (
-                          <div className="w-3 h-3 rounded-full bg-[#8B0203]" />
+                          <div className="w-3 h-3 rounded-full bg-[#c72030]" />
                         )}
                       </div>
                       <div className="text-left">
@@ -286,7 +286,7 @@ const NewTier = () => {
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="px-8 py-2.5 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors font-medium"
+                    className="px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium"
                   >
                     Next
                   </button>
@@ -353,7 +353,7 @@ const NewTier = () => {
                           <Field
                             name="name"
                             placeholder="Enter tier name"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                           />
                           <ErrorMessage name="name" component="div" className="text-red-500 text-xs mt-1" />
                         </div>
@@ -368,7 +368,7 @@ const NewTier = () => {
                             name="exit_points"
                             type="number"
                             placeholder="Enter exit points"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                           />
                           <ErrorMessage name="exit_points" component="div" className="text-red-500 text-xs mt-1" />
                         </div>
@@ -383,7 +383,7 @@ const NewTier = () => {
                             name="multipliers"
                             type="number"
                             placeholder="Enter multipliers"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                           />
                           <ErrorMessage name="multipliers" component="div" className="text-red-500 text-xs mt-1" />
                         </div>
@@ -398,7 +398,7 @@ const NewTier = () => {
                             name="welcome_bonus"
                             type="number"
                             placeholder="Enter welcome bonus"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                           />
                           <ErrorMessage name="welcome_bonus" component="div" className="text-red-500 text-xs mt-1" />
                         </div>
@@ -430,7 +430,7 @@ const NewTier = () => {
                                     <Field
                                       name={`tiers[${index}].name`}
                                       placeholder="Enter tier name"
-                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                                     />
                                     <ErrorMessage name={`tiers[${index}].name`} component="div" className="text-red-500 text-xs mt-1" />
                                   </div>
@@ -442,7 +442,7 @@ const NewTier = () => {
                                       name={`tiers[${index}].exit_points`}
                                       type="number"
                                       placeholder="Enter exit points"
-                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                                     />
                                     <ErrorMessage name={`tiers[${index}].exit_points`} component="div" className="text-red-500 text-xs mt-1" />
                                   </div>
@@ -454,7 +454,7 @@ const NewTier = () => {
                                       name={`tiers[${index}].multipliers`}
                                       type="number"
                                       placeholder="Enter multipliers"
-                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                                     />
                                     <ErrorMessage name={`tiers[${index}].multipliers`} component="div" className="text-red-500 text-xs mt-1" />
                                   </div>
@@ -466,7 +466,7 @@ const NewTier = () => {
                                       name={`tiers[${index}].welcome_bonus`}
                                       type="number"
                                       placeholder="Enter welcome bonus"
-                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                                     />
                                     <ErrorMessage name={`tiers[${index}].welcome_bonus`} component="div" className="text-red-500 text-xs mt-1" />
                                   </div>
@@ -476,7 +476,7 @@ const NewTier = () => {
                             <button
                               type="button"
                               onClick={() => push({ name: "", exit_points: "", multipliers: "", welcome_bonus: "" })}
-                              className="flex items-center gap-2 px-4 py-2 text-[#8B0203] border border-[#8B0203] rounded-lg hover:bg-[#8B020308] transition-colors"
+                              className="flex items-center gap-2 px-4 py-2 text-[#c72030] border border-[#c72030] rounded-lg hover:bg-[#c7203008] transition-colors"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                                 <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
@@ -492,7 +492,7 @@ const NewTier = () => {
                         <button
                           type="submit"
                           disabled={isSubmitting}
-                          className={`px-8 py-2.5 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors font-medium ${
+                          className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
                             isSubmitting ? "opacity-50 cursor-not-allowed" : ""
                           }`}
                         >

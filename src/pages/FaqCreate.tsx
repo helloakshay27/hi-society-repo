@@ -400,7 +400,7 @@ const FaqCreate = () => {
                   <div>
                     <button
                       type="button"
-                      className="flex items-center gap-2 px-4 py-2 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={handleAddFaq}
                       disabled={loading}
                     >

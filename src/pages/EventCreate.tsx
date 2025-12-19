@@ -1269,7 +1269,7 @@ const EventCreate = () => {
                   </span>
                 </h5>
                 <button
-                  className="flex items-center gap-2 px-4 py-2 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                   type="button"
                   onClick={() => setShowCoverUploader(true)}
                 >
@@ -1343,7 +1343,7 @@ const EventCreate = () => {
                   </span>
                 </h5>
                 <button
-                  className="flex items-center gap-2 px-4 py-2 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                   type="button"
                   onClick={() => setShowEventUploader(true)}
                 >

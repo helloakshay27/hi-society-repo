@@ -250,15 +250,15 @@ const LoyaltyTiersList = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-gradient-to-r from-[#8B0203] to-[#C72030] rounded-lg p-4 text-white">
+          <div className="bg-gradient-to-r from-[#c72030] to-[#C72030] rounded-lg p-4 text-white">
             <p className="text-3xl font-bold mb-1">{tiers.length}</p>
             <p className="text-sm opacity-90">Total Tiers</p>
           </div>
-          <div className="bg-gradient-to-r from-[#8B0203] to-[#C72030] rounded-lg p-4 text-white">
+          <div className="bg-gradient-to-r from-[#c72030] to-[#C72030] rounded-lg p-4 text-white">
             <p className="text-3xl font-bold mb-1">{yearlyTier}</p>
             <p className="text-sm opacity-90">Rolling Year Tiers</p>
           </div>
-          <div className="bg-gradient-to-r from-[#8B0203] to-[#C72030] rounded-lg p-4 text-white">
+          <div className="bg-gradient-to-r from-[#c72030] to-[#C72030] rounded-lg p-4 text-white">
             <p className="text-3xl font-bold mb-1">{lifeTimeTier}</p>
             <p className="text-sm opacity-90">Life Time Tiers</p>
           </div>
@@ -278,8 +278,8 @@ const LoyaltyTiersList = () => {
               />
               <button type="button" className="px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors">
                 <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7.66927 13.939C3.9026 13.939 0.835938 11.064 0.835938 7.53271C0.835938 4.00146 3.9026 1.12646 7.66927 1.12646C11.4359 1.12646 14.5026 4.00146 14.5026 7.53271C14.5026 11.064 11.4359 13.939 7.66927 13.939ZM7.66927 2.06396C4.44927 2.06396 1.83594 4.52021 1.83594 7.53271C1.83594 10.5452 4.44927 13.0015 7.66927 13.0015C10.8893 13.0015 13.5026 10.5452 13.5026 7.53271C13.5026 4.52021 10.8893 2.06396 7.66927 2.06396Z" fill="#8B0203"/>
-                  <path d="M14.6676 14.5644C14.5409 14.5644 14.4143 14.5206 14.3143 14.4269L12.9809 13.1769C12.7876 12.9956 12.7876 12.6956 12.9809 12.5144C13.1743 12.3331 13.4943 12.3331 13.6876 12.5144L15.0209 13.7644C15.2143 13.9456 15.2143 14.2456 15.0209 14.4269C14.9209 14.5206 14.7943 14.5644 14.6676 14.5644Z" fill="#8B0203"/>
+                  <path d="M7.66927 13.939C3.9026 13.939 0.835938 11.064 0.835938 7.53271C0.835938 4.00146 3.9026 1.12646 7.66927 1.12646C11.4359 1.12646 14.5026 4.00146 14.5026 7.53271C14.5026 11.064 11.4359 13.939 7.66927 13.939ZM7.66927 2.06396C4.44927 2.06396 1.83594 4.52021 1.83594 7.53271C1.83594 10.5452 4.44927 13.0015 7.66927 13.0015C10.8893 13.0015 13.5026 10.5452 13.5026 7.53271C13.5026 4.52021 10.8893 2.06396 7.66927 2.06396Z" fill="#c72030"/>
+                  <path d="M14.6676 14.5644C14.5409 14.5644 14.4143 14.5206 14.3143 14.4269L12.9809 13.1769C12.7876 12.9956 12.7876 12.6956 12.9809 12.5144C13.1743 12.3331 13.4943 12.3331 13.6876 12.5144L15.0209 13.7644C15.2143 13.9456 15.2143 14.2456 15.0209 14.4269C14.9209 14.5206 14.7943 14.5644 14.6676 14.5644Z" fill="#c72030"/>
                 </svg>
               </button>
             </div>
@@ -299,7 +299,7 @@ const LoyaltyTiersList = () => {
             )}
           </div>
           <button
-            className="flex items-center gap-2 px-4 py-2 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
             onClick={() => navigate("/setup-member/new-tier")}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -317,7 +317,7 @@ const LoyaltyTiersList = () => {
           <div className="p-6">
             {loading ? (
               <div className="text-center py-12">
-                <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-[#8B0203] rounded-full animate-spin" role="status">
+                <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-[#c72030] rounded-full animate-spin" role="status">
                   <span className="sr-only">Loading...</span>
                 </div>
               </div>
@@ -348,14 +348,14 @@ const LoyaltyTiersList = () => {
                               <div className="flex justify-center items-center gap-2">
                                 <button
                                   onClick={() => handleEditClick(tier)}
-                                  className="text-gray-600 hover:text-[#8B0203] transition-colors"
+                                  className="text-gray-600 hover:text-[#c72030] transition-colors"
                                   title="Edit Tier"
                                 >
                                   <Edit className="w-5 h-5" />
                                 </button>
                                 <button
                                   onClick={() => navigate(`/setup-member/tier-details/${tier.id}`)}
-                                  className="text-gray-600 hover:text-[#8B0203] transition-colors"
+                                  className="text-gray-600 hover:text-[#c72030] transition-colors"
                                   title="View Tier"
                                 >
                                   <Eye className="w-5 h-5" />
@@ -436,7 +436,7 @@ const LoyaltyTiersList = () => {
                             <Field
                               type="text"
                               name="name"
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                             />
                             <ErrorMessage name="name" component="div" className="text-red-500 text-xs mt-1" />
                           </div>
@@ -452,7 +452,7 @@ const LoyaltyTiersList = () => {
                               name="exit_points"
                               value={values.exit_points}
                               onChange={handleChange}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                             />
                             <ErrorMessage name="exit_points" component="div" className="text-red-500 text-xs mt-1" />
                           </div>
@@ -468,7 +468,7 @@ const LoyaltyTiersList = () => {
                               name="multipliers"
                               value={values.multipliers}
                               onChange={handleChange}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                             />
                             <ErrorMessage name="multipliers" component="div" className="text-red-500 text-xs mt-1" />
                           </div>
@@ -484,7 +484,7 @@ const LoyaltyTiersList = () => {
                               name="welcome_bonus"
                               value={values.welcome_bonus}
                               onChange={handleChange}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                             />
                             <ErrorMessage name="welcome_bonus" component="div" className="text-red-500 text-xs mt-1" />
                           </div>
@@ -499,7 +499,7 @@ const LoyaltyTiersList = () => {
                               name="point_type"
                               onChange={handleChange}
                               value={values.point_type}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                             >
                               <option value="lifetime">Life Time</option>
                               <option value="yearly">Yearly</option>
@@ -512,7 +512,7 @@ const LoyaltyTiersList = () => {
                         <div className="flex items-center justify-center gap-4 mt-8">
                           <button
                             type="submit"
-                            className="px-8 py-2.5 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors font-medium"
+                            className="px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium"
                           >
                             Submit
                           </button>

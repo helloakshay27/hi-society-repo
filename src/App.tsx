@@ -2246,7 +2246,7 @@ function App() {
                   {/* Maintenance Routes */}
                   <Route
                     path="/maintenance/asset"
-                    element={<ManageUsersPage />}
+                    element={<AssetDashboard />}
                   />
                   <Route
                     path="/maintenance/asset/details/:id"

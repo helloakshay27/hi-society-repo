@@ -207,7 +207,7 @@ const LockRoleCreate = () => {
                   <input
                     type="text"
                     name="name"
-                    className={`w-full px-4 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all`}
+                    className={`w-full px-4 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all`}
                     placeholder="Enter role title"
                     value={formData.name}
                     onChange={handleChange}
@@ -229,7 +229,7 @@ const LockRoleCreate = () => {
                       checked={formData.active === 1}
                       onChange={handleChange}
                       disabled={submitting}
-                      className="w-4 h-4 text-[#8B0203] bg-gray-100 border-gray-300 rounded focus:ring-[#8B0203] focus:ring-2"
+                      className="w-4 h-4 text-[#c72030] bg-gray-100 border-gray-300 rounded focus:ring-[#c72030] focus:ring-2"
                     />
                     <label htmlFor="isActive" className="ml-2 text-sm text-gray-700 cursor-pointer">
                       Active
@@ -243,7 +243,7 @@ const LockRoleCreate = () => {
                 <h4 className="text-sm font-medium text-gray-700 mb-4">Role Permissions</h4>
                 {loading ? (
                   <div className="text-center py-12">
-                    <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-[#8B0203] rounded-full animate-spin" role="status">
+                    <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-[#c72030] rounded-full animate-spin" role="status">
                       <span className="sr-only">Loading...</span>
                     </div>
                   </div>
@@ -298,7 +298,7 @@ const LockRoleCreate = () => {
                 <button
                   type="submit"
                   disabled={submitting || loading}
-                  className={`px-8 py-2.5 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors font-medium ${
+                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
                     (submitting || loading) ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >

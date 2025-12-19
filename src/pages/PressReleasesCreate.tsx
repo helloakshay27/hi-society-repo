@@ -230,7 +230,7 @@ const PressReleasesCreate = () => {
                   <input
                     type="text"
                     name="title"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                     placeholder="Enter title"
                     value={formData.title}
                     onChange={handleChange}
@@ -247,7 +247,7 @@ const PressReleasesCreate = () => {
                   <input
                     type="date"
                     name="release_date"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                     value={formData.release_date}
                     onChange={handleChange}
                     disabled={loading}
@@ -263,7 +263,7 @@ const PressReleasesCreate = () => {
                   <textarea
                     name="description"
                     rows={1}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all resize-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all resize-none"
                     placeholder="Enter description"
                     value={formData.description}
                     onChange={handleChange}
@@ -280,7 +280,7 @@ const PressReleasesCreate = () => {
                   <textarea
                     name="press_source"
                     rows={1}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all resize-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all resize-none"
                     placeholder="Enter source details"
                     value={formData.press_source}
                     onChange={handleChange}
@@ -297,7 +297,7 @@ const PressReleasesCreate = () => {
                   <input
                     type="url"
                     name="attachment_url"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                     placeholder="Enter URL"
                     value={formData.attachment_url}
                     onChange={handleChange}
@@ -422,7 +422,7 @@ const PressReleasesCreate = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`px-8 py-2.5 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors font-medium ${
+                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
                     loading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >

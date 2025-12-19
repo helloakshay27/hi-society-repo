@@ -339,7 +339,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             : isSidebarCollapsed
               ? "ml-16"
               : "ml-64"
-          } ${isEmployeeUser ? "pt-24" : "pt-16"} transition-all duration-300`}
+          } ${isEmployeeUser ? "pt-24" : "pt-24"} transition-all duration-300`}
       >
         <Outlet />
       </main>

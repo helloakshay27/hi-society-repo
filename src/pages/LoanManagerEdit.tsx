@@ -166,7 +166,7 @@ const LoanManagerEdit = () => {
           box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
         }
         .form-control:focus {
-          border-color: #8b0203;
+          border-color: #c72030;
           box-shadow: 0 0 0 0.2rem rgba(139, 2, 3, 0.25);
         }
         .otp-asterisk {

@@ -168,7 +168,7 @@ const LoanManagerAdd = () => {
                   <input
                     type="text"
                     name="name"
-                    className={`w-full px-4 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all`}
+                    className={`w-full px-4 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all`}
                     placeholder="Enter full name"
                     value={formData.name}
                     onChange={handleChange}
@@ -188,7 +188,7 @@ const LoanManagerAdd = () => {
                   <input
                     type="email"
                     name="email"
-                    className={`w-full px-4 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all`}
+                    className={`w-full px-4 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all`}
                     placeholder="Enter email address"
                     value={formData.email}
                     onChange={handleChange}
@@ -208,7 +208,7 @@ const LoanManagerAdd = () => {
                   <input
                     type="tel"
                     name="mobile"
-                    className={`w-full px-4 py-2 border ${errors.mobile ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all`}
+                    className={`w-full px-4 py-2 border ${errors.mobile ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all`}
                     placeholder="Enter 10-digit mobile number"
                     value={formData.mobile}
                     onChange={handleChange}
@@ -228,7 +228,7 @@ const LoanManagerAdd = () => {
                   </label>
                   <select
                     name="project_id"
-                    className={`w-full px-4 py-2 border ${errors.project_id ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all bg-white`}
+                    className={`w-full px-4 py-2 border ${errors.project_id ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all bg-white`}
                     value={formData.project_id}
                     onChange={handleChange}
                     disabled={loading}
@@ -255,7 +255,7 @@ const LoanManagerAdd = () => {
                         name="active"
                         checked={formData.active}
                         onChange={handleChange}
-                        className="w-4 h-4 text-[#8B0203] border-gray-300 rounded focus:ring-[#8B0203] cursor-pointer"
+                        className="w-4 h-4 text-[#c72030] border-gray-300 rounded focus:ring-[#c72030] cursor-pointer"
                         disabled={loading}
                       />
                       <span className="text-sm text-gray-700">Active</span>
@@ -269,7 +269,7 @@ const LoanManagerAdd = () => {
                 <button
                   type="submit"
                   disabled={loading || isSubmitting}
-                  className={`px-8 py-2.5 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors font-medium ${
+                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
                     (loading || isSubmitting) ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >

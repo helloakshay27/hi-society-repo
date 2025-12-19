@@ -606,7 +606,7 @@ const CreateRuleEngine = () => {
                 );
                 setConditions(updatedConditions);
               }}
-              className="w-4 h-4 text-[#8B0203] focus:ring-[#8B0203]"
+              className="w-4 h-4 text-[#c72030] focus:ring-[#c72030]"
             />
             <span className="text-sm font-medium text-gray-700">AND</span>
           </label>
@@ -621,7 +621,7 @@ const CreateRuleEngine = () => {
                 );
                 setConditions(updatedConditions);
               }}
-              className="w-4 h-4 text-[#8B0203] focus:ring-[#8B0203]"
+              className="w-4 h-4 text-[#c72030] focus:ring-[#c72030]"
             />
             <span className="text-sm font-medium text-gray-700">OR</span>
           </label>
@@ -648,7 +648,7 @@ const CreateRuleEngine = () => {
                 handleMasterAttributeChange(e);
               }}
               disabled={loading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
             >
               <option value="">Select Master Attribute</option>
               {masterAttributes.map((attr) => (
@@ -672,7 +672,7 @@ const CreateRuleEngine = () => {
                 setConditions(updatedConditions);
               }}
               disabled={!condition.masterAttribute || loading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all disabled:bg-gray-100"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all disabled:bg-gray-100"
             >
               <option value="">Select Sub Attribute</option>
               {subAttributes.map((subAttr) => (
@@ -705,7 +705,7 @@ const CreateRuleEngine = () => {
                 handleMasterOperatorChange(e);
               }}
               disabled={loading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
             >
               <option value="">Select Master Operator</option>
               {masterOperators.map((op) => (
@@ -729,7 +729,7 @@ const CreateRuleEngine = () => {
                 setConditions(updatedConditions);
               }}
               disabled={!condition.master_operator || loading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all disabled:bg-gray-100"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all disabled:bg-gray-100"
             >
               <option value="">Select Sub Operator</option>
               {subOperators.map((subOp) => (
@@ -762,7 +762,7 @@ const CreateRuleEngine = () => {
               setConditions(updatedConditions);
             }}
             disabled={loading}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
           />
         </div>
       </div>
@@ -813,7 +813,7 @@ const CreateRuleEngine = () => {
                   value={ruleName}
                   onChange={(e) => setRuleName(e.target.value)}
                   disabled={loading}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                 />
               </div>
 
@@ -828,7 +828,7 @@ const CreateRuleEngine = () => {
                   value={displayRuleName}
                   onChange={(e) => setDisplayRuleName(e.target.value)}
                   disabled={loading}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                 />
               </div>
             </div>
@@ -844,7 +844,7 @@ const CreateRuleEngine = () => {
                 type="button"
                 onClick={addCondition}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 text-[#8B0203] border border-[#8B0203] rounded-lg hover:bg-[#8B020308] transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-[#c72030] border border-[#c72030] rounded-lg hover:bg-[#c7203008] transition-colors"
               >
                 <Plus className="w-5 h-5" />
                 Add Additional Condition
@@ -865,7 +865,7 @@ const CreateRuleEngine = () => {
                     value={selectedMasterRewardOutcomes.id || ""}
                     onChange={handleMasterSubRewardOutcomeChange}
                     disabled={loading}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                   >
                     <option value="">Select Master Reward Outcome</option>
                     {masterRewardOutcomes.map((reward) => (
@@ -891,7 +891,7 @@ const CreateRuleEngine = () => {
                       setSelectedSubRewardOutcome(selectedSubReward);
                     }}
                     disabled={!selectedMasterRewardOutcomes.id || loading}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all disabled:bg-gray-100"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all disabled:bg-gray-100"
                   >
                     <option value="">Select Sub Reward Outcome</option>
                     {subRewardOutcomes.map((reward) => (
@@ -913,7 +913,7 @@ const CreateRuleEngine = () => {
                       value={parameter}
                       onChange={(e) => setParameter(e.target.value)}
                       disabled={loading}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all pr-12"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all pr-12"
                     />
                     {selectedSubRewardOutcome?.display_name && (
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 font-medium">
@@ -935,7 +935,7 @@ const CreateRuleEngine = () => {
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading}
-                className={`px-8 py-2.5 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors font-medium ${
+                className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
                   loading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >

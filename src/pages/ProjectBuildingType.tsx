@@ -126,7 +126,7 @@ const ProjectBuildingType = () => {
                     <span className="text-red-500 ml-1">*</span>
                   </label>
                   <select
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all bg-white"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all bg-white"
                     value={formData.Property_Type}
                     onChange={(e) => {
                       const selected = propertyTypeOptions.find(
@@ -157,7 +157,7 @@ const ProjectBuildingType = () => {
                   </label>
                   <input
                     type="text"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                     placeholder="Enter building type name"
                     value={buildingType}
                     onChange={(e) => setBuildingType(e.target.value)}
@@ -171,7 +171,7 @@ const ProjectBuildingType = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`px-8 py-2.5 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors font-medium ${
+                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
                     loading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >

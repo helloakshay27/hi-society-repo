@@ -347,7 +347,7 @@ const LockFunctionCreate = () => {
                       checked={formData.active === 1}
                       onChange={handleChange}
                       disabled={submitting}
-                      className="w-4 h-4 text-[#8B0203] bg-gray-100 border-gray-300 rounded focus:ring-[#8B0203] focus:ring-2"
+                      className="w-4 h-4 text-[#c72030] bg-gray-100 border-gray-300 rounded focus:ring-[#c72030] focus:ring-2"
                     />
                     <label htmlFor="isActive" className="ml-2 text-sm text-gray-700 cursor-pointer">
                       Active
@@ -361,7 +361,7 @@ const LockFunctionCreate = () => {
                 <button
                   type="submit"
                   disabled={submitting || loading}
-                  className={`px-8 py-2.5 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors font-medium ${
+                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
                     (submitting || loading) ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >

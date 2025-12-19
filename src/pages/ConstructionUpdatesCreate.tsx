@@ -287,7 +287,7 @@ const ConstructionUpdatesCreate = () => {
                   </label>
                   <input
                     type="text"
-                    className={`w-full px-4 py-2 border ${errors.title ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all`}
+                    className={`w-full px-4 py-2 border ${errors.title ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all`}
                     placeholder="Enter title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -306,7 +306,7 @@ const ConstructionUpdatesCreate = () => {
                   </label>
                   <textarea
                     rows={1}
-                    className={`w-full px-4 py-2 border ${errors.description ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all resize-none`}
+                    className={`w-full px-4 py-2 border ${errors.description ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all resize-none`}
                     placeholder="Enter description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -395,7 +395,7 @@ const ConstructionUpdatesCreate = () => {
                   <label className="block text-sm font-medium text-gray-700">Date</label>
                   <input
                     type="date"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B0203] focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                     value={onDate}
                     onChange={(e) => setOnDate(e.target.value)}
                     disabled={loading}
@@ -536,7 +536,7 @@ const ConstructionUpdatesCreate = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`px-8 py-2.5 bg-[#8B0203] text-white rounded-lg hover:bg-[#6d0102] transition-colors font-medium ${
+                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
                     loading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
