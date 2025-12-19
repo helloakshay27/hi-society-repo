@@ -23,7 +23,12 @@ import { ViewSelectionModal } from "./ViewSelectionModal";
 
 import { SetupHeader } from "./SetupHeader";
 import { SetupSidebar } from "./SetupSidebar";
-import { HiSocityHeader } from "./hiSocityHeader";
+import { HiSocietyHeader } from "./HiSocietyHeader";
+import { HomeSidebar } from "./HomeSidebar";
+import { CommunicationSidebar } from "./CommunicationSidebar";
+import { SetupMainSidebar } from "./SetupMainSidebar";
+import { SetupMemberSidebar } from "./SetupMemberSidebar";
+import { LoyaltySidebar } from "./LoyaltySidebar";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -107,12 +112,44 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Render sidebar component based on configuration
   const renderSidebar = () => {
     // Check if user is employee (pms_occupant) - Employee layout takes priority
-    // Only show sidebar for "Project Task" module, hide for other modules
-    if (isEmployeeUser ) {
-      // Only render sidebar for Project Task module
-        return <SetupSidebar />;
-     
-      // For other modules (Ticket, MOM, Visitors), don't render sidebar
+    // Render specific sidebar based on current route
+    if (isEmployeeUser) {
+      const path = location.pathname;
+      
+      // Determine which sidebar to show based on route
+      if (path.startsWith('/communication')) {
+        return <CommunicationSidebar />;
+      } else if (path.startsWith('/setup-member/loyalty')) {
+        return <LoyaltySidebar />;
+      } else if (path.startsWith('/setup-member')) {
+        // Check if it's a home menu item
+        const homeRoutes = [
+          '/setup-member/project-details-list',
+          '/setup-member/banner-list',
+          '/setup-member/testimonial-list',
+          '/setup-member/event-list',
+          '/setup-member/specification-list',
+          '/setup-member/organization-list',
+          '/setup-member/company-list',
+          '/setup-member/site-list',
+          '/setup-member/press-releases-list',
+          '/setup-member/faq-list',
+          '/setup-member/referral-program-list',
+        ];
+        
+        const isHomeRoute = homeRoutes.some(route => path.startsWith(route.replace('-list', '')));
+        
+        if (isHomeRoute) {
+          return <HomeSidebar />;
+        } else {
+          return <SetupMemberSidebar />;
+        }
+      } else if (path.startsWith('/setup')) {
+        return <SetupMainSidebar />;
+      } else {
+        // Default to Home sidebar
+        return <HomeSidebar />;
+      }
     }
 
     // Check for token-based VI access first
@@ -170,9 +207,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Render header component based on configuration
   const renderDynamicHeader = () => {
     // Check if user is employee (pms_occupant) - Employee layout takes priority
-    // Employees don't need dynamic header, they use EmployeeHeader instead
-    if (isEmployeeUser ) {
-      return <SetupHeader />; // No dynamic header for employees
+    // Employees don't need dynamic header, they use HiSocietyHeader instead
+    if (isEmployeeUser) {
+      return null; // No dynamic header for Hi Society dashboard
     }
 
     // Domain-based logic takes precedence for backward compatibility
@@ -283,21 +320,19 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         onComplete={() => setShowViewModal(false)}
       />
 
-      {/* Conditional Header - Use EmployeeHeader for employee users */}
-      {isEmployeeUser  ? <HiSocityHeader /> : <Header />}
+      {/* Conditional Header - Use HiSocietyHeader for employee users */}
+      {isEmployeeUser ? <HiSocietyHeader /> : <Header />}
 
       {renderSidebar()}
       {renderDynamicHeader()}
 
       <main
         className={`${
-          // For employee users, only add left margin if on Project Task module
+          // For employee users (Hi Society), always show sidebar
           isEmployeeUser 
-            ? currentSection === "Project Task"
-              ? isSidebarCollapsed
-                ? "ml-16"
-                : "ml-64"
-              : "ml-0" // No margin for other modules
+            ? isSidebarCollapsed
+              ? "ml-16"
+              : "ml-64"
             : isSidebarCollapsed
               ? "ml-16"
               : "ml-64"
