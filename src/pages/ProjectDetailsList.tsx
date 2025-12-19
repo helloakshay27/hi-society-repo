@@ -154,7 +154,7 @@ const ProjectDetailsList = () => {
   };
 
   const renderCustomActions = () => (
-    <div className="flex flex-wrap gap-2 sm:gap-3">
+    <div className="flex flex-wrap">
       <Button 
         onClick={() => setShowActionPanel((prev) => !prev)}
         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"

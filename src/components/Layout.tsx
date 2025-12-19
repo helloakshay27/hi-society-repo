@@ -24,6 +24,7 @@ import { ViewSelectionModal } from "./ViewSelectionModal";
 import { SetupHeader } from "./SetupHeader";
 import { SetupSidebar } from "./SetupSidebar";
 import { HiSocietyHeader } from "./HiSocietyHeader";
+import { HiSocietyNavigation } from "./HiSocietyNavigation";
 import { HomeSidebar } from "./HomeSidebar";
 import { CommunicationSidebar } from "./CommunicationSidebar";
 import { SetupMainSidebar } from "./SetupMainSidebar";
@@ -115,7 +116,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     // Render specific sidebar based on current route
     if (isEmployeeUser) {
       const path = location.pathname;
-      
+
       // Determine which sidebar to show based on route
       if (path.startsWith('/communication')) {
         return <CommunicationSidebar />;
@@ -136,9 +137,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           '/setup-member/faq-list',
           '/setup-member/referral-program-list',
         ];
-        
+
         const isHomeRoute = homeRoutes.some(route => path.startsWith(route.replace('-list', '')));
-        
+
         if (isHomeRoute) {
           return <HomeSidebar />;
         } else {
@@ -177,7 +178,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       return <ZxSidebar />;
     }
 
-   
+
 
 
     if (
@@ -225,7 +226,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       return <ZxDynamicHeader />;
     }
 
-   
+
     if (
       selectedCompany?.id === 300 ||
       selectedCompany?.id === 295 ||
@@ -324,19 +325,21 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {isEmployeeUser ? <HiSocietyHeader /> : <Header />}
 
       {renderSidebar()}
-      {renderDynamicHeader()}
+      
+      {/* Navigation - HiSocietyNavigation for employees, DynamicHeader for admins */}
+      {isEmployeeUser ? <HiSocietyNavigation /> : renderDynamicHeader()}
 
       <main
         className={`${
           // For employee users (Hi Society), always show sidebar
-          isEmployeeUser 
+          isEmployeeUser
             ? isSidebarCollapsed
-              ? "ml-16" 
+              ? "ml-16"
               : "ml-64"
             : isSidebarCollapsed
               ? "ml-16"
               : "ml-64"
-        } ${isEmployeeUser ? "pt-12" : "pt-16"} transition-all duration-300`}
+          } ${isEmployeeUser ? "pt-24" : "pt-16"} transition-all duration-300`}
       >
         <Outlet />
       </main>

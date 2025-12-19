@@ -5,53 +5,52 @@ import { API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Eye } from "lucide-react";
+import { Plus, Edit } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 
-
-interface Event {
+interface Banner {
   id: number;
-  event_name: string;
-  event_at: string;
-  from_time: string;
-  to_time: string;
+  title: string;
+  banner_video_9_by_16?: { document_url?: string; document_content_type?: string };
+  banner_video_1_by_1?: { document_url?: string; document_content_type?: string };
+  banner_video_16_by_9?: { document_url?: string; document_content_type?: string };
+  banner_video_3_by_2?: { document_url?: string; document_content_type?: string };
   active: boolean;
-  created_at: string;
-  updated_at: string;
 }
 
-interface EventPermissions {
+interface BannerPermissions {
   create?: string;
   update?: string;
   delete?: string;
-  show?: string;
-  destroy?: string;
 }
 
-const Eventlist = () => {
+const BannerList = () => {
   const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [eventPermissions, setEventPermissions] = useState<EventPermissions>({});
-  
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  
-  const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState(null);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [bannerPermissions, setBannerPermissions] = useState<BannerPermissions>({});
   const [showActionPanel, setShowActionPanel] = useState(false);
 
-  const getEventPermissions = () => {
+  const [currentPage, setCurrentPage] = useState(() => {
+    return parseInt(localStorage.getItem("banner_list_currentPage")) || 1;
+  });
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageSize] = useState(10);
+
+  const getBannerPermissions = () => {
     try {
       const lockRolePermissions = localStorage.getItem("lock_role_permissions");
       if (!lockRolePermissions) return {};
 
       const permissions = JSON.parse(lockRolePermissions);
-      return permissions.event || {};
+      return permissions.banner || {};
     } catch (e) {
       console.error("Error parsing lock_role_permissions:", e);
       return {};
@@ -59,56 +58,62 @@ const Eventlist = () => {
   };
 
   useEffect(() => {
-    setEventPermissions(getEventPermissions());
+    setBannerPermissions(getBannerPermissions());
   }, []);
 
-  const fetchEvents = useCallback(async (page: number, search: string) => {
+  const fetchBanners = useCallback(async (page: number, search: string) => {
     setLoading(true);
     setIsSearching(!!search);
+    setError(null);
     try {
-      const response = await axios.get(`${baseURL}events.json`, {
+      const response = await axios.get(`${baseURL}banners.json`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
+        params: {
+          banner_name: true,
+          title: true,
+          image: true,
+          banners_list: true
+        }
       });
 
-      const eventsData = response.data.events || [];
+      const bannersData = response.data.banners_list || [];
 
       // Client-side search filtering
-      let filteredEvents = eventsData;
+      let filteredBanners = bannersData;
       if (search) {
         const searchLower = search.toLowerCase();
-        filteredEvents = eventsData.filter((event: Event) =>
-          event.event_name?.toLowerCase().includes(searchLower) ||
-          event.event_at?.toLowerCase().includes(searchLower)
+        filteredBanners = bannersData.filter((banner: Banner) =>
+          banner.title?.toLowerCase().includes(searchLower)
         );
       }
 
       // Client-side pagination
-      const itemsPerPage = 10;
-      const startIndex = (page - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedBanners = filteredBanners.slice(startIndex, endIndex);
 
-      setEvents(paginatedEvents);
+      setBanners(paginatedBanners);
       setCurrentPage(page);
-      setTotalPages(Math.ceil(filteredEvents.length / itemsPerPage));
-      setTotalCount(filteredEvents.length);
+      setTotalPages(Math.ceil(filteredBanners.length / pageSize));
+      setTotalCount(filteredBanners.length);
 
-      // Cache all events
-      sessionStorage.setItem('cached_events', JSON.stringify(eventsData));
+      // Cache all banners
+      sessionStorage.setItem('cached_banners', JSON.stringify(bannersData));
     } catch (error) {
-      toast.error("Failed to fetch events.");
-      console.error("Error fetching events:", error);
+      setError("Failed to fetch banners. Please try again later.");
+      toast.error("Failed to fetch banners.");
+      console.error("Error fetching banners:", error);
     } finally {
       setLoading(false);
       setIsSearching(false);
     }
-  }, [baseURL]);
+  }, [baseURL, pageSize]);
 
   useEffect(() => {
-    fetchEvents(currentPage, searchTerm);
-  }, [currentPage, searchTerm, fetchEvents]);
+    fetchBanners(currentPage, searchTerm);
+  }, [currentPage, searchTerm, fetchBanners]);
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
@@ -118,88 +123,122 @@ const Eventlist = () => {
   const handlePageChange = (page: number) => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
+      localStorage.setItem("banner_list_currentPage", page.toString());
     }
   };
 
-  const handleAddEvent = () => navigate("/setup-member/event-create");
-  const handleEditEvent = (id: number) => navigate(`/setup-member/event-edit/${id}`);
-  const handleViewEvent = (id: number) => navigate(`/setup-member/event-details/${id}`);
+  const handleAddBanner = () => navigate("/setup-member/banner-add");
+  const handleEditBanner = (id: number) => navigate(`/setup-member/banner-edit/${id}`);
   const handleClearSelection = () => { setShowActionPanel(false); };
 
-  const handleToggle = async (id: number, currentStatus: boolean) => {
+  const onToggle = async (bannerId: number, currentStatus: boolean) => {
+
+  const onToggle = async (bannerId: number, currentStatus: boolean) => {
     toast.dismiss();
+    setLoading(true);
     try {
-      await axios.put(
-        `${baseURL}events/${id}.json`,
-        { event: { active: !currentStatus } },
+      const response = await axios.put(
+        `${baseURL}banners/${bannerId}.json`,
+        {
+          banner: {
+            active: !currentStatus
+          }
+        },
         {
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
-      fetchEvents(currentPage, searchTerm);
-      toast.success("Status updated successfully!");
+      if (response.status === 200) {
+        // Refresh the banners list
+        fetchBanners(currentPage, searchTerm);
+        toast.success("Banner status updated successfully!");
+      }
     } catch (error) {
-      console.error("Error toggling event status:", error);
-      toast.error("Failed to update status.");
+      console.error("Error toggling banner status:", error);
+      toast.error("Limit reached: only 5 active banners allowed. Please deactivate one before activating another.");
+    } finally {
+      setLoading(false);
     }
   };
-
-  function formatDateTimeManual(datetime: string) {
-    if (!datetime) return "-";
-    const date = new Date(datetime);
-    return date.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  }
 
   const columns = [
     { key: 'actions', label: 'Action', sortable: false },
     { key: 'id', label: 'Sr No', sortable: true },
-    { key: 'event_name', label: 'Event Name', sortable: true },
-    { key: 'event_at', label: 'Event At', sortable: true },
-    { key: 'from_time', label: 'Event From', sortable: false },
-    { key: 'to_time', label: 'Event To', sortable: false },
-    { key: 'active', label: 'Status', sortable: false },
+    { key: 'title', label: 'Title', sortable: true },
+    { key: 'banner', label: 'Banner', sortable: false },
+    { key: 'status', label: 'Status', sortable: false },
   ];
 
-  const renderCell = (item: Event, columnKey: string) => {
+  const renderCell = (item: Banner, columnKey: string) => {
     switch (columnKey) {
       case 'actions':
         return (
           <div className="flex gap-1">
-            {eventPermissions.update === "true" && (
-              <Button variant="ghost" size="sm" onClick={() => handleEditEvent(item.id)} title="Edit">
+            {bannerPermissions.update === "true" && (
+              <Button variant="ghost" size="sm" onClick={() => handleEditBanner(item.id)} title="Edit">
                 <Edit className="w-4 h-4" />
-              </Button>
-            )}
-            {eventPermissions.show === "true" && (
-              <Button variant="ghost" size="sm" onClick={() => handleViewEvent(item.id)} title="View">
-                <Eye className="w-4 h-4" />
               </Button>
             )}
           </div>
         );
-      case 'event_name':
-        return item.event_name || "-";
-      case 'event_at':
-        return item.event_at || "-";
-      case 'from_time':
-        return formatDateTimeManual(item.from_time);
-      case 'to_time':
-        return formatDateTimeManual(item.to_time);
-      case 'active':
-        return eventPermissions.destroy === "true" ? (
+      case 'title':
+        return item.title || "-";
+      case 'banner':
+        return (
+          <div className="flex gap-2 flex-wrap">
+            {[
+              { key: "banner_video_9_by_16", ratio: "9:16" },
+              { key: "banner_video_1_by_1", ratio: "1:1" },
+              { key: "banner_video_16_by_9", ratio: "16:9" },
+              { key: "banner_video_3_by_2", ratio: "3:2" },
+            ]
+              .filter((mediaItem) => item?.[mediaItem.key as keyof Banner])
+              .map((mediaItem) => {
+                const media = item[mediaItem.key as keyof Banner] as any;
+                const isVideo = media?.document_content_type?.startsWith("video/");
+                const url = media?.document_url || "-";
+
+                return (
+                  <div key={mediaItem.key} className="flex-shrink-0">
+                    {isVideo ? (
+                      <video
+                        width="100"
+                        height="65"
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        className="rounded border border-gray-200"
+                        style={{ objectFit: "cover" }}
+                      >
+                        <source src={url} type={media?.document_content_type} />
+                        Your browser does not support the video tag.
+                      </video>
+                    ) : (
+                      <img
+                        src={url}
+                        className="rounded border border-gray-200"
+                        alt={item?.title || `Banner ${mediaItem.ratio}`}
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          objectFit: "cover",
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        );
+      case 'status':
+        return (
           <button
-            onClick={() => handleToggle(item.id, item.active)}
+            onClick={() => onToggle(item.id, item.active)}
             className="toggle-button"
             style={{
               border: "none",
@@ -233,11 +272,9 @@ const Eventlist = () => {
               </svg>
             )}
           </button>
-        ) : (
-          <span className="text-sm text-gray-500">{item.active ? "Active" : "Inactive"}</span>
         );
       default:
-        return item[columnKey as keyof Event] as React.ReactNode ?? '-';
+        return item[columnKey as keyof Banner] as React.ReactNode ?? '-';
     }
   };
 
@@ -257,25 +294,25 @@ const Eventlist = () => {
     <div className="space-y-4">
       {showActionPanel && (
         <SelectionPanel
-          onAdd={handleAddEvent}
+          onAdd={handleAddBanner}
           onClearSelection={handleClearSelection}
         />
       )}
       <>
         <EnhancedTable
-          data={events}
+          data={banners}
           columns={columns}
           renderCell={renderCell}
           pagination={false}
           enableExport={true}
-          exportFileName="events"
-          storageKey="events-table"
+          exportFileName="banners"
+          storageKey="banners-table"
           enableGlobalSearch={true}
           onGlobalSearch={handleGlobalSearch}
-          searchPlaceholder="Search events..."
+          searchPlaceholder="Search banners..."
           leftActions={renderCustomActions()}
           loading={isSearching || loading}
-          loadingMessage={isSearching ? "Searching events..." : "Loading events..."}
+          loadingMessage={isSearching ? "Searching banners..." : "Loading banners..."}
         />
         {!searchTerm && totalPages > 1 && (
           <div className="mt-6 flex justify-center">
@@ -324,4 +361,4 @@ const Eventlist = () => {
   );
 };
 
-export default Eventlist;
+export default BannerList;

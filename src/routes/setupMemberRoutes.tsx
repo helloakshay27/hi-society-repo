@@ -281,9 +281,9 @@ export const setupMemberRoutes = (
     <Route path="/loyalty/referral-list" element={withSuspense(ReferralList)} />
 
     {/* Referral Program Routes */}
-    <Route path="/setup-member/referral-program-create" element={withSuspense(ReferralProgramCreate)} />
-    <Route path="/setup-member/referral-program-edit/:id" element={withSuspense(ReferralProgramEdit)} />
-    <Route path="/setup-member/referral-program-list" element={withSuspense(ReferralProgramList)} />
+    <Route path="/maintenance/referral-program-create" element={withSuspense(ReferralProgramCreate)} />
+    <Route path="/maintenance/referral-program-edit/:id" element={withSuspense(ReferralProgramEdit)} />
+    <Route path="/maintenance/referral-program-list" element={withSuspense(ReferralProgramList)} />
 
     {/* Service Category Routes */}
     <Route path="/setup-member/service-category" element={withSuspense(ServiceCategory)} />

@@ -150,7 +150,7 @@ export const HiSocietyHeader: React.FC = () => {
       className="h-12 border-b border-[#D5DbDB] fixed top-0 left-0 right-0 z-10 transition-all duration-300"
       style={{ backgroundColor: "#f6f4ee" }}
     >
-      <div className="flex items-center h-full px-4 max-w-[1920px] mx-auto">
+      <div className="flex justify-between items-center h-full px-4 max-w-[1920px] mx-auto">
         {/* Left Section - Logo */}
         <div className="flex items-center gap-6 flex-shrink-0">
           {isOmanSite ? (
@@ -213,32 +213,30 @@ export const HiSocietyHeader: React.FC = () => {
           )}
         </div>
 
-        {/* Center Section - Navigation (scrollable, like DynamicHeader) */}
-        <nav className="flex justify-center h-full w-[500px] mx-auto">
-          <div className="w-full overflow-x-auto md:overflow-visible no-scrollbar h-full">
-            <ul className="flex w-max lg:w-full space-x-4 md:space-x-6 lg:space-x-0 md:justify-start lg:justify-between whitespace-nowrap items-center h-full">
+        {/* Center Section - Navigation */}
+        {/* <div className="flex items-center h-full px-4 overflow-x-auto flex-1">
+          <div className="w-full overflow-x-auto md:overflow-visible no-scrollbar">
+            <div className="flex w-max lg:w-full space-x-4 md:space-x-6 lg:space-x-0 md:justify-start lg:justify-between whitespace-nowrap">
               {navigationItems.map((item) => {
                 const isActive = activeNav === item.id;
                 return (
-                  <li key={item.id} className="flex-shrink-0">
-                    <button
-                      onClick={() => handleNavClick(item)}
-                      className={`pb-3 text-sm transition-colors whitespace-nowrap flex items-center gap-2 flex-shrink-0 h-full ${
-                        isActive
-                          ? "text-[#C72030] border-b-2 border-[#C72030] font-medium bg-transparent"
-                          : "text-[#1a1a1a] opacity-70 hover:opacity-100 bg-transparent"
-                      }`}
-                      style={{ background: "none", boxShadow: "none", borderRadius: 0, paddingLeft: 16, paddingRight: 16 }}
-                    >
-                      {item.icon}
-                      <span>{item.label}</span>
-                    </button>
-                  </li>
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavClick(item)}
+                    className={`pb-3 text-sm transition-colors whitespace-nowrap flex items-center gap-2 flex-shrink-0 ${
+                      isActive
+                        ? "text-[#C72030] border-b-2 border-[#C72030] font-medium"
+                        : "text-[#1a1a1a] opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </button>
                 );
               })}
-            </ul>
+            </div>
           </div>
-        </nav>
+        </div> */}
 
         {/* Right Section - Actions */}
         <div className="flex items-center gap-3 flex-shrink-0">
