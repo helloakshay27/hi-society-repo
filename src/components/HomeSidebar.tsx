@@ -110,7 +110,7 @@ export const HomeSidebar: React.FC = () => {
       className={`${
         isSidebarCollapsed ? "w-16" : "w-64"
       } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
-      style={{ top: "3rem", height: "100%" }}
+      style={{ top: "4rem", height: "100%" }}
     >
       <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>
         {/* Collapse Button */}
@@ -161,9 +161,7 @@ export const HomeSidebar: React.FC = () => {
 
                   {/* Icon */}
                   <Icon
-                    className={`w-5 h-5 flex-shrink-0 ${
-                      active ? "text-[#C72030]" : "text-[#1a1a1a]"
-                    }`}
+                    className={`w-5 h-5 flex-shrink-0 text-[#1a1a1a]`}
                   />
 
                   {/* Label */}

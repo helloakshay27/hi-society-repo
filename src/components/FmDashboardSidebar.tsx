@@ -308,7 +308,7 @@ export const FmDashboardSidebar = () => {
                       ? "bg-[#f0e8dc] shadow-inner"
                       : "hover:bg-[#DBC2A9]"
                   }`}
-                  title={module.name}
+                  title={`${module.name} okoko`}
                 >
                   {isActiveRoute(module.href) && (
                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#C72030]"></div>
