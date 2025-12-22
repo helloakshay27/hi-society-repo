@@ -628,7 +628,7 @@ export const Header = () => {
                         "tempType",
                         "pms_organization_admin"
                       );
-                      window.location.href = "/";
+                      window.location.href = "/maintenance/project-details-list";
                     }}
                     className="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm bg-white hover:bg-[#C72030] text-gray-700 hover:text-white transition-all duration-200 border border-gray-200 hover:border-[#C72030] group shadow-sm"
                   >
