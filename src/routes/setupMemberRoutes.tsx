@@ -71,7 +71,7 @@ const NoticeboardList = lazy(() => import("@/pages/NoticeboardList"));
 const OrganizationCreate = lazy(() => import("@/pages/OrganizationCreate"));
 const OrganizationList = lazy(() => import("@/pages/OrganizationList"));
 const OrganizationUpdate = lazy(() => import("@/pages/OrganizationUpdate"));
-const ProjectDetailsCreate = lazy(() => import("@/pages/ProjectDetailsCreate"));
+// const ProjectDetailsCreate = lazy(() => import("@/pages/ProjectDetailsCreate")); // TEMPORARILY DISABLED - FILE CORRUPTED
 const ProjectDetailsEdit = lazy(() => import("@/pages/ProjectDetailsEdit"));
 const ProjectDetails = lazy(() => import("@/pages/ProjectDetails"));
 const ProjectDetailsList = lazy(() => import("@/pages/ProjectDetailsList"));
@@ -259,7 +259,7 @@ export const setupMemberRoutes = (
     <Route path="/maintenance/organization-update/:id" element={withSuspense(OrganizationUpdate)} />
 
     {/* Project Details Routes */}
-    <Route path="/maintenance/project-details-create" element={withSuspense(ProjectDetailsCreate)} />
+    {/* <Route path="/maintenance/project-details-create" element={withSuspense(ProjectDetailsCreate)} /> */} {/* TEMPORARILY DISABLED - FILE CORRUPTED */}
     <Route path="/maintenance/project-details-edit/:id" element={withSuspense(ProjectDetailsEdit)} />
     <Route path="/maintenance/project-details-view/:id" element={withSuspense(ProjectDetails)} />
     <Route path="/maintenance/project-details-list" element={withSuspense(ProjectDetailsList)} />

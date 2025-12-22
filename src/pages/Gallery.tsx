@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";  // Import Axios
-import "../mor.css";
+import "../styles/mor.css";
 
 
 const GalleryDetails = () => {

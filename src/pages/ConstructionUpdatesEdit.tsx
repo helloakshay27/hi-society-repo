@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
-import "../mor.css";
+import "../styles/mor.css";
 import { useNavigate, useParams } from "react-router-dom";
 import MultiSelectBox from "../components/ui/multi-selector";
 

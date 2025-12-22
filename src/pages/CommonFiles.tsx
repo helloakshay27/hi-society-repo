@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import axios from "axios";
 import { API_CONFIG } from "@/config/apiConfig";
-import "../mor.css"; // Assuming you want to reuse your existing styles
+import "../styles/mor.css"; // Assuming you want to reuse your existing styles
 
 
 const MAX_UPLOAD_SIZE = {

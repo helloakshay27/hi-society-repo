@@ -38,10 +38,6 @@ const EventEdit = () => {
     is_important: "false",
     email_trigger_enabled: "false",
     set_reminders_attributes: [],
-    existingImages: [],
-    newImages: [],
-    cover_image: null,
-    existingCoverImage: null,
     existingImages: [], // for previously uploaded images
     newImages: [], // for newly selected images
     cover_image: null, // Changed from array to single value

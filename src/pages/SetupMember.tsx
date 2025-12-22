@@ -1,7 +1,7 @@
 import React from "react";
 
 
-import "../mor.css";
+import "../styles/mor.css";
 import { Link } from "react-router-dom";
 
 const SetupMember = () => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Select from "react-select";
 
-import "../mor.css";
+import "../styles/mor.css";
 import { useParams } from "react-router-dom";
 
 

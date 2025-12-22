@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "../mor.css";
+import "../styles/mor.css";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
 

@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Select from "react-select";
 
-import "../mor.css";
+import "../styles/mor.css";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import MultiSelectBox from "../components/ui/multi-selector";
 import { API_CONFIG } from "@/config/apiConfig";
 
-import PropertySelect from "../components/base/PropertySelect";
+import PropertySelect from "../components/ui/property-select";
 import { ImageUploadingButton } from "../components/reusable/ImageUploadingButton";
 import { ImageCropper } from "../components/reusable/ImageCropper";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
