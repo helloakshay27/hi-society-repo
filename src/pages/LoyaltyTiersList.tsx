@@ -1,120 +1,174 @@
-import React, { useEffect, useState, useMemo } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { API_CONFIG } from "@/config/apiConfig";
-import { toast } from "sonner";
-import { ChevronRight, ArrowLeft, Edit, Eye, X } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
+import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Plus, Eye, Edit, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
+import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
+import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 
 const validationSchema = Yup.object({
-  name: Yup.string().required("Tier Name is required"),
+  name: Yup.string().required('Tier Name is required'),
   exit_points: Yup.number()
-    .required("Exit Points are required")
-    .positive("Exit Points must be a positive number"),
+    .required('Exit Points are required')
+    .positive('Exit Points must be a positive number'),
   multipliers: Yup.number()
-    .required("Multipliers are required")
-    .positive("Multipliers must be a positive number"),
+    .required('Multipliers are required')
+    .positive('Multipliers must be a positive number'),
   welcome_bonus: Yup.number()
-    .required("Welcome Bonus is required")
-    .positive("Welcome Bonus must be a positive number"),
+    .required('Welcome Bonus is required')
+    .positive('Welcome Bonus must be a positive number'),
   point_type: Yup.string()
-    .required("Point type is required")
-    .oneOf(["lifetime", "yearly"], "Invalid point type"),
+    .required('Point type is required')
+    .oneOf(['lifetime', 'yearly'], 'Invalid point type'),
 });
 
+interface LoyaltyTier {
+  id: number;
+  name: string;
+  exit_points: number;
+  multipliers: number;
+  welcome_bonus: number;
+  point_type: 'lifetime' | 'yearly';
+  member_count?: number;
+}
+
 const LoyaltyTiersList = () => {
-  const baseURL = API_CONFIG.BASE_URL;
-  const [tiers, setTiers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [selectedTier, setSelectedTier] = useState(null);
-  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+  const [tiers, setTiers] = useState<LoyaltyTier[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [selectedTier, setSelectedTier] = useState<LoyaltyTier | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  
+  const itemsPerPage = 10;
 
-  const getPageFromStorage = () => {
-    return parseInt(localStorage.getItem("loyalty_tiers_currentPage")) || 1;
-  };
-
-  const [pagination, setPagination] = useState({
-    current_page: getPageFromStorage(),
-    total_count: 0,
-    total_pages: 0,
-  });
-
-  const pageSize = 10;
-
-  useEffect(() => {
-    fetchTiers();
-  }, []);
-
-  const fetchTiers = async () => {
+  const fetchTiers = useCallback(async (page: number, search: string) => {
     setLoading(true);
-    const storedValue = sessionStorage.getItem("selectedId");
+    setIsSearching(!!search);
+    const storedValue = sessionStorage.getItem('selectedId');
     try {
-      const response = await axios.get(
-        `${baseURL}/loyalty/tiers.json?q[loyalty_type_id_eq]=${storedValue}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=${storedValue}`), {
+        method: 'GET',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
 
-      // Ensure tiersData is always an array
-      let tiersData = [];
-      if (Array.isArray(response.data)) {
-        tiersData = response.data;
-      } else if (response.data?.tiers && Array.isArray(response.data.tiers)) {
-        tiersData = response.data.tiers;
-      } else if (response.data?.data && Array.isArray(response.data.data)) {
-        tiersData = response.data.data;
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tiers: ${response.statusText}`);
       }
 
-      setTiers(tiersData);
-      setPagination({
-        current_page: getPageFromStorage(),
-        total_count: tiersData.length,
-        total_pages: Math.ceil(tiersData.length / pageSize),
-      });
+      const data = await response.json();
+      let tiersData: LoyaltyTier[] = [];
+      if (Array.isArray(data)) {
+        tiersData = data;
+      } else if (data?.tiers && Array.isArray(data.tiers)) {
+        tiersData = data.tiers;
+      } else if (data?.data && Array.isArray(data.data)) {
+        tiersData = data.data;
+      }
+      
+      // Client-side search filtering
+      let filteredTiers = tiersData;
+      if (search) {
+        const searchLower = search.toLowerCase();
+        filteredTiers = tiersData.filter((tier: LoyaltyTier) =>
+          tier.name?.toLowerCase().includes(searchLower) ||
+          String(tier.exit_points || '').toLowerCase().includes(searchLower) ||
+          String(tier.multipliers || '').toLowerCase().includes(searchLower) ||
+          (String(tier.multipliers || '') + 'x').toLowerCase().includes(searchLower) ||
+          String(tier.welcome_bonus || '').toLowerCase().includes(searchLower) ||
+          tier.point_type?.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      // Client-side pagination
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedTiers = filteredTiers.slice(startIndex, endIndex);
+      
+      setTiers(paginatedTiers);
+      setCurrentPage(page);
+      setTotalPages(Math.ceil(filteredTiers.length / itemsPerPage));
+      setTotalCount(filteredTiers.length);
+      
+      // Store all tiers for stats calculation
+      sessionStorage.setItem('all_tiers', JSON.stringify(tiersData));
     } catch (error) {
-      console.error("Error fetching tiers:", error);
-      toast.error("Failed to load tiers");
-      setTiers([]); // Set empty array on error
+      console.error('Error fetching tiers:', error);
+      toast.error('Failed to load tiers');
+      setTiers([]);
     } finally {
       setLoading(false);
+      setIsSearching(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTiers(currentPage, searchTerm);
+  }, [currentPage, searchTerm, fetchTiers]);
+
+  // Calculate stats from all tiers
+  const allTiersData = sessionStorage.getItem('all_tiers');
+  const allTiers: LoyaltyTier[] = allTiersData ? JSON.parse(allTiersData) : [];
+  const yearlyTier = allTiers.filter((item) => item.point_type === 'yearly').length;
+  const lifeTimeTier = allTiers.filter((item) => item.point_type === 'lifetime').length;
+
+  const handleGlobalSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
     }
   };
 
-  const handleEditClick = (tier) => {
+  const handleAdd = () => {
+    navigate('/setup-member/new-tier');
+  };
+
+  const handleView = (id: number) => {
+    navigate(`/setup-member/tier-details/${id}`);
+  };
+
+  const handleEditClick = (tier: LoyaltyTier) => {
     setSelectedTier(tier);
     setShowModal(true);
   };
 
-  const handleFormSubmit = async (values) => {
+  const handleFormSubmit = async (values: any) => {
     if (selectedTier) {
       try {
-        await axios.put(
-          `${baseURL}/loyalty/tiers/${selectedTier.id}.json`,
-          { loyalty_tier: values },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(getFullUrl(`/loyalty/tiers/${selectedTier.id}.json`), {
+          method: 'PUT',
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ loyalty_tier: values }),
+        });
 
-        toast.success("Tier updated successfully!");
-        await fetchTiers();
+        if (!response.ok) {
+          throw new Error('Failed to update tier');
+        }
+
+        toast.success('Tier updated successfully!');
+        await fetchTiers(currentPage, searchTerm);
         handleCloseModal();
       } catch (error) {
-        console.error("Error updating tier:", error);
-        toast.error("Failed to update tier");
+        console.error('Error updating tier:', error);
+        toast.error('Failed to update tier');
       }
     }
   };
@@ -124,278 +178,135 @@ const LoyaltyTiersList = () => {
     setSelectedTier(null);
   };
 
-  const handleSearchInputChange = (e) => {
-    const term = e.target.value;
-    setSearchQuery(term);
+  const columns = [
+    { key: 'name', label: 'Tier Name', sortable: true },
+    { key: 'exit_points', label: 'Exit Points', sortable: true },
+    { key: 'multipliers', label: 'Multipliers', sortable: true },
+    { key: 'welcome_bonus', label: 'Welcome Bonus', sortable: true },
+    { key: 'member_count', label: 'Member Count', sortable: true },
+    { key: 'actions', label: 'Actions', sortable: false },
+  ];
 
-    if (term.trim()) {
-      const filtered = tiers.filter((tier) => {
-        const q = term.toLowerCase();
-        const multipliersStr =
-          tier.multipliers !== undefined && tier.multipliers !== null
-            ? String(tier.multipliers) + "x"
-            : "";
-
-        return [
-          tier.name,
-          tier.exit_points,
-          multipliersStr,
-          tier.multipliers,
-          tier.welcome_bonus,
-          tier.point_type,
-        ]
-          .map((v) => (v !== null && v !== undefined ? String(v).toLowerCase() : ""))
-          .some((v) => v.includes(q));
-      });
-
-      setSuggestions(filtered.slice(0, 10));
-      setSelectedIndex(-1);
-      setPagination((prev) => ({ ...prev, current_page: 1 }));
-    } else {
-      setSuggestions([]);
-      setPagination((prev) => ({ ...prev, current_page: 1 }));
+  const renderCell = (item: LoyaltyTier, columnKey: string) => {
+    switch (columnKey) {
+      case 'multipliers':
+        return `${item.multipliers}x`;
+      case 'welcome_bonus':
+        return `${item.welcome_bonus} Points`;
+      case 'member_count':
+        return item.member_count || 0;
+      case 'actions':
+        return (
+          <div className="flex justify-center items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEditClick(item)}
+              title="Edit Tier"
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleView(item.id)}
+              title="View Tier"
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+          </div>
+        );
+      default:
+        return item[columnKey as keyof LoyaltyTier] as React.ReactNode ?? '-';
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSelectedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
-        const selectedItem = suggestions[selectedIndex];
-        setSearchQuery(selectedItem.name);
-        setSuggestions([]);
-        setPagination((prev) => ({ ...prev, current_page: 1 }));
-      }
-    } else if (e.key === "Escape") {
-      setSuggestions([]);
-      setSelectedIndex(-1);
-    }
-  };
+  const renderCustomActions = () => (
+    <div className="flex flex-wrap">
+      <Button
+        onClick={handleAdd}
+        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+      >
+        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+        New Tier
+      </Button>
+    </div>
+  );
 
-  const handleSuggestionClick = (tier) => {
-    setSearchQuery(tier.name);
-    setSuggestions([]);
-    setPagination((prev) => ({ ...prev, current_page: 1 }));
-  };
-
-  const handlePageChange = (pageNumber) => {
-    setPagination((prev) => ({
-      ...prev,
-      current_page: pageNumber,
-    }));
-    localStorage.setItem("loyalty_tiers_currentPage", pageNumber);
-  };
-
-  const filteredTiers = useMemo(() => {
-    if (!Array.isArray(tiers)) return []; // Safety check
-    if (!searchQuery.trim()) return tiers;
-
-    return tiers.filter((tier) => {
-      const q = searchQuery.toLowerCase();
-      const multipliersStr =
-        tier.multipliers !== undefined && tier.multipliers !== null
-          ? String(tier.multipliers) + "x"
-          : "";
-
-      return [
-        tier.name,
-        tier.exit_points,
-        multipliersStr,
-        tier.multipliers,
-        tier.welcome_bonus,
-        tier.point_type,
-      ]
-        .map((v) => (v !== null && v !== undefined ? String(v).toLowerCase() : ""))
-        .some((v) => v.includes(q));
-    });
-  }, [tiers, searchQuery]);
-
-  const yearlyTier = Array.isArray(tiers) ? tiers.filter((item) => item.point_type === "yearly").length : 0;
-  const lifeTimeTier = Array.isArray(tiers) ? tiers.filter((item) => item.point_type === "lifetime").length : 0;
-
-  const totalFiltered = filteredTiers.length;
-  const totalPages = Math.ceil(totalFiltered / pageSize);
-  const startIndex = (pagination.current_page - 1) * pageSize;
-
-  const displayedTiers = filteredTiers.slice(startIndex, startIndex + pageSize);
+  const renderListTab = () => (
+    <div className="space-y-4">
+      <EnhancedTable
+        data={tiers}
+        columns={columns}
+        renderCell={renderCell}
+        pagination={false}
+        enableExport={true}
+        exportFileName="loyalty-tiers"
+        storageKey="loyalty-tiers-table"
+        enableGlobalSearch={true}
+        onGlobalSearch={handleGlobalSearch}
+        searchPlaceholder="Search tiers (name, points, multipliers, bonus)..."
+        leftActions={renderCustomActions()}
+        loading={isSearching || loading}
+        loadingMessage={isSearching ? "Searching tiers..." : "Loading tiers..."}
+      />
+      {!searchTerm && totalPages > 1 && (
+        <div className="mt-6 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
+                    isActive={currentPage === page}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <div className="h-full bg-gray-50">
-      <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
-        {/* Header with Back Button and Breadcrumbs */}
-        <div className="mb-6">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
-            </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Setup Member</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Loyalty</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#C72030] font-medium">Tiers</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">LOYALTY TIERS</h1>
+    <div className="p-2 sm:p-4 lg:p-6">
+      <Toaster position="top-right" richColors closeButton />
+      
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-gradient-to-r from-[#c72030] to-[#C72030] rounded-lg p-4 text-white">
+          <p className="text-3xl font-bold mb-1">{allTiers.length}</p>
+          <p className="text-sm opacity-90">Total Tiers</p>
         </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-gradient-to-r from-[#c72030] to-[#C72030] rounded-lg p-4 text-white">
-            <p className="text-3xl font-bold mb-1">{tiers.length}</p>
-            <p className="text-sm opacity-90">Total Tiers</p>
-          </div>
-          <div className="bg-gradient-to-r from-[#c72030] to-[#C72030] rounded-lg p-4 text-white">
-            <p className="text-3xl font-bold mb-1">{yearlyTier}</p>
-            <p className="text-sm opacity-90">Rolling Year Tiers</p>
-          </div>
-          <div className="bg-gradient-to-r from-[#c72030] to-[#C72030] rounded-lg p-4 text-white">
-            <p className="text-3xl font-bold mb-1">{lifeTimeTier}</p>
-            <p className="text-sm opacity-90">Life Time Tiers</p>
-          </div>
+        <div className="bg-gradient-to-r from-[#c72030] to-[#C72030] rounded-lg p-4 text-white">
+          <p className="text-3xl font-bold mb-1">{yearlyTier}</p>
+          <p className="text-sm opacity-90">Rolling Year Tiers</p>
         </div>
-
-        {/* Search and Add Button */}
-        <div className="flex justify-end items-center gap-3 mb-4">
-          <div className="w-80 relative">
-            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
-              <input
-                type="text"
-                className="flex-1 px-4 py-2 outline-none"
-                placeholder="Search by Tier name"
-                value={searchQuery}
-                onChange={handleSearchInputChange}
-                onKeyDown={handleKeyDown}
-              />
-              <button type="button" className="px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors">
-                <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7.66927 13.939C3.9026 13.939 0.835938 11.064 0.835938 7.53271C0.835938 4.00146 3.9026 1.12646 7.66927 1.12646C11.4359 1.12646 14.5026 4.00146 14.5026 7.53271C14.5026 11.064 11.4359 13.939 7.66927 13.939ZM7.66927 2.06396C4.44927 2.06396 1.83594 4.52021 1.83594 7.53271C1.83594 10.5452 4.44927 13.0015 7.66927 13.0015C10.8893 13.0015 13.5026 10.5452 13.5026 7.53271C13.5026 4.52021 10.8893 2.06396 7.66927 2.06396Z" fill="#c72030"/>
-                  <path d="M14.6676 14.5644C14.5409 14.5644 14.4143 14.5206 14.3143 14.4269L12.9809 13.1769C12.7876 12.9956 12.7876 12.6956 12.9809 12.5144C13.1743 12.3331 13.4943 12.3331 13.6876 12.5144L15.0209 13.7644C15.2143 13.9456 15.2143 14.2456 15.0209 14.4269C14.9209 14.5206 14.7943 14.5644 14.6676 14.5644Z" fill="#c72030"/>
-                </svg>
-              </button>
-            </div>
-            {suggestions.length > 0 && (
-              <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                {suggestions.map((tier, index) => (
-                  <li
-                    key={tier.id}
-                    className={`px-4 py-2 cursor-pointer hover:bg-gray-50 ${selectedIndex === index ? 'bg-gray-100' : ''}`}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                    onClick={() => handleSuggestionClick(tier)}
-                  >
-                    {tier.name}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <button
-            className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-            onClick={() => navigate("/setup-member/new-tier")}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-            </svg>
-            <span>New Tier</span>
-          </button>
-        </div>
-
-        {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Tiers List</h3>
-          </div>
-          <div className="p-6">
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-[#c72030] rounded-full animate-spin" role="status">
-                  <span className="sr-only">Loading...</span>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="rounded-lg border border-gray-200 overflow-hidden">
-                  <Table className="border-separate">
-                    <TableHeader>
-                      <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff", minWidth: "180px" }}>Tier Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff", width: "130px" }}>Exit Points</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff", width: "130px" }}>Multipliers</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff", width: "150px" }}>Welcome Bonus</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff", width: "140px" }}>Member Count</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center" style={{ borderColor: "#fff", width: "120px" }}>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {displayedTiers.length > 0 ? (
-                        displayedTiers.map((tier) => (
-                          <TableRow key={tier.id} className="hover:bg-gray-50 transition-colors">
-                            <TableCell className="py-3 px-4 font-medium">{tier.name}</TableCell>
-                            <TableCell className="py-3 px-4">{tier.exit_points}</TableCell>
-                            <TableCell className="py-3 px-4">{tier.multipliers}x</TableCell>
-                            <TableCell className="py-3 px-4">{tier.welcome_bonus} Points</TableCell>
-                            <TableCell className="py-3 px-4">{tier.member_count || 0}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <div className="flex justify-center items-center gap-2">
-                                <button
-                                  onClick={() => handleEditClick(tier)}
-                                  className="text-gray-600 hover:text-[#c72030] transition-colors"
-                                  title="Edit Tier"
-                                >
-                                  <Edit className="w-5 h-5" />
-                                </button>
-                                <button
-                                  onClick={() => navigate(`/setup-member/tier-details/${tier.id}`)}
-                                  className="text-gray-600 hover:text-[#c72030] transition-colors"
-                                  title="View Tier"
-                                >
-                                  <Eye className="w-5 h-5" />
-                                </button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-12 text-gray-500">
-                            {searchQuery ? (
-                              <div>
-                                <p className="text-lg mb-2">No tiers found</p>
-                                <p className="text-sm text-gray-400">Try adjusting your search criteria</p>
-                              </div>
-                            ) : (
-                              <div>
-                                <p className="text-lg mb-2">No tiers found</p>
-                                <p className="text-sm text-gray-400">Create your first tier to get started</p>
-                              </div>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Pagination */}
-                {displayedTiers.length > 0 && totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-6 px-3">
-                    {/* ...existing pagination code similar to SiteList... */}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+        <div className="bg-gradient-to-r from-[#c72030] to-[#C72030] rounded-lg p-4 text-white">
+          <p className="text-3xl font-bold mb-1">{lifeTimeTier}</p>
+          <p className="text-sm opacity-90">Life Time Tiers</p>
         </div>
       </div>
+
+      {renderListTab()}
 
       {/* Edit Modal */}
       {showModal && (
@@ -415,11 +326,11 @@ const LoyaltyTiersList = () => {
                 {selectedTier && (
                   <Formik
                     initialValues={{
-                      name: selectedTier.name || "",
+                      name: selectedTier.name || '',
                       exit_points: selectedTier.exit_points || 0,
                       multipliers: selectedTier.multipliers || 0,
                       welcome_bonus: selectedTier.welcome_bonus || 0,
-                      point_type: selectedTier.point_type || "",
+                      point_type: selectedTier.point_type || '',
                     }}
                     validationSchema={validationSchema}
                     onSubmit={handleFormSubmit}

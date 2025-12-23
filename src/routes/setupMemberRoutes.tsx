@@ -202,14 +202,14 @@ export const setupMemberRoutes = (
     <Route path="/maintenance/event-list" element={withSuspense(EventList)} />
 
     {/* FAQ Routes */}
-    <Route path="/maintenance/faq-category-form" element={withSuspense(FaqCategoryForm)} />
-    <Route path="/maintenance/faq-category-list" element={withSuspense(FaqCategoryList)} />
+    <Route path="/setup-member/faq-category-form" element={withSuspense(FaqCategoryForm)} />
+    <Route path="/setup-member/faq-category-list" element={withSuspense(FaqCategoryList)} />
     <Route path="/maintenance/faq-create" element={withSuspense(FaqCreate)} />
     <Route path="/maintenance/faq-edit/:id" element={withSuspense(FaqEdit)} />
     <Route path="/maintenance/faq-list" element={withSuspense(FaqList)} />
-    <Route path="/maintenance/faq-subcategory" element={withSuspense(FaqSubCategory)} />
-    <Route path="/maintenance/faq-subcategory/:faqSubId/edit" element={<FaqSubCategory />} />
-    <Route path="/maintenance/faq-subcategory-list" element={withSuspense(FaqSubCategoryList)} />
+    <Route path="/setup-member/faq-subcategory" element={withSuspense(FaqSubCategory)} />
+    <Route path="/setup-member/faq-subcategory/:faqSubId/edit" element={<FaqSubCategory />} />
+    <Route path="/setup-member/faq-subcategory-list" element={withSuspense(FaqSubCategoryList)} />
 
     {/* Gallery Routes */}
     <Route path="/setup-member/gallery" element={withSuspense(Gallery)} />
@@ -359,10 +359,6 @@ export const setupMemberRoutes = (
     {/* Project Configuration Routes */}
     <Route path="/setup-member/project-configuration" element={withSuspense(ProjectConfiguration)} />
     <Route path="/setup-member/project-configuration-list" element={withSuspense(ProjectConfigurationList)} />
-
-    {/* Site Visit Slot Config Routes */}
-    <Route path="/setup-member/site-visit-slot-config" element={withSuspense(SiteVisitSlotConfig)} />
-    <Route path="/setup-member/site-visit-slot-config-list" element={withSuspense(SiteVisitSlotConfigList)} />
 
     {/* Plus Services Routes */}
     <Route path="/setup-member/plus-services-list" element={withSuspense(PlusServicesList)} />

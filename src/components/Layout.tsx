@@ -126,19 +126,52 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         // Check if it's a home menu item
         const homeRoutes = [
           '/setup-member/project-details-list',
+          '/setup-member/project-details-view',
+          '/setup-member/project-details-edit',
+          '/setup-member/project-details-create',
           '/setup-member/banner-list',
+          '/setup-member/banner-view',
+          '/setup-member/banner-edit',
+          '/setup-member/banner-create',
           '/setup-member/testimonial-list',
+          '/setup-member/testimonial-view',
+          '/setup-member/testimonial-edit',
+          '/setup-member/testimonial-create',
           '/setup-member/event-list',
+          '/setup-member/event-view',
+          '/setup-member/event-edit',
+          '/setup-member/event-create',
           '/setup-member/specification-list',
+          '/setup-member/specification-view',
+          '/setup-member/specification-edit',
+          '/setup-member/specification-create',
           '/setup-member/organization-list',
+          '/setup-member/organization-view',
+          '/setup-member/organization-edit',
+          '/setup-member/organization-create',
           '/setup-member/company-list',
+          '/setup-member/company-view',
+          '/setup-member/company-edit',
+          '/setup-member/company-create',
           '/setup-member/site-list',
+          '/setup-member/site-view',
+          '/setup-member/site-edit',
+          '/setup-member/site-create',
           '/setup-member/press-releases-list',
+          '/setup-member/press-releases-view',
+          '/setup-member/press-releases-edit',
+          '/setup-member/press-releases-create',
           '/setup-member/faq-list',
+          '/setup-member/faq-view',
+          '/setup-member/faq-edit',
+          '/setup-member/faq-create',
           '/setup-member/referral-program-list',
+          '/setup-member/referral-program-view',
+          '/setup-member/referral-program-edit',
+          '/setup-member/referral-program-create',
         ];
 
-        const isHomeRoute = homeRoutes.some(route => path.startsWith(route.replace('-list', '')));
+        const isHomeRoute = homeRoutes.some(route => path.startsWith(route));
 
         if (isHomeRoute) {
           return <HomeSidebar />;
@@ -324,8 +357,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Conditional Header - Use HiSocietyHeader for employee users */}
       {isEmployeeUser ? <HiSocietyHeader /> : <Header />}
 
-      {renderSidebar()}
-      
+        {renderSidebar()}
+
       {/* Navigation - HiSocietyNavigation for employees, DynamicHeader for admins */}
       {isEmployeeUser ? <HiSocietyNavigation /> : renderDynamicHeader()}
 

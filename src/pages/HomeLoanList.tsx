@@ -1,18 +1,34 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
-import { API_CONFIG } from "@/config/apiConfig";
-import axios from "axios";
-import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
+import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
+
+interface Bank {
+  bank_name: string;
+}
+
+interface Project {
+  Project_Name: string;
+  project_address: string;
+}
+
+interface HomeLoan {
+  id: number;
+  project?: Project;
+  required_loan_amt: number;
+  tenure: number;
+  preffered_banks?: Bank[];
+  created_at: string;
+}
 
 const HomeLoanList = () => {
-  const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
-  const [homeLoans, setHomeLoans] = useState([]);
+  const [homeLoans, setHomeLoans] = useState<HomeLoan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -23,19 +39,26 @@ const HomeLoanList = () => {
     setLoading(true);
     setIsSearching(!!searchTerm);
     try {
-      const response = await axios.get(`${baseURL}/home_loans.json`, {
+      const response = await fetch(getFullUrl('/home_loans.json'), {
+        method: 'GET',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
         },
       });
 
-      const loansData = response.data.home_loans || [];
+      if (!response.ok) {
+        throw new Error(`Failed to fetch home loans: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const loansData = data.home_loans || [];
 
       // Client-side search filtering
       let filteredLoans = loansData;
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
-        filteredLoans = loansData.filter((loan) =>
+        filteredLoans = loansData.filter((loan: HomeLoan) =>
           loan.project?.Project_Name?.toLowerCase().includes(query) ||
           loan.project?.project_address?.toLowerCase().includes(query) ||
           loan.required_loan_amt?.toString().includes(query)
@@ -43,7 +66,7 @@ const HomeLoanList = () => {
       }
 
       // Sort by ID descending
-      filteredLoans.sort((a, b) => (b.id || 0) - (a.id || 0));
+      filteredLoans.sort((a: HomeLoan, b: HomeLoan) => (b.id || 0) - (a.id || 0));
 
       // Client-side pagination
       const startIndex = (currentPage - 1) * itemsPerPage;
@@ -53,31 +76,31 @@ const HomeLoanList = () => {
       setTotalCount(filteredLoans.length);
       setTotalPages(Math.ceil(filteredLoans.length / itemsPerPage) || 1);
     } catch (error) {
-      console.error("Error fetching home loans:", error);
-      toast.error("Failed to fetch home loans");
+      console.error('Error fetching home loans:', error);
+      toast.error('Failed to fetch home loans');
     } finally {
       setLoading(false);
       setIsSearching(false);
     }
-  }, [baseURL, searchTerm, currentPage]);
+  }, [searchTerm, currentPage]);
 
   useEffect(() => {
     fetchHomeLoans();
   }, [fetchHomeLoans]);
 
-  const handleGlobalSearch = (term) => {
+  const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
     setCurrentPage(1);
   };
 
-  const handlePageChange = (page) => {
+  const handlePageChange = (page: number) => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
 
-  const formatCurrency = (amount) => {
-    if (!amount) return "-";
+  const formatCurrency = (amount: number): string => {
+    if (!amount) return '-';
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -86,8 +109,8 @@ const HomeLoanList = () => {
     }).format(amount);
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
+  const formatDate = (dateString: string): string => {
+    if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'short',
@@ -105,7 +128,7 @@ const HomeLoanList = () => {
     { key: "created_at", label: "Created Date", sortable: true },
   ];
 
-  const renderCell = (item, columnKey) => {
+  const renderCell = (item: HomeLoan, columnKey: string) => {
     const index = homeLoans.findIndex(l => l.id === item.id);
     const startIndex = (currentPage - 1) * itemsPerPage;
 
@@ -131,7 +154,7 @@ const HomeLoanList = () => {
               item.preffered_banks.map((bank, bankIndex) => (
                 <span key={bankIndex} className="text-sm">
                   {bank.bank_name}
-                  {bankIndex !== item.preffered_banks.length - 1 && ","}
+                  {bankIndex !== item.preffered_banks!.length - 1 && ","}
                 </span>
               ))
             ) : (
@@ -147,51 +170,54 @@ const HomeLoanList = () => {
   };
 
   const renderListTab = () => (
-    <div className="space-y-6">
-          <EnhancedTable
-            data={homeLoans}
-            columns={columns}
-            renderCell={renderCell}
-            enableExport={false}
-            enableGlobalSearch={true}
-            onGlobalSearch={handleGlobalSearch}
-            searchPlaceholder="Search by project name, address, or loan amount..."
-            loading={loading}
-            loadingMessage="Loading home loans..."
-          />
-          {!loading && homeLoans.length > 0 && totalPages > 1 && (
-            <div className="flex items-center justify-center mt-6">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                    />
-                  </PaginationItem>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <PaginationItem key={page}>
-                      <PaginationLink 
-                        href="#"
-                        onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-                        isActive={currentPage === page}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
+    <div className="space-y-4">
+      <EnhancedTable
+        data={homeLoans}
+        columns={columns}
+        renderCell={renderCell}
+        pagination={false}
+        enableExport={true}
+        exportFileName="home-loans"
+        storageKey="home-loans-table"
+        enableGlobalSearch={true}
+        onGlobalSearch={handleGlobalSearch}
+        searchPlaceholder="Search by project name, address, or loan amount..."
+        loading={isSearching || loading}
+        loadingMessage={isSearching ? "Searching home loans..." : "Loading home loans..."}
+      />
+      {!searchTerm && totalPages > 1 && (
+        <div className="mt-6 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <PaginationItem key={page}>
+                  <PaginationLink 
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
+                    isActive={currentPage === page}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 
