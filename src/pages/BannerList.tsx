@@ -124,8 +124,8 @@ const BannerList = () => {
     }
   };
 
-  const handleAddBanner = () => navigate("/setup-member/banner-add");
-  const handleEditBanner = (id: number) => navigate(`/setup-member/banner-edit/${id}`);
+  const handleAddBanner = () => navigate("/maintenance/banner-add");
+  const handleEditBanner = (id: number) => navigate(`/maintenance/banner-edit/${id}`);
   const handleClearSelection = () => { setShowActionPanel(false); };
 
   const onToggle = async (bannerId: number, currentStatus: boolean) => {

@@ -875,7 +875,7 @@ input[type="checkbox"] {
 }
 
 .tbl-container table {
-  width: max-content;
+  width: 100%;
 }
 
 .tbl-container tr {
@@ -945,14 +945,15 @@ input[type="checkbox"] {
 }
 
 .tbl-container thead th {
-  background-color: var(--red) !important;
-  border: 1px solid white;
-  color: var(--body-bg-color);
+  background-color: #E5E0D3 !important;
+  border: 1px solid #D5DbDB;
+  color: #000000;
   font-family: "Open Sans", sans-serif;
   font-weight: 600;
   font-style: normal;
   font-size: 13px;
   text-align: left;
+  padding: 12px 16px;
 }
 
 .bid-tbl thead th {
@@ -1008,6 +1009,7 @@ input[type="checkbox"] {
   box-shadow: 0px 2.8828866481781006px 7.687697887420654px 0px #0000003d;
   overflow: auto;
   height: max-content;
+  width: 100%;
   margin: 10px 0;
 
   position: relative; /* ✅ Helps prevent floating/overlapping */

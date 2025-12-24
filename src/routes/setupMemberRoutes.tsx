@@ -71,7 +71,7 @@ const NoticeboardList = lazy(() => import("@/pages/NoticeboardList"));
 const OrganizationCreate = lazy(() => import("@/pages/OrganizationCreate"));
 const OrganizationList = lazy(() => import("@/pages/OrganizationList"));
 const OrganizationUpdate = lazy(() => import("@/pages/OrganizationUpdate"));
-// const ProjectDetailsCreate = lazy(() => import("@/pages/ProjectDetailsCreate")); // TEMPORARILY DISABLED - FILE CORRUPTED
+const ProjectDetailsCreate = lazy(() => import("@/pages/ProjectDetailsCreate"));
 const ProjectDetailsEdit = lazy(() => import("@/pages/ProjectDetailsEdit"));
 const ProjectDetails = lazy(() => import("@/pages/ProjectDetails"));
 const ProjectDetailsList = lazy(() => import("@/pages/ProjectDetailsList"));
@@ -198,6 +198,7 @@ export const setupMemberRoutes = (
 
     {/* Event Routes */}
     <Route path="/maintenance/event-create" element={withSuspense(EventCreate)} />
+    {/* <Route path="/maintenance/event-details/:id" element={withSuspense(EventDetails)} /> */}
     <Route path="/maintenance/event-edit/:id" element={withSuspense(EventEdit)} />
     <Route path="/maintenance/event-list" element={withSuspense(EventList)} />
 
@@ -259,7 +260,7 @@ export const setupMemberRoutes = (
     <Route path="/maintenance/organization-update/:id" element={withSuspense(OrganizationUpdate)} />
 
     {/* Project Details Routes */}
-    {/* <Route path="/maintenance/project-details-create" element={withSuspense(ProjectDetailsCreate)} /> */} {/* TEMPORARILY DISABLED - FILE CORRUPTED */}
+    <Route path="/maintenance/project-details-create" element={withSuspense(ProjectDetailsCreate)} />
     <Route path="/maintenance/project-details-edit/:id" element={withSuspense(ProjectDetailsEdit)} />
     <Route path="/maintenance/project-details-view/:id" element={withSuspense(ProjectDetails)} />
     <Route path="/maintenance/project-details-list" element={withSuspense(ProjectDetailsList)} />
@@ -268,6 +269,11 @@ export const setupMemberRoutes = (
     <Route path="/setup-member/project-building-type" element={withSuspense(ProjectBuildingType)} />
     <Route path="/setup-member/project-building-type-edit/:id" element={withSuspense(ProjectBuildingTypeEdit)} />
     <Route path="/setup-member/project-building-type-list" element={withSuspense(ProjectBuildingTypeList)} />
+
+     <Route path="/setup-member/project-details-create" element={withSuspense(ProjectDetailsCreate)} />
+    <Route path="/setup-member/project-details-edit/:id" element={withSuspense(ProjectDetailsEdit)} />
+    <Route path="/setup-member/project-details-view/:id" element={withSuspense(ProjectDetails)} />
+    <Route path="/setup-member/project-details-list" element={withSuspense(ProjectDetailsList)} />
 
 
     {/* Property Type Routes */}

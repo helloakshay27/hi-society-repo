@@ -121,9 +121,9 @@ const Eventlist = () => {
     }
   };
 
-  const handleAddEvent = () => navigate("/setup-member/event-create");
-  const handleEditEvent = (id: number) => navigate(`/setup-member/event-edit/${id}`);
-  const handleViewEvent = (id: number) => navigate(`/setup-member/event-details/${id}`);
+  const handleAddEvent = () => navigate("/maintenance/event-create");
+  const handleEditEvent = (id: number) => navigate(`/maintenance/event-edit/${id}`);
+  const handleViewEvent = (id: number) => navigate(`/maintenance/event-details/${id}`);
   const handleClearSelection = () => { setShowActionPanel(false); };
 
   const handleToggle = async (id: number, currentStatus: boolean) => {
