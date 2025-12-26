@@ -2,13 +2,20 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, ArrowLeft } from "lucide-react";
+import { ChevronRight, ArrowLeft, FileText, Calendar, Users } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { API_CONFIG } from "@/config/apiConfig";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
+import {
+  TextField,
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+} from "@mui/material";
 
 const EventCreate = () => {
   const baseURL = API_CONFIG.BASE_URL;
@@ -63,6 +70,30 @@ const EventCreate = () => {
   const [showCoverUploader, setShowCoverUploader] = useState(false);
   const [showEventUploader, setShowEventUploader] = useState(false);
   const previewUrlsRef = useRef(new Map()); // Store preview URLs for cleanup
+
+  // Field styles for Material-UI components
+  const fieldStyles = {
+    height: '45px',
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    '& .MuiOutlinedInput-root': {
+      height: '45px',
+      '& fieldset': {
+        borderColor: '#ddd',
+      },
+      '&:hover fieldset': {
+        borderColor: '#C72030',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#C72030',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      '&.Mui-focused': {
+        color: '#C72030',
+      },
+    },
+  };
 
   const timeOptions = [
     // { value: "", label: "Select Unit" },
@@ -781,141 +812,194 @@ const EventCreate = () => {
   };
 
   return (
-    <div className="h-full bg-gray-50">
-      <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
-        {/* Header with Back Button and Breadcrumbs */}
-        <div className="mb-6">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
-            </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Home</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Event</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#C72030] font-medium">Create Event</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">CREATE EVENT</h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Event List</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Create New Event</span>
         </div>
+        <h1 className="text-2xl font-bold text-gray-900">CREATE EVENT</h1>
+      </div>
 
-        {/* Main Form Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Event Information</h3>
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
+        {/* Section: Event Information */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <FileText size={16} color="#C72030" />
+              </span>
+              Event Information
+            </h2>
           </div>
-          
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Project */}
-              <div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-0">Project</label>
-                  <SelectBox
-                    options={projects.map((proj) => ({
-                      value: proj.id,
-                      label: proj.project_name,
-                    }))}
-                    value={selectedProjectId || ""}
-                    onChange={(value) => setSelectedProjectId(value)}
-                  />
-                </div>
-              </div>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Project Select */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+              >
+                <InputLabel shrink>Project</InputLabel>
+                <MuiSelect
+                  value={selectedProjectId || ""}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  label="Project"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select Project</MenuItem>
+                  {projects.map((project) => (
+                    <MenuItem key={project.id} value={project.id}>
+                      {project.project_name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
               {/* Event Type */}
-              <div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-0">Event Type</label>
-                  <input
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
-                    type="text"
-                    name="event_type"
-                    placeholder="Enter Event Type"
-                    value={formData.event_type}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
+              <TextField
+                label="Event Type"
+                placeholder="Enter Event Type"
+                value={formData.event_type}
+                onChange={handleChange}
+                name="event_type"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
 
               {/* Event Name */}
-              <div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-0">
-                    Event Name
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
-                    type="text"
-                    name="event_name"
-                    placeholder="Enter Event Name"
-                    value={formData.event_name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
+              <TextField
+                label="Event Name"
+                placeholder="Enter Event Name"
+                value={formData.event_name}
+                onChange={handleChange}
+                name="event_name"
+                required
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
 
               {/* Event At */}
-              <div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-0">Event At</label>
-                  <input
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
-                    type="text"
-                    name="event_at"
-                    placeholder="Enter Event At"
-                    value={formData.event_at}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
+              <TextField
+                label="Event At"
+                placeholder="Enter Event At"
+                value={formData.event_at}
+                onChange={handleChange}
+                name="event_at"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
 
               {/* Event From */}
-              <div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-0">Event From</label>
-                  <input
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
-                    type="datetime-local"
-                    name="from_time"
-                    value={formData.from_time}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
+              <TextField
+                label="Event From"
+                type="datetime-local"
+                value={formData.from_time}
+                onChange={handleChange}
+                name="from_time"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
 
               {/* Event To */}
-              <div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-0">Event To</label>
-                  <input
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
-                    type="datetime-local"
-                    name="to_time"
-                    value={formData.to_time}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
+              <TextField
+                label="Event To"
+                type="datetime-local"
+                value={formData.to_time}
+                onChange={handleChange}
+                name="to_time"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
 
               {/* Event Description */}
-              <div className="md:col-span-2">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-0">Event Description</label>
-                  <textarea
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent resize-y"
-                    rows={3}
-                    name="description"
-                    placeholder="Enter Description"
-                    value={formData.description}
-                    onChange={handleChange}
-                  />
-                </div>
+              <div className="md:col-span-3">
+                <TextField
+                  label="Event Description"
+                  placeholder="Enter Description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  name="description"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      minHeight: '90px',
+                      alignItems: 'flex-start',
+                      '& fieldset': {
+                        borderColor: '#ddd',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#C72030',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#C72030',
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      '&.Mui-focused': {
+                        color: '#C72030',
+                      },
+                    },
+                  }}
+                />
               </div>
 
               {/* Mark Important */}
@@ -1026,32 +1110,40 @@ const EventCreate = () => {
               {/* RSVP Fields */}
               {formData.rsvp_action === "yes" && (
                 <>
-                  <div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-0">RSVP Name</label>
-                      <input
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
-                        type="text"
-                        name="rsvp_name"
-                        placeholder="Enter RSVP Name"
-                        value={formData.rsvp_name || ""}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-0">RSVP Number</label>
-                      <input
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
-                        type="text"
-                        name="rsvp_number"
-                        placeholder="Enter RSVP Number"
-                        value={formData.rsvp_number || ""}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
+                  <TextField
+                    label="RSVP Name"
+                    placeholder="Enter RSVP Name"
+                    value={formData.rsvp_name || ""}
+                    onChange={handleChange}
+                    name="rsvp_name"
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
+                    InputProps={{
+                      sx: fieldStyles,
+                    }}
+                  />
+                  <TextField
+                    label="RSVP Number"
+                    placeholder="Enter RSVP Number"
+                    value={formData.rsvp_number || ""}
+                    onChange={handleChange}
+                    name="rsvp_number"
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
+                    InputProps={{
+                      sx: fieldStyles,
+                    }}
+                  />
                 </>
               )}
 
@@ -1409,23 +1501,23 @@ const EventCreate = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-6 flex justify-end gap-4 mb-6">
+        <div className="flex gap-4 justify-center pt-6">
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Submitting...' : 'Submit'}
+          </button>
           <button
             type="button"
             onClick={handleCancel}
-            className="px-6 py-2 bg-[#f6f4ee] text-[#C72030] rounded hover:bg-[#f0ebe0] transition-colors font-medium"
+            className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2 rounded transition-colors"
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={loading}
-            className="px-6 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Submitting..." : "Submit"}
-          </button>
         </div>
+      </form>
 
         {/* Modals */}
         {showCoverUploader && (
@@ -1454,7 +1546,6 @@ const EventCreate = () => {
             allowVideos={true}
           />
         )}
-      </div>
     </div>
   );
 };

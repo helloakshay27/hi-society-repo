@@ -2,15 +2,44 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, FileText } from "lucide-react";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, Radio, RadioGroup, FormControlLabel, Checkbox } from "@mui/material";
 import MultiSelectBox from "../components/ui/multi-selector";
+import SelectBox from "@/components/ui/select-box";
 import { API_CONFIG } from "@/config/apiConfig";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
+
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#d1d5db',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
 
 const NoticeboardForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
+  
+  // Get baseURL
+  const baseURL = API_CONFIG.BASE_URL;
+  
   const [formData, setFormData] = useState({
     project_id: "",
     notice_heading: "",
@@ -574,7 +603,7 @@ const NoticeboardForm = () => {
     const preparedReminders = prepareRemindersForSubmission();
 
     // Use backend value for shared
-    const backendSharedValue = formData.shared === "all" ? 0 : 1;
+    const backendSharedValue = formData.shared === "all" ? "0" : "1";
 
     const validationErrors = validateForm(formData);
     if (validationErrors.length > 0) {
@@ -750,7 +779,7 @@ const NoticeboardForm = () => {
         }, 1000);
       }
 
-      navigate("/noticeboard-list");
+      navigate("/maintenance/noticeboard-list");
     } catch (error) {
       console.error("Error submitting the form:", error);
       if (error.response && error.response.data) {
@@ -768,33 +797,43 @@ const NoticeboardForm = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          console.error("No access token found");
+          return;
+        }
+
         const response = await axios.get(
           `${baseURL}users/get_users.json`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           }
         );
 
         setEventUserID(response?.data.users || []);
-        console.log("eventUserID", eventUserID);
       } catch (error) {
         console.error("Error fetching Users:", error);
+        if (error.response?.status === 401) {
+          toast.error("Authentication failed. Please login again.");
+          navigate("/login");
+        }
       }
     };
     fetchUsers();
-  }, []);
+  }, [baseURL, navigate]);
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        console.log("Fetching projects...");
         const token = localStorage.getItem("access_token");
         
         if (!token) {
           console.error("No access token found");
+          toast.error("Authentication required. Please login.");
+          navigate("/login");
           return;
         }
 
@@ -805,17 +844,9 @@ const NoticeboardForm = () => {
           },
         });
         
-        console.log("Projects API response:", response);
-        console.log("Projects data:", response.data);
-        
         setProjects(response.data.projects || []);
       } catch (error) {
         console.error("Error fetching projects:", error);
-        console.error("Projects API error details:", {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message
-        });
         
         if (error.response?.status === 401) {
           toast.error("Authentication failed. Please login again.");
@@ -825,14 +856,12 @@ const NoticeboardForm = () => {
     };
 
     fetchProjects();
-  }, [navigate]);
+  }, [baseURL, navigate]);
 
   // Fetch noticeboard data for edit mode
   useEffect(() => {
     const fetchNoticeboardData = async () => {
       if (!isEdit || !id) return;
-      
-      console.log("Fetching noticeboard data for ID:", id);
       
       try {
         setLoading(true);
@@ -843,8 +872,6 @@ const NoticeboardForm = () => {
           navigate("/login");
           return;
         }
-
-        console.log("Making API call to:", `${baseURL}noticeboards/${id}.json`);
         
         const response = await axios.get(`${baseURL}noticeboards/${id}.json`, {
           headers: {
@@ -959,7 +986,7 @@ const NoticeboardForm = () => {
             navigate("/login");
           } else if (error.response.status === 404) {
             toast.error("Broadcast not found.");
-            navigate("/noticeboard-list");
+            navigate("/maintenance/noticeboard-list");
           } else {
             toast.error(`Failed to fetch broadcast data: ${error.response.data?.message || error.message}`);
           }
@@ -985,9 +1012,15 @@ const NoticeboardForm = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          console.error("No access token found");
+          return;
+        }
+
         const response = await axios.get(`${baseURL}usergroups.json`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
@@ -1005,7 +1038,7 @@ const NoticeboardForm = () => {
     if (formData.shared === "group" && groups.length === 0) {
       fetchGroups();
     }
-  }, [formData.shared]);
+  }, [formData.shared, groups.length, baseURL]);
 
   const handleCoverImageUpload = (newImageList) => {
     if (!newImageList || newImageList.length === 0) return;
@@ -1028,842 +1061,792 @@ const NoticeboardForm = () => {
     setDialogOpen(true);
   };
 
-  // Check authentication on component mount
-  useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      toast.error("Authentication required. Please login.");
-      navigate("/login");
-      return;
-    }
-  }, [navigate]);
-
   // Validate edit mode parameters
   useEffect(() => {
     if (isEdit && !id) {
       toast.error("Invalid broadcast ID provided");
-      navigate("/noticeboard-list");
+      navigate("/maintenance/noticeboard-list");
       return;
     }
     
     if (isEdit && isNaN(parseInt(id))) {
       toast.error("Invalid broadcast ID format");
-      navigate("/noticeboard-list");
+      navigate("/maintenance/noticeboard-list");
       return;
     }
   }, [id, isEdit, navigate]);
 
   return (
-    <>
-      <div className="main-content">
-        <div className="">
-          <div className="module-data-section container-fluid">
-            <div className="module-data-section p-3">
-              <div className="card mt-4 pb-4 mx-4">
-                <div className="card-header">
-                  <h3 className="card-title">{isEdit ? 'Edit' : 'Create'} Broadcast</h3>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Broadcast List</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">{isEdit ? 'Edit Broadcast' : 'Create New Broadcast'}</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">{isEdit ? 'EDIT BROADCAST' : 'CREATE BROADCAST'}</h1>
+      </div>
+
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
+        {/* Section: Broadcast Information */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <FileText size={16} color="#C72030" />
+              </span>
+              Broadcast Information
+            </h2>
+          </div>
+          <div className="p-6 space-y-6">
+            {loading && (
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030]"></div>
+                <p className="mt-3 text-gray-600">{isEdit ? 'Loading broadcast data...' : 'Loading...'}</p>
+              </div>
+            )}
+            
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-red-600">{error}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Project */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Project
+                </label>
+                <SelectBox
+                  label="Select Project"
+                  options={projects.map((proj) => ({
+                    value: proj.id,
+                    label: proj.project_name,
+                  }))}
+                  defaultValue={selectedProjectId || ""}
+                  onChange={(value) => setSelectedProjectId(value)}
+                />
+              </div>
+
+              {/* Notice Heading */}
+              <div>
+                <TextField
+                  fullWidth
+                  label="Notice Heading"
+                  name="notice_heading"
+                  placeholder="Enter Notice Heading"
+                  value={formData.notice_heading}
+                  onChange={handleChange}
+                  required
+                  sx={fieldStyles}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              </div>
+
+              {/* Notice Text */}
+              <div>
+                <TextField
+                  fullWidth
+                  label="Notice Text"
+                  name="notice_text"
+                  placeholder="Enter Notice Text"
+                  value={formData.notice_text}
+                  onChange={handleChange}
+                  required
+                  multiline
+                  rows={1}
+                  sx={fieldStyles}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              </div>
+
+              {/* Notice Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Notice Type
+                </label>
+                <SelectBox
+                  label="Select Notice Type"
+                  options={noticeTypeOptions}
+                  defaultValue={formData.notice_type || ""}
+                  onChange={(value) => setFormData(prev => ({...prev, notice_type: value}))}
+                />
+              </div>
+
+              {/* Expire Time */}
+              <div>
+                <TextField
+                  fullWidth
+                  label="Expire Time"
+                  name="expire_time"
+                  type="datetime-local"
+                  placeholder="Enter Expire Time"
+                  value={formData.expire_time}
+                  onChange={handleChange}
+                  required
+                  sx={fieldStyles}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              </div>
+
+              {/* Comment */}
+              <div>
+                <TextField
+                  fullWidth
+                  label="Comment"
+                  name="comment"
+                  placeholder="Enter Comment"
+                  value={formData.comment}
+                  onChange={handleChange}
+                  required
+                  multiline
+                  rows={1}
+                  sx={fieldStyles}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              </div>
+
+              {/* Mark Important */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mark Important
+                </label>
+                <RadioGroup
+                  row
+                  name="is_important"
+                  value={formData.is_important}
+                  onChange={handleChange}
+                  className="mt-1"
+                >
+                  <FormControlLabel
+                    value="1"
+                    control={<Radio sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' } }} />}
+                    label="Yes"
+                  />
+                  <FormControlLabel
+                    value="0"
+                    control={<Radio sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' } }} />}
+                    label="No"
+                  />
+                </RadioGroup>
+              </div>
+
+              {/* Send Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Send Email
+                </label>
+                <RadioGroup
+                  row
+                  name="email_trigger_enabled"
+                  value={formData.email_trigger_enabled}
+                  onChange={handleChange}
+                  className="mt-1"
+                >
+                  <FormControlLabel
+                    value="1"
+                    control={<Radio sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' } }} />}
+                    label="Yes"
+                  />
+                  <FormControlLabel
+                    value="0"
+                    control={<Radio sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' } }} />}
+                    label="No"
+                  />
+                </RadioGroup>
+              </div>
+
+              {/* Active Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Active Status
+                </label>
+                <RadioGroup
+                  row
+                  name="active"
+                  value={formData.active}
+                  onChange={handleChange}
+                  className="mt-1"
+                >
+                  <FormControlLabel
+                    value="1"
+                    control={<Radio sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' } }} />}
+                    label="Active"
+                  />
+                  <FormControlLabel
+                    value="0"
+                    control={<Radio sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' } }} />}
+                    label="Inactive"
+                  />
+                </RadioGroup>
+              </div>
+
+              {/* Set Reminders - Full Width */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Set Reminders</label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                  <div>
+                    <SelectBox
+                      label="Time Unit"
+                      options={timeOptions}
+                      defaultValue={reminderUnit || ""}
+                      onChange={(value) => {
+                        setReminderUnit(value);
+                        setReminderValue("");
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <TextField
+                      fullWidth
+                      type="number"
+                      placeholder="Value"
+                      value={reminderValue}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const constraints = timeConstraints[reminderUnit];
+                        if (constraints && (value < constraints.min || value > constraints.max)) {
+                          return;
+                        }
+                        setReminderValue(value);
+                      }}
+                      inputProps={{
+                        min: timeConstraints[reminderUnit]?.min || 0,
+                        max: timeConstraints[reminderUnit]?.max || "",
+                      }}
+                      title={
+                        reminderUnit
+                          ? `Must be between ${timeConstraints[reminderUnit].min} to ${timeConstraints[reminderUnit].max} ${reminderUnit}`
+                          : "Please select a time unit first"
+                      }
+                      disabled={!reminderUnit}
+                      sx={fieldStyles}
+                    />
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      className="w-full h-[45px] bg-[#C72030] hover:bg-[#B8252F] text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={handleAddReminder}
+                      disabled={!reminderValue || !reminderUnit}
+                    >
+                      + Add
+                    </button>
+                  </div>
                 </div>
 
-                <div className="card-body">
-                  {loading && (
-                    <div className="text-center py-3">
-                      <div className="spinner-border" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                      </div>
-                      <p className="mt-2">{isEdit ? 'Loading broadcast data...' : 'Loading...'}</p>
-                    </div>
-                  )}
-                  {error && <p className="text-danger">{error}</p>}
-                  <div className="row">
-                    <div className="col-md-3 mt-1">
-                      <div className="form-group">
-                        <label>Project</label>
-                        <SelectBox
-                          options={projects.map((proj) => ({
-                            value: proj.id,
-                            label: proj.project_name,
-                          }))}
-                          value={selectedProjectId || ""}
-                          onChange={(value) => setSelectedProjectId(value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>
-                          Notice Heading
-                          <span className="otp-asterisk"> *</span>
-                        </label>
-                        <input
-                          className="form-control"
-                          type="text"
-                          name="notice_heading"
-                          placeholder="Enter Notice Heading"
-                          value={formData.notice_heading}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>
-                          Notice Text
-                          <span className="otp-asterisk"> *</span>
-                        </label>
-                        <textarea
-                          className="form-control"
-                          rows={1}
-                          name="notice_text"
-                          placeholder="Enter Notice Text"
-                          value={formData.notice_text}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>Notice Type</label>
-                        <SelectBox
-                          options={noticeTypeOptions}
-                          value={formData.notice_type || ""}
-                          onChange={(value) => setFormData(prev => ({...prev, notice_type: value}))}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>Expire Time
-                          <span className="otp-asterisk"> *</span>
-                        </label>
-                        <input
-                          className="form-control"
-                          type="datetime-local"
-                          name="expire_time"
-                          placeholder="Enter Expire Time"
-                          value={formData.expire_time}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-
-
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>Comment
-                           <span className="otp-asterisk"> *</span>
-                        </label>
-                        <textarea
-                          className="form-control"
-                          rows={1}
-                          name="comment"
-                          placeholder="Enter Comment"
-                          value={formData.comment}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>Mark Important</label>
-                        <div className="d-flex">
-                          <div className="form-check me-3">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="is_important"
-                              value="1"
-                              checked={formData.is_important === "1"}
-                              onChange={handleChange}
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
+                {/* Display added reminders */}
+                <div className="space-y-2">
+                  {formData.set_reminders_attributes
+                    .filter((reminder) => !reminder._destroy)
+                    .map((reminder, index) => (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4" key={index}>
+                        <div>
+                          <FormControl fullWidth sx={fieldStyles}>
+                            <MuiSelect
+                              value={reminder.unit}
+                              disabled
+                              sx={{ backgroundColor: "#f8f9fa" }}
                             >
-                              Yes
-                            </label>
-                          </div>
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="is_important"
-                              value="0"
-                              checked={formData.is_important === "0"}
-                              onChange={handleChange}
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              No
-                            </label>
-                          </div>
+                              {timeOptions.map((option) => (
+                                <MenuItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </MenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
                         </div>
-                      </div>
-                    </div>
-
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>Send Email</label>
-                        <div className="d-flex">
-                          <div className="form-check me-3">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="email_trigger_enabled"
-                              value="1"
-                              checked={formData.email_trigger_enabled === "1"}
-                              onChange={handleChange}
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              Yes
-                            </label>
-                          </div>
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="email_trigger_enabled"
-                              value="0"
-                              checked={formData.email_trigger_enabled === "0"}
-                              onChange={handleChange}
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              No
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>Active Status</label>
-                        <div className="d-flex">
-                          <div className="form-check me-3">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="active"
-                              value="1"
-                              checked={formData.active === "1"}
-                              onChange={handleChange}
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              Active
-                            </label>
-                          </div>
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="active"
-                              value="0"
-                              checked={formData.active === "0"}
-                              onChange={handleChange}
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              Inactive
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="col-md-6">
-                      <label className="form-label">Set Reminders</label>
-                      <div className="row mb-2">
-                        <div className="col-md-4">
-                          <SelectBox
-                            options={timeOptions}
-                            value={reminderUnit || ""}
-                            onChange={(value) => {
-                              setReminderUnit(value);
-                              setReminderValue("");
-                            }}
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <input
+                        <div>
+                          <TextField
+                            fullWidth
                             type="number"
-                            className="form-control"
-                            placeholder="Value"
-                            value={reminderValue}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              const constraints = timeConstraints[reminderUnit];
-                              if (constraints && (value < constraints.min || value > constraints.max)) {
-                                return;
-                              }
-                              setReminderValue(value);
-                            }}
-                            min={timeConstraints[reminderUnit]?.min || 0}
-                            max={timeConstraints[reminderUnit]?.max || ""}
-                            title={
-                              reminderUnit
-                                ? `Must be between ${timeConstraints[reminderUnit].min} to ${timeConstraints[reminderUnit].max} ${reminderUnit}`
-                                : "Please select a time unit first"
-                            }
-                            disabled={!reminderUnit}
+                            value={reminder.value}
+                            disabled
+                            sx={{ ...fieldStyles, backgroundColor: "#f8f9fa" }}
                           />
                         </div>
-
-                        <div className="col-md-4">
+                        <div>
                           <button
                             type="button"
-                            className="btn btn-danger w-100"
-                            onClick={handleAddReminder}
-                            disabled={!reminderValue || !reminderUnit}
-                            style={{
-                              height: "35px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
+                            className="w-full h-[45px] bg-[#C72030] hover:bg-[#B8252F] text-white font-medium rounded-md transition-colors"
+                            onClick={() => handleRemoveReminder(index)}
                           >
-                            + Add
+                            ×
                           </button>
                         </div>
                       </div>
-
-                      {formData.set_reminders_attributes
-                        .filter((reminder) => !reminder._destroy)
-                        .map((reminder, index) => (
-                          <div className="row mb-2" key={index}>
-                            <div className="col-md-4">
-                              <select
-                                className="form-control"
-                                value={reminder.unit}
-                                disabled
-                                style={{ backgroundColor: "#f8f9fa" }}
-                              >
-                                {timeOptions.map((option) => (
-                                  <option
-                                    key={option.value}
-                                    value={option.value}
-                                  >
-                                    {option.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className="col-md-4">
-                              <input
-                                type="number"
-                                className="form-control"
-                                value={reminder.value}
-                                readOnly
-                                style={{ backgroundColor: "#f8f9fa" }}
-                              />
-                            </div>
-
-                            <div className="col-md-4">
-                              <button
-                                type="button"
-                                className="btn btn-danger w-100"
-                                onClick={() => handleRemoveReminder(index)}
-                                style={{
-                                  height: "35px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-
-                    <div className="col-md-4">
-                      <div className="form-group">
-                        <label>Share With</label>
-                        <div className="d-flex gap-3">
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="shared"
-                              value="all"
-                              checked={formData.shared === "all"}
-                              onChange={() =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  shared: "all",
-                                  user_id: "",
-                                  group_id: [],
-                                }))
-                              }
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              All
-                            </label>
-                          </div>
-
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="shared"
-                              value="individual"
-                              checked={formData.shared === "individual"}
-                              onChange={() =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  shared: "individual",
-                                  group_id: [], // clear other
-                                }))
-                              }
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              Individuals
-                            </label>
-                          </div>
-
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="shared"
-                              value="group"
-                              checked={formData.shared === "group"}
-                              onChange={() =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  shared: "group",
-                                  user_id: "", // clear other
-                                }))
-                              }
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              Groups
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-
-                      {formData.shared === "individual" && (
-                        <div className="form-group">
-                          <label>Broadcast User ID</label>
-                          <MultiSelectBox
-                            options={eventUserID.map((user) => ({
-                              value: user.id,
-                              label: `${user.firstname} ${user.lastname}`,
-                            }))}
-                            value={
-                              formData.user_id
-                                ? formData.user_id.split(",").map((id) => {
-                                    const user = eventUserID.find(
-                                      (u) => u.id.toString() === id
-                                    );
-                                    return {
-                                      value: id,
-                                      label: `${user?.firstname} ${user?.lastname}`,
-                                    };
-                                  })
-                                : []
-                            }
-                            onChange={(selectedOptions) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                user_id: selectedOptions
-                                  .map((option) => option.value)
-                                  .join(","),
-                              }))
-                            }
-                          />
-                        </div>
-                      )}
-
-                      {formData.shared === "group" && (
-                        <div className="form-group">
-                          <label>Share with Groups</label>
-                          <MultiSelectBox
-                            options={groups.map((group) => ({
-                              value: group.id,
-                              label: group.name,
-                            }))}
-                            value={
-                              Array.isArray(formData.group_id)
-                                ? formData.group_id
-                                    .map((id) => {
-                                      const group = groups.find(
-                                        (g) =>
-                                          g.id === id ||
-                                          g.id.toString() === id.toString()
-                                      );
-                                      return group
-                                        ? { value: group.id, label: group.name }
-                                        : null;
-                                    })
-                                    .filter(Boolean)
-                                : []
-                            }
-                            onChange={(selectedOptions) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                group_id: selectedOptions.map(
-                                  (option) => option.value
-                                ),
-                              }))
-                            }
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                    ))}
                 </div>
               </div>
 
-              <div className="card mt-3 pb-4 mx-4">
-                <div className="card-header3">
-                  <h3 className="card-title">File Upload</h3>
-                </div>
-                <div className="card-body mt-0 pb-0">
-                  <div className="row"></div>
-
-                  <div className="d-flex justify-content-between align-items-end mx-1">
-                    <h5 className="mt-3">
-                      Broadcast Cover Image{" "}
-                      <span
-                        className="tooltip-container"
-                        onMouseEnter={() => setShowTooltip(true)}
-                        onMouseLeave={() => setShowTooltip(false)}
-                      >
-                        [i]
-                        {showTooltip && (
-                          <span className="tooltip-text">
-                            Max Upload Size 3 MB. Single image per aspect ratio (16:9, 1:1, 9:16, 3:2)
-                          </span>
-                        )}
-                      </span>
-                    </h5>
-                    <button
-                      className="purple-btn2 rounded-3"
-                      type="button"
-                      onClick={() => setShowCoverUploader(true)}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width={16}
-                        height={16}
-                        fill="currentColor"
-                        className="bi bi-plus"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                      </svg>
-                      <span>Add</span>
-                    </button>
-                    {showCoverUploader && (
-                      <ProjectBannerUpload
-                        onClose={() => setShowCoverUploader(false)}
-                        includeInvalidRatios={false}
-                        selectedRatioProp={selectedCoverRatios}
-                        showAsModal={true}
-                        label={coverImageLabel}
-                        description={dynamicCoverDescription}
-                        onContinue={(validImages) =>
-                          handleCroppedImages(validImages, "cover")
-                        }
-                      />
-                    )}
-                  </div>
-                  <div className="col-md-12 mt-2">
-                    <p className="text-muted mb-2">
-                      <i className="bi bi-info-circle"></i> Cover images: Only one image per aspect ratio will be used
-                    </p>
-                    <div
-                      className="mt-4 tbl-container"
-                      style={{ maxHeight: "300px", overflowY: "auto" }}
-                    >
-                      <table className="w-100">
-                        <thead>
-                          <tr>
-                            <th>File Name</th>
-                            <th>Preview</th>
-                            <th>Ratio</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {coverImageRatios.flatMap(({ key, label }) => {
-                            const files = Array.isArray(formData[key])
-                              ? formData[key]
-                              : formData[key]
-                              ? [formData[key]]
-                              : [];
-
-                            if (files.length === 0) return [];
-
-                            return files.map((file, index) => {
-                              const preview =
-                                file.preview || file.document_url || file.url || file.file_url || "";
-                              const name =
-                                file.name ||
-                                file.document_file_name ||
-                                file.filename ||
-                                `Cover Image ${index + 1}`;
-                              const ratio = file.ratio || label;
-
-                              return (
-                                <tr key={`${key}-${index}`}>
-                                  <td>{name}</td>
-                                  <td>
-                                    {preview ? (
-                                      <img
-                                        src={preview}
-                                        alt="Preview"
-                                        style={{
-                                          width: "50px",
-                                          height: "50px",
-                                          objectFit: "cover",
-                                        }}
-                                        onError={(e) => {
-                                          console.error(`Failed to load cover image: ${preview}`);
-                                          e.target.style.display = "none";
-                                          e.target.nextSibling.style.display = "block";
-                                        }}
-                                      />
-                                    ) : null}
-                                    <span 
-                                      style={{ 
-                                        display: preview ? "none" : "block",
-                                        fontSize: "12px",
-                                        color: "#666"
-                                      }}
-                                    >
-                                      No Preview
-                                    </span>
-                                  </td>
-                                  <td>{ratio}</td>
-                                  <td>
-                                    <button
-                                      type="button"
-                                      className="btn btn-danger btn-sm"
-                                      disabled={removingImageId === file.id}
-                                      onClick={async () => await handleImageRemoval(key, index)}
-                                    >
-                                      {removingImageId === file.id ? 'Removing...' : 'Remove'}
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            });
-                          })}
-                          {coverImageRatios.every(({ key }) => {
-                            const files = Array.isArray(formData[key]) ? formData[key] : [];
-                            return files.length === 0;
-                          }) && (
-                            <tr>
-                              <td colSpan="4" className="text-center">
-                                No cover images uploaded
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  <div className="d-flex justify-content-between align-items-end mx-1">
-                    <h5 className="mt-3">
-                      Broadcast Images{" "}
-                      <span
-                        className="tooltip-container"
-                        onMouseEnter={() => setShowAttachmentTooltip(true)}
-                        onMouseLeave={() => setShowAttachmentTooltip(false)}
-                      >
-                        [i]
-                        {showAttachmentTooltip && (
-                          <span className="tooltip-text">
-                            Max Upload Size 3 MB. Multiple images per aspect ratio (16:9, 1:1, 9:16, 3:2)
-                          </span>
-                        )}
-                      </span>
-                    </h5>
-                    <button
-                      className="purple-btn2 rounded-3"
-                      type="button"
-                      onClick={() => setShowEventUploader(true)}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width={16}
-                        height={16}
-                        fill="currentColor"
-                        className="bi bi-plus"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                      </svg>
-                      <span>Add</span>
-                    </button>
-                    {showEventUploader && (
-                      <ProjectImageVideoUpload
-                        onClose={() => setShowEventUploader(false)}
-                        includeInvalidRatios={false}
-                        selectedRatioProp={selectedNoticeRatios}
-                        showAsModal={true}
-                        label={noticeImageLabel}
-                        description={dynamicNoticeDescription}
-                        onContinue={(validImages) =>
-                          handleCroppedImages(validImages, "notice")
-                        }
-                        allowVideos={false}
-                      />
-                    )}
-                  </div>
-                  <div className="col-md-12 mt-2">
-                    <p className="text-muted mb-2">
-                      <i className="bi bi-info-circle"></i> Broadcast images: Multiple images per aspect ratio are allowed
-                    </p>
-                    <div
-                      className="mt-4 tbl-container"
-                      style={{ maxHeight: "300px", overflowY: "auto" }}
-                    >
-                      <table className="w-100">
-                        <thead>
-                          <tr>
-                            <th>File Name</th>
-                            <th>Preview</th>
-                            <th>Ratio</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {noticeboardImageRatios.flatMap(({ key, label }) => {
-                            const files = Array.isArray(formData[key])
-                              ? formData[key]
-                              : formData[key]
-                              ? [formData[key]]
-                              : [];
-
-                            if (files.length === 0) return [];
-
-                            return files.map((file, index) => {
-                              const preview =
-                                file.preview || file.document_url || file.url || file.file_url || "";
-                              const name =
-                                file.name ||
-                                file.document_file_name ||
-                                file.filename ||
-                                `Broadcast Image ${index + 1}`;
-                              const ratio = file.ratio || label;
-
-                              return (
-                                <tr key={`${key}-${index}`}>
-                                  <td>{name}</td>
-                                  <td>
-                                    {preview ? (
-                                      <img
-                                        src={preview}
-                                        alt="Preview"
-                                        style={{
-                                          width: "50px",
-                                          height: "50px",
-                                          objectFit: "cover",
-                                        }}
-                                        onError={(e) => {
-                                          console.error(`Failed to load broadcast image: ${preview}`);
-                                          e.target.style.display = "none";
-                                          e.target.nextSibling.style.display = "block";
-                                        }}
-                                      />
-                                    ) : null}
-                                    <span 
-                                      style={{ 
-                                        display: preview ? "none" : "block",
-                                        fontSize: "12px",
-                                        color: "#666"
-                                      }}
-                                    >
-                                      No Preview
-                                    </span>
-                                  </td>
-                                  <td>{ratio}</td>
-                                  <td>
-                                    <button
-                                      type="button"
-                                      className="btn btn-danger btn-sm"
-                                      disabled={removingImageId === file.id}
-                                      onClick={async () => await handleImageRemoval(key, index)}
-                                    >
-                                      {removingImageId === file.id ? 'Removing...' : 'Remove'}
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            });
-                          })}
-                          {noticeboardImageRatios.every(({ key }) => {
-                            const files = Array.isArray(formData[key]) ? formData[key] : [];
-                            return files.length === 0;
-                          }) && (
-                            <tr>
-                              <td colSpan="4" className="text-center">
-                                No broadcast images uploaded
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="row justify-content-center">
-              <div className="col-md-2">
-                <button
-                  onClick={handleSubmit}
-                  type="submit"
-                  className="purple-btn2 w-100"
-                  disabled={loading}
+              {/* Share With - Full Width */}
+              <div className="md:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
+                <RadioGroup
+                  row
+                  name="shared"
+                  value={formData.shared}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "all") {
+                      setFormData((prev) => ({
+                        ...prev,
+                        shared: "all",
+                        user_id: "",
+                        group_id: [],
+                      }));
+                    } else if (value === "individual") {
+                      setFormData((prev) => ({
+                        ...prev,
+                        shared: "individual",
+                        group_id: [],
+                      }));
+                    } else if (value === "group") {
+                      setFormData((prev) => ({
+                        ...prev,
+                        shared: "group",
+                        user_id: "",
+                      }));
+                    }
+                  }}
+                  className="mb-3"
                 >
-                  {isEdit ? 'Update' : 'Submit'}
-                </button>
-              </div>
-              <div className="col-md-2">
-                <button
-                  type="button"
-                  className="purple-btn2 w-100"
-                  onClick={handleCancel}
-                >
-                  Cancel
-                </button>
+                  <FormControlLabel
+                    value="all"
+                    control={<Radio sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' } }} />}
+                    label="All"
+                  />
+                  <FormControlLabel
+                    value="individual"
+                    control={<Radio sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' } }} />}
+                    label="Individuals"
+                  />
+                  <FormControlLabel
+                    value="group"
+                    control={<Radio sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' } }} />}
+                    label="Groups"
+                  />
+                </RadioGroup>
+
+                {/* Conditional: Individual Users */}
+                {formData.shared === "individual" && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Broadcast User ID
+                    </label>
+                    <MultiSelectBox
+                      options={eventUserID.map((user) => ({
+                        value: user.id,
+                        label: `${user.firstname} ${user.lastname}`,
+                      }))}
+                      value={
+                        formData.user_id
+                          ? formData.user_id.split(",").map((id) => {
+                              const user = eventUserID.find(
+                                (u) => u.id.toString() === id
+                              );
+                              return {
+                                value: id,
+                                label: `${user?.firstname} ${user?.lastname}`,
+                              };
+                            })
+                          : []
+                      }
+                      onChange={(selectedOptions) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          user_id: selectedOptions
+                            .map((option) => option.value)
+                            .join(","),
+                        }))
+                      }
+                      placeholder="Select Users"
+                    />
+                  </div>
+                )}
+
+                {/* Conditional: Groups */}
+                {formData.shared === "group" && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Share with Groups
+                    </label>
+                    <MultiSelectBox
+                      options={groups.map((group) => ({
+                        value: group.id,
+                        label: group.name,
+                      }))}
+                      value={
+                        Array.isArray(formData.group_id)
+                          ? formData.group_id
+                              .map((id) => {
+                                const group = groups.find(
+                                  (g) =>
+                                    g.id === id ||
+                                    g.id.toString() === id.toString()
+                                );
+                                return group
+                                  ? { value: group.id, label: group.name }
+                                  : null;
+                              })
+                              .filter(Boolean)
+                          : []
+                      }
+                      onChange={(selectedOptions) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          group_id: selectedOptions.map(
+                            (option) => option.value
+                          ),
+                        }))
+                      }
+                      placeholder="Select Groups"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </>
+
+        {/* Section: File Upload */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#C72030' }}>
+                <FileText size={16} color="#fff" />
+              </span>
+              File Upload
+            </h2>
+          </div>
+                <div className="p-6 space-y-6">
+            {/* Cover Images Section */}
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-base font-medium text-gray-900 flex items-center">
+                  Broadcast Cover Image
+                  <span
+                    className="ml-2 text-xs text-gray-500 cursor-help relative group"
+                    onMouseEnter={() => setShowTooltip(true)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                  >
+                    [i]
+                    {showTooltip && (
+                      <span className="absolute left-0 top-6 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
+                        Max Upload Size 3 MB. Single image per aspect ratio (16:9, 1:1, 9:16, 3:2)
+                      </span>
+                    )}
+                  </span>
+                </h3>
+                <button
+                  className="px-4 py-2 bg-[#C72030] hover:bg-[#B8252F] text-white rounded-md flex items-center gap-2 transition-colors"
+                  type="button"
+                  onClick={() => setShowCoverUploader(true)}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width={16}
+                    height={16}
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
+                  </svg>
+                  <span>Add</span>
+                </button>
+              </div>
+
+              {showCoverUploader && (
+                <ProjectBannerUpload
+                  onClose={() => setShowCoverUploader(false)}
+                  includeInvalidRatios={false}
+                  selectedRatioProp={selectedCoverRatios}
+                  showAsModal={true}
+                  label={coverImageLabel}
+                  description={dynamicCoverDescription}
+                  onContinue={(validImages) =>
+                    handleCroppedImages(validImages, "cover")
+                  }
+                  allowVideos={false}
+                />
+              )}
+
+              <div className="bg-gray-50 rounded-md border border-gray-200 overflow-hidden">
+                <p className="px-4 py-2 text-sm text-gray-600 border-b border-gray-200 bg-white">
+                  <i className="bi bi-info-circle mr-1"></i> Cover images: Single image per aspect ratio
+                </p>
+                <div className="max-h-[300px] overflow-y-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-100 sticky top-0">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">File Name</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Preview</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Ratio</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                      {coverImageRatios.flatMap(({ key, label }) => {
+                        const files = Array.isArray(formData[key])
+                          ? formData[key]
+                          : formData[key]
+                          ? [formData[key]]
+                          : [];
+
+                        if (files.length === 0) return [];
+
+                        return files.map((file, index) => {
+                          const preview =
+                            file.preview || file.document_url || file.url || file.file_url || "";
+                          const name =
+                            file.name ||
+                            file.document_file_name ||
+                            file.filename ||
+                            `Cover Image ${index + 1}`;
+                          const ratio = file.ratio || label;
+
+                          return (
+                            <tr key={`${key}-${index}`} className="border-b border-gray-100">
+                              <td className="px-4 py-3 text-sm text-gray-900">{name}</td>
+                              <td className="px-4 py-3">
+                                {preview ? (
+                                  <img
+                                    src={preview}
+                                    alt="Preview"
+                                    className="w-12 h-12 object-cover rounded"
+                                    onError={(e) => {
+                                      console.error(`Failed to load cover image: ${preview}`);
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = "none";
+                                      if (target.nextSibling) {
+                                        (target.nextSibling as HTMLElement).style.display = "block";
+                                      }
+                                    }}
+                                  />
+                                ) : null}
+                                <span 
+                                  style={{ 
+                                    display: preview ? "none" : "block",
+                                  }}
+                                  className="text-xs text-gray-500"
+                                >
+                                  No Preview
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{ratio}</td>
+                              <td className="px-4 py-3">
+                                <button
+                                  type="button"
+                                  className="px-3 py-1 bg-[#C72030] hover:bg-[#B8252F] text-white text-sm rounded transition-colors disabled:opacity-50"
+                                  disabled={removingImageId === file.id}
+                                  onClick={async () => await handleImageRemoval(key, index)}
+                                >
+                                  {removingImageId === file.id ? 'Removing...' : 'Remove'}
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })}
+                      {coverImageRatios.every(({ key }) => {
+                        const files = Array.isArray(formData[key]) ? formData[key] : [];
+                        return files.length === 0;
+                      }) && (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-8 text-center text-gray-500 text-sm">
+                            No cover images uploaded
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Broadcast Images Section */}
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-base font-medium text-gray-900 flex items-center">
+                  Broadcast Images
+                  <span
+                    className="ml-2 text-xs text-gray-500 cursor-help relative group"
+                    onMouseEnter={() => setShowAttachmentTooltip(true)}
+                    onMouseLeave={() => setShowAttachmentTooltip(false)}
+                  >
+                    [i]
+                    {showAttachmentTooltip && (
+                      <span className="absolute left-0 top-6 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
+                        Max Upload Size 3 MB. Multiple images per aspect ratio (16:9, 1:1, 9:16, 3:2)
+                      </span>
+                    )}
+                  </span>
+                </h3>
+                <button
+                  className="px-4 py-2 bg-[#C72030] hover:bg-[#B8252F] text-white rounded-md flex items-center gap-2 transition-colors"
+                  type="button"
+                  onClick={() => setShowEventUploader(true)}
+                    >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width={16}
+                    height={16}
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
+                  </svg>
+                  <span>Add</span>
+                </button>
+              </div>
+
+              {showEventUploader && (
+                <ProjectImageVideoUpload
+                  onClose={() => setShowEventUploader(false)}
+                  includeInvalidRatios={false}
+                  selectedRatioProp={selectedNoticeRatios}
+                  showAsModal={true}
+                  label={noticeImageLabel}
+                  description={dynamicNoticeDescription}
+                  onContinue={(validImages) =>
+                    handleCroppedImages(validImages, "notice")
+                  }
+                  allowVideos={false}
+                />
+              )}
+
+              <div className="bg-gray-50 rounded-md border border-gray-200 overflow-hidden">
+                <p className="px-4 py-2 text-sm text-gray-600 border-b border-gray-200 bg-white">
+                  <i className="bi bi-info-circle mr-1"></i> Broadcast images: Multiple images per aspect ratio are allowed
+                </p>
+                <div className="max-h-[300px] overflow-y-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-100 sticky top-0">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">File Name</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Preview</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Ratio</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-700">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                      {noticeboardImageRatios.flatMap(({ key, label }) => {
+                        const files = Array.isArray(formData[key])
+                          ? formData[key]
+                          : formData[key]
+                          ? [formData[key]]
+                          : [];
+
+                        if (files.length === 0) return [];
+
+                        return files.map((file, index) => {
+                          const preview =
+                            file.preview || file.document_url || file.url || file.file_url || "";
+                          const name =
+                            file.name ||
+                            file.document_file_name ||
+                            file.filename ||
+                            `Broadcast Image ${index + 1}`;
+                          const ratio = file.ratio || label;
+
+                          return (
+                            <tr key={`${key}-${index}`} className="border-b border-gray-100">
+                              <td className="px-4 py-3 text-sm text-gray-900">{name}</td>
+                              <td className="px-4 py-3">
+                                {preview ? (
+                                  <img
+                                    src={preview}
+                                    alt="Preview"
+                                    className="w-12 h-12 object-cover rounded"
+                                    onError={(e) => {
+                                      console.error(`Failed to load broadcast image: ${preview}`);
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = "none";
+                                      if (target.nextSibling) {
+                                        (target.nextSibling as HTMLElement).style.display = "block";
+                                      }
+                                    }}
+                                  />
+                                ) : null}
+                                <span 
+                                  style={{ 
+                                    display: preview ? "none" : "block",
+                                  }}
+                                  className="text-xs text-gray-500"
+                                >
+                                  No Preview
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{ratio}</td>
+                              <td className="px-4 py-3">
+                                <button
+                                  type="button"
+                                  className="px-3 py-1 bg-[#C72030] hover:bg-[#B8252F] text-white text-sm rounded transition-colors disabled:opacity-50"
+                                  disabled={removingImageId === file.id}
+                                  onClick={async () => await handleImageRemoval(key, index)}
+                                >
+                                  {removingImageId === file.id ? 'Removing...' : 'Remove'}
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })}
+                      {noticeboardImageRatios.every(({ key }) => {
+                        const files = Array.isArray(formData[key]) ? formData[key] : [];
+                        return files.length === 0;
+                      }) && (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-8 text-center text-gray-500 text-sm">
+                            No broadcast images uploaded
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-center gap-4 mt-8">
+          <button
+            onClick={handleSubmit}
+            type="submit"
+            className="px-8 py-2.5 bg-[#C72030] hover:bg-[#B8252F] text-white font-medium rounded-md transition-colors disabled:opacity-50"
+            disabled={loading}
+          >
+            {isEdit ? 'Update' : 'Submit'}
+          </button>
+          <button
+            type="button"
+            className="px-8 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-md transition-colors"
+            onClick={handleCancel}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 

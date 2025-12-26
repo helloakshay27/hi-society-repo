@@ -1,0 +1,523 @@
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
+import { Button } from "@/components/ui/button";
+import { Plus, Eye } from "lucide-react";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
+import { API_CONFIG } from "@/config/apiConfig";
+
+const NoticeboardList = () => {
+  const baseURL = API_CONFIG.BASE_URL;
+  const navigate = useNavigate();
+  const [noticeboards, setNoticeboards] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [noticeboardPermission, setNoticeboardPermission] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [showActionPanel, setShowActionPanel] = useState(false);
+
+  const getNoticeboardPermission = () => {
+    try {
+      const lockRolePermissions = localStorage.getItem("lock_role_permissions");
+      if (!lockRolePermissions) return { create: "true", update: "true", show: "true", destroy: "true" };
+
+      const permissions = JSON.parse(lockRolePermissions);
+      // Return default permissions if noticeboard permissions don't exist
+      return permissions.noticeboard || { create: "true", update: "true", show: "true", destroy: "true" };
+    } catch (e) {
+      console.error("Error parsing lock_role_permissions:", e);
+      return { create: "true", update: "true", show: "true", destroy: "true" };
+    }
+  };
+
+  useEffect(() => {
+    const permissions = getNoticeboardPermission();
+    console.log("Noticeboard permissions:", permissions);
+    setNoticeboardPermission(permissions);
+  }, []);
+
+  useEffect(() => {
+    const fetchNoticeboards = async () => {
+      setLoading(true); // Start loading
+      try {
+        const response = await fetch(`${baseURL}noticeboards.json`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+  const fetchNoticeboards = useCallback(async (search: string) => {
+    setLoading(true);
+    setIsSearching(!!search);
+    try {
+      const response = await fetch(`${baseURL}noticeboards.json`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+
+      // Handle different response formats - API returns direct array
+      let noticeboardsData = [];
+      if (Array.isArray(data)) {
+        noticeboardsData = data;
+      } else if (data.noticeboards && Array.isArray(data.noticeboards)) {
+        noticeboardsData = data.noticeboards;
+      } else if (data.data && Array.isArray(data.data)) {
+        noticeboardsData = data.data;
+      }
+
+      // Client-side search filtering
+      let filteredNoticeboards = noticeboardsData;
+      if (search) {
+        const searchLower = search.toLowerCase();
+        filteredNoticeboards = noticeboardsData.filter((noticeboard) =>
+          (noticeboard.notice_heading || "").toLowerCase().includes(searchLower) ||
+          (noticeboard.notice_text || "").toLowerCase().includes(searchLower) ||
+          (noticeboard.notice_type || "").toLowerCase().includes(searchLower) ||
+          (noticeboard.project_name || "").toLowerCase().includes(searchLower)
+        );
+      }
+
+      setNoticeboards(filteredNoticeboards);
+    } catch (error) {
+      console.error("Error fetching noticeboards:", error);
+      toast.error("Failed to fetch noticeboards");
+      setNoticeboards([]);
+    } finally {
+      setLoading(false);
+      setIsSearching(false);
+    }
+  }, [baseURL]);
+
+  useEffect(() => {
+    fetchNoticeboards(searchTerm);
+  }, [searchTerm, fetchNoticeboards]);
+
+  const handleGlobalSearch = (term: string) => {
+    setSearchTerm(term);
+  };      "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ noticeboard: { active: !currentStatus } }),
+      });
+
+      toast.success("Updated Status");
+      if (!response.ok) {
+        throw new Error("Failed to update noticeboard status");
+      }
+
+      // Update the local state after API success
+      setNoticeboards((prevNoticeboards) =>
+        prevNoticeboards.map((noticeboard) =>
+          noticeboard.id === noticeboardId ? { ...noticeboard, active: !currentStatus } : noticeboard
+        )
+      );
+    } catch (error) {
+      console.error("Error updating noticeboard status:", error);
+    }
+  };
+
+  function formatDateTimeManual(datetime: string) {
+    if (!datetime) return "-";
+    const date = new Date(datetime);
+    return date.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
+
+  const columns = [
+    { key: 'actions', label: 'Action', sortable: false },
+    { key: 'id', label: 'Sr No', sortable: true },
+    { key: 'notice_heading', label: 'Notice Heading', sortable: true },
+    { key: 'notice_type', label: 'Notice Type', sortable: true },
+    { key: 'project_name', label: 'Project', sortable: true },
+    { key: 'expire_time', label: 'Expire Time', sortable: false },
+    { key: 'active', label: 'Status', sortable: false },
+  ];
+
+  const renderCell = (item: any, columnKey: string) => {
+    switch (columnKey) {
+      case 'actions':
+        return (
+          <div className="flex gap-1">
+            {noticeboardPermission.show === "true" && (
+              <Button variant="ghost" size="sm" onClick={() => handleViewNoticeboard(item.id)} title="View">
+                <Eye className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        );
+      case 'notice_heading':
+        return item.notice_heading || "-";
+      case 'notice_type':
+        return item.notice_type
+          ? item.notice_type.charAt(0).toUpperCase() + item.notice_type.slice(1).toLowerCase()
+          : "-";
+      case 'project_name':
+        return item.project_name || "-";
+      case 'expire_time':
+        return formatDateTimeManual(item.expire_time);
+      case 'active':
+        return noticeboardPermission.destroy === "true" ? (
+          <button
+            onClick={() => handleToggleNoticeboard(item.id, item.active)}
+            className="toggle-button"
+            style={{
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              padding: 0,
+              width: "70px",
+            }}
+          >
+            {item.active ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="40"
+                height="25"
+                fill="#de7008"
+                className="bi bi-toggle-on"
+                viewBox="0 0 16 16"
+              >
+                <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="40"
+                height="25"
+                fill="#667085"
+                className="bi bi-toggle-off"
+                viewBox="0 0 16 16"
+              >
+                <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
+              </svg>
+            )}
+          </button>
+        ) : (
+          <span className="text-sm text-gray-500">{item.active ? "Active" : "Inactive"}</span>
+        );
+      default:
+        return item[columnKey] ?? '-';
+    }
+  };
+
+  const renderCustomActions = () => (
+    <div className="flex flex-wrap">
+      <Button 
+        onClick={() => setShowActionPanel((prev) => !prev)}
+        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
+      >
+        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
+        Action
+      </Button>
+    </div>
+  );
+
+  const renderListTab = () => (
+    <div className="space-y-4">
+      {showActionPanel && (
+        <SelectionPanel
+          onAdd={handleAddNoticeboard}
+          onClearSelection={handleClearSelection}
+        />
+      )}
+      <EnhancedTable
+        data={noticeboards}
+        columns={columns}
+        renderCell={renderCell}
+        pagination={false}
+        enableExport={true}
+        exportFileName="broadcasts"
+        storageKey="noticeboards-table"
+        enableGlobalSearch={true}
+        onGlobalSearch={handleGlobalSearch}
+        searchPlaceholder="Search broadcasts..."
+        leftActions={renderCustomActions()}
+        loading={isSearching || loading}
+        loadingMessage={isSearching ? "Searching broadcasts..." : "Loading broadcasts..."}
+      />
+    </div>
+  );
+
+  return (
+    <div className="p-2 sm:p-4 lg:p-6">
+      <Toaster position="top-right" richColors closeButton />
+      <div className="w-full">
+        {renderListTab()}
+      </div>
+    </div>
+  );
+};
+
+export default NoticeboardList;
+              fill="currentColor"
+              viewBox="0 0 16 16"
+            >
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
+            </svg>
+            <span>Add</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Table Card */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              {loading ? (
+                <div className="text-center">
+                  <div
+                    className="spinner-border"
+                    role="status"
+                    style={{ color: "var(--red)" }}
+                  >
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+        ) : (
+          <>
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-[#E5E0D3] border-b border-gray-200">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Action</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Sr No</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Notice Heading</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Notice Type</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Project</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Expire Time</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-gray-200">
+                  {displayedNoticeboards.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                        No broadcasts found.
+                      </td>
+                    </tr>
+                  ) : (
+                    displayedNoticeboards.map((noticeboard, index) => (
+                      <tr key={noticeboard.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              navigate(`/noticeboard-details/${noticeboard.id}`);
+                            }}
+                            className="text-[#C72030] hover:text-[#A01820] transition-colors"
+                            title="View Details"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="20"
+                              height="20"
+                              fill="currentColor"
+                              viewBox="0 0 16 16"
+                            >
+                              <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z" />
+                              <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0" />
+                            </svg>
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {(pagination.current_page - 1) * pageSize + index + 1}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700 font-medium">
+                          {noticeboard.notice_heading || "-"}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {noticeboard.notice_type
+                            ? noticeboard.notice_type.charAt(0).toUpperCase() +
+                              noticeboard.notice_type.slice(1).toLowerCase()
+                            : "-"}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {noticeboard.project_name || "-"}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {formatDateTimeManual(noticeboard.expire_time)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() =>
+                              handleToggleNoticeboard(noticeboard.id, noticeboard.active)
+                            }
+                            className="focus:outline-none transition-all hover:scale-105"
+                            title={noticeboard.active ? "Active - Click to Deactivate" : "Inactive - Click to Activate"}
+                          >
+                            {noticeboard.active ? (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="40"
+                                height="25"
+                                fill="#de7008"
+                                viewBox="0 0 16 16"
+                              >
+                                <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
+                              </svg>
+                            ) : (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="40"
+                                height="25"
+                                fill="#667085"
+                                viewBox="0 0 16 16"
+                              >
+                                <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
+                              </svg>
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-200">
+              {/* Page Info */}
+              <div className="text-sm text-gray-600">
+                Showing{" "}
+                {Math.min(
+                  (pagination.current_page - 1) * pageSize + 1 || 1,
+                  pagination.total_count
+                )}{" "}
+                to{" "}
+                {Math.min(
+                  pagination.current_page * pageSize,
+                  pagination.total_count
+                )}{" "}
+                of {pagination.total_count} entries
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center gap-2">
+                {/* First Button */}
+                <button
+                  onClick={() => handlePageChange(1)}
+                  disabled={pagination.current_page === 1}
+                  className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  First
+                </button>
+
+                {/* Previous Button */}
+                <button
+                  onClick={() => handlePageChange(pagination.current_page - 1)}
+                  disabled={pagination.current_page === 1}
+                  className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Prev
+                </button>
+
+                {/* Dynamic Page Numbers */}
+                {(() => {
+                  const totalPages = pagination.total_pages;
+                  const currentPage = pagination.current_page;
+                  const pageNumbers = [];
+
+                  let startPage = Math.max(currentPage - 2, 1);
+                  let endPage = Math.min(startPage + 4, totalPages);
+
+                  if (endPage - startPage < 5) {
+                    startPage = Math.max(endPage - 4, 1);
+                  }
+
+                  if (startPage > 1) {
+                    pageNumbers.push(
+                      <button
+                        key={1}
+                        onClick={() => handlePageChange(1)}
+                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        1
+                      </button>
+                    );
+                    if (startPage > 2) {
+                      pageNumbers.push(
+                        <span key="start-ellipsis" className="px-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                  }
+
+                  for (let i = startPage; i <= endPage; i++) {
+                    pageNumbers.push(
+                      <button
+                        key={i}
+                        onClick={() => handlePageChange(i)}
+                        className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                          pagination.current_page === i
+                            ? "bg-[#C72030] text-white border border-[#C72030]"
+                            : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        {i}
+                      </button>
+                    );
+                  }
+
+                  if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                      pageNumbers.push(
+                        <span key="end-ellipsis" className="px-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                    pageNumbers.push(
+                      <button
+                        key={totalPages}
+                        onClick={() => handlePageChange(totalPages)}
+                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        {totalPages}
+                      </button>
+                    );
+                  }
+
+                  return pageNumbers;
+                })()}
+
+                {/* Next Button */}
+                <button
+                  onClick={() => handlePageChange(pagination.current_page + 1)}
+                  disabled={pagination.current_page === pagination.total_pages}
+                  className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+
+                {/* Last Button */}
+                <button
+                  onClick={() => handlePageChange(pagination.total_pages)}
+                  disabled={pagination.current_page === pagination.total_pages}
+                  className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Last
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default NoticeboardList;

@@ -8,6 +8,23 @@ import { ImageUploadingButton } from "../components/reusable/ImageUploadingButto
 import { ImageCropper } from "../components/reusable/ImageCropper";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
+import { ArrowLeft, FileText, Calendar, Users, Plus } from "lucide-react";
+import {
+  TextField,
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+} from "@mui/material";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
+import SelectBox from "@/components/ui/select-box";
 
 const EventEdit = () => {
   const { id } = useParams();
@@ -70,6 +87,31 @@ const EventEdit = () => {
   const [showAttachmentTooltip, setShowAttachmentTooltip] = useState(false);
   const [showCoverUploader, setShowCoverUploader] = useState(false);
   const [showEventUploader, setShowEventUploader] = useState(false);
+  const baseURL = API_CONFIG.BASE_URL;
+
+  // Field styles for Material-UI components
+  const fieldStyles = {
+    height: '45px',
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    '& .MuiOutlinedInput-root': {
+      height: '45px',
+      '& fieldset': {
+        borderColor: '#ddd',
+      },
+      '&:hover fieldset': {
+        borderColor: '#C72030',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#C72030',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      '&.Mui-focused': {
+        color: '#C72030',
+      },
+    },
+  };
 
   const timeOptions = [
     // { value: "", label: "Select Unit" },
@@ -1085,155 +1127,231 @@ const EventEdit = () => {
   };
 
   return (
-    <>
-      <div className="main-content">
-        <div className="">
-          <div className="module-data-section container-fluid">
-            <div className="module-data-section p-3">
-              <div className="card mt-4 pb-4 mx-4">
-                <div className="card-header">
-                  <h3 className="card-title">Edit Event</h3>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Event List</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Edit Event</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">EDIT EVENT</h1>
+      </div>
+
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
+        {/* Section: Event Information */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <FileText size={16} color="#C72030" />
+              </span>
+              Event Information
+            </h2>
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Project Select */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+              >
+                <InputLabel shrink>Project</InputLabel>
+                <MuiSelect
+                  value={formData.project_id || ""}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, project_id: e.target.value }))}
+                  label="Project"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select Project</MenuItem>
+                  {projects.map((project) => (
+                    <MenuItem key={project.id} value={project.id}>
+                      {project.project_name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+
+              {/* Event Type */}
+              <TextField
+                label="Event Type"
+                placeholder="Enter Event Type"
+                value={formData.event_type || ""}
+                onChange={handleChange}
+                name="event_type"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
+
+              {/* Event Name */}
+              <TextField
+                label="Event Name"
+                placeholder="Enter Event Name"
+                value={formData.event_name}
+                onChange={handleChange}
+                name="event_name"
+                required
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
+
+              {/* Event At */}
+              <TextField
+                label="Event At"
+                placeholder="Enter Event At"
+                value={formData.event_at}
+                onChange={handleChange}
+                name="event_at"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
+
+              {/* Event From */}
+              <TextField
+                label="Event From"
+                type="datetime-local"
+                value={formatDateForInput(formData.from_time) || ""}
+                onChange={handleChange}
+                name="from_time"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
+
+              {/* Event To */}
+              <TextField
+                label="Event To"
+                type="datetime-local"
+                value={formatDateForInput(formData.to_time)}
+                onChange={handleChange}
+                name="to_time"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
+
+              {/* Event Description */}
+              <div className="md:col-span-3">
+                <TextField
+                  label="Event Description"
+                  placeholder="Enter Event Description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  name="description"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      minHeight: '90px',
+                      alignItems: 'flex-start',
+                      '& fieldset': {
+                        borderColor: '#ddd',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#C72030',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#C72030',
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      '&.Mui-focused': {
+                        color: '#C72030',
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Old Bootstrap Form Elements */}
+            <div className="row mt-4">
+              {/* <div className="col-md-3">
+                <div className="form-group">
+                  <label>
+                    Attachment
+                    <span
+                      className="tooltip-container"
+                      onMouseEnter={() => setShowTooltip(true)}
+                      onMouseLeave={() => setShowTooltip(false)}
+                    >
+                      [i]
+                      {showTooltip && (
+                        <span className="tooltip-text">
+                          Max Upload Size for video 10 MB and for image 3
+                          MB
+                        </span>
+                      )}
+                    </span>
+                  </label>
+                  <input
+                    className="form-control"
+                    type="file"
+                    name="attachfile"
+                    accept="image/*,video/*" 
+                    multiple
+                    onChange={handleFileChange} 
+                  />
                 </div>
 
-                <div className="card-body">
-                  <div className="row">
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>Project</label>
-                        <SelectBox
-                          options={projects.map((project) => ({
-                            value: project.id, // Ensure this matches API response field
-                            label: project.project_name, // Ensure correct field name
-                          }))}
-                          defaultValue={formData.project_id || ""}
-                          onChange={(value) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              project_id: value,
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>Event Type</label>
-                        <input
-                          className="form-control"
-                          type="text"
-                          name="event_type"
-                          placeholder="Enter Event Type"
-                          value={formData.event_type || ""}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>
-                          Event Name
-                          <span className="otp-asterisk"> *</span>
-                        </label>
-                        <input
-                          className="form-control"
-                          type="text"
-                          name="event_name"
-                          placeholder="Enter Event Name"
-                          value={formData.event_name}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>Event At</label>
-                        <input
-                          className="form-control"
-                          type="text"
-                          name="event_at"
-                          placeholder="Enter Event At"
-                          value={formData.event_at}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>Event From</label>
-                        <input
-                          className="form-control"
-                          type="datetime-local"
-                          name="from_time"
-                          placeholder="Enter Event From"
-                          value={formatDateForInput(formData.from_time) || ""}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>Event To</label>
-                        <input
-                          className="form-control"
-                          type="datetime-local"
-                          name="to_time"
-                          placeholder="Enter Event To"
-                          value={formatDateForInput(formData.to_time)}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="col-md-3">
-                      <div className="form-group">
-                        <label>Event Description</label>
-                        <textarea
-                          className="form-control"
-                          rows={1}
-                          name="description"
-                          placeholder="Enter Project Description"
-                          value={formData.description}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-
-                    {/* <div className="col-md-3">
-                      <div className="form-group">
-                        <label>
-                          Attachment
-                          <span
-                            className="tooltip-container"
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
-                          >
-                            [i]
-                            {showTooltip && (
-                              <span className="tooltip-text">
-                                Max Upload Size for video 10 MB and for image 3
-                                MB
-                              </span>
-                            )}
-                          </span>
-                        </label>
-                        <input
-                          className="form-control"
-                          type="file"
-                          name="attachfile"
-                          accept="image/*,video/*" 
-                          multiple
-                          onChange={handleFileChange} 
-                        />
-                      </div>
-
-                    
-                      {Array.isArray(formData.previewImage) &&
-                        formData.previewImage.length > 0 && (
-                          <div className="d-flex flex-wrap gap-2 mt-2">
-                            {formData.previewImage.map((fileObj, index) => {
+                {Array.isArray(formData.previewImage) &&
+                  formData.previewImage.length > 0 && (
+                    <div className="d-flex flex-wrap gap-2 mt-2">
+                      {formData.previewImage.map((fileObj, index) => {
                               const { url, type, isExisting } = fileObj;
                               const isVideo = type.startsWith("video");
 
@@ -1298,12 +1416,12 @@ const EventEdit = () => {
                                     {isExisting ? "" : ""}
                                   </small>
                                 </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                    </div> */}
-                    {/* <div className="col-md-3 col-sm-6 col-12">
+                        );
+                      })}
+                    </div>
+                  )}
+              </div> */}
+              {/* <div className="col-md-3 col-sm-6 col-12">
                       <div className="form-group mt-3">
                   
                         <label className="d-flex align-items-center gap-1 mb-2">
@@ -1412,7 +1530,7 @@ const EventEdit = () => {
                       </div>
                     </div> */}
 
-                    <div className="col-md-3">
+              <div className="col-md-3">
                       <div className="form-group mt-3">
                         <label>Mark Important</label>
                         <div className="d-flex">
@@ -1877,52 +1995,44 @@ const EventEdit = () => {
                     </div>
                   </div>
                 </div>
+
+        {/* File Upload Section */}
+        <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-bold text-gray-900">File Upload</h3>
+          </div>
+          
+          <div className="p-6">
+            {/* Event Cover Image */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <h5 className="text-base font-semibold">
+                  Event Cover Image{" "}
+                  <span
+                    className="tooltip-container relative inline-block cursor-pointer"
+                    onMouseEnter={() => setShowTooltip(true)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                  >
+                    [i]
+                    {showTooltip && (
+                      <span className="tooltip-text absolute bg-gray-800 text-white text-xs rounded py-1 px-2 -top-8 left-0 whitespace-nowrap">
+                        Max Upload Size 3 MB and Required ratio is 16:9
+                      </span>
+                    )}
+                  </span>
+                </h5>
+
+                <button
+                  className="bg-[#C72030] hover:bg-[#B8252F] text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                  type="button"
+                  onClick={() => setShowCoverUploader(true)}
+                >
+                  <Plus size={16} />
+                  <span>Add Cover Image</span>
+                </button>
               </div>
 
-              <div className="card mt-3 pb-4 mx-4">
-                <div className="card-header3">
-                  <h3 className="card-title">File Upload</h3>
-                </div>
-                <div className="card-body mt-0 pb-0">
-                  <div className="row"></div>
-
-                  <div className="d-flex justify-content-between align-items-end mx-1">
-                    <h5 className="mt-3">
-                      Cover Image{" "}
-                      <span
-                        className="tooltip-container"
-                        onMouseEnter={() => setShowTooltip(true)}
-                        onMouseLeave={() => setShowTooltip(false)}
-                      >
-                        [i]
-                        {showTooltip && (
-                          <span className="tooltip-text">
-                            Max Upload Size 3 MB and Required ratio is 16:9
-                          </span>
-                        )}
-                      </span>
-                    </h5>
-
-                    <button
-                      className="purple-btn2 rounded-3"
-                      type="button"
-                      onClick={() => setShowCoverUploader(true)}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width={16}
-                        height={16}
-                        fill="currentColor"
-                        className="bi bi-plus"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                      </svg>
-                      <span>Add</span>
-                    </button>
-                  </div>
-
-                  {showCoverUploader && (
+              {showCoverUploader && (
                     <ProjectBannerUpload
                       onClose={() => setShowCoverUploader(false)}
                       includeInvalidRatios={false}
@@ -1936,29 +2046,29 @@ const EventEdit = () => {
                     />
                   )}
 
-                  <div className="col-md-12 mt-2">
-                    <div className="mt-4 tbl-container">
-                      <table className="w-100">
-                        <thead>
-                          <tr>
-                            <th>File Name</th>
-                            <th>Preview</th>
-                            <th>Ratio</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
+              <div className="mt-4">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>File Name</TableHead>
+                        <TableHead>Preview</TableHead>
+                        <TableHead>Ratio</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                           {formData.cover_image?.document_url && (
-                            <tr>
-                              <td>
+                            <TableRow>
+                              <TableCell>
                                 {formData.cover_image.document_file_name ||
                                   formData.cover_image.file_name ||
                                   formData.cover_image.document_url
                                     ?.split("/")
                                     ?.pop() ||
                                   "Cover Image"}
-                              </td>
-                              <td>
+                              </TableCell>
+                              <TableCell>
                                 <img
                                   src={formData.cover_image.document_url}
                                   alt="Cover Preview"
@@ -1969,20 +2079,20 @@ const EventEdit = () => {
                                     objectFit: "cover",
                                   }}
                                 />
-                              </td>
-                              <td>N/A</td>
-                              <td>
+                              </TableCell>
+                              <TableCell>N/A</TableCell>
+                              <TableCell>
                                 <button
                                   type="button"
-                                  className="purple-btn2"
+                                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors duration-200"
                                   onClick={() =>
                                     handleFetchedDiscardGallery("cover_image")
                                   }
                                 >
-                                  x
+                                  Delete
                                 </button>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           )}
 
                           {coverImageRatios.flatMap(({ key, label }) => {
@@ -2004,9 +2114,9 @@ const EventEdit = () => {
                               const ratio = file.ratio || label;
 
                               return (
-                                <tr key={`${key}-${file.id || index}`}>
-                                  <td>{name}</td>
-                                  <td>
+                                <TableRow key={`${key}-${file.id || index}`}>
+                                  <TableCell>{name}</TableCell>
+                                  <TableCell>
                                     {preview ? (
                                       <img
                                         style={{
@@ -2028,12 +2138,12 @@ const EventEdit = () => {
                                     ) : (
                                       <span>No Preview Available</span>
                                     )}
-                                  </td>
-                                  <td>{ratio}</td>
-                                  <td>
+                                  </TableCell>
+                                  <TableCell>{ratio}</TableCell>
+                                  <TableCell>
                                     <button
                                       type="button"
-                                      className="purple-btn2"
+                                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors duration-200"
                                       onClick={() =>
                                         handleFetchedDiscardGallery(
                                           key,
@@ -2042,10 +2152,10 @@ const EventEdit = () => {
                                         )
                                       }
                                     >
-                                      x
+                                      Delete
                                     </button>
-                                  </td>
-                                </tr>
+                                  </TableCell>
+                                </TableRow>
                               );
                             });
                           })}
@@ -2054,194 +2164,50 @@ const EventEdit = () => {
                             ({ key }) =>
                               !(formData[key] && formData[key].length > 0)
                           ) && (
-                            <tr>
-                              {/* <td colSpan="4" className="text-center">No event images uploaded</td> */}
-                            </tr>
+                            <TableRow>
+                              <TableCell colSpan={4} className="text-center text-gray-500">
+                                No cover images uploaded
+                              </TableCell>
+                            </TableRow>
                           )}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     </div>
                   </div>
-                  {/* <div className="d-flex justify-content-between align-items-end mx-1">
-                    <h5 className="mt-3">
-                      Event Attachment{" "}
-                      <span
-                        className="tooltip-container"
-                        onMouseEnter={() => setShowAttachmentTooltip(true)}
-                        onMouseLeave={() => setShowAttachmentTooltip(false)}
-                      >
-                        [i]
-                        {showAttachmentTooltip && (
-                          <span className="tooltip-text">
-                            Max Upload Size 3 MB and Required ratio is 16:9
-                          </span>
-                        )}
-                      </span>
-                    </h5>
-                    <button
-                      className="purple-btn2 rounded-3"
-                      type="button"
-                      onClick={() => setShowEventUploader(true)}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width={16}
-                        height={16}
-                        fill="currentColor"
-                        className="bi bi-plus"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                      </svg>
-                      <span>Add</span>
-                    </button>
-                    {showEventUploader && (
-                      <ProjectBannerUpload
-                        onClose={() => setShowEventUploader(false)}
-                        includeInvalidRatios={false}
-                        selectedRatioProp={selectedEventRatios}
-                        showAsModal={true}
-                        label={eventImageLabel}
-                        description={dynamicEventDescription}
-                        onContinue={(validImages) =>
-                          handleEventImageCropComplete(
-                            validImages,
-                            "event_images"
-                          )
-                        }
-                      />
-                    )}
-                  </div>
-                  <div className="col-md-12 mt-2">
-                    <div
-                      className="mt-4 tbl-container"
-                      style={{ maxHeight: "300px", overflowY: "auto" }}
-                    >
-                      <table className="w-100">
-                        <thead>
-                          <tr>
-                            <th>File Name</th>
-                            <th>Preview</th>
-                            <th>Ratio</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {eventImageRatios.flatMap(({ key, label }) => {
-                            const files = Array.isArray(formData[key])
-                              ? formData[key]
-                              : formData[key]
-                              ? [formData[key]]
-                              : [];
 
-                            if (files.length === 0) return [];
-
-                            return files.map((file, index) => {
-                              const preview =
-                                file.preview || file.document_url || "";
-                              const name =
-                                file.name ||
-                                file.document_file_name ||
-                                `Image ${index + 1}`;
-                              const ratio = file.ratio || label;
-
-                              return (
-                                <tr key={`${key}-${file.id || index}`}>
-                                  <td>{name}</td>
-                                  <td>
-                                    {preview ? (
-                                      <img
-                                        style={{
-                                          maxWidth: 100,
-                                          maxHeight: 100,
-                                          objectFit: "cover",
-                                        }}
-                                        className="img-fluid rounded"
-                                        src={preview}
-                                        alt={name}
-                                        onError={(e) => {
-                                          console.error(
-                                            `Failed to load image: ${preview}`
-                                          );
-                                          e.target.src =
-                                            "https://via.placeholder.com/100?text=Preview+Failed";
-                                        }}
-                                      />
-                                    ) : (
-                                      <span>No Preview Available</span>
-                                    )}
-                                  </td>
-                                  <td>{ratio}</td>
-                                  <td>
-                                    <button
-                                      type="button"
-                                      className="purple-btn2"
-                                      onClick={() =>
-                                        handleFetchedDiscardGallery(key, index, file.id)
-                                      }
-                                    >
-                                      x
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            });
-                          })}
-
-                          {eventImageRatios.every(
-                            ({ key }) =>
-                              !(formData[key] && formData[key].length > 0)
-                          ) && (
-                            <tr>
-                            
-                            </tr>
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h5 className="text-base font-semibold">
+                        Event Attachment Images{" "}
+                        <span
+                          className="tooltip-container relative inline-block cursor-pointer"
+                          onMouseEnter={() => setShowAttachmentTooltip(true)}
+                          onMouseLeave={() => setShowAttachmentTooltip(false)}
+                        >
+                          [i]
+                          {showAttachmentTooltip && (
+                            <span className="tooltip-text">
+                              Max Upload Size for video 10 MB and for image 3 MB
+                            </span>
                           )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div> */}
-
-                  <div className="d-flex justify-content-between align-items-end mx-1">
-                    <h5 className="mt-3">
-                      Event Attachment{" "}
-                      <span
-                        className="tooltip-container"
-                        onMouseEnter={() => setShowAttachmentTooltip(true)}
-                        onMouseLeave={() => setShowAttachmentTooltip(false)}
+                        </span>
+                      </h5>
+                      <button
+                        className="bg-[#C72030] hover:bg-[#B8252F] text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                        type="button"
+                        onClick={() => setShowEventUploader(true)}
                       >
-                        [i]
-                        {showAttachmentTooltip && (
-                          <span className="tooltip-text">
-                            Max Upload Size for video 10 MB and for image 3 MB
-                          </span>
-                        )}
-                      </span>
-                    </h5>
-                    <button
-                      className="purple-btn2 rounded-3"
-                      type="button"
-                      onClick={() => setShowEventUploader(true)}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width={16}
-                        height={16}
-                        fill="currentColor"
-                        className="bi bi-plus"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                      </svg>
-                      <span>Add</span>
-                    </button>
-                    {showEventUploader && (
-                      <ProjectImageVideoUpload
-                        onClose={() => setShowEventUploader(false)}
-                        includeInvalidRatios={false}
-                        selectedRatioProp={selectedEventRatios}
-                        showAsModal={true}
-                        label={eventImageLabel}
-                        description={dynamicEventDescription}
+                        <Plus size={16} />
+                        <span>Add Event Images</span>
+                      </button>
+                      {showEventUploader && (
+                        <ProjectImageVideoUpload
+                          onClose={() => setShowEventUploader(false)}
+                          includeInvalidRatios={false}
+                          selectedRatioProp={selectedEventRatios}
+                          showAsModal={true}
+                          label={eventImageLabel}
+                          description={dynamicEventDescription}
                         onContinue={(validImages, videoFiles) =>
                           handleEventCroppedImages(
                             validImages,
@@ -2254,26 +2220,23 @@ const EventEdit = () => {
                     )}
                   </div>
 
-                  <div className="col-md-12 mt-2">
-                    <div
-                      className="mt-4 tbl-container"
-                      style={{ maxHeight: "300px", overflowY: "auto" }}
-                    >
-                      <table className="w-100">
-                        <thead>
-                          <tr>
-                            <th>File Name</th>
-                            <th>Preview</th>
-                            <th>Ratio</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
+                  <div className="mt-4">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>File Name</TableHead>
+                            <TableHead>Preview</TableHead>
+                            <TableHead>Ratio</TableHead>
+                            <TableHead>Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
                           {Array.isArray(formData.attachfile) &&
                             formData.attachfile.map((file) => (
-                              <tr key={`attachfile-${file.id}`}>
-                                <td>{file.document_file_name || "N/A"}</td>
-                                <td>
+                              <TableRow key={`attachfile-${file.id}`}>
+                                <TableCell>{file.document_file_name || "N/A"}</TableCell>
+                                <TableCell>
                                   {file.document_url && (
                                     <img
                                       style={{
@@ -2288,21 +2251,21 @@ const EventEdit = () => {
                                       }
                                     />
                                   )}
-                                </td>
-                                <td>N/A</td>
-                                <td>
+                                </TableCell>
+                                <TableCell>N/A</TableCell>
+                                <TableCell>
                                   <button
                                     type="button"
-                                    className="purple-btn2"
+                                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors duration-200"
                                     onClick={() =>
                                       handleFetchedDiscardGallery(file.id)
                                     }
                                     title="Remove attached file"
                                   >
-                                    ×
+                                    Delete
                                   </button>
-                                </td>
-                              </tr>
+                                </TableCell>
+                              </TableRow>
                             ))}
                           {eventImageRatios.flatMap(({ key, label }) => {
                             const files = Array.isArray(formData[key])
@@ -2331,9 +2294,9 @@ const EventEdit = () => {
                                   ));
 
                               return (
-                                <tr key={`${key}-${file.id || index}`}>
-                                  <td>{name}</td>
-                                  <td>
+                                <TableRow key={`${key}-${file.id || index}`}>
+                                  <TableCell>{name}</TableCell>
+                                  <TableCell>
                                     {isVideo ? (
                                       <video
                                         controls
@@ -2370,12 +2333,12 @@ const EventEdit = () => {
                                         }}
                                       />
                                     )}
-                                  </td>
-                                  <td>{ratio}</td>
-                                  <td>
+                                  </TableCell>
+                                  <TableCell>{ratio}</TableCell>
+                                  <TableCell>
                                     <button
                                       type="button"
-                                      className="purple-btn2"
+                                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors duration-200"
                                       onClick={() =>
                                         handleFetchedDiscardGallery(
                                           key,
@@ -2384,48 +2347,57 @@ const EventEdit = () => {
                                         )
                                       }
                                     >
-                                      x
+                                      Delete
                                     </button>
-                                  </td>
-                                </tr>
+                                  </TableCell>
+                                </TableRow>
                               );
                             });
                           })}
-                        </tbody>
-                      </table>
+
+                          {eventImageRatios.every(
+                            ({ key }) =>
+                              !(formData[key] && formData[key].length > 0)
+                          ) &&
+                            !Array.isArray(formData.attachfile) && (
+                              <TableRow>
+                                <TableCell colSpan={4} className="text-center text-gray-500">
+                                  No event attachments uploaded
+                                </TableCell>
+                              </TableRow>
+                            )}
+                        </TableBody>
+                      </Table>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              <div className="row mt-2 justify-content-center">
-                <div className="col-md-2">
-                  <button
-                    onClick={handleSubmit}
-                    type="submit"
-                    className="purple-btn2 w-100"
-                    disabled={loading}
-                  >
-                    Submit
-                  </button>
-                </div>
-
-                <div className="col-md-2">
-                  <button
-                    type="button"
-                    className="purple-btn2 w-100"
-                    onClick={handleCancel}
-                  >
-                    Cancel
-                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </>
-  );
-};
 
-export default EventEdit;
+        {/* Action Buttons */}
+        <div className="flex gap-4 justify-center pt-6">
+            <button
+              onClick={handleSubmit}
+              type="submit"
+              className="px-6 py-2.5 bg-[#C72030] hover:bg-[#B8252F] text-white rounded-lg transition-colors duration-200"
+              disabled={loading}
+            >
+              Submit
+            </button>
+            <button
+              type="button"
+              className="px-6 py-2.5 border-2 border-[#C72030] text-[#C72030] hover:bg-[#C72030] hover:text-white rounded-lg transition-colors duration-200"
+              onClick={handleCancel}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+
+    );
+  };
+
+  export default EventEdit;

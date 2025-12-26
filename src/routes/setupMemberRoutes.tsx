@@ -68,6 +68,7 @@ const LoyaltyManagersList = lazy(() => import("@/pages/LoyaltyManagersList"));
 const NewGallery = lazy(() => import("@/pages/NewGallery"));
 const NoticeboardCreate = lazy(() => import("@/pages/NoticeboardCreate"));
 const NoticeboardList = lazy(() => import("@/pages/NoticeboardList"));
+const NoticeboardDetails = lazy(() => import("@/pages/NoticeboardDetails"));
 const OrganizationCreate = lazy(() => import("@/pages/OrganizationCreate"));
 const OrganizationList = lazy(() => import("@/pages/OrganizationList"));
 const OrganizationUpdate = lazy(() => import("@/pages/OrganizationUpdate"));
@@ -202,6 +203,12 @@ export const setupMemberRoutes = (
     <Route path="/maintenance/event-edit/:id" element={withSuspense(EventEdit)} />
     <Route path="/maintenance/event-list" element={withSuspense(EventList)} />
 
+    {/* Noticeboard Routes (Broadcast) */}
+    <Route path="/maintenance/noticeboard-list" element={withSuspense(NoticeboardList)} />
+    <Route path="/maintenance/noticeboard-create" element={withSuspense(NoticeboardCreate)} />
+    <Route path="/maintenance/noticeboard-edit/:id" element={withSuspense(NoticeboardCreate)} />
+    <Route path="/maintenance/noticeboard-details/:id" element={withSuspense(NoticeboardDetails)} />
+
     {/* FAQ Routes */}
     <Route path="/setup-member/faq-category-form" element={withSuspense(FaqCategoryForm)} />
     <Route path="/setup-member/faq-category-list" element={withSuspense(FaqCategoryList)} />
@@ -250,9 +257,7 @@ export const setupMemberRoutes = (
     <Route path="/loyalty/loyalty-managers-edit/:id" element={withSuspense(LoyaltyManagersEdit)} />
     <Route path="/loyalty/loyalty-managers-list" element={withSuspense(LoyaltyManagersList)} />
 
-    {/* Noticeboard Routes */}
-    <Route path="/communication/noticeboard-create" element={withSuspense(NoticeboardCreate)} />
-    <Route path="/communication/noticeboard-list" element={withSuspense(NoticeboardList)} />
+
 
     {/* Organization Routes */}
     <Route path="/maintenance/organization-create" element={withSuspense(OrganizationCreate)} />

@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
-import { ChevronRight, ArrowLeft } from "lucide-react";
-import SelectBox from "../components/ui/select-box";
+import { ChevronRight, ArrowLeft, FileText } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -14,6 +13,13 @@ import {
   TableRow,
 } from "../components/ui/table";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
+import {
+  TextField,
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+} from "@mui/material";
 
 const BannerAdd = () => {
   const baseURL = API_CONFIG.BASE_URL;
@@ -21,7 +27,7 @@ const BannerAdd = () => {
 
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<{title?: string; project_id?: string}>({});
   const [previewImg, setPreviewImg] = useState(null);
   const [previewVideo, setPreviewVideo] = useState(null);
   const [showVideoTooltip, setShowVideoTooltip] = useState(false);
@@ -82,6 +88,30 @@ const BannerAdd = () => {
     { key: "banner_video_9_by_16", label: "9:16" },
     { key: "banner_video_3_by_2", label: "3:2" },
   ];
+
+  // Field styles for Material-UI components
+  const fieldStyles = {
+    height: '45px',
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    '& .MuiOutlinedInput-root': {
+      height: '45px',
+      '& fieldset': {
+        borderColor: '#ddd',
+      },
+      '&:hover fieldset': {
+        borderColor: '#C72030',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#C72030',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      '&.Mui-focused': {
+        color: '#C72030',
+      },
+    },
+  };
 
   const bannerUploadConfig = {
     "Banner Attachment": ["1:1", "9:16", "16:9", "3:2"],
@@ -221,135 +251,136 @@ const BannerAdd = () => {
   };
 
   return (
-    <div className="h-full bg-gray-50">
-      <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
-        {/* Header with Back Button and Breadcrumbs */}
-        <div className="mb-6">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
-            </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Setup Member</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Banner</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#C72030] font-medium">Create Banner</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">CREATE BANNER</h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Banner List</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Create New Banner</span>
         </div>
+        <h1 className="text-2xl font-bold text-gray-900">CREATE BANNER</h1>
+      </div>
 
-        {/* Main Form Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Banner Information</h3>
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
+        {/* Section: Banner Information */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <FileText size={16} color="#C72030" />
+              </span>
+              Banner Information
+            </h2>
           </div>
-
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Title Input */}
-              <div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-0">
-                    Title <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    placeholder="Enter title"
-                  />
-                  {errors.title && (
-                    <span className="text-red-500 text-sm">{errors.title}</span>
-                  )}
-                </div>
-              </div>
+              <TextField
+                label="Title"
+                placeholder="Enter title"
+                value={formData.title}
+                onChange={handleChange}
+                name="title"
+                required
+                fullWidth
+                variant="outlined"
+                error={!!errors.title}
+                helperText={errors.title}
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
 
               {/* Project Select */}
-              <div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-0">
-                    Project <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <SelectBox
-                    options={projects.map((project) => ({
-                      label: project.project_name,
-                      value: project.id,
-                    }))}
-                    value={formData.project_id}
-                    onChange={(value) =>
-                      setFormData({ ...formData, project_id: value })
-                    }
-                  />
-                  {errors.project_id && (
-                    <span className="text-red-500 text-sm">{errors.project_id}</span>
-                  )}
-                </div>
-              </div>
+              <FormControl
+                fullWidth
+                variant="outlined"
+                required
+                error={!!errors.project_id}
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+              >
+                <InputLabel shrink>Project</InputLabel>
+                <MuiSelect
+                  value={formData.project_id}
+                  onChange={(e) => setFormData({ ...formData, project_id: e.target.value })}
+                  label="Project"
+                  notched
+                  displayEmpty
+                  disabled={loading}
+                >
+                  <MenuItem value="">
+                    {loading ? "Loading projects..." : "Select Project"}
+                  </MenuItem>
+                  {projects.map((project) => (
+                    <MenuItem key={project.id} value={project.id}>
+                      {project.project_name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+                {errors.project_id && (
+                  <span className="text-red-500 text-xs mt-1">{errors.project_id}</span>
+                )}
+              </FormControl>
 
-              {/* Banner Attachment Upload */}
-              <div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-0">
-                    Banner Attachment{" "}
-                    <span
-                      className="relative inline-block cursor-help"
-                      onMouseEnter={() => setShowVideoTooltip(true)}
-                      onMouseLeave={() => setShowVideoTooltip(false)}
-                    >
-                      <span className="text-blue-500">[i]</span>
-                      {showVideoTooltip && (
-                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                          Supports 1:1, 9:16, 16:9, 3:2 aspect ratios
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowUploader(true)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-left bg-white hover:bg-gray-50 transition-colors flex items-center justify-between"
-                  >
-                    <span className="text-gray-500">Choose file</span>
-                    <span className="text-sm text-gray-400">No file chosen</span>
-                  </button>
-
-                  {showUploader && (
-                    <ProjectImageVideoUpload
-                      onClose={() => setShowUploader(false)}
-                      includeInvalidRatios={false}
-                      selectedRatioProp={selectedRatios}
-                      showAsModal={true}
-                      label={dynamicLabel}
-                      description={dynamicDescription}
-                      onContinue={handleCropComplete}
-                      allowVideos={true}
-                    />
-                  )}
-                </div>
-              </div>
             </div>
 
-            {/* Media Table */}
-            <div className="mt-6">
-              <div
-                className="rounded-lg border border-gray-200 overflow-hidden"
-                style={{ maxHeight: "400px", overflowY: "auto" }}
-              >
-                <Table className="border-separate">
-                  <TableHeader
-                    className="sticky top-0 z-10"
-                    style={{ backgroundColor: "#e6e2d8" }}
+            {/* Banner Attachment Section */}
+            <div className="mb-6">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-4">
+                <h5 className="font-semibold">
+                  Banner Attachment{" "}
+                  <span
+                    className="relative inline-block cursor-help"
+                    onMouseEnter={() => setShowVideoTooltip(true)}
+                    onMouseLeave={() => setShowVideoTooltip(false)}
                   >
-                    <TableRow className="hover:bg-gray-50">
+                    <span className="text-red-500">[i]</span>
+                    {showVideoTooltip && (
+                      <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                        Max Upload Size 5 MB. Supports 1:1, 9:16, 16:9, 3:2 aspect ratios
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-red-500 ml-1">*</span>
+                </h5>
+
+                <button
+                  className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                  type="button"
+                  onClick={() => setShowUploader(true)}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width={20}
+                    height={20}
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                  </svg>
+                  <span>Add</span>
+                </button>
+              </div>
+
+              {/* Table */}
+              <div className="rounded-lg border border-gray-200 overflow-hidden">
+                <Table className="w-full border-separate">
+                  <TableHeader>
+                    <TableRow style={{ backgroundColor: "#e6e2d8" }}>
                       <TableHead
                         className="font-semibold text-gray-900 py-3 px-4 border-r"
                         style={{ borderColor: "#fff" }}
@@ -368,25 +399,28 @@ const BannerAdd = () => {
                       >
                         Ratio
                       </TableHead>
-                      <TableHead
-                        className="font-semibold text-gray-900 py-3 px-4"
+                      <TableHead 
+                      className="font-semibold text-gray-900 py-3 px-4 border-r"
                         style={{ borderColor: "#fff" }}
                       >
                         Action
                       </TableHead>
                     </TableRow>
                   </TableHeader>
+
                   <TableBody>
-                    {project_banner.map(({ key, label }) => {
+                    {project_banner.flatMap(({ key, label }) => {
                       const files = Array.isArray(formData[key])
                         ? formData[key]
                         : formData[key]
                         ? [formData[key]]
                         : [];
 
+                      if (files.length === 0) return [];
+
                       return files.map((file, index) => {
                         const preview = file.preview || file.document_url || "";
-                        const name = file.name || file.document_file_name || "Unnamed";
+                        const name = file.name || file.document_file_name || `Image ${index + 1}`;
                         const isVideo =
                           file.type === "video" ||
                           file.file?.type?.startsWith("video/") ||
@@ -397,18 +431,21 @@ const BannerAdd = () => {
 
                         return (
                           <TableRow
-                            key={`${key}-${index}`}
+                            key={`${key}-${file.id || index}`}
                             className="hover:bg-gray-50 transition-colors"
                           >
-                            <TableCell className="py-3 px-4 font-medium">
-                              {name}
-                            </TableCell>
+                            <TableCell className="py-3 px-4 font-medium">{name}</TableCell>
+
                             <TableCell className="py-3 px-4">
                               {isVideo ? (
                                 <video
                                   controls
+                                  style={{
+                                    maxWidth: 100,
+                                    maxHeight: 100,
+                                    objectFit: "cover",
+                                  }}
                                   className="rounded border border-gray-200"
-                                  style={{ maxWidth: 100, maxHeight: 100 }}
                                 >
                                   <source
                                     src={preview}
@@ -417,20 +454,25 @@ const BannerAdd = () => {
                                       `video/${preview.split(".").pop()}`
                                     }
                                   />
-                                  Your browser does not support the video tag.
                                 </video>
                               ) : (
                                 <img
+                                  style={{
+                                    maxWidth: 100,
+                                    maxHeight: 100,
+                                    objectFit: "cover",
+                                  }}
                                   className="rounded border border-gray-200"
-                                  style={{ maxWidth: 100, maxHeight: 100 }}
                                   src={preview}
                                   alt={name}
                                 />
                               )}
                             </TableCell>
+
                             <TableCell className="py-3 px-4">
                               {file.ratio || label}
                             </TableCell>
+
                             <TableCell className="py-3 px-4">
                               <button
                                 type="button"
@@ -444,46 +486,45 @@ const BannerAdd = () => {
                         );
                       });
                     })}
-                    {project_banner.every(
-                      ({ key }) =>
-                        !formData[key] ||
-                        (Array.isArray(formData[key]) && formData[key].length === 0)
-                    ) && (
-                      <TableRow>
-                        <TableCell
-                          colSpan={4}
-                          className="text-center py-12 text-gray-500"
-                        >
-                          No files uploaded yet
-                        </TableCell>
-                      </TableRow>
-                    )}
                   </TableBody>
                 </Table>
               </div>
+
+              {/* Upload Modal */}
+              {showUploader && (
+                <ProjectImageVideoUpload
+                  onClose={() => setShowUploader(false)}
+                  includeInvalidRatios={false}
+                  selectedRatioProp={selectedRatios}
+                  showAsModal
+                  label={dynamicLabel}
+                  description={dynamicDescription}
+                  onContinue={handleCropComplete}
+                  allowVideos
+                />
+              )}
             </div>
           </div>
-
-          {/* Submit and Cancel Buttons */}
-          <div className="flex justify-end gap-4 px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="px-6 py-2 bg-[#f6f4ee] text-[#C72030] rounded hover:bg-[#f0ebe0] transition-colors font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={loading}
-              className="px-6 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Submitting..." : "Submit"}
-            </button>
-          </div>
         </div>
-      </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 justify-center pt-6">
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Submitting...' : 'Submit'}
+          </button>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2 rounded transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

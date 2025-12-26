@@ -41,12 +41,12 @@ export const HomeSidebar: React.FC = () => {
       icon: Image,
       path: "/maintenance/banner-list",
     },
-    {
-      id: "testimonial",
-      label: "Testimonial",
-      icon: MessageSquare,
-      path: "/maintenance/testimonial-list",
-    },
+    // {
+    //   id: "testimonial",
+    //   label: "Testimonial",
+    //   icon: MessageSquare,
+    //   path: "/maintenance/testimonial-list",
+    // },
     {
       id: "event",
       label: "Event",
@@ -54,17 +54,23 @@ export const HomeSidebar: React.FC = () => {
       path: "/maintenance/event-list",
     },
     {
-      id: "specification",
-      label: "Specification",
-      icon: FileText,
-      path: "/maintenance/specification-list",
+      id: "broadcast",
+      label: "Broadcast",
+      icon: MessageSquare,
+      path: "/maintenance/noticeboard-list",
     },
-    {
-      id: "organization",
-      label: "Organization",
-      icon: Building2,
-      path: "/maintenance/organization-list",
-    },
+    // {
+    //   id: "specification",
+    //   label: "Specification",
+    //   icon: FileText,
+    //   path: "/maintenance/specification-list",
+    // },
+    // {
+    //   id: "organization",
+    //   label: "Organization",
+    //   icon: Building2,
+    //   path: "/maintenance/organization-list",
+    // },
     {
       id: "company",
       label: "Company",
@@ -89,12 +95,12 @@ export const HomeSidebar: React.FC = () => {
       icon: HelpCircle,
       path: "/maintenance/faq-list",
     },
-    {
-      id: "referral-program",
-      label: "Referral Program",
-      icon: UserCheck,
-      path: "/maintenance/referral-program-list",
-    },
+    // {
+    //   id: "referral-program",
+    //   label: "Referral Program",
+    //   icon: UserCheck,
+    //   path: "/maintenance/referral-program-list",
+    // },
   ];
 
   const isActive = (path: string) =>
