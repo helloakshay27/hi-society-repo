@@ -1,6 +1,36 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { API_CONFIG } from "@/config/apiConfig";
+import { toast } from "sonner";
+import { ArrowLeft, Building } from "lucide-react";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import { Button } from "@/components/ui/button";
+
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
+
+const baseURL = API_CONFIG.BASE_URL;
 
 
 const DepartmentEdit = () => {
@@ -148,126 +178,119 @@ const DepartmentEdit = () => {
     }
   };
 
-  return (
-    <div className="main-content">
-      <div className="website-content overflow-auto">
-        <div className="module-data-section container-fluid">
-          <form onSubmit={handleSubmit}>
-            <div className="card mt-4 pb-4 mx-4">
-              <div className="card-header">
-                <h3 className="card-title">Edit Department</h3>
-              </div>
-              <div className="card-body">
-                <div className="row">
-                  {/* Department Name */}
-                  <div className="col-md-3">
-                    <div className="form-group">
-                      <label>
-                        Department Name <span className="otp-asterisk">{" "}*</span>
-                      </label>
-                      <input
-                        className="form-control"
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="Enter Department Name"
-                        required
-                      />
-                    </div>
-                  </div>
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
-                  {/* Company ID */}
-                  <div className="col-md-3">
-                    <div className="form-group">
-                      <label>
-                        Company <span className="otp-asterisk">{" "}*</span>
-                      </label>
-                      <SelectBox
-                        options={company.map((comp) => ({
-                          value: comp.id,
-                          label: comp.name,
-                        }))}
-                        defaultValue={formData.companyId}
-                        onChange={(value) => {
-                          setFormData({
-                            ...formData,
-                            companyId: value,
-                          });
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Organization ID */}
-                  <div className="col-md-3">
-                    <div className="form-group">
-                      <label>
-                        Organization <span className="otp-asterisk">{" "}*</span>
-                      </label>
-                      <SelectBox
-                        options={organizations.map((org) => ({
-                          value: org.id,
-                          label: org.name,
-                        }))}
-                        defaultValue={formData.organizationId}
-                        onChange={(value) => {
-                          setFormData({
-                            ...formData,
-                            organizationId: value,
-                          });
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Active Status */}
-                  {/* <div className="col-md-3">
-                    <div className="form-group">
-                      <label>Status</label>
-                      <SelectBox
-                        options={[
-                          { value: true, label: "Active" },
-                          { value: false, label: "Inactive" },
-                        ]}
-                        defaultValue={formData.active}
-                        onChange={(value) => {
-                          setFormData({
-                            ...formData,
-                            active: value,
-                          });
-                        }}
-                      />
-                    </div>
-                  </div> */}
-                </div>
-              </div>
-            </div>
-
-            {/* Submit & Cancel Buttons */}
-            <div className="row mt-2 justify-content-center">
-                <div className="col-md-2">
-                <button
-                  type="submit"
-                    className="purple-btn2 w-100"
-                  disabled={loading}
-                >
-                  {loading ? "Updating..." : "Submit"}
-                </button>
-              </div>
-              <div className="col-md-2">
-                <button
-                  type="submit"
-                    className="purple-btn2 w-100"
-                  onClick={() => navigate("/setup-member/department-list")}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030]"></div>
       </div>
+    );
+  }
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button 
+            onClick={handleGoBack}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Setup Member</span>
+          <span>{">"}  </span>
+          <span>Department</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Edit</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">EDIT DEPARTMENT</h1>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <Building size={16} color="#C72030" />
+              </span>
+              Department Details
+            </h2>
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <TextField
+                label="Department Name"
+                name="name"
+                placeholder="Enter department name"
+                value={formData.name}
+                onChange={handleChange}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+                required
+              />
+
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Company *</InputLabel>
+                <MuiSelect
+                  value={formData.companyId}
+                  onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
+                  label="Company *"
+                  notched
+                  sx={fieldStyles}
+                >
+                  {company.map((comp) => (
+                    <MenuItem key={comp.id} value={comp.id}>
+                      {comp.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Organization *</InputLabel>
+                <MuiSelect
+                  value={formData.organizationId}
+                  onChange={(e) => setFormData({ ...formData, organizationId: e.target.value })}
+                  label="Organization *"
+                  notched
+                  sx={fieldStyles}
+                >
+                  {organizations.map((org) => (
+                    <MenuItem key={org.id} value={org.id}>
+                      {org.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-4 justify-center pt-6">
+          <Button
+            type="submit"
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
+            disabled={loading}
+          >
+            {loading ? "Updating..." : "Update Department"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoBack}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

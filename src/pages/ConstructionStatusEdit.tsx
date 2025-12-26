@@ -3,7 +3,32 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
+import { ArrowLeft, Building2 } from "lucide-react";
 import { TextField } from "@mui/material";
+import { Button } from "@/components/ui/button";
+
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
 
 const ConstructionStatusEdit = () => {
   const { id } = useParams();
@@ -64,82 +89,85 @@ const ConstructionStatusEdit = () => {
     }
   };
 
-  return (
-    <div className="main-content">
-      <div className="website-content overflow-auto">
-        <div className="module-data-section container-fluid">
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
-          {/* SECTION-STYLE CARD */}
-          <div className="bg-white rounded-lg shadow-sm border mx-4 mt-8">
-            
-            {/* Section Header */}
-            <div className="flex items-center gap-3 px-6 py-4 border-b">
-              <div className="w-9 h-9 flex items-center justify-center rounded-full bg-[#F2EEE9] text-[#BF213E] font-semibold">
-                CS
-              </div>
-              <h3 className="text-lg font-semibold text-gray-800">
-                Edit Construction Status
-              </h3>
-            </div>
-
-            {/* Section Body */}
-            <div className="px-6 py-6">
-              {loading ? (
-                <p>Loading...</p>
-              ) : (
-                <form id="constructionStatusForm" onSubmit={handleSubmit}>
-                  <div className="row">
-                    <div className="col-md-3">
-                      <TextField
-                        label="Name"
-                        name="construction_status"
-                        value={formData.construction_status}
-                        onChange={handleChange}
-                        placeholder="Name"
-                        variant="outlined"
-                        size="small"
-                        sx={{ width: "300px" }}
-                        slotProps={{
-                          inputLabel: {
-                            shrink: true,
-                          },
-                        }}
-                        InputProps={{
-                          sx: {
-                            backgroundColor: "#fff",
-                            borderRadius: "6px",
-                          },
-                        }}
-                      />
-                    </div>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
-
-          {/* Buttons (UNCHANGED, OUTSIDE CARD) */}
-          <div className="flex justify-center gap-4 mt-6 mb-8">
-            <button
-              type="submit"
-              form="constructionStatusForm"
-              disabled={loading}
-              className="px-8 py-2.5 bg-[#F2EEE9] text-[#BF213E] rounded-lg font-medium hover:bg-[#E8E0D8] disabled:opacity-50"
-            >
-              Update
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/setup-member/construction-status-list")}
-              disabled={loading}
-              className="px-8 py-2.5 bg-white text-[#8B2E3D] border border-[#8B2E3D] rounded-md font-medium hover:bg-gray-50 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-          </div>
-
-        </div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030]"></div>
       </div>
+    );
+  }
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button 
+            onClick={handleGoBack}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Setup Member</span>
+          <span>{">"}  </span>
+          <span>Construction Status</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Edit</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">EDIT CONSTRUCTION STATUS</h1>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <Building2 size={16} color="#C72030" />
+              </span>
+              Construction Status Details
+            </h2>
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <TextField
+                label="Construction Status Name"
+                name="construction_status"
+                placeholder="Enter construction status name"
+                value={formData.construction_status}
+                onChange={handleChange}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-4 justify-center pt-6">
+          <Button
+            type="submit"
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
+            disabled={loading}
+          >
+            {loading ? "Updating..." : "Update Status"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoBack}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

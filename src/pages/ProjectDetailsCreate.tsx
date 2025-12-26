@@ -690,13 +690,15 @@ const ProjectDetailsCreate = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const amenityTypes = [
-    ...new Set(amenities.map((ammit) => ammit.amenity_type)),
-  ].map((type) => ({ value: type, label: type }));
+  const amenityTypes = Array.isArray(amenities)
+    ? [
+        ...new Set(amenities.map((ammit) => ammit.amenity_type)),
+      ].map((type) => ({ value: type, label: type }))
+    : [];
 
   // Filter amenities based on selected type
   useEffect(() => {
-    if (selectedType) {
+    if (selectedType && Array.isArray(amenities)) {
       setFilteredAmenities(
         amenities.filter((ammit) => ammit.amenity_type === selectedType.value)
       );
@@ -2668,7 +2670,7 @@ const ProjectDetailsCreate = () => {
                       }
                       return (selected as number[])
                         .map((id) => {
-                          const ammit = amenities.find((ammit) => ammit.id === id);
+                          const ammit = Array.isArray(amenities) ? amenities.find((ammit) => ammit.id === id) : null;
                           return ammit ? ammit.name : "";
                         })
                         .filter(Boolean)
@@ -2678,7 +2680,7 @@ const ProjectDetailsCreate = () => {
                     <MenuItem value="" disabled>
                       Select amenities
                     </MenuItem>
-                    {amenities.map((ammit) => (
+                    {Array.isArray(amenities) && amenities.map((ammit) => (
                       <MenuItem key={ammit.id} value={ammit.id}>
                         {ammit.name}
                       </MenuItem>

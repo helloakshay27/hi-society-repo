@@ -3,9 +3,36 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { API_CONFIG } from "@/config/apiConfig";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { MaterialDatePicker } from "@/components/ui/material-date-picker";
+import { ArrowLeft, User } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
 
 const UserEdit = () => {
+  const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
   const { id } = useParams(); // Get user ID from URL params
   const [loading, setLoading] = useState(false);
@@ -532,13 +559,11 @@ const UserEdit = () => {
 
   if (fetchingUser) {
     return (
-      <div className="main-content">
-        <div className="module-data-section p-3">
-          <div className="text-center p-5">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="mt-2">Loading user data...</p>
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading user data...</p>
           </div>
         </div>
       </div>
@@ -546,453 +571,358 @@ const UserEdit = () => {
   }
 
   return (
-    <div className="main-content">
-      <div className="">
-        <div className="">
-          <div className="module-data-section p-3">
-            <form onSubmit={handleSubmit} noValidate>
-              <div className="card mt-4 pb-4 mx-4">
-                <div className="card-header3">
-                  <h3 className="card-title">Edit User</h3>
-                </div>
-                <div className="card-body">
-                  <div className="row">
-                    <div className="row">
-                      {/* First Name */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>
-                            First Name <span className="otp-asterisk">*</span>
-                          </label>
-                          <input
-                            className={`form-control ${
-                              errors.firstname ? "is-invalid" : ""
-                            }`}
-                            type="text"
-                            name="firstname"
-                            placeholder="Enter firstname"
-                            value={formData.firstname}
-                            onChange={handleChange}
-                          />
-                          {errors.firstname && (
-                            <div className="invalid-feedback">
-                              {errors.firstname}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button 
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Setup Member</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Edit User</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">EDIT USER</h1>
+      </div>
 
-                      {/* Last Name */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>
-                            Last Name <span className="otp-asterisk">*</span>
-                          </label>
-                          <input
-                            className={`form-control ${
-                              errors.lastname ? "is-invalid" : ""
-                            }`}
-                            type="text"
-                            name="lastname"
-                            placeholder="Enter lastname"
-                            value={formData.lastname}
-                            onChange={handleChange}
-                          />
-                          {errors.lastname && (
-                            <div className="invalid-feedback">
-                              {errors.lastname}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <User size={16} color="#C72030" />
+              </span>
+              User Details
+            </h2>
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* First Name */}
+              <TextField
+                label="First Name"
+                placeholder="Enter firstname"
+                value={formData.firstname}
+                onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+                required
+                error={!!errors.firstname}
+                helperText={errors.firstname}
+              />
 
-                      {/* Mobile */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>
-                            Mobile Number{" "}
-                            <span className="otp-asterisk">*</span>
-                          </label>
-                          <input
-                            className={`form-control ${
-                              errors.mobile ? "is-invalid" : ""
-                            }`}
-                            type="text"
-                            name="mobile"
-                            placeholder="Enter mobile"
-                            value={formData.mobile}
-                            onChange={handleChange}
-                            maxLength={10}
-                          />
-                          {errors.mobile && (
-                            <div className="invalid-feedback">
-                              {errors.mobile}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              {/* Last Name */}
+              <TextField
+                label="Last Name"
+                placeholder="Enter lastname"
+                value={formData.lastname}
+                onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+                required
+                error={!!errors.lastname}
+                helperText={errors.lastname}
+              />
 
-                      {/* Email */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>
-                            Email <span className="otp-asterisk">*</span>
-                          </label>
-                          <input
-                            className={`form-control ${
-                              errors.email ? "is-invalid" : ""
-                            }`}
-                            type="email"
-                            name="email"
-                            placeholder="Enter email"
-                            value={formData.email}
-                            onChange={handleChange}
-                          />
-                          {errors.email && (
-                            <div className="invalid-feedback">
-                              {errors.email}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              {/* Mobile Number */}
+              <TextField
+                label="Mobile Number"
+                placeholder="Enter mobile"
+                value={formData.mobile}
+                onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+                inputProps={{ maxLength: 10 }}
+                required
+                error={!!errors.mobile}
+                helperText={errors.mobile}
+              />
 
-                      {/* Password - Read Only */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>Password</label>
-                          <input
-                            className="form-control"
-                            type="password"
-                            name="password"
-                            placeholder="Password"
-                            value={formData.password}
-                            disabled
-                            readOnly
-                            style={{ 
-                              backgroundColor: "#f8f9fa", 
-                              cursor: "not-allowed" 
-                            }}
-                          />
-                        </div>
-                      </div>
+              {/* Email */}
+              <TextField
+                label="Email"
+                placeholder="Enter email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+                type="email"
+                required
+                error={!!errors.email}
+                helperText={errors.email}
+              />
 
-                      {/* Alternate Email 1 */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>Alternate Email </label>
-                          <input
-                            className={`form-control ${
-                              errors.alternate_email1 ? "is-invalid" : ""
-                            }`}
-                            type="email"
-                            name="alternate_email1"
-                            placeholder="Enter alternate email"
-                            value={formData.alternate_email1 || ""}
-                            onChange={handleChange}
-                          />
-                          {errors.alternate_email1 && (
-                            <div className="invalid-feedback">
-                              {errors.alternate_email1}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              {/* Password - Read Only */}
+              <TextField
+                label="Password"
+                placeholder="Password"
+                value={formData.password}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ 
+                  sx: { 
+                    ...fieldStyles,
+                    backgroundColor: '#f8f9fa',
+                    cursor: 'not-allowed'
+                  },
+                  readOnly: true
+                }}
+                type="password"
+                disabled
+              />
 
-                      {/* Alternate Address */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>Address</label>
-                          <input
-                            className="form-control"
-                            type="text"
-                            name="alternate_address"
-                            placeholder="Enter address"
-                            value={formData.alternate_address || ""}
-                            onChange={handleChange}
-                          />
-                        </div>
-                      </div>
+              {/* Alternate Email */}
+              <TextField
+                label="Alternate Email"
+                placeholder="Enter alternate email"
+                value={formData.alternate_email1 || ""}
+                onChange={(e) => setFormData({ ...formData, alternate_email1: e.target.value })}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+                type="email"
+                error={!!errors.alternate_email1}
+                helperText={errors.alternate_email1}
+              />
 
-                      {/* User Title */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>User Title</label>
-                          <input
-                            className="form-control"
-                            type="text"
-                            name="user_title"
-                            placeholder="Enter user title"
-                            value={formData.user_title || ""}
-                            onChange={handleChange}
-                          />
-                        </div>
-                      </div>
+              {/* Address */}
+              <TextField
+                label="Address"
+                placeholder="Enter address"
+                value={formData.alternate_address || ""}
+                onChange={(e) => setFormData({ ...formData, alternate_address: e.target.value })}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
-                      {/* Gender */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>Gender</label>
-                          <SelectBox
-                            options={[
-                              { label: "Male", value: "Male" },
-                              { label: "Female", value: "Female" },
-                              { label: "Other", value: "Other" },
-                            ]}
-                            defaultValue={formData.gender}
-                            onChange={(value) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                gender: value,
-                              }))
-                            }
-                          />
-                        </div>
-                      </div>
+              {/* User Title */}
+              <TextField
+                label="User Title"
+                placeholder="Enter user title"
+                value={formData.user_title || ""}
+                onChange={(e) => setFormData({ ...formData, user_title: e.target.value })}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
-                         {/* <div className="col-md-3">
-                        <div className="form-group">
-                          <label>Birth Date</label>
-                          <input
-                            className="form-control"
-                            type="date"
-                            name="birth_date"
-                            value={formatDateToDisplay(formData.birth_date)}
-                            onChange={handleChange}
-                          />
-                        </div>
-                      </div> */}
+              {/* Gender */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+              >
+                <InputLabel shrink>Gender</InputLabel>
+                <MuiSelect
+                  value={formData.gender || ""}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  label="Gender"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select...</MenuItem>
+                  <MenuItem value="Male">Male</MenuItem>
+                  <MenuItem value="Female">Female</MenuItem>
+                  <MenuItem value="Other">Other</MenuItem>
+                </MuiSelect>
+              </FormControl>
 
-                      {/* Birth Date */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>Birth Date</label>
-                          <input
-                            className={`form-control ${
-                              errors.birth_date ? "is-invalid" : ""
-                            }`}
-                            type="date"
-                            name="birth_date"
-                            value={formData.birth_date || ""}
-                            max={getMaxBirthDate()} // This restricts the date picker
-                            onChange={handleChange}
-                          />
-                          {errors.birth_date && (
-                            <div className="invalid-feedback">
-                              {errors.birth_date}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {/* Employee Type */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>Employee Type</label>
-                          <input
-                            className="form-control"
-                            type="text"
-                            name="employee_type"
-                            placeholder="Enter employee type"
-                            value={formData.employee_type || ""}
-                            onChange={handleChange}
-                          />
-                        </div>
-                      </div>
+              {/* Birth Date */}
+              <TextField
+                label="Birth Date"
+                type="date"
+                value={formData.birth_date || ""}
+                onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+                inputProps={{ max: getMaxBirthDate() }}
+                error={!!errors.birth_date}
+                helperText={errors.birth_date}
+              />
 
-                      {/* Company Dropdown */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>
-                            Company
-                            <span className="otp-asterisk"> *</span>
-                          </label>
-                          <SelectBox
-                            options={companies.map((comp) => ({
-                              label: comp.name,
-                              value: comp.id,
-                            }))}
-                            defaultValue={formData.company_id}
-                            onChange={(value) => {
-                              setFormData({
-                                ...formData,
-                                company_id: value,
-                              });
-                            }}
-                            className={errors.company_id ? "is-invalid" : ""}
-                          />
-                          {errors.company_id && (
-                            <div className="invalid-feedback">
-                              {errors.company_id}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              {/* Employee Type */}
+              <TextField
+                label="Employee Type"
+                placeholder="Enter employee type"
+                value={formData.employee_type || ""}
+                onChange={(e) => setFormData({ ...formData, employee_type: e.target.value })}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
 
-                      {/* Organization Dropdown */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>
-                            Organization
-                            {/* <span className="otp-asterisk"> *</span> */}
-                          </label>
-                          <SelectBox
-                            options={organizations.map((org) => ({
-                              label: org.name,
-                              value: org.id,
-                            }))}
-                            defaultValue={formData.organization_id}
-                            onChange={(value) => {
-                              setFormData({
-                                ...formData,
-                                organization_id: value,
-                              });
-                            }}
-                            className={
-                              errors.organization_id ? "is-invalid" : ""
-                            }
-                          />
-                          {errors.organization_id && (
-                            <div className="invalid-feedback">
-                              {errors.organization_id}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              {/* Company */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+                required
+                error={!!errors.company_id}
+              >
+                <InputLabel shrink>Company</InputLabel>
+                <MuiSelect
+                  value={formData.company_id || ""}
+                  onChange={(e) => setFormData({ ...formData, company_id: e.target.value })}
+                  label="Company"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select...</MenuItem>
+                  {companies.map((comp) => (
+                    <MenuItem key={comp.id} value={comp.id}>
+                      {comp.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
-                      {/* Role Dropdown */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>
-                            User Role
-                            <span className="otp-asterisk"> *</span>
-                          </label>
-                          <SelectBox
-                            options={roles.map((role) => ({
-                              label: role.name,
-                              value: role.id,
-                            }))}
-                            defaultValue={formData.role_id}
-                            onChange={(value) => {
-                              setFormData({
-                                ...formData,
-                                role_id: value,
-                              });
-                            }}
-                            className={errors.role_id ? "is-invalid" : ""}
-                          />
-                          {errors.role_id && (
-                            <div className="invalid-feedback">
-                              {errors.role_id}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              {/* Organization */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+              >
+                <InputLabel shrink>Organization</InputLabel>
+                <MuiSelect
+                  value={formData.organization_id || ""}
+                  onChange={(e) => setFormData({ ...formData, organization_id: e.target.value })}
+                  label="Organization"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select...</MenuItem>
+                  {organizations.map((org) => (
+                    <MenuItem key={org.id} value={org.id}>
+                      {org.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
-                      {/* Department Dropdown - Added from UserCreate */}
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>
-                            Department <span className="otp-asterisk">*</span>
-                          </label>
-                          <SelectBox
-                            options={
-                              departmentsLoading
-                                ? [{ value: "", label: "Loading..." }]
-                                : departments.length > 0
-                                ? departments.map((dept) => ({
-                                    value: dept.id,
-                                    label: dept.name,
-                                  }))
-                                : [{ value: "", label: "No departments found" }]
-                            }
-                            defaultValue={formData.department_id}
-                            onChange={(value) =>
-                              setFormData({ ...formData, department_id: value })
-                            }
-                            className={errors.department_id ? "is-invalid" : ""}
-                          />
-                          {errors.department_id && (
-                            <div className="invalid-feedback">
-                              {errors.department_id}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              {/* User Role */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+                required
+                error={!!errors.role_id}
+              >
+                <InputLabel shrink>User Role</InputLabel>
+                <MuiSelect
+                  value={formData.role_id || ""}
+                  onChange={(e) => setFormData({ ...formData, role_id: e.target.value })}
+                  label="User Role"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select...</MenuItem>
+                  {roles.map((role) => (
+                    <MenuItem key={role.id} value={role.id}>
+                      {role.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
 
-                      <div className="col-md-3">
-                        <div className="form-group">
-                          <label>
-                            Site 
-                            {/* <span className="otp-asterisk">*</span> */}
-                          </label>
-                          <SelectBox
-                            options={
-                              sitesLoading
-                                ? [{ value: "", label: "Loading..." }]
-                                : sites.length > 0
-                                ? sites.map((site) => ({
-                                    value: site.id,
-                                    label: site.name,
-                                  }))
-                                : [{ value: "", label: "No site found" }]
-                            }
-                            defaultValue={formData.site_id}
-                            onChange={(value) =>
-                              setFormData({ ...formData, site_id: value })
-                            }
-                            className={errors.site_id ? "is-invalid" : ""}
-                          />
-                          {errors.site_id && (
-                            <div className="invalid-feedback">
-                              {errors.site_id}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              {/* Department */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+                required
+                error={!!errors.department_id}
+              >
+                <InputLabel shrink>Department</InputLabel>
+                <MuiSelect
+                  value={formData.department_id || ""}
+                  onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
+                  label="Department"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select...</MenuItem>
+                  {departmentsLoading ? (
+                    <MenuItem value="" disabled>Loading...</MenuItem>
+                  ) : departments.length > 0 ? (
+                    departments.map((dept) => (
+                      <MenuItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem value="" disabled>No departments found</MenuItem>
+                  )}
+                </MuiSelect>
+              </FormControl>
 
-                      {/* Site ID */}
-                      {/* <div className="col-md-3 mt-1">
-                        <div className="form-group">
-                          <label>Site ID</label>
-                          <input
-                            className="form-control"
-                            type="text"
-                            name="site_id"
-                            placeholder="Enter Site ID"
-                            value={formData.site_id || ""}
-                            onChange={handleChange}
-                          />
-                        </div>
-                      </div> */}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Submit and Cancel Buttons */}
-              <div className="row mt-2 justify-content-center">
-                <div className="col-md-2">
-                  <button
-                    type="submit"
-                    className="purple-btn2 w-100"
-                    disabled={loading}
-                  >
-                    {loading ? "Updating..." : "Submit"}
-                  </button>
-                </div>
-                <div className="col-md-2">
-                  <button
-                    type="button"
-                    className="purple-btn2 w-100"
-                    onClick={handleCancel}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </form>
+              {/* Site */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+              >
+                <InputLabel shrink>Site</InputLabel>
+                <MuiSelect
+                  value={formData.site_id || ""}
+                  onChange={(e) => setFormData({ ...formData, site_id: e.target.value })}
+                  label="Site"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select...</MenuItem>
+                  {sitesLoading ? (
+                    <MenuItem value="" disabled>Loading...</MenuItem>
+                  ) : sites.length > 0 ? (
+                    sites.map((site) => (
+                      <MenuItem key={site.id} value={site.id}>
+                        {site.name}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem value="" disabled>No sites found</MenuItem>
+                  )}
+                </MuiSelect>
+              </FormControl>
+            </div>
           </div>
         </div>
-      </div>
+
+        <div className="flex gap-4 justify-center pt-6">
+          <Button
+            type="submit"
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
+            disabled={loading}
+          >
+            {loading ? "Updating..." : "Update User"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancel}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

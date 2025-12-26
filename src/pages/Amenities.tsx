@@ -3,8 +3,32 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
-import { ChevronRight, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Home } from "lucide-react";
 import { TextField } from "@mui/material";
+import { Button } from "@/components/ui/button";
+
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
 
 const Amenities = () => {
   const baseURL = API_CONFIG.BASE_URL;
@@ -91,91 +115,98 @@ const Amenities = () => {
     }
   };
 
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
   return (
-    <div className="h-full bg-gray-50">
-      <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
-        {/* Header with Back Button and Breadcrumbs */}
-        <div className="mb-6">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
-            </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Setup Member</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Amenities</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#C72030] font-medium">Create</span>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button 
+            onClick={handleGoBack}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Setup Member</span>
+          <span>{">"}  </span>
+          <span>Amenities</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Create</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">CREATE AMENITY</h1>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <Home size={16} color="#C72030" />
+              </span>
+              Amenity Details
+            </h2>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">CREATE AMENITY</h1>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <TextField
+                label="Name"
+                placeholder="Enter amenity name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+                required
+              />
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Night Mode
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setNightMode(!nightMode)}
+                  className="toggle-button"
+                  style={{
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                    width: "70px",
+                  }}
+                >
+                  {nightMode ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="40"
+                      height="25"
+                      fill="#de7008"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="40"
+                      height="25"
+                      fill="#667085"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zM5 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 relative">
-          <div className="absolute -top-3 left-6 px-2 bg-white">
-            <h3 className="text-sm font-medium text-gray-500">Amenity Details</h3>
-          </div>
-          <div className="p-6">
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Name */}
-                <TextField
-                   label="Name"
-                       fullWidth
-                       variant="outlined"
-                        slotProps={{
-                         inputLabel: {
-                           shrink: true,
-                    },
-                          }}
-                  InputProps={{
-                    sx: {
-                      backgroundColor: "#fff",
-                      borderRadius: "6px",
-                    },
-                  }}   />
-
-                {/* Night Mode Toggle */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Night Mode
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setNightMode(!nightMode)}
-                    className="text-gray-600 hover:opacity-80 transition-opacity"
-                  >
-                    {nightMode ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="40"
-                        height="24"
-                        fill="#28a745"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-                      </svg>
-                    ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="40"
-                        height="24"
-                        fill="#6c757d"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zM5 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Section 4: Add Attachments */}
-<div className="mt-6 bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
   <div className="px-6 py-3 border-b border-gray-200">
     <h2 className="text-lg font-medium text-gray-900 flex items-center">
       <span
@@ -374,37 +405,25 @@ const Amenities = () => {
 </div>
 
 
-              {/* Action Buttons */}
-              <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-gray-200">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`px-8 py-2.5 bg-[#F2EEE9] text-[#BF213E] rounded-lg  transition-colors font-medium ${
-                    loading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Submitting...
-                    </span>
-                  ) : (
-                    "Submit"
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate(-1)}
-                  disabled={loading}
-                  className="px-8 py-2.5 bg-[#FFFFFF] text-[#BF213E] border border-[#BF213E] rounded-lg transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
+        <div className="flex gap-4 justify-center pt-6">
+          <Button
+            type="submit"
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
+            disabled={loading}
+          >
+            {loading ? "Creating..." : "Create Amenity"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoBack}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            disabled={loading}
+          >
+            Cancel
+          </Button>
         </div>
-      </div>
+      </form>
     </div>
   );
 };

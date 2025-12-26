@@ -4,6 +4,31 @@ import axios from "axios";
 import { TextField } from "@mui/material";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
+import { ArrowLeft, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
 
 const ProjectConfigEdit = () => {
   const { id } = useParams();
@@ -100,143 +125,128 @@ const ProjectConfigEdit = () => {
     }
   };
 
-  return (
-    <div className="main-content">
-      <div className="website-content overflow-auto">
-        <div className="module-data-section container-fluid">
-          <form onSubmit={handleSubmit}>
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
-            {/* SECTION STYLE CARD */}
-            <div className="bg-white rounded-lg shadow-sm border mx-4 mt-8">
-
-              {/* Header */}
-              <div className="flex items-center gap-3 px-6 py-4 border-b">
-                <div className="w-9 h-9 flex items-center justify-center rounded-full bg-[#F2EEE9] text-[#BF213E] font-semibold">
-                  PC
-                </div>
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Edit Project Configuration
-                </h3>
-              </div>
-
-              {/* Body */}
-              <div className="px-6 py-6">
-                <div className="row">
-                  <div className="col-md-3">
-                    <TextField
-                      label="Name"
-                      name="name"
-                      placeholder="Enter Name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      variant="outlined"
-                      size="small"
-                      sx={{ width: "300px" }}
-                      slotProps={{ inputLabel: { shrink: true } }}
-                      InputProps={{
-                        sx: {
-                          backgroundColor: "#fff",
-                          borderRadius: "6px",
-                        },
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Attachments Section  */}
-                <div className="mt-8 bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-3 border-b border-gray-200">
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                      <span
-                        className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
-                        style={{ backgroundColor: "#E5E0D3" }}
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 16 16"
-                          fill="none"
-                        >
-                          <path
-                            d="M3 2C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V5.41421C14 5.149 13.8946 4.89464 13.7071 4.70711L11.2929 2.29289C11.1054 2.10536 10.851 2 10.5858 2H3Z"
-                            fill="#C72030"
-                          />
-                          <path
-                            d="M10 2V5C10 5.55228 10.4477 6 11 6H14"
-                            fill="#E5E0D3"
-                          />
-                        </svg>
-                      </span>
-                      Upload Icon
-                    </h2>
-                  </div>
-
-                  <div className="p-6">
-                    {showTooltip && (
-                      <div className="text-xs bg-gray-800 text-white rounded px-2 py-1 mb-2 inline-block">
-                        Max Upload Size 10 MB
-                      </div>
-                    )}
-
-                    <input
-                      type="file"
-                      className="hidden"
-                      id="icon-upload"
-                      accept=".png,.jpg,.jpeg,.svg"
-                      onChange={handleIconChange}
-                      disabled={loading}
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        document.getElementById("icon-upload")?.click()
-                      }
-                      onMouseEnter={() => setShowTooltip(true)}
-                      onMouseLeave={() => setShowTooltip(false)}
-                      className="mt-3 px-6 py-2 border-2 border-dashed border-[#C72030] text-[#C72030] rounded-md"
-                    >
-                      Upload Files
-                    </button>
-
-                    {iconPreview && (
-                      <img
-                        src={iconPreview}
-                        alt="Preview"
-                        className="mt-3"
-                        style={{ width: 100, height: 100 }}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Buttons  */}
-            <div className="flex justify-center gap-4 mt-6 mb-8">
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-8 py-2.5 bg-[#F2EEE9] text-[#BF213E] rounded-lg"
-              >
-                {loading ? "Updating..." : "Update"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  navigate("/setup-member/project-configuration-list")
-                }
-                disabled={loading}
-                className="px-8 py-2.5 bg-white border border-[#8B2E3D] text-[#8B2E3D] rounded-md"
-              >
-                Cancel
-              </button>
-            </div>
-
-          </form>
-        </div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030]"></div>
       </div>
+    );
+  }
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button 
+            onClick={handleGoBack}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Setup Member</span>
+          <span>{">"}  </span>
+          <span>Project Configuration</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Edit</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">EDIT PROJECT CONFIGURATION</h1>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <Settings size={16} color="#C72030" />
+              </span>
+              Configuration Details
+            </h2>
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <TextField
+                label="Name"
+                name="name"
+                placeholder="Enter configuration name"
+                value={formData.name}
+                onChange={handleInputChange}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 2C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V5.41421C14 5.149 13.8946 4.89464 13.7071 4.70711L11.2929 2.29289C11.1054 2.10536 10.851 2 10.5858 2H3Z" fill="#C72030"/>
+                  <path d="M10 2V5C10 5.55228 10.4477 6 11 6H14" fill="#E5E0D3"/>
+                </svg>
+              </span>
+              Upload Icon
+            </h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <input
+              type="file"
+              className="hidden"
+              id="icon-upload"
+              accept=".png,.jpg,.jpeg,.svg"
+              onChange={handleIconChange}
+            />
+            <button
+              type="button"
+              onClick={() => document.getElementById("icon-upload")?.click()}
+              className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-[#C72030] text-[#C72030] rounded-md bg-white hover:bg-[#C72030]/5 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C72030" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              <span className="font-medium">Upload Files</span>
+            </button>
+            {iconPreview && (
+              <img
+                src={iconPreview}
+                alt="Preview"
+                className="rounded-lg border border-gray-200"
+                style={{ width: "100px", height: "100px", objectFit: "cover" }}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-4 justify-center pt-6">
+          <Button
+            type="submit"
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
+            disabled={loading}
+          >
+            {loading ? "Updating..." : "Update Configuration"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoBack}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

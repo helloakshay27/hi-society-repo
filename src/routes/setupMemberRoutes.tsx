@@ -251,6 +251,7 @@ export const setupMemberRoutes = (
     {/* Lock Function Routes */}
     <Route path="/setup-member/lock-function-create" element={withSuspense(LockFunctionCreate)} />
     <Route path="/setup-member/lock-function-list" element={withSuspense(LockFunctionList)} />
+    <Route path="/setup-member/lock-function-edit/:id" element={withSuspense(lazy(() => import("@/pages/LockFunctionEdit")))} />
 
     {/* Lock Role Routes */}
     <Route path="/setup-member/lock-role-create" element={withSuspense(LockRoleCreate)} />

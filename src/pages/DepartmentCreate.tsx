@@ -2,8 +2,32 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { ChevronRight, ArrowLeft } from "lucide-react";
-import SelectBox from "../components/ui/select-box";
+import { ArrowLeft, Building } from "lucide-react";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
+import { Button } from "@/components/ui/button";
+
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
 
 const DepartmentCreate = () => {
   const baseURL = API_CONFIG.BASE_URL;
@@ -124,140 +148,130 @@ const DepartmentCreate = () => {
     }
   };
 
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
   return (
-    <div className="h-full bg-gray-50">
-      <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
-        {/* Header with Back Button and Breadcrumbs */}
-        <div className="mb-6">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
-            </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Setup Member</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Department</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#C72030] font-medium">Create</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">CREATE DEPARTMENT</h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button 
+            onClick={handleGoBack}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Setup Member</span>
+          <span>{">"}  </span>
+          <span>Department</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Create</span>
         </div>
-
-        {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Department Details</h3>
-          </div>
-          <div className="p-6">
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Department Name */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Department Name
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className={`w-full px-4 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all`}
-                    placeholder="Enter department name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    disabled={submitting}
-                  />
-                  {errors.name && (
-                    <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-                  )}
-                </div>
-
-                {/* Company ID */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Company
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <SelectBox
-                    options={
-                      loading
-                        ? [{ value: "", label: "Loading..." }]
-                        : companies.length > 0
-                        ? companies.map((comp) => ({
-                            value: comp.id,
-                            label: comp.name,
-                          }))
-                        : [{ value: "", label: "No companies found" }]
-                    }
-                    value={formData.companyId}
-                    onChange={(value) => setFormData({ ...formData, companyId: value })}
-                    disabled={submitting}
-                  />
-                  {errors.companyId && (
-                    <p className="text-red-500 text-xs mt-1">{errors.companyId}</p>
-                  )}
-                </div>
-
-                {/* Organization ID */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Organization
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <SelectBox
-                    options={
-                      loading
-                        ? [{ value: "", label: "Loading..." }]
-                        : organizations.length > 0
-                        ? organizations.map((org) => ({
-                            value: org.id,
-                            label: org.name,
-                          }))
-                        : [{ value: "", label: "No organizations found" }]
-                    }
-                    value={formData.organizationId}
-                    onChange={(value) => setFormData({ ...formData, organizationId: value })}
-                    disabled={submitting}
-                  />
-                  {errors.organizationId && (
-                    <p className="text-red-500 text-xs mt-1">{errors.organizationId}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-gray-200">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
-                    submitting ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {submitting ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Submitting...
-                    </span>
-                  ) : (
-                    "Submit"
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate(-1)}
-                  disabled={submitting}
-                  className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-900">CREATE DEPARTMENT</h1>
       </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <Building size={16} color="#C72030" />
+              </span>
+              Department Details
+            </h2>
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <TextField
+                label="Department Name"
+                placeholder="Enter department name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+                error={!!errors.name}
+                helperText={errors.name}
+                required
+              />
+
+              <FormControl fullWidth variant="outlined" error={!!errors.companyId}>
+                <InputLabel shrink>Company *</InputLabel>
+                <MuiSelect
+                  value={formData.companyId}
+                  onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
+                  label="Company *"
+                  notched
+                  sx={fieldStyles}
+                >
+                  {loading ? (
+                    <MenuItem value="">Loading...</MenuItem>
+                  ) : companies.length > 0 ? (
+                    companies.map((comp) => (
+                      <MenuItem key={comp.id} value={comp.id}>
+                        {comp.name}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem value="">No companies found</MenuItem>
+                  )}
+                </MuiSelect>
+                {errors.companyId && (
+                  <p className="text-red-500 text-xs mt-1">{errors.companyId}</p>
+                )}
+              </FormControl>
+
+              <FormControl fullWidth variant="outlined" error={!!errors.organizationId}>
+                <InputLabel shrink>Organization *</InputLabel>
+                <MuiSelect
+                  value={formData.organizationId}
+                  onChange={(e) => setFormData({ ...formData, organizationId: e.target.value })}
+                  label="Organization *"
+                  notched
+                  sx={fieldStyles}
+                >
+                  {loading ? (
+                    <MenuItem value="">Loading...</MenuItem>
+                  ) : organizations.length > 0 ? (
+                    organizations.map((org) => (
+                      <MenuItem key={org.id} value={org.id}>
+                        {org.name}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem value="">No organizations found</MenuItem>
+                  )}
+                </MuiSelect>
+                {errors.organizationId && (
+                  <p className="text-red-500 text-xs mt-1">{errors.organizationId}</p>
+                )}
+              </FormControl>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-4 justify-center pt-6">
+          <Button
+            type="submit"
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
+            disabled={submitting}
+          >
+            {submitting ? "Creating..." : "Create Department"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoBack}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            disabled={submitting}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

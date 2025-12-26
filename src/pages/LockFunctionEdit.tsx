@@ -3,11 +3,38 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
+import { ArrowLeft, Lock } from "lucide-react";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { Button } from "@/components/ui/button";
+
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
 
 
 const LockFunctionEdit = () => {
+  const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
-  const { id } = useParams(); // Get the ID from URL parameters
+  const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -285,14 +312,14 @@ const LockFunctionEdit = () => {
     navigate(-1);
   };
 
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
   if (loading) {
     return (
-      <div className="main-content">
-        <div className="website-content d-flex justify-content-center align-items-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030]"></div>
       </div>
     );
   }
@@ -353,133 +380,154 @@ const LockFunctionEdit = () => {
   ];
 
   return (
-    <>
-      <div className="main-content">
-        <div className="website-content overflow-hidden">
-          <div className="module-data-section">
-            <div className="card mt-4 pb-4 mx-4">
-              <div className="card-header">
-                <h3 className="card-title">Edit Lock Function</h3>
-              </div>
-              <div className="card-body">
-                <div className="row">
-                  {/* Name Input - Changed to SelectBox */}
-                  <div className="col-md-4">
-                    <div className="form-group">
-                      <label>
-                        Name
-                        <span className="otp-asterisk"> *</span>
-                      </label>
-                      <SelectBox
-                        options={nameOptions}
-                        defaultValue={formData.name}
-                        onChange={(value) => handleNameChange(value)}
-                      />
-                      {errors.name && (
-                        <span className="error text-danger">{errors.name}</span>
-                      )}
-                    </div>
-                  </div>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button 
+            onClick={handleGoBack}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Setup Member</span>
+          <span>{">"}  </span>
+          <span>Lock Function</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Edit Lock Function</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">EDIT LOCK FUNCTION</h1>
+      </div>
 
-                  {/* Action Name Input - Now conditionally shown */}
-                  {showActionName && (
-                    <div className="col-md-4">
-                      <div className="form-group">
-                        <label>
-                          Action Name
-                          <span className="otp-asterisk"> *</span>
-                        </label>
-                        <input
-                          className="form-control"
-                          type="text"
-                          name="action_name"
-                          value={formData.action_name}
-                          onChange={handleChange}
-                          placeholder="Enter action name"
-                          readOnly // Make it readonly since it fills automatically
-                        />
-                        {errors.action_name && (
-                          <span className="error text-danger">
-                            {errors.action_name}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Parent Function Selection */}
-                  <div className="col-md-4">
-                    <div className="form-group">
-                      <label>
-                        Parent Function
-                        <span className="otp-asterisk"> *</span>
-                      </label>
-                      <SelectBox
-                        options={[
-                          { label: "All Functions", value: "All Functions" },
-                        ]}
-                        defaultValue={formData.parent_function}
-                        onChange={(value) =>
-                          setFormData({ ...formData, parent_function: value })
-                        }
-                      />
-                      {errors.parent_function && (
-                        <span className="error text-danger">
-                          {errors.parent_function}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="row mt-3">
-                  {/* Active Status */}
-                  <div className="col-md-4">
-                    <div className="form-group">
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          name="active"
-                          id="isActive"
-                          checked={formData.active === 1}
-                          onChange={handleChange}
-                        />
-                        <label className="form-check-label" htmlFor="isActive">
-                          Active
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <Lock size={16} color="#C72030" />
+              </span>
+              Function Details
+            </h2>
           </div>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* Name Selection */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+                required
+                error={!!errors.name}
+              >
+                <InputLabel shrink>Name</InputLabel>
+                <MuiSelect
+                  value={formData.name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  label="Name"
+                  notched
+                  displayEmpty
+                  disabled={submitLoading}
+                >
+                  <MenuItem value="">Select...</MenuItem>
+                  {nameOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+                {errors.name && (
+                  <span style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px' }}>
+                    {errors.name}
+                  </span>
+                )}
+              </FormControl>
 
-          {/* Submit and Cancel Buttons */}
-          <div className="row mt-4 justify-content-center">
-            <div className="col-md-2">
-              <button
-                onClick={handleSubmit}
-                className="purple-btn2 w-100"
-                disabled={submitLoading}
+              {/* Action Name (auto-filled, read-only) */}
+              <TextField
+                label="Action Name"
+                name="action_name"
+                value={formData.action_name}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ 
+                  sx: { ...fieldStyles, backgroundColor: '#f9fafb' },
+                  readOnly: true
+                }}
+                required
+                error={!!errors.action_name}
+                helperText={errors.action_name}
+              />
+
+              {/* Parent Function */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+                required
+                error={!!errors.parent_function}
               >
-                {submitLoading ? "Updating..." : "Update"}
-              </button>
-            </div>
-            <div className="col-md-2">
-              <button
-                type="button"
-                className="purple-btn2 w-100"
-                onClick={handleCancel}
-              >
-                Cancel
-              </button>
+                <InputLabel shrink>Parent Function</InputLabel>
+                <MuiSelect
+                  value={formData.parent_function}
+                  onChange={(e) => setFormData({ ...formData, parent_function: e.target.value })}
+                  label="Parent Function"
+                  notched
+                  displayEmpty
+                  disabled={submitLoading}
+                >
+                  <MenuItem value="All Functions">All Functions</MenuItem>
+                </MuiSelect>
+                {errors.parent_function && (
+                  <span style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px' }}>
+                    {errors.parent_function}
+                  </span>
+                )}
+              </FormControl>
+
+              {/* Active Status */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <div className="flex items-center pt-2">
+                  <input
+                    type="checkbox"
+                    name="active"
+                    id="isActive"
+                    checked={formData.active === 1}
+                    onChange={handleChange}
+                    disabled={submitLoading}
+                    className="w-4 h-4 text-[#c72030] bg-gray-100 border-gray-300 rounded focus:ring-[#c72030] focus:ring-2"
+                  />
+                  <label htmlFor="isActive" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                    Active
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 justify-center pt-6">
+          <Button
+            type="submit"
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
+            disabled={submitLoading || loading}
+          >
+            {submitLoading ? "Updating..." : "Update Function"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoBack}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            disabled={submitLoading}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
 

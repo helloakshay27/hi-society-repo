@@ -3,7 +3,9 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
-import { ChevronRight, ArrowLeft } from "lucide-react";
+import { ChevronRight, ArrowLeft, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 
 
@@ -133,8 +135,8 @@ const LockRoleList = () => {
     setSelectedRole(role);
   };
 
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
+  const handleSearch = (term) => {
+    setSearchTerm(term);
   };
 
   const handlePermissionChange = (functionName, permType) => {
@@ -272,55 +274,26 @@ const LockRoleList = () => {
           </div>
         )}
 
-        {/* Search and Add Button */}
-        <div className="flex justify-end items-center gap-3 mb-4">
-          <div className="w-80">
-            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
-              <input
-                type="text"
-                className="flex-1 px-4 py-2 outline-none"
-                placeholder="Search roles..."
-                value={searchTerm}
-                onChange={handleSearch}
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
+        {/* Search and Add Button - Above Tables */}
+        <div className="mb-4">
+          <EnhancedTable
+            data={[]}
+            columns={[]}
+            renderCell={() => null}
+            enableGlobalSearch={true}
+            onGlobalSearch={handleSearch}
+            leftActions={
+              <Button
+                onClick={() => navigate("/setup-member/lock-role-create")}
+                className="bg-[#C72030] hover:bg-[#A01828] text-white"
               >
-                <svg
-                  width={16}
-                  height={16}
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M7.66927 13.939C3.9026 13.939 0.835938 11.064 0.835938 7.53271C0.835938 4.00146 3.9026 1.12646 7.66927 1.12646C11.4359 1.12646 14.5026 4.00146 14.5026 7.53271C14.5026 11.064 11.4359 13.939 7.66927 13.939ZM7.66927 2.06396C4.44927 2.06396 1.83594 4.52021 1.83594 7.53271C1.83594 10.5452 4.44927 13.0015 7.66927 13.0015C10.8893 13.0015 13.5026 10.5452 13.5026 7.53271C13.5026 4.52021 10.8893 2.06396 7.66927 2.06396Z"
-                    fill="#c72030"
-                  />
-                  <path
-                    d="M14.6676 14.5644C14.5409 14.5644 14.4143 14.5206 14.3143 14.4269L12.9809 13.1769C12.7876 12.9956 12.7876 12.6956 12.9809 12.5144C13.1743 12.3331 13.4943 12.3331 13.6876 12.5144L15.0209 13.7644C15.2143 13.9456 15.2143 14.2456 15.0209 14.4269C14.9209 14.5206 14.7943 14.5644 14.6676 14.5644Z"
-                    fill="#c72030"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-          <button
-            className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-            onClick={() => navigate("/setup-member/lock-role-create")}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width={20}
-              height={20}
-              fill="currentColor"
-              viewBox="0 0 16 16"
-            >
-              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-            </svg>
-            <span>Add Role</span>
-          </button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Role
+              </Button>
+            }
+            enableExport={false}
+            hideTable={true}
+          />
         </div>
 
         {/* Main Content */}

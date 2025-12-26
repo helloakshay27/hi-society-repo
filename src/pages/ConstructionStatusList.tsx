@@ -1,30 +1,26 @@
 
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { ChevronRight, ArrowLeft } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import { Toaster } from "@/components/ui/sonner";
+import { Plus, Edit } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 
 const ConstructionStatusList = () => {
   const baseURL = API_CONFIG.BASE_URL;
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [constructionStatusPermissions, setConstructionStatusPermissions] = useState({});
-  
-  const getPageFromStorage = () => {
-    return parseInt(localStorage.getItem("construction_status_currentPage")) || 1;
-  };
-  
-  const [pagination, setPagination] = useState({
-    current_page: getPageFromStorage(),
-    total_count: 0,
-    total_pages: 0,
-  });
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
   const itemsPerPage = 10;
   const navigate = useNavigate();
 
@@ -46,52 +42,64 @@ const ConstructionStatusList = () => {
     setConstructionStatusPermissions(permissions);
   }, []);
 
-  useEffect(() => {
-    const fetchStatuses = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(`${baseURL}/construction_statuses.json`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        });
-        setStatuses(response.data);
-        setPagination({
-          current_page: getPageFromStorage(),
-          total_count: response.data.length,
-          total_pages: Math.ceil(response.data.length / itemsPerPage),
-        });
-      } catch (error) {
-        console.error("Error fetching statuses:", error);
-        toast.error("Failed to load construction statuses.");
-      } finally {
-        setLoading(false);
+  const fetchStatuses = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${baseURL}/construction_statuses.json`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+      
+      let allStatuses = response.data || [];
+
+      // Client-side search
+      if (searchTerm.trim()) {
+        const query = searchTerm.toLowerCase();
+        allStatuses = allStatuses.filter((status) =>
+          (status.construction_status || "").toLowerCase().includes(query)
+        );
       }
-    };
 
+      setTotalCount(allStatuses.length);
+      setTotalPages(Math.ceil(allStatuses.length / itemsPerPage) || 1);
+
+      // Client-side pagination
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const paginatedStatuses = allStatuses.slice(startIndex, startIndex + itemsPerPage);
+      setStatuses(paginatedStatuses);
+    } catch (error) {
+      console.error("Error fetching statuses:", error);
+      toast.error("Failed to load construction statuses.");
+    } finally {
+      setLoading(false);
+      setIsSearching(false);
+    }
+  }, [baseURL, searchTerm, currentPage]);
+
+  useEffect(() => {
     fetchStatuses();
-  }, [baseURL]);
+  }, [fetchStatuses]);
 
-  const handlePageChange = (pageNumber) => {
-    setPagination((prevState) => ({
-      ...prevState,
-      current_page: pageNumber,
-    }));
-    localStorage.setItem("construction_status_currentPage", pageNumber);
+  const handleGlobalSearch = (term) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+    setIsSearching(true);
   };
 
-  const filteredStatuses = statuses.filter((status) =>
-    (status.construction_status || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
-  const totalFiltered = filteredStatuses.length;
-  const totalPages = Math.ceil(totalFiltered / itemsPerPage);
-  const startIndex = (pagination.current_page - 1) * itemsPerPage;
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
-  const displayedStatuses = filteredStatuses.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+  const handleAdd = () => {
+    navigate("/setup-member/construction-status");
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/setup-member/construction-status-edit/${id}`);
+  };
 
   const handleToggle = async (id, currentStatus) => {
     toast.dismiss();
@@ -105,167 +113,151 @@ const ConstructionStatusList = () => {
           "Content-Type": "application/json",
         },
       });
-      setStatuses((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, active: updatedStatus } : item
-        )
-      );
       toast.success("Status updated successfully!");
+      fetchStatuses(); // Refetch to maintain consistency
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update status.");
     }
   };
 
-  return (
-    <div className="h-full bg-gray-50">
-      <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
-        {/* Header with Back Button and Breadcrumbs */}
-        <div className="mb-6">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
-            </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Setup Member</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#C72030] font-medium">Construction Status</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">CONSTRUCTION STATUS</h1>
-        </div>
+  const columns = [
+    { key: "actions", label: "Actions", sortable: false },
+    { key: "id", label: "Sr No", sortable: true },
+    { key: "construction_status", label: "Status Name", sortable: true },
+    { key: "status", label: "Status", sortable: false },
+  ];
 
-        {/* Toolbar with Add Button and Search */}
-        <div className="flex justify-between items-center mb-4">
-          {/* Add Status Button */}
-          {true && (
-        <button
-  className="flex items-center gap-2 px-4 py-1.5 bg-[#F2EEE9] text-[#BF213E] rounded-md transition-colors"
-  onClick={() => navigate("/setup-member/construction-status")}
->
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path d="M8 3.5V12.5" stroke="#BF213E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M3.5 8H12.5" stroke="#BF213E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-  <span className="text-sm font-medium">Add Status</span>
-</button>
-          )}
-          
-          {/* Search Bar */}
-          <div className="w-80">
-            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
-              <input
-                type="text"
-                className="flex-1 px-4 py-2 outline-none"
-                placeholder="Search construction status..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setPagination((prev) => ({ ...prev, current_page: 1 }));
-                }}
-              />
-              <button type="button" className="px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors">
-                <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7.66927 13.939C3.9026 13.939 0.835938 11.064 0.835938 7.53271C0.835938 4.00146 3.9026 1.12646 7.66927 1.12646C11.4359 1.12646 14.5026 4.00146 14.5026 7.53271C14.5026 11.064 11.4359 13.939 7.66927 13.939ZM7.66927 2.06396C4.44927 2.06396 1.83594 4.52021 1.83594 7.53271C1.83594 10.5452 4.44927 13.0015 7.66927 13.0015C10.8893 13.0015 13.5026 10.5452 13.5026 7.53271C13.5026 4.52021 10.8893 2.06396 7.66927 2.06396Z" fill="#c72030"/>
-                  <path d="M14.6676 14.5644C14.5409 14.5644 14.4143 14.5206 14.3143 14.4269L12.9809 13.1769C12.7876 12.9956 12.7876 12.6956 12.9809 12.5144C13.1743 12.3331 13.4943 12.3331 13.6876 12.5144L15.0209 13.7644C15.2143 13.9456 15.2143 14.2456 15.0209 14.4269C14.9209 14.5206 14.7943 14.5644 14.6676 14.5644Z" fill="#c72030"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
+  const renderCell = (item, columnKey) => {
+    const index = statuses.findIndex(s => s.id === item.id);
+    const startIndex = (currentPage - 1) * itemsPerPage;
 
-        {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Construction Status List</h3>
-          </div>
-          <div className="p-6">
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-[#c72030] rounded-full animate-spin" role="status">
-                  <span className="sr-only">Loading...</span>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="rounded-lg border border-gray-200 overflow-hidden">
-                  <Table className="border-separate">
-                    <TableHeader>
-                      <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff", width: "100px" }}>Action</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff", width: "80px" }}>Sr No</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff", minWidth: "250px" }}>Status Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center" style={{ borderColor: "#fff", width: "100px" }}>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {displayedStatuses.length > 0 ? (
-                        displayedStatuses.map((status, index) => (
-                          <TableRow key={status.id} className="hover:bg-gray-50 transition-colors">
-                            <TableCell className="py-3 px-4">
-                              {constructionStatusPermissions.update === "true" && (
-                                <button
-                                  onClick={() => navigate(`/setup-member/construction-status-edit/${status.id}`)}
-                                  className="text-gray-600 hover:text-[#c72030] transition-colors"
-                                >
-                                  {/* ...existing SVG... */}
-                                </button>
-                              )}
-                            </TableCell>
-                            <TableCell className="py-3 px-4 font-medium">{startIndex + index + 1}</TableCell>
-                            <TableCell className="py-3 px-4">{status.construction_status || "-"}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <div className="flex justify-center">
-                                <button
-                                  onClick={() => handleToggle(status.id, status.active)}
-                                  className="text-gray-600 hover:opacity-80 transition-opacity"
-                                >
-                                  {status.active ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" fill="#28a745" viewBox="0 0 16 16">
-                                      <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-                                    </svg>
-                                  ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" fill="#6c757d" viewBox="0 0 16 16">
-                                      <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zM5 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-                                    </svg>
-                                  )}
-                                </button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-12 text-gray-500">
-                            {searchQuery ? (
-                              <div>
-                                <p className="text-lg mb-2">No construction statuses found</p>
-                                <p className="text-sm text-gray-400">Try adjusting your search criteria</p>
-                              </div>
-                            ) : (
-                              "No construction statuses found"
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Pagination */}
-                {displayedStatuses.length > 0 && totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-6 px-3">
-                    {/* ...existing pagination code similar to SiteList... */}
-                  </div>
-                )}
-              </>
+    switch (columnKey) {
+      case "actions":
+        return (
+          <div className="flex gap-2">
+            {constructionStatusPermissions.update === "true" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleEdit(item.id)}
+                className="h-8 w-8 text-gray-600 hover:text-[#C72030] hover:bg-gray-100"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
             )}
           </div>
+        );
+      case "id":
+        return <span className="font-medium">{startIndex + index + 1}</span>;
+      case "construction_status":
+        return <span>{item.construction_status || "-"}</span>;
+      case "status":
+        return (
+          <button
+            onClick={() => handleToggle(item.id, item.active)}
+            className="toggle-button"
+            style={{
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              padding: 0,
+              width: "70px",
+            }}
+          >
+            {item.active ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="40"
+                height="25"
+                fill="#de7008"
+                className="bi bi-toggle-on"
+                viewBox="0 0 16 16"
+              >
+                <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="40"
+                height="25"
+                fill="#667085"
+                className="bi bi-toggle-off"
+                viewBox="0 0 16 16"
+              >
+                <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
+              </svg>
+            )}
+          </button>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderCustomActions = () => (
+    <Button
+      onClick={handleAdd}
+      className="bg-[#C72030] hover:bg-[#A01828] text-white"
+    >
+      <Plus className="h-4 w-4 mr-2" />
+      Add
+    </Button>
+  );
+
+  const renderListTab = () => (
+    <div className="space-y-6">
+      <EnhancedTable
+        data={statuses}
+        columns={columns}
+        renderCell={renderCell}
+        enableExport={false}
+        enableGlobalSearch={true}
+        onGlobalSearch={handleGlobalSearch}
+        leftActions={renderCustomActions()}
+        loading={loading}
+        loadingMessage="Loading construction statuses..."
+      />
+      {!loading && statuses.length > 0 && totalPages > 1 && (
+        <div className="flex items-center justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <PaginationItem key={page}>
+                  <PaginationLink 
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
+                    isActive={currentPage === page}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
-      </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="p-2 sm:p-4 lg:p-6">
+      <Toaster position="top-right" richColors closeButton />
+      {renderListTab()}
     </div>
   );
 };

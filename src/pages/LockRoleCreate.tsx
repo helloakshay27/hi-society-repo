@@ -2,13 +2,39 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { API_CONFIG } from "@/config/apiConfig";
-import { ChevronRight, ArrowLeft } from "lucide-react";
+import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { ChevronRight, ArrowLeft, Shield } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import { TextField, FormControl, InputLabel } from "@mui/material";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 
 const LockRoleCreate = () => {
   const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
+
+  const fieldStyles = {
+    height: '45px',
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    '& .MuiOutlinedInput-root': {
+      height: '45px',
+      '& fieldset': {
+        borderColor: '#ddd',
+      },
+      '&:hover fieldset': {
+        borderColor: '#C72030',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#C72030',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      '&.Mui-focused': {
+        color: '#C72030',
+      },
+    },
+  };
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
@@ -34,12 +60,12 @@ const LockRoleCreate = () => {
   useEffect(() => {
     const fetchLockFunctions = async () => {
       try {
-        const response = await axios.get(`${baseURL}/lock_functions.json`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
-        });
+      const response = await axios.get(getFullUrl('/lock_functions.json'), {
+        headers: {
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+      });
 
         const functionsData = Array.isArray(response.data) ? response.data : [];
         setLockFunctions(functionsData);
@@ -150,9 +176,9 @@ const LockRoleCreate = () => {
         lock_modules: null
       };
 
-      await axios.post(`${baseURL}/lock_roles.json`, payload, {
+      await axios.post(getFullUrl('/lock_roles.json'), payload, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          Authorization: getAuthHeader(),
           "Content-Type": "application/json",
         },
       });
@@ -191,36 +217,37 @@ const LockRoleCreate = () => {
         </div>
 
         {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Role Details</h3>
-          </div>
-          <div className="p-6">
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                  <Shield size={16} color="#C72030" />
+                </span>
+                Role Details
+              </h2>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {/* Role Title */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Role Title
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    className={`w-full px-4 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all`}
-                    placeholder="Enter role title"
-                    value={formData.name}
-                    onChange={handleChange}
-                    disabled={submitting}
-                  />
-                  {errors.name && (
-                    <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-                  )}
-                </div>
+                <TextField
+                  label="Role Title"
+                  name="name"
+                  placeholder="Enter role title"
+                  value={formData.name}
+                  onChange={handleChange}
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{ inputLabel: { shrink: true } }}
+                  InputProps={{ sx: fieldStyles }}
+                  required
+                  error={!!errors.name}
+                  helperText={errors.name as string}
+                />
 
                 {/* Active Status */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                   <div className="flex items-center pt-2">
                     <input
                       type="checkbox"
@@ -237,93 +264,96 @@ const LockRoleCreate = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Permissions Table */}
-              <div className="mt-6">
-                <h4 className="text-sm font-medium text-gray-700 mb-4">Role Permissions</h4>
-                {loading ? (
-                  <div className="text-center py-12">
-                    <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-[#c72030] rounded-full animate-spin" role="status">
-                      <span className="sr-only">Loading...</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="rounded-lg border border-gray-200 overflow-hidden">
-                    <Table className="border-separate">
-                      <TableHeader>
-                        <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff", minWidth: "250px" }}>
-                            Functions
-                          </TableHead>
-                          {standardActions.map(action => (
-                            <TableHead key={action} className="font-semibold text-gray-900 py-3 px-4 border-r text-center" style={{ borderColor: "#fff", width: "100px" }}>
-                              {actionLabels[action]}
-                            </TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {lockFunctions.length > 0 ? (
-                          lockFunctions.map((func) => (
-                            <TableRow key={func.id} className="hover:bg-gray-50 transition-colors">
-                              <TableCell className="py-3 px-4 font-medium">{func.name}</TableCell>
-                              {standardActions.map(action => (
-                                <TableCell key={`${func.action_name}-${action}`} className="py-3 px-4 text-center">
-                                  <input
-                                    type="checkbox"
-                                    className="w-4 h-4 accent-[#C72030] cursor-pointer"
-                                    checked={permissionsHash[func.action_name]?.[action] === "true"}
-                                    onChange={(e) => handlePermissionChange(func.action_name, action, e.target.checked)}
-                                    disabled={submitting}
-                                  />
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={standardActions.length + 1} className="text-center py-12 text-gray-500">
-                              No functions available
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-gray-200">
-                <button
-                  type="submit"
-                  disabled={submitting || loading}
-                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
-                    (submitting || loading) ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {submitting ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Submitting...
-                    </span>
-                  ) : (
-                    "Submit"
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate(-1)}
-                  disabled={submitting}
-                  className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
+
+          {/* Permissions Table */}
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                  <Shield size={16} color="#C72030" />
+                </span>
+                Role Permissions
+              </h2>
+            </div>
+            <div className="p-6">
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-[#c72030] rounded-full animate-spin" role="status">
+                    <span className="sr-only">Loading...</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-gray-200 overflow-hidden">
+                  <Table className="border-separate">
+                    <TableHeader>
+                      <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff", minWidth: "250px" }}>
+                          Functions
+                        </TableHead>
+                        {standardActions.map(action => (
+                          <TableHead key={action} className="font-semibold text-gray-900 py-3 px-4 border-r text-center" style={{ borderColor: "#fff", width: "100px" }}>
+                            {actionLabels[action]}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {lockFunctions.length > 0 ? (
+                        lockFunctions.map((func) => (
+                          <TableRow key={func.id} className="hover:bg-gray-50 transition-colors">
+                            <TableCell className="py-3 px-4 font-medium">{func.name}</TableCell>
+                            {standardActions.map(action => (
+                              <TableCell key={`${func.action_name}-${action}`} className="py-3 px-4 text-center">
+                                <input
+                                  type="checkbox"
+                                  name={`${func.action_name}-${action}`}
+                                  className="w-4 h-4 accent-[#C72030] cursor-pointer"
+                                  checked={permissionsHash[func.action_name]?.[action] === "true"}
+                                  onChange={(e) => handlePermissionChange(func.action_name, action, e.target.checked)}
+                                  disabled={submitting}
+                                />
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={standardActions.length + 1} className="text-center py-12 text-gray-500">
+                            No functions available
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 justify-center pt-6">
+            <button
+              type="submit"
+              disabled={submitting || loading}
+              className={`px-8 py-2 bg-[#C72030] hover:bg-[#B8252F] text-white rounded transition-colors font-medium ${
+                (submitting || loading) ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              {submitting ? "Creating..." : "Create Role"}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              disabled={submitting}
+              className="px-8 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded transition-colors font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
         </div>
-      </div>
     </div>
   );
 };

@@ -3,8 +3,32 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
-import { ChevronRight, ArrowLeft } from "lucide-react";
-import SelectBox from "../components/ui/select-box";
+import { ChevronRight, ArrowLeft, Lock } from "lucide-react";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { Button } from "@/components/ui/button";
+
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
 
 
 const LockFunctionCreate = () => {
@@ -202,191 +226,203 @@ const LockFunctionCreate = () => {
     setShowActionName(false); // Hide Action Name field
   };
 
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
   return (
-    <div className="h-full bg-gray-50">
-      <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
-        {/* Header with Back Button and Breadcrumbs */}
-        <div className="mb-6">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
-            </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Setup Member</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Lock Function</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#C72030] font-medium">Create</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">CREATE LOCK FUNCTION</h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button 
+            onClick={handleGoBack}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Setup Member</span>
+          <span>{">"}</span>
+          <span>Lock Function</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Create Lock Function</span>
         </div>
-
-        {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Function Details</h3>
-          </div>
-          <div className="p-6">
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Name Selection */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Name
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <SelectBox
-                    options={[
-                      { label: "Project", value: "Project" },
-                      { label: "Banner", value: "Banner" },
-                      { label: "Testimonial", value: "Testimonial" },
-                      { label: "Referral", value: "Referral" },
-                      { label: "Enquiry", value: "Enquiry" },
-                      { label: "Event", value: "Event" },
-                      { label: "Specification", value: "Specification" },
-                      { label: "Site Visit", value: "Site Visit" },
-                      { label: "Organization", value: "Organization" },
-                      { label: "Company", value: "Company" },
-                      { label: "Department", value: "Department" },
-                      { label: "Site", value: "Site" },
-                      { label: "Support Service", value: "Support Service" },
-                      { label: "Press Releases", value: "Press Releases" },
-                      { label: "FAQ", value: "FAQ" },
-                      { label: "Referral Program", value: "Referral Program" },
-                      { label: "User Role", value: "User Role" },
-                      { label: "Lock Function", value: "Lock Function" },
-                      { label: "User Module", value: "User Module" },
-                      { label: "User Groups", value: "User Groups" },
-                      { label: "Property Type", value: "Property Type" },
-                      { label: "Project Building", value: "Project Building" },
-                      { label: "Construction", value: "Construction" },
-                      { label: "Construction Update", value: "Construction Update" },
-                      { label: "Project Config", value: "Project Config" },
-                      { label: "Amenities", value: "Amenities" },
-                      { label: "Visit Slot", value: "Visit Slot" },
-                      { label: "TDS Tutorials", value: "TDS Tutorials" },
-                      { label: "Plus Services", value: "Plus Services" },
-                      { label: "SMTP Settings", value: "SMTP Settings" },
-                      { label: "FAQ Category", value: "FAQ Category" },
-                      { label: "FAQ SubCategory", value: "FAQ SubCategory" },
-                      { label: "Service Category", value: "Service Category" },
-                      { label: "Image Config", value: "Image Config" },
-                      { label: "Bank Details", value: "Bank Details" },
-                      { label: "Home Loan", value: "Home Loan" },
-                      { label: "Banks", value: "Banks" },
-                      { label: "Loan Manager", value: "Loan Manager" },
-                      { label: "Common Files", value: "Common Files" },
-                      { label: "Demand Notes", value: "Demand Notes" },
-                      { label: "Orders", value: "Orders" },
-                      { label: "Encash", value: "Encash" },
-                      { label: "Lock Payments", value: "Lock Payments" },
-                      { label: "Loyalty Members", value: "Loyalty Members" },
-                      { label: "Loyalty Tiers", value: "Loyalty Tiers" },
-                      { label: "Loyalty Section", value: "Loyalty Section" },
-                      { label: "Referral List", value: "Referral List" },
-                      { label: "Rule Engine", value: "Rule Engine" },
-                      { label: "Loyalty Managers", value: "Loyalty Managers" },
-                      { label: "Home Loan Request", value: "Home Loan Request" },
-                    ]}
-                    value={formData.name}
-                    onChange={handleNameChange}
-                    disabled={submitting}
-                  />
-                  {errors.name && (
-                    <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-                  )}
-                </div>
-
-                {/* Action Name (auto-filled, read-only) */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Action Name
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="action_name"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 outline-none"
-                    value={formData.action_name}
-                    readOnly
-                  />
-                  {errors.action_name && (
-                    <p className="text-red-500 text-xs mt-1">{errors.action_name}</p>
-                  )}
-                </div>
-
-                {/* Parent Function */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Parent Function
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <SelectBox
-                    options={[{ label: "All Functions", value: "All Functions" }]}
-                    value={formData.parent_function}
-                    onChange={(value) => setFormData({ ...formData, parent_function: value })}
-                    disabled={submitting}
-                  />
-                  {errors.parent_function && (
-                    <p className="text-red-500 text-xs mt-1">{errors.parent_function}</p>
-                  )}
-                </div>
-
-                {/* Active Status */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Status</label>
-                  <div className="flex items-center pt-2">
-                    <input
-                      type="checkbox"
-                      name="active"
-                      id="isActive"
-                      checked={formData.active === 1}
-                      onChange={handleChange}
-                      disabled={submitting}
-                      className="w-4 h-4 text-[#c72030] bg-gray-100 border-gray-300 rounded focus:ring-[#c72030] focus:ring-2"
-                    />
-                    <label htmlFor="isActive" className="ml-2 text-sm text-gray-700 cursor-pointer">
-                      Active
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-gray-200">
-                <button
-                  type="submit"
-                  disabled={submitting || loading}
-                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
-                    (submitting || loading) ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {submitting ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Submitting...
-                    </span>
-                  ) : (
-                    "Submit"
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate(-1)}
-                  disabled={submitting}
-                  className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-900">CREATE LOCK FUNCTION</h1>
       </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <Lock size={16} color="#C72030" />
+              </span>
+              Function Details
+            </h2>
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* Name Selection */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+                required
+                error={!!errors.name}
+              >
+                <InputLabel shrink>Name</InputLabel>
+                <MuiSelect
+                  value={formData.name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  label="Name"
+                  notched
+                  displayEmpty
+                  disabled={submitting}
+                >
+                  <MenuItem value="">Select...</MenuItem>
+                  <MenuItem value="Project">Project</MenuItem>
+                  <MenuItem value="Banner">Banner</MenuItem>
+                  <MenuItem value="Testimonial">Testimonial</MenuItem>
+                  <MenuItem value="Referral">Referral</MenuItem>
+                  <MenuItem value="Enquiry">Enquiry</MenuItem>
+                  <MenuItem value="Event">Event</MenuItem>
+                  <MenuItem value="Specification">Specification</MenuItem>
+                  <MenuItem value="Site Visit">Site Visit</MenuItem>
+                  <MenuItem value="Organization">Organization</MenuItem>
+                  <MenuItem value="Company">Company</MenuItem>
+                  <MenuItem value="Department">Department</MenuItem>
+                  <MenuItem value="Site">Site</MenuItem>
+                  <MenuItem value="Support Service">Support Service</MenuItem>
+                  <MenuItem value="Press Releases">Press Releases</MenuItem>
+                  <MenuItem value="FAQ">FAQ</MenuItem>
+                  <MenuItem value="Referral Program">Referral Program</MenuItem>
+                  <MenuItem value="User Role">User Role</MenuItem>
+                  <MenuItem value="Lock Function">Lock Function</MenuItem>
+                  <MenuItem value="User Module">User Module</MenuItem>
+                  <MenuItem value="User Groups">User Groups</MenuItem>
+                  <MenuItem value="Property Type">Property Type</MenuItem>
+                  <MenuItem value="Project Building">Project Building</MenuItem>
+                  <MenuItem value="Construction">Construction</MenuItem>
+                  <MenuItem value="Construction Update">Construction Update</MenuItem>
+                  <MenuItem value="Project Config">Project Config</MenuItem>
+                  <MenuItem value="Amenities">Amenities</MenuItem>
+                  <MenuItem value="Visit Slot">Visit Slot</MenuItem>
+                  <MenuItem value="TDS Tutorials">TDS Tutorials</MenuItem>
+                  <MenuItem value="Plus Services">Plus Services</MenuItem>
+                  <MenuItem value="SMTP Settings">SMTP Settings</MenuItem>
+                  <MenuItem value="FAQ Category">FAQ Category</MenuItem>
+                  <MenuItem value="FAQ SubCategory">FAQ SubCategory</MenuItem>
+                  <MenuItem value="Service Category">Service Category</MenuItem>
+                  <MenuItem value="Image Config">Image Config</MenuItem>
+                  <MenuItem value="Bank Details">Bank Details</MenuItem>
+                  <MenuItem value="Home Loan">Home Loan</MenuItem>
+                  <MenuItem value="Banks">Banks</MenuItem>
+                  <MenuItem value="Loan Manager">Loan Manager</MenuItem>
+                  <MenuItem value="Common Files">Common Files</MenuItem>
+                  <MenuItem value="Demand Notes">Demand Notes</MenuItem>
+                  <MenuItem value="Orders">Orders</MenuItem>
+                  <MenuItem value="Encash">Encash</MenuItem>
+                  <MenuItem value="Lock Payments">Lock Payments</MenuItem>
+                  <MenuItem value="Loyalty Members">Loyalty Members</MenuItem>
+                  <MenuItem value="Loyalty Tiers">Loyalty Tiers</MenuItem>
+                  <MenuItem value="Loyalty Section">Loyalty Section</MenuItem>
+                  <MenuItem value="Referral List">Referral List</MenuItem>
+                  <MenuItem value="Rule Engine">Rule Engine</MenuItem>
+                  <MenuItem value="Loyalty Managers">Loyalty Managers</MenuItem>
+                  <MenuItem value="Home Loan Request">Home Loan Request</MenuItem>
+                </MuiSelect>
+                {errors.name && (
+                  <span style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px' }}>
+                    {errors.name}
+                  </span>
+                )}
+              </FormControl>
+
+              {/* Action Name (auto-filled, read-only) */}
+              <TextField
+                label="Action Name"
+                name="action_name"
+                value={formData.action_name}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ 
+                  sx: { ...fieldStyles, backgroundColor: '#f9fafb' },
+                  readOnly: true
+                }}
+                required
+                error={!!errors.action_name}
+                helperText={errors.action_name}
+              />
+
+              {/* Parent Function */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+                required
+                error={!!errors.parent_function}
+              >
+                <InputLabel shrink>Parent Function</InputLabel>
+                <MuiSelect
+                  value={formData.parent_function}
+                  onChange={(e) => setFormData({ ...formData, parent_function: e.target.value })}
+                  label="Parent Function"
+                  notched
+                  displayEmpty
+                  disabled={submitting}
+                >
+                  <MenuItem value="All Functions">All Functions</MenuItem>
+                </MuiSelect>
+                {errors.parent_function && (
+                  <span style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px' }}>
+                    {errors.parent_function}
+                  </span>
+                )}
+              </FormControl>
+
+              {/* Active Status */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <div className="flex items-center pt-2">
+                  <input
+                    type="checkbox"
+                    name="active"
+                    id="isActive"
+                    checked={formData.active === 1}
+                    onChange={handleChange}
+                    disabled={submitting}
+                    className="w-4 h-4 text-[#c72030] bg-gray-100 border-gray-300 rounded focus:ring-[#c72030] focus:ring-2"
+                  />
+                  <label htmlFor="isActive" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                    Active
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 justify-center pt-6">
+          <Button
+            type="submit"
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
+            disabled={submitting || loading}
+          >
+            {submitting ? "Creating..." : "Create Function"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoBack}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            disabled={submitting}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

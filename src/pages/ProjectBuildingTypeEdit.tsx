@@ -3,8 +3,32 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
-import SelectBox from "@/components/ui/select-box";
-import { TextField } from "@mui/material";
+import { ArrowLeft, Building2 } from "lucide-react";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { Button } from "@/components/ui/button";
+
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
 
 const ProjectBuildingTypeEdit = () => {
   const { id } = useParams();
@@ -129,104 +153,121 @@ const ProjectBuildingTypeEdit = () => {
     }
   };
 
-  return (
-    <div className="main-content">
-      <div className="website-content overflow-auto">
-        <div className="module-data-section container-fluid">
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
-          {/* SECTION CARD */}
-          <div className="bg-white rounded-lg border mx-4 mt-6">
-            <div className="flex items-center gap-3 px-6 py-4 border-b">
-              <div className="w-9 h-9 rounded-full bg-[#F2EEE9] text-[#BF213E] flex items-center justify-center font-semibold">
-                PB
-              </div>
-              <h3 className="text-lg font-semibold">
-                Edit Project Building Type
-              </h3>
-            </div>
-
-            <div className="px-6 py-6">
-              {isLoading ? (
-                <div className="text-center">Loading...</div>
-              ) : (
-                <form id="projectBuildingTypeForm" onSubmit={handleSubmit}>
-
-                  {/* 🔒 HARD FLEX ROW — WILL NOT STACK */}
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-end",
-                      gap: "40px",
-                    }}
-                  >
-                    {/* Name */}
-                    <div>
-                      <TextField
-                        label="Name"
-                        placeholder="Enter Name "
-                        value={buildingType}
-                        onChange={(e) => setBuildingType(e.target.value)}
-                        size="small"
-                        sx={{ width: 300 }}
-                      />
-                    </div>
-
-                    {/* Property Type */}
-                    <div>
-                      <label className="block mb-1">
-                        Property Types <span className="otp-asterisk">*</span>
-                      </label>
-                      <div style={{ width: 300 }}>
-                        <SelectBox
-                          options={propertyTypeOptions}
-                          value={formData.Property_Type}
-                          onChange={(value) => {
-                            const selected = propertyTypeOptions.find(
-                              (opt) => opt.value === value
-                            );
-                            setFormData((prev) => ({
-                              ...prev,
-                              Property_Type: value,
-                              Property_Type_ID: selected?.id || null,
-                            }));
-                          }}
-                          placeholder="Select Property Type"
-                          isSearchable
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                </form>
-              )}
-            </div>
-          </div>
-
-          {/* ACTION BUTTONS OUTSIDE */}
-          <div className="flex justify-center gap-20 mt-8 mb-8">
-            <button
-              type="submit"
-              form="projectBuildingTypeForm"
-              disabled={loading}
-              className="px-8 py-2.5 bg-[#F2EEE9] text-[#BF213E] rounded-lg"
-            >
-              Submit
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                navigate("/setup-member/project-building-type-list")
-              }
-              disabled={loading}
-              className="px-8 py-2.5 bg-white border border-[#8B2E3D] text-[#8B2E3D] rounded-md"
-            >
-              Cancel
-            </button>
-          </div>
-
-        </div>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030]"></div>
       </div>
+    );
+  }
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button 
+            onClick={handleGoBack}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Setup Member</span>
+          <span>{">"}  </span>
+          <span>Project Building Type</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Edit</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">EDIT PROJECT BUILDING TYPE</h1>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <Building2 size={16} color="#C72030" />
+              </span>
+              Building Type Details
+            </h2>
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* Property Type */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+                required
+              >
+                <InputLabel shrink>Property Type</InputLabel>
+                <MuiSelect
+                  value={formData.Property_Type}
+                  onChange={(e) => {
+                    const selected = propertyTypeOptions.find(
+                      (opt) => opt.value === e.target.value
+                    );
+                    setFormData((prev) => ({
+                      ...prev,
+                      Property_Type: e.target.value,
+                      Property_Type_ID: selected?.id || null,
+                    }));
+                  }}
+                  label="Property Type"
+                  notched
+                  displayEmpty
+                  disabled={loading}
+                >
+                  <MenuItem value="">Select Property Type</MenuItem>
+                  {propertyTypeOptions.map((option) => (
+                    <MenuItem key={option.id} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+
+              {/* Building Type Name */}
+              <TextField
+                label="Building Type Name"
+                placeholder="Enter building type name"
+                value={buildingType}
+                onChange={(e) => setBuildingType(e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+                required
+                disabled={loading}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 justify-center pt-6">
+          <Button
+            type="submit"
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
+            disabled={loading}
+          >
+            {loading ? "Updating..." : "Update Building Type"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoBack}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

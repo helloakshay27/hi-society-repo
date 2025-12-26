@@ -232,7 +232,7 @@ const LockFunctionList = () => {
       className="bg-[#C72030] hover:bg-[#A01828] text-white"
     >
       <Plus className="h-4 w-4 mr-2" />
-      Add Function
+      Add
     </Button>
   );
 

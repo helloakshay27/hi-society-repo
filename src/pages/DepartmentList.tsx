@@ -204,7 +204,7 @@ const DepartmentList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap gap-2">
-      {permissions.create === 'true' && (
+      {/* {permissions.create === 'true' && ( */}
         <Button 
           onClick={handleAddDepartment}
           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
@@ -212,7 +212,7 @@ const DepartmentList = () => {
           <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
           Add Department
         </Button>
-      )}
+      {/* )} */}
     </div>
   );
 

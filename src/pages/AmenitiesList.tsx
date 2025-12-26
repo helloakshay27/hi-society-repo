@@ -1,27 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { ChevronRight, ArrowLeft } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import { Toaster } from "@/components/ui/sonner";
+import { Plus, Edit } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 
 const AmenitiesList = () => {
   const baseURL = API_CONFIG.BASE_URL;
   const [amenities, setAmenities] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [amenitiesPermissions, setAmenitiesPermissions] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
+  const itemsPerPage = 10;
   const navigate = useNavigate();
-
-  const pageSize = 10;
-  const getPageFromStorage = () =>
-    parseInt(localStorage.getItem("amenities_list_currentPage")) || 1;
-  const [pagination, setPagination] = useState({
-    current_page: getPageFromStorage(),
-    total_count: 0,
-    total_pages: 0,
-  });
 
   const getAmenitiesPermissions = () => {
     try {
@@ -38,45 +37,65 @@ const AmenitiesList = () => {
 
   useEffect(() => {
     const permissions = getAmenitiesPermissions();
-    console.log('Amenities Permissions:', permissions); // Debug log
     setAmenitiesPermissions(permissions);
-    
-    // For testing: Force show the button temporarily
-    console.log('For testing: Setting create permission to true');
-    setAmenitiesPermissions(prev => ({ ...prev, create: true }));
   }, []);
 
-  useEffect(() => {
-    const fetchAmenities = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(`${baseURL}/amenity_setups.json`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        });
-        const data = response.data.amenities_setups || [];
+  const fetchAmenities = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${baseURL}/amenity_setups.json`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+      let allAmenities = response.data.amenities_setups || [];
 
-        setAmenities(data);
-        setPagination({
-          total_count: data.length,
-          total_pages: Math.ceil(data.length / pageSize),
-          current_page: getPageFromStorage(),
-        });
-      } catch (err) {
-        console.error("Error fetching amenities:", err);
-        toast.error("Failed to fetch amenities data");
-      } finally {
-        setLoading(false);
+      // Client-side search
+      if (searchTerm.trim()) {
+        const query = searchTerm.toLowerCase();
+        allAmenities = allAmenities.filter((amenity) =>
+          amenity.name?.toLowerCase().includes(query)
+        );
       }
-    };
 
+      setTotalCount(allAmenities.length);
+      setTotalPages(Math.ceil(allAmenities.length / itemsPerPage) || 1);
+
+      // Client-side pagination
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const paginatedAmenities = allAmenities.slice(startIndex, startIndex + itemsPerPage);
+      setAmenities(paginatedAmenities);
+    } catch (err) {
+      console.error("Error fetching amenities:", err);
+      toast.error("Failed to fetch amenities data");
+    } finally {
+      setLoading(false);
+      setIsSearching(false);
+    }
+  }, [baseURL, searchTerm, currentPage]);
+
+  useEffect(() => {
     fetchAmenities();
-  }, [baseURL]);
+  }, [fetchAmenities]);
+
+  const handleGlobalSearch = (term) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+    setIsSearching(true);
+  };
 
   const handlePageChange = (page) => {
-    setPagination((prev) => ({ ...prev, current_page: page }));
-    localStorage.setItem("amenities_list_currentPage", page);
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleAdd = () => {
+    navigate("/setup-member/amenities");
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/setup-member/edit-amenities/${id}`);
   };
 
   const handleToggle = async (id, currentStatus) => {
@@ -91,11 +110,7 @@ const AmenitiesList = () => {
         },
       });
 
-      setAmenities((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, active: updatedStatus } : item
-        )
-      );
+      fetchAmenities();
       toast.success("Status updated successfully!");
     } catch (error) {
       console.error("Error updating status:", error);
@@ -117,12 +132,7 @@ const AmenitiesList = () => {
         },
       });
 
-      setAmenities((prevAmenities) =>
-        prevAmenities.map((amenity) =>
-          amenity.id === id ? { ...amenity, night_mode: updatedValue } : amenity
-        )
-      );
-
+      fetchAmenities();
       toast.success(`Night Mode ${updatedValue ? "enabled" : "disabled"}`);
     } catch (err) {
       toast.error("Failed to toggle night mode");
@@ -130,202 +140,216 @@ const AmenitiesList = () => {
     }
   };
 
-  const filteredAmenities = amenities.filter((amenity) =>
-    (amenity.name?.toLowerCase() || "").includes(searchQuery.toLowerCase())
-  );
-  const totalFiltered = filteredAmenities.length;
-  const totalPages = Math.ceil(totalFiltered / pageSize);
-  const startIndex = (pagination.current_page - 1) * pageSize;
+  const columns = [
+    { key: "actions", label: "Actions", sortable: false },
+    { key: "id", label: "Sr No", sortable: true },
+    { key: "name", label: "Name", sortable: true },
+    { key: "icon", label: "Icon", sortable: false },
+    { key: "dark_mode_icon", label: "Dark Mode Icon", sortable: false },
+    { key: "night_mode", label: "Night Mode", sortable: false },
+  ];
 
-  const displayedAmenities = filteredAmenities.slice(
-    startIndex,
-    startIndex + pageSize
+  const renderCell = (item, columnKey) => {
+    const index = amenities.findIndex(a => a.id === item.id);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+
+    switch (columnKey) {
+      case "actions":
+        return (
+          <div className="flex gap-2">
+            {amenitiesPermissions.update === "true" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleEdit(item.id)}
+                className="h-8 w-8 text-gray-600 hover:text-[#C72030] hover:bg-gray-100"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
+            <button
+              onClick={() => handleToggle(item.id, item.active)}
+              className="toggle-button"
+              style={{
+                border: "none",
+                background: "none",
+                cursor: "pointer",
+                padding: 0,
+                width: "70px",
+              }}
+            >
+              {item.active ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="40"
+                  height="25"
+                  fill="#de7008"
+                  className="bi bi-toggle-on"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="40"
+                  height="25"
+                  fill="#667085"
+                  className="bi bi-toggle-off"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
+                </svg>
+              )}
+            </button>
+          </div>
+        );
+      case "id":
+        return <span className="font-medium">{startIndex + index + 1}</span>;
+      case "name":
+        return <span>{item.name || "-"}</span>;
+      case "icon":
+        return (
+          <div className="flex justify-center">
+            {item.icon_url ? (
+              <img
+                src={item.icon_url}
+                alt={item.name}
+                className="rounded-lg border border-gray-200"
+                style={{ width: "60px", height: "60px", objectFit: "cover" }}
+              />
+            ) : (
+              <span className="text-sm text-gray-500 italic">No Icon</span>
+            )}
+          </div>
+        );
+      case "dark_mode_icon":
+        return (
+          <div className="flex justify-center">
+            {item.dark_mode_icon_url ? (
+              <img
+                src={item.dark_mode_icon_url}
+                alt={item.name}
+                className="rounded-lg border border-gray-200"
+                style={{ width: "60px", height: "60px", objectFit: "cover" }}
+              />
+            ) : (
+              <span className="text-sm text-gray-500 italic">No Icon</span>
+            )}
+          </div>
+        );
+      case "night_mode":
+        return (
+          <div className="flex justify-center">
+            <button
+              onClick={() => handleNightModeToggle(item.id, item.night_mode)}
+              className="toggle-button"
+              style={{
+                border: "none",
+                background: "none",
+                cursor: "pointer",
+                padding: 0,
+                width: "70px",
+              }}
+            >
+              {item.night_mode ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="40"
+                  height="25"
+                  fill="#de7008"
+                  className="bi bi-toggle-on"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="40"
+                  height="25"
+                  fill="#667085"
+                  className="bi bi-toggle-off"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
+                </svg>
+              )}
+            </button>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderCustomActions = () => (
+    <>
+      {/* {amenitiesPermissions.create && ( */}
+        <Button
+          onClick={handleAdd}
+          className="bg-[#C72030] hover:bg-[#A01828] text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add
+        </Button>
+      {/* )} */}
+    </>
+  );
+
+  const renderListTab = () => (
+    <div className="space-y-6">
+      <EnhancedTable
+        data={amenities}
+        columns={columns}
+        renderCell={renderCell}
+        enableExport={false}
+        enableGlobalSearch={true}
+        onGlobalSearch={handleGlobalSearch}
+        leftActions={renderCustomActions()}
+        loading={loading}
+        loadingMessage="Loading amenities..."
+      />
+      {!loading && amenities.length > 0 && totalPages > 1 && (
+        <div className="flex items-center justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <PaginationItem key={page}>
+                  <PaginationLink 
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
+                    isActive={currentPage === page}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+    </div>
   );
 
   return (
-    <div className="h-full bg-gray-50">
-      <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
-        {/* Header with Back Button and Breadcrumbs */}
-        <div className="mb-6">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
-            </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Setup Member</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#C72030] font-medium">Amenities</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">AMENITIES</h1>
-        </div>
-
-        {/* Search and Add Button */}
-    
-<div className="flex items-center justify-between mb-4">
-   {Boolean(amenitiesPermissions.create) && (
-    <button
-      className="flex items-center gap-2 px-4 py-1.5 bg-[#F2EEE9] text-[#BF213E] rounded-md transition-colors"
-      onClick={() => navigate("/setup-member/amenities")}
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 16 16" fill="none">
-        <path d="M8 3.5V12.5" stroke="#BF213E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M3.5 8H12.5" stroke="#BF213E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-      <span className="text-sm font-medium">Add Amenity</span>
-    </button>
-  )}
-
-  <div className="w-80">
-    <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
-      <input
-        type="text"
-        className="flex-1 px-4 py-2 outline-none"
-        placeholder="Search by title or description..."
-        value={searchQuery}
-        onChange={(e) => {
-          setSearchQuery(e.target.value);
-          setPagination((prev) => ({ ...prev, current_page: 1 }));
-        }}
-      />
-      <button type="button" className="px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors">
-      <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7.66927 13.939C3.9026 13.939 0.835938 11.064 0.835938 7.53271C0.835938 4.00146 3.9026 1.12646 7.66927 1.12646C11.4359 1.12646 14.5026 4.00146 14.5026 7.53271C14.5026 11.064 11.4359 13.939 7.66927 13.939ZM7.66927 2.06396C4.44927 2.06396 1.83594 4.52021 1.83594 7.53271C1.83594 10.5452 4.44927 13.0015 7.66927 13.0015C10.8893 13.0015 13.5026 10.5452 13.5026 7.53271C13.5026 4.52021 10.8893 2.06396 7.66927 2.06396Z" fill="#c72030"/>
-                  <path d="M14.6676 14.5644C14.5409 14.5644 14.4143 14.5206 14.3143 14.4269L12.9809 13.1769C12.7876 12.9956 12.7876 12.6956 12.9809 12.5144C13.1743 12.3331 13.4943 12.3331 13.6876 12.5144L15.0209 13.7644C15.2143 13.9456 15.2143 14.2456 15.0209 14.4269C14.9209 14.5206 14.7943 14.5644 14.6676 14.5644Z" fill="#c72030"/>
-                </svg>
-      </button>
-    </div>
-  </div>
-</div>
-
-        {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Amenities Setup List</h3>
-          </div>
-          <div className="p-6">
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-[#c72030] rounded-full animate-spin" role="status">
-                  <span className="sr-only">Loading...</span>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="rounded-lg border border-gray-200 overflow-hidden">
-                  <Table className="border-separate">
-                    <TableHeader>
-                      <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff", width: "120px" }}>Action</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff", width: "80px" }}>Sr No</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff", minWidth: "150px" }}>Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r text-center" style={{ borderColor: "#fff", width: "120px" }}>Icon</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r text-center" style={{ borderColor: "#fff", width: "150px" }}>Dark Mode Icon</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center" style={{ borderColor: "#fff", width: "120px" }}>Night Mode</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {displayedAmenities.length > 0 ? (
-                        displayedAmenities.map((amenity, index) => (
-                          <TableRow key={amenity.id} className="hover:bg-gray-50 transition-colors">
-                            <TableCell className="py-3 px-4">
-                              <div className="flex items-center gap-2">
-                                {amenitiesPermissions.update === "true" && (
-                                  <button
-                                    onClick={() => navigate(`/setup-member/edit-amenities/${amenity.id}`)}
-                                    className="text-gray-600 hover:text-[#c72030] transition-colors"
-                                  >
-                                    {/* ...existing edit SVG... */}
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => handleToggle(amenity.id, amenity.active)}
-                                  className="text-gray-600 hover:opacity-80 transition-opacity"
-                                >
-                                  {amenity.active ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" fill="#28a745" viewBox="0 0 16 16">
-                                      <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-                                    </svg>
-                                  ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" fill="#6c757d" viewBox="0 0 16 16">
-                                      <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zM5 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-                                    </svg>
-                                  )}
-                                </button>
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-3 px-4 font-medium">{startIndex + index + 1}</TableCell>
-                            <TableCell className="py-3 px-4">{amenity.name || "-"}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <div className="flex justify-center">
-                                {amenity.icon_url ? (
-                                  <img src={amenity.icon_url} alt={amenity.name} className="rounded-lg border border-gray-200" style={{ width: "60px", height: "60px", objectFit: "cover" }} />
-                                ) : (
-                                  <span className="text-sm text-gray-500 italic">No Icon</span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-3 px-4">
-                              <div className="flex justify-center">
-                                {amenity.dark_mode_icon_url ? (
-                                  <img src={amenity.dark_mode_icon_url} alt={amenity.name} className="rounded-lg border border-gray-200" style={{ width: "60px", height: "60px", objectFit: "cover" }} />
-                                ) : (
-                                  <span className="text-sm text-gray-500 italic">No Icon</span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-3 px-4">
-                              <div className="flex justify-center">
-                                <button
-                                  onClick={() => handleNightModeToggle(amenity.id, amenity.night_mode)}
-                                  className="text-gray-600 hover:opacity-80 transition-opacity"
-                                >
-                                  {amenity.night_mode ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" fill="#28a745" viewBox="0 0 16 16">
-                                      <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-                                    </svg>
-                                  ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" fill="#6c757d" viewBox="0 0 16 16">
-                                      <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zM5 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-                                    </svg>
-                                  )}
-                                </button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-12 text-gray-500">
-                            {searchQuery ? (
-                              <div>
-                                <p className="text-lg mb-2">No amenities found</p>
-                                <p className="text-sm text-gray-400">Try adjusting your search criteria</p>
-                              </div>
-                            ) : (
-                              "No amenities found"
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Pagination */}
-                {displayedAmenities.length > 0 && totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-6 px-3">
-                    {/* ...existing pagination code similar to SiteList... */}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+    <div className="p-2 sm:p-4 lg:p-6">
+      <Toaster position="top-right" richColors closeButton />
+      {renderListTab()}
     </div>
   );
 };
