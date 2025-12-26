@@ -1318,683 +1318,412 @@ const EventEdit = () => {
               </div>
             </div>
 
-            {/* Old Bootstrap Form Elements */}
-            <div className="row mt-4">
-              {/* <div className="col-md-3">
-                <div className="form-group">
-                  <label>
-                    Attachment
-                    <span
-                      className="tooltip-container"
-                      onMouseEnter={() => setShowTooltip(true)}
-                      onMouseLeave={() => setShowTooltip(false)}
-                    >
-                      [i]
-                      {showTooltip && (
-                        <span className="tooltip-text">
-                          Max Upload Size for video 10 MB and for image 3
-                          MB
-                        </span>
-                      )}
-                    </span>
-                  </label>
-                  <input
-                    className="form-control"
-                    type="file"
-                    name="attachfile"
-                    accept="image/*,video/*" 
-                    multiple
-                    onChange={handleFileChange} 
-                  />
-                </div>
-
-                {Array.isArray(formData.previewImage) &&
-                  formData.previewImage.length > 0 && (
-                    <div className="d-flex flex-wrap gap-2 mt-2">
-                      {formData.previewImage.map((fileObj, index) => {
-                              const { url, type, isExisting } = fileObj;
-                              const isVideo = type.startsWith("video");
-
-                              return (
-                                <div key={index} className="position-relative">
-                                  {isVideo ? (
-                                    <video
-                                      src={url}
-                                      controls
-                                      className="rounded"
-                                      style={{
-                                        maxWidth: "100px",
-                                        maxHeight: "100px",
-                                        objectFit: "cover",
-                                      }}
-                                    />
-                                  ) : (
-                                    <img
-                                      src={url}
-                                      alt={`Preview ${index}`}
-                                      className="img-fluid rounded"
-                                      style={{
-                                        maxWidth: "100px",
-                                        maxHeight: "100px",
-                                        objectFit: "cover",
-                                      }}
-                                    />
-                                  )}
-                                
-                                  <button
-                                    type="button"
-                                    className="btn btn-danger btn-sm position-absolute"
-                                    style={{
-                                      top: "-5px",
-                                      right: "-5px",
-                                      fontSize: "10px",
-                                      width: "20px",
-                                      height: "20px",
-                                      padding: "0",
-                                      borderRadius: "50%",
-                                    }}
-                                    onClick={() => handleRemoveImage(index)}
-                                    title={
-                                      isExisting
-                                        ? "Remove existing image"
-                                        : "Remove new image"
-                                    }
-                                  >
-                                    ×
-                                  </button>
-                                 
-                                  <small
-                                    className={`badge ${
-                                      isExisting ? "bg-info" : "bg-success"
-                                    } position-absolute`}
-                                    style={{
-                                      bottom: "-5px",
-                                      left: "5px",
-                                      fontSize: "8px",
-                                    }}
-                                  >
-                                    {isExisting ? "" : ""}
-                                  </small>
-                                </div>
-                        );
-                      })}
-                    </div>
-                  )}
-              </div> */}
-              {/* <div className="col-md-3 col-sm-6 col-12">
-                      <div className="form-group mt-3">
-                  
-                        <label className="d-flex align-items-center gap-1 mb-2">
-                          <span>Cover Image</span>
-
-                          <span
-                            className="tooltip-container"
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
-                            style={{ cursor: 'pointer', fontWeight: 'bold' }}
-                          >
-                            [i]
-                            {showTooltip && (
-                              <span
-                                className="tooltip-text"
-                              >
-                                Max Upload Size 3 MB and Required ratio is 16:9
-                              </span>
-                            )}
-                          </span>
-                        </label>
-
-                       
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => setShowUploader(true)}
-                          className="custom-upload-button input-upload-button"
-                        >
-                          <span
-                            className="upload-button-label"
-                          >
-                            Choose file
-                          </span>
-                          <span
-                            className="upload-button-value"
-                          >
-                            No file chosen
-                          </span>
-                        </span>
-
-                      
-                        {showUploader && (
-                          <ProjectBannerUpload
-                            onClose={() => setShowUploader(false)}
-                            includeInvalidRatios={false}
-                            selectedRatioProp={selectedRatios}
-                            showAsModal={true}
-                            label={dynamicLabel}
-                            description={dynamicDescription}
-                            onContinue={handleCropComplete}
-                          />
-                        )}
-
-                       
-                        <div className="mt-2 d-flex flex-wrap">
-                          {Array.isArray(formData.cover_image_16by9) && formData.cover_image_16by9.length > 0 ? (
-                            formData.cover_image_16by9.map((file, index) => (
-                              <div
-                                key={index}
-                                className="position-relative"
-                                style={{ marginRight: "10px", marginBottom: "10px" }}
-                              >
-                                <img
-                                  src={file.preview}
-                                  alt={file.name}
-                                  className="img-fluid rounded"
-                                  style={{
-                                    maxWidth: "100px",
-                                    maxHeight: "100px",
-                                    objectFit: "cover",
-                                  }}
-                                />
-                              </div>
-                            ))
-                          ) : croppedImage ? (
-                            <div className="position-relative">
-                              <img
-                                src={croppedImage}
-                                alt="Cover Preview"
-                                className="img-fluid rounded"
-                                style={{
-                                  maxWidth: "100px",
-                                  maxHeight: "100px",
-                                  objectFit: "cover",
-                                }}
-                              />
-                            </div>
-                          ) : formData.existingCoverImage ? (
-                            <div className="position-relative">
-                              <img
-                                src={formData.existingCoverImage.url}
-                                alt="Existing Cover"
-                                className="img-fluid rounded"
-                                style={{
-                                  maxWidth: "100px",
-                                  maxHeight: "100px",
-                                  objectFit: "cover",
-                                }}
-                              />
-                            </div>
-                          ) : (
-                            <span>No image selected</span>
-                          )}
-                        </div>
-                      </div>
-                    </div> */}
-
-              <div className="col-md-3">
-                      <div className="form-group mt-3">
-                        <label>Mark Important</label>
-                        <div className="d-flex">
-                          <div className="form-check me-3">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="is_important"
-                              value="true"
-                              checked={formData.is_important === true}
-                              onChange={handleRadioChange}
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              Yes
-                            </label>
-                          </div>
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="is_important"
-                              value="false"
-                              checked={formData.is_important === false}
-                              onChange={handleRadioChange}
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              No
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Share With Radio Buttons */}
-
-                    <div className="col-md-3">
-                      <div className="form-group mt-3">
-                        <label>Send Email</label>
-                        <div className="d-flex">
-                          {/* Yes Option */}
-                          <div className="form-check me-3">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="email_trigger_enabled"
-                              value="true"
-                              checked={formData.email_trigger_enabled === true} // Compare as boolean
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  email_trigger_enabled:
-                                    e.target.value === "true", // Convert to boolean
-                                }))
-                              }
-                              required
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              Yes
-                            </label>
-                          </div>
-
-                          {/* No Option */}
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="email_trigger_enabled"
-                              value="false"
-                              checked={formData.email_trigger_enabled === false} // Compare as boolean
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  email_trigger_enabled:
-                                    e.target.value === "true", // Convert to boolean
-                                }))
-                              }
-                              required
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              No
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="col-md-3 mt-3">
-                      <div className="form-group">
-                        <label>RSVP Action</label>
-                        <div className="d-flex">
-                          <div className="form-check me-3">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="rsvp_action"
-                              value="yes"
-                              checked={formData.rsvp_action === "yes"}
-                              onChange={handleChange}
-                              required
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              Yes
-                            </label>
-                          </div>
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="rsvp_action"
-                              value="no"
-                              checked={formData.rsvp_action === "no"}
-                              onChange={handleChange}
-                              required
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              No
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Show RSVP Name and RSVP Number only if RSVP Action is "yes" */}
-                    {formData.rsvp_action === "yes" && (
-                      <>
-                        <div className="col-md-3">
-                          <div className="form-group">
-                            <label>RSVP Name</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              placeholder="Enter RSVP Name"
-                              name="rsvp_name"
-                              value={formData.rsvp_name || ""}
-                              onChange={handleChange}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-3">
-                          <div className="form-group">
-                            <label>RSVP Number</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              placeholder="Enter RSVP Number"
-                              name="rsvp_number"
-                              value={formData.rsvp_number || ""}
-                              onChange={handleChange}
-                            />
-                          </div>
-                        </div>
-                      </>
-                    )}
-
-                    {/* <div className="col-md-3">
-                      <div className="form-group">
-                        <label>Event Shared</label>
-                        <input
-                          className="form-control"
-                          type="text"
-                          name="shared"
-                          placeholder="Enter Event Shared"
-                          value={formData.shared}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div> */}
-
-                    <div className="col-md-6">
-                      <label className="form-label">Set Reminders</label>
-
-                      {/* Input fields for adding new reminders */}
-                      <div className="row mb-2">
-                        <div className="col-md-4">
-                          <SelectBox
-                            options={timeOptions}
-                            value={reminderUnit || ""}
-                            onChange={(value) => {
-                              setReminderUnit(value);
-                              setReminderValue("");
-                            }}
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <input
-                            type="number"
-                            className="form-control"
-                            placeholder="Value"
-                            value={reminderValue}
-                            onChange={(e) => {
-                              const val = Number(e.target.value);
-                              const unit = reminderUnit;
-                              const constraints = timeConstraints[unit] || {
-                                min: 0,
-                                max: Infinity,
-                              };
-                              if (
-                                val >= constraints.min &&
-                                val <= constraints.max
-                              ) {
-                                setReminderValue(e.target.value);
-                              }
-                            }}
-                            min={timeConstraints[reminderUnit]?.min || 0}
-                            max={timeConstraints[reminderUnit]?.max || ""}
-                            title={
-                              reminderUnit
-                                ? `Must be between ${timeConstraints[reminderUnit].min} to ${timeConstraints[reminderUnit].max} ${reminderUnit}`
-                                : "Please select a time unit first"
-                            }
-                            disabled={!reminderUnit}
-                          />
-                        </div>
-
-                        <div className="col-md-4">
-                          <button
-                            type="button"
-                            className="btn btn-danger w-100"
-                            onClick={handleAddReminder}
-                            disabled={!reminderValue || !reminderUnit}
-                            style={{
-                              height: "35px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            + Add
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Display added reminders */}
-                      {formData.set_reminders_attributes
-                        .filter((reminder) => !reminder._destroy)
-                        .map((reminder, index) => (
-                          <div className="row mb-2" key={index}>
-                            <div className="col-md-4">
-                              <select
-                                className="form-control"
-                                value={reminder.unit}
-                                disabled
-                                style={{ backgroundColor: "#f8f9fa" }}
-                              >
-                                {timeOptions.map((option) => (
-                                  <option
-                                    key={option.value}
-                                    value={option.value}
-                                  >
-                                    {option.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className="col-md-4">
-                              <input
-                                type="number"
-                                className="form-control"
-                                value={reminder.value}
-                                readOnly
-                                style={{ backgroundColor: "#f8f9fa" }}
-                              />
-                            </div>
-
-                            <div className="col-md-4">
-                              <button
-                                type="button"
-                                className="btn btn-danger w-100"
-                                onClick={() => handleRemoveReminder(index)}
-                                style={{
-                                  height: "35px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                    <div className="col-md-4">
-                      <div className="form-group mt-3">
-                        <label>Share With</label>
-                        <div className="d-flex gap-3">
-                          {/* All */}
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="shared"
-                              value="all"
-                              checked={formData.shared === "all"}
-                              onChange={() =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  shared: "all",
-                                  user_id: [],
-                                  group_id: "",
-                                }))
-                              }
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{ color: "black" }}
-                            >
-                              All
-                            </label>
-                          </div>
-                          {/* Individuals */}
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="shared"
-                              value="individual"
-                              checked={formData.shared === "individual"}
-                              onChange={() =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  shared: "individual",
-                                  group_id: "",
-                                }))
-                              }
-                              disabled={
-                                !eventUserID || eventUserID.length === 0
-                              }
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{
-                                color:
-                                  !eventUserID || eventUserID.length === 0
-                                    ? "gray"
-                                    : "black",
-                              }}
-                            >
-                              Individuals
-                            </label>
-                          </div>
-                          {/* Groups */}
-                          {/* <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name="shared"
-                              value="group"
-                              checked={formData.shared === "group"}
-                              onChange={() =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  shared: "group",
-                                  user_id: [],
-                                  group_id: [], // Reset to empty array
-                                }))
-                              }
-                            />
-                            <label
-                              className="form-check-label"
-                              style={{
-                                color:
-                                  !groups || groups.length === 0
-                                    ? "black"
-                                    : "black",
-                              }}
-                            >
-                              Groups
-                            </label>
-                          </div> */}
-                        </div>
-                      </div>
-
-                      {/* Individuals MultiSelect */}
-                      {formData.shared === "individual" && (
-                        <div className="form-group">
-                          <label>Event User ID</label>
-                          <MultiSelectBox
-                            options={eventUserID?.map((user) => ({
-                              value: user.id,
-                              label: `${user.firstname} ${user.lastname}`,
-                            }))}
-                            value={
-                              Array.isArray(formData.user_id)
-                                ? formData.user_id.map((userId) => {
-                                    const user = eventUserID.find(
-                                      (u) => u.id === userId
-                                    );
-                                    return user
-                                      ? {
-                                          value: userId,
-                                          label: `${user.firstname} ${user.lastname}`,
-                                        }
-                                      : {
-                                          value: userId,
-                                          label: `User ${userId}`,
-                                        };
-                                  })
-                                : []
-                            }
-                            onChange={(selectedOptions) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                user_id: selectedOptions.map(
-                                  (option) => option.value
-                                ),
-                              }))
-                            }
-                          />
-                        </div>
-                      )}
-
-                      {/* Groups MultiSelect */}
-                      {/* {formData.shared === "group" && (
-                        <div className="form-group">
-                          <label>Share with Groups</label>
-                          <MultiSelectBox
-                            options={groups?.map((group) => ({
-                              value: group.id,
-                              label: group.name,
-                            }))}
-                            value={
-                              formData.group_id
-                                ? formData.group_id.split(",").map((id) => ({
-                                  value: id,
-                                  label:
-                                    groups.find(
-                                      (group) => group.id.toString() === id
-                                    )?.name || `Group ${id}`,
-                                }))
-                                : []
-                            }
-                            onChange={(selectedOptions) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                group_id: selectedOptions.map(
-                                  (option) => option.value
-                                ),
-                              }))
-                            }
-                          />
-                        </div>
-                      )} */}
-                    </div>
+              {/* Radio Button Groups in a Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Mark Important */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="is_important"
+                        checked={formData.is_important === true}
+                        onChange={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            is_important: true,
+                          }))
+                        }
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Yes</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="is_important"
+                        checked={formData.is_important === false}
+                        onChange={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            is_important: false,
+                          }))
+                        }
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">No</span>
+                    </label>
                   </div>
                 </div>
+
+                {/* Send Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="email_trigger_enabled"
+                        checked={formData.email_trigger_enabled === true}
+                        onChange={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            email_trigger_enabled: true,
+                          }))
+                        }
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Yes</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="email_trigger_enabled"
+                        checked={formData.email_trigger_enabled === false}
+                        onChange={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            email_trigger_enabled: false,
+                          }))
+                        }
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">No</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* RSVP Action */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="rsvp_action"
+                        value="yes"
+                        checked={formData.rsvp_action === "yes"}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Yes</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="rsvp_action"
+                        value="no"
+                        checked={formData.rsvp_action === "no"}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">No</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* RSVP Fields */}
+              {formData.rsvp_action === "yes" && (
+                <>
+                  <TextField
+                    label="RSVP Name"
+                    placeholder="Enter RSVP Name"
+                    value={formData.rsvp_name || ""}
+                    onChange={handleChange}
+                    name="rsvp_name"
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
+                    InputProps={{
+                      sx: fieldStyles,
+                    }}
+                  />
+                  <TextField
+                    label="RSVP Number"
+                    placeholder="Enter RSVP Number"
+                    value={formData.rsvp_number || ""}
+                    onChange={handleChange}
+                    name="rsvp_number"
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
+                    InputProps={{
+                      sx: fieldStyles,
+                    }}
+                  />
+                </>
+              )}
+
+              {/* Set Reminders */}
+              <div className="md:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Set Reminders</label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{ '& .MuiInputBase-root': fieldStyles }}
+                  >
+                    <InputLabel shrink>Select Unit</InputLabel>
+                    <MuiSelect
+                      value={reminderUnit || ""}
+                      onChange={(e) => {
+                        setReminderUnit(e.target.value);
+                        setReminderValue("");
+                      }}
+                      label="Select Unit"
+                      notched
+                      displayEmpty
+                    >
+                      <MenuItem value="">Select Unit</MenuItem>
+                      {timeOptions.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+                  <TextField
+                    label="Value"
+                    type="number"
+                    placeholder="Enter Value"
+                    value={reminderValue}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      const constraints = timeConstraints[reminderUnit] || { min: 0, max: Infinity };
+                      if (val >= constraints.min && val <= constraints.max) {
+                        setReminderValue(e.target.value);
+                      }
+                    }}
+                    disabled={!reminderUnit}
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
+                    InputProps={{
+                      sx: fieldStyles,
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="px-6 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed h-[45px]"
+                    onClick={handleAddReminder}
+                    disabled={!reminderValue || !reminderUnit}
+                  >
+                    + Add
+                  </button>
+                </div>
+
+                {/* Display Reminders */}
+                {formData.set_reminders_attributes
+                  .filter((reminder) => !reminder._destroy)
+                  .map((reminder, index) => (
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        sx={{ '& .MuiInputBase-root': fieldStyles }}
+                      >
+                        <InputLabel shrink>Unit</InputLabel>
+                        <MuiSelect
+                          value={reminder.unit}
+                          label="Unit"
+                          notched
+                        >
+                          {timeOptions.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                              {option.label}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+                      <TextField
+                        label="Value"
+                        type="number"
+                        value={reminder.value}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{
+                          inputLabel: {
+                            shrink: true,
+                          },
+                        }}
+                        InputProps={{
+                          sx: fieldStyles,
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors font-medium h-[45px]"
+                        onClick={() => handleRemoveReminder(index)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+              </div>
+
+              {/* Share With */}
+              <div className="md:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
+                <div className="flex gap-6 mb-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="shared"
+                      value="all"
+                      checked={formData.shared === "all"}
+                      onChange={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          shared: "all",
+                          user_id: [],
+                          group_id: "",
+                        }))
+                      }
+                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">All</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="shared"
+                      value="individual"
+                      checked={formData.shared === "individual"}
+                      onChange={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          shared: "individual",
+                          group_id: "",
+                        }))
+                      }
+                      disabled={!eventUserID || eventUserID.length === 0}
+                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] disabled:opacity-50"
+                    />
+                    <span className={`ml-2 text-sm ${!eventUserID || eventUserID.length === 0 ? 'text-gray-400' : 'text-gray-700'}`}>Individuals</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="shared"
+                      value="group"
+                      checked={formData.shared === "group"}
+                      onChange={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          shared: "group",
+                          user_id: [],
+                        }))
+                      }
+                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Groups</span>
+                  </label>
+                </div>
+
+                {formData.shared === "individual" && (
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{ '& .MuiInputBase-root': fieldStyles }}
+                  >
+                    <InputLabel shrink>Event User ID</InputLabel>
+                    <MuiSelect
+                      multiple
+                      value={Array.isArray(formData.user_id) ? formData.user_id.map(id => id.toString()) : []}
+                      onChange={(e) => {
+                        const selectedIds = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          user_id: Array.isArray(selectedIds) ? selectedIds.map(id => parseInt(id)) : [],
+                        }));
+                      }}
+                      label="Event User ID"
+                      notched
+                      displayEmpty
+                      renderValue={(selected) => {
+                        if (!selected || selected.length === 0) {
+                          return <span style={{ color: '#999' }}>Select Users</span>;
+                        }
+                        return selected
+                          .map((id) => {
+                            const user = eventUserID.find((u) => u.id.toString() === id);
+                            return user ? `${user.firstname} ${user.lastname}` : id;
+                          })
+                          .join(", ");
+                      }}
+                    >
+                      <MenuItem value="" disabled>
+                        Select Users
+                      </MenuItem>
+                      {eventUserID?.map((user) => (
+                        <MenuItem key={user.id} value={user.id.toString()}>
+                          {user.firstname} {user.lastname}
+                        </MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+                )}
+                {formData.shared === "group" && (
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{ '& .MuiInputBase-root': fieldStyles }}
+                  >
+                    <InputLabel shrink>Share with Groups</InputLabel>
+                    <MuiSelect
+                      multiple
+                      value={Array.isArray(formData.group_id) ? formData.group_id : []}
+                      onChange={(e) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          group_id: e.target.value,
+                        }));
+                      }}
+                      label="Share with Groups"
+                      notched
+                      displayEmpty
+                      renderValue={(selected) => {
+                        if (!selected || selected.length === 0) {
+                          return <span style={{ color: '#999' }}>Select Groups</span>;
+                        }
+                        return selected
+                          .map((id) => {
+                            const group = groups.find((g) => g.id === id || g.id.toString() === id.toString());
+                            return group ? group.name : id;
+                          })
+                          .join(", ");
+                      }}
+                    >
+                      <MenuItem value="" disabled>
+                        Select Groups
+                      </MenuItem>
+                      {groups?.map((group) => (
+                        <MenuItem key={group.id} value={group.id}>
+                          {group.name}
+                        </MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+                )}
+              </div>
+            </div>
+          </div>
 
         {/* File Upload Section */}
         <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200">
@@ -2374,7 +2103,6 @@ const EventEdit = () => {
               </div>
             </div>
           </div>
-        </div>
 
         {/* Action Buttons */}
         <div className="flex gap-4 justify-center pt-6">

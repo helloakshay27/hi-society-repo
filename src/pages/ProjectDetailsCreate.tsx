@@ -18,9 +18,10 @@ import {
   Select as MuiSelect,
   MenuItem,
 } from "@mui/material";
-import { Building2, FileText, Trash2 } from "lucide-react";
+import { Building2, FileText, Trash2, ArrowLeft } from "lucide-react";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import "../styles/mor.css";
+import { FileUpload } from "@mui/icons-material";
 
 // Field styles for Material-UI components
 const fieldStyles = {
@@ -1669,6 +1670,23 @@ const ProjectDetailsCreate = () => {
 
   return (
     <div className="p-6 bg-gray-50 h-screen overflow-y-auto scrollbar-thin pb-28">
+      {/* Header Section */}
+      <div className="mb-8">
+             <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+               <button
+                 onClick={() => Navigate(-1)}
+                 className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+                 aria-label="Go back"
+               >
+                 <ArrowLeft className="w-4 h-4 text-gray-600" />
+               </button>
+               <span>Back to Project List</span>
+               {/* <span>{">"}</span> */}
+               {/* <span className="text-gray-900 font-medium">Create New Project</span> */}
+             </div>
+             <h1 className="text-2xl font-bold text-gray-900">CREATE PROJECT</h1>
+           </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -1903,27 +1921,49 @@ const ProjectDetailsCreate = () => {
               </FormControl>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TextField
-                label="Project Description"
-                placeholder="Enter Project Description"
-                value={formData.Project_Description}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    Project_Description: e.target.value,
-                  }))
-                }
-                multiline
-                rows={1}
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="md:col-span-3">
+                <TextField
+                  label="Project Description"
+                  placeholder="Enter Project Description"
+                  value={formData.Project_Description}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      Project_Description: e.target.value,
+                    }))
+                  }
+                  // multiline
+                  // rows={3}
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  // sx={{
+                  //   '& .MuiOutlinedInput-root': {
+                  //     minHeight: '90px',
+                  //     alignItems: 'flex-start',
+                  //     '& fieldset': {
+                  //       borderColor: '#ddd',
+                  //     },
+                  //     '&:hover fieldset': {
+                  //       borderColor: '#C72030',
+                  //     },
+                  //     '&.Mui-focused fieldset': {
+                  //       borderColor: '#C72030',
+                  //     },
+                  //   },
+                  //   '& .MuiInputLabel-root': {
+                  //     '&.Mui-focused': {
+                  //       color: '#C72030',
+                  //     },
+                  //   },
+                  // }}
+                />
+              </div>
 
               <TextField
                 label="Price Onward"
@@ -1946,9 +1986,9 @@ const ProjectDetailsCreate = () => {
                   sx: fieldStyles,
                 }}
               />
-            </div>
+            {/* </div> */}
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4"> */}
               <TextField
                 label="Size (Sq. Mtr.)"
                 placeholder="Enter Size in Sq. Mtr."
@@ -2272,9 +2312,9 @@ const ProjectDetailsCreate = () => {
                     disclaimer: e.target.value,
                   }))
                 }
-                multiline
-                rows={1}
-                fullWidth
+                // multiline
+                // rows={1}
+                // fullWidth
                 variant="outlined"
                 slotProps={{
                   inputLabel: {
@@ -2303,7 +2343,7 @@ const ProjectDetailsCreate = () => {
                 </div>
                 <div className="p-6 space-y-6">
                   <div className="grid grid-cols-1 gap-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <TextField
                         label="Tower"
                         placeholder="Enter Tower Name"
@@ -2355,10 +2395,8 @@ const ProjectDetailsCreate = () => {
                           sx: fieldStyles,
                         }}
                       />
-                    </div>
 
-                    <div className="flex justify-end">
-                      <button
+                       <button
                         type="button"
                         className="flex items-center gap-2 px-6 py-2.5 rounded-md text-white font-medium transition-colors"
                         style={{
@@ -2410,6 +2448,60 @@ const ProjectDetailsCreate = () => {
                         Add
                       </button>
                     </div>
+
+                    {/* <div className="flex justify-end">
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 px-6 py-2.5 rounded-md text-white font-medium transition-colors"
+                        style={{
+                          height: "45px",
+                          backgroundColor: "#C72030",
+                          border: "2px solid #C72030",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "#A01828";
+                          e.currentTarget.style.borderColor = "#A01828";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "#C72030";
+                          e.currentTarget.style.borderColor = "#C72030";
+                        }}
+                        onClick={() => {
+                          if (!towerName || !reraNumber) {
+                            toast.error(
+                              "Please enter both Tower Name and RERA Number"
+                            );
+                            return;
+                          }
+                          setFormData((prev) => ({
+                            ...prev,
+                            Rera_Number_multiple: [
+                              ...prev.Rera_Number_multiple,
+                              {
+                                tower: towerName,
+                                rera_number: reraNumber,
+                                rera_url: reraUrl,
+                              },
+                            ],
+                          }));
+                          setTowerName("");
+                          setReraNumber("");
+                          setReraUrl("");
+                          toast.success("RERA entry added");
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width={20}
+                          height={20}
+                          fill="currentColor"
+                          viewBox="0 0 16 16"
+                        >
+                          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
+                        </svg>
+                        Add
+                      </button>
+                    </div> */}
                   </div>
                   {formData.Rera_Number_multiple.length > 0 && (
                     <div className="mt-4">
@@ -2552,25 +2644,47 @@ const ProjectDetailsCreate = () => {
           <div className="p-6">
             <div className="grid grid-cols-1 gap-4">
               <div className="w-full md:w-1/3">
-                <MultiSelectBox
-                  options={amenities.map((ammit) => ({
-                    value: ammit.id,
-                    label: ammit.name,
-                  }))}
-                  value={formData.Amenities.map((id) => {
-                    const ammit = amenities.find((ammit) => ammit.id === id);
-                    return ammit
-                      ? { value: ammit.id, label: ammit.name }
-                      : null;
-                  }).filter(Boolean)}
-                  onChange={(selectedOptions) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      Amenities: selectedOptions.map((option) => option.value),
-                    }))
-                  }
-                  placeholder="Select amenities"
-                />
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  sx={{ "& .MuiInputBase-root": fieldStyles }}
+                >
+                  <InputLabel shrink>Amenities</InputLabel>
+                  <MuiSelect
+                    multiple
+                    value={formData.Amenities}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        Amenities: e.target.value as number[],
+                      }))
+                    }
+                    label="Amenities"
+                    notched
+                    displayEmpty
+                    renderValue={(selected) => {
+                      if ((selected as number[]).length === 0) {
+                        return "Select amenities";
+                      }
+                      return (selected as number[])
+                        .map((id) => {
+                          const ammit = amenities.find((ammit) => ammit.id === id);
+                          return ammit ? ammit.name : "";
+                        })
+                        .filter(Boolean)
+                        .join(", ");
+                    }}
+                  >
+                    <MenuItem value="" disabled>
+                      Select amenities
+                    </MenuItem>
+                    {amenities.map((ammit) => (
+                      <MenuItem key={ammit.id} value={ammit.id}>
+                        {ammit.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
               </div>
             </div>
           </div>
@@ -2886,9 +3000,17 @@ const ProjectDetailsCreate = () => {
             </div>
           </div>
         )}
-        <div className="card mt-3 pb-4 mx-4">
-          <div className="card-header">
-            <h3 className="card-title">File Upload</h3>
+         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span
+                className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: "#E5E0D3" }}
+              >
+                <FileUpload sx={{ fontSize: 16, color: "#C72030" }} />
+              </span>
+              File Uploads
+            </h2>
           </div>
           <div className="card-body">
             <div className="row">
@@ -4337,19 +4459,24 @@ const ProjectDetailsCreate = () => {
                           </tbody>
                         </table>
                       </div>
-                      <div className="d-flex justify-content-between align-items-end mx-1">
-                        <div className="col-md-12 mt-2">
-                          <div className="form-group">
-                            <label>Video Preview Image Url</label>
-                            <input
-                              className="form-control"
-                              name="video_preview_image_url"
-                              placeholder="Enter Video Url"
-                              value={formData.video_preview_image_url}
-                              onChange={handleChange}
-                            />
-                          </div>
-                        </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-12">
+                        <TextField
+                          label="Video Preview Image URL"
+                          placeholder="Enter Video URL"
+                          name="video_preview_image_url"
+                          value={formData.video_preview_image_url}
+                          onChange={handleChange}
+                          fullWidth
+                          variant="outlined"
+                          slotProps={{
+                            inputLabel: {
+                              shrink: true,
+                            },
+                          }}
+                          InputProps={{
+                            sx: fieldStyles,
+                          }}
+                        />
                       </div>
                     </div>
                   </>
@@ -4360,57 +4487,74 @@ const ProjectDetailsCreate = () => {
         {baseURL !== "https://dev-panchshil-super-app.lockated.com/" &&
           baseURL !== "https://rustomjee-live.lockated.com/" && (
             <>
-              <div className="card mt-3 pb-4 mx-4">
-                <div className="card-header3 d-flex justify-content-between align-items-center">
-                  <h3 className="card-title">Virtual Tour</h3>
-                </div>
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span
+                className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: "#E5E0D3" }}
+              >
+                <FileText size={16} color="#C72030" />
+              </span>
+              Virtual Tours
+            </h2>
+          </div>
                 <div className="card-body mt-0 pb-0">
-                  <div className="row align-items-center">
-                    <div className="col-md-3 mt-2">
-                      <div className="form-group">
-                        <label>Virtual Tour Name </label>
-                        <input
-                          className="form-control"
-                          type="text"
-                          name="virtual_tour_name"
-                          placeholder="Enter Virtual Tour Name"
-                          value={virtualTourName}
-                          onChange={handleVirtualTourNameChange}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-3 mt-2">
-                      <div className="form-group">
-                        <label>Virtual Tour URL </label>
-                        <input
-                          className="form-control"
-                          type="url"
-                          name="virtual_tour_url"
-                          placeholder="Enter Virtual Tour URL"
-                          value={virtualTourUrl}
-                          onChange={handleVirtualTourChange}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-3 mt-2">
-                      <button
-                        className="purple-btn2 rounded-3"
-                        style={{ marginTop: "23px" }}
-                        onClick={handleAddVirtualTour}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <TextField
+                      label="Virtual Tour Name"
+                      placeholder="Enter Virtual Tour Name"
+                      type="text"
+                      name="virtual_tour_name"
+                      value={virtualTourName}
+                      onChange={handleVirtualTourNameChange}
+                      fullWidth
+                      variant="outlined"
+                      slotProps={{
+                        inputLabel: {
+                          shrink: true,
+                        },
+                      }}
+                      InputProps={{
+                        sx: fieldStyles,
+                      }}
+                    />
+
+                    <TextField
+                      label="Virtual Tour URL"
+                      placeholder="Enter Virtual Tour URL"
+                      type="url"
+                      name="virtual_tour_url"
+                      value={virtualTourUrl}
+                      onChange={handleVirtualTourChange}
+                      fullWidth
+                      variant="outlined"
+                      slotProps={{
+                        inputLabel: {
+                          shrink: true,
+                        },
+                      }}
+                      InputProps={{
+                        sx: fieldStyles,
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      className="flex items-center justify-center gap-2 px-6 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors font-medium shadow-sm h-[45px]"
+                      onClick={handleAddVirtualTour}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width={20}
+                        height={20}
+                        fill="currentColor"
+                        viewBox="0 0 16 16"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width={26}
-                          height={20}
-                          fill="currentColor"
-                          className="bi bi-plus"
-                          viewBox="0 0 16 16"
-                        >
-                          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                        </svg>
-                        <span> Add</span>
-                      </button>
-                    </div>
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                      </svg>
+                      <span>Add</span>
+                    </button>
                   </div>
                   {formData.virtual_tour_url_multiple.length > 0 && (
                     <div className="col-md-12 mt-2">

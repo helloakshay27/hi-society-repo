@@ -1150,19 +1150,35 @@ const EventCreate = () => {
               {/* Set Reminders */}
               <div className="md:col-span-3">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Set Reminders</label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <SelectBox
-                    options={timeOptions}
-                    value={reminderUnit || ""}
-                    onChange={(value) => {
-                      setReminderUnit(value);
-                      setReminderValue("");
-                    }}
-                  />
-                  <input
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{ '& .MuiInputBase-root': fieldStyles }}
+                  >
+                    <InputLabel shrink>Select Unit</InputLabel>
+                    <MuiSelect
+                      value={reminderUnit || ""}
+                      onChange={(e) => {
+                        setReminderUnit(e.target.value);
+                        setReminderValue("");
+                      }}
+                      label="Select Unit"
+                      notched
+                      displayEmpty
+                    >
+                      <MenuItem value="">Select Unit</MenuItem>
+                      {timeOptions.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+                  <TextField
+                    label="Value"
                     type="number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
-                    placeholder="Value"
+                    placeholder="Enter Value"
                     value={reminderValue}
                     onChange={(e) => {
                       const val = Number(e.target.value);
@@ -1172,10 +1188,20 @@ const EventCreate = () => {
                       }
                     }}
                     disabled={!reminderUnit}
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
+                    InputProps={{
+                      sx: fieldStyles,
+                    }}
                   />
                   <button
                     type="button"
-                    className="px-6 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed h-[45px]"
                     onClick={handleAddReminder}
                     disabled={!reminderValue || !reminderUnit}
                   >
@@ -1187,27 +1213,45 @@ const EventCreate = () => {
                 {formData.set_reminders_attributes
                   .filter((reminder) => !reminder._destroy)
                   .map((reminder, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-                      <select
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
-                        value={reminder.unit}
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                      <FormControl
+                        fullWidth
+                        variant="outlined"
                         disabled
+                        sx={{ '& .MuiInputBase-root': fieldStyles }}
                       >
-                        {timeOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      <input
+                        <InputLabel shrink>Unit</InputLabel>
+                        <MuiSelect
+                          value={reminder.unit}
+                          label="Unit"
+                          notched
+                        >
+                          {timeOptions.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                              {option.label}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+                      <TextField
+                        label="Value"
                         type="number"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
                         value={reminder.value}
-                        readOnly
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{
+                          inputLabel: {
+                            shrink: true,
+                          },
+                        }}
+                        InputProps={{
+                          sx: fieldStyles,
+                        }}
                       />
                       <button
                         type="button"
-                        className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors font-medium"
+                        className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors font-medium h-[45px]"
                         onClick={() => handleRemoveReminder(index)}
                       >
                         ×
@@ -1275,60 +1319,89 @@ const EventCreate = () => {
                 </div>
 
                 {formData.shared === "individual" && (
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-0">Event User ID</label>
-                    <MultiSelectBox
-                      options={eventUserID.map((user) => ({
-                        value: user.id,
-                        label: `${user.firstname} ${user.lastname}`,
-                      }))}
-                      value={
-                        formData.user_id
-                          ? formData.user_id.split(",").map((id) => {
-                              const user = eventUserID.find((u) => u.id.toString() === id);
-                              return {
-                                value: id,
-                                label: `${user?.firstname} ${user?.lastname}`,
-                              };
-                            })
-                          : []
-                      }
-                      onChange={(selectedOptions) =>
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{ '& .MuiInputBase-root': fieldStyles }}
+                  >
+                    <InputLabel shrink>Event User ID</InputLabel>
+                    <MuiSelect
+                      multiple
+                      value={formData.user_id ? formData.user_id.split(",") : []}
+                      onChange={(e) => {
+                        const selectedIds = e.target.value;
                         setFormData((prev) => ({
                           ...prev,
-                          user_id: selectedOptions.map((option) => option.value).join(","),
-                        }))
-                      }
-                    />
-                  </div>
+                          user_id: Array.isArray(selectedIds) ? selectedIds.join(",") : selectedIds,
+                        }));
+                      }}
+                      label="Event User ID"
+                      notched
+                      displayEmpty
+                      renderValue={(selected) => {
+                        if (!selected || selected.length === 0) {
+                          return <span style={{ color: '#999' }}>Select Users</span>;
+                        }
+                        return selected
+                          .map((id) => {
+                            const user = eventUserID.find((u) => u.id.toString() === id);
+                            return user ? `${user.firstname} ${user.lastname}` : id;
+                          })
+                          .join(", ");
+                      }}
+                    >
+                      <MenuItem value="" disabled>
+                        Select Users
+                      </MenuItem>
+                      {eventUserID.map((user) => (
+                        <MenuItem key={user.id} value={user.id.toString()}>
+                          {user.firstname} {user.lastname}
+                        </MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
                 )}
-
                 {formData.shared === "group" && (
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-0">Share with Groups</label>
-                    <MultiSelectBox
-                      options={groups.map((group) => ({
-                        value: group.id,
-                        label: group.name,
-                      }))}
-                      value={
-                        Array.isArray(formData.group_id)
-                          ? formData.group_id
-                              .map((id) => {
-                                const group = groups.find((g) => g.id === id || g.id.toString() === id.toString());
-                                return group ? { value: group.id, label: group.name } : null;
-                              })
-                              .filter(Boolean)
-                          : []
-                      }
-                      onChange={(selectedOptions) =>
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{ '& .MuiInputBase-root': fieldStyles }}
+                  >
+                    <InputLabel shrink>Share with Groups</InputLabel>
+                    <MuiSelect
+                      multiple
+                      value={Array.isArray(formData.group_id) ? formData.group_id : []}
+                      onChange={(e) => {
                         setFormData((prev) => ({
                           ...prev,
-                          group_id: selectedOptions.map((option) => option.value),
-                        }))
-                      }
-                    />
-                  </div>
+                          group_id: e.target.value,
+                        }));
+                      }}
+                      label="Share with Groups"
+                      notched
+                      displayEmpty
+                      renderValue={(selected) => {
+                        if (!selected || selected.length === 0) {
+                          return <span style={{ color: '#999' }}>Select Groups</span>;
+                        }
+                        return selected
+                          .map((id) => {
+                            const group = groups.find((g) => g.id === id || g.id.toString() === id.toString());
+                            return group ? group.name : id;
+                          })
+                          .join(", ");
+                      }}
+                    >
+                      <MenuItem value="" disabled>
+                        Select Groups
+                      </MenuItem>
+                      {groups.map((group) => (
+                        <MenuItem key={group.id} value={group.id}>
+                          {group.name}
+                        </MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
                 )}
               </div>
             </div>

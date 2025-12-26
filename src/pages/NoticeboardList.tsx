@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Plus, Eye } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { API_CONFIG } from "@/config/apiConfig";
 
 const NoticeboardList = () => {
@@ -13,10 +12,14 @@ const NoticeboardList = () => {
   const navigate = useNavigate();
   const [noticeboards, setNoticeboards] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [noticeboardPermission, setNoticeboardPermission] = useState({});
+  const [noticeboardPermission, setNoticeboardPermission] = useState<{
+    create?: string;
+    update?: string;
+    show?: string;
+    destroy?: string;
+  }>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [showActionPanel, setShowActionPanel] = useState(false);
 
   const getNoticeboardPermission = () => {
     try {
@@ -33,7 +36,6 @@ const NoticeboardList = () => {
 
   useEffect(() => {
     const permissions = getNoticeboardPermission();
-    console.log("Noticeboard permissions:", permissions);
     setNoticeboardPermission(permissions);
   }, []);
 
@@ -94,11 +96,9 @@ const NoticeboardList = () => {
   };
 
   const handleAddNoticeboard = () => {
-    setShowActionPanel(false);
     navigate("/maintenance/noticeboard-create");
   };
   const handleViewNoticeboard = (id: number) => navigate(`/maintenance/noticeboard-details/${id}`);
-  const handleClearSelection = () => { setShowActionPanel(false); };
 
   const handleToggleNoticeboard = async (id: number, currentStatus: boolean) => {
     toast.dismiss();
@@ -147,7 +147,18 @@ const NoticeboardList = () => {
     { key: 'active', label: 'Status', sortable: false },
   ];
 
-  const renderCell = (item: any, columnKey: string) => {
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const renderCell = (item: {
+    id: number;
+    notice_heading?: string;
+    notice_text?: string;
+    notice_type?: string;
+    project_name?: string;
+    expire_time?: string;
+    active: boolean;
+    [key: string]: any;
+  }, columnKey: string) => {
+  /* eslint-enable @typescript-eslint/no-explicit-any */
     switch (columnKey) {
       case 'actions':
         return (
@@ -217,23 +228,17 @@ const NoticeboardList = () => {
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
       <Button 
-        onClick={() => setShowActionPanel((prev) => !prev)}
+        onClick={handleAddNoticeboard}
         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
       >
         <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
-        Action
+        Add
       </Button>
     </div>
   );
 
   const renderListTab = () => (
     <div className="space-y-4">
-      {showActionPanel && (
-        <SelectionPanel
-          onAdd={handleAddNoticeboard}
-          onClearSelection={handleClearSelection}
-        />
-      )}
       <EnhancedTable
         data={noticeboards}
         columns={columns}

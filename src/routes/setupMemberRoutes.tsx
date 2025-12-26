@@ -1,5 +1,6 @@
 import { Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
+const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
 const NewTier = lazy(() => import("@/pages/NewTier"));
 const DepartmentCreate = lazy(() => import("@/pages/DepartmentCreate"));
 const DepartmentList = lazy(() => import("@/pages/DepartmentList"));
@@ -205,7 +206,7 @@ export const setupMemberRoutes = (
 
     {/* Noticeboard Routes (Broadcast) */}
     <Route path="/maintenance/noticeboard-list" element={withSuspense(NoticeboardList)} />
-    <Route path="/maintenance/noticeboard-create" element={withSuspense(NoticeboardCreate)} />
+    <Route path="/maintenance/noticeboard-create" element={withSuspense(BroadcastCreate)} />
     <Route path="/maintenance/noticeboard-edit/:id" element={withSuspense(NoticeboardCreate)} />
     <Route path="/maintenance/noticeboard-details/:id" element={withSuspense(NoticeboardDetails)} />
 
