@@ -47,6 +47,7 @@ const ProjectBuildingType = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!buildingType.trim()) {
       toast.error("Building type name is required");
       return;
@@ -87,7 +88,7 @@ const ProjectBuildingType = () => {
   return (
     <div className="h-full bg-gray-50">
       <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
-        {/* Header with Back Button and Breadcrumbs */}
+        {/* Header */}
         <div className="mb-6">
           <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
             <button
@@ -109,92 +110,92 @@ const ProjectBuildingType = () => {
           </h1>
         </div>
 
-        {/* Main Content */}
+        {/* Main Card */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-bold text-gray-900">
               Building Type Details
             </h3>
           </div>
+
           <div className="p-6">
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Property Type Select */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Property Type
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <select
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all bg-white"
-                    value={formData.Property_Type}
-                    onChange={(e) => {
-                      const selected = propertyTypeOptions.find(
-                        (opt) => opt.value === e.target.value
-                      );
-                      setFormData((prev) => ({
-                        ...prev,
-                        Property_Type: e.target.value,
-                        Property_Type_ID: selected?.id || null,
-                      }));
-                    }}
-                    disabled={loading}
-                  >
-                    <option value="">Select Property Type</option>
-                    {propertyTypeOptions.map((option) => (
-                      <option key={option.id} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+
+                {/* Property Type (UPDATED ONLY HERE) */}
+                <div>
+                  <fieldset className="border border-gray-300 rounded-md px-3 py-2 focus-within:border-[#788af1]">
+                    <legend className="px-1 text-sm text-gray-600">
+                      Property Type <span className="text-red-500">*</span>
+                    </legend>
+                    <select
+                      className="w-[300px] px-1 py-1 text-base border-none outline-none bg-transparent text-gray-900"
+                      value={formData.Property_Type}
+                      onChange={(e) => {
+                        const selected = propertyTypeOptions.find(
+                          (opt) => opt.value === e.target.value
+                        );
+                        setFormData((prev) => ({
+                          ...prev,
+                          Property_Type: e.target.value,
+                          Property_Type_ID: selected?.id || null,
+                        }));
+                      }}
+                      disabled={loading}
+                    >
+                      <option value="">Select Property Type</option>
+                      {propertyTypeOptions.map((option) => (
+                        <option key={option.id} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </fieldset>
                 </div>
 
-                {/* Building Type Name */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Building Type Name
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
-                    placeholder="Enter building type name"
-                    value={buildingType}
-                    onChange={(e) => setBuildingType(e.target.value)}
-                    disabled={loading}
-                  />
+                {/* Building Type Name  */}
+                <div>
+                  <fieldset className="border border-gray-300 rounded-md px-3 py-2 focus-within:border-[#c72030]">
+                    <legend className="px-4 text-sm text-gray-600">
+                      Building Type Name <span className="text-red-500">*</span>
+                    </legend>
+                    <input
+                      type="text"
+                      value={buildingType}
+                      onChange={(e) => setBuildingType(e.target.value)}
+                      disabled={loading}
+                      className="w-[300px] px-1 py-1 text-base border-none outline-none bg-transparent text-gray-900"
+                      placeholder="Enter building type name"
+                    />
+                  </fieldset>
                 </div>
+
               </div>
 
-              {/* Action Buttons */}
+              {/* Buttons */}
               <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-gray-200">
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
+                  className={`px-8 py-2.5 bg-[#F2EEE9] text-[#BF213E] rounded-lg transition-colors font-medium ${
                     loading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Submitting...
-                    </span>
-                  ) : (
-                    "Submit"
-                  )}
+                  {loading ? "Submitting..." : "Submit"}
                 </button>
+
                 <button
                   type="button"
                   onClick={() =>
                     navigate("/setup-member/project-building-type-list")
                   }
                   disabled={loading}
-                  className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                  className="px-8 py-2.5 bg-[#FFFFFF] text-[#BF213E] border border-[#BF213E] rounded-lg transition-colors font-medium"
                 >
                   Cancel
                 </button>
               </div>
+
             </form>
           </div>
         </div>

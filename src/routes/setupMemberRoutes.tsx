@@ -1,5 +1,7 @@
 import { Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import EditAmenities from "@/pages/EditAmenities";
+import ProjectConfigEdit from "@/pages/ProjectConfigEdit";
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
 const NewTier = lazy(() => import("@/pages/NewTier"));
 const DepartmentCreate = lazy(() => import("@/pages/DepartmentCreate"));
@@ -153,6 +155,7 @@ export const setupMemberRoutes = (
     {/* Amenities Routes */}
     <Route path="/setup-member/amenities" element={withSuspense(Amenities)} />
     <Route path="/setup-member/amenities-list" element={withSuspense(AmenitiesList)} />
+    <Route path="/setup-member/amenities-edit/:id" element={withSuspense(EditAmenities)}/>
 
     {/* Bank Details Routes */}
     <Route path="/setup-member/bank-details-create" element={withSuspense(BankDetailsCreate)} />
@@ -371,6 +374,7 @@ export const setupMemberRoutes = (
     {/* Project Configuration Routes */}
     <Route path="/setup-member/project-configuration" element={withSuspense(ProjectConfiguration)} />
     <Route path="/setup-member/project-configuration-list" element={withSuspense(ProjectConfigurationList)} />
+    <Route path="/setup-member/project-configuration-edit/:id"element={withSuspense(ProjectConfigEdit)} />
 
     {/* Plus Services Routes */}
     <Route path="/setup-member/plus-services-list" element={withSuspense(PlusServicesList)} />

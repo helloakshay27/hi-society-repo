@@ -4,10 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { ChevronRight, ArrowLeft } from "lucide-react";
+import { TextField } from "@mui/material";
 
 const ConstructionStatus = () => {
   const baseURL = API_CONFIG.BASE_URL;
-  const [name, setName] = useState("");
+  const [formData, setFormData] = useState({ name: "" });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -20,11 +21,11 @@ const ConstructionStatus = () => {
     }
 
     setLoading(true);
-    const formData = new FormData();
-    formData.append("construction_status[construction_status]", name); // ✅ Correct format
+    const formDataToSend = new FormData();
+    formDataToSend.append("construction_status[construction_status]", formData.name);
 
     try {
-      await axios.post(`${baseURL}/construction_statuses.json`, formData, {
+      await axios.post(`${baseURL}/construction_statuses.json`, formDataToSend, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
@@ -76,28 +77,35 @@ const ConstructionStatus = () => {
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Name Input */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Status Name
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
-                    placeholder="Enter construction status name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-              </div>
+                <TextField
+                  label="Construction Name"
+                  placeholder="Enter Construction Status name"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
+                  InputProps={{
+                    sx: {
+                      backgroundColor: "#fff",
+                      borderRadius: "6px",
+                    },
+                  }}
+                />
 
+              </div>
+              
               {/* Action Buttons */}
               <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-gray-200">
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
+                  className={`px-8 py-2.5 bg-[#F2EEE9] text-[#BF213E] rounded-lg  transition-colors font-medium ${
                     loading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
@@ -111,13 +119,14 @@ const ConstructionStatus = () => {
                   )}
                 </button>
                 <button
-                  type="button"
-                  onClick={() => navigate("/setup-member/construction-status-list")}
-                  disabled={loading}
-                  className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
+  type="button"
+  onClick={() => navigate("/setup-member/construction-status-list")}
+  disabled={loading}
+  className="px-8 py-2.5 bg-white text-[#BF213E] border border-[#BF213E] rounded-lg transition-colors font-medium hover:bg-[#BF213E]/5 disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  Cancel
+</button>
+
               </div>
             </form>
           </div>

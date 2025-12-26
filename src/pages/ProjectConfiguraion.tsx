@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { ChevronRight, ArrowLeft } from "lucide-react";
+import { ChevronRight, ArrowLeft, Upload } from "lucide-react";
+import { TextField, Button } from "@mui/material";
 
 const ProjectConfiguration = () => {
   const baseURL = API_CONFIG.BASE_URL;
@@ -18,23 +19,16 @@ const ProjectConfiguration = () => {
     icon: null,
   });
 
-  const handleIconChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setFormData((prevData) => ({
-        ...prevData,
-        icon: file,
-      }));
-      setIconPreview(URL.createObjectURL(file));
-    }
-  };
+  const handleFileUpload = (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-  const handleRemoveIcon = () => {
-    setFormData((prevData) => ({
-      ...prevData,
-      icon: null,
+    // keeping existing icon logic untouched
+    setFormData((prev) => ({
+      ...prev,
+      icon: files[0],
     }));
-    setIconPreview(null);
+    setIconPreview(URL.createObjectURL(files[0]));
   };
 
   const handleInputChange = (e) => {
@@ -80,12 +74,12 @@ const ProjectConfiguration = () => {
   return (
     <div className="h-full bg-gray-50">
       <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
-        {/* Header with Back Button and Breadcrumbs */}
+        {/* Header */}
         <div className="mb-6">
           <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
+              className="flex items-center text-gray-600 hover:text-[#C72030]"
             >
               <ArrowLeft className="w-4 h-4 mr-1" />
               Back
@@ -109,128 +103,122 @@ const ProjectConfiguration = () => {
               Configuration Details
             </h3>
           </div>
+
           <div className="p-6">
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Name Field */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Name
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
-                    placeholder="Enter configuration name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                  />
-                </div>
 
-                {/* Icon Upload */}
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <span>Icon</span>
+                {/* Name Field */}
+                <TextField
+                  label="Name"
+                  placeholder="Enter Configuration Name"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{ inputLabel: { shrink: true } }}
+                  InputProps={{
+                    sx: {
+                      backgroundColor: "#fff",
+                      borderRadius: "6px",
+                    },
+                  }}
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              {/* Section 4: Add Attachments */}
+              <div className="mt-6 bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-6 py-3 border-b border-gray-200">
+                  <h2 className="text-lg font-medium text-gray-900 flex items-center">
                     <span
-                      className="relative cursor-pointer text-blue-600"
-                      onMouseEnter={() => setShowTooltip(true)}
-                      onMouseLeave={() => setShowTooltip(false)}
+                      className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                      style={{ backgroundColor: "#E5E0D3" }}
                     >
-                      ℹ️
-                      {showTooltip && (
-                        <span className="absolute left-6 top-0 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
-                          Max Upload Size 10 MB
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="icon-upload"
-                      name="icon"
-                      className="hidden"
-                      onChange={handleIconChange}
-                      disabled={loading}
-                      accept="image/*"
-                    />
-                    <label
-                      htmlFor="icon-upload"
-                      className="flex items-center justify-between w-full px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                    >
-                      <span className="text-gray-600 text-sm">
-                        {formData.icon ? formData.icon.name : "Choose file"}
-                      </span>
                       <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-gray-400"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
                         fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                        xmlns="http://www.w3.org/2000/svg"
                       >
                         <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          d="M3 2C2.44772 2 2 2.44772 2 3V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V5.41421C14 5.149 13.8946 4.89464 13.7071 4.70711L11.2929 2.29289C11.1054 2.10536 10.851 2 10.5858 2H3Z"
+                          fill="#C72030"
+                        />
+                        <path
+                          d="M10 2V5C10 5.55228 10.4477 6 11 6H14"
+                          fill="#E5E0D3"
                         />
                       </svg>
-                    </label>
-                  </div>
+                    </span>
+                    Add Attachments
+                  </h2>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  <input
+  type="file"
+  multiple
+  onChange={handleFileUpload}
+  className="hidden"
+  id="file-upload"
+/>
+
+<button
+  type="button"
+  onClick={() => document.getElementById("file-upload")?.click()}
+  className="flex items-center justify-center gap-2 px-2 py-0.5 border-2 border-dashed border-[#BF213E] text-[#BF213E] rounded-md bg-white hover:bg-[#C72030]/5 transition-colors"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#C72030"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="17 8 12 3 7 8" />
+    <line x1="12" y1="3" x2="12" y2="15" />
+  </svg>
+  <span className="font-medium">Upload Files</span>
+</button>
+
+
                   {iconPreview && (
-                    <div className="mt-2 relative inline-block">
-                      <img
-                        src={iconPreview}
-                        alt="Icon Preview"
-                        className="rounded-lg border border-gray-200"
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          objectFit: "cover",
-                        }}
-                      />
-                      <button
-                        type="button"
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors"
-                        onClick={handleRemoveIcon}
-                      >
-                        ×
-                      </button>
-                    </div>
+                    <img
+                      src={iconPreview}
+                      alt="Preview"
+                      className="rounded-lg border border-gray-200"
+                      style={{ width: "100px", height: "100px", objectFit: "cover" }}
+                    />
                   )}
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Buttons */}
               <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-gray-200">
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
-                    loading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  className="px-8 py-2.5 bg-[#F2EEE9] text-[#BF213E] rounded-lg font-medium"
                 >
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Submitting...
-                    </span>
-                  ) : (
-                    "Submit"
-                  )}
+                  {loading ? "Submitting..." : "Submit"}
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate(-1)}
                   disabled={loading}
-                  className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                  className="px-8 py-2.5 bg-white text-[#BF213E] border border-[#BF213E] rounded-lg font-medium"
                 >
                   Cancel
                 </button>
               </div>
+
             </form>
           </div>
         </div>

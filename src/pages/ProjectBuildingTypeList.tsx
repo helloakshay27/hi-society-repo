@@ -72,7 +72,6 @@ const ProjectBuildingTypeList = () => {
       
       const allBuildingTypes = response.data || [];
       
-      // Client-side search filtering
       let filteredBuildingTypes = allBuildingTypes;
       if (search) {
         const searchLower = search.toLowerCase();
@@ -81,10 +80,8 @@ const ProjectBuildingTypeList = () => {
         );
       }
       
-      // Sort by ID descending
       filteredBuildingTypes.sort((a: BuildingType, b: BuildingType) => b.id - a.id);
       
-      // Client-side pagination
       const startIndex = (page - 1) * itemsPerPage;
       const endIndex = startIndex + itemsPerPage;
       const paginatedBuildingTypes = filteredBuildingTypes.slice(startIndex, endIndex);
@@ -158,7 +155,7 @@ const ProjectBuildingTypeList = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            {projectBuildingPermission.update === "true" && (
+            {String(projectBuildingPermission.update) === "true" && (
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -173,7 +170,7 @@ const ProjectBuildingTypeList = () => {
       case 'status':
         return (
           <div className="flex justify-center">
-            {projectBuildingPermission.show === "true" && (
+            {String(projectBuildingPermission.show) === "true" && (
               <button
                 onClick={() => handleToggle(item.id, item.active)}
                 className="text-gray-600 hover:opacity-80 transition-opacity"
@@ -198,7 +195,9 @@ const ProjectBuildingTypeList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      {projectBuildingPermission.create === "true" && (
+     
+     {(String(projectBuildingPermission.create) === "true" || true) && (
+
         <Button 
           onClick={handleAddBuildingType}
           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
