@@ -22,6 +22,7 @@ import { Building2, FileText, Trash2, ArrowLeft } from "lucide-react";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import "../styles/mor.css";
 import { FileUpload } from "@mui/icons-material";
+import { Button } from "react-day-picker";
 
 // Field styles for Material-UI components
 const fieldStyles = {
@@ -1359,6 +1360,51 @@ const ProjectDetailsCreate = () => {
     }
   };
 
+  const handleQRCodeImageChange = (e) => {
+    const files = Array.from(e.target.files) as File[];
+    if (!files || files.length === 0) return;
+
+    const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+    const validFiles: any[] = [];
+
+    files.forEach((file) => {
+      if (file.size > MAX_SIZE) {
+        toast.error(`File ${file.name} is too large. Max size is 50MB.`);
+        return;
+      }
+
+      validFiles.push({
+        project_qrcode_image: file,
+        title: "",
+        isNew: true,
+      });
+    });
+
+    if (validFiles.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        project_qrcode_image: [...prev.project_qrcode_image, ...validFiles],
+      }));
+    }
+  };
+
+  const handleQRCodeImageNameChange = (index, newTitle) => {
+    setFormData((prev) => ({
+      ...prev,
+      project_qrcode_image: prev.project_qrcode_image.map((img, i) =>
+        i === index ? { ...img, title: newTitle } : img
+      ),
+    }));
+  };
+
+  const handleRemoveQRCodeImage = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      project_qrcode_image: prev.project_qrcode_image.filter((_, i) => i !== index),
+    }));
+    toast.success("QR Code image removed");
+  };
+
   const validateForm = (formData) => {
     // Clear previous toasts
     toast.dismiss();
@@ -1633,7 +1679,7 @@ const ProjectDetailsCreate = () => {
 
       toast.success("Project submitted successfully");
       sessionStorage.removeItem("cached_projects");
-      Navigate("/project-list");
+      Navigate("/maintenance/project-details-list");
     } catch (error) {
       console.error("Error submitting the form:", error);
       if (
@@ -1653,7 +1699,7 @@ const ProjectDetailsCreate = () => {
   };
 
   const handleCancel = () => {
-    Navigate("/project-list");
+    Navigate("/maintenance/project-details-list");
   };
 
   return (
@@ -1678,7 +1724,7 @@ const ProjectDetailsCreate = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -1689,8 +1735,8 @@ const ProjectDetailsCreate = () => {
               Basic Information
             </h2>
           </div>
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormControl
                 fullWidth
                 variant="outlined"
@@ -1816,10 +1862,8 @@ const ProjectDetailsCreate = () => {
                   ))}
                 </MuiSelect>
               </FormControl>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <TextField
+                <TextField
                 label="Project Name"
                 placeholder="Enter Project Name"
                 value={formData.Project_Name}
@@ -1842,7 +1886,7 @@ const ProjectDetailsCreate = () => {
                 }}
               />
 
-              <TextField
+               <TextField
                 label="SFDC Project ID"
                 placeholder="Enter SFDC Project ID"
                 value={formData.SFDC_Project_Id}
@@ -1911,10 +1955,6 @@ const ProjectDetailsCreate = () => {
                   <MenuItem value="Upcoming">Upcoming</MenuItem>
                 </MuiSelect>
               </FormControl>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="md:col-span-3">
                 <TextField
                   label="Project Description"
                   placeholder="Enter Project Description"
@@ -1925,8 +1965,7 @@ const ProjectDetailsCreate = () => {
                       Project_Description: e.target.value,
                     }))
                   }
-                  // multiline
-                  // rows={3}
+                  
                   fullWidth
                   variant="outlined"
                   slotProps={{
@@ -1934,30 +1973,9 @@ const ProjectDetailsCreate = () => {
                       shrink: true,
                     },
                   }}
-                  // sx={{
-                  //   '& .MuiOutlinedInput-root': {
-                  //     minHeight: '90px',
-                  //     alignItems: 'flex-start',
-                  //     '& fieldset': {
-                  //       borderColor: '#ddd',
-                  //     },
-                  //     '&:hover fieldset': {
-                  //       borderColor: '#C72030',
-                  //     },
-                  //     '&.Mui-focused fieldset': {
-                  //       borderColor: '#C72030',
-                  //     },
-                  //   },
-                  //   '& .MuiInputLabel-root': {
-                  //     '&.Mui-focused': {
-                  //       color: '#C72030',
-                  //     },
-                  //   },
-                  // }}
+                 
                 />
-              </div>
-
-              <TextField
+                 <TextField
                 label="Price Onward"
                 placeholder="Enter Price Onward"
                 value={formData.Price_Onward}
@@ -2072,10 +2090,7 @@ const ProjectDetailsCreate = () => {
                   sx: fieldStyles,
                 }}
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <TextField
+               <TextField
                 label="RERA Carpet Area (Sq. M)"
                 placeholder="Enter RERA Carpet Area (Sq. M)"
                 type="number"
@@ -2166,9 +2181,6 @@ const ProjectDetailsCreate = () => {
                   sx: fieldStyles,
                 }}
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <TextField
                 label="Number of Units"
                 placeholder="Enter Number of Units"
@@ -2271,10 +2283,7 @@ const ProjectDetailsCreate = () => {
                   <MenuItem value="Lease">Lease</MenuItem>
                 </MuiSelect>
               </FormControl>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TextField
+                <TextField
                 label="Order Number"
                 placeholder="Enter Order Number"
                 type="number"
@@ -2318,11 +2327,11 @@ const ProjectDetailsCreate = () => {
           </div>
         </div>
 
-        {baseURL !== "https://dev-panchshil-super-app.lockated.com/" &&
-          baseURL !== "https://rustomjee-live.lockated.com/" && (
+        {/* {baseURL !== "https://dev-panchshil-super-app.lockated.com/" &&
+          baseURL !== "https://rustomjee-live.lockated.com/" && ( */}
             <>
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="px-6 py-3 border-b border-gray-200">
+                <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
                   <h2 className="text-lg font-medium text-gray-900 flex items-center">
                     <span
                       className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -2333,9 +2342,9 @@ const ProjectDetailsCreate = () => {
                     RERA Number
                   </h2>
                 </div>
-                <div className="p-6 space-y-6">
+                <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
                   <div className="grid grid-cols-1 gap-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <TextField
                         label="Tower"
                         placeholder="Enter Tower Name"
@@ -2387,22 +2396,24 @@ const ProjectDetailsCreate = () => {
                           sx: fieldStyles,
                         }}
                       />
+                    </div>
 
-                       <button
+                    <div className="flex justify-end">
+                      <button
                         type="button"
-                        className="flex items-center gap-2 px-6 py-2.5 rounded-md text-white font-medium transition-colors"
+                        className="flex items-center gap-2 px-6 py-2.5 rounded-md text-[#C72030] font-medium transition-colors"
                         style={{
                           height: "45px",
                           backgroundColor: "#C72030",
-                          border: "2px solid #C72030",
+                          // border: "2px solid #C4B89D59",
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = "#A01828";
-                          e.currentTarget.style.borderColor = "#A01828";
+                          e.currentTarget.style.backgroundColor = "#C4B89D59";
+                          // e.currentTarget.style.borderColor = "#A01828";
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "#C72030";
-                          e.currentTarget.style.borderColor = "#C72030";
+                          e.currentTarget.style.backgroundColor = "#C4B89D59";
+                          // e.currentTarget.style.borderColor = "#C72030";
                         }}
                         onClick={() => {
                           if (!towerName || !reraNumber) {
@@ -2437,7 +2448,7 @@ const ProjectDetailsCreate = () => {
                         >
                           <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
                         </svg>
-                        Add
+                        Add RERA
                       </button>
                     </div>
 
@@ -2615,14 +2626,103 @@ const ProjectDetailsCreate = () => {
                       />
                     </div>
                   )}
+
+                  {/* Project QR Code Images Section */}
+                  <div className="mt-6">
+                    <h5 className="font-semibold mb-3">
+                      Project QR Code Images
+                      <span
+                        className="relative inline-block cursor-help ml-1"
+                        onMouseEnter={() => setShowQrTooltip(true)}
+                        onMouseLeave={() => setShowQrTooltip(false)}
+                      >
+                        <span className="text-red-500">[i]</span>
+                        {showQrTooltip && (
+                          <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                            Max Upload Size 50 MB
+                          </span>
+                        )}
+                      </span>
+                      <span className="text-red-500 ml-1">*</span>
+                    </h5>
+
+                    <TextField
+                      label="Upload QR Code Images"
+                      placeholder="Select QR Code Images"
+                      type="file"
+                      name="project_qrcode_image"
+                      onChange={handleQRCodeImageChange}
+                      rows={3}
+                      fullWidth
+                      variant="outlined"
+                      slotProps={{
+                        inputLabel: {
+                          shrink: true,
+                        },
+                        htmlInput: {
+                          accept: "image/*",
+                          multiple: true,
+                        },
+                      }}
+                      InputProps={{
+                        sx: fieldStyles,
+                      }}
+                    />
+
+                    <div className="mt-4">
+                      {formData.project_qrcode_image.length > 0 ? (
+                        formData.project_qrcode_image.map((image, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-3 mb-3 p-3 border border-gray-200 rounded-lg bg-white"
+                          >
+                            <img
+                              src={
+                                image.isNew
+                                  ? URL.createObjectURL(image.project_qrcode_image)
+                                  : image.document_url
+                              }
+                              alt="QR Code Preview"
+                              className="rounded border border-gray-300"
+                              style={{
+                                width: "100px",
+                                height: "100px",
+                                objectFit: "cover",
+                              }}
+                            />
+                            <TextField
+                              placeholder="Enter image name"
+                              value={image.title || ""}
+                              onChange={(e) =>
+                                handleQRCodeImageNameChange(index, e.target.value)
+                              }
+                              disabled={!image.isNew}
+                              size="small"
+                              fullWidth
+                              variant="outlined"
+                            />
+                            <button
+                              type="button"
+                              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors whitespace-nowrap"
+                              onClick={() => handleRemoveQRCodeImage(index)}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-gray-500">No images selected</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </>
-          )}
+          {/* // )} */}
 
         {/* Amenities Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -2633,7 +2733,7 @@ const ProjectDetailsCreate = () => {
               Amenities
             </h2>
           </div>
-          <div className="p-6">
+          <div className="p-6" style={{ backgroundColor: "#AAB9C50D" }}>
             <div className="grid grid-cols-1 gap-4">
               <div className="w-full md:w-1/3">
                 <FormControl
@@ -2683,7 +2783,7 @@ const ProjectDetailsCreate = () => {
         </div>
         {/* Address Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -2694,7 +2794,7 @@ const ProjectDetailsCreate = () => {
               Address
             </h2>
           </div>
-          <div className="p-6 space-y-6">
+          <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <TextField
                 label="Address Line 1"
@@ -2751,7 +2851,7 @@ const ProjectDetailsCreate = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <TextField
                 label="State"
                 placeholder="State"
@@ -2993,7 +3093,7 @@ const ProjectDetailsCreate = () => {
           </div>
         )}
          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -3004,7 +3104,7 @@ const ProjectDetailsCreate = () => {
               File Uploads
             </h2>
           </div>
-          <div className="card-body">
+          <div className="card-body" style={{ backgroundColor: "#AAB9C50D" }}>
             <div className="row">
               <div className="col-12 mb-4"></div>
               <div className="mb-6">
@@ -4480,7 +4580,7 @@ const ProjectDetailsCreate = () => {
           baseURL !== "https://rustomjee-live.lockated.com/" && (
             <>
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -4491,7 +4591,7 @@ const ProjectDetailsCreate = () => {
               Virtual Tours
             </h2>
           </div>
-                <div className="card-body mt-0 pb-0">
+                <div className="card-body mt-0 pb-0" style={{ backgroundColor: "#AAB9C50D" }}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                     <TextField
                       label="Virtual Tour Name"
@@ -4621,7 +4721,7 @@ const ProjectDetailsCreate = () => {
           <div className="flex gap-4">
             <button
               type="submit"
-              className="purple-btn2 min-w-[120px]"
+              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
               disabled={loading}
             >
               {loading ? "Submitting..." : "Submit"}
@@ -4629,7 +4729,7 @@ const ProjectDetailsCreate = () => {
             <button
               type="button"
               onClick={handleCancel}
-              className="purple-btn2 min-w-[120px]"
+              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
             >
               Cancel
             </button>
