@@ -18,11 +18,14 @@ import {
   Select as MuiSelect,
   MenuItem,
 } from "@mui/material";
-import { Building2, FileText, Trash2, ArrowLeft } from "lucide-react";
+import { Building2, FileText, Trash2, ArrowLeft, Delete, DeleteIcon } from "lucide-react";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import "../styles/mor.css";
-import { FileUpload } from "@mui/icons-material";
+import { DeleteForever, DeleteForeverOutlined, DeleteForeverRounded, DeleteForeverSharp, DeleteForeverTwoTone, DeleteOutlined, DeleteOutlineOutlined, DeleteOutlineRounded, DeleteSweepOutlined, DeleteSweepRounded, DeleteSweepSharp, DeleteSweepTwoTone, FileUpload } from "@mui/icons-material";
 import { Button } from "react-day-picker";
+import { DeleteCompanyModal } from "@/components/DeleteCompanyModal";
+import { DeleteCountryModal } from "@/components/DeleteCountryModal";
+import { DeletePatrollingModal } from "@/components/DeletePatrollingModal";
 
 // Field styles for Material-UI components
 const fieldStyles = {
@@ -598,7 +601,7 @@ const ProjectDetailsCreate = () => {
   // Fetch configurations
   useEffect(() => {
     axios
-      .get(`${baseURL}/configurations.json`)
+      .get(`${baseURL}/configuration_setups.json`)
       .then((response) => {
         setConfigurations(response.data);
       })
@@ -2404,7 +2407,7 @@ const ProjectDetailsCreate = () => {
                         className="flex items-center gap-2 px-6 py-2.5 rounded-md text-[#C72030] font-medium transition-colors"
                         style={{
                           height: "45px",
-                          backgroundColor: "#C72030",
+                          backgroundColor: "#C4B89D59",
                           // border: "2px solid #C4B89D59",
                         }}
                         onMouseEnter={(e) => {
@@ -2629,7 +2632,7 @@ const ProjectDetailsCreate = () => {
 
                   {/* Project QR Code Images Section */}
                   <div className="mt-6">
-                    <h5 className="font-semibold mb-3">
+                    {/* <h5 className="font-semibold mb-3">
                       Project QR Code Images
                       <span
                         className="relative inline-block cursor-help ml-1"
@@ -2644,7 +2647,7 @@ const ProjectDetailsCreate = () => {
                         )}
                       </span>
                       <span className="text-red-500 ml-1">*</span>
-                    </h5>
+                    </h5> */}
 
                     <TextField
                       label="Upload QR Code Images"
@@ -3129,7 +3132,7 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                     type="button"
                     onClick={() => setShowBannerModal(true)}
                   >
@@ -3229,10 +3232,10 @@ const ProjectDetailsCreate = () => {
                             <td className="py-3 px-4">
                               <button
                                 type="button"
-                                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                 onClick={() => discardImage(key, file)}
                               >
-                                ×
+                                <DeleteForeverRounded fontSize="small" />
                               </button>
                             </td>
                           </tr>
@@ -3264,7 +3267,7 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                     type="button"
                     onClick={() => setShowUploader(true)}
                   >
@@ -3383,10 +3386,10 @@ const ProjectDetailsCreate = () => {
                               <td className="py-3 px-4">
                                 <button
                                   type="button"
-                                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                  // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                   onClick={() => discardImage(key, file)}
                                 >
-                                  ×
+                                  <DeleteForeverRounded fontSize="small" />
                                 </button>
                               </td>
                             </tr>
@@ -3435,7 +3438,7 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                     type="button"
                     onClick={() => setShowGalleryModal(true)}
                   >
@@ -3600,10 +3603,10 @@ const ProjectDetailsCreate = () => {
                               <td className="py-3 px-4">
                                 <button
                                   type="button"
-                                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                  // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                   onClick={() => discardImage(key, file)}
                                 >
-                                  ×
+                                  <DeleteForeverRounded fontSize="small" />
                                 </button>
                               </td>
                             </tr>
@@ -3636,7 +3639,7 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                     type="button"
                     onClick={() => setShowFloorPlanModal(true)}
                   >
@@ -3733,10 +3736,10 @@ const ProjectDetailsCreate = () => {
                             <td className="py-3 px-4">
                               <button
                                 type="button"
-                                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                 onClick={() => discardImage(key, file)}
                               >
-                                ×
+                                 <DeleteForeverRounded fontSize="small" />
                               </button>
                             </td>
                           </tr>
@@ -3767,7 +3770,7 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                     onClick={() => document.getElementById("brochure").click()}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -3804,10 +3807,10 @@ const ProjectDetailsCreate = () => {
                             <td className="py-3 px-4">
                               <button
                                 type="button"
-                                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                 onClick={() => handleDiscardFile("brochure", index)}
                               >
-                                ×
+                                <DeleteForeverRounded fontSize="small" />
                               </button>
                             </td>
                           </tr>
@@ -3840,7 +3843,7 @@ const ProjectDetailsCreate = () => {
                         </h5>
 
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_ppt").click()}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -3877,10 +3880,10 @@ const ProjectDetailsCreate = () => {
                                 <td className="py-3 px-4">
                                   <button
                                     type="button"
-                                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardPpt("project_ppt", index)}
                                   >
-                                    ×
+                                    <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -3909,7 +3912,7 @@ const ProjectDetailsCreate = () => {
                         </h5>
 
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_layout").click()}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -3954,10 +3957,10 @@ const ProjectDetailsCreate = () => {
                                 <td className="py-3 px-4">
                                   <button
                                     type="button"
-                                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_layout", index)}
                                   >
-                                    ×
+                                     <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -3986,7 +3989,7 @@ const ProjectDetailsCreate = () => {
                         </h5>
 
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_creatives").click()}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -4032,10 +4035,10 @@ const ProjectDetailsCreate = () => {
                                 <td className="py-3 px-4">
                                   <button
                                     type="button"
-                                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_creatives", index)}
                                   >
-                                    ×
+                                     <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -4063,7 +4066,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_creative_generics").click()}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -4107,10 +4110,10 @@ const ProjectDetailsCreate = () => {
                                 <td className="py-3 px-4">
                                   <button
                                     type="button"
-                                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_creative_generics", index)}
                                   >
-                                    ×
+                                     <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -4138,7 +4141,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_creative_offers").click()}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -4182,10 +4185,10 @@ const ProjectDetailsCreate = () => {
                                 <td className="py-3 px-4">
                                   <button
                                     type="button"
-                                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_creative_offers", index)}
                                   >
-                                    ×
+                                     <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -4213,7 +4216,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_interiors").click()}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -4257,10 +4260,10 @@ const ProjectDetailsCreate = () => {
                                 <td className="py-3 px-4">
                                   <button
                                     type="button"
-                                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_interiors", index)}
                                   >
-                                    ×
+                                     <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -4288,7 +4291,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_exteriors").click()}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -4332,10 +4335,10 @@ const ProjectDetailsCreate = () => {
                                 <td className="py-3 px-4">
                                   <button
                                     type="button"
-                                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_exteriors", index)}
                                   >
-                                    ×
+                                     <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -4363,7 +4366,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_emailer_templetes").click()}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -4398,10 +4401,10 @@ const ProjectDetailsCreate = () => {
                                 <td className="py-3 px-4">
                                   <button
                                     type="button"
-                                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_emailer_templetes", index)}
                                   >
-                                    ×
+                                     <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -4429,7 +4432,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("KnwYrApt_Technical").click()}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -4464,10 +4467,10 @@ const ProjectDetailsCreate = () => {
                                 <td className="py-3 px-4">
                                   <button
                                     type="button"
-                                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("KnwYrApt_Technical", index)}
                                   >
-                                    ×
+                                     <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -4495,7 +4498,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("videos").click()}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
@@ -4540,10 +4543,10 @@ const ProjectDetailsCreate = () => {
                                 <td className="py-3 px-4">
                                   <button
                                     type="button"
-                                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("videos", index)}
                                   >
-                                    ×
+                                     <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -4633,7 +4636,7 @@ const ProjectDetailsCreate = () => {
 
                     <button
                       type="button"
-                      className="flex items-center justify-center gap-2 px-6 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors font-medium shadow-sm h-[45px]"
+                      className="flex items-center justify-center gap-2 px-6 py-2 bg-[#C4B89D59] text-[#C72030] rounded hover:bg-[#C4B89D59]/90 transition-colors font-medium shadow-sm h-[45px]"
                       onClick={handleAddVirtualTour}
                     >
                       <svg
@@ -4686,7 +4689,7 @@ const ProjectDetailsCreate = () => {
                           renderActions={(item) => (
                             <button
                               type="button"
-                              className="text-red-600 hover:text-red-800 p-1 transition-colors"
+                              // className="text-red-600 hover:text-red-800 p-1 transition-colors"
                               onClick={() => {
                                 const updated =
                                   formData.virtual_tour_url_multiple.filter(
@@ -4700,7 +4703,7 @@ const ProjectDetailsCreate = () => {
                               }}
                               title="Delete"
                             >
-                              <Trash2 size={18} />
+                               <DeleteForeverRounded fontSize="small" />
                             </button>
                           )}
                           hideTableSearch

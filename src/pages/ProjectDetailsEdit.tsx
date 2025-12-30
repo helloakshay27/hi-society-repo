@@ -18,8 +18,8 @@ import {
   Select as MuiSelect,
   MenuItem,
 } from "@mui/material";
-import { FileUpload } from "@mui/icons-material";
-import { Building2, FileText, Trash2, ArrowLeft } from "lucide-react";
+import { DeleteForeverRounded, FileUpload } from "@mui/icons-material";
+import { Building2, FileText, Trash2, ArrowLeft, Plus } from "lucide-react";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import "../styles/mor.css";
 
@@ -290,6 +290,49 @@ const ProjectDetailsEdit = () => {
     setVirtualTourName("");
     setVirtualTourUrl("");
     toast.success("Virtual tour added successfully");
+  };
+
+  // QR Code handlers
+  const handleQRCodeImageChange = (e) => {
+    const files = Array.from(e.target.files) as File[];
+    const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+    const validFiles: any[] = [];
+    
+    files.forEach((file) => {
+      if (file.size > MAX_SIZE) {
+        toast.error(`File ${file.name} is too large. Max size is 50MB.`);
+        return;
+      }
+      validFiles.push({
+        project_qrcode_image: file,
+        title: "",
+        isNew: true,
+      });
+    });
+    
+    if (validFiles.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        project_qrcode_image: [...prev.project_qrcode_image, ...validFiles],
+      }));
+    }
+  };
+  
+  const handleQRCodeImageNameChange = (index, newTitle) => {
+    setFormData((prev) => ({
+      ...prev,
+      project_qrcode_image: prev.project_qrcode_image.map((img, i) =>
+        i === index ? { ...img, title: newTitle } : img
+      ),
+    }));
+  };
+  
+  const handleRemoveQRCodeImage = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      project_qrcode_image: prev.project_qrcode_image.filter((_, i) => i !== index),
+    }));
+    toast.success("QR Code image removed");
   };
 
   const updateFormData = (key, files) => {
@@ -687,7 +730,7 @@ const ProjectDetailsEdit = () => {
       } catch (error) {
         console.error("Error fetching project:", error);
         toast.error("Failed to load project data");
-        navigate("/project-list");
+        navigate("/maintenance/project-details-list");
       } finally {
         setLoading(false);
       }
@@ -812,7 +855,7 @@ const ProjectDetailsEdit = () => {
   // Fetch configurations
   useEffect(() => {
     axios
-      .get(`${baseURL}/configurations.json`)
+      .get(`${baseURL}/configuration_setups.json`)
       .then((response) => {
         setConfigurations(response.data);
       })
@@ -1161,7 +1204,7 @@ const ProjectDetailsEdit = () => {
       );
 
       toast.success("Project updated successfully");
-      navigate("/project-list");
+      navigate("/maintenance/project-details-list");
     } catch (error) {
       console.error("Error updating project:", error);
       if (
@@ -1181,7 +1224,7 @@ const ProjectDetailsEdit = () => {
   };
 
   const handleCancel = () => {
-    navigate("/project-list");
+    navigate("/maintenance/project-details-list");
   };
 
   if (loading) {
@@ -1250,7 +1293,7 @@ const ProjectDetailsEdit = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -1261,8 +1304,8 @@ const ProjectDetailsEdit = () => {
               Basic Information
             </h2>
           </div>
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+         <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormControl
                 fullWidth
                 variant="outlined"
@@ -1388,9 +1431,7 @@ const ProjectDetailsEdit = () => {
                   ))}
                 </MuiSelect>
               </FormControl>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <TextField
+               <TextField
                 label="Project Name"
                 placeholder="Enter Project Name"
                 value={formData.Project_Name}
@@ -1482,11 +1523,7 @@ const ProjectDetailsEdit = () => {
                   <MenuItem value="Upcoming">Upcoming</MenuItem>
                 </MuiSelect>
               </FormControl>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="md:col-span-3">
-                <TextField
+              <TextField
                   label="Project Description"
                   placeholder="Enter Project Description"
                   value={formData.Project_Description}
@@ -1507,32 +1544,12 @@ const ProjectDetailsEdit = () => {
                     sx: fieldStyles,
                   }}
                 />
-              </div>
-
-              <TextField
-                label="Price Onward"
-                placeholder="Enter Price Onward"
-                value={formData.Price_Onward}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    Price_Onward: e.target.value,
-                  }))
-                }
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
             </div>
+           
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+           
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <TextField
                 label="Size (Sq. Mtr.)"
                 placeholder="Enter Size in Sq. Mtr."
@@ -1624,10 +1641,7 @@ const ProjectDetailsEdit = () => {
                   sx: fieldStyles,
                 }}
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <TextField
+               <TextField
                 label="RERA Carpet Area (Sq. M)"
                 placeholder="Enter RERA Carpet Area (Sq. M)"
                 type="number"
@@ -1718,10 +1732,7 @@ const ProjectDetailsEdit = () => {
                   sx: fieldStyles,
                 }}
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <TextField
+               <TextField
                 label="Number of Units"
                 placeholder="Enter Number of Units"
                 type="number"
@@ -1823,10 +1834,7 @@ const ProjectDetailsEdit = () => {
                   <MenuItem value="Lease">Lease</MenuItem>
                 </MuiSelect>
               </FormControl>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TextField
+                <TextField
                 label="Order Number"
                 placeholder="Enter Order Number"
                 type="number"
@@ -1867,6 +1875,12 @@ const ProjectDetailsEdit = () => {
                 }}
               />
             </div>
+
+           
+
+            
+
+           
             {/* Continue with all grids and fields from create */}
           </div>
         </div>
@@ -1874,7 +1888,7 @@ const ProjectDetailsEdit = () => {
           baseURL !== "https://rustomjee-live.lockated.com/" && (
             <>
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="px-6 py-3 border-b border-gray-200">
+                <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
                   <h2 className="text-lg font-medium text-gray-900 flex items-center">
                     <span
                       className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -1885,9 +1899,9 @@ const ProjectDetailsEdit = () => {
                     RERA Number
                   </h2>
                 </div>
-                <div className="p-6 space-y-6">
+                  <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
                   <div className="grid grid-cols-1 gap-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <TextField
                         label="Tower"
                         placeholder="Enter Tower Name"
@@ -1939,62 +1953,55 @@ const ProjectDetailsEdit = () => {
                           sx: fieldStyles,
                         }}
                       />
-
-                       <button
-                        type="button"
-                        className="flex items-center gap-2 px-6 py-2.5 rounded-md text-white font-medium transition-colors"
-                        style={{
-                          height: "45px",
-                          backgroundColor: "#C72030",
-                          border: "2px solid #C72030",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = "#A01828";
-                          e.currentTarget.style.borderColor = "#A01828";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "#C72030";
-                          e.currentTarget.style.borderColor = "#C72030";
-                        }}
-                        onClick={() => {
-                          if (!towerName || !reraNumber) {
-                            toast.error(
-                              "Please enter both Tower Name and RERA Number"
-                            );
-                            return;
-                          }
-                          setFormData((prev) => ({
-                            ...prev,
-                            Rera_Number_multiple: [
-                              ...prev.Rera_Number_multiple,
-                              {
-                                tower: towerName,
-                                rera_number: reraNumber,
-                                rera_url: reraUrl,
-                              },
-                            ],
-                          }));
-                          setTowerName("");
-                          setReraNumber("");
-                          setReraUrl("");
-                          toast.success("RERA entry added");
-                        }}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width={20}
-                          height={20}
-                          fill="currentColor"
-                          viewBox="0 0 16 16"
-                        >
-                          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                        </svg>
-                        Add
-                      </button>
                     </div>
-                  </div>
-                  {formData.Rera_Number_multiple.length > 0 && (
-                    <div className="mt-4">
+
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 px-6 py-2.5 rounded-md text-[#C72030] font-medium transition-colors"
+                        style={{
+                        height: "45px",
+                        backgroundColor: "#C4B89D59",
+                        // border: "2px solid #C4B89D59",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#C4B89D59";
+                        // e.currentTarget.style.borderColor = "#A01828";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "#C4B89D59";
+                        // e.currentTarget.style.borderColor = "#C72030";
+                      }}                          
+                        onClick={() => {
+                            if (!towerName || !reraNumber) {
+                              toast.error(
+                                "Please enter both Tower Name and RERA Number"
+                              );
+                              return;
+                            }
+                            setFormData((prev) => ({
+                              ...prev,
+                              Rera_Number_multiple: [
+                                ...prev.Rera_Number_multiple,
+                                {
+                                  tower: towerName,
+                                  rera_number: reraNumber,
+                                  rera_url: reraUrl,
+                                },
+                              ],
+                            }));
+                            setTowerName("");
+                            setReraNumber("");
+                            setReraUrl("");
+                            toast.success("RERA entry added");
+                          }}
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add RERA
+                        </button>
+                      </div>
+                       {formData.Rera_Number_multiple.length > 0 && (
+                    <div className="mt-2">
                       <EnhancedTable
                         data={formData.Rera_Number_multiple.map(
                           (item, index) => ({ ...item, id: index })
@@ -2111,10 +2118,79 @@ const ProjectDetailsEdit = () => {
                         hideColumnsButton
                         emptyMessage="No RERA entries added yet"
                       />
+                      
                     </div>
                   )}
+                    </div>
+                       <div className="space-y-4 mt-6">
+                    <h3 className="text-base font-medium text-gray-900">
+                      Project QR Code Images
+                    </h3>
+                    <TextField
+                      label="Upload QR Code Images"
+                      placeholder="Select QR Code Images"
+                      type="file"
+                      name="project_qrcode_image"
+                      onChange={handleQRCodeImageChange}
+                      fullWidth
+                      variant="outlined"
+                      slotProps={{
+                        inputLabel: { shrink: true },
+                        htmlInput: {
+                          accept: "image/*",
+                          multiple: true,
+                        },
+                      }}
+                      InputProps={{ sx: fieldStyles }}
+                    />
+
+                    {formData.project_qrcode_image.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                        {formData.project_qrcode_image.map((img, index) => (
+                          <div
+                            key={index}
+                            className="relative border rounded-lg p-3 bg-gray-50"
+                          >
+                            <img
+                              src={
+                                img.isNew
+                                  ? URL.createObjectURL(img.project_qrcode_image)
+                                  : img.document_url || img.project_qrcode_image
+                              }
+                              alt={`QR Code ${index + 1}`}
+                              className="w-full h-24 object-contain mb-2 rounded"
+                            />
+                            <TextField
+                              label="Image Title"
+                              placeholder="Enter title"
+                              value={img.title || ""}
+                              onChange={(e) =>
+                                handleQRCodeImageNameChange(index, e.target.value)
+                              }
+                              size="small"
+                              fullWidth
+                              variant="outlined"
+                            />
+                            <button
+                              type="button"
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                              onClick={() => handleRemoveQRCodeImage(index)}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  </div>
+                  
+                 
+
+                  {/* QR Code Upload Section */}
+               
                 </div>
-              </div>
+              {/* </div> */}
             </>
           )}
 
@@ -2122,7 +2198,7 @@ const ProjectDetailsEdit = () => {
         {/* Amenities, Address, Plans, File Upload sections - all copied from create */}
         {/* Amenities Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -2133,7 +2209,7 @@ const ProjectDetailsEdit = () => {
               Amenities
             </h2>
           </div>
-          <div className="p-6">
+            <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
             <div className="grid grid-cols-1 gap-4">
               <div className="w-full md:w-1/3">
                 <FormControl
@@ -2183,7 +2259,7 @@ const ProjectDetailsEdit = () => {
         </div>
         {/* Address Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -2194,7 +2270,7 @@ const ProjectDetailsEdit = () => {
               Address
             </h2>
           </div>
-          <div className="p-6 space-y-6">
+           <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <TextField
                 label="Address Line 1"
@@ -2251,7 +2327,7 @@ const ProjectDetailsEdit = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <TextField
                 label="State"
                 placeholder="State"
@@ -2493,7 +2569,7 @@ const ProjectDetailsEdit = () => {
           </div>
         )}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -2504,7 +2580,7 @@ const ProjectDetailsEdit = () => {
               File Uploads
             </h2>
           </div>
-          <div className="card-body">
+           <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
             <div className="row">
               <div className="col-12 mb-4"></div>
               <div className="mb-6">
@@ -2529,7 +2605,7 @@ const ProjectDetailsEdit = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                     type="button"
                     onClick={() => setShowBannerModal(true)}
                   >
@@ -2629,10 +2705,10 @@ const ProjectDetailsEdit = () => {
                             <td className="py-3 px-4">
                               <button
                                 type="button"
-                                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                 onClick={() => discardImage(key, file)}
                               >
-                                ×
+                                <DeleteForeverRounded fontSize="small" />
                               </button>
                             </td>
                           </tr>
@@ -2664,19 +2740,11 @@ const ProjectDetailsEdit = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                     type="button"
                     onClick={() => setShowUploader(true)}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width={20}
-                      height={20}
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                    </svg>
+                    <Plus className="w-4 h-4" />
                     <span>Add</span>
                   </button>
                 </div>
@@ -2786,7 +2854,7 @@ const ProjectDetailsEdit = () => {
                                   className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                   onClick={() => discardImage(key, file)}
                                 >
-                                  ×
+                                  <DeleteForeverRounded fontSize="small" />
                                 </button>
                               </td>
                             </tr>
@@ -2835,7 +2903,7 @@ const ProjectDetailsEdit = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                     type="button"
                     onClick={() => setShowGalleryModal(true)}
                   >
@@ -3003,7 +3071,7 @@ const ProjectDetailsEdit = () => {
                                   className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                   onClick={() => discardImage(key, file)}
                                 >
-                                  ×
+                                  <DeleteForeverRounded fontSize="small" />
                                 </button>
                               </td>
                             </tr>
@@ -3037,7 +3105,7 @@ const ProjectDetailsEdit = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                     type="button"
                     onClick={() => setShowFloorPlanModal(true)}
                   >
@@ -3139,7 +3207,7 @@ const ProjectDetailsEdit = () => {
                                 className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                 onClick={() => discardImage(key, file)}
                               >
-                                ×
+                                <DeleteForeverRounded fontSize="small" />
                               </button>
                             </td>
                           </tr>
@@ -3170,7 +3238,7 @@ const ProjectDetailsEdit = () => {
                   </h5>
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                     onClick={() => document.getElementById("brochure").click()}
                   >
                     <svg
@@ -3232,7 +3300,7 @@ const ProjectDetailsEdit = () => {
                                     handleDiscardFile("brochure", index)
                                   }
                                 >
-                                  ×
+                                  <DeleteForeverRounded fontSize="small" />
                                 </button>
                               </td>
                             </tr>
@@ -3242,8 +3310,8 @@ const ProjectDetailsEdit = () => {
                   </table>
                 </div>
               </div>
-              {baseURL !== "https://dev-panchshil-super-app.lockated.com/" &&
-                baseURL !== "https://rustomjee-live.lockated.com/" && (
+              {/* {baseURL !== "https://dev-panchshil-super-app.lockated.com/" &&
+                baseURL !== "https://rustomjee-live.lockated.com/" && ( */}
                   <>
                     <div className="mb-6">
                       {/* Header */}
@@ -3265,7 +3333,7 @@ const ProjectDetailsEdit = () => {
                         </h5>
 
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() =>
                             document.getElementById("project_ppt").click()
                           }
@@ -3327,7 +3395,7 @@ const ProjectDetailsEdit = () => {
                                       handleDiscardPpt("project_ppt", index)
                                     }
                                   >
-                                    ×
+                                    <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -3356,7 +3424,7 @@ const ProjectDetailsEdit = () => {
                         </h5>
 
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() =>
                             document.getElementById("project_layout").click()
                           }
@@ -3439,7 +3507,7 @@ const ProjectDetailsEdit = () => {
                                       handleDiscardFile("project_layout", index)
                                     }
                                   >
-                                    ×
+                                    <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -3468,7 +3536,7 @@ const ProjectDetailsEdit = () => {
                         </h5>
 
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() =>
                             document.getElementById("project_creatives").click()
                           }
@@ -3555,7 +3623,7 @@ const ProjectDetailsEdit = () => {
                                       )
                                     }
                                   >
-                                    ×
+                                    <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -3583,7 +3651,7 @@ const ProjectDetailsEdit = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() =>
                             document
                               .getElementById("project_creative_generics")
@@ -3676,7 +3744,7 @@ const ProjectDetailsEdit = () => {
                                         )
                                       }
                                     >
-                                      ×
+                                      <DeleteForeverRounded fontSize="small" />
                                     </button>
                                   </td>
                                 </tr>
@@ -3705,7 +3773,7 @@ const ProjectDetailsEdit = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() =>
                             document
                               .getElementById("project_creative_offers")
@@ -3798,7 +3866,7 @@ const ProjectDetailsEdit = () => {
                                         )
                                       }
                                     >
-                                      ×
+                                      <DeleteForeverRounded fontSize="small" />
                                     </button>
                                   </td>
                                 </tr>
@@ -3827,7 +3895,7 @@ const ProjectDetailsEdit = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() =>
                             document.getElementById("project_interiors").click()
                           }
@@ -3917,7 +3985,7 @@ const ProjectDetailsEdit = () => {
                                       )
                                     }
                                   >
-                                    ×
+                                    <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -3945,7 +4013,7 @@ const ProjectDetailsEdit = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() =>
                             document.getElementById("project_exteriors").click()
                           }
@@ -4035,7 +4103,7 @@ const ProjectDetailsEdit = () => {
                                       )
                                     }
                                   >
-                                    ×
+                                    <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -4063,7 +4131,7 @@ const ProjectDetailsEdit = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() =>
                             document
                               .getElementById("project_emailer_templetes")
@@ -4135,7 +4203,7 @@ const ProjectDetailsEdit = () => {
                                           )
                                         }
                                       >
-                                        ×
+                                        <DeleteForeverRounded fontSize="small" />
                                       </button>
                                     </td>
                                   </tr>
@@ -4164,7 +4232,7 @@ const ProjectDetailsEdit = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() =>
                             document
                               .getElementById("KnwYrApt_Technical")
@@ -4236,7 +4304,7 @@ const ProjectDetailsEdit = () => {
                                           )
                                         }
                                       >
-                                        ×
+                                        <DeleteForeverRounded fontSize="small" />
                                       </button>
                                     </td>
                                   </tr>
@@ -4265,7 +4333,7 @@ const ProjectDetailsEdit = () => {
                           </span>
                         </h5>
                         <button
-                          className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() =>
                             document.getElementById("videos").click()
                           }
@@ -4346,7 +4414,7 @@ const ProjectDetailsEdit = () => {
                                       handleDiscardFile("videos", index)
                                     }
                                   >
-                                    ×
+                                    <DeleteForeverRounded fontSize="small" />
                                   </button>
                                 </td>
                               </tr>
@@ -4375,15 +4443,15 @@ const ProjectDetailsEdit = () => {
                                            </div>
                     </div>
                   </>
-                )}
+                {/* // )} */}
             </div>
           </div>
         </div>
-        {baseURL !== "https://dev-panchshil-super-app.lockated.com/" &&
-          baseURL !== "https://rustomjee-live.lockated.com/" && (
+        {/* {baseURL !== "https://dev-panchshil-super-app.lockated.com/" &&
+          baseURL !== "https://rustomjee-live.lockated.com/" && ( */}
             <>
                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                        <div className="px-6 py-3 border-b border-gray-200">
+                        <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
                           <h2 className="text-lg font-medium text-gray-900 flex items-center">
                             <span
                               className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -4394,7 +4462,7 @@ const ProjectDetailsEdit = () => {
                             Virtual Tours
                           </h2>
                         </div>
-                <div className="card-body mt-0 pb-0">
+                  <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                     <TextField
                       label="Virtual Tour Name"
@@ -4422,18 +4490,10 @@ const ProjectDetailsEdit = () => {
                     />
                     <button
                       type="button"
-                      className="flex items-center justify-center gap-2 px-6 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors font-medium shadow-sm h-[45px]"
+                      className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                       onClick={handleAddVirtualTour}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width={20}
-                        height={20}
-                        fill="currentColor"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                      </svg>
+                      <Plus className="w-4 h-4" />
                       <span>Add</span>
                     </button>
                   </div>
@@ -4503,7 +4563,7 @@ const ProjectDetailsEdit = () => {
                 </div>
               </div>
             </>
-          )}
+          {/* )} */}
         {/* Virtual Tour - copy from create */}
 
         {/* Sticky footer with Update button */}
@@ -4512,20 +4572,14 @@ const ProjectDetailsEdit = () => {
             <button
               type="submit"
               disabled={isSubmitting || loading}
-              className="px-6 py-2.5 bg-[#C72030] text-white rounded-md font-medium transition-colors"
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = "#A01828")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = "#C72030")
-              }
+              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
             >
-              {isSubmitting ? "Updating..." : "Update Project"}
+              {isSubmitting ? "Updating..." : "Update"}
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-md font-medium transition-colors hover:bg-gray-50"
+              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
             >
               Cancel
             </button>
