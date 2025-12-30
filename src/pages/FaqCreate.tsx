@@ -309,14 +309,16 @@ const FaqCreate = () => {
         {/* Main Form Card */}
         <form id="faqCreateForm" onSubmit={handleSubmit}>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="bg-[#E5E0D3] px-6 py-4 border-b border-gray-200 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-white/50 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-gray-700" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">FAQ Information</h3>
+            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                  <FileText size={16} color="#C72030" />
+                </span>
+                FAQ Information
+              </h2>
             </div>
             
-            <div className="p-6">
+            <div className="p-6" style={{ backgroundColor: "#AAB9C50D" }}>
               {/* Category and Subcategory Selection */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <FormControl fullWidth variant="outlined" required={(baseURL === "https://dev-panchshil-super-app.lockated.com/" || baseURL === "https://kalpataru.lockated.com/" || baseURL === "https://rustomjee-live.lockated.com/")}>
@@ -408,7 +410,7 @@ const FaqCreate = () => {
                   <div className="flex items-end">
                     <button
                       type="button"
-                      className="w-full h-[45px] flex items-center justify-center gap-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      className="w-full bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center justify-center gap-2"
                       onClick={handleAddFaq}
                       disabled={loading}
                     >
@@ -495,15 +497,15 @@ const FaqCreate = () => {
             <button
               type="submit"
               disabled={loading || formData.faqs.length === 0}
-              className="h-[45px] bg-[#C72030] hover:bg-[#B8252F] text-white px-8 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
             >
-              {loading ? 'Submitting...' : 'Submit'}
+              {loading ? 'Submit' : 'Submit'}
             </button>
             <button
               type="button"
               onClick={() => navigate("/setup-member/faq-list")}
               disabled={loading}
-              className="h-[45px] border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 rounded transition-colors font-medium"
+              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
             >
               Cancel
             </button>

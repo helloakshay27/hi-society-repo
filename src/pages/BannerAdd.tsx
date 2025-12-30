@@ -20,6 +20,7 @@ import {
   Select as MuiSelect,
   MenuItem,
 } from "@mui/material";
+import { DeleteForeverRounded } from "@mui/icons-material";
 
 const BannerAdd = () => {
   const baseURL = API_CONFIG.BASE_URL;
@@ -272,7 +273,7 @@ const BannerAdd = () => {
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
         {/* Section: Banner Information */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
                 <FileText size={16} color="#C72030" />
@@ -280,7 +281,7 @@ const BannerAdd = () => {
               Banner Information
             </h2>
           </div>
-          <div className="p-6 space-y-6">
+          <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Title Input */}
               <TextField
@@ -359,8 +360,7 @@ const BannerAdd = () => {
                 </h5>
 
                 <button
-                  className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
-                  type="button"
+                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                   onClick={() => setShowUploader(true)}
                 >
                   <svg
@@ -479,7 +479,7 @@ const BannerAdd = () => {
                                 className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                 onClick={() => discardImage(key, file)}
                               >
-                                ×
+                                 <DeleteForeverRounded fontSize="small" />
                               </button>
                             </TableCell>
                           </TableRow>
@@ -512,14 +512,14 @@ const BannerAdd = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+             className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
           >
-            {loading ? 'Submitting...' : 'Submit'}
+            {loading ? 'Submit' : 'Submit'}
           </button>
           <button
             type="button"
             onClick={handleCancel}
-            className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2 rounded transition-colors"
+             className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
           >
             Cancel
           </button>

@@ -481,7 +481,7 @@ const FaqEdit = () => {
         {/* Main Form Card */}
         <form id="faqEditForm" onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200">
+            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
                   <FileText size={16} color="#C72030" />
@@ -490,7 +490,7 @@ const FaqEdit = () => {
               </h2>
             </div>
             
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
               {/* Category and Subcategory Selection */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* FAQ Category */}
@@ -600,15 +600,15 @@ const FaqEdit = () => {
             <button
               type="submit"
               disabled={loading || formData.faqs.length === 0}
-              className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
             >
-              {loading ? 'Submitting...' : 'Update'}
+              {loading ? 'Update' : 'Update'}
             </button>
             <button
               type="button"
               onClick={() => navigate("/faq-list")}
               disabled={loading}
-              className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2 rounded transition-colors"
+              className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
             >
               Cancel
             </button>

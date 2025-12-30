@@ -273,23 +273,23 @@ const BannerList = () => {
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
       <Button 
-        onClick={() => setShowActionPanel((prev) => !prev)}
+        onClick={handleAddBanner}
         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
       >
         <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
-        Action
+        Add
       </Button>
     </div>
   );
 
   const renderListTab = () => (
     <div className="space-y-4">
-      {showActionPanel && (
+      {/* {showActionPanel && (
         <SelectionPanel
           onAdd={handleAddBanner}
           onClearSelection={handleClearSelection}
         />
-      )}
+      )} */}
       <>
         <EnhancedTable
           data={banners}
