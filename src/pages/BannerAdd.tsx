@@ -48,7 +48,7 @@ const BannerAdd = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get(`${baseURL}projects.json`, {
+        const response = await axios.get(`${baseURL}/projects.json`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
             "Content-Type": "application/json",
@@ -229,7 +229,7 @@ const BannerAdd = () => {
 
       console.log("data to be sent:", Array.from(sendData.entries()));
 
-      await axios.post(`${baseURL}banners.json`, sendData, {
+      await axios.post(`${baseURL}/banners.json`, sendData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           "Content-Type": "multipart/form-data",

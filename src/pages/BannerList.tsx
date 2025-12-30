@@ -64,7 +64,7 @@ const BannerList = () => {
     setLoading(true);
     setIsSearching(!!search);
     try {
-      const response = await axios.get(`${baseURL}banners.json`, {
+      const response = await axios.get(`${baseURL}/banners.json`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
@@ -76,7 +76,7 @@ const BannerList = () => {
         }
       });
 
-      const bannersData = response.data.banners_list || [];
+      const bannersData = response.data.banners || response.data.banners_list || [];
 
       // Client-side search filtering
       let filteredBanners = bannersData;
@@ -132,7 +132,7 @@ const BannerList = () => {
     toast.dismiss();
     try {
       const response = await axios.put(
-        `${baseURL}banners/${bannerId}.json`,
+        `${baseURL}/banners/${bannerId}.json`,
         {
           banner: {
             active: !currentStatus
@@ -170,11 +170,11 @@ const BannerList = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            {bannerPermissions.update === "true" && (
+            {/* {bannerPermissions.update === "true" && ( */}
               <Button variant="ghost" size="sm" onClick={() => handleEditBanner(item.id)} title="Edit">
                 <Edit className="w-4 h-4" />
               </Button>
-            )}
+            {/* )} */}
           </div>
         );
       case 'title':

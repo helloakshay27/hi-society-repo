@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { API_CONFIG } from "@/config/apiConfig";
@@ -77,19 +77,14 @@ const BannerEdit = () => {
     banner_video_3_by_2: null,
   });
 
-  useEffect(() => {
-    fetchBanner();
-    fetchProjects();
-    return () => {
-      if (previewImg) URL.revokeObjectURL(previewImg);
-      if (previewVideo) URL.revokeObjectURL(previewVideo);
-      if (image?.data_url) URL.revokeObjectURL(image.data_url);
-    };
-  }, []);
-
-  const fetchBanner = async () => {
+  const fetchBanner = useCallback(async () => {
+    if (!id) return;
     try {
-      const response = await axios.get(`${baseURL}banners/${id}.json`);
+      const response = await axios.get(`${baseURL}/banners/${id}.json`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
       if (response.data) {
         const bannerData = response.data;
         setFormData({
@@ -102,7 +97,7 @@ const BannerEdit = () => {
           banner_video_3_by_2: bannerData.banner_video_3_by_2 || null,
           active: true,
         });
-        setOriginalBannerVideo(bannerData.banner_video?.document_url || null); // Store original
+        setOriginalBannerVideo(bannerData.banner_video?.document_url || null);
         if (bannerData.banner_video?.document_url) {
           const isImage = isImageFile(bannerData.banner_video.document_url);
           setFileType(isImage ? "image" : "video");
@@ -122,11 +117,11 @@ const BannerEdit = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, baseURL]);
 
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
-      const response = await axios.get(`${baseURL}projects.json`, {
+      const response = await axios.get(`${baseURL}/projects.json`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
@@ -135,7 +130,22 @@ const BannerEdit = () => {
     } catch (error) {
       toast.error("Failed to fetch projects");
     }
-  };
+  }, [baseURL]);
+
+  useEffect(() => {
+    if (!id) {
+      toast.error("Banner ID is missing");
+      navigate("/banner-list");
+      return;
+    }
+    fetchBanner();
+    fetchProjects();
+    return () => {
+      if (previewImg) URL.revokeObjectURL(previewImg);
+      if (previewVideo) URL.revokeObjectURL(previewVideo);
+      if (image?.data_url) URL.revokeObjectURL(image.data_url);
+    };
+  }, [id, fetchBanner, fetchProjects, navigate, previewImg, previewVideo, image]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -433,7 +443,7 @@ const BannerEdit = () => {
         }
       });
 
-      await axios.put(`${baseURL}banners/${id}.json`, sendData, {
+      await axios.put(`${baseURL}/banners/${id}.json`, sendData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           "Content-Type": "multipart/form-data",
