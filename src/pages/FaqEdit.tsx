@@ -3,16 +3,32 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
+import { ArrowLeft, FileText } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  TextField,
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+} from "@mui/material";
 
 
 const FaqEdit = () => {
+  const baseURL = API_CONFIG.BASE_URL;
+
   const [formData, setFormData] = useState({
     faq_category_id: "",
     faq_sub_category_id: "",
     faqs: [],
   });
-
-  console.log("formdata", formData);
 
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
@@ -31,6 +47,30 @@ const FaqEdit = () => {
 
   const navigate = useNavigate();
   const { faqId } = useParams();
+
+  // Field styles for Material-UI components
+  const fieldStyles = {
+    height: '45px',
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    '& .MuiOutlinedInput-root': {
+      height: '45px',
+      '& fieldset': {
+        borderColor: '#ddd',
+      },
+      '&:hover fieldset': {
+        borderColor: '#C72030',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#C72030',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      '&.Mui-focused': {
+        color: '#C72030',
+      },
+    },
+  };
 
   const getAuthHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -419,243 +459,161 @@ const FaqEdit = () => {
 };
 
   return (
-    <div className="main-content">
-      <div className="website-content overflow-auto">
-        <div className="module-data-section container-fluid">
-          <form id="faqEditForm" onSubmit={handleSubmit}>
-            <div className="card mt-4 pb-4 mx-4">
-              <div className="card-header">
-                <h3 className="card-title">Edit FAQ</h3>
-              </div>
-              <div className="card-body">
-                {/* Category and Subcategory Selection */}
-                <div className="row">
-                  <div className="col-md-3">
-                    <div className="form-group">
-                      <label>
-                        FAQ Category 
-                         {(baseURL === "https://dev-panchshil-super-app.lockated.com/" || baseURL === "https://kalpataru.lockated.com/" || baseURL === "https://rustomjee-live.lockated.com/") && (
-                                                    <span className="otp-asterisk"> *</span>
-                                                )}
-                      </label>
-                      <SelectBox
-                        options={[
-                          {
-                            value: "",
-                            label: categoriesLoading
-                              ? "Loading categories..."
-                              : "Select Category",
-                          },
-                          ...categories.map((category) => ({
-                            value: category.id,
-                            label: category.name,
-                          })),
-                        ]}
-                        defaultValue={formData.faq_category_id}
-                        onChange={handleCategoryChange}
-                        disabled={loading || categoriesLoading}
-                      />
-                    </div>
-                  </div>
+    <div className="h-full bg-gray-50">
+      <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-4 h-4 text-gray-600" />
+            </button>
+            <span>FAQ List</span>
+            <span>{">"}</span>
+            <span className="text-gray-900 font-medium">Edit FAQ</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">EDIT FAQ</h1>
+        </div>
 
-                  <div className="col-md-3">
-                    <div className="form-group">
-                      <label>
-                        FAQ Sub Category 
-                        {(baseURL === "https://dev-panchshil-super-app.lockated.com/" || baseURL === "https://kalpataru.lockated.com/" || baseURL === "https://rustomjee-live.lockated.com/") && (
-                                                 <span className="otp-asterisk"> *</span>
-                                               )}
-                      </label>
-                      <SelectBox
-                        options={[
-                          {
-                            value: "",
-                            label: subCategoriesLoading
-                              ? "Loading subcategories..."
-                              : "Select Sub Category",
-                          },
-                          ...subCategories.map((subCategory) => ({
-                            value: subCategory.id,
-                            label: subCategory.name,
-                          })),
-                        ]}
-                        defaultValue={formData.faq_sub_category_id}
-                        onChange={handleSubCategoryChange}
-                        disabled={
-                          loading ||
-                          subCategoriesLoading ||
-                          !formData.faq_category_id
-                        }
-                      />
-                    </div>
-                  </div>
-              
-             
-                {/* <div className="row align-items-center"> */}
-                 
-                  <div className="col-md-3">
-                    <div className="form-group">
-                      <label>
-                        Question <span className="otp-asterisk">*</span>
-                      </label>
-                      <input
-                        className="form-control"
-                        type="text"
-                        name="question"
-                        placeholder="Enter FAQ Question"
-                        value={question}
-                        onChange={(e) => setQuestion(e.target.value)}
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
-
-                 
-                  <div className="col-md-3">
-                    <div className="form-group">
-                      <label>
-                        Answer <span className="otp-asterisk">*</span>
-                      </label>
-                      <textarea
-                        className="form-control"
-                        name="answer"
-                        placeholder="Enter FAQ Answer"
-                        value={answer}
-                        onChange={(e) => setAnswer(e.target.value)}
-                        disabled={loading}
-                        rows="1"
-                      />
-                    </div>
-                  </div>
-                    </div>
-
-
-                 
-                  {/* <div className="col-md-2 mt-2">
-                    <button
-                      type="button"
-                      className="purple-btn2 rounded-3"
-                      style={{ marginTop: "23px" }}
-                      onClick={handleAddFaq}
-                      disabled={loading}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width={26}
-                        height={20}
-                        fill="currentColor"
-                        className="bi bi-plus"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                      </svg>
-                      <span> Add</span>
-                    </button>
-                  </div>
-                </div> */}
-
-               
-                {/* {formData.faqs.length > 0 && (
-                  <div className="col-md-12 mt-4">
-                    <div className="mt-4 tbl-container w-100">
-                      <table className="w-100">
-                        <thead>
-                          <tr>
-                            <th>Sr No</th>
-                            <th>Question</th>
-                            <th>Answer</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {formData.faqs.map((faq, index) => {
-                            const siteName =
-                              sites.find((site) => site.id == faq.site_id)
-                                ?.name || "Unknown Site";
-                            return (
-                              <tr key={index}>
-                                <td>{index + 1}</td>
-                                <td>
-                                  <input
-                                    type="text"
-                                    className="form-control"
-                                    value={faq.question}
-                                    onChange={(e) =>
-                                      handleEditFaq(
-                                        index,
-                                        "question",
-                                        e.target.value
-                                      )
-                                    }
-                                    disabled={loading}
-                                    style={{ minWidth: "200px" }}
-                                  />
-                                </td>
-                                <td>
-                                  <textarea
-                                    className="form-control"
-                                    value={faq.answer}
-                                    onChange={(e) =>
-                                      handleEditFaq(
-                                        index,
-                                        "answer",
-                                        e.target.value
-                                      )
-                                    }
-                                    disabled={loading}
-                                    rows="1"
-                                    style={{ minWidth: "250px" }}
-                                  />
-                                </td>
-                                <td>
-                                  <button
-                                    type="button"
-                                    className="purple-btn2"
-                                    onClick={() => handleDeleteFaq(index)}
-                                    disabled={loading}
-                                  >
-                                    x
-                                  </button>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )} */}
-              </div>
+        {/* Main Form Card */}
+        <form id="faqEditForm" onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                  <FileText size={16} color="#C72030" />
+                </span>
+                FAQ Information
+              </h2>
             </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Category and Subcategory Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* FAQ Category */}
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  required={baseURL === "https://dev-panchshil-super-app.lockated.com/" || 
+                    baseURL === "https://rustomjee-live.lockated.com/"}
+                  sx={{ '& .MuiInputBase-root': fieldStyles }}
+                >
+                  <InputLabel shrink>FAQ Category</InputLabel>
+                  <MuiSelect
+                    value={formData.faq_category_id}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    label="FAQ Category"
+                    notched
+                    displayEmpty
+                    disabled={loading || categoriesLoading}
+                  >
+                    <MenuItem value="">
+                      {categoriesLoading ? "Loading categories..." : "Select Category"}
+                    </MenuItem>
+                    {categories.map((category) => (
+                      <MenuItem key={category.id} value={category.id}>
+                        {category.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
-            {/* Hidden submit button for form submission */}
-            <button type="submit" style={{ display: "none" }} />
-          </form>
+                {/* FAQ Sub Category */}
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  sx={{ '& .MuiInputBase-root': fieldStyles }}
+                >
+                  <InputLabel shrink>FAQ Sub Category</InputLabel>
+                  <MuiSelect
+                    value={formData.faq_sub_category_id}
+                    onChange={(e) => handleSubCategoryChange(e.target.value)}
+                    label="FAQ Sub Category"
+                    notched
+                    displayEmpty
+                    disabled={loading || subCategoriesLoading || !formData.faq_category_id}
+                  >
+                    <MenuItem value="">
+                      {subCategoriesLoading ? "Loading subcategories..." : "Select Sub Category"}
+                    </MenuItem>
+                    {subCategories.map((subCategory) => (
+                      <MenuItem key={subCategory.id} value={subCategory.id}>
+                        {subCategory.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+              </div>
 
-          {/* Visible buttons positioned below the card */}
-          <div className="row mt-3 justify-content-center mx-4">
-            <div className="col-md-2">
-              <button
-                type="submit"
-                form="faqEditForm"
-                className="purple-btn2 w-100"
-                disabled={loading || formData.faqs.length === 0}
-              >
-                {loading ? "Submiting..." : "Submit"}
-              </button>
-            </div>
-            <div className="col-md-2">
-              <button
-                type="button"
-                className="purple-btn2 w-100"
-                onClick={() => navigate("/faq-list")}
-                disabled={loading}
-              >
-                Cancel
-              </button>
+              {/* Question and Answer Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Question */}
+                <TextField
+                  label="Question"
+                  placeholder="Enter FAQ Question"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  name="question"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                  disabled={loading}
+                />
+
+                {/* Answer */}
+                <TextField
+                  label="Answer"
+                  placeholder="Enter FAQ Answer"
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  name="answer"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                  disabled={loading}
+                />
+              </div>
             </div>
           </div>
-        </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 justify-center pt-6">
+            <button
+              type="submit"
+              disabled={loading || formData.faqs.length === 0}
+              className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Submitting...' : 'Update'}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/faq-list")}
+              disabled={loading}
+              className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2 rounded transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -127,7 +127,7 @@ const FaqCategoryList = () => {
     }
   };
 
-  const handleEdit = (id: number) => navigate(`/setup-member/faq-category/${id}/edit`);
+  const handleEdit = (id: number) => navigate(`/setup-member/faq-category-form/${id}`);
   const handleAdd = () => navigate('/setup-member/faq-category-form');
 
   const handleToggle = async (id: number, currentStatus: boolean) => {
@@ -175,11 +175,11 @@ const FaqCategoryList = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            {permissions.update === "true" && (
+            {/* {permissions.update === "true" && ( */}
               <Button variant="ghost" size="sm" onClick={() => handleEdit(item.id)} title="Edit">
                 <Edit className="w-4 h-4" />
               </Button>
-            )}
+            {/* )} */}
           </div>
         );
       case 'id':
@@ -214,15 +214,15 @@ const FaqCategoryList = () => {
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      {permissions.create === "true" && (
+      {/* {permissions.create === "true" && ( */}
         <Button 
           onClick={handleAdd}
           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
         >
           <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
-          Add Category
+          Add
         </Button>
-      )}
+      {/* )} */}
     </div>
   );
 

@@ -56,6 +56,7 @@ const ProjectDetailsCreate = () => {
     building_type: "",
     SFDC_Project_Id: "",
     Project_Construction_Status: "",
+    Construction_Status_id: "",
     Configuration_Type: [],
     Project_Name: "",
     project_address: "",
@@ -567,7 +568,6 @@ const ProjectDetailsCreate = () => {
       .get(`${baseURL}/property_types.json`)
       .then((response) => {
         const options = response.data
-          .filter((item) => item.active)
           .map((type) => ({
             value: type.property_type,
             label: type.property_type,
@@ -584,9 +584,9 @@ const ProjectDetailsCreate = () => {
   // Fetch amenities
   useEffect(() => {
     axios
-      .get(`${baseURL}/amenities.json`)
+      .get(`${baseURL}/amenity_setups.json`)
       .then((response) => {
-        setAmenities(response.data);
+        setAmenities(response.data.amenities_setups || []);
       })
       .catch((error) => {
         console.error("Error fetching amenities:", error);
@@ -610,11 +610,12 @@ const ProjectDetailsCreate = () => {
   // Fetch status options
   useEffect(() => {
     axios
-      .get(`${baseURL}/project_construction_statuses.json`)
+      .get(`${baseURL}/construction_statuses.json`)
       .then((response) => {
         const options = response.data.map((status) => ({
-          value: status.name,
-          label: status.name,
+          value: status.construction_status,
+          label: status.construction_status,
+          id: status.id,
         }));
         setStatusOptions(options);
       })
@@ -670,25 +671,6 @@ const ProjectDetailsCreate = () => {
       console.error("Error fetching building types:", error);
     }
   };
-
-  useEffect(() => {
-    axios
-      .get(`${baseURL}/property_types.json`)
-      .then((response) => {
-        const options = response.data
-          .filter((item) => item.active)
-          .map((type) => ({
-            value: type.property_type,
-            label: type.property_type,
-            id: type.id,
-          }));
-        setPropertyTypeOptions(options);
-      })
-      .catch((error) => {
-        console.error("Error fetching property types:", error);
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const amenityTypes = Array.isArray(amenities)
     ? [
@@ -1535,8 +1517,12 @@ const ProjectDetailsCreate = () => {
         });
       } else if (key === "image" && mainImageUpload[0]?.file instanceof File) {
         data.append("project[image]", mainImageUpload[0]?.file);
-      } else if (key === "video_preview_image_url" && value instanceof File) {
-        data.append("project[video_preview_image_url]", value);
+      } else if (key === "video_preview_image_url") {
+        // Only append if there's actual data
+        if (value instanceof File) {
+          data.append("project[video_preview_image_url]", value);
+        }
+        // Skip appending if value is empty/null/undefined
       } else if (key === "project_qrcode_image" && Array.isArray(value)) {
         value.forEach((fileObj) => {
           if (fileObj.project_qrcode_image instanceof File) {
@@ -1639,7 +1625,7 @@ const ProjectDetailsCreate = () => {
     });
 
     try {
-      const response = await axios.post(`${baseURL}projects.json`, data, {
+      const response = await axios.post(`${baseURL}/projects.json`, data, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -1771,20 +1757,24 @@ const ProjectDetailsCreate = () => {
               >
                 <InputLabel shrink>Construction Status</InputLabel>
                 <MuiSelect
-                  value={formData.Project_Construction_Status}
-                  onChange={(e) =>
+                  value={formData.Construction_Status_id}
+                  onChange={(e) => {
+                    const selectedOption = statusOptions.find(
+                      (opt) => opt.id === e.target.value
+                    );
                     setFormData((prev) => ({
                       ...prev,
-                      Project_Construction_Status: e.target.value,
-                    }))
-                  }
+                      Project_Construction_Status: selectedOption?.value || "",
+                      Construction_Status_id: e.target.value,
+                    }));
+                  }}
                   label="Construction Status"
                   notched
                   displayEmpty
                 >
                   <MenuItem value="">Select Status</MenuItem>
                   {statusOptions.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
+                    <MenuItem key={option.id} value={option.id}>
                       {option.label}
                     </MenuItem>
                   ))}
@@ -4630,11 +4620,11 @@ const ProjectDetailsCreate = () => {
         <div className=" bottom-0 left-0 w-full flex justify-center ">
           <div className="flex gap-4">
             <button
-              onClick={handleSubmit}
+              type="submit"
               className="purple-btn2 min-w-[120px]"
               disabled={loading}
             >
-              Submit
+              {loading ? "Submitting..." : "Submit"}
             </button>
             <button
               type="button"

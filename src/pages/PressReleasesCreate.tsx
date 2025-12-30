@@ -3,8 +3,17 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { ChevronRight, ArrowLeft, Upload, X } from "lucide-react";
+import { ChevronRight, ArrowLeft, Upload, X, FileText } from "lucide-react";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
+import { TextField } from "@mui/material";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
 
 const PressReleasesCreate = () => {
   const baseURL = API_CONFIG.BASE_URL;
@@ -23,6 +32,30 @@ const PressReleasesCreate = () => {
     attachment_url: "",
     press_source: "",
   });
+
+  // Field styles for Material-UI components
+  const fieldStyles = {
+    height: '45px',
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    '& .MuiOutlinedInput-root': {
+      height: '45px',
+      '& fieldset': {
+        borderColor: '#ddd',
+      },
+      '&:hover fieldset': {
+        borderColor: '#C72030',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#C72030',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      '&.Mui-focused': {
+        color: '#C72030',
+      },
+    },
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -193,260 +226,301 @@ const PressReleasesCreate = () => {
   return (
     <div className="h-full bg-gray-50">
       <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
-        {/* Header with Back Button and Breadcrumbs */}
-        <div className="mb-6">
+        {/* Header */}
+        <div className="mb-8">
           <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
+              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+              aria-label="Go back"
             >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
+              <ArrowLeft className="w-4 h-4 text-gray-600" />
             </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Content</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Press Releases</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#C72030] font-medium">Create</span>
+            <span>Press Releases List</span>
+            <span>{">"}</span>
+            <span className="text-gray-900 font-medium">Create New Press Release</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">CREATE PRESS RELEASE</h1>
         </div>
 
-        {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Press Release Details</h3>
-          </div>
-          <div className="p-6">
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Title */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Title
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="title"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
-                    placeholder="Enter title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                </div>
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
+          {/* Section: Press Release Information */}
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                  <FileText size={16} color="#C72030" />
+                </span>
+                Press Release Information
+              </h2>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Title Input */}
+                <TextField
+                  label="Title"
+                  placeholder="Enter title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  name="title"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                  disabled={loading}
+                />
 
                 {/* Release Date */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Press Releases Date
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="release_date"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
-                    value={formData.release_date}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                </div>
+                <TextField
+                  label="Press Releases Date"
+                  type="date"
+                  value={formData.release_date}
+                  onChange={handleChange}
+                  name="release_date"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                  disabled={loading}
+                />
 
                 {/* Description */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Description
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <textarea
-                    name="description"
-                    rows={1}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all resize-none"
-                    placeholder="Enter description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                </div>
+                <TextField
+                  label="Description"
+                  placeholder="Enter description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  name="description"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                  disabled={loading}
+                />
 
                 {/* Source Details */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Source Details
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <textarea
-                    name="press_source"
-                    rows={1}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all resize-none"
-                    placeholder="Enter source details"
-                    value={formData.press_source}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                </div>
+                <TextField
+                  label="Source Details"
+                  placeholder="Enter source details"
+                  value={formData.press_source}
+                  onChange={handleChange}
+                  name="press_source"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                  disabled={loading}
+                />
 
                 {/* Attachment URL */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Attachment URL
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <input
-                    type="url"
-                    name="attachment_url"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
-                    placeholder="Enter URL"
-                    value={formData.attachment_url}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                </div>
+                <TextField
+                  label="Attachment URL"
+                  type="url"
+                  placeholder="Enter URL"
+                  value={formData.attachment_url}
+                  onChange={handleChange}
+                  name="attachment_url"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                  disabled={loading}
+                />
+              </div>
 
-                {/* Attachment Image */}
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <span>Attachment</span>
+              {/* Banner Attachment Section */}
+              <div className="mb-6">
+                {/* Header */}
+                <div className="flex justify-between items-center mb-4">
+                  <h5 className="font-semibold">
+                    Press Release Attachment{" "}
                     <span
-                      className="relative cursor-pointer text-blue-600"
+                      className="relative inline-block cursor-help"
                       onMouseEnter={() => setShowTooltip(true)}
                       onMouseLeave={() => setShowTooltip(false)}
                     >
-                      ℹ️
+                      <span className="text-red-500">[i]</span>
                       {showTooltip && (
-                        <span className="absolute left-6 top-0 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
-                          Max Upload Size 3 MB. Ratios: 16:9, 9:16, 1:1
+                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                          Max Upload Size 5 MB. Supports 16:9, 9:16, 1:1 aspect ratios
                         </span>
                       )}
                     </span>
-                    <span className="text-red-500">*</span>
-                  </label>
+                    <span className="text-red-500 ml-1">*</span>
+                  </h5>
+
                   <button
+                    className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
                     type="button"
                     onClick={() => setShowUploader(true)}
-                    disabled={loading}
-                    className="flex items-center justify-between w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-left text-gray-600"
                   >
-                    <span className="text-sm">Choose files (multiple ratios supported)</span>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-gray-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                      width={20}
+                      height={20}
+                      fill="currentColor"
+                      viewBox="0 0 16 16"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
+                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
                     </svg>
+                    <span>Add</span>
                   </button>
-                  <p className="text-xs text-gray-500">
-                    Upload images in different aspect ratios: 16:9 (landscape), 9:16 (portrait), 1:1 (square)
-                  </p>
-
-                  {showUploader && (
-                    <ProjectBannerUpload
-                      onClose={() => setShowUploader(false)}
-                      includeInvalidRatios={false}
-                      selectedRatioProp={selectedRatios}
-                      showAsModal={true}
-                      label={dynamicLabel}
-                      description={dynamicDescription}
-                      onContinue={handleCropComplete}
-                    />
-                  )}
                 </div>
-              </div>
 
-              {/* Image Preview Table */}
-              {allUploadedImages.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">
-                    Uploaded Images ({allUploadedImages.length})
-                  </h4>
-                  <div className="rounded-lg border border-gray-200 overflow-hidden">
-                    <table className="w-full">
-                      <thead className="bg-[#e6e2d8]">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">File Name</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Preview</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Aspect Ratio</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Dimensions</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {allUploadedImages.map((file, index) => (
-                          <tr key={index} className="border-t border-gray-200 hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm text-gray-900">{file.name}</td>
-                            <td className="px-4 py-3">
-                              <img
-                                src={file.preview}
-                                alt={file.name}
-                                className="w-20 h-20 object-cover rounded border border-gray-200"
-                              />
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                {/* Table */}
+                <div className="rounded-lg border border-gray-200 overflow-hidden">
+                  <Table className="w-full border-separate">
+                    <TableHeader>
+                      <TableRow style={{ backgroundColor: "#e6e2d8" }}>
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
+                        >
+                          File Name
+                        </TableHead>
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
+                        >
+                          Preview
+                        </TableHead>
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
+                        >
+                          Ratio
+                        </TableHead>
+                        <TableHead 
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
+                        >
+                          Action
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+
+                    <TableBody>
+                      {allUploadedImages.length > 0 ? (
+                        allUploadedImages.map((file, index) => {
+                          const preview = file.preview || "";
+                          const name = file.name || `Image ${index + 1}`;
+
+                          return (
+                            <TableRow
+                              key={`${file.type}-${file.id || index}`}
+                              className="hover:bg-gray-50 transition-colors"
+                            >
+                              <TableCell className="py-3 px-4 font-medium">{name}</TableCell>
+
+                              <TableCell className="py-3 px-4">
+                                <img
+                                  style={{
+                                    maxWidth: 100,
+                                    maxHeight: 100,
+                                    objectFit: "cover",
+                                  }}
+                                  className="rounded border border-gray-200"
+                                  src={preview}
+                                  alt={name}
+                                />
+                              </TableCell>
+
+                              <TableCell className="py-3 px-4">
                                 {file.ratio || "N/A"}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {file.width && file.height ? `${file.width} × ${file.height}` : "N/A"}
-                            </td>
-                            <td className="px-4 py-3">
-                              <button
-                                type="button"
-                                onClick={() => discardImage(file.type, file)}
-                                className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Remove image"
-                              >
-                                <X className="w-5 h-5" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
+                              </TableCell>
 
-              {/* Action Buttons */}
-              <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-gray-200">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
-                    loading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Submitting...
-                    </span>
-                  ) : (
-                    "Submit"
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/setup-member/press-releases-list")}
-                  disabled={loading}
-                  className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
+                              <TableCell className="py-3 px-4">
+                                <button
+                                  type="button"
+                                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                  onClick={() => discardImage(file.type, file)}
+                                >
+                                  ×
+                                </button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-6 text-gray-500">
+                            No images uploaded yet
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Upload Modal */}
+                {showUploader && (
+                  <ProjectBannerUpload
+                    onClose={() => setShowUploader(false)}
+                    includeInvalidRatios={false}
+                    selectedRatioProp={selectedRatios}
+                    showAsModal
+                    label={dynamicLabel}
+                    description={dynamicDescription}
+                    onContinue={handleCropComplete}
+                  />
+                )}
               </div>
-            </form>
+            </div>
           </div>
-        </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 justify-center pt-6">
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Submitting...' : 'Submit'}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/setup-member/press-releases-list")}
+              className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2 rounded transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

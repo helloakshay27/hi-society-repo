@@ -215,12 +215,13 @@ export const setupMemberRoutes = (
 
     {/* FAQ Routes */}
     <Route path="/setup-member/faq-category-form" element={withSuspense(FaqCategoryForm)} />
+    <Route path="/setup-member/faq-category-form/:faqId" element={withSuspense(FaqCategoryForm)} />
     <Route path="/setup-member/faq-category-list" element={withSuspense(FaqCategoryList)} />
     <Route path="/maintenance/faq-create" element={withSuspense(FaqCreate)} />
     <Route path="/maintenance/faq-edit/:id" element={withSuspense(FaqEdit)} />
     <Route path="/maintenance/faq-list" element={withSuspense(FaqList)} />
     <Route path="/setup-member/faq-subcategory" element={withSuspense(FaqSubCategory)} />
-    <Route path="/setup-member/faq-subcategory/:faqSubId/edit" element={<FaqSubCategory />} />
+    <Route path="/setup-member/faq-subcategory/:faqSubId" element={withSuspense(FaqSubCategory)} />
     <Route path="/setup-member/faq-subcategory-list" element={withSuspense(FaqSubCategoryList)} />
 
     {/* Gallery Routes */}

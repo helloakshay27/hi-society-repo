@@ -71,18 +71,18 @@ export const HomeSidebar: React.FC = () => {
     //   icon: Building2,
     //   path: "/maintenance/organization-list",
     // },
-    {
-      id: "company",
-      label: "Company",
-      icon: Building,
-      path: "/maintenance/company-list",
-    },
-    {
-      id: "site",
-      label: "Site",
-      icon: MapPin,
-      path: "/maintenance/site-list",
-    },
+    // {
+    //   id: "company",
+    //   label: "Company",
+    //   icon: Building,
+    //   path: "/maintenance/company-list",
+    // },
+    // {
+    //   id: "site",
+    //   label: "Site",
+    //   icon: MapPin,
+    //   path: "/maintenance/site-list",
+    // },
     {
       id: "press-releases",
       label: "Press Releases",

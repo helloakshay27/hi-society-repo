@@ -39,10 +39,10 @@ const ConstructionStatus = () => {
   // Handle Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) {
-      toast.error("Name is required");
-      return;
-    }
+    // if (!name.trim()) {
+    //   toast.error("Name is required");
+    //   return;
+    // }
 
     setLoading(true);
     const formDataToSend = new FormData();

@@ -48,7 +48,7 @@ const fieldStyles = {
 };
 
 const ProjectDetailsEdit = () => {
-  const { projectId } = useParams<{ projectId: string }>();
+  const { id: projectId } = useParams<{ id: string }>();
   const baseURL = API_CONFIG.BASE_URL;
   const accessToken = localStorage.getItem("access_token");
   const [formData, setFormData] = useState({
@@ -57,6 +57,7 @@ const ProjectDetailsEdit = () => {
     building_type: "",
     SFDC_Project_Id: "",
     Project_Construction_Status: "",
+    Construction_Status_id: "",
     Configuration_Type: [],
     Project_Name: "",
     project_address: "",
@@ -104,7 +105,7 @@ const ProjectDetailsEdit = () => {
     project_layout: [],
     project_sales_type: "",
     order_no: null,
-    video_preview_image_url: [],
+    video_preview_image_url: null,
     enable_enquiry: false,
     rera_url: "",
     isDay: true,
@@ -561,107 +562,145 @@ const ProjectDetailsEdit = () => {
   };
 
   // Fetch existing project data
-  // useEffect(() => {
-  //   const fetchProject = async () => {
-  //     if (!projectId) return;
+  useEffect(() => {
+    const fetchProject = async () => {
+      if (!projectId) {
+        setLoading(false);
+        return;
+      }
 
-  //     try {
-  //       const response = await axios.get(
-  //         `${baseURL}/projects/${projectId}.json`,
-  //         {
-  //           headers: { Authorization: `Bearer ${accessToken}` },
-  //         }
-  //       );
+      try {
+        const response = await axios.get(
+          `${baseURL}/projects/${projectId}.json`,
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        );
 
-  //       const project = response.data;
+        const project = response.data;
 
-  //       // Map API response to formData structure
-  //       // Adjust keys based on your API response structure
-  //       setFormData({
-  //         ...formData,
-  //         Property_Type: project.property_type || "",
-  //         Property_type_id: project.property_type_id || "",
-  //         building_type: project.building_type || "",
-  //         SFDC_Project_Id: project.sfdc_project_id || "",
-  //         Project_Construction_Status:
-  //           project.project_construction_status || "",
-  //         Configuration_Type: project.configuration_type || [],
-  //         Project_Name: project.project_name || "",
-  //         project_address: project.project_address || "",
-  //         Project_Description: project.project_description || "",
-  //         Price_Onward: project.price_onward || "",
-  //         Project_Size_Sq_Mtr: project.project_size_sq_mtr || "",
-  //         Project_Size_Sq_Ft: project.project_size_sq_ft || "",
-  //         development_area_sqft: project.development_area_sqft || "",
-  //         development_area_sqmt: project.development_area_sqmt || "",
-  //         Rera_Carpet_Area_Sq_M: project.rera_carpet_area_sq_m || "",
-  //         Rera_Carpet_Area_sqft: project.rera_carpet_area_sqft || "",
-  //         Rera_Sellable_Area: project.rera_sellable_area || "",
-  //         Number_Of_Towers: project.number_of_towers || "",
-  //         Number_Of_Units: project.number_of_units || "",
-  //         no_of_floors: project.no_of_floors || "",
-  //         Amenities: project.amenities || [],
-  //         Land_Area: project.land_area || "",
-  //         land_uom: project.land_uom || "",
-  //         project_tag: project.project_tag || "",
-  //         map_url: project.map_url || "",
-  //         Address: project.address || formData.Address,
-  //         brochure: project.brochure || [],
-  //         two_d_images: project.two_d_images || [],
-  //         videos: project.videos || [],
-  //         gallery_image: project.gallery_image || [],
-  //         project_ppt: project.project_ppt || [],
-  //         project_creatives: project.project_creatives || [],
-  //         project_creative_generics: project.project_creative_generics || [],
-  //         project_creative_offers: project.project_creative_offers || [],
-  //         project_interiors: project.project_interiors || [],
-  //         project_exteriors: project.project_exteriors || [],
-  //         project_emailer_templetes: project.project_emailer_templetes || [],
-  //         KnwYrApt_Technical: project.knw_yr_apt_technical || [],
-  //         project_layout: project.project_layout || [],
-  //         project_sales_type: project.project_sales_type || "",
-  //         order_no: project.order_no || null,
-  //         video_preview_image_url: project.video_preview_image_url || [],
-  //         enable_enquiry: project.enable_enquiry || false,
-  //         rera_url: project.rera_url || "",
-  //         isDay: project.is_day || true,
-  //         disclaimer: project.disclaimer || "",
-  //         project_qrcode_image: project.project_qrcode_image || [],
-  //         cover_images: project.cover_images || [],
-  //         is_sold: project.is_sold || false,
-  //         plans: project.plans || [],
-  //         Rera_Number_multiple: project.rera_number_multiple || [],
-  //         virtual_tour_url_multiple: project.virtual_tour_url_multiple || [],
-  //       });
+        // Fetch dropdown options first to match property_type and construction_status text to IDs
+        const [propertyTypesRes, statusRes] = await Promise.all([
+          axios.get(`${baseURL}/property_types.json`),
+          axios.get(`${baseURL}/construction_statuses.json`)
+        ]);
 
-  //       setPlans(project.plans || []);
-  //       setReraList(project.rera_number_multiple || []);
-  //       // Set other states as needed, e.g., buildingTypes based on property type
+        // Find matching property type by name
+        const matchedPropertyType = propertyTypesRes.data.find(
+          (pt) => pt.property_type === project.property_type
+        );
 
-  //       // Fetch related data if needed (amenities, configs, etc.)
-  //       await Promise.all([
-  //         fetchAmenities(),
-  //         fetchConfigurations(),
-  //         fetchStatusOptions(),
-  //         fetchPropertyTypes(),
-  //         fetchBuildingTypes(),
-  //       ]);
-  //     } catch (error) {
-  //       console.error("Error fetching project:", error);
-  //       toast.error("Failed to load project data");
-  //       navigate("/project-list");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+        // Find matching construction status by name
+        const matchedStatus = statusRes.data.find(
+          (st) => st.construction_status === project.Project_Construction_Status ||
+                  st.construction_status === project.project_construction_status
+        );
 
-  //   fetchProject();
-  // }, [projectId]);
+        // Map API response to formData structure
+        setFormData({
+          Property_Type: project.property_type || "",
+          Property_type_id: matchedPropertyType?.id || project.property_type_id || "",
+          building_type: project.building_type || "",
+          SFDC_Project_Id: project.sfdc_project_id || "",
+          Project_Construction_Status: project.Project_Construction_Status || project.project_construction_status || "",
+          Construction_Status_id: matchedStatus?.id || project.construction_status_id || "",
+          Configuration_Type: Array.isArray(project.configuration_type) 
+            ? project.configuration_type 
+            : project.configurations?.map(c => c.name) || [],
+          Project_Name: project.project_name || "",
+          project_address: project.project_address || "",
+          Project_Description: project.project_description || "",
+          Price_Onward: project.price_onward || "",
+          Project_Size_Sq_Mtr: project.project_size_sq_mtr || "",
+          Project_Size_Sq_Ft: project.project_size_sq_ft || "",
+          development_area_sqft: project.development_area_sqft || "",
+          development_area_sqmt: project.development_area_sqmt || "",
+          Rera_Carpet_Area_Sq_M: project.rera_carpet_area_sq_m || "",
+          Rera_Carpet_Area_sqft: project.rera_carpet_area_sqft || "",
+          Rera_Sellable_Area: project.rera_sellable_area || "",
+          Number_Of_Towers: project.number_of_towers || "",
+          Number_Of_Units: project.number_of_units || "",
+          no_of_floors: project.no_of_floors || "",
+          Amenities: Array.isArray(project.amenities) 
+            ? project.amenities.map(a => a.id) 
+            : [],
+          Specifications: project.specifications || [],
+          Land_Area: project.land_area || "",
+          land_uom: project.land_uom || "",
+          project_tag: project.project_tag || "",
+          map_url: project.map_url || "",
+          virtual_tour_url_multiple: project.virtual_tour_url_multiple || [],
+          Rera_Number_multiple: project.rera_number_multiple || [],
+          Address: project.address || {
+            address_line_1: "",
+            address_line_2: "",
+            city: "",
+            state: "",
+            pin_code: "",
+            country: "",
+          },
+          brochure: project.brochure || [],
+          two_d_images: project.two_d_images || [],
+          videos: project.videos || [],
+          gallery_image: project.gallery_image || [],
+          project_ppt: project.project_ppt || [],
+          project_creatives: project.project_creatives || [],
+          project_creative_generics: project.project_creative_generics || [],
+          project_creative_offers: project.project_creative_offers || [],
+          project_interiors: project.project_interiors || [],
+          project_exteriors: project.project_exteriors || [],
+          project_emailer_templetes: project.project_emailer_templetes || [],
+          KnwYrApt_Technical: project.knw_yr_apt_technical || [],
+          project_layout: project.project_layout || [],
+          project_sales_type: project.project_sales_type || "",
+          order_no: project.order_no || null,
+          video_preview_image_url: project.video_preview_image_url || null,
+          enable_enquiry: project.enable_enquiry || false,
+          rera_url: project.rera_url || "",
+          isDay: project.is_day !== undefined ? project.is_day : true,
+          disclaimer: project.disclaimer || "",
+          project_qrcode_image: project.project_qrcode_image || [],
+          cover_images: project.cover_images || [],
+          is_sold: project.is_sold || false,
+          plans: project.plans || [],
+          image: project.image || [],
+        });
+
+        setPlans(project.plans || []);
+        
+        // If building type exists, fetch building types for that property type
+        const propertyTypeIdToUse = matchedPropertyType?.id || project.property_type_id;
+        if (propertyTypeIdToUse) {
+          try {
+            const buildingResponse = await axios.get(
+              `${baseURL}/building_types.json?q[property_type_id_eq]=${propertyTypeIdToUse}`
+            );
+            const formattedBuildingTypes = buildingResponse.data.map((item) => ({
+              value: item.building_type,
+              label: item.building_type,
+            }));
+            setBuildingTypes(formattedBuildingTypes);
+          } catch (error) {
+            console.error("Error fetching building types:", error);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching project:", error);
+        toast.error("Failed to load project data");
+        navigate("/project-list");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProject();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
 
   // Fetch helpers (same as create)
   const fetchAmenities = () => {
-    return axios.get(`${baseURL}/amenities.json`).then((response) => {
-      setAmenities(response.data);
+    return axios.get(`${baseURL}/amenity_setups.json`).then((response) => {
+      setAmenities(response.data.amenities_setups || []);
     });
   };
 
@@ -673,11 +712,12 @@ const ProjectDetailsEdit = () => {
 
   const fetchStatusOptions = () => {
     return axios
-      .get(`${baseURL}/project_construction_statuses.json`)
+      .get(`${baseURL}/construction_statuses.json`)
       .then((response) => {
         const options = response.data.map((status) => ({
-          value: status.name,
-          label: status.name,
+          value: status.construction_status,
+          label: status.construction_status,
+          id: status.id,
         }));
         setStatusOptions(options);
       });
@@ -686,7 +726,6 @@ const ProjectDetailsEdit = () => {
   const fetchPropertyTypes = () => {
     return axios.get(`${baseURL}/property_types.json`).then((response) => {
       const options = response.data
-        .filter((item) => item.active)
         .map((type) => ({
           value: type.property_type,
           label: type.property_type,
@@ -737,6 +776,91 @@ const ProjectDetailsEdit = () => {
       console.error("Error fetching building types:", error);
     }
   };
+
+  // Fetch property types on mount
+  useEffect(() => {
+    axios
+      .get(`${baseURL}/property_types.json`)
+      .then((response) => {
+        const options = response.data
+          .map((type) => ({
+            value: type.property_type,
+            label: type.property_type,
+            id: type.id,
+          }));
+        setPropertyTypeOptions(options);
+      })
+      .catch((error) => {
+        console.error("Error fetching property types:", error);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch amenities
+  useEffect(() => {
+    axios
+      .get(`${baseURL}/amenity_setups.json`)
+      .then((response) => {
+        setAmenities(response.data.amenities_setups || []);
+      })
+      .catch((error) => {
+        console.error("Error fetching amenities:", error);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch configurations
+  useEffect(() => {
+    axios
+      .get(`${baseURL}/configurations.json`)
+      .then((response) => {
+        setConfigurations(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching configurations:", error);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch status options
+  useEffect(() => {
+    axios
+      .get(`${baseURL}/construction_statuses.json`)
+      .then((response) => {
+        const options = response.data.map((status) => ({
+          value: status.construction_status,
+          label: status.construction_status,
+          id: status.id,
+        }));
+        setStatusOptions(options);
+      })
+      .catch((error) => {
+        console.error("Error fetching status options:", error);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    fetchBuildingTypes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const amenityTypes = Array.isArray(amenities)
+    ? [
+        ...new Set(amenities.map((ammit) => ammit.amenity_type)),
+      ].map((type) => ({ value: type, label: type }))
+    : [];
+
+  // Filter amenities based on selected type
+  useEffect(() => {
+    if (selectedType && Array.isArray(amenities)) {
+      setFilteredAmenities(
+        amenities.filter((ammit) => ammit.amenity_type === selectedType.value)
+      );
+    } else {
+      setFilteredAmenities([]);
+    }
+  }, [selectedType, amenities]);
 
   // All other handlers from create (handleChange, handleFileUpload, etc.) remain the same
   const handleChange = (e) => {
@@ -841,21 +965,186 @@ const ProjectDetailsEdit = () => {
     const data = new FormData();
     data.append("project[id]", projectId || "");
 
-    // Append all form data (same as create, but for update)
+    // Helper function to check if value has data
+    const hasValue = (val) => {
+      if (val === null || val === undefined || val === "") return false;
+      if (Array.isArray(val) && val.length === 0) return false;
+      if (typeof val === "object" && !Array.isArray(val) && !(val instanceof File)) {
+        return Object.values(val).some(v => v !== "" && v !== null && v !== undefined);
+      }
+      return true;
+    };
+
+    // Append form data only if it has values
     Object.entries(formData).forEach(([key, value]) => {
-      // Copy the entire appending logic from create's handleSubmit
-      // For example:
-      if (key === "Address") {
-        for (const addressKey in value) {
-          data.append(`project[Address][${addressKey}]`, value[addressKey]);
-        }
-      } else if (Array.isArray(value)) {
-        // Handle arrays, files, etc.
-        value.forEach((item, index) => {
-          // Specific logic for each type (brochure, videos, etc.)
+      if (!hasValue(value)) return; // Skip empty values
+
+      if (key === "plans" && Array.isArray(value)) {
+        value.forEach((plan, index) => {
+          if (plan.name) {
+            data.append(`project[plans][${index}][name]`, plan.name);
+            if (Array.isArray(plan.images) && plan.images.length > 0) {
+              plan.images.forEach((img) => {
+                data.append(`project[plans][${index}][images][]`, img);
+              });
+            }
+          }
         });
-      } else {
-        data.append(`project[${key}]`, value);
+      } else if (key === "Address" && hasValue(value)) {
+        for (const addressKey in value) {
+          if (value[addressKey]) {
+            data.append(`project[Address][${addressKey}]`, value[addressKey]);
+          }
+        }
+      } else if (key === "brochure" && Array.isArray(value) && value.length > 0) {
+        value.forEach((file) => {
+          if (file instanceof File) {
+            data.append("project[ProjectBrochure][]", file);
+          }
+        });
+      } else if (key === "project_emailer_templetes" && Array.isArray(value) && value.length > 0) {
+        value.forEach((file) => {
+          if (file instanceof File) {
+            data.append("project[ProjectEmailerTempletes][]", file);
+          }
+        });
+      } else if (key === "KnwYrApt_Technical" && Array.isArray(value) && value.length > 0) {
+        value.forEach((file) => {
+          if (file instanceof File) {
+            data.append("project[KnwYrApt_Technical][]", file);
+          }
+        });
+      } else if (key === "two_d_images" && Array.isArray(value) && value.length > 0) {
+        value.forEach((file) => data.append("project[Project2DImage][]", file));
+      } else if (key === "project_creatives" && Array.isArray(value) && value.length > 0) {
+        value.forEach((file) => data.append("project[ProjectCreatives][]", file));
+      } else if (key === "cover_images" && Array.isArray(value) && value.length > 0) {
+        value.forEach((file) => data.append("project[cover_images][]", file));
+      } else if (key === "project_creative_generics" && Array.isArray(value) && value.length > 0) {
+        value.forEach((file) => data.append("project[ProjectCreativeGenerics][]", file));
+      } else if (key === "project_creative_offers" && Array.isArray(value) && value.length > 0) {
+        value.forEach((file) => data.append("project[ProjectCreativeOffers][]", file));
+      } else if (key === "project_interiors" && Array.isArray(value) && value.length > 0) {
+        value.forEach((file) => data.append("project[ProjectInteriors][]", file));
+      } else if (key === "project_exteriors" && Array.isArray(value) && value.length > 0) {
+        value.forEach((file) => data.append("project[ProjectExteriors][]", file));
+      } else if (key === "project_layout" && Array.isArray(value) && value.length > 0) {
+        value.forEach((file) => data.append("project[ProjectLayout][]", file));
+      } else if (key === "videos" && Array.isArray(value) && value.length > 0) {
+        value.forEach((file) => data.append("project[ProjectVideo][]", file));
+      } else if (key === "gallery_image" && Array.isArray(value) && value.length > 0) {
+        value.forEach((fileObj, index) => {
+          if (fileObj.gallery_image instanceof File) {
+            data.append("project[gallery_image][]", fileObj.gallery_image);
+            data.append(`project[gallery_image_file_name][${index}]`, fileObj.gallery_image_file_name || "");
+            data.append(`project[gallery_type]`, fileObj.gallery_image_file_type || "");
+            data.append(`project[gallery_image_is_day][${index}]`, fileObj.isDay);
+          }
+        });
+      } else if (key === "image" && mainImageUpload[0]?.file instanceof File) {
+        data.append("project[image]", mainImageUpload[0]?.file);
+      } else if (key === "video_preview_image_url") {
+        if (value instanceof File) {
+          data.append("project[video_preview_image_url]", value);
+        } else if (typeof value === "string" && value.trim() !== "") {
+          data.append("project[video_preview_image_url]", value);
+        }
+      } else if (key === "project_qrcode_image" && Array.isArray(value) && value.length > 0) {
+        value.forEach((fileObj) => {
+          if (fileObj.project_qrcode_image instanceof File) {
+            data.append("project[project_qrcode_image][]", fileObj.project_qrcode_image);
+            data.append("project[project_qrcode_image_titles][]", fileObj.title || "");
+          }
+        });
+      } else if (key === "virtual_tour_url_multiple" && Array.isArray(value) && value.length > 0) {
+        value.forEach((item, index) => {
+          if (item.virtual_tour_url && item.virtual_tour_name) {
+            data.append(`project[virtual_tour_url_multiple][${index}][virtual_tour_url]`, item.virtual_tour_url);
+            data.append(`project[virtual_tour_url_multiple][${index}][virtual_tour_name]`, item.virtual_tour_name);
+          }
+        });
+      } else if (key === "Rera_Number_multiple" && Array.isArray(value) && value.length > 0) {
+        value.forEach((item, index) => {
+          if (item.tower_name && item.rera_number) {
+            data.append(`project[Rera_Number_multiple][${index}][tower_name]`, item.tower_name);
+            data.append(`project[Rera_Number_multiple][${index}][rera_number]`, item.rera_number);
+            if (item.rera_url) {
+              data.append(`project[Rera_Number_multiple][${index}][rera_url]`, item.rera_url);
+            }
+          }
+        });
+      } else if (key === "project_ppt" && Array.isArray(value) && value.length > 0) {
+        value.forEach((file) => {
+          if (file instanceof File) {
+            data.append("project[ProjectPPT]", file);
+          }
+        });
+      } else if (key === "Amenities" && Array.isArray(value) && value.length > 0) {
+        value.forEach((amenityId) => {
+          if (amenityId) {
+            data.append("project[Amenities][]", amenityId);
+          }
+        });
+      } else if (key === "Configuration_Type" && Array.isArray(value) && value.length > 0) {
+        value.forEach((config) => {
+          if (config) {
+            data.append("project[Configuration_Type][]", config);
+          }
+        });
+      } else if (key === "Specifications" && Array.isArray(value) && value.length > 0) {
+        value.forEach((spec) => {
+          if (spec) {
+            data.append("project[Specifications][]", spec);
+          }
+        });
+      } else if (key.startsWith("image_") && Array.isArray(value) && value.length > 0) {
+        value.forEach((img) => {
+          const backendField = key.replace("image", "project[image") + "]";
+          if (img.file instanceof File) {
+            data.append(backendField, img.file);
+          }
+        });
+      } else if (key.startsWith("cover_images_") && Array.isArray(value) && value.length > 0) {
+        value.forEach((img) => {
+          const backendField = key.replace("cover_images_", "project[cover_images_") + "]";
+          if (img.file instanceof File) {
+            data.append(backendField, img.file);
+          }
+        });
+      } else if (key.startsWith("gallery_image_") && Array.isArray(value) && value.length > 0) {
+        value.forEach((img) => {
+          if (img.file instanceof File) {
+            data.append(`project[${key}][][file]`, img.file);
+            data.append(`project[${key}][][file_name]`, img.file_name || "");
+            data.append(`project[${key}][][order]`, img.order || 0);
+          }
+        });
+      } else if (key.startsWith("project_2d_image_") && Array.isArray(value) && value.length > 0) {
+        value.forEach((img) => {
+          if (img.file instanceof File) {
+            data.append(`project[${key}][][file]`, img.file);
+            data.append(`project[${key}][][file_name]`, img.file_name || "");
+            data.append(`project[${key}][][order]`, img.order || 0);
+          }
+        });
+      } else if (
+        ![
+          "plans", "Address", "brochure", "project_emailer_templetes", "KnwYrApt_Technical",
+          "two_d_images", "project_creatives", "cover_images", "project_creative_generics",
+          "project_creative_offers", "project_interiors", "project_exteriors", "project_layout",
+          "videos", "gallery_image", "image", "video_preview_image_url", "project_qrcode_image",
+          "virtual_tour_url_multiple", "Rera_Number_multiple", "project_ppt", "Amenities",
+          "Configuration_Type", "Specifications"
+        ].includes(key) &&
+        !key.startsWith("image_") &&
+        !key.startsWith("cover_images_") &&
+        !key.startsWith("gallery_image_") &&
+        !key.startsWith("project_2d_image_")
+      ) {
+        // For simple fields, only append if they have a value
+        if (value !== null && value !== undefined && value !== "") {
+          data.append(`project[${key}]`, value);
+        }
       }
     });
 
@@ -895,13 +1184,13 @@ const ProjectDetailsEdit = () => {
     navigate("/project-list");
   };
 
-  // if (loading) {
-  //   return (
-  //     <div className="p-6 bg-gray-50 h-screen flex items-center justify-center">
-  //       <div className="text-lg">Loading project details...</div>
-  //     </div>
-  //   );
-  // }
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-50 h-screen flex items-center justify-center">
+        <div className="text-lg">Loading project details...</div>
+      </div>
+    );
+  }
 
     function handlePlanDelete(id: any, planIndex: any): void {
         // Remove plan by index (planIndex is provided where function is called)
@@ -1040,20 +1329,24 @@ const ProjectDetailsEdit = () => {
               >
                 <InputLabel shrink>Construction Status</InputLabel>
                 <MuiSelect
-                  value={formData.Project_Construction_Status}
-                  onChange={(e) =>
+                  value={formData.Construction_Status_id}
+                  onChange={(e) => {
+                    const selectedOption = statusOptions.find(
+                      (opt) => opt.id === e.target.value
+                    );
                     setFormData((prev) => ({
                       ...prev,
-                      Project_Construction_Status: e.target.value,
-                    }))
-                  }
+                      Project_Construction_Status: selectedOption?.value || "",
+                      Construction_Status_id: e.target.value,
+                    }));
+                  }}
                   label="Construction Status"
                   notched
                   displayEmpty
                 >
                   <MenuItem value="">Select Status</MenuItem>
                   {statusOptions.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
+                    <MenuItem key={option.id} value={option.id}>
                       {option.label}
                     </MenuItem>
                   ))}

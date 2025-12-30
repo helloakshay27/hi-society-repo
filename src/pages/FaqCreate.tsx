@@ -1,14 +1,45 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, ArrowLeft } from "lucide-react";
+import { ChevronRight, ArrowLeft, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
 import SelectBox from "@/components/ui/select-box";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import {
+  TextField,
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+} from "@mui/material";
 
 const FaqCreate = () => {
   const baseURL = API_CONFIG.BASE_URL;
+
+  // Field styles for Material-UI components
+  const fieldStyles = {
+    height: '45px',
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    '& .MuiOutlinedInput-root': {
+      height: '45px',
+      '& fieldset': {
+        borderColor: '#ddd',
+      },
+      '&:hover fieldset': {
+        borderColor: '#C72030',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#C72030',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      '&.Mui-focused': {
+        color: '#C72030',
+      },
+    },
+  };
 
   const [formData, setFormData] = useState({
     faq_category_id: "",
@@ -259,161 +290,138 @@ const FaqCreate = () => {
   return (
     <div className="h-full bg-gray-50">
       <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
-        {/* Header with Back Button and Breadcrumbs */}
+        {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
+              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors"
+              aria-label="Go back"
             >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
+              <ArrowLeft className="w-4 h-4 text-gray-600" />
             </button>
+            <span className="hover:text-[#C72030] cursor-pointer" onClick={() => navigate("/setup-member/faq-list")}>FAQ List</span>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Setup Member</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">FAQ</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#C72030] font-medium">Create FAQ</span>
+            <span className="text-gray-900 font-medium">Create New FAQ</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">CREATE FAQ</h1>
         </div>
 
         {/* Main Form Card */}
         <form id="faqCreateForm" onSubmit={handleSubmit}>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900">FAQ Information</h3>
+            <div className="bg-[#E5E0D3] px-6 py-4 border-b border-gray-200 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-white/50 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-gray-700" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">FAQ Information</h3>
             </div>
             
             <div className="p-6">
               {/* Category and Subcategory Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-0">
-                      FAQ Category
-                      {(baseURL === "https://dev-panchshil-super-app.lockated.com/" || 
-                        baseURL === "https://kalpataru.lockated.com/" || 
-                        baseURL === "https://rustomjee-live.lockated.com/") && (
-                        <span className="text-red-500 ml-1">*</span>
-                      )}
-                    </label>
-                    <SelectBox
-                      options={[
-                        {
-                          value: "",
-                          label: categoriesLoading
-                            ? "Loading categories..."
-                            : "Select Category",
-                        },
-                        ...categories.map((category) => ({
-                          value: category.id,
-                          label: category.name,
-                        })),
-                      ]}
-                      defaultValue={formData.faq_category_id}
-                      onChange={handleCategoryChange}
-                      disabled={loading || categoriesLoading}
-                    />
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <FormControl fullWidth variant="outlined" required={(baseURL === "https://dev-panchshil-super-app.lockated.com/" || baseURL === "https://kalpataru.lockated.com/" || baseURL === "https://rustomjee-live.lockated.com/")}>
+                  <InputLabel shrink htmlFor="faq-category">
+                    FAQ Category
+                  </InputLabel>
+                  <MuiSelect
+                    value={formData.faq_category_id}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    disabled={loading || categoriesLoading}
+                    label="FAQ Category"
+                    notched
+                    displayEmpty
+                    inputProps={{ id: "faq-category" }}
+                    sx={fieldStyles}
+                  >
+                    <MenuItem value="">
+                      {categoriesLoading ? "Loading categories..." : "Select Category"}
+                    </MenuItem>
+                    {categories.map((category) => (
+                      <MenuItem key={category.id} value={category.id}>
+                        {category.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
-                <div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-0">
-                      FAQ Sub Category
-                      {(baseURL === "https://dev-panchshil-super-app.lockated.com/" || 
-                        baseURL === "https://kalpataru.lockated.com/" || 
-                        baseURL === "https://rustomjee-live.lockated.com/") && (
-                        <span className="text-red-500 ml-1">*</span>
-                      )}
-                    </label>
-                    <SelectBox
-                      options={[
-                        {
-                          value: "",
-                          label: subCategoriesLoading
-                            ? "Loading subcategories..."
-                            : "Select Sub Category",
-                        },
-                        ...subCategories.map((subCategory) => ({
-                          value: subCategory.id,
-                          label: subCategory.name,
-                        })),
-                      ]}
-                      defaultValue={formData.faq_sub_category_id}
-                      onChange={handleSubCategoryChange}
-                      disabled={
-                        loading ||
-                        subCategoriesLoading ||
-                        !formData.faq_category_id
-                      }
-                    />
-                  </div>
-                </div>
+                <FormControl fullWidth variant="outlined" required={(baseURL === "https://dev-panchshil-super-app.lockated.com/" || baseURL === "https://kalpataru.lockated.com/" || baseURL === "https://rustomjee-live.lockated.com/")}>
+                  <InputLabel shrink htmlFor="faq-sub-category">
+                    FAQ Sub Category
+                  </InputLabel>
+                  <MuiSelect
+                    value={formData.faq_sub_category_id}
+                    onChange={(e) => handleSubCategoryChange(e.target.value)}
+                    disabled={loading || subCategoriesLoading || !formData.faq_category_id}
+                    label="FAQ Sub Category"
+                    notched
+                    displayEmpty
+                    inputProps={{ id: "faq-sub-category" }}
+                    sx={fieldStyles}
+                  >
+                    <MenuItem value="">
+                      {subCategoriesLoading ? "Loading subcategories..." : "Select Sub Category"}
+                    </MenuItem>
+                    {subCategories.map((subCategory) => (
+                      <MenuItem key={subCategory.id} value={subCategory.id}>
+                        {subCategory.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
               </div>
 
               {/* FAQ Entry Section */}
               <div className="border-t border-gray-200 pt-6">
                 <h4 className="text-base font-semibold text-gray-900 mb-4">Add FAQ</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Question */}
-                  <div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-0">
-                        Question
-                        <span className="text-red-500 ml-1">*</span>
-                      </label>
-                      <input
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
-                        type="text"
-                        name="question"
-                        placeholder="Enter FAQ Question"
-                        value={question}
-                        onChange={(e) => setQuestion(e.target.value)}
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
+                  <TextField
+                    label="Question"
+                    variant="outlined"
+                    fullWidth
+                    required
+                    placeholder="Enter FAQ Question"
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    disabled={loading}
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
 
                   {/* Answer */}
-                  <div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-0">
-                        Answer
-                        <span className="text-red-500 ml-1">*</span>
-                      </label>
-                      <textarea
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent resize-y"
-                        name="answer"
-                        placeholder="Enter FAQ Answer"
-                        value={answer}
-                        onChange={(e) => setAnswer(e.target.value)}
-                        disabled={loading}
-                        rows="1"
-                      />
-                    </div>
-                  </div>
+                  <TextField
+                    label="Answer"
+                    variant="outlined"
+                    fullWidth
+                    required
+                    placeholder="Enter FAQ Answer"
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    disabled={loading}
+                    // multiline
+                    // rows={1}
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
 
                   {/* Add Button */}
-                  <div>
+                  <div className="flex items-end">
                     <button
                       type="button"
-                      className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full h-[45px] flex items-center justify-center gap-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                       onClick={handleAddFaq}
                       disabled={loading}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        width={20}
-                        height={20}
+                        width={18}
+                        height={18}
                         fill="currentColor"
                         viewBox="0 0 16 16"
                       >
                         <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
                       </svg>
-                      <span>Add FAQ</span>
+                      <span>Add</span>
                     </button>
                   </div>
                 </div>
@@ -424,34 +432,19 @@ const FaqCreate = () => {
                 <div className="mt-6">
                   <h4 className="text-base font-semibold text-gray-900 mb-4">FAQ List</h4>
                   <div className="rounded-lg border border-gray-200 overflow-hidden">
-                    <Table className="border-separate">
+                    <Table>
                       <TableHeader>
-                        <TableRow
-                          className="hover:bg-gray-50"
-                          style={{ backgroundColor: "#e6e2d8" }}
-                        >
-                          <TableHead
-                            className="font-semibold text-gray-900 py-3 px-4 border-r"
-                            style={{ borderColor: "#fff" }}
-                          >
+                        <TableRow style={{ backgroundColor: "#E5E0D3" }}>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4">
                             Sr No
                           </TableHead>
-                          <TableHead
-                            className="font-semibold text-gray-900 py-3 px-4 border-r"
-                            style={{ borderColor: "#fff" }}
-                          >
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4">
                             Question
                           </TableHead>
-                          <TableHead
-                            className="font-semibold text-gray-900 py-3 px-4 border-r"
-                            style={{ borderColor: "#fff" }}
-                          >
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4">
                             Answer
                           </TableHead>
-                          <TableHead
-                            className="font-semibold text-gray-900 py-3 px-4"
-                            style={{ borderColor: "#fff" }}
-                          >
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center">
                             Action
                           </TableHead>
                         </TableRow>
@@ -475,12 +468,13 @@ const FaqCreate = () => {
                                 {faq.answer}
                               </div>
                             </TableCell>
-                            <TableCell className="py-3 px-4">
+                            <TableCell className="py-3 px-4 text-center">
                               <button
                                 type="button"
-                                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="inline-flex items-center justify-center w-8 h-8 bg-red-500 text-white rounded hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xl font-bold"
                                 onClick={() => handleDeleteFaq(index)}
                                 disabled={loading}
+                                title="Delete FAQ"
                               >
                                 ×
                               </button>
@@ -494,24 +488,25 @@ const FaqCreate = () => {
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-4 px-6 py-4 bg-gray-50 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() => navigate("/setup-member/faq-list")}
-                disabled={loading}
-                className="px-6 py-2 bg-[#f6f4ee] text-[#C72030] rounded hover:bg-[#f0ebe0] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading || formData.faqs.length === 0}
-                className="px-6 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Submitting..." : "Submit"}
-              </button>
-            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 justify-center pt-6">
+            <button
+              type="submit"
+              disabled={loading || formData.faqs.length === 0}
+              className="h-[45px] bg-[#C72030] hover:bg-[#B8252F] text-white px-8 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            >
+              {loading ? 'Submitting...' : 'Submit'}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/setup-member/faq-list")}
+              disabled={loading}
+              className="h-[45px] border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 rounded transition-colors font-medium"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>

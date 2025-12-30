@@ -3,8 +3,17 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { ChevronRight, ArrowLeft, X } from "lucide-react";
+import { ChevronRight, ArrowLeft, FileText } from "lucide-react";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
+import { TextField } from "@mui/material";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
 
 const PressReleasesEdit = () => {
   const baseURL = API_CONFIG.BASE_URL;
@@ -24,6 +33,30 @@ const PressReleasesEdit = () => {
     attachment_url: "",
     press_source: "",
   });
+
+  // Field styles for Material-UI components
+  const fieldStyles = {
+    height: '45px',
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    '& .MuiOutlinedInput-root': {
+      height: '45px',
+      '& fieldset': {
+        borderColor: '#ddd',
+      },
+      '&:hover fieldset': {
+        borderColor: '#C72030',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#C72030',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      '&.Mui-focused': {
+        color: '#C72030',
+      },
+    },
+  };
 
   useEffect(() => {
     if (id) {
@@ -365,312 +398,301 @@ const PressReleasesEdit = () => {
     <div className="h-full bg-gray-50">
       <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-8">
           <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
+              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+              aria-label="Go back"
             >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
+              <ArrowLeft className="w-4 h-4 text-gray-600" />
             </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Content</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Press Releases</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#C72030] font-medium">Edit</span>
+            <span>Press Releases List</span>
+            <span>{">"}</span>
+            <span className="text-gray-900 font-medium">Edit Press Release</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            EDIT PRESS RELEASE
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">EDIT PRESS RELEASE</h1>
         </div>
 
-        {/* Main Content - Same structure as Create */}
-        <div className="mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="form-group">
-              <label>
-                Title
-                <span className="otp-asterisk"> *</span>
-              </label>
-              <input
-                className="form-control"
-                type="text"
-                name="title"
-                placeholder="Enter Title"
-                value={formData.title}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label>
-                Press Release Date
-                <span className="otp-asterisk"> *</span>
-              </label>
-              <input
-                className="form-control"
-                type="date"
-                name="release_date"
-                placeholder="Enter date"
-                value={formData.release_date}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>
-                Description
-                <span className="otp-asterisk"> *</span>
-              </label>
-              <textarea
-                className="form-control"
-                rows={1}
-                name="description"
-                placeholder="Enter Description"
-                value={formData.description}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>
-                Source Details
-                <span className="otp-asterisk"> *</span>
-              </label>
-              <textarea
-                className="form-control"
-                rows={1}
-                name="press_source"
-                placeholder="Enter Source Details"
-                value={formData.press_source}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>
-                Attachment URL <span className="otp-asterisk"> *</span>
-              </label>
-              <input
-                className="form-control"
-                type="url"
-                name="attachment_url"
-                placeholder="Enter URL"
-                value={formData.attachment_url}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group col-span-2">
-              {/* Label + Tooltip + Asterisk in one line */}
-              <label className="d-flex align-items-center gap-1 mb-2">
-                <span>Attachment</span>
-
-                <span
-                  className="tooltip-container"
-                  onMouseEnter={() => setShowTooltip(true)}
-                  onMouseLeave={() => setShowTooltip(false)}
-                  style={{ cursor: "pointer", fontWeight: "bold" }}
-                >
-                  [i]
-                  {showTooltip && (
-                    <span
-                      className="tooltip-text"
-                      style={{
-                        marginLeft: "6px",
-                        background: "#f9f9f9",
-                        border: "1px solid #ccc",
-                        padding: "6px 8px",
-                        borderRadius: "4px",
-                        position: "absolute",
-                        zIndex: 1000,
-                        fontSize: "13px",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      Max Upload Size 3 MB and Required ratio is 16:9
-                    </span>
-                  )}
+        {/* Main Content */}
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
+          {/* Section: Press Release Information */}
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                  <FileText size={16} color="#C72030" />
                 </span>
-
-                <span className="otp-asterisk text-danger">*</span>
-              </label>
-
-              {/* Upload Button */}
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={() => setShowUploader(true)}
-                className="custom-upload-button input-upload-button"
-              >
-                <span className="upload-button-label">Choose file</span>
-                <span className="upload-button-value">No file chosen</span>
-              </span>
-
-              {/* Upload Modal */}
-              {showUploader && (
-                <ProjectBannerUpload
-                  onClose={() => setShowUploader(false)}
-                  includeInvalidRatios={false}
-                  selectedRatioProp={selectedRatios}
-                  showAsModal={true}
-                  label={dynamicLabel}
-                  description={dynamicDescription}
-                  onContinue={handleCropComplete}
-                />
-              )}
+                Press Release Information
+              </h2>
             </div>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Title Input */}
+                <TextField
+                  label="Title"
+                  placeholder="Enter title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  name="title"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                  disabled={loading}
+                />
 
-            <div className="col-span-2 mt-2">
-              {Array.isArray(formData.pr_image_16by9) &&
-              formData.pr_image_16by9.length > 0 ? (
-                // ✅ Uploaded table view
-                <div className="mt-4 tbl-container">
-                  <table className="w-full bg-white shadow-md rounded-lg overflow-hidden">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="py-3 px-4 text-left text-gray-600">
-                          File Name
-                        </th>
-                        <th className="py-3 px-4 text-left text-gray-600">
-                          Preview
-                        </th>
-                        <th className="py-3 px-4 text-left text-gray-600">
-                          Ratio
-                        </th>
-                        <th className="py-3 px-4 text-left text-gray-600">
-                          Action
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {formData.pr_image_16by9.map((file, index) => (
-                        <tr
-                          key={index}
-                          className="hover:bg-gray-50 transition-colors"
+                {/* Release Date */}
+                <TextField
+                  label="Press Releases Date"
+                  type="date"
+                  value={formData.release_date}
+                  onChange={handleChange}
+                  name="release_date"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                  disabled={loading}
+                />
+
+                {/* Description */}
+                <TextField
+                  label="Description"
+                  placeholder="Enter description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  name="description"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                  disabled={loading}
+                />
+
+                {/* Source Details */}
+                <TextField
+                  label="Source Details"
+                  placeholder="Enter source details"
+                  value={formData.press_source}
+                  onChange={handleChange}
+                  name="press_source"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                  disabled={loading}
+                />
+
+                {/* Attachment URL */}
+                <TextField
+                  label="Attachment URL"
+                  type="url"
+                  placeholder="Enter URL"
+                  value={formData.attachment_url}
+                  onChange={handleChange}
+                  name="attachment_url"
+                  required
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Press Release Attachment Section */}
+              <div className="mb-6">
+                {/* Header */}
+                <div className="flex justify-between items-center mb-4">
+                  <h5 className="font-semibold">
+                    Press Release Attachment{" "}
+                    <span
+                      className="relative inline-block cursor-help"
+                      onMouseEnter={() => setShowTooltip(true)}
+                      onMouseLeave={() => setShowTooltip(false)}
+                    >
+                      <span className="text-red-500">[i]</span>
+                      {showTooltip && (
+                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                          Max Upload Size 5 MB. Supports 16:9, 9:16, 1:1 aspect ratios
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-red-500 ml-1">*</span>
+                  </h5>
+
+                  <button
+                    className="flex items-center gap-2 px-4 py-2 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors"
+                    type="button"
+                    onClick={() => setShowUploader(true)}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width={20}
+                      height={20}
+                      fill="currentColor"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                    </svg>
+                    <span>Add</span>
+                  </button>
+                </div>
+
+                {/* Table */}
+                <div className="rounded-lg border border-gray-200 overflow-hidden">
+                  <Table className="w-full border-separate">
+                    <TableHeader>
+                      <TableRow style={{ backgroundColor: "#e6e2d8" }}>
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
                         >
-                          <td className="py-2 px-4 border-b">
-                            {file.name}
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            <img
-                              style={{ maxWidth: 100, maxHeight: 100 }}
-                              className="img-fluid rounded"
-                              src={file.preview}
-                              alt={file.name}
-                            />
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            {file.ratio || "16:9"}
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            <button
-                              type="button"
-                              className="purple-btn2"
-                              onClick={() =>
-                                discardImage("pr_image_16by9", file)
-                              }
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                // ✅ Fallback preview from croppedImage or formData.pr_image (existing)
-                <div className="mt-4 tbl-container">
-                  <table className="w-full bg-white shadow-md rounded-lg overflow-hidden">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="py-3 px-4 text-left text-gray-600">
                           File Name
-                        </th>
-                        <th className="py-3 px-4 text-left text-gray-600">
+                        </TableHead>
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
+                        >
                           Preview
-                        </th>
-                        <th className="py-3 px-4 text-left text-gray-600">
+                        </TableHead>
+                        <TableHead
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
+                        >
                           Ratio
-                        </th>
-                        <th className="py-3 px-4 text-left text-gray-600">
+                        </TableHead>
+                        <TableHead 
+                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          style={{ borderColor: "#fff" }}
+                        >
                           Action
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td className="py-2 px-4 border-b">
-                          {croppedImage
-                            ? "Cropped Image"
-                            : "pr_image_16by9.jpg"}
-                        </td>
-                        <td className="py-2 px-4 border-b">
-                          <img
-                            src={croppedImage || formData.pr_image}
-                            className="img-fluid rounded mt-2"
-                            alt="Image Preview"
-                            style={{
-                              maxWidth: "100px",
-                              maxHeight: "100px",
-                              objectFit: "cover",
-                            }}
-                          />
-                        </td>
-                        <td className="py-2 px-4 border-b">16:9</td>
-                        <td className="py-2 px-4 border-b">
-                          <button
-                            type="button"
-                            className="purple-btn2"
-                            onClick={() =>
-                              discardImage("pr_image_16by9", {
-                                preview: croppedImage || formData.pr_image,
-                                name: "pr_image_16by9.jpg",
-                                ratio: "16:9",
-                              })
-                            }
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+
+                    <TableBody>
+                      {allUploadedImages.length > 0 ? (
+                        allUploadedImages.map((file, index) => {
+                          const preview = file.preview || "";
+                          const name = file.name || `Image ${index + 1}`;
+
+                          return (
+                            <TableRow
+                              key={`${file.type}-${file.id || index}`}
+                              className="hover:bg-gray-50 transition-colors"
+                            >
+                              <TableCell className="py-3 px-4 font-medium">{name}</TableCell>
+
+                              <TableCell className="py-3 px-4">
+                                <img
+                                  style={{
+                                    maxWidth: 100,
+                                    maxHeight: 100,
+                                    objectFit: "cover",
+                                  }}
+                                  className="rounded border border-gray-200"
+                                  src={preview}
+                                  alt={name}
+                                />
+                              </TableCell>
+
+                              <TableCell className="py-3 px-4">
+                                {file.ratio || "N/A"}
+                              </TableCell>
+
+                              <TableCell className="py-3 px-4">
+                                <button
+                                  type="button"
+                                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                  onClick={() => discardImage(file.type, file)}
+                                >
+                                  ×
+                                </button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-6 text-gray-500">
+                            No images uploaded yet
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
-              )}
+
+                {/* Upload Modal */}
+                {showUploader && (
+                  <ProjectBannerUpload
+                    onClose={() => setShowUploader(false)}
+                    includeInvalidRatios={false}
+                    selectedRatioProp={selectedRatios}
+                    showAsModal
+                    label={dynamicLabel}
+                    description={dynamicDescription}
+                    onContinue={handleCropComplete}
+                  />
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-4">
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="purple-btn2 px-6 py-3 flex items-center gap-2"
-          >
-            {loading ? (
-              <>
-                <span className="loader"></span>
-                Submitting...
-              </>
-            ) : (
-              <>
-                <span>💾</span>
-                Save
-              </>
-            )}
-          </button>
-          <button
-            onClick={handleCancel}
-            className="purple-btn2 px-6 py-3 flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Cancel
-          </button>
-        </div>
+          {/* Action Buttons */}
+          <div className="flex gap-4 justify-center pt-6">
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Submitting...' : 'Update'}
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2 rounded transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

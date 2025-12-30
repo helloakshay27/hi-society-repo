@@ -3,8 +3,14 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
-import { ChevronRight, ArrowLeft } from "lucide-react";
+import { ChevronRight, ArrowLeft, FileText } from "lucide-react";
 import SelectBox from "../components/ui/select-box";
+import {
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  MenuItem,
+} from "@mui/material";
 
 const SiteVisitSlotConfig = () => {
   const baseURL = API_CONFIG.BASE_URL;
@@ -18,10 +24,44 @@ const SiteVisitSlotConfig = () => {
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = Array.from({ length: 60 }, (_, i) => i);
 
-  const [errors, setErrors] = useState({});
+  // Field styles for Material-UI components
+  const fieldStyles = {
+    height: '45px',
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    '& .MuiOutlinedInput-root': {
+      height: '45px',
+      '& fieldset': {
+        borderColor: '#ddd',
+      },
+      '&:hover fieldset': {
+        borderColor: '#C72030',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#C72030',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      '&.Mui-focused': {
+        color: '#C72030',
+      },
+    },
+  };
+
+  const [errors, setErrors] = useState<{
+    startHour?: string;
+    startMinute?: string;
+    endHour?: string;
+    endMinute?: string;
+  }>({});
 
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: {
+      startHour?: string;
+      startMinute?: string;
+      endHour?: string;
+      endMinute?: string;
+    } = {};
 
     if (startHour === "" || startHour === null)
       newErrors.startHour = "Start hour is required";
@@ -77,148 +117,167 @@ const SiteVisitSlotConfig = () => {
   };
 
   return (
-    <div className="h-full bg-gray-50">
-      <div className="p-6 max-w-full h-[calc(100vh-50px)] overflow-y-auto">
-        {/* Header with Back Button and Breadcrumbs */}
-        <div className="mb-6">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-[#C72030] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
-            </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Setup Member</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-400">Visit Slot</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#C72030] font-medium">Create</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">CREATE VISIT SLOT</h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Visit Slot List</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Create New Visit Slot</span>
         </div>
+        <h1 className="text-2xl font-bold text-gray-900">CREATE VISIT SLOT</h1>
+      </div>
 
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Visit Slot Details</h3>
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <FileText size={16} color="#C72030" />
+              </span>
+              Visit Slot Details
+            </h2>
           </div>
-          <div className="p-6">
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {/* Start Hours */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                <FormControl fullWidth variant="outlined" required error={!!errors.startHour}>
+                  <InputLabel shrink htmlFor="start-hour">
                     Start Hours
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <SelectBox
-                    options={hours.map((hour) => ({
-                      label: hour.toString().padStart(2, "0"),
-                      value: hour,
-                    }))}
+                  </InputLabel>
+                  <MuiSelect
                     value={startHour}
-                    onChange={(value) => setStartHour(value)}
+                    onChange={(e) => setStartHour(e.target.value)}
                     disabled={loading}
-                  />
+                    label="Start Hours"
+                    notched
+                    displayEmpty
+                    inputProps={{ id: "start-hour" }}
+                    sx={fieldStyles}
+                  >
+                    <MenuItem value="">Select Hour</MenuItem>
+                    {hours.map((hour) => (
+                      <MenuItem key={hour} value={hour}>
+                        {hour.toString().padStart(2, "0")}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
                   {errors.startHour && (
-                    <p className="text-red-500 text-xs mt-1">{errors.startHour}</p>
+                    <span className="text-red-500 text-xs mt-1">{errors.startHour}</span>
                   )}
-                </div>
+                </FormControl>
 
                 {/* Start Minutes */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                <FormControl fullWidth variant="outlined" required error={!!errors.startMinute}>
+                  <InputLabel shrink htmlFor="start-minute">
                     Start Minutes
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <SelectBox
-                    options={minutes.map((minute) => ({
-                      label: minute.toString().padStart(2, "0"),
-                      value: minute,
-                    }))}
+                  </InputLabel>
+                  <MuiSelect
                     value={startMinute}
-                    onChange={(value) => setStartMinute(value)}
+                    onChange={(e) => setStartMinute(e.target.value)}
                     disabled={loading}
-                  />
+                    label="Start Minutes"
+                    notched
+                    displayEmpty
+                    inputProps={{ id: "start-minute" }}
+                    sx={fieldStyles}
+                  >
+                    <MenuItem value="">Select Minute</MenuItem>
+                    {minutes.map((minute) => (
+                      <MenuItem key={minute} value={minute}>
+                        {minute.toString().padStart(2, "0")}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
                   {errors.startMinute && (
-                    <p className="text-red-500 text-xs mt-1">{errors.startMinute}</p>
+                    <span className="text-red-500 text-xs mt-1">{errors.startMinute}</span>
                   )}
-                </div>
+                </FormControl>
 
                 {/* End Hours */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                <FormControl fullWidth variant="outlined" required error={!!errors.endHour}>
+                  <InputLabel shrink htmlFor="end-hour">
                     End Hours
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <SelectBox
-                    options={hours.map((hour) => ({
-                      label: hour.toString().padStart(2, "0"),
-                      value: hour,
-                    }))}
+                  </InputLabel>
+                  <MuiSelect
                     value={endHour}
-                    onChange={(value) => setEndHour(value)}
+                    onChange={(e) => setEndHour(e.target.value)}
                     disabled={loading}
-                  />
+                    label="End Hours"
+                    notched
+                    displayEmpty
+                    inputProps={{ id: "end-hour" }}
+                    sx={fieldStyles}
+                  >
+                    <MenuItem value="">Select Hour</MenuItem>
+                    {hours.map((hour) => (
+                      <MenuItem key={hour} value={hour}>
+                        {hour.toString().padStart(2, "0")}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
                   {errors.endHour && (
-                    <p className="text-red-500 text-xs mt-1">{errors.endHour}</p>
+                    <span className="text-red-500 text-xs mt-1">{errors.endHour}</span>
                   )}
-                </div>
+                </FormControl>
 
                 {/* End Minutes */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                <FormControl fullWidth variant="outlined" required error={!!errors.endMinute}>
+                  <InputLabel shrink htmlFor="end-minute">
                     End Minutes
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <SelectBox
-                    options={minutes.map((minute) => ({
-                      label: minute.toString().padStart(2, "0"),
-                      value: minute,
-                    }))}
+                  </InputLabel>
+                  <MuiSelect
                     value={endMinute}
-                    onChange={(value) => setEndMinute(value)}
+                    onChange={(e) => setEndMinute(e.target.value)}
                     disabled={loading}
-                  />
+                    label="End Minutes"
+                    notched
+                    displayEmpty
+                    inputProps={{ id: "end-minute" }}
+                    sx={fieldStyles}
+                  >
+                    <MenuItem value="">Select Minute</MenuItem>
+                    {minutes.map((minute) => (
+                      <MenuItem key={minute} value={minute}>
+                        {minute.toString().padStart(2, "0")}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
                   {errors.endMinute && (
-                    <p className="text-red-500 text-xs mt-1">{errors.endMinute}</p>
+                    <span className="text-red-500 text-xs mt-1">{errors.endMinute}</span>
                   )}
-                </div>
+                </FormControl>
               </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-gray-200">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`px-8 py-2.5 bg-[#c72030] text-white rounded-lg hover:bg-[#A01828] transition-colors font-medium ${
-                    loading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Submitting...
-                    </span>
-                  ) : (
-                    "Submit"
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate(-1)}
-                  disabled={loading}
-                  className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
           </div>
         </div>
-      </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 justify-center pt-6">
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Submitting...' : 'Submit'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/setup-member/site-visit-slot-config-list")}
+            disabled={loading}
+            className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2 rounded transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

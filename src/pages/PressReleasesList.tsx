@@ -122,11 +122,11 @@ const PressReleasesList = () => {
   };
 
   const handleAdd = () => {
-    navigate("/setup-member/press-releases-create");
+    navigate("/maintenance/press-releases-create");
   };
 
   const handleEdit = (id: number) => {
-    navigate(`/setup-member/press-releases-edit/${id}`);
+    navigate(`/maintenance/press-releases-edit/${id}`);
   };
 
   const handleClearSelection = () => {
@@ -200,15 +200,15 @@ const PressReleasesList = () => {
   const renderCustomActions = () => {
     return (
       <>
-        {permissions.create === "true" && (
+        {/* {permissions.create === "true" && ( */}
           <Button
             onClick={handleAdd}
             className="bg-[#C72030] hover:bg-[#A01828] text-white"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add Press Release
+            Add
           </Button>
-        )}
+        {/* // )} */}
       </>
     );
   };

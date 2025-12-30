@@ -103,11 +103,11 @@ const FaqList = () => {
   };
 
   const handleAdd = () => {
-    navigate("/setup-member/faq-create");
+    navigate("/maintenance/faq-create");
   };
 
   const handleEdit = (id: number) => {
-    navigate(`/setup-member/faq-edit/${id}`);
+    navigate(`/maintenance/faq-edit/${id}`);
   };
 
   const handleToggleActive = async (id: number, currentStatus: boolean) => {
@@ -245,7 +245,7 @@ const FaqList = () => {
       className="bg-[#C72030] hover:bg-[#A01828] text-white"
     >
       <Plus className="h-4 w-4 mr-2" />
-      Add FAQ
+      Add
     </Button>
   );
 
