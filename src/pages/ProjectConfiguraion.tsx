@@ -121,7 +121,7 @@ const ProjectConfiguration = () => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
                 <Settings size={16} color="#C72030" />
@@ -140,7 +140,7 @@ const ProjectConfiguration = () => {
                 fullWidth
                 variant="outlined"
                 slotProps={{ inputLabel: { shrink: true } }}
-                InputProps={{ sx: fieldStyles }}
+                InputProps={{ sx: { ...fieldStyles, width: '350px' } }}
                 required
               />
             </div>
@@ -148,7 +148,7 @@ const ProjectConfiguration = () => {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -159,49 +159,72 @@ const ProjectConfiguration = () => {
               Add Attachments
             </h2>
           </div>
-          <div className="p-6 space-y-4">
-            <input
-              type="file"
-              onChange={handleFileUpload}
-              className="hidden"
-              id="file-upload"
-            />
-            <button
-              type="button"
-              onClick={() => document.getElementById("file-upload")?.click()}
-              className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-[#C72030] text-[#C72030] rounded-md bg-white hover:bg-[#C72030]/5 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C72030" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-              <span className="font-medium">Upload Files</span>
-            </button>
-            {iconPreview && (
-              <img
-                src={iconPreview}
-                alt="Preview"
-                className="rounded-lg border border-gray-200"
-                style={{ width: "100px", height: "100px", objectFit: "cover" }}
-              />
-            )}
-          </div>
+          <div className="p-6">
+  {/* Label box */}
+  <div className="border border-gray-300 rounded-md p-4">
+    <span className="block text-sm font-medium text-gray-700 mb-3">
+      Project QR Code Images
+    </span>
+
+    {/* Hidden input (UNCHANGED) */}
+    <input
+      type="file"
+      onChange={handleFileUpload}
+      className="hidden"
+      id="file-upload"
+    />
+
+    {/* Upload button */}
+    <button
+      type="button"
+      onClick={() => document.getElementById("file-upload")?.click()}
+      className="inline-flex items-center gap-2 px-2 py-1 border rounded-md  border-[#e0d9c859] bg-[#e0d9c859] text-gray-800 transition"
+    >
+      <span className="font-medium">Upload Files</span>
+
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#C72030"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="17 8 12 3 7 8" />
+        <line x1="12" y1="3" x2="12" y2="15" />
+      </svg>
+    </button>
+
+    {/* Preview (UNCHANGED) */}
+    {iconPreview && (
+      <img
+        src={iconPreview}
+        alt="Preview"
+        className="mt-4 rounded-md border "
+        style={{ width: "100px", height: "100px", objectFit: "cover" }}
+      />
+    )}
+  </div>
+</div>
         </div>
 
         <div className="flex gap-4 justify-center pt-6">
           <Button
             type="submit"
-            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
+            className="bg-[#C72030] hover:bg-[#C72030] text-white px-8 py-2"
             disabled={loading}
           >
-            {loading ? "Creating..." : "Create Configuration"}
+            {loading ? "Creating..." : "Submit"}
           </Button>
           <Button
             type="button"
-            variant="outline"
+          
             onClick={handleGoBack}
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            className="border-[#C4B89D59] text-gray-700 hover:bg-gray-50 px-8 py-2"
             disabled={loading}
           >
             Cancel

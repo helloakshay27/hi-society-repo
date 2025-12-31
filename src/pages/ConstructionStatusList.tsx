@@ -136,7 +136,7 @@ const ConstructionStatusList = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            {constructionStatusPermissions.update === "true" && (
+            {/* {constructionStatusPermissions.update === "true" && ( */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -145,7 +145,7 @@ const ConstructionStatusList = () => {
               >
                 <Edit className="h-4 w-4" />
               </Button>
-            )}
+            {/* )} */}
           </div>
         );
       case "id":
@@ -154,41 +154,36 @@ const ConstructionStatusList = () => {
         return <span>{item.construction_status || "-"}</span>;
       case "status":
         return (
-          <button
-            onClick={() => handleToggle(item.id, item.active)}
-            className="toggle-button"
-            style={{
-              border: "none",
-              background: "none",
-              cursor: "pointer",
-              padding: 0,
-              width: "70px",
-            }}
-          >
-            {item.active ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="40"
-                height="25"
-                fill="#de7008"
-                className="bi bi-toggle-on"
-                viewBox="0 0 16 16"
-              >
-                <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="40"
-                height="25"
-                fill="#667085"
-                className="bi bi-toggle-off"
-                viewBox="0 0 16 16"
-              >
-                <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-              </svg>
-            )}
-          </button>
+         <button
+  type="button"
+  onClick={() => handleToggle(item.id, item.active)}
+  style={{
+    width: "32px",          
+    height: "12px",         
+    backgroundColor: "#e5e5e5",
+    borderRadius: "999px",
+    border: "none",
+    padding: "0",
+    cursor: "pointer",
+    position: "relative",
+  }}
+>
+  <span
+    style={{
+      width: "14px",        
+      height: "14px",
+      borderRadius: "50%",
+      backgroundColor: "#d32f2f",
+      position: "absolute",
+      top: "-1px",          
+      left: "0px",
+      transform: item.active ? "translateX(18px)" : "translateX(0px)",
+      transition: "transform 0.2s ease",
+    }}
+  />
+</button>
+
+
         );
       default:
         return null;

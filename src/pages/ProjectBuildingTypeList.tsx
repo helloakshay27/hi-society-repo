@@ -155,7 +155,7 @@ const ProjectBuildingTypeList = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            {String(projectBuildingPermission.update) === "true" && (
+            {/* {String(projectBuildingPermission.update) === "true" && ( */}
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -164,28 +164,42 @@ const ProjectBuildingTypeList = () => {
               >
                 <Edit className="w-4 h-4" />
               </Button>
-            )}
+            {/* )} */}
           </div>
         );
       case 'status':
         return (
           <div className="flex justify-center">
-            {String(projectBuildingPermission.show) === "true" && (
+            {/* {String(projectBuildingPermission.show) === "true" && ( */}
               <button
-                onClick={() => handleToggle(item.id, item.active)}
-                className="text-gray-600 hover:opacity-80 transition-opacity"
-              >
-                {item.active ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" fill="#28a745" viewBox="0 0 16 16">
-                    <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" fill="#6c757d" viewBox="0 0 16 16">
-                    <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zM5 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-                  </svg>
-                )}
-              </button>
-            )}
+  type="button"
+  onClick={() => handleToggle(item.id, item.active)}
+  style={{
+    width: "32px",          
+    height: "12px",        
+    backgroundColor: "#e5e5e5",
+    borderRadius: "999px",
+    border: "none",
+    padding: "0",
+    cursor: "pointer",
+    position: "relative",
+  }}
+>
+  <span
+    style={{
+      width: "14px",       
+      height: "14px",
+      borderRadius: "50%",
+      backgroundColor: "#C72030",
+      position: "absolute",
+      top: "-1px",         
+      left: "0px",
+      transform: item.active ? "translateX(18px)" : "translateX(0px)", 
+      transition: "transform 0.2s ease",
+    }}
+  />
+</button>
+            {/* )} */}
           </div>
         );
       default:

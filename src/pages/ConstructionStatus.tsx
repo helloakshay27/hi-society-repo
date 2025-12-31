@@ -91,7 +91,7 @@ const ConstructionStatus = () => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
                 <Building2 size={16} color="#C72030" />
@@ -106,10 +106,9 @@ const ConstructionStatus = () => {
                 placeholder="Enter construction status name"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
-                fullWidth
                 variant="outlined"
                 slotProps={{ inputLabel: { shrink: true } }}
-                InputProps={{ sx: fieldStyles }}
+                InputProps={{ sx: { ...fieldStyles, width: '350px' } }}
                 required
               />
             </div>
@@ -119,16 +118,16 @@ const ConstructionStatus = () => {
         <div className="flex gap-4 justify-center pt-6">
           <Button
             type="submit"
-            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
+            className="bg-[#C72030] hover:bg-[#C72030] text-white px-8 py-2"
             disabled={loading}
           >
-            {loading ? "Creating..." : "Create Status"}
+            {loading ? "Creating..." : "Submit"}
           </Button>
           <Button
             type="button"
-            variant="outline"
+            
             onClick={handleGoBack}
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            className="border-[#C4B89D59] text-gray-700 hover:bg-gray-50 px-8 py-2"
             disabled={loading}
           >
             Cancel
