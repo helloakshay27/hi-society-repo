@@ -391,7 +391,7 @@ const UserCreate = () => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200 bg-[#F2F1EF]">
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
                 <User size={16} color="#C72030" />
@@ -400,7 +400,7 @@ const UserCreate = () => {
             </h2>
         </div>
           <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Row 1 */}
               <TextField
                 label="First Name"
@@ -442,20 +442,6 @@ const UserCreate = () => {
                 error={!!errors.mobile}
                 helperText={errors.mobile}
               />
-              <TextField
-                label="Email"
-                placeholder="Enter email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                fullWidth
-                variant="outlined"
-                slotProps={{ inputLabel: { shrink: true } }}
-                InputProps={{ sx: fieldStyles }}
-                type="email"
-                required
-                error={!!errors.email}
-                helperText={errors.email}
-              />
 
               {/* Row 2 */}
               <TextField
@@ -490,16 +476,6 @@ const UserCreate = () => {
                 placeholder="Enter alternate address"
                 value={formData.alternate_address}
                 onChange={(e) => setFormData({ ...formData, alternate_address: e.target.value })}
-                fullWidth
-                variant="outlined"
-                slotProps={{ inputLabel: { shrink: true } }}
-                InputProps={{ sx: fieldStyles }}
-              />
-              <TextField
-                label="User Title"
-                placeholder="Enter user title"
-                value={formData.user_title}
-                onChange={(e) => setFormData({ ...formData, user_title: e.target.value })}
                 fullWidth
                 variant="outlined"
                 slotProps={{ inputLabel: { shrink: true } }}
@@ -549,41 +525,6 @@ const UserCreate = () => {
                 slotProps={{ inputLabel: { shrink: true } }}
                 InputProps={{ sx: fieldStyles }}
               />
-              <FormControl
-                fullWidth
-                variant="outlined"
-                sx={{ '& .MuiInputBase-root': fieldStyles }}
-                required
-                error={!!errors.company_id}
-              >
-                <InputLabel shrink>Company</InputLabel>
-                <MuiSelect
-                  value={formData.company_id || ""}
-                  onChange={(e) => setFormData({ ...formData, company_id: e.target.value })}
-                  label="Company"
-                  notched
-                  displayEmpty
-                  disabled={companiesLoading}
-                >
-                  <MenuItem value="">Select...</MenuItem>
-                  {companiesLoading ? (
-                    <MenuItem disabled>Loading companies...</MenuItem>
-                  ) : companies.length === 0 ? (
-                    <MenuItem disabled>No companies available</MenuItem>
-                  ) : (
-                    companies.map((comp) => (
-                      <MenuItem key={comp.id} value={comp.id}>
-                        {comp.name}
-                      </MenuItem>
-                    ))
-                  )}
-                </MuiSelect>
-                {errors.company_id && (
-                  <span style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px' }}>
-                    {errors.company_id}
-                  </span>
-                )}
-              </FormControl>
 
               {/* Row 4 */}
               <FormControl
@@ -684,6 +625,67 @@ const UserCreate = () => {
                   </span>
                 )}
               </FormControl>
+
+              {/* Row 5 - Email, User Title, Company, Site */}
+              <TextField
+                label="Email"
+                placeholder="Enter email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+                type="email"
+                required
+                error={!!errors.email}
+                helperText={errors.email}
+              />
+              <TextField
+                label="User Title"
+                placeholder="Enter user title"
+                value={formData.user_title}
+                onChange={(e) => setFormData({ ...formData, user_title: e.target.value })}
+                fullWidth
+                variant="outlined"
+                slotProps={{ inputLabel: { shrink: true } }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+                required
+                error={!!errors.company_id}
+              >
+                <InputLabel shrink>Company</InputLabel>
+                <MuiSelect
+                  value={formData.company_id || ""}
+                  onChange={(e) => setFormData({ ...formData, company_id: e.target.value })}
+                  label="Company"
+                  notched
+                  displayEmpty
+                  disabled={companiesLoading}
+                >
+                  <MenuItem value="">Select...</MenuItem>
+                  {companiesLoading ? (
+                    <MenuItem disabled>Loading companies...</MenuItem>
+                  ) : companies.length === 0 ? (
+                    <MenuItem disabled>No companies available</MenuItem>
+                  ) : (
+                    companies.map((comp) => (
+                      <MenuItem key={comp.id} value={comp.id}>
+                        {comp.name}
+                      </MenuItem>
+                    ))
+                  )}
+                </MuiSelect>
+                {errors.company_id && (
+                  <span style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '3px', marginLeft: '14px' }}>
+                    {errors.company_id}
+                  </span>
+                )}
+              </FormControl>
               <FormControl
                 fullWidth
                 variant="outlined"
@@ -726,9 +728,9 @@ const UserCreate = () => {
           </Button>
           <Button
             type="button"
-            variant="outline"
+            
             onClick={handleGoBack}
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            className="border-[#E5E4E1] text-gray-700 hover:bg-[#ECEBE8] px-8 py-2"
           >
             Cancel
           </Button>

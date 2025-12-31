@@ -252,7 +252,7 @@ const LockFunctionCreate = () => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-300 bg-[#F6F4EE]">
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
                 <Lock size={16} color="#C72030" />
@@ -261,7 +261,7 @@ const LockFunctionCreate = () => {
             </h2>
           </div>
           <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Name Selection */}
               <FormControl
                 fullWidth
@@ -414,9 +414,8 @@ const LockFunctionCreate = () => {
           </Button>
           <Button
             type="button"
-            variant="outline"
             onClick={handleGoBack}
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            className="border-gray-300 text-red-700 bg-[#C4B89D59] px-8 py-2"
             disabled={submitting}
           >
             Cancel

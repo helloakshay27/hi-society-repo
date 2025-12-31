@@ -210,8 +210,8 @@ const LockRoleCreate = () => {
             <span className="text-gray-400">Setup Member</span>
             <ChevronRight className="w-4 h-4" />
             <span className="text-gray-400">User Module</span>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-[#C72030] font-medium">Create Role</span>
+           <ChevronRight className="w-4 h-4 text-gray-700" />
+            <span className="border-[#C4B89D59] font-medium">Create Role</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">CREATE LOCK ROLE</h1>
         </div>
@@ -219,7 +219,7 @@ const LockRoleCreate = () => {
         {/* Main Content */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200">
+            <div className="px-6 py-3 bg-[#F6F4EE] border-b border-[#E5E4E1]">
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
                   <Shield size={16} color="#C72030" />
@@ -269,7 +269,7 @@ const LockRoleCreate = () => {
 
           {/* Permissions Table */}
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200">
+            <div className="px-6 py-3 border-b bg-[#F6F4EE] border-[#E5E4E1]">
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
                   <Shield size={16} color="#C72030" />
@@ -337,17 +337,15 @@ const LockRoleCreate = () => {
             <button
               type="submit"
               disabled={submitting || loading}
-              className={`px-8 py-2 bg-[#C72030] hover:bg-[#B8252F] text-white rounded transition-colors font-medium ${
-                (submitting || loading) ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className="px-8 py-2 bg-[#C4B89D59] text-red-700 rounded font-medium"
             >
               {submitting ? "Creating..." : "Create Role"}
             </button>
             <button
               type="button"
               onClick={() => navigate(-1)}
-              disabled={submitting}
-              className="px-8 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded transition-colors font-medium"
+               disabled={submitting}
+              className="px-8 py-2 bg-[#C4B89D59] text-red-600 rounded font-medium cursor-pointer"
             >
               Cancel
             </button>
