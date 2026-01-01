@@ -25,11 +25,15 @@ import { SetupHeader } from "./SetupHeader";
 import { SetupSidebar } from "./SetupSidebar";
 import { HiSocietyHeader } from "./HiSocietyHeader";
 import { HiSocietyNavigation } from "./HiSocietyNavigation";
-import { HomeSidebar } from "./HomeSidebar";
-import { CommunicationSidebar } from "./CommunicationSidebar";
-import { SetupMainSidebar } from "./SetupMainSidebar";
-import { SetupMemberSidebar } from "./SetupMemberSidebar";
-import { LoyaltySidebar } from "./LoyaltySidebar";
+import { BMSSidebar } from "./BMSSidebar";
+import { CMSSidebar } from "./CMSSidebar";
+import { CampaignsSidebar } from "./CampaignsSidebar";
+import { FBSidebar } from "./FBSidebar";
+import { OSRSidebar } from "./OSRSidebar";
+import { FitoutSidebar } from "./FitoutSidebar";
+import { AccountingSidebar } from "./AccountingSidebar";
+import { SmartSecureSidebar } from "./SmartSecureSidebar";
+import { IncidentsSidebar } from "./IncidentsSidebar";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -113,77 +117,52 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Render sidebar component based on configuration
   const renderSidebar = () => {
     // Check if user is employee (pms_occupant) - Employee layout takes priority
-    // Render specific sidebar based on current route
+    // Use specific sidebars for different sections
     if (isEmployeeUser) {
       const path = location.pathname;
-
-      // Determine which sidebar to show based on route
-      if (path.startsWith('/communication')) {
-        return <CommunicationSidebar />;
-      } else if (path.startsWith('/loyalty')) {
-        return <LoyaltySidebar />;
-      } else if (path.startsWith('/setup-member')) {
-        // Check if it's a home menu item
-        const homeRoutes = [
-          '/setup-member/project-details-list',
-          '/setup-member/project-details-view',
-          '/setup-member/project-details-edit',
-          '/setup-member/project-details-create',
-          '/setup-member/banner-list',
-          '/setup-member/banner-view',
-          '/setup-member/banner-edit',
-          '/setup-member/banner-create',
-          '/setup-member/testimonial-list',
-          '/setup-member/testimonial-view',
-          '/setup-member/testimonial-edit',
-          '/setup-member/testimonial-create',
-          '/setup-member/event-list',
-          '/setup-member/event-view',
-          '/setup-member/event-edit',
-          '/setup-member/event-create',
-          '/setup-member/specification-list',
-          '/setup-member/specification-view',
-          '/setup-member/specification-edit',
-          '/setup-member/specification-create',
-          '/setup-member/organization-list',
-          '/setup-member/organization-view',
-          '/setup-member/organization-edit',
-          '/setup-member/organization-create',
-          '/setup-member/company-list',
-          '/setup-member/company-view',
-          '/setup-member/company-edit',
-          '/setup-member/company-create',
-          '/setup-member/site-list',
-          '/setup-member/site-view',
-          '/setup-member/site-edit',
-          '/setup-member/site-create',
-          '/setup-member/press-releases-list',
-          '/setup-member/press-releases-view',
-          '/setup-member/press-releases-edit',
-          '/setup-member/press-releases-create',
-          '/setup-member/faq-list',
-          '/setup-member/faq-view',
-          '/setup-member/faq-edit',
-          '/setup-member/faq-create',
-          '/setup-member/referral-program-list',
-          '/setup-member/referral-program-view',
-          '/setup-member/referral-program-edit',
-          '/setup-member/referral-program-create',
-        ];
-
-        const isHomeRoute = homeRoutes.some(route => path.startsWith(route));
-
-        if (isHomeRoute) {
-          return <HomeSidebar />;
-        } else {
-          return <SetupMemberSidebar />;
-        }
-      } else if (path.startsWith('/setup')) {
-        return <SetupMainSidebar />;
-      } else {
-        // Default to Home sidebar
-        return <HomeSidebar />;
+      
+      // CMS routes use CMSSidebar
+      if (path.startsWith('/cms')) {
+        return <CMSSidebar />;
       }
+      
+      // Campaigns routes use CampaignsSidebar
+      if (path.startsWith('/campaigns')) {
+        return <CampaignsSidebar />;
+      }
+      
+      // F & B routes use FBSidebar
+      if (path.startsWith('/fb')) {
+        return <FBSidebar />;
+      }
+      
+      // OSR routes use OSRSidebar
+      if (path.startsWith('/osr')) {
+        return <OSRSidebar />;
+      }
+      
+      // Fitout routes use FitoutSidebar
+      if (path.startsWith('/fitout')) {
+        return <FitoutSidebar />;
+      }
+      
+      // Accounting routes use AccountingSidebar
+      if (path.startsWith('/accounting')) {
+        return <AccountingSidebar />;
+      }
+      
+      // SmartSecure routes use SmartSecureSidebar
+      if (path.startsWith('/smartsecure')) {
+        return <SmartSecureSidebar />;
+      }
+      
+      // Incidents routes use IncidentsSidebar
+      if (path.startsWith('/incidents')) {
+        return <IncidentsSidebar />;
+      }
+      
+      // All other routes use BMSSidebar
+      return <BMSSidebar />;
     }
 
     // Check for token-based VI access first

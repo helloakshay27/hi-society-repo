@@ -1,0 +1,698 @@
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useLayout } from "../contexts/LayoutContext";
+import {
+  Layout,
+  Image,
+  MessageSquare,
+  Calendar,
+  FileText,
+  Building2,
+  MapPin,
+  HelpCircle,
+  UserCheck,
+  Building,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Bell,
+  BarChart3,
+  Users,
+  Headset,
+  Shield,
+  Award,
+  Settings,
+  Home,
+  Gift,
+  Briefcase,
+  Car,
+  UsersRound,
+  Clipboard,
+  Tag,
+  Cloud,
+  File,
+  TrendingUp,
+} from "lucide-react";
+
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  path: string;
+}
+
+export const BMSSidebar: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
+
+  // State for collapsible parent items
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [communicationOpen, setCommunicationOpen] = useState(false);
+  const [helpdeskOpen, setHelpdeskOpen] = useState(false);
+  const [homeOpen, setHomeOpen] = useState(false);
+  const [setupMemberOpen, setSetupMemberOpen] = useState(false);
+  const [loyaltyOpen, setLoyaltyOpen] = useState(false);
+  const [documentsOpen, setDocumentsOpen] = useState(false);
+  const [businessDirectoryOpen, setBusinessDirectoryOpen] = useState(false);
+
+  // Setup sub-items
+  const setupItems: MenuItem[] = [
+    {
+      id: "special-users",
+      label: "Special Users Category",
+      icon: Users,
+      path: "/setup/special-users-category",
+    },
+    {
+      id: "manage-users",
+      label: "Manage Users",
+      icon: Users,
+      path: "/setup/manage-users",
+    },
+    {
+      id: "kyc-details",
+      label: "KYC Details",
+      icon: FileText,
+      path: "/setup/kyc-details",
+    },
+    {
+      id: "manage-flats",
+      label: "Manage Flats",
+      icon: Building2,
+      path: "/setup/manage-flats",
+    },
+    {
+      id: "helpdesk-setup",
+      label: "Helpdesk Setup",
+      icon: Headset,
+      path: "/setup/helpdesk-setup",
+    },
+  ];
+
+  // Communication sub-items
+  const communicationItems: MenuItem[] = [
+    {
+      id: "notice",
+      label: "Notice",
+      icon: Bell,
+      path: "/communication/notice",
+    },
+    {
+      id: "events",
+      label: "Events",
+      icon: Calendar,
+      path: "/communication/events",
+    },
+    {
+      id: "polls",
+      label: "Polls",
+      icon: BarChart3,
+      path: "/communication/polls",
+    },
+    {
+      id: "notifications",
+      label: "Notifications",
+      icon: Bell,
+      path: "/communication/notifications",
+    },
+  ];
+
+  // Helpdesk sub-items
+  const helpdeskItems: MenuItem[] = [
+    {
+      id: "helpdesk",
+      label: "Helpdesk",
+      icon: Headset,
+      path: "/bms/helpdesk",
+    },
+    {
+      id: "communication-template",
+      label: "Communication Template",
+      icon: MessageSquare,
+      path: "/bms/communication-template",
+    },
+  ];
+
+  // Home sub-items
+  const homeItems: MenuItem[] = [
+    {
+      id: "project",
+      label: "Project",
+      icon: Layout,
+      path: "/maintenance/project-details-list",
+    },
+    {
+      id: "banner",
+      label: "Banner",
+      icon: Image,
+      path: "/maintenance/banner-list",
+    },
+    {
+      id: "event",
+      label: "Event",
+      icon: Calendar,
+      path: "/maintenance/event-list",
+    },
+    {
+      id: "broadcast",
+      label: "Broadcast",
+      icon: MessageSquare,
+      path: "/maintenance/noticeboard-list",
+    },
+    {
+      id: "company",
+      label: "Company",
+      icon: Building,
+      path: "/maintenance/company-list",
+    },
+    {
+      id: "site",
+      label: "Site",
+      icon: MapPin,
+      path: "/maintenance/site-list",
+    },
+    {
+      id: "press-releases",
+      label: "Press Releases",
+      icon: FileText,
+      path: "/maintenance/press-releases-list",
+    },
+    {
+      id: "faq",
+      label: "FAQ",
+      icon: HelpCircle,
+      path: "/maintenance/faq-list",
+    },
+  ];
+
+  // Setup Member sub-items
+  const setupMemberItems: MenuItem[] = [
+    {
+      id: "user-list",
+      label: "User Module",
+      icon: Users,
+      path: "/setup-member/user-list",
+    },
+    {
+      id: "lock-role-list",
+      label: "User Role",
+      icon: Shield,
+      path: "/setup-member/lock-role-list",
+    },
+    {
+      id: "lock-function-list",
+      label: "Lock Function",
+      icon: Shield,
+      path: "/setup-member/lock-function-list",
+    },
+    {
+      id: "property-type-list",
+      label: "Property Types",
+      icon: Home,
+      path: "/setup-member/property-type-list",
+    },
+    {
+      id: "project-building-type-list",
+      label: "Project Building",
+      icon: Building2,
+      path: "/setup-member/project-building-type-list",
+    },
+    {
+      id: "construction-status-list",
+      label: "Construction Status",
+      icon: BarChart3,
+      path: "/setup-member/construction-status-list",
+    },
+    {
+      id: "project-configuration-list",
+      label: "Project Config",
+      icon: Settings,
+      path: "/setup-member/project-configuration-list",
+    },
+    {
+      id: "amenities-list",
+      label: "Amenities",
+      icon: Gift,
+      path: "/setup-member/amenities-list",
+    },
+    {
+      id: "department-list",
+      label: "Department",
+      icon: Building,
+      path: "/setup-member/department-list",
+    },
+    {
+      id: "visitslot-list",
+      label: "Visit Slot",
+      icon: Calendar,
+      path: "/setup-member/site-visit-slot-config-list",
+    },
+    {
+      id: "faq-category-list",
+      label: "FAQ Category",
+      icon: HelpCircle,
+      path: "/setup-member/faq-category-list",
+    },
+    {
+      id: "faq-subcategory-list",
+      label: "FAQ SubCategory",
+      icon: HelpCircle,
+      path: "/setup-member/faq-subcategory-list",
+    },
+  ];
+
+  // Loyalty sub-items
+  const loyaltyItems: MenuItem[] = [
+    {
+      id: "loyalty-members",
+      label: "Members",
+      icon: Users,
+      path: "/loyalty/loyalty-members-list",
+    },
+    {
+      id: "loyalty-tiers",
+      label: "Tiers",
+      icon: Award,
+      path: "/loyalty/loyalty-tiers-list",
+    },
+    {
+      id: "rule-engine",
+      label: "Rule Engine",
+      icon: Settings,
+      path: "/loyalty/rule-engine-list",
+    },
+    {
+      id: "loyalty-referral",
+      label: "Referrals",
+      icon: UserCheck,
+      path: "/loyalty/referral-list",
+    },
+    {
+      id: "lock-payments",
+      label: "Lock Payments",
+      icon: Shield,
+      path: "/loyalty/lock-payments-list",
+    },
+    {
+      id: "home-loan-requests",
+      label: "Home Loan Requests",
+      icon: Home,
+      path: "/loyalty/home-loan-requests-list",
+    },
+    {
+      id: "demand-notes",
+      label: "Demand Notes",
+      icon: FileText,
+      path: "/loyalty/demand-notes-list",
+    },
+    {
+      id: "orders",
+      label: "Orders",
+      icon: Briefcase,
+      path: "/loyalty/orders-list",
+    },
+    {
+      id: "encash",
+      label: "Encash",
+      icon: Gift,
+      path: "/loyalty/encash-list",
+    },
+  ];
+
+  // Documents sub-items
+  const documentsItems: MenuItem[] = [
+    {
+      id: "flat-related",
+      label: "Flat Related",
+      icon: Building2,
+      path: "/bms/documents/flat-related",
+    },
+    {
+      id: "common-files",
+      label: "Common Files",
+      icon: File,
+      path: "/bms/documents/common-files",
+    },
+  ];
+
+  // Business Directory sub-items
+  const businessDirectoryItems: MenuItem[] = [
+    {
+      id: "business-setup",
+      label: "Setup",
+      icon: Settings,
+      path: "/bms/business-directory/setup",
+    },
+    {
+      id: "business-directory",
+      label: "Business Directory",
+      icon: Building,
+      path: "/bms/business-directory/list",
+    },
+  ];
+
+  const isActive = (path: string) =>
+    location.pathname === path || location.pathname.startsWith(path + "/");
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
+
+  const renderSubItems = (items: MenuItem[]) => {
+    return items.map((item) => {
+      const active = isActive(item.path);
+      const Icon = item.icon;
+
+      return (
+        <button
+          key={item.id}
+          onClick={() => handleNavigation(item.path)}
+          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
+          title={item.label}
+        >
+          {active && (
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+          )}
+          <Icon className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+          {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
+        </button>
+      );
+    });
+  };
+
+  return (
+    <div
+      className={`${
+        isSidebarCollapsed ? "w-16" : "w-64"
+      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      style={{ top: "4rem", height: "calc(100% - 4rem)" }}
+    >
+      <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"} pb-16`}>
+        {/* Collapse Button */}
+        <button
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className="absolute right-2 top-2 p-1 rounded-md hover:bg-[#DBC2A9] z-10"
+        >
+          {isSidebarCollapsed ? (
+            <div className="flex justify-center items-center w-8 h-8 bg-[#f6f4ee] border border-[#e5e1d8] mx-auto">
+              <ChevronRight className="w-4 h-4" />
+            </div>
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
+        </button>
+
+        {/* Spacer */}
+        <div className="w-full h-4 bg-[#f6f4ee] border-[#e5e1d8] mb-2 mt-4" />
+
+        {/* Header */}
+        {!isSidebarCollapsed && (
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-[#1a1a1a] opacity-70 uppercase tracking-wide">
+              BMS
+            </h3>
+          </div>
+        )}
+
+        {/* Menu Items */}
+        <nav className="space-y-1">
+          {/* Setup Parent */}
+          <div>
+            <button
+              onClick={() => setSetupOpen(!setupOpen)}
+              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+            >
+              <div className="flex items-center gap-3">
+                <Settings className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Setup</span>}
+              </div>
+              {!isSidebarCollapsed && (
+                setupOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            {setupOpen && !isSidebarCollapsed && (
+              <div className="mt-1 space-y-1">
+                {renderSubItems(setupItems)}
+              </div>
+            )}
+          </div>
+
+          {/* Communication Parent */}
+          <div>
+            <button
+              onClick={() => setCommunicationOpen(!communicationOpen)}
+              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+            >
+              <div className="flex items-center gap-3">
+                <MessageSquare className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Communication</span>}
+              </div>
+              {!isSidebarCollapsed && (
+                communicationOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            {communicationOpen && !isSidebarCollapsed && (
+              <div className="mt-1 space-y-1">
+                {renderSubItems(communicationItems)}
+              </div>
+            )}
+          </div>
+
+          {/* Helpdesk Parent */}
+          <div>
+            <button
+              onClick={() => setHelpdeskOpen(!helpdeskOpen)}
+              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+            >
+              <div className="flex items-center gap-3">
+                <Headset className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Helpdesk</span>}
+              </div>
+              {!isSidebarCollapsed && (
+                helpdeskOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            {helpdeskOpen && !isSidebarCollapsed && (
+              <div className="mt-1 space-y-1">
+                {renderSubItems(helpdeskItems)}
+              </div>
+            )}
+          </div>
+
+          {/* Feedback Standalone */}
+          <button
+            onClick={() => handleNavigation("/bms/feedbacks")}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"  
+            title="Feedbacks"
+          >
+            {isActive("/bms/feedbacks") && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+            )}
+            <TrendingUp className="w-5 h-5 flex-shrink-0" />
+            {!isSidebarCollapsed && <span>Feedbacks</span>}
+          </button>
+
+          {/* Parking Standalone */}
+          <button
+            onClick={() => handleNavigation("/bms/parking")}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+            title="Parking"
+          >
+            {isActive("/bms/parking") && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+            )}
+            <Car className="w-5 h-5 flex-shrink-0" />
+            {!isSidebarCollapsed && <span>Parking</span>}
+          </button>
+
+          {/* Groups Standalone */}
+          <button
+            onClick={() => handleNavigation("/bms/groups")}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+            title="Groups"
+          >
+            {isActive("/bms/groups") && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+            )}
+            <UsersRound className="w-5 h-5 flex-shrink-0" />
+            {!isSidebarCollapsed && <span>Groups</span>}
+          </button>
+
+          {/* Quarantine Tracker Standalone */}
+          <button
+            onClick={() => handleNavigation("/bms/quarantine-tracker")}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+            title="Quarantine Tracker"
+          >
+            {isActive("/bms/quarantine-tracker") && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+            )}
+            <Clipboard className="w-5 h-5 flex-shrink-0" />
+            {!isSidebarCollapsed && <span>Quarantine Tracker</span>}
+          </button>
+
+          {/* Offers Standalone */}
+          <button
+            onClick={() => handleNavigation("/bms/offers")}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+            title="Offers"
+          >
+            {isActive("/bms/offers") && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+            )}
+            <Tag className="w-5 h-5 flex-shrink-0" />
+            {!isSidebarCollapsed && <span>Offers</span>}
+          </button>
+
+          {/* Documents Parent */}
+          <div>
+            <button
+              onClick={() => setDocumentsOpen(!documentsOpen)}
+              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+            >
+              <div className="flex items-center gap-3">
+                <Cloud className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Documents</span>}
+              </div>
+              {!isSidebarCollapsed && (
+                documentsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            {documentsOpen && !isSidebarCollapsed && (
+              <div className="mt-1 space-y-1">
+                {renderSubItems(documentsItems)}
+              </div>
+            )}
+          </div>
+
+          {/* Business Directory Parent */}
+          <div>
+            <button
+              onClick={() => setBusinessDirectoryOpen(!businessDirectoryOpen)}
+              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+            >
+              <div className="flex items-center gap-3">
+                <Building className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Business Directory</span>}
+              </div>
+              {!isSidebarCollapsed && (
+                businessDirectoryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            {businessDirectoryOpen && !isSidebarCollapsed && (
+              <div className="mt-1 space-y-1">
+                {renderSubItems(businessDirectoryItems)}
+              </div>
+            )}
+          </div>
+
+          {/* MIS Standalone */}
+          <button
+            onClick={() => handleNavigation("/bms/mis")}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+            title="MIS"
+          >
+            {isActive("/bms/mis") && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+            )}
+            <BarChart3 className="w-5 h-5 flex-shrink-0" />
+            {!isSidebarCollapsed && <span>MIS</span>}
+          </button>
+
+          {/* Helpdesk Report Standalone */}
+          <button
+            onClick={() => handleNavigation("/bms/helpdesk-report")}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+            title="Helpdesk Report"
+          >
+            {isActive("/bms/helpdesk-report") && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+            )}
+            <BarChart3 className="w-5 h-5 flex-shrink-0" />
+            {!isSidebarCollapsed && <span>Helpdesk Report</span>}
+          </button>
+
+          {/* Invoice Report Standalone */}
+          <button
+            onClick={() => handleNavigation("/bms/invoice-report")}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+            title="Invoice Report"
+          >
+            {isActive("/bms/invoice-report") && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+            )}
+            <BarChart3 className="w-5 h-5 flex-shrink-0" />
+            {!isSidebarCollapsed && <span>Invoice Report</span>}
+          </button>
+
+          {/* Home Parent */}
+          <div>
+            <button
+              onClick={() => setHomeOpen(!homeOpen)}
+              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+            >
+              <div className="flex items-center gap-3">
+                <Home className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Home</span>}
+              </div>
+              {!isSidebarCollapsed && (
+                homeOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            {homeOpen && !isSidebarCollapsed && (
+              <div className="mt-1 space-y-1">
+                {renderSubItems(homeItems)}
+              </div>
+            )}
+          </div>
+
+          {/* Setup Member Parent */}
+          <div>
+            <button
+              onClick={() => setSetupMemberOpen(!setupMemberOpen)}
+              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+            >
+              <div className="flex items-center gap-3">
+                <Users className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Setup Member</span>}
+              </div>
+              {!isSidebarCollapsed && (
+                setupMemberOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            {setupMemberOpen && !isSidebarCollapsed && (
+              <div className="mt-1 space-y-1">
+                {renderSubItems(setupMemberItems)}
+              </div>
+            )}
+          </div>
+
+          {/* Loyalty Parent */}
+          <div>
+            <button
+              onClick={() => setLoyaltyOpen(!loyaltyOpen)}
+              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+            >
+              <div className="flex items-center gap-3">
+                <Award className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Loyalty</span>}
+              </div>
+              {!isSidebarCollapsed && (
+                loyaltyOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            {loyaltyOpen && !isSidebarCollapsed && (
+              <div className="mt-1 space-y-1">
+                {renderSubItems(loyaltyItems)}
+              </div>
+            )}
+          </div>
+        </nav>
+      </div>
+    </div>
+  );
+};
+
+export default BMSSidebar;

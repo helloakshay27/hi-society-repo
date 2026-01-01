@@ -18,34 +18,58 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   {
-    id: "home",
-    label: "Home",
+    id: "bms",
+    label: "BMS",
     icon: <Home className="w-4 h-4" />,
-    path: "/maintenance/projects",
+    path: "/maintenance/project-details-list",
   },
   {
-    id: "communication",
-    label: "Communication",
-    icon: <MessageSquare className="w-4 h-4" />,
-    path: "/communication/notice",
-  },
-  {
-    id: "setup",
-    label: "Setup",
+    id: "cms",
+    label: "CMS",
     icon: <SettingsIcon className="w-4 h-4" />,
-    path: "/setup/special-users-category",
+    path: "/cms/facility",
   },
   {
-    id: "setup-member",
-    label: "Setup Member",
-    icon: <Users className="w-4 h-4" />,
-    path: "/setup-member/user-list",
-  },
-  {
-    id: "loyalty",
-    label: "Loyalty",
+    id: "campaigns",
+    label: "Campaigns",
     icon: <Gift className="w-4 h-4" />,
-    path: "/loyalty/loyalty-members-list",
+    path: "/campaigns/referrals",
+  },
+  {
+    id: "fb",
+    label: "F & B",
+    icon: <Users className="w-4 h-4" />,
+    path: "/fb/restaurants",
+  },
+  {
+    id: "osr",
+    label: "OSR",
+    icon: <MessageSquare className="w-4 h-4" />,
+    path: "/osr/setup",
+  },
+  {
+    id: "fitout",
+    label: "Fitout",
+    icon: <SettingsIcon className="w-4 h-4" />,
+    path: "/fitout/requests",
+  },
+  {
+    id: "accounting",
+    label: "Accounting",
+    icon: <SettingsIcon className="w-4 h-4" />,
+    path: "/accounting/dashboard",
+  },
+  {
+    id: "smartsecure",
+    label: "SmartSecure",
+    icon: <SettingsIcon className="w-4 h-4" />,
+    path: "/smartsecure/visitor-in",
+  },
+  {
+    id: "incidents",
+    label: "Incidents",
+    icon: <SettingsIcon className="w-4 h-4" />,
+    path: "/incidents/setup",
   },
 ];
 
@@ -58,16 +82,26 @@ export const HiSocietyNavigation: React.FC = () => {
   // Detect active navigation based on current path
   useEffect(() => {
     const path = location.pathname;
-    if (path.startsWith("/communication")) {
-      setActiveNav("communication");
-    } else if (path.startsWith("/loyalty")) {
-      setActiveNav("loyalty");
-    } else if (path.startsWith("/setup-member")) {
-      setActiveNav("setup-member");
-    } else if (path.startsWith("/setup")) {
-      setActiveNav("setup");
+    if (path.startsWith("/cms")) {
+      setActiveNav("cms");
+    } else if (path.startsWith("/campaigns")) {
+      setActiveNav("campaigns");
+    } else if (path.startsWith("/fb")) {
+      setActiveNav("fb");
+    } else if (path.startsWith("/osr")) {
+      setActiveNav("osr");
+    } else if (path.startsWith("/fitout")) {
+      setActiveNav("fitout");
+    } else if (path.startsWith("/accounting")) {
+      setActiveNav("accounting");
+    } else if (path.startsWith("/smartsecure")) {
+      setActiveNav("smartsecure");
+    } else if (path.startsWith("/incidents")) {
+      setActiveNav("incidents");
+    } else if (path.startsWith("/bms") || path.startsWith("/maintenance") || path.startsWith("/communication") || path.startsWith("/loyalty") || path.startsWith("/setup-member") || path.startsWith("/setup")) {
+      setActiveNav("bms");
     } else {
-      setActiveNav("home");
+      setActiveNav("bms");
     }
   }, [location.pathname]);
 
