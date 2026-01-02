@@ -34,6 +34,7 @@ import { FitoutSidebar } from "./FitoutSidebar";
 import { AccountingSidebar } from "./AccountingSidebar";
 import { SmartSecureSidebar } from "./SmartSecureSidebar";
 import { IncidentsSidebar } from "./IncidentsSidebar";
+import { SettingsSidebar } from "./SettingsSidebar";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -159,6 +160,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       // Incidents routes use IncidentsSidebar
       if (path.startsWith('/incidents')) {
         return <IncidentsSidebar />;
+      }
+      
+      // Settings routes use SettingsSidebar
+      if (path.startsWith('/settings')) {
+        return <SettingsSidebar />;
       }
       
       // All other routes use BMSSidebar

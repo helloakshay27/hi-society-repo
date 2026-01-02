@@ -1439,27 +1439,27 @@ function App() {
                   
                   {/* Setup - Manage Users Route */}
                   <Route
-                    path="/setup/manage-users"
+                    path="/settings/manage-users"
                     element={<ManageUsersPage />}
                   />
                   <Route
-                    path="/setup/manage-users/add"
+                    path="/settings/manage-users/add"
                     element={<AddUserPage />}
                   />
                   <Route
-                    path="/setup/manage-users/view/:id"
+                    path="/settings/manage-users/view/:id"
                     element={<ViewManageUserPage />}
                   />
 
                   {/* Setup - Special Users Category Route */}
                   <Route
-                    path="/setup/special-users-category"
+                    path="/settings/special-users-category"
                     element={<SpecialUsersCategoryDashboard />}
                   />
 
                   {/* Setup - KYC Details Route */}
                   <Route
-                    path="/setup/kyc-details"
+                    path="/settings/kyc-details"
                     element={<KYCDetailsDashboard />}
                   />
 
@@ -1471,13 +1471,13 @@ function App() {
 
                   {/* Setup - Helpdesk Setup Route */}
                   <Route
-                    path="/setup/helpdesk-setup"
+                    path="/settings/helpdesk-setup"
                     element={<HelpdeskSetupDashboard />}
                   />
 
                   {/* Setup - Communication Setup Route */}
                   <Route
-                    path="/setup/communication"
+                    path="/settings/communication"
                     element={<CommunicationSetupDashboard />}
                   />
 
@@ -1524,11 +1524,11 @@ function App() {
 
                   {/* Setup - Manage Flats Route */}
                   <Route
-                    path="/setup/manage-flats"
+                    path="/settings/manage-flats"
                     element={<ManageFlatsPage />}
                   />
                   <Route
-                    path="/setup/manage-flats/edit/:flatId"
+                    path="/settings/manage-flats/edit/:flatId"
                     element={<EditFlatPage />}
                   />
 
@@ -3549,7 +3549,7 @@ function App() {
 
                 {/* Setup Routes - Outside of settings parent route */}
                 <Route
-                  path="/setup/permit"
+                  path="/settings/permit"
                   element={
                     <ProtectedRoute>
                       <PermitSetupDashboard />
@@ -3557,7 +3557,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/setup/incident"
+                  path="/settings/incident"
                   element={
                     <ProtectedRoute>
                       <IncidentSetupDashboard />
@@ -3567,7 +3567,7 @@ function App() {
 
                 {/* Setup User Management Routes */}
                 <Route
-                  path="/setup/fm-users"
+                  path="/settings/fm-users"
                   element={
                     <ProtectedRoute>
                       <FMUserDashboard />
@@ -3575,7 +3575,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/setup/fm-users/add"
+                  path="/settings/fm-users/add"
                   element={
                     <ProtectedRoute>
                       <AddFMUserDashboard />
@@ -3583,7 +3583,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/setup/occupant-users"
+                  path="/settings/occupant-users"
                   element={
                     <ProtectedRoute>
                       <OccupantUsersDashboard />
@@ -3591,7 +3591,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/setup/occupant-users/add"
+                  path="/settings/occupant-users/add"
                   element={
                     <ProtectedRoute>
                       <AddOccupantUserDashboard />
