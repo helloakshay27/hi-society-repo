@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft, FileText, Trash2 } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { API_CONFIG } from "@/config/apiConfig";
@@ -32,9 +32,13 @@ const BroadcastCreate = () => {
     user_ids: [],
     is_important: false,
     email_trigger_enabled: "",
+    status: "active",
     publish: "1",
     of_phase: "pms",
     of_atype: "Pms::Site",
+    notice_type: "",
+    from_time: "",
+    to_time: "",
     cover_image_1_by_1: [],
     cover_image_9_by_16: [],
     cover_image_3_by_2: [],
@@ -267,7 +271,7 @@ const BroadcastCreate = () => {
     data.append("noticeboard[of_phase]", formData.of_phase);
     data.append("noticeboard[of_atype]", formData.of_atype);
     data.append("noticeboard[of_atype_id]", localStorage.getItem("selectedSiteId") || "");
-    data.append("noticeboard[publish]", formData.publish);
+    data.append("noticeboard[publish]", formData.status === "active" ? "1" : "0");
     data.append("noticeboard[is_important]", formData.is_important ? "1" : "0");
 
     if (formData.shared === "individual" && formData.user_ids.length > 0) {
@@ -397,7 +401,7 @@ const BroadcastCreate = () => {
           <span>{">"}</span>
           <span className="text-gray-900 font-medium">Create Broadcast</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">CREATE BROADCAST</h1>
+        {/* <h1 className="text-2xl font-bold text-gray-900">CREATE BROADCAST</h1> */}
       </div>
 
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
@@ -408,18 +412,42 @@ const BroadcastCreate = () => {
               <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
                 <FileText size={16} color="#C72030" />
               </span>
-              Communication Information
+              Create Broadcast
             </h2>
           </div>
-          <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
+          <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Project Select */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+              >
+                <InputLabel shrink>Project</InputLabel>
+                <MuiSelect
+                  value={selectedProjectId || ""}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  label="Project"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select Project</MenuItem>
+                  {projects.map((project) => (
+                    <MenuItem key={project.id} value={project.id}>
+                      {project.project_name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+
               {/* Title */}
               <TextField
-                label={<span>Title<span className="text-red-500">*</span></span>}
-                placeholder="Title"
+                label={<span>Notice Heading<span className="text-red-500"></span></span>}
+                placeholder="Enter Title"
                 value={formData.notice_heading}
                 onChange={handleChange}
                 name="notice_heading"
+                required
                 fullWidth
                 variant="outlined"
                 slotProps={{
@@ -432,9 +460,53 @@ const BroadcastCreate = () => {
                 }}
               />
 
-              {/* End Date */}
+              {/* Notice Type */}
+              <FormControl
+                fullWidth
+                variant="outlined"
+                sx={{ '& .MuiInputBase-root': fieldStyles }}
+              >
+                <InputLabel shrink>Notice Type</InputLabel>
+                <MuiSelect
+                  value={formData.notice_type || ""}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, notice_type: e.target.value }))}
+                  label="Notice Type"
+                  notched
+                  displayEmpty
+                >
+                  <MenuItem value="">Select Type</MenuItem>
+                  <MenuItem value="general">General</MenuItem>
+                  <MenuItem value="urgent">Urgent</MenuItem>
+                  <MenuItem value="announcement">Announcement</MenuItem>
+                  <MenuItem value="event">Event</MenuItem>
+                  <MenuItem value="maintenance">Maintenance</MenuItem>
+                </MuiSelect>
+              </FormControl>
+
+              {/* Description spanning 2 columns */}
+              <div className="md:col-span-2">
+                <TextField
+                  label={<span>Notice Description<span className="text-red-500">*</span></span>}
+                  placeholder="Enter Description"
+                  value={formData.notice_text}
+                  onChange={handleChange}
+                  name="notice_text"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+              </div>
+
+              {/* Broadcast From */}
               <TextField
-                label={<span>End Date<span className="text-red-500">*</span></span>}
+                label={<span>Expire Date<span className="text-red-500">*</span></span>}
                 type="date"
                 value={formData.expire_date}
                 onChange={handleChange}
@@ -453,10 +525,13 @@ const BroadcastCreate = () => {
                   min: new Date().toISOString().split("T")[0],
                 }}
               />
+            </div>
 
-              {/* End Time */}
-              <TextField
-                label={<span>End Time<span className="text-red-500">*</span></span>}
+            {/* 4-column grid for Broadcast To, Mark Important, Send Email, End Date & Time */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* Broadcast To */}
+               <TextField
+                label={<span>Expire Time<span className="text-red-500">*</span></span>}
                 type="time"
                 value={formData.expire_time}
                 onChange={handleChange}
@@ -473,202 +548,280 @@ const BroadcastCreate = () => {
                 }}
               />
 
-              {/* Description */}
-              <div className="md:col-span-3 relative">
-                <TextField
-                  label={<span>Description<span className="text-red-500">*</span></span>}
-                  placeholder="Enter Description"
-                  value={formData.notice_text}
-                  onChange={handleChange}
-                  name="notice_text"
-                  fullWidth
-                  multiline
-                  rows={4}
-                  variant="outlined"
-                  slotProps={{
-                    inputLabel: {
-                      shrink: true,
-                    },
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      minHeight: '100px',
-                      alignItems: 'flex-start',
-                      '& fieldset': {
-                        borderColor: '#ddd',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#C72030',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#C72030',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      '&.Mui-focused': {
-                        color: '#C72030',
-                      },
-                    },
-                  }}
-                />
-                <span className="absolute bottom-2 right-3 text-xs" style={{ color: formData.notice_text.length > 255 ? 'red' : 'gray' }}>
-                  {formData.notice_text.length}/255
-                </span>
+              {/* Mark Important */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="is_important"
+                      checked={formData.is_important === true}
+                      onChange={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          is_important: true,
+                        }))
+                      }
+                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      style={{ accentColor: '#C72030' }}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Yes</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="is_important"
+                      checked={formData.is_important === false}
+                      onChange={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          is_important: false,
+                        }))
+                      }
+                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      style={{ accentColor: '#C72030' }}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">No</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Send Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="email_trigger_enabled"
+                      value="true"
+                      checked={formData.email_trigger_enabled === "true"}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          email_trigger_enabled: e.target.value,
+                        }))
+                      }
+                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      style={{ accentColor: '#C72030' }}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Yes</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="email_trigger_enabled"
+                      value="false"
+                      checked={formData.email_trigger_enabled === "false"}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          email_trigger_enabled: e.target.value,
+                        }))
+                      }
+                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      style={{ accentColor: '#C72030' }}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">No</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="active"
+                      checked={formData.status === "active"}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          status: e.target.value,
+                        }))
+                      }
+                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      style={{ accentColor: '#C72030' }}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Active</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="inactive"
+                      checked={formData.status === "inactive"}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          status: e.target.value,
+                        }))
+                      }
+                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      style={{ accentColor: '#C72030' }}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Inactive</span>
+                  </label>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Section: Broadcast Settings */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
-                <FileText size={16} color="#C72030" />
-              </span>
-              Broadcast Settings
-            </h2>
-          </div>
-          <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
+           
+
             {/* Share With */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Share with</label>
-              <div className="flex gap-6">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="shared"
-                    value="all"
-                    checked={formData.shared === "all"}
-                    onChange={() =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        shared: "all",
-                        user_ids: [],
-                        group_id: [],
-                      }))
-                    }
-                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">All</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="shared"
-                    value="individual"
-                    checked={formData.shared === "individual"}
-                    onChange={() =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        shared: "individual",
-                        group_id: [],
-                      }))
-                    }
-                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Individuals</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="shared"
-                    value="group"
-                    checked={formData.shared === "group"}
-                    onChange={() =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        shared: "group",
-                        user_ids: [],
-                      }))
-                    }
-                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Groups</span>
-                </label>
-              </div>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
+                <div className="flex gap-6 mb-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="shared"
+                      value="all"
+                      checked={formData.shared === "all"}
+                      onChange={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          shared: "all",
+                          user_ids: [],
+                          group_id: [],
+                        }))
+                      }
+                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      style={{ accentColor: '#C72030' }}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">All</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="shared"
+                      value="individual"
+                      checked={formData.shared === "individual"}
+                      onChange={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          shared: "individual",
+                          group_id: [],
+                        }))
+                      }
+                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      style={{ accentColor: '#C72030' }}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Individuals</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="shared"
+                      value="group"
+                      checked={formData.shared === "group"}
+                      onChange={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          shared: "group",
+                          user_ids: [],
+                        }))
+                      }
+                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      style={{ accentColor: '#C72030' }}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Groups</span>
+                  </label>
+                </div>
 
-            {/* Individual Select */}
-            {formData.shared === "individual" && (
-              <div className="max-w-md">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Individuals</label>
-                <MultiSelectBox
-                  placeholder="Select Users"
-                  options={users.map((user) => ({
-                    value: user.id,
-                    label: user.full_name || `${user.firstname} ${user.lastname}`,
-                  }))}
-                  value={
-                    formData.user_ids.length > 0
-                      ? formData.user_ids.map((id) => {
-                          const user = users.find((u) => u.id.toString() === id.toString());
-                          return {
-                            value: id,
-                            label: user?.full_name || `${user?.firstname} ${user?.lastname}`,
-                          };
-                        })
-                      : []
-                  }
-                  onChange={(selectedOptions) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      user_ids: selectedOptions.map((option) => option.value),
-                    }))
-                  }
-                />
-              </div>
-            )}
+                {/* Individual Select */}
+                {formData.shared === "individual" && (
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{ '& .MuiInputBase-root': fieldStyles }}
+                  >
+                    <InputLabel shrink>Select Users</InputLabel>
+                    <MuiSelect
+                      multiple
+                      value={formData.user_ids}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          user_ids: e.target.value,
+                        }))
+                      }
+                      label="Select Users"
+                      notched
+                      displayEmpty
+                      renderValue={(selected) => {
+                        if (!selected || selected.length === 0) {
+                          return <span style={{ color: '#999' }}>Select Users</span>;
+                        }
+                        return selected
+                          .map((id) => {
+                            const user = users.find((u) => u.id.toString() === id.toString());
+                            return user?.full_name || `${user?.firstname} ${user?.lastname}`;
+                          })
+                          .join(", ");
+                      }}
+                    >
+                      <MenuItem value="" disabled>
+                        Select Users
+                      </MenuItem>
+                      {users.map((user) => (
+                        <MenuItem key={user.id} value={user.id}>
+                          {user.full_name || `${user.firstname} ${user.lastname}`}
+                        </MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+                )}
 
-            {/* Group Select */}
-            {formData.shared === "group" && (
-              <div className="max-w-md">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Groups</label>
-                <MultiSelectBox
-                  placeholder="Select Groups"
-                  options={groups.map((group) => ({
-                    value: group.id,
-                    label: group.name,
-                  }))}
-                  value={
-                    formData.group_id.length > 0
-                      ? formData.group_id.map((id) => {
-                          const group = groups.find((g) => g.id === id || g.id.toString() === id.toString());
-                          return group ? { value: group.id, label: group.name } : null;
-                        }).filter(Boolean)
-                      : []
-                  }
-                  onChange={(selectedOptions) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      group_id: selectedOptions.map((option) => option.value),
-                    }))
-                  }
-                />
+                {/* Group Select */}
+                {formData.shared === "group" && (
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{ '& .MuiInputBase-root': fieldStyles }}
+                  >
+                    <InputLabel shrink>Select Groups</InputLabel>
+                    <MuiSelect
+                      multiple
+                      value={Array.isArray(formData.group_id) ? formData.group_id : []}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          group_id: e.target.value,
+                        }))
+                      }
+                      label="Select Groups"
+                      notched
+                      displayEmpty
+                      renderValue={(selected) => {
+                        if (!selected || selected.length === 0) {
+                          return <span style={{ color: '#999' }}>Select Groups</span>;
+                        }
+                        return selected
+                          .map((id) => {
+                            const group = groups.find((g) => g.id === id || g.id.toString() === id.toString());
+                            return group ? group.name : id;
+                          })
+                          .join(", ");
+                      }}
+                    >
+                      <MenuItem value="" disabled>
+                        Select Groups
+                      </MenuItem>
+                      {groups.map((group) => (
+                        <MenuItem key={group.id} value={group.id}>
+                          {group.name}
+                        </MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+                )}
               </div>
-            )}
-
-            {/* Mark as Important */}
-            <div>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.is_important}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        is_important: e.target.checked,
-                      }))
-                    }
-                    sx={{
-                      '&.Mui-checked': {
-                        color: '#C72030',
-                      },
-                    }}
-                  />
-                }
-                label="Mark as Important"
-              />
             </div>
           </div>
         </div>
@@ -680,7 +833,7 @@ const BroadcastCreate = () => {
               <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
                 <FileText size={16} color="#C72030" />
               </span>
-              Attachments
+              Notice Attachments
             </h2>
           </div>
           
@@ -708,9 +861,9 @@ const BroadcastCreate = () => {
                   type="button"
                   onClick={() => setShowCoverUploader(true)}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                  {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                  </svg>
+                  </svg> */}
                   <span>Add</span>
                 </button>
               </div>
@@ -745,10 +898,10 @@ const BroadcastCreate = () => {
                           <TableCell className="py-3 px-4">
                             <button
                               type="button"
-                              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                              // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                               onClick={() => handleImageRemoval(key, index)}
                             >
-                              ×
+                              <Trash2 className="w-4 h-4 text-[#c72030]" />
                             </button>
                           </TableCell>
                         </TableRow>
@@ -782,9 +935,9 @@ const BroadcastCreate = () => {
                   type="button"
                   onClick={() => setShowBroadcastUploader(true)}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                  {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                  </svg>
+                  </svg> */}
                   <span>Add</span>
                 </button>
               </div>
@@ -825,10 +978,10 @@ const BroadcastCreate = () => {
                                 <TableCell className="py-3 px-4">
                                   <button
                                     type="button"
-                                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleImageRemoval(key, index)}
                                   >
-                                    ×
+                                     <Trash2 className="w-4 h-4 text-[#c72030]" />
                                   </button>
                                 </TableCell>
                               </TableRow>
