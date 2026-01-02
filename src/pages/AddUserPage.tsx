@@ -1,20 +1,129 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, User, Eye, EyeOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Camera, User as UserIcon, Info } from "lucide-react";
 import {
+  Box,
+  Paper,
+  TextField,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+  MenuItem,
+  FormControl,
+  InputLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Button as MuiButton,
+  InputAdornment,
+  IconButton,
+  styled,
+  FormLabel,
+  Avatar,
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
-export const AddUserPage = () => {
+// Styled Components
+const SectionCard = styled(Paper)(({ theme }) => ({
+  backgroundColor: 'white',
+  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+  borderRadius: 0,
+  overflow: 'hidden',
+  marginBottom: '24px',
+}));
+
+const SectionHeader = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  padding: '16px 24px',
+  backgroundColor: '#f9fafb',
+  borderBottom: '1px solid #e5e7eb',
+}));
+
+const RedIcon = styled(Box)(({ theme }) => ({
+  color: 'white',
+  backgroundColor: '#C72030',
+  borderRadius: '50%',
+  padding: '8px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '32px',
+  height: '32px',
+}));
+
+const RedButton = styled(MuiButton)(({ theme }) => ({
+  backgroundColor: '#C72030', // matches SVG color
+  color: 'white',
+  borderRadius: 0,
+  textTransform: 'none',
+  padding: '8px 16px',
+  fontFamily: 'Work Sans, sans-serif',
+  fontWeight: 500,
+  boxShadow: '0 2px 4px rgba(199, 32, 48, 0.2)',
+  '&:hover': {
+    backgroundColor: '#B8252F',
+    boxShadow: '0 4px 8px rgba(199, 32, 48, 0.3)',
+  },
+}));
+
+const DraftButton = styled(MuiButton)(({ theme }) => ({
+  backgroundColor: '#e7e3d9',
+  color: '#C72030',
+  borderRadius: 0,
+  textTransform: 'none',
+  padding: '8px 16px',
+  fontFamily: 'Work Sans, sans-serif',
+  fontWeight: 500,
+  '&:hover': {
+    backgroundColor: '#d9d5c9',
+  },
+}));
+
+const fieldStyles = {
+  '& .MuiOutlinedInput-root': {
+    fontSize: '14px',
+    backgroundColor: '#fff',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    fontSize: '14px',
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
+
+const ProfileAvatar = styled(Avatar)(({ theme }) => ({
+  width: 128,
+  height: 128,
+  backgroundColor: '#fff', // white background
+  fontSize: '48px',
+  color: '#C72030', // icon color matches SVG color
+  border: '2px solid #C72030',
+}));
+
+const CameraButton = styled(IconButton)(({ theme }) => ({
+  position: 'absolute',
+  bottom: 0,
+  right: 0,
+  backgroundColor: '#C72030',
+  color: 'white',
+  width: '32px',
+  height: '32px',
+  '&:hover': {
+    backgroundColor: '#a01828',
+  },
+}));
+
+ const AddUserPage = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -64,626 +173,574 @@ export const AddUserPage = () => {
     navigate(-1);
   };
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Handle image upload logic here
+      console.log("Image uploaded:", file);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#fafafa] p-6">
-      <div className="max-w-7xl mx-auto">
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundColor: '#fafafa',
+        padding: '24px',
+        fontFamily: 'Work Sans, sans-serif',
+      }}
+    >
+      <Box sx={{ maxWidth: '1400px', margin: '0 auto' }}>
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
-          <div className="px-6 py-4">
-            <h1 className="text-2xl font-semibold text-[#1A1A1A]">Add User</h1>
-          </div>
-        </div>
+        <Paper
+          sx={{
+            backgroundColor: 'white',
+            borderRadius: 0,
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            marginBottom: '24px',
+            padding: '16px 24px',
+          }}
+        >
+          <h1
+            style={{
+              fontSize: '24px',
+              fontWeight: 600,
+              color: '#1A1A1A',
+              margin: 0,
+              fontFamily: 'Work Sans, sans-serif',
+            }}
+          >
+            Add User
+          </h1>
+        </Paper>
 
-        <div className="bg-white rounded-lg shadow-sm">
-          {/* Primary Details Section */}
-          <div className="border-b border-gray-200">
-            <div className="px-6 py-4 flex items-center gap-2">
-              <User className="w-5 h-5 text-[#1A1A1A]" />
-              <h2 className="text-lg font-semibold text-[#1A1A1A]">
-                Primary Details
-              </h2>
-            </div>
-          </div>
+        {/* Primary Details Section */}
+        <SectionCard>
+          <SectionHeader>
+            <RedIcon>
+              <UserIcon size={16} />
+            </RedIcon>
+            <h2
+              style={{
+                fontSize: '18px',
+                fontWeight: 600,
+                color: '#1A1A1A',
+                margin: 0,
+                fontFamily: 'Work Sans, sans-serif',
+              }}
+            >
+              Primary Details
+            </h2>
+          </SectionHeader>
 
-          <div className="p-6">
-            <div className="flex gap-6">
+          <Box sx={{ padding: '24px' }}>
+            <Box sx={{ display: 'flex', gap: '24px' }}>
               {/* Profile Photo */}
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-32 h-32 rounded-full bg-[#1e3a5f] flex items-center justify-center relative">
-                  <User className="w-16 h-16 text-white" />
-                  <button className="absolute bottom-0 right-0 w-8 h-8 bg-[#C72031] rounded-full flex items-center justify-center hover:bg-[#a01828] transition-colors">
-                    <Camera className="w-4 h-4 text-white" />
-                  </button>
-                </div>
-              </div>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <Box sx={{ position: 'relative' }}>
+                  <ProfileAvatar>
+                    <UserIcon size={64} />
+                  </ProfileAvatar>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    id="profile-upload"
+                    onChange={handleImageUpload}
+                  />
+                  <label htmlFor="profile-upload">
+                    <CameraButton component="span">
+                      <Camera size={16} />
+                    </CameraButton>
+                  </label>
+                </Box>
+              </Box>
 
               {/* Form Fields */}
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Box sx={{ flex: 1, display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: '16px' }}>
                 {/* Title */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Select Title
-                  </Label>
+                <FormControl fullWidth size="small" sx={fieldStyles}>
+                  <InputLabel required>Select Title</InputLabel>
                   <Select
                     value={formData.title}
-                    onValueChange={(value) => handleInputChange("title", value)}
+                    label="Select Title"
+                    onChange={(e) => handleInputChange("title", e.target.value)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Title" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Mr">Mr</SelectItem>
-                      <SelectItem value="Mrs">Mrs</SelectItem>
-                      <SelectItem value="Ms">Ms</SelectItem>
-                      <SelectItem value="Dr">Dr</SelectItem>
-                    </SelectContent>
+                    <MenuItem value="Mr">Mr</MenuItem>
+                    <MenuItem value="Mrs">Mrs</MenuItem>
+                    <MenuItem value="Ms">Ms</MenuItem>
+                    <MenuItem value="Dr">Dr</MenuItem>
                   </Select>
-                </div>
+                </FormControl>
 
                 {/* First Name */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> First Name
-                  </Label>
-                  <Input
-                    value={formData.firstName}
-                    onChange={(e) =>
-                      handleInputChange("firstName", e.target.value)
-                    }
-                    placeholder="First Name"
-                    className="border-gray-300"
-                  />
-                </div>
+                <TextField
+                  fullWidth
+                  required
+                  size="small"
+                  label="First Name"
+                  value={formData.firstName}
+                  onChange={(e) => handleInputChange("firstName", e.target.value)}
+                  sx={fieldStyles}
+                />
 
                 {/* Last Name */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Last Name
-                  </Label>
-                  <Input
-                    value={formData.lastName}
-                    onChange={(e) =>
-                      handleInputChange("lastName", e.target.value)
-                    }
-                    placeholder="Last Name"
-                    className="border-gray-300"
-                  />
-                </div>
+                <TextField
+                  fullWidth
+                  required
+                  size="small"
+                  label="Last Name"
+                  value={formData.lastName}
+                  onChange={(e) => handleInputChange("lastName", e.target.value)}
+                  sx={fieldStyles}
+                />
 
                 {/* Email */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Email
-                  </Label>
-                  <Input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    placeholder="runwal.gardens@lockated.com"
-                    className="border-gray-300"
-                  />
-                </div>
+                <TextField
+                  fullWidth
+                  required
+                  size="small"
+                  label="Email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  sx={fieldStyles}
+                />
 
                 {/* Mobile */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">Mobile</Label>
-                  <div className="flex gap-2">
+                <Box sx={{ display: 'flex', gap: '8px' }}>
+                  <FormControl size="small" sx={{ ...fieldStyles, width: '100px' }}>
+                    <InputLabel>Code</InputLabel>
                     <Select
                       value={formData.countryCode}
-                      onValueChange={(value) =>
-                        handleInputChange("countryCode", value)
-                      }
+                      label="Code"
+                      onChange={(e) => handleInputChange("countryCode", e.target.value)}
                     >
-                      <SelectTrigger className="w-24">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="+91">🇮🇳 +91</SelectItem>
-                        <SelectItem value="+1">🇺🇸 +1</SelectItem>
-                        <SelectItem value="+44">🇬🇧 +44</SelectItem>
-                      </SelectContent>
+                      <MenuItem value="+91">🇮🇳 +91</MenuItem>
+                      <MenuItem value="+1">🇺🇸 +1</MenuItem>
+                      <MenuItem value="+44">🇬🇧 +44</MenuItem>
                     </Select>
-                    <Input
-                      type="tel"
-                      value={formData.mobile}
-                      onChange={(e) =>
-                        handleInputChange("mobile", e.target.value)
-                      }
-                      placeholder="Mobile Number"
-                      className="flex-1 border-gray-300"
-                    />
-                  </div>
-                </div>
+                  </FormControl>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Mobile Number"
+                    value={formData.mobile}
+                    onChange={(e) => handleInputChange("mobile", e.target.value)}
+                    sx={fieldStyles}
+                  />
+                </Box>
 
                 {/* Password */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Password
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      value={formData.password}
-                      onChange={(e) =>
-                        handleInputChange("password", e.target.value)
-                      }
-                      placeholder="••••••••••"
-                      className="border-gray-300 pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4 text-gray-500" />
-                      ) : (
-                        <Eye className="w-4 h-4 text-gray-500" />
-                      )}
-                    </button>
-                  </div>
-                </div>
+                <TextField
+                  fullWidth
+                  required
+                  size="small"
+                  label="Password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={(e) => handleInputChange("password", e.target.value)}
+                  sx={fieldStyles}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          size="small"
+                        >
+                          {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
 
                 {/* Phase */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Select Phase
-                  </Label>
+                <FormControl fullWidth required size="small" sx={fieldStyles}>
+                  <InputLabel>Select Phase</InputLabel>
                   <Select
                     value={formData.phase}
-                    onValueChange={(value) => handleInputChange("phase", value)}
+                    label="Select Phase"
+                    onChange={(e) => handleInputChange("phase", e.target.value)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Phase" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Phase 1">Phase 1</SelectItem>
-                      <SelectItem value="Phase 2">Phase 2</SelectItem>
-                      <SelectItem value="Phase 3">Phase 3</SelectItem>
-                    </SelectContent>
+                    <MenuItem value="Phase 1">Phase 1</MenuItem>
+                    <MenuItem value="Phase 2">Phase 2</MenuItem>
+                    <MenuItem value="Phase 3">Phase 3</MenuItem>
                   </Select>
-                </div>
+                </FormControl>
 
                 {/* Status */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Select Status
-                  </Label>
+                <FormControl fullWidth required size="small" sx={fieldStyles}>
+                  <InputLabel>Select Status</InputLabel>
                   <Select
                     value={formData.status}
-                    onValueChange={(value) =>
-                      handleInputChange("status", value)
-                    }
+                    label="Select Status"
+                    onChange={(e) => handleInputChange("status", e.target.value)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                    </SelectContent>
+                    <MenuItem value="Active">Active</MenuItem>
+                    <MenuItem value="Inactive">Inactive</MenuItem>
                   </Select>
-                </div>
+                </FormControl>
 
                 {/* Tower */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Select Tower
-                  </Label>
+                <FormControl fullWidth required size="small" sx={fieldStyles}>
+                  <InputLabel>Select Tower</InputLabel>
                   <Select
                     value={formData.tower}
-                    onValueChange={(value) => handleInputChange("tower", value)}
+                    label="Select Tower"
+                    onChange={(e) => handleInputChange("tower", e.target.value)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Tower" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Tower A">Tower A</SelectItem>
-                      <SelectItem value="Tower B">Tower B</SelectItem>
-                      <SelectItem value="Tower C">Tower C</SelectItem>
-                    </SelectContent>
+                    <MenuItem value="Tower A">Tower A</MenuItem>
+                    <MenuItem value="Tower B">Tower B</MenuItem>
+                    <MenuItem value="Tower C">Tower C</MenuItem>
                   </Select>
-                </div>
+                </FormControl>
 
                 {/* Flat */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Select Flat
-                  </Label>
+                <FormControl fullWidth required size="small" sx={fieldStyles}>
+                  <InputLabel>Select Flat</InputLabel>
                   <Select
                     value={formData.flat}
-                    onValueChange={(value) => handleInputChange("flat", value)}
+                    label="Select Flat"
+                    onChange={(e) => handleInputChange("flat", e.target.value)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Flat" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="101">101</SelectItem>
-                      <SelectItem value="102">102</SelectItem>
-                      <SelectItem value="103">103</SelectItem>
-                    </SelectContent>
+                    <MenuItem value="101">101</MenuItem>
+                    <MenuItem value="102">102</MenuItem>
+                    <MenuItem value="103">103</MenuItem>
                   </Select>
-                </div>
+                </FormControl>
 
                 {/* Category */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Select Category
-                  </Label>
+                <FormControl fullWidth required size="small" sx={fieldStyles}>
+                  <InputLabel>Select Category</InputLabel>
                   <Select
                     value={formData.category}
-                    onValueChange={(value) =>
-                      handleInputChange("category", value)
-                    }
+                    label="Select Category"
+                    onChange={(e) => handleInputChange("category", e.target.value)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Resident">Resident</SelectItem>
-                      <SelectItem value="Staff">Staff</SelectItem>
-                      <SelectItem value="Vendor">Vendor</SelectItem>
-                    </SelectContent>
+                    <MenuItem value="Resident">Resident</MenuItem>
+                    <MenuItem value="Staff">Staff</MenuItem>
+                    <MenuItem value="Vendor">Vendor</MenuItem>
                   </Select>
-                </div>
+                </FormControl>
 
                 {/* Alternate Address */}
-                <div className="space-y-2 md:col-span-3">
-                  <Label className="text-sm text-gray-600">
-                    Alternate Address
-                  </Label>
-                  <Textarea
-                    value={formData.alternateAddress}
-                    onChange={(e) =>
-                      handleInputChange("alternateAddress", e.target.value)
-                    }
-                    placeholder="Alternate Address"
-                    className="border-gray-300 min-h-[80px]"
-                  />
-                </div>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Alternate Address"
+                  multiline
+                  rows={3}
+                  value={formData.alternateAddress}
+                  onChange={(e) => handleInputChange("alternateAddress", e.target.value)}
+                  sx={{ ...fieldStyles, gridColumn: { md: 'span 3' } }}
+                />
 
                 {/* Resident Type */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">Resident Type:</Label>
-                  <RadioGroup
-                    value={formData.residentType}
-                    onValueChange={(value) =>
-                      handleInputChange("residentType", value)
-                    }
-                    className="flex gap-4"
+                <FormControl component="fieldset" sx={{ gridColumn: { md: 'span 1' } }}>
+                  <FormLabel
+                    component="legend"
+                    sx={{
+                      fontSize: '14px',
+                      color: 'rgba(0, 0, 0, 0.6)',
+                      marginBottom: '8px',
+                      '&.Mui-focused': { color: '#C72030' },
+                    }}
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="Owner" id="owner" />
-                      <Label htmlFor="owner" className="font-normal cursor-pointer">
-                        Owner
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="Tenant" id="tenant" />
-                      <Label htmlFor="tenant" className="font-normal cursor-pointer">
-                        Tenant
-                      </Label>
-                    </div>
+                    Resident Type:
+                  </FormLabel>
+                  <RadioGroup
+                    row
+                    value={formData.residentType}
+                    onChange={(e) => handleInputChange("residentType", e.target.value)}
+                  >
+                    <FormControlLabel value="Owner" control={<Radio size="small" />} label="Owner" />
+                    <FormControlLabel value="Tenant" control={<Radio size="small" />} label="Tenant" />
                   </RadioGroup>
-                </div>
+                </FormControl>
 
                 {/* Membership Type */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">Membership Type:</Label>
-                  <RadioGroup
-                    value={formData.membershipType}
-                    onValueChange={(value) =>
-                      handleInputChange("membershipType", value)
-                    }
-                    className="flex gap-4"
+                <FormControl component="fieldset" sx={{ gridColumn: { md: 'span 1' } }}>
+                  <FormLabel
+                    component="legend"
+                    sx={{
+                      fontSize: '14px',
+                      color: 'rgba(0, 0, 0, 0.6)',
+                      marginBottom: '8px',
+                      '&.Mui-focused': { color: '#C72030' },
+                    }}
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="Primary" id="primary" />
-                      <Label htmlFor="primary" className="font-normal cursor-pointer">
-                        Primary
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="Secondary" id="secondary" />
-                      <Label htmlFor="secondary" className="font-normal cursor-pointer">
-                        Secondary
-                      </Label>
-                    </div>
+                    Membership Type:
+                  </FormLabel>
+                  <RadioGroup
+                    row
+                    value={formData.membershipType}
+                    onChange={(e) => handleInputChange("membershipType", e.target.value)}
+                  >
+                    <FormControlLabel value="Primary" control={<Radio size="small" />} label="Primary" />
+                    <FormControlLabel value="Secondary" control={<Radio size="small" />} label="Secondary" />
                   </RadioGroup>
-                </div>
+                </FormControl>
 
                 {/* Lives Here */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">Lives Here:</Label>
-                  <RadioGroup
-                    value={formData.livesHere}
-                    onValueChange={(value) =>
-                      handleInputChange("livesHere", value)
-                    }
-                    className="flex gap-4"
+                <FormControl component="fieldset" sx={{ gridColumn: { md: 'span 1' } }}>
+                  <FormLabel
+                    component="legend"
+                    sx={{
+                      fontSize: '14px',
+                      color: 'rgba(0, 0, 0, 0.6)',
+                      marginBottom: '8px',
+                      '&.Mui-focused': { color: '#C72030' },
+                    }}
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="Yes" id="lives-yes" />
-                      <Label htmlFor="lives-yes" className="font-normal cursor-pointer">
-                        Yes
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="No" id="lives-no" />
-                      <Label htmlFor="lives-no" className="font-normal cursor-pointer">
-                        No
-                      </Label>
-                    </div>
+                    Lives Here:
+                  </FormLabel>
+                  <RadioGroup
+                    row
+                    value={formData.livesHere}
+                    onChange={(e) => handleInputChange("livesHere", e.target.value)}
+                  >
+                    <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
+                    <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
                   </RadioGroup>
-                </div>
+                </FormControl>
 
                 {/* Allow Fitout */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">Allow Fitout:</Label>
-                  <RadioGroup
-                    value={formData.allowFitout}
-                    onValueChange={(value) =>
-                      handleInputChange("allowFitout", value)
-                    }
-                    className="flex gap-4"
+                <FormControl component="fieldset" sx={{ gridColumn: { md: 'span 1' } }}>
+                  <FormLabel
+                    component="legend"
+                    sx={{
+                      fontSize: '14px',
+                      color: 'rgba(0, 0, 0, 0.6)',
+                      marginBottom: '8px',
+                      '&.Mui-focused': { color: '#C72030' },
+                    }}
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="Yes" id="fitout-yes" />
-                      <Label htmlFor="fitout-yes" className="font-normal cursor-pointer">
-                        Yes
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="No" id="fitout-no" />
-                      <Label htmlFor="fitout-no" className="font-normal cursor-pointer">
-                        No
-                      </Label>
-                    </div>
+                    Allow Fitout:
+                  </FormLabel>
+                  <RadioGroup
+                    row
+                    value={formData.allowFitout}
+                    onChange={(e) => handleInputChange("allowFitout", e.target.value)}
+                  >
+                    <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
+                    <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
                   </RadioGroup>
-                </div>
-              </div>
-            </div>
-          </div>
+                </FormControl>
+              </Box>
+            </Box>
+          </Box>
+        </SectionCard>
 
-          {/* Additional Info Section */}
-          <div className="border-t border-gray-200">
-            <div className="px-6 py-4 flex items-center gap-2">
-              <User className="w-5 h-5 text-[#1A1A1A]" />
-              <h2 className="text-lg font-semibold text-[#1A1A1A]">
-                Additional Info
-              </h2>
-            </div>
-          </div>
+        {/* Additional Info Section */}
+        <SectionCard>
+          <SectionHeader>
+            <RedIcon>
+              <Info size={16} />
+            </RedIcon>
+            <h2
+              style={{
+                fontSize: '18px',
+                fontWeight: 600,
+                color: '#1A1A1A',
+                margin: 0,
+                fontFamily: 'Work Sans, sans-serif',
+              }}
+            >
+              Additional Info
+            </h2>
+          </SectionHeader>
 
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Box sx={{ padding: '24px' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: '16px' }}>
               {/* Birth Date */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">Birth Date:</Label>
-                <Input
-                  type="date"
-                  value={formData.birthDate}
-                  onChange={(e) =>
-                    handleInputChange("birthDate", e.target.value)
-                  }
-                  className="border-gray-300"
-                />
-              </div>
+              <TextField
+                fullWidth
+                size="small"
+                label="Birth Date"
+                type="date"
+                value={formData.birthDate}
+                onChange={(e) => handleInputChange("birthDate", e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={fieldStyles}
+              />
 
               {/* Anniversary */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">Anniversary:</Label>
-                <Input
-                  type="date"
-                  value={formData.anniversary}
-                  onChange={(e) =>
-                    handleInputChange("anniversary", e.target.value)
-                  }
-                  placeholder="Anniversary Date"
-                  className="border-gray-300"
-                />
-              </div>
+              <TextField
+                fullWidth
+                size="small"
+                label="Anniversary"
+                type="date"
+                value={formData.anniversary}
+                onChange={(e) => handleInputChange("anniversary", e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={fieldStyles}
+              />
 
               {/* Spouse Birth Date */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">
-                  Spouse Birth Date:
-                </Label>
-                <Input
-                  type="date"
-                  value={formData.spouseBirthDate}
-                  onChange={(e) =>
-                    handleInputChange("spouseBirthDate", e.target.value)
-                  }
-                  placeholder="Spouse Birth Date"
-                  className="border-gray-300"
-                />
-              </div>
+              <TextField
+                fullWidth
+                size="small"
+                label="Spouse Birth Date"
+                type="date"
+                value={formData.spouseBirthDate}
+                onChange={(e) => handleInputChange("spouseBirthDate", e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={fieldStyles}
+              />
 
               {/* Alternate Email 1 */}
-              <div className="space-y-2">
-                <Input
-                  type="email"
-                  value={formData.alternateEmail1}
-                  onChange={(e) =>
-                    handleInputChange("alternateEmail1", e.target.value)
-                  }
-                  placeholder="Alternate Email-1"
-                  className="border-gray-300"
-                />
-              </div>
+              <TextField
+                fullWidth
+                size="small"
+                label="Alternate Email-1"
+                type="email"
+                value={formData.alternateEmail1}
+                onChange={(e) => handleInputChange("alternateEmail1", e.target.value)}
+                sx={fieldStyles}
+              />
 
               {/* Alternate Email 2 */}
-              <div className="space-y-2">
-                <Input
-                  type="email"
-                  value={formData.alternateEmail2}
-                  onChange={(e) =>
-                    handleInputChange("alternateEmail2", e.target.value)
-                  }
-                  placeholder="Alternate Email-2"
-                  className="border-gray-300"
-                />
-              </div>
+              <TextField
+                fullWidth
+                size="small"
+                label="Alternate Email-2"
+                type="email"
+                value={formData.alternateEmail2}
+                onChange={(e) => handleInputChange("alternateEmail2", e.target.value)}
+                sx={fieldStyles}
+              />
 
               {/* Landline Number */}
-              <div className="space-y-2">
-                <Input
-                  type="tel"
-                  value={formData.landlineNumber}
-                  onChange={(e) =>
-                    handleInputChange("landlineNumber", e.target.value)
-                  }
-                  placeholder="Landline Number"
-                  className="border-gray-300"
-                />
-              </div>
+              <TextField
+                fullWidth
+                size="small"
+                label="Landline Number"
+                value={formData.landlineNumber}
+                onChange={(e) => handleInputChange("landlineNumber", e.target.value)}
+                sx={fieldStyles}
+              />
 
               {/* Intercom Number */}
-              <div className="space-y-2">
-                <Input
-                  type="text"
-                  value={formData.intercomNumber}
-                  onChange={(e) =>
-                    handleInputChange("intercomNumber", e.target.value)
-                  }
-                  placeholder="Intercom Number"
-                  className="border-gray-300"
-                />
-              </div>
+              <TextField
+                fullWidth
+                size="small"
+                label="Intercom Number"
+                value={formData.intercomNumber}
+                onChange={(e) => handleInputChange("intercomNumber", e.target.value)}
+                sx={fieldStyles}
+              />
 
               {/* GST Number */}
-              <div className="space-y-2">
-                <Input
-                  type="text"
-                  value={formData.gstNumber}
-                  onChange={(e) =>
-                    handleInputChange("gstNumber", e.target.value)
-                  }
-                  placeholder="Gst Number"
-                  className="border-gray-300"
-                />
-              </div>
+              <TextField
+                fullWidth
+                size="small"
+                label="Gst Number"
+                value={formData.gstNumber}
+                onChange={(e) => handleInputChange("gstNumber", e.target.value)}
+                sx={fieldStyles}
+              />
 
               {/* PAN Number */}
-              <div className="space-y-2">
-                <Input
-                  type="text"
-                  value={formData.panNumber}
-                  onChange={(e) =>
-                    handleInputChange("panNumber", e.target.value)
-                  }
-                  placeholder="Pan Number"
-                  className="border-gray-300"
-                />
-              </div>
+              <TextField
+                fullWidth
+                size="small"
+                label="Pan Number"
+                value={formData.panNumber}
+                onChange={(e) => handleInputChange("panNumber", e.target.value)}
+                sx={fieldStyles}
+              />
 
               {/* EV Connection */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">EV Connection:</Label>
+              <FormControl fullWidth size="small" sx={fieldStyles}>
+                <InputLabel>EV Connection</InputLabel>
                 <Select
                   value={formData.evConnection}
-                  onValueChange={(value) =>
-                    handleInputChange("evConnection", value)
-                  }
+                  label="EV Connection"
+                  onChange={(e) => handleInputChange("evConnection", e.target.value)}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="NA" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NA">NA</SelectItem>
-                    <SelectItem value="Yes">Yes</SelectItem>
-                    <SelectItem value="No">No</SelectItem>
-                  </SelectContent>
+                  <MenuItem value="NA">NA</MenuItem>
+                  <MenuItem value="Yes">Yes</MenuItem>
+                  <MenuItem value="No">No</MenuItem>
                 </Select>
-              </div>
-
-              {/* No. of Pets */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">No. of Pets:</Label>
-                <Input
-                  type="number"
-                  value={formData.noOfPets}
-                  onChange={(e) =>
-                    handleInputChange("noOfPets", e.target.value)
-                  }
-                  placeholder="pets"
-                  className="border-gray-300"
-                />
-              </div>
+              </FormControl>
 
               {/* No. of Adult Family Members Residing */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">
-                  No. of Adult Family Members Residing:
-                </Label>
-                <Input
-                  type="number"
-                  value={formData.noOfAdults}
-                  onChange={(e) =>
-                    handleInputChange("noOfAdults", e.target.value)
-                  }
-                  placeholder="Adults"
-                  className="border-gray-300"
-                />
-              </div>
+              <TextField
+                fullWidth
+                size="small"
+                label="No. of Adult Family Members Residing"
+                type="number"
+                value={formData.noOfAdults}
+                onChange={(e) => handleInputChange("noOfAdults", e.target.value)}
+                sx={fieldStyles}
+              />
 
               {/* No. of Children Residing */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">
-                  No. of Children Residing:
-                </Label>
-                <Input
-                  type="number"
-                  value={formData.noOfChildren}
-                  onChange={(e) =>
-                    handleInputChange("noOfChildren", e.target.value)
-                  }
-                  placeholder="Children"
-                  className="border-gray-300"
-                />
-              </div>
+              <TextField
+                fullWidth
+                size="small"
+                label="No. of Children Residing"
+                type="number"
+                value={formData.noOfChildren}
+                onChange={(e) => handleInputChange("noOfChildren", e.target.value)}
+                sx={fieldStyles}
+              />
+
+              {/* No. of Pets */}
+              <TextField
+                fullWidth
+                size="small"
+                label="No. of Pets"
+                type="number"
+                value={formData.noOfPets}
+                onChange={(e) => handleInputChange("noOfPets", e.target.value)}
+                sx={fieldStyles}
+              />
 
               {/* Differently Abled */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">
-                  Differently Abled:
-                </Label>
-                <RadioGroup
-                  value={formData.differentlyAbled}
-                  onValueChange={(value) =>
-                    handleInputChange("differentlyAbled", value)
-                  }
-                  className="flex gap-4"
+              <FormControl component="fieldset">
+                <FormLabel
+                  component="legend"
+                  sx={{
+                    fontSize: '14px',
+                    color: 'rgba(0, 0, 0, 0.6)',
+                    marginBottom: '8px',
+                    '&.Mui-focused': { color: '#C72030' },
+                  }}
                 >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Yes" id="abled-yes" />
-                    <Label htmlFor="abled-yes" className="font-normal cursor-pointer">
-                      Yes
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="No" id="abled-no" />
-                    <Label htmlFor="abled-no" className="font-normal cursor-pointer">
-                      No
-                    </Label>
-                  </div>
+                  Differently Abled:
+                </FormLabel>
+                <RadioGroup
+                  row
+                  value={formData.differentlyAbled}
+                  onChange={(e) => handleInputChange("differentlyAbled", e.target.value)}
+                >
+                  <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
+                  <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
                 </RadioGroup>
-              </div>
-            </div>
-          </div>
+              </FormControl>
+            </Box>
+          </Box>
 
           {/* Submit Button */}
-          <div className="border-t border-gray-200 px-6 py-4 flex justify-center">
-            <Button
-              onClick={handleSubmit}
-              className="bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-12"
-            >
-              Submit
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+          <Box
+            sx={{
+              borderTop: '1px solid #e5e7eb',
+              padding: '16px 24px',
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 2,
+            }}
+          >
+            <RedButton onClick={handleSubmit}>Submit</RedButton>
+            <DraftButton onClick={handleCancel}>Cancel</DraftButton>
+          </Box>
+        </SectionCard>
+      </Box>
+    </Box>
   );
 };
+
+export default AddUserPage;

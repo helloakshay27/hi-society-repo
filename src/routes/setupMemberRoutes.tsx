@@ -2,6 +2,7 @@ import { Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import ProjectConfigEdit from "@/pages/ProjectConfigEdit";
 import LockFunctionEdit from "@/pages/LockFunctionEdit";
+
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
 const NewTier = lazy(() => import("@/pages/NewTier"));
 const DepartmentCreate = lazy(() => import("@/pages/DepartmentCreate"));
@@ -14,6 +15,11 @@ const PlusServicesCreate = lazy(() => import("@/pages/PlusServiceCreate"));
 const EditAmenities = lazy(() => import("@/pages/EditAmenities"));
 
 // Lazy load all setup member pages
+const AddMISPage = lazy(() => import("@/pages/AddMISPage"));
+const AddUserPage = lazy(() => import("@/pages/AddUserPage"));
+const AddQuarantinePage = lazy(() => import("@/pages/AddQuarantinePage"));
+const AddOffersPage = lazy(() => import("@/pages/AddOffersPage"));
+const AddBusinessDirectoryPage = lazy(() => import("@/pages/AddBusinessDirectoryPage"));
 const Amenities = lazy(() => import("@/pages/Amenities"));
 const AmenitiesList = lazy(() => import("@/pages/AmenitiesList"));
 const BankDetailsCreate = lazy(() => import("@/pages/BankDetailsCreate"));
@@ -250,7 +256,11 @@ export const setupMemberRoutes = (
     <Route path="/settings/amenities" Component={withSuspense(Amenities)} />
     <Route path="/settings/amenities-list" Component={withSuspense(AmenitiesList)} />
     <Route path="/settings/amenities-edit/:id" Component={withSuspense(EditAmenities)} />
-
+    <Route path="/settings/add-user" Component={withSuspense(AddUserPage)} />
+  <Route
+                    path="/quarantine-tracker/add"
+                    Component={withSuspense(AddQuarantinePage)}
+                  />
     {/* Bank Details Routes */}
     <Route path="/settings/bank-details-create" Component={withSuspense(BankDetailsCreate)} />
     <Route path="/settings/bank-details-edit/:id" Component={withSuspense(BankDetailsEdit)} />
@@ -565,5 +575,10 @@ export const setupMemberRoutes = (
     <Route path="/incidents/setup" Component={withSuspense(IncidentsSetup)} />
     <Route path="/incidents/incidents" Component={withSuspense(IncidentsIncidents)} />
     <Route path="/incidents/design-inputs" Component={withSuspense(IncidentsDesignInputs)} />
+
+    {/* Offers Routes */}
+    <Route path="/offers/add" Component={withSuspense(AddOffersPage)} />
+    <Route path="/business-directory/add" Component={withSuspense(AddBusinessDirectoryPage)} />
+    <Route path="/mis/add" Component={withSuspense(AddMISPage)} />
   </>
 );

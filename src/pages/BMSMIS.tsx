@@ -4,6 +4,7 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Plus, Download, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 interface MISRecord {
   id: string;
@@ -13,6 +14,7 @@ interface MISRecord {
 
 const BMSMIS: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   const { data: misData } = useQuery({
     queryKey: ["mis-records"],
@@ -32,7 +34,7 @@ const BMSMIS: React.FC = () => {
   ];
 
   const handleAdd = () => {
-    toast.info("Add MIS record");
+    navigate("/mis/add");
   };
 
   const handleExport = () => {

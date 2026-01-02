@@ -385,7 +385,7 @@ export const ManageUsersPage = () => {
   };
 
   const handleAddUser = () => {
-    navigate("/setup/manage-users/add");
+    navigate("/settings/add-user");
     setShowActionPanel(false);
   };
 
