@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import ProjectConfigEdit from "@/pages/ProjectConfigEdit";
 import LockFunctionEdit from "@/pages/LockFunctionEdit";
 
+const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
 const NewTier = lazy(() => import("@/pages/NewTier"));
 const DepartmentCreate = lazy(() => import("@/pages/DepartmentCreate"));

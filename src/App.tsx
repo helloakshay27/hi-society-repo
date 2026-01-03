@@ -821,6 +821,7 @@ import SprintDetailsPage from "./pages/SprintDetailsPage";
 import MilestoneDetailsPage from "./pages/MilestoneDetailsPage";
 import ProjectTaskDetails from "./pages/ProjectTaskDetails";
 import { setupMemberRoutes } from "./routes/setupMemberRoutes";
+import { ViewUserPage } from "./pages/ViewUserPage";
 // import RouteLogger from "./components/RouteLogger";
 
 const queryClient = new QueryClient();
@@ -1441,6 +1442,11 @@ function App() {
                   <Route
                     path="/settings/manage-users"
                     element={<ManageUsersPage />}
+                  />
+
+                  <Route 
+                  path="/settings/manage-users/view-user/:id"
+                  element={<ViewUserPage />}
                   />
                   {/* <Route
                     path="/settings/manage-users/add"

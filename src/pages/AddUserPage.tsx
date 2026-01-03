@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Camera, User as UserIcon, Info } from "lucide-react";
 import {
   Box,
@@ -123,50 +123,169 @@ const CameraButton = styled(IconButton)(({ theme }) => ({
   },
 }));
 
- const AddUserPage = () => {
+const API_TOKEN = "bfa5004e7b0175622be8f7e69b37d01290b737f82e078414";
+const CREATE_API = `https://uat-hi-society.lockated.com/crm/admin/user_societies.json?token=${API_TOKEN}`;
+const EDIT_API = (id: string) => `https://uat-hi-society.lockated.com/crm/admin/user_societies/${id}.json?token=${API_TOKEN}`;
+
+const mapFormDataToApiPayload = (formData: any) => ({
+  email: formData.email,
+  number: formData.mobile,
+  password: formData.password,
+  user_title: formData.title,
+  firstname: formData.firstName,
+  lastname: formData.lastName,
+  country_code: formData.countryCode,
+  country_code_name: "IN",
+  alternate_email1: formData.alternateEmail1,
+  alternate_email2: formData.alternateEmail2,
+  alternate_address: formData.alternateAddress,
+  company_name: formData.companyName || "",
+  pan_number: formData.panNumber,
+  gst_number: formData.gstNumber,
+  flat: formData.flat,
+  ownership: formData.residentType,
+  lives_here: formData.livesHere === "Yes" ? true : false,
+  allow_fitout: formData.allowFitout === "Yes" ? true : false,
+  intercom: formData.intercomNumber,
+  landline: formData.landlineNumber,
+  agreement_start_date: formData.agreementStartDate || "",
+  agreement_expire_date: formData.agreementExpireDate || "",
+  document: null,
+  status: formData.status === "Active" || formData.status === true,
+  is_primary: formData.membershipType === "Primary" ? 1 : 0,
+  birthday: formData.birthDate,
+  anniversary: formData.anniversary,
+  spouse_birthday: formData.spouseBirthDate,
+  differently_abled: formData.differentlyAbled === "Yes" ? true : false,
+  ev_connection: formData.evConnection === "Yes" ? true : false,
+  adults: Number(formData.noOfAdults) || 0,
+  children: Number(formData.noOfChildren) || 0,
+  pets: Number(formData.noOfPets) || 0,
+  user_category_id: formData.category === "Resident" ? 3 : formData.category === "Staff" ? 2 : 1,
+  name_on_bill: `${formData.firstName} ${formData.lastName}`,
+});
+
+const defaultFormData = {
+  title: "",
+  firstName: "",
+  lastName: "",
+  email: "",
+  countryCode: "+91",
+  mobile: "",
+  password: "",
+  phase: "",
+  status: "",
+  tower: "",
+  flat: "",
+  category: "",
+  alternateAddress: "",
+  residentType: "Owner",
+  membershipType: "Primary",
+  livesHere: "Yes",
+  allowFitout: "No",
+  birthDate: "",
+  anniversary: "",
+  spouseBirthDate: "",
+  alternateEmail1: "",
+  alternateEmail2: "",
+  landlineNumber: "",
+  intercomNumber: "",
+  gstNumber: "",
+  panNumber: "",
+  evConnection: "",
+  noOfPets: "",
+  noOfAdults: "",
+  noOfChildren: "",
+  differentlyAbled: "No",
+  companyName: "",
+  agreementStartDate: "",
+  agreementExpireDate: "",
+};
+
+const AddUserPage = () => {
   const navigate = useNavigate();
+  const { userId } = useParams<{ userId?: string }>();
+  const location = useLocation();
+  const isEdit = Boolean(userId);
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    title: "",
-    firstName: "",
-    lastName: "",
-    email: "",
-    countryCode: "+91",
-    mobile: "",
-    password: "",
-    phase: "",
-    status: "",
-    tower: "",
-    flat: "",
-    category: "",
-    alternateAddress: "",
-    residentType: "Owner",
-    membershipType: "Primary",
-    livesHere: "Yes",
-    allowFitout: "No",
-    birthDate: "",
-    anniversary: "",
-    spouseBirthDate: "",
-    alternateEmail1: "",
-    alternateEmail2: "",
-    landlineNumber: "",
-    intercomNumber: "",
-    gstNumber: "",
-    panNumber: "",
-    evConnection: "",
-    noOfPets: "",
-    noOfAdults: "",
-    noOfChildren: "",
-    differentlyAbled: "No",
-  });
+  const [formData, setFormData] = useState(defaultFormData);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch user data if editing
+  useEffect(() => {
+    if (isEdit && userId) {
+      setLoading(true);
+      fetch(EDIT_API(userId), { method: "GET" })
+        .then(res => res.json())
+        .then(data => {
+          // Map API response to formData shape
+          const user = data?.data || {};
+          setFormData({
+            ...defaultFormData,
+            title: user.user_title || "",
+            firstName: user.firstname || "",
+            lastName: user.lastname || "",
+            email: user.email || "",
+            countryCode: user.country_code || "+91",
+            mobile: user.number || "",
+            password: "", // don't prefill password
+            phase: user.phase || "",
+            status: user.status ? "Active" : "Inactive",
+            tower: user.tower || "",
+            flat: user.flat || "",
+            category: user.user_category_id === 3 ? "Resident" : user.user_category_id === 2 ? "Staff" : "Vendor",
+            alternateAddress: user.alternate_address || "",
+            residentType: user.ownership || "Owner",
+            membershipType: user.is_primary === 1 ? "Primary" : "Secondary",
+            livesHere: user.lives_here ? "Yes" : "No",
+            allowFitout: user.allow_fitout ? "Yes" : "No",
+            birthDate: user.birthday || "",
+            anniversary: user.anniversary || "",
+            spouseBirthDate: user.spouse_birthday || "",
+            alternateEmail1: user.alternate_email1 || "",
+            alternateEmail2: user.alternate_email2 || "",
+            landlineNumber: user.landline || "",
+            intercomNumber: user.intercom || "",
+            gstNumber: user.gst_number || "",
+            panNumber: user.pan_number || "",
+            evConnection: user.ev_connection ? "Yes" : "No",
+            noOfPets: user.pets?.toString() || "",
+            noOfAdults: user.adults?.toString() || "",
+            noOfChildren: user.children?.toString() || "",
+            differentlyAbled: user.differently_abled ? "Yes" : "No",
+            companyName: user.company_name || "",
+            agreementStartDate: user.agreement_start_date || "",
+            agreementExpireDate: user.agreement_expire_date || "",
+          });
+        })
+        .catch(() => setError("Failed to load user data."))
+        .finally(() => setLoading(false));
+    }
+  }, [isEdit, userId]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    console.log("Form submitted:", formData);
-    // Add your submit logic here
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(null);
+    const payload = mapFormDataToApiPayload(formData);
+    try {
+      const res = await fetch(isEdit && userId ? EDIT_API(userId) : CREATE_API, {
+        method: isEdit ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("API error");
+      // Optionally handle response
+      navigate("/setup/manage-users");
+    } catch (e) {
+      setError("Failed to submit. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -210,10 +329,12 @@ const CameraButton = styled(IconButton)(({ theme }) => ({
               fontFamily: 'Work Sans, sans-serif',
             }}
           >
-            Add User
+            {isEdit ? "Edit User" : "Add User"}
           </h1>
         </Paper>
-
+        {error && (
+          <Box sx={{ color: "#C72030", mb: 2, fontWeight: 500 }}>{error}</Box>
+        )}
         {/* Primary Details Section */}
         <SectionCard>
           <SectionHeader>
@@ -734,8 +855,10 @@ const CameraButton = styled(IconButton)(({ theme }) => ({
               gap: 2,
             }}
           >
-            <RedButton onClick={handleSubmit}>Submit</RedButton>
-            <DraftButton onClick={handleCancel}>Cancel</DraftButton>
+            <RedButton onClick={handleSubmit} disabled={loading}>
+              {loading ? (isEdit ? "Saving..." : "Submitting...") : (isEdit ? "Save" : "Submit")}
+            </RedButton>
+            <DraftButton onClick={handleCancel} disabled={loading}>Cancel</DraftButton>
           </Box>
         </SectionCard>
       </Box>

@@ -342,31 +342,18 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       setToken(response.access_token);
       saveBaseUrl(baseUrl);
       localStorage.setItem("userId", response.id.toString());
-      localStorage.setItem("userType", response.user_type.toString());
+      // Always set to Hi Society view (employee view)
+      localStorage.setItem("userType", "pms_occupant");
+      localStorage.setItem("selectedView", "employee");
       // Session storage
       sessionStorage.setItem("userId", response.id.toString());
-      sessionStorage.setItem("userType", response.user_type.toString());
-
-      const from =
-        (location.state as { from?: Location })?.from?.pathname +
-          (location.state as { from?: Location })?.from?.search ||
-        "/maintenance/asset";
+      sessionStorage.setItem("userType", "pms_occupant");
 
       toast.success(`Welcome back, ${response.firstname}! Login successful.`);
 
-      // Add a slight delay for better UX, then redirect to dashboard
+      // Navigate directly to Hi Society dashboard
       setTimeout(() => {
-        isViSite
-          ? navigate("/safety/m-safe/internal")
-          : navigate(from, { replace: true });
-        // Special routing for user ID 189005
-        if (response.id === 189005) {
-          navigate("/dashboard");
-        } else if (isViSite) {
-          navigate("/safety/m-safe/internal");
-        } else {
-          navigate(from, { replace: true });
-        }
+        navigate("/maintenance/project-details-list", { replace: true });
       }, 500);
     } catch (error: any) {
       console.error("Login error:", error);
