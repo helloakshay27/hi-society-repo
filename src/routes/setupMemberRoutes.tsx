@@ -2,6 +2,7 @@ import { Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import ProjectConfigEdit from "@/pages/ProjectConfigEdit";
 import LockFunctionEdit from "@/pages/LockFunctionEdit";
+import EventDetails from "@/pages/EventDetails";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
@@ -309,6 +310,7 @@ export const setupMemberRoutes = (
     {/* Event Routes */}
     <Route path="/maintenance/event-create" Component={withSuspense(EventCreate)} />
     {/* <Route path="/maintenance/event-details/:id" element={<EventDetails />} /> */}
+     <Route path="/maintenance/event-details/:id" element={<EventDetails />} />
     <Route path="/maintenance/event-edit/:id" Component={withSuspense(EventEdit)} />
     <Route path="/maintenance/event-list" Component={withSuspense(EventList)} />
 
