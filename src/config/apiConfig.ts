@@ -1,5 +1,21 @@
 import { getBaseUrl, getToken } from '@/utils/auth';
 
+// Hi-Society API Configuration
+export const HI_SOCIETY_CONFIG = {
+  BASE_URL: 'https://uat-hi-society.lockated.com',
+  get TOKEN() {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user?.spree_api_key || '';
+  },
+  ENDPOINTS: {
+    ACCOUNT: '/api/users/account.json',
+    USER_APPROVED_SOCIETIES: '/user_approved_societies.json',
+    CHANGE_USER_SOCIETY: '/change_user_society.json',
+    USER_CATEGORIES: '/crm/admin/user_categories.json',
+    USER_CATEGORY_DETAILS: '/crm/admin/user_categories', // Base path, will append /{id}.json
+  },
+};
+
 // API Configuration - Central place for managing API endpoints and tokens
 const getApiConfig = () => {
   const savedToken = getToken();

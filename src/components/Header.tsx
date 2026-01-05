@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Bell,
@@ -43,6 +44,7 @@ import { permissionService } from "@/services/permissionService";
 import { is } from "date-fns/locale";
 import { Dashboard } from "@mui/icons-material";
 import { AnalyticsGrid } from "./dashboard/AnalyticsGrid";
+import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 
 export interface Company {
   id: number;
@@ -52,6 +54,20 @@ export interface Company {
 export interface Site {
   id: number;
   name: string;
+}
+
+export interface HiSocietySociety {
+  id: number;
+  id_society: string;
+  society: {
+    id: number;
+    building_name: string;
+  };
+  user_flat?: {
+    id: number;
+    flat: string;
+    block: string;
+  };
 }
 
 export const Header = () => {
@@ -65,6 +81,12 @@ export const Header = () => {
     email?: string;
     role_name?: string;
   } | null>(null);
+  
+  // Hi-Society specific state
+  const [hiSocietySocieties, setHiSocietySocieties] = useState<HiSocietySociety[]>([]);
+  const [selectedSociety, setSelectedSociety] = useState<HiSocietySociety | null>(null);
+  const [hiSocietyLoading, setHiSocietyLoading] = useState(false);
+  
   const dispatch = useDispatch<AppDispatch>();
 
   const currentPath = window.location.pathname;
@@ -181,6 +203,29 @@ export const Header = () => {
     }
   }, [isViSite]);
 
+  // Load Hi-Society data from localStorage
+  useEffect(() => {
+    const loadHiSocietyData = () => {
+      const societiesData = localStorage.getItem("hiSocietyApprovedSocieties");
+      const selectedUserSociety = localStorage.getItem("selectedUserSociety");
+      
+      if (societiesData) {
+        const societies: HiSocietySociety[] = JSON.parse(societiesData);
+        setHiSocietySocieties(societies);
+        
+        // Find and set selected society
+        if (selectedUserSociety) {
+          const selected = societies.find(s => s.id.toString() === selectedUserSociety);
+          if (selected) {
+            setSelectedSociety(selected);
+          }
+        }
+      }
+    };
+
+    loadHiSocietyData();
+  }, []);
+
   useEffect(() => {
     if (selectedCompany) {
       // setCompany(selectedCompany.name)
@@ -191,6 +236,43 @@ export const Header = () => {
 
   const handleSearch = (searchTerm: string) => {
     console.log("Search term:", searchTerm);
+  };
+
+  // Handle Hi-Society society change
+  const handleSocietyChange = async (societyId: number) => {
+    setHiSocietyLoading(true);
+    try {
+      const user = getUser();
+      if (!user?.spree_api_key) {
+        console.error("No token found");
+        return;
+      }
+
+      const response = await fetch(
+        `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.CHANGE_USER_SOCIETY}?token=${user.spree_api_key}&user_society_id=${societyId}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to change society");
+      }
+
+      const data = await response.json();
+      
+      // Update selected society
+      const selected = hiSocietySocieties.find(s => s.id === societyId);
+      if (selected) {
+        setSelectedSociety(selected);
+        localStorage.setItem("selectedUserSociety", societyId.toString());
+        sessionStorage.setItem("selectedUserSociety", societyId.toString());
+      }
+
+      // Reload page to reflect changes
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to change society:", error);
+    } finally {
+      setHiSocietyLoading(false);
+    }
   };
 
   // Load initial data
@@ -407,74 +489,47 @@ export const Header = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Society Dropdown */}
+          <p style={{color:'black'}}>okmlk</p>
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
               <Building2 className="w-4 h-4" />
 
-              {projectLoading ? (
+              {hiSocietyLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <span className="text-sm font-medium">
-                  {selectedCompany?.name || "Select Project"}
+                  {selectedSociety?.society?.building_name || "Select Society"}
                 </span>
               )}
               <ChevronDown className="w-3 h-3" />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
-              {companies.map((company) => (
+              {hiSocietySocieties.map((society) => (
                 <DropdownMenuItem
-                  key={company.id}
-                  onClick={() => handleCompanyChange(company.id)}
+                  key={society.id}
+                  onClick={() => handleSocietyChange(society.id)}
                   className={
-                    selectedCompany?.id === company.id
+                    selectedSociety?.id === society.id
                       ? "bg-[#f6f4ee] text-[#C72030]"
                       : ""
                   }
                 >
-                  {company.name}
+                  {society.society.building_name}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Site Dropdown (hidden for VI and localhost) */}
-          {!isViSite && (
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
-                <MapPin className="w-4 h-4" />
-                {siteLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <span className="text-sm font-medium">
-                    {selectedSite?.name || "Select Site"}
-                  </span>
-                )}
-                <ChevronDown className="w-3 h-3" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
-                {sites.length > 0 ? (
-                  sites.map((site) => (
-                    <DropdownMenuItem
-                      key={site.id}
-                      onClick={() => handleSiteChange(site.id)}
-                      className={
-                        selectedSite?.id === site.id
-                          ? "bg-[#f6f4ee] text-[#C72030]"
-                          : ""
-                      }
-                    >
-                      {site.name}
-                    </DropdownMenuItem>
-                  ))
-                ) : (
-                  <DropdownMenuItem disabled>
-                    {selectedCompany
-                      ? "No sites available"
-                      : "Select a project first"}
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+          {/* Flat Display */}
+          {selectedSociety?.user_flat && (
+            <div className="flex items-center gap-2 text-[#1a1a1a]">
+              <Home className="w-4 h-4" />
+              <span className="text-sm font-medium">
+                {selectedSociety.user_flat.block && `${selectedSociety.user_flat.block} - `}
+                {selectedSociety.user_flat.flat}
+              </span>
+            </div>
           )}
 
           {!isViSite && (

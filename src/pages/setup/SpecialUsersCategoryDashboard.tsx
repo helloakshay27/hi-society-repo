@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 
 // Column configuration
 const columns: ColumnConfig[] = [
@@ -21,80 +22,85 @@ const columns: ColumnConfig[] = [
   { key: "categoryName", label: "Category Name", sortable: true, draggable: true },
 ];
 
-// Sample data
-const sampleCategories = [
-  {
-    id: "1",
-    sNo: 1,
-    categoryName: "Other",
-  },
-  {
-    id: "2",
-    sNo: 2,
-    categoryName: "Committee Member",
-  },
-  {
-    id: "3",
-    sNo: 3,
-    categoryName: "Pregnant Lady",
-  },
-  {
-    id: "4",
-    sNo: 4,
-    categoryName: "Senior Citizen",
-  },
-  {
-    id: "5",
-    sNo: 5,
-    categoryName: "Prioritize Complaint",
-  },
-  {
-    id: "6",
-    sNo: 6,
-    categoryName: "New User",
-  },
-  {
-    id: "7",
-    sNo: 7,
-    categoryName: "Test Category",
-  },
-  {
-    id: "8",
-    sNo: 8,
-    categoryName: "Abc",
-  },
-];
-
 export const SpecialUsersCategoryDashboard = () => {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState(sampleCategories);
+  const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch categories from API
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_CATEGORIES}?token=${HI_SOCIETY_CONFIG.TOKEN}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch categories");
+      }
+      const data = await response.json();
+      
+      // Transform API data to match our table format
+      const transformedData = data.map((category: any, index: number) => ({
+        id: category.id.toString(),
+        sNo: index + 1,
+        categoryName: category.name,
+      }));
+      
+      setCategories(transformedData);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error("Failed to load categories");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAddCategory = () => {
     setShowAddDialog(true);
   };
 
-  const handleSubmitCategory = () => {
+  const handleSubmitCategory = async () => {
     if (!categoryName.trim()) {
       toast.error("Please enter a category name");
       return;
     }
 
-    const newCategory = {
-      id: `category-${Date.now()}`,
-      sNo: categories.length + 1,
-      categoryName: categoryName,
-    };
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_CATEGORIES}?token=${HI_SOCIETY_CONFIG.TOKEN}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_category: {
+            name: categoryName,
+          },
+        }),
+      });
 
-    setCategories([...categories, newCategory]);
-    setCategoryName("");
-    setShowAddDialog(false);
-    toast.success("Category added successfully!");
+      if (!response.ok) {
+        throw new Error("Failed to add category");
+      }
+
+      toast.success("Category added successfully!");
+      setCategoryName("");
+      setShowAddDialog(false);
+      fetchCategories(); // Refresh the list
+    } catch (error) {
+      console.error("Error adding category:", error);
+      toast.error("Failed to add category");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -122,27 +128,72 @@ export const SpecialUsersCategoryDashboard = () => {
     }
   };
 
-  const handleSubmitEdit = () => {
+  const handleSubmitEdit = async () => {
     if (!categoryName.trim()) {
       toast.error("Please enter a category name");
       return;
     }
 
-    setCategories(categories.map((c) => 
-      c.id === editingCategory.id 
-        ? { ...c, categoryName: categoryName }
-        : c
-    ));
-    
-    setCategoryName("");
-    setEditingCategory(null);
-    setShowEditDialog(false);
-    toast.success("Category updated successfully!");
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_CATEGORY_DETAILS}/${editingCategory.id}.json?token=${HI_SOCIETY_CONFIG.TOKEN}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_category: {
+              name: categoryName,
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update category");
+      }
+
+      toast.success("Category updated successfully!");
+      setCategoryName("");
+      setEditingCategory(null);
+      setShowEditDialog(false);
+      fetchCategories(); // Refresh the list
+    } catch (error) {
+      console.error("Error updating category:", error);
+      toast.error("Failed to update category");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
-    setCategories(categories.filter((c) => c.id !== categoryId));
-    toast.success("Category deleted successfully!");
+  const handleDeleteCategory = async (categoryId: string) => {
+    if (!confirm("Are you sure you want to delete this category?")) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_CATEGORY_DETAILS}/${categoryId}.json?token=${HI_SOCIETY_CONFIG.TOKEN}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete category");
+      }
+
+      toast.success("Category deleted successfully!");
+      fetchCategories(); // Refresh the list
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast.error("Failed to delete category");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Render cell content based on column key
@@ -279,9 +330,10 @@ export const SpecialUsersCategoryDashboard = () => {
                 </Button>
                 <Button
                   onClick={handleSubmitCategory}
+                  disabled={isLoading}
                   className="px-6 py-2 bg-[#1E3A8A] hover:bg-[#1E40AF] text-white"
                 >
-                  Add
+                  {isLoading ? "Adding..." : "Add"}
                 </Button>
               </div>
             </div>
@@ -335,9 +387,10 @@ export const SpecialUsersCategoryDashboard = () => {
                 </Button>
                 <Button
                   onClick={handleSubmitEdit}
+                  disabled={isLoading}
                   className="px-6 py-2 bg-[#1E3A8A] hover:bg-[#1E40AF] text-white"
                 >
-                  Update
+                  {isLoading ? "Updating..." : "Update"}
                 </Button>
               </div>
             </div>

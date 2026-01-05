@@ -14,6 +14,7 @@ import {
 } from "@/utils/auth";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
+import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 
 const muiFieldStyles = {
   width: "100%",
@@ -215,6 +216,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
     setCurrentStep(3);
   };
 
+
   const handleLogin = async () => {
     if (!email || !password || !selectedOrganization) {
       toast.error("Please enter all required information.");
@@ -229,7 +231,8 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
 
     setLoginLoading(true);
     try {
-      const baseUrl = `${selectedOrganization.sub_domain}.${selectedOrganization.domain}`;
+      // Use Hi-Society base URL for authentication (remove https:// as loginUser adds it)
+      const baseUrl = HI_SOCIETY_CONFIG.BASE_URL.replace(/^https?:\/\//, '');
       const response = await loginUser(email, password, baseUrl);
 
       if (!response || !response.access_token) {
@@ -348,7 +351,10 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       // Session storage
       sessionStorage.setItem("userId", response.id.toString());
       sessionStorage.setItem("userType", "pms_occupant");
-
+      
+      // Fetch Hi-Society specific data
+      await fetchHiSocietyData(response.spree_api_key);
+      
       toast.success(`Welcome back, ${response.firstname}! Login successful.`);
 
       // Navigate directly to Hi Society dashboard
@@ -672,7 +678,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('https://vendor.panchshil.com/assets/pan_logo-4e1c867e2fada5efc385ef5c565a0ad3b533cd396d1ed187a0bc7fdec161a35a.jpg')`,
+            backgroundImage: `url('https://lockated-public.s3.ap-south-1.amazonaws.com/attachfiles/documents/49244/original/Background_image.png')`,
           }}
         />
       </div>

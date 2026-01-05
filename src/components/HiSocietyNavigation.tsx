@@ -36,18 +36,6 @@ const navigationItems: NavigationItem[] = [
     path: "/campaigns/referrals",
   },
   {
-    id: "fb",
-    label: "F & B",
-    icon: <Users className="w-4 h-4" />,
-    path: "/fb/restaurants",
-  },
-  {
-    id: "osr",
-    label: "OSR",
-    icon: <MessageSquare className="w-4 h-4" />,
-    path: "/osr/setup",
-  },
-  {
     id: "fitout",
     label: "Fitout",
     icon: <SettingsIcon className="w-4 h-4" />,
@@ -70,6 +58,18 @@ const navigationItems: NavigationItem[] = [
     label: "Incidents",
     icon: <SettingsIcon className="w-4 h-4" />,
     path: "/incidents/setup",
+  },
+  {
+    id: "fb",
+    label: "F & B",
+    icon: <Users className="w-4 h-4" />,
+    path: "/fb/restaurants",
+  },
+  {
+    id: "osr",
+    label: "OSR",
+    icon: <MessageSquare className="w-4 h-4" />,
+    path: "/osr/setup",
   },
   {
     id: "settings",
