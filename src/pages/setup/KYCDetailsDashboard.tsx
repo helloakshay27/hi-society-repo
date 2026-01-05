@@ -174,7 +174,7 @@ export const KYCDetailsDashboard = () => {
   return (
     <div className="p-6 bg-[#fafafa] min-h-screen">
       {/* Separate Header */}
-      <div className="bg-white rounded-lg shadow-sm mb-6">
+      <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-3">
         <div className="px-6 py-4">
           <h1 className="text-2xl font-semibold text-gray-900">
             KYC Details
@@ -222,52 +222,55 @@ export const KYCDetailsDashboard = () => {
               <span className="sr-only">Close</span>
             </button>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="userName">
+          <div className="space-y-6 py-4">
+            <div className="relative">
+              <Label htmlFor="userName" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                 User Name <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="userName"
-                placeholder="Enter User Name"
+                placeholder=" "
                 value={formData.userName}
                 onChange={(e) =>
                   setFormData({ ...formData, userName: e.target.value })
                 }
+                className="border border-gray-400 pt-2"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="userEmail">
+            <div className="relative">
+              <Label htmlFor="userEmail" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                 User Email <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="userEmail"
                 type="email"
-                placeholder="Enter User Email"
+                placeholder=" "
                 value={formData.userEmail}
                 onChange={(e) =>
                   setFormData({ ...formData, userEmail: e.target.value })
                 }
+                className="border border-gray-400 pt-2"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="userMobile">
+            <div className="relative">
+              <Label htmlFor="userMobile" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                 User Mobile <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="userMobile"
                 type="tel"
-                placeholder="Enter User Mobile"
+                placeholder=" "
                 value={formData.userMobile}
                 onChange={(e) =>
                   setFormData({ ...formData, userMobile: e.target.value })
                 }
+                className="border border-gray-400 pt-2"
               />
             </div>
           </div>
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button
-              variant="outline"
+              
               onClick={() => {
                 setShowAddDialog(false);
                 setFormData({ userName: "", userEmail: "", userMobile: "" });

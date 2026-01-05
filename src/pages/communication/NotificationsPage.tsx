@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { Upload } from 'lucide-react';
+import { TextField } from '@mui/material';
 
 const NotificationsPage = () => {
   const [formData, setFormData] = useState({
@@ -47,71 +48,121 @@ const NotificationsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] p-6">
+    <div className="min-h-screen bg-[#fafafa] p-6" >
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm mb-6">
+        <div className="bg-white rounded-lg shadow-sm mb-6">
         <div className="px-6 py-4">
+           
           <h1 className="text-2xl font-semibold text-gray-900">Send Notifications</h1>
         </div>
       </div>
-
-      {/* Form Card */}
+    {/* Form Card */}
       <div className="bg-white rounded-lg shadow-sm">
         <form onSubmit={handleSubmit} className="p-8">
           <div className="max-w-3xl space-y-6">
+           
             {/* Title Field */}
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-sm font-medium text-gray-700">
-                Title
-              </Label>
-              <Input
-                id="title"
-                type="text"
-                placeholder="Enter notification title"
+           <div className="p-2">
+             <div className="grid grid-cols-3 md:grid-cols-2 gap-6 items-center">
+                <TextField
+                 label="Title"
+                 name="name"
+                 placeholder="Enter notification title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full"
-              />
-            </div>
+                fullWidth
+              variant="outlined"
+       />
+             </div>
+           </div>
 
-            {/* Text Field */}
-            <div className="space-y-2">
-              <Label htmlFor="text" className="text-sm font-medium text-gray-700">
-                Text
-              </Label>
-              <Textarea
-                id="text"
-                placeholder="Enter notification message"
-                value={formData.text}
-                onChange={(e) => setFormData({ ...formData, text: e.target.value })}
-                className="w-full min-h-[120px] resize-none"
-              />
-            </div>
+           {/* Text Field */}
+           <div className="p-2 -mt-4">
+             <div className="grid grid-cols-1 gap-6 items-center">
+<div className="relative w-full">
+  {/* Floating Label */}
+  <Label
+    className="
+      absolute 
+      -top-2 
+      left-3 
+      bg-white 
+      px-1 
+      text-xs 
+      text-gray-600
+    "
+  >
+    Text
+  </Label>
 
-            {/* File Upload */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Attachment (Optional)
-              </Label>
-              <div className="flex items-center gap-4">
-                <input
-                  type="file"
-                  id="file-upload"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 text-sm text-gray-700 transition-colors"
-                >
-                  <Upload className="w-4 h-4" />
-                  Choose File
-                </label>
-                <span className="text-sm text-gray-600">
-                  {formData.file ? formData.file.name : 'No file chosen'}
-                </span>
-              </div>
-            </div>
+  <Textarea
+    name="text"
+    placeholder="Enter notification message"
+    value={formData.text}
+    onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+    className="
+      w-full
+      min-h-[150px]
+      rounded-lg
+      border
+      border-gray-300
+      px-3
+      pt-4
+      resize-none
+      focus:outline-none
+      focus:ring-1
+      focus:ring-[#C72030]
+      focus:border-[#C72030]
+    "
+  />
+</div>
+             </div>
+           </div>
+
+           {/* File Upload */}
+<div className="space-y-2">
+  <Label className="text-sm font-medium text-gray-700">
+    Attachment (Optional)
+  </Label>
+
+  <div className="flex items-center gap-4">
+    <input
+      type="file"
+      id="file-upload"
+      onChange={handleFileChange}
+      className="hidden"
+    />
+
+    <label
+      htmlFor="file-upload"
+      className="
+        inline-flex
+        items-center
+        gap-3
+        px-5
+        py-2
+        bg-[#e0d9c859]
+        border
+        border-gray-300
+        rounded-md
+        cursor-pointer
+        hover:bg-[#ECECEC]
+        transition-colors
+      "
+    >
+      <span className="text-sm font-medium text-gray-800">
+        Upload Files
+      </span>
+
+      <Upload className="w-4 h-4 text-[#C72030]" />
+    </label>
+
+    <span className="text-sm text-gray-600">
+      {formData.file ? formData.file.name : 'No file chosen'}
+    </span>
+  </div>
+</div>
+
 
             {/* Share With Section */}
             <div className="space-y-4 pt-4">
