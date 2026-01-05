@@ -48,48 +48,12 @@ export const BMSSidebar: React.FC = () => {
   const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
 
   // State for collapsible parent items
-  const [setupOpen, setSetupOpen] = useState(false);
   const [communicationOpen, setCommunicationOpen] = useState(false);
   const [helpdeskOpen, setHelpdeskOpen] = useState(false);
   const [homeOpen, setHomeOpen] = useState(false);
-  const [setupMemberOpen, setSetupMemberOpen] = useState(false);
   const [loyaltyOpen, setLoyaltyOpen] = useState(false);
   const [documentsOpen, setDocumentsOpen] = useState(false);
   const [businessDirectoryOpen, setBusinessDirectoryOpen] = useState(false);
-
-  // Setup sub-items
-  const setupItems: MenuItem[] = [
-    {
-      id: "special-users",
-      label: "Special Users Category",
-      icon: Users,
-      path: "/setup/special-users-category",
-    },
-    {
-      id: "manage-users",
-      label: "Manage Users",
-      icon: Users,
-      path: "/setup/manage-users",
-    },
-    {
-      id: "kyc-details",
-      label: "KYC Details",
-      icon: FileText,
-      path: "/setup/kyc-details",
-    },
-    {
-      id: "manage-flats",
-      label: "Manage Flats",
-      icon: Building2,
-      path: "/setup/manage-flats",
-    },
-    {
-      id: "helpdesk-setup",
-      label: "Helpdesk Setup",
-      icon: Headset,
-      path: "/setup/helpdesk-setup",
-    },
-  ];
 
   // Communication sub-items
   const communicationItems: MenuItem[] = [
@@ -184,82 +148,6 @@ export const BMSSidebar: React.FC = () => {
       label: "FAQ",
       icon: HelpCircle,
       path: "/maintenance/faq-list",
-    },
-  ];
-
-  // Setup Member sub-items
-  const setupMemberItems: MenuItem[] = [
-    {
-      id: "user-list",
-      label: "User Module",
-      icon: Users,
-      path: "/setup-member/user-list",
-    },
-    {
-      id: "lock-role-list",
-      label: "User Role",
-      icon: Shield,
-      path: "/setup-member/lock-role-list",
-    },
-    {
-      id: "lock-function-list",
-      label: "Lock Function",
-      icon: Shield,
-      path: "/setup-member/lock-function-list",
-    },
-    {
-      id: "property-type-list",
-      label: "Property Types",
-      icon: Home,
-      path: "/setup-member/property-type-list",
-    },
-    {
-      id: "project-building-type-list",
-      label: "Project Building",
-      icon: Building2,
-      path: "/setup-member/project-building-type-list",
-    },
-    {
-      id: "construction-status-list",
-      label: "Construction Status",
-      icon: BarChart3,
-      path: "/setup-member/construction-status-list",
-    },
-    {
-      id: "project-configuration-list",
-      label: "Project Config",
-      icon: Settings,
-      path: "/setup-member/project-configuration-list",
-    },
-    {
-      id: "amenities-list",
-      label: "Amenities",
-      icon: Gift,
-      path: "/setup-member/amenities-list",
-    },
-    {
-      id: "department-list",
-      label: "Department",
-      icon: Building,
-      path: "/setup-member/department-list",
-    },
-    {
-      id: "visitslot-list",
-      label: "Visit Slot",
-      icon: Calendar,
-      path: "/setup-member/site-visit-slot-config-list",
-    },
-    {
-      id: "faq-category-list",
-      label: "FAQ Category",
-      icon: HelpCircle,
-      path: "/setup-member/faq-category-list",
-    },
-    {
-      id: "faq-subcategory-list",
-      label: "FAQ SubCategory",
-      icon: HelpCircle,
-      path: "/setup-member/faq-subcategory-list",
     },
   ];
 
@@ -386,7 +274,7 @@ export const BMSSidebar: React.FC = () => {
     <div
       className={`${
         isSidebarCollapsed ? "w-16" : "w-64"
-      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto overflow-x-hidden transition-all duration-300`}
       style={{ top: "4rem", height: "calc(100% - 4rem)" }}
     >
       <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"} pb-16`}>
@@ -418,27 +306,6 @@ export const BMSSidebar: React.FC = () => {
 
         {/* Menu Items */}
         <nav className="space-y-1">
-          {/* Setup Parent */}
-          <div>
-            <button
-              onClick={() => setSetupOpen(!setupOpen)}
-              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
-            >
-              <div className="flex items-center gap-3">
-                <Settings className="w-5 h-5 flex-shrink-0" />
-                {!isSidebarCollapsed && <span>Setup</span>}
-              </div>
-              {!isSidebarCollapsed && (
-                setupOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-              )}
-            </button>
-            {setupOpen && !isSidebarCollapsed && (
-              <div className="mt-1 space-y-1">
-                {renderSubItems(setupItems)}
-              </div>
-            )}
-          </div>
-
           {/* Communication Parent */}
           <div>
             <button
@@ -644,27 +511,6 @@ export const BMSSidebar: React.FC = () => {
             {homeOpen && !isSidebarCollapsed && (
               <div className="mt-1 space-y-1">
                 {renderSubItems(homeItems)}
-              </div>
-            )}
-          </div>
-
-          {/* Setup Member Parent */}
-          <div>
-            <button
-              onClick={() => setSetupMemberOpen(!setupMemberOpen)}
-              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
-            >
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 flex-shrink-0" />
-                {!isSidebarCollapsed && <span>Setup Member</span>}
-              </div>
-              {!isSidebarCollapsed && (
-                setupMemberOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-              )}
-            </button>
-            {setupMemberOpen && !isSidebarCollapsed && (
-              <div className="mt-1 space-y-1">
-                {renderSubItems(setupMemberItems)}
               </div>
             )}
           </div>

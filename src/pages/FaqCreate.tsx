@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ArrowLeft, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import SelectBox from "@/components/ui/select-box";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import {
@@ -74,8 +74,8 @@ const FaqCreate = () => {
     const fetchCategories = async () => {
       try {
         setCategoriesLoading(true);
-        const res = await axios.get(`${baseURL}faq_categories.json`, {
-          headers: getAuthHeaders(),
+        const res = await axios.get(`${baseURL}/faq_categories.json`, {
+         headers: { Authorization: getAuthHeader() },
         });
 
         const categoriesData = res.data?.faq_categories || res.data || [];
@@ -101,8 +101,8 @@ const FaqCreate = () => {
       const fetchSubCategories = async () => {
         try {
           setSubCategoriesLoading(true);
-          const res = await axios.get(`${baseURL}faq_sub_categories.json`, {
-            headers: getAuthHeaders(),
+          const res = await axios.get(`${baseURL}/faq_sub_categories.json`, {
+            headers: { Authorization: getAuthHeader() },
           });
 
           const subCategoriesData =
@@ -139,7 +139,7 @@ const FaqCreate = () => {
     const fetchSites = async () => {
       try {
         setSitesLoading(true);
-        const res = await axios.get(`${baseURL}sites.json`, {
+        const res = await axios.get(`${baseURL}/sites.json`, {
           headers: getAuthHeaders(),
         });
 
@@ -271,8 +271,8 @@ const FaqCreate = () => {
         faqs: formData.faqs,
       };
 
-      await axios.post(`${baseURL}faqs.json`, payload, {
-        headers: getAuthHeaders(),
+      await axios.post(`${baseURL}/faqs.json`, payload, {
+        headers: { Authorization: getAuthHeader() },
       });
 
       toast.success("FAQs created successfully!");

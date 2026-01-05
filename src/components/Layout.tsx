@@ -18,9 +18,6 @@ import { ZxDynamicHeader } from "./ZxDynamicHeader";
 import { saveToken, saveUser, saveBaseUrl, getUser } from "../utils/auth";
 import { ProtectionLayer } from "./ProtectionLayer";
 
-
-import { ViewSelectionModal } from "./ViewSelectionModal";
-
 import { SetupHeader } from "./SetupHeader";
 import { SetupSidebar } from "./SetupSidebar";
 import { HiSocietyHeader } from "./HiSocietyHeader";
@@ -34,6 +31,7 @@ import { FitoutSidebar } from "./FitoutSidebar";
 import { AccountingSidebar } from "./AccountingSidebar";
 import { SmartSecureSidebar } from "./SmartSecureSidebar";
 import { IncidentsSidebar } from "./IncidentsSidebar";
+import { SettingsSidebar } from "./SettingsSidebar";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -63,22 +61,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isEmployeeRoute = location.pathname.startsWith("/employee");
   const userType = localStorage.getItem("userType");
   const isEmployeeUser = isEmployeeRoute || userType === "pms_occupant";
-
-  // Check if user needs to select a view (Admin or Employee)
-  const [showViewModal, setShowViewModal] = useState(false);
-
-  useEffect(() => {
-    // Check if user has already selected a view
-    const selectedView = localStorage.getItem("selectedView");
-    const storedUserType = localStorage.getItem("userType");
-
-    // If no view is selected, show the view selection modal
-    if (!selectedView || !storedUserType) {
-      setShowViewModal(true);
-    } else {
-      setShowViewModal(false);
-    }
-  }, []);
 
   // Check if non-employee user needs to select project/site
   const hostname = window.location.hostname;
@@ -159,6 +141,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       // Incidents routes use IncidentsSidebar
       if (path.startsWith('/incidents')) {
         return <IncidentsSidebar />;
+      }
+      
+      // Settings routes use SettingsSidebar
+      if (path.startsWith('/settings')) {
+        return <SettingsSidebar />;
       }
       
       // All other routes use BMSSidebar
@@ -324,13 +311,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <ProtectionLayer
         enabled={true}
         allowedDomains={["vi-web.gophygital.work"]}
-      />
-
-      {/* View Selection Modal - Choose Admin or Employee View */}
-
-      <ViewSelectionModal
-        isOpen={!isEmployeeUser ? showViewModal : false}
-        onComplete={() => setShowViewModal(false)}
       />
 
       {/* Conditional Header - Use HiSocietyHeader for employee users */}

@@ -381,11 +381,11 @@ export const ManageUsersPage = () => {
   });
 
   const handleViewUser = (userId: string) => {
-    navigate(`/setup/manage-users/view/${userId}`);
+    navigate(`/settings/manage-users/view-user/${userId}`);
   };
 
   const handleAddUser = () => {
-    navigate("/setup/manage-users/add");
+    navigate("/settings/add-user");
     setShowActionPanel(false);
   };
 

@@ -212,7 +212,7 @@ export const SpecialUsersCategoryDashboard = () => {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-lg shadow-sm">
+        <div className="bg-[#fafafa] rounded-lg shadow-sm">
           <EnhancedTable
             columns={columns}
             data={categories}

@@ -148,11 +148,11 @@ const RuleEngineList = () => {
   };
 
   const handleAdd = () => {
-    navigate('/setup-member/create-rule-engine');
+    navigate('/loyalty/create-rule-engine');
   };
 
   const handleView = (id: number) => {
-    navigate(`/setup-member/view-rule-engine/${id}`);
+    navigate(`/loyalty/view-rule-engine/${id}`);
   };
 
   const handleToggle = async (id: number, isActive: boolean) => {

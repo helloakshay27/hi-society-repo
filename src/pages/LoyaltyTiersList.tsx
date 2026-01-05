@@ -135,7 +135,7 @@ const LoyaltyTiersList = () => {
   };
 
   const handleAdd = () => {
-    navigate('/setup-member/new-tier');
+    navigate('/loyalty/new-tier');
   };
 
   const handleView = (id: number) => {

@@ -2,6 +2,9 @@ import { Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import ProjectConfigEdit from "@/pages/ProjectConfigEdit";
 import LockFunctionEdit from "@/pages/LockFunctionEdit";
+import EventDetails from "@/pages/EventDetails";
+
+const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
 const NewTier = lazy(() => import("@/pages/NewTier"));
 const DepartmentCreate = lazy(() => import("@/pages/DepartmentCreate"));
@@ -14,6 +17,11 @@ const PlusServicesCreate = lazy(() => import("@/pages/PlusServiceCreate"));
 const EditAmenities = lazy(() => import("@/pages/EditAmenities"));
 
 // Lazy load all setup member pages
+const AddMISPage = lazy(() => import("@/pages/AddMISPage"));
+const AddUserPage = lazy(() => import("@/pages/AddUserPage"));
+const AddQuarantinePage = lazy(() => import("@/pages/AddQuarantinePage"));
+const AddOffersPage = lazy(() => import("@/pages/AddOffersPage"));
+const AddBusinessDirectoryPage = lazy(() => import("@/pages/AddBusinessDirectoryPage"));
 const Amenities = lazy(() => import("@/pages/Amenities"));
 const AmenitiesList = lazy(() => import("@/pages/AmenitiesList"));
 const BankDetailsCreate = lazy(() => import("@/pages/BankDetailsCreate"));
@@ -247,19 +255,23 @@ const withSuspense = (Component: React.LazyExoticComponent<any>) => {
 export const setupMemberRoutes = (
   <>
     {/* Amenities Routes */}
-    <Route path="/setup-member/amenities" Component={withSuspense(Amenities)} />
-    <Route path="/setup-member/amenities-list" Component={withSuspense(AmenitiesList)} />
-    <Route path="/setup-member/amenities-edit/:id" Component={withSuspense(EditAmenities)} />
-
+    <Route path="/settings/amenities" Component={withSuspense(Amenities)} />
+    <Route path="/settings/amenities-list" Component={withSuspense(AmenitiesList)} />
+    <Route path="/settings/amenities-edit/:id" Component={withSuspense(EditAmenities)} />
+    <Route path="/settings/add-user" Component={withSuspense(AddUserPage)} />
+  <Route
+                    path="/quarantine-tracker/add"
+                    Component={withSuspense(AddQuarantinePage)}
+                  />
     {/* Bank Details Routes */}
-    <Route path="/setup-member/bank-details-create" Component={withSuspense(BankDetailsCreate)} />
-    <Route path="/setup-member/bank-details-edit/:id" Component={withSuspense(BankDetailsEdit)} />
-    <Route path="/setup-member/bank-details-list" Component={withSuspense(BankDetailsList)} />
+    <Route path="/settings/bank-details-create" Component={withSuspense(BankDetailsCreate)} />
+    <Route path="/settings/bank-details-edit/:id" Component={withSuspense(BankDetailsEdit)} />
+    <Route path="/settings/bank-details-list" Component={withSuspense(BankDetailsList)} />
 
     {/* Banks Routes */}
-    <Route path="/setup-member/banks/:bankId?" Component={withSuspense(Banks)} />
-    <Route path="/setup-member/banks-list" Component={withSuspense(BanksList)} />
-    <Route path="/setup-member/banks/create" Component={withSuspense(BanksCreate)} />
+    <Route path="/settings/banks/:bankId?" Component={withSuspense(Banks)} />
+    <Route path="/settings/banks-list" Component={withSuspense(BanksList)} />
+    <Route path="/settings/banks/create" Component={withSuspense(BanksCreate)} />
 
     {/* Banner Routes */}
     <Route path="/maintenance/banner-add" Component={withSuspense(BannerAdd)} />
@@ -267,12 +279,12 @@ export const setupMemberRoutes = (
     <Route path="/maintenance/banner-list" Component={withSuspense(BannerList)} />
 
     {/* Category Types Routes */}
-    <Route path="/setup-member/category-types" Component={withSuspense(CategoryTypes)} />
-    <Route path="/setup-member/category-types-edit/:id" Component={withSuspense(CategoryTypesEdit)} />
-    <Route path="/setup-member/category-types-list" Component={withSuspense(CategoryTypesList)} />
+    <Route path="/settings/category-types" Component={withSuspense(CategoryTypes)} />
+    <Route path="/settings/category-types-edit/:id" Component={withSuspense(CategoryTypesEdit)} />
+    <Route path="/settings/category-types-list" Component={withSuspense(CategoryTypesList)} />
 
     {/* Common Files Routes */}
-    <Route path="/setup-member/common-files" Component={withSuspense(CommonFiles)} />
+    <Route path="/settings/common-files" Component={withSuspense(CommonFiles)} />
 
     {/* Company Routes */}
     <Route path="/maintenance/company-create" Component={withSuspense(CompanyCreate)} />
@@ -280,24 +292,25 @@ export const setupMemberRoutes = (
     <Route path="/maintenance/company-list" Component={withSuspense(CompanyList)} />
 
     {/* Construction Status Routes */}
-    <Route path="/setup-member/construction-status" Component={withSuspense(ConstructionStatus)} />
-    <Route path="/setup-member/construction-status-edit/:id" Component={withSuspense(ConstructionStatusEdit)} />
-    <Route path="/setup-member/construction-status-list" Component={withSuspense(ConstructionStatusList)} />
+    <Route path="/settings/construction-status" Component={withSuspense(ConstructionStatus)} />
+    <Route path="/settings/construction-status-edit/:id" Component={withSuspense(ConstructionStatusEdit)} />
+    <Route path="/settings/construction-status-list" Component={withSuspense(ConstructionStatusList)} />
 
     {/* Construction Updates Routes */}
-    <Route path="/setup-member/construction-updates-create" Component={withSuspense(ConstructionUpdatesCreate)} />
-    <Route path="/setup-member/construction-updates-edit/:id" Component={withSuspense(ConstructionUpdatesEdit)} />
-    <Route path="/setup-member/construction-updates-list" Component={withSuspense(ConstructionUpdatesList)} />
+    <Route path="/settings/construction-updates-create" Component={withSuspense(ConstructionUpdatesCreate)} />
+    <Route path="/settings/construction-updates-edit/:id" Component={withSuspense(ConstructionUpdatesEdit)} />
+    <Route path="/settings/construction-updates-list" Component={withSuspense(ConstructionUpdatesList)} />
 
     {/* Rule Engine Routes */}
     <Route path="/loyalty/create-rule-engine" Component={withSuspense(CreateRuleEngine)} />
 
     {/* Enquiry Routes */}
-    <Route path="/setup-member/enquiry-list" Component={withSuspense(EnquiryList)} />
+    <Route path="/settings/enquiry-list" Component={withSuspense(EnquiryList)} />
 
     {/* Event Routes */}
     <Route path="/maintenance/event-create" Component={withSuspense(EventCreate)} />
     {/* <Route path="/maintenance/event-details/:id" element={<EventDetails />} /> */}
+     <Route path="/maintenance/event-details/:id" element={<EventDetails />} />
     <Route path="/maintenance/event-edit/:id" Component={withSuspense(EventEdit)} />
     <Route path="/maintenance/event-list" Component={withSuspense(EventList)} />
 
@@ -308,14 +321,14 @@ export const setupMemberRoutes = (
     <Route path="/maintenance/noticeboard-details/:id" Component={withSuspense(NoticeboardDetails)} />
 
     {/* FAQ Routes */}
-    <Route path="/setup-member/faq-category-form" Component={withSuspense(FaqCategoryForm)} />
-    <Route path="/setup-member/faq-category-list" Component={withSuspense(FaqCategoryList)} />
+    <Route path="/settings/faq-category-form" Component={withSuspense(FaqCategoryForm)} />
+    <Route path="/settings/faq-category-list" Component={withSuspense(FaqCategoryList)} />
     <Route path="/maintenance/faq-create" Component={withSuspense(FaqCreate)} />
     <Route path="/maintenance/faq-edit/:id" Component={withSuspense(FaqEdit)} />
     <Route path="/maintenance/faq-list" Component={withSuspense(FaqList)} />
-    <Route path="/setup-member/faq-subcategory" Component={withSuspense(FaqSubCategory)} />
-    <Route path="/setup-member/faq-subcategory/:faqSubId/edit" Component={withSuspense(FaqSubCategory)} />
-    <Route path="/setup-member/faq-subcategory-list" Component={withSuspense(FaqSubCategoryList)} />
+    <Route path="/settings/faq-subcategory" Component={withSuspense(FaqSubCategory)} />
+    <Route path="/settings/faq-subcategory/:faqSubId/edit" Component={withSuspense(FaqSubCategory)} />
+    <Route path="/settings/faq-subcategory-list" Component={withSuspense(FaqSubCategoryList)} />
 
     {/* Gallery Routes */}
     <Route path="/setup-member/gallery" Component={withSuspense(Gallery)} />
@@ -324,32 +337,32 @@ export const setupMemberRoutes = (
     <Route path="/setup-member/new-gallery" Component={withSuspense(NewGallery)} />
 
     {/* Home Loan Routes */}
-    <Route path="/setup-member/home-loan-create" Component={withSuspense(HomeLoanCreate)} />
-    <Route path="/setup-member/home-loan-edit/:id" Component={withSuspense(HomeLoanEdit)} />
-    <Route path="/setup-member/home-loan-list" Component={withSuspense(HomeLoanList)} />
+    <Route path="/settings/home-loan-create" Component={withSuspense(HomeLoanCreate)} />
+    <Route path="/settings/home-loan-edit/:id" Component={withSuspense(HomeLoanEdit)} />
+    <Route path="/settings/home-loan-list" Component={withSuspense(HomeLoanList)} />
 
     {/* Image Config Routes */}
-    <Route path="/setup-member/image-config-create" Component={withSuspense(ImageConfigCreate)} />
-    <Route path="/setup-member/image-config-edit/:id" Component={withSuspense(ImageConfigEdit)} />
-    <Route path="/setup-member/image-config-list" Component={withSuspense(ImageConfigList)} />
+    <Route path="/settings/image-config-create" Component={withSuspense(ImageConfigCreate)} />
+    <Route path="/settings/image-config-edit/:id" Component={withSuspense(ImageConfigEdit)} />
+    <Route path="/settings/image-config-list" Component={withSuspense(ImageConfigList)} />
 
     {/* Loan Manager Routes */}
-    <Route path="/setup-member/loan-manager-add" Component={withSuspense(LoanManagerAdd)} />
-    <Route path="/setup-member/loan-manager-edit/:id" Component={withSuspense(LoanManagerEdit)} />
-    <Route path="/setup-member/loan-manager-list" Component={withSuspense(LoanManagerList)} />
+    <Route path="/settings/loan-manager-add" Component={withSuspense(LoanManagerAdd)} />
+    <Route path="/settings/loan-manager-edit/:id" Component={withSuspense(LoanManagerEdit)} />
+    <Route path="/settings/loan-manager-list" Component={withSuspense(LoanManagerList)} />
     
     {/* Department Routes */}
-    <Route path="/setup-member/department-list" Component={withSuspense(DepartmentList)} />
-    <Route path="/setup-member/department-create" Component={withSuspense(DepartmentCreate)} />
+    <Route path="/settings/department-list" Component={withSuspense(DepartmentList)} />
+    <Route path="/settings/department-create" Component={withSuspense(DepartmentCreate)} />
 
     {/* Lock Function Routes */}
-    <Route path="/setup-member/lock-function-create" Component={withSuspense(LockFunctionCreate)} />
-    <Route path="/setup-member/lock-function-list" Component={withSuspense(LockFunctionList)} />
-    <Route path="/setup-member/lock-function-edit/:id" element={<LockFunctionEdit />} />
+    <Route path="/settings/lock-function-create" Component={withSuspense(LockFunctionCreate)} />
+    <Route path="/settings/lock-function-list" Component={withSuspense(LockFunctionList)} />
+    <Route path="/settings/lock-function-edit/:id" element={<LockFunctionEdit />} />
 
     {/* Lock Role Routes */}
-    <Route path="/setup-member/lock-role-create" Component={withSuspense(LockRoleCreate)} />
-    <Route path="/setup-member/lock-role-list" Component={withSuspense(LockRoleList)} />
+    <Route path="/settings/lock-role-create" Component={withSuspense(LockRoleCreate)} />
+    <Route path="/settings/lock-role-list" Component={withSuspense(LockRoleList)} />
 
     {/* Loyalty Manager Routes */}
     <Route path="/loyalty/loyalty-managers-create" Component={withSuspense(LoyaltyManagersCreate)} />
@@ -370,20 +383,20 @@ export const setupMemberRoutes = (
     <Route path="/maintenance/project-details-list" Component={withSuspense(ProjectDetailsList)} />
 
 
-    <Route path="/setup-member/project-building-type" Component={withSuspense(ProjectBuildingType)} />
-    <Route path="/setup-member/project-building-type-edit/:id" Component={withSuspense(ProjectBuildingTypeEdit)} />
-    <Route path="/setup-member/project-building-type-list" Component={withSuspense(ProjectBuildingTypeList)} />
+    <Route path="/settings/project-building-type" Component={withSuspense(ProjectBuildingType)} />
+    <Route path="/settings/project-building-type-edit/:id" Component={withSuspense(ProjectBuildingTypeEdit)} />
+    <Route path="/settings/project-building-type-list" Component={withSuspense(ProjectBuildingTypeList)} />
 
-     <Route path="/setup-member/project-details-create" Component={withSuspense(ProjectDetailsCreate)} />
-    <Route path="/setup-member/project-details-edit/:id" Component={withSuspense(ProjectDetailsEdit)} />
-    <Route path="/setup-member/project-details-view/:id" Component={withSuspense(ProjectDetails)} />
-    <Route path="/setup-member/project-details-list" Component={withSuspense(ProjectDetailsList)} />
+     <Route path="/settings/project-details-create" Component={withSuspense(ProjectDetailsCreate)} />
+    <Route path="/settings/project-details-edit/:id" Component={withSuspense(ProjectDetailsEdit)} />
+    <Route path="/settings/project-details-view/:id" Component={withSuspense(ProjectDetails)} />
+    <Route path="/settings/project-details-list" Component={withSuspense(ProjectDetailsList)} />
 
 
     {/* Property Type Routes */}
-    <Route path="/setup-member/property-type" Component={withSuspense(PropertyType)} />
-    <Route path="/setup-member/property-type-edit/:id" Component={withSuspense(PropertyTypeEdit)} />
-    <Route path="/setup-member/property-type-list" Component={withSuspense(PropertyTypeList)} />
+    <Route path="/settings/property-type" Component={withSuspense(PropertyType)} />
+    <Route path="/settings/property-type-edit/:id" Component={withSuspense(PropertyTypeEdit)} />
+    <Route path="/settings/property-type-list" Component={withSuspense(PropertyTypeList)} />
 
     {/* Referral Routes */}
     <Route path="/loyalty/referral-create" Component={withSuspense(ReferralCreate)} />
@@ -396,9 +409,9 @@ export const setupMemberRoutes = (
     <Route path="/maintenance/referral-program-list" Component={withSuspense(ReferralProgramList)} />
 
     {/* Service Category Routes */}
-    <Route path="/setup-member/service-category" Component={withSuspense(ServiceCategory)} />
-    <Route path="/setup-member/service-category/:serviceId" Component={withSuspense(ServiceCategory)} />
-    <Route path="/setup-member/service-category-list" Component={withSuspense(ServiceCategoryList)} />
+    <Route path="/settings/service-category" Component={withSuspense(ServiceCategory)} />
+    <Route path="/settings/service-category/:serviceId" Component={withSuspense(ServiceCategory)} />
+    <Route path="/settings/service-category-list" Component={withSuspense(ServiceCategoryList)} />
 
     {/* Site Routes */}
     <Route path="/maintenance/site-create" Component={withSuspense(SiteCreate)} />
@@ -406,17 +419,17 @@ export const setupMemberRoutes = (
     <Route path="/maintenance/site-list" Component={withSuspense(SiteList)} />
 
     {/* Site Visit Routes */}
-    <Route path="/setup-member/site-visit-create" Component={withSuspense(SiteVisitCreate)} />
-    <Route path="/setup-member/site-visit-edit/:id" Component={withSuspense(SiteVisitEdit)} />
-    <Route path="/setup-member/site-visit-list" Component={withSuspense(SiteVisitList)} />
+    <Route path="/settings/site-visit-create" Component={withSuspense(SiteVisitCreate)} />
+    <Route path="/settings/site-visit-edit/:id" Component={withSuspense(SiteVisitEdit)} />
+    <Route path="/settings/site-visit-list" Component={withSuspense(SiteVisitList)} />
 
     {/* Site Visit Slot Config Routes */}
-    <Route path="/setup-member/site-visit-slot-config" Component={withSuspense(SiteVisitSlotConfig)} />
-    <Route path="/setup-member/site-visit-slot-config-list" Component={withSuspense(SiteVisitSlotConfigList)} />
+    <Route path="/settings/site-visit-slot-config" Component={withSuspense(SiteVisitSlotConfig)} />
+    <Route path="/settings/site-visit-slot-config-list" Component={withSuspense(SiteVisitSlotConfigList)} />
 
     {/* SMTP Settings Routes */}
-    <Route path="/setup-member/smtp-settings-edit/:id" Component={withSuspense(SmtpSettingsEdit)} />
-    <Route path="/setup-member/smtp-settings-list" Component={withSuspense(SmtpSettingsList)} />
+    <Route path="/settings/smtp-settings-edit/:id" Component={withSuspense(SmtpSettingsEdit)} />
+    <Route path="/settings/smtp-settings-list" Component={withSuspense(SmtpSettingsList)} />
 
     {/* Specification Routes */}
     <Route path="/maintenance/specification" Component={withSuspense(Specification)} />
@@ -424,15 +437,15 @@ export const setupMemberRoutes = (
     <Route path="/maintenance/specification-update/:id" Component={withSuspense(SpecificationUpdate)} />
 
     {/* Support Service Routes */}
-    <Route path="/setup-member/support-service-list" Component={withSuspense(SupportServiceList)} />
+    <Route path="/settings/support-service-list" Component={withSuspense(SupportServiceList)} />
 
     {/* Tag Routes */}
-    <Route path="/setup-member/tag-add" Component={withSuspense(TagAdd)} />
+    <Route path="/settings/tag-add" Component={withSuspense(TagAdd)} />
 
     {/* TDS Tutorials Routes */}
-    <Route path="/setup-member/tds-tutorials-create" Component={withSuspense(TdsTutorialsCreate)} />
-    <Route path="/setup-member/tds-tutorials-edit/:id" Component={withSuspense(TdsTutorialsEdit)} />
-    <Route path="/setup-member/tds-tutorials-list" Component={withSuspense(TdsTutorialsList)} />
+    <Route path="/settings/tds-tutorials-create" Component={withSuspense(TdsTutorialsCreate)} />
+    <Route path="/settings/tds-tutorials-edit/:id" Component={withSuspense(TdsTutorialsEdit)} />
+    <Route path="/settings/tds-tutorials-list" Component={withSuspense(TdsTutorialsList)} />
 
     {/* Testimonial Routes */}
     <Route path="/maintenance/testimonials" Component={withSuspense(Testimonials)} />
@@ -440,15 +453,15 @@ export const setupMemberRoutes = (
     <Route path="/maintenance/testimonial-list" Component={withSuspense(TestimonialList)} />
 
     {/* User Routes */}
-    <Route path="/setup-member/user-create" Component={withSuspense(UserCreate)} />
-    <Route path="/setup-member/user-details/:id" Component={withSuspense(UserDetails)} />
-    <Route path="/setup-member/user-edit/:id" Component={withSuspense(UserEdit)} />
-    <Route path="/setup-member/user-list" Component={withSuspense(UserList)} />
+    <Route path="/settings/user-create" Component={withSuspense(UserCreate)} />
+    <Route path="/settings/user-details/:id" Component={withSuspense(UserDetails)} />
+    <Route path="/settings/user-edit/:id" Component={withSuspense(UserEdit)} />
+    <Route path="/settings/user-list" Component={withSuspense(UserList)} />
 
     {/* User Groups Routes */}
-    <Route path="/setup-member/user-groups-create" Component={withSuspense(UserGroupsCreate)} />
-    <Route path="/setup-member/user-groups-edit/:id" Component={withSuspense(UserGroupsEdit)} />
-    <Route path="/setup-member/user-groups-list" Component={withSuspense(UserGroupsList)} />
+    <Route path="/settings/user-groups-create" Component={withSuspense(UserGroupsCreate)} />
+    <Route path="/settings/user-groups-edit/:id" Component={withSuspense(UserGroupsEdit)} />
+    <Route path="/settings/user-groups-list" Component={withSuspense(UserGroupsList)} />
 
     {/* Press Releases Routes */}
     <Route path="/maintenance/press-releases-create" Component={withSuspense(PressReleasesCreate)} />
@@ -467,13 +480,13 @@ export const setupMemberRoutes = (
     <Route path="/loyalty/encash-list" Component={withSuspense(EncashList)} />
 
     {/* Project Configuration Routes */}
-    <Route path="/setup-member/project-configuration" Component={withSuspense(ProjectConfiguration)} />
-    <Route path="/setup-member/project-configuration-list" Component={withSuspense(ProjectConfigurationList)} />
-    <Route path="/setup-member/project-configuration-edit/:id" element={<ProjectConfigEdit />} />
+    <Route path="/settings/project-configuration" Component={withSuspense(ProjectConfiguration)} />
+    <Route path="/settings/project-configuration-list" Component={withSuspense(ProjectConfigurationList)} />
+    <Route path="/settings/project-configuration-edit/:id" element={<ProjectConfigEdit />} />
 
     {/* Plus Services Routes */}
-    <Route path="/setup-member/plus-services-list" Component={withSuspense(PlusServicesList)} />
-    <Route path="/setup-member/plus-services-create" Component={withSuspense(PlusServicesCreate)} />
+    <Route path="/settings/plus-services-list" Component={withSuspense(PlusServicesList)} />
+    <Route path="/settings/plus-services-create" Component={withSuspense(PlusServicesCreate)} />
 
     {/* BMS Routes */}
     <Route path="/bms/helpdesk" Component={withSuspense(BMSHelpdesk)} />
@@ -565,5 +578,10 @@ export const setupMemberRoutes = (
     <Route path="/incidents/setup" Component={withSuspense(IncidentsSetup)} />
     <Route path="/incidents/incidents" Component={withSuspense(IncidentsIncidents)} />
     <Route path="/incidents/design-inputs" Component={withSuspense(IncidentsDesignInputs)} />
+
+    {/* Offers Routes */}
+    <Route path="/offers/add" Component={withSuspense(AddOffersPage)} />
+    <Route path="/business-directory/add" Component={withSuspense(AddBusinessDirectoryPage)} />
+    <Route path="/mis/add" Component={withSuspense(AddMISPage)} />
   </>
 );

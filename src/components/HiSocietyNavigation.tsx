@@ -71,6 +71,12 @@ const navigationItems: NavigationItem[] = [
     icon: <SettingsIcon className="w-4 h-4" />,
     path: "/incidents/setup",
   },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: <SettingsIcon className="w-4 h-4" />,
+    path: "/settings/special-users-category",
+  },
 ];
 
 export const HiSocietyNavigation: React.FC = () => {
@@ -98,6 +104,8 @@ export const HiSocietyNavigation: React.FC = () => {
       setActiveNav("smartsecure");
     } else if (path.startsWith("/incidents")) {
       setActiveNav("incidents");
+    } else if (path.startsWith("/settings")) {
+      setActiveNav("settings");
     } else if (path.startsWith("/bms") || path.startsWith("/maintenance") || path.startsWith("/communication") || path.startsWith("/loyalty") || path.startsWith("/setup-member") || path.startsWith("/setup")) {
       setActiveNav("bms");
     } else {

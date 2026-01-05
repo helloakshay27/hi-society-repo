@@ -65,7 +65,7 @@ const FaqCategoryForm = () => {
     const fetchSites = async () => {
       try {
         setSitesLoading(true);
-        const res = await axios.get(`${baseURL}sites.json`, {
+        const res = await axios.get(`${baseURL}/sites.json`, {
           headers: getAuthHeaders()
         });
         
