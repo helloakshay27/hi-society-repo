@@ -21,26 +21,6 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
-<<<<<<< HEAD
-// Floating Label Field Component
-const FloatingLabelField = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => {
-  return (
-    <div className="relative">
-      <div className="border-2 border-gray-300 rounded px-3 py-2">
-        <label className="absolute -top-3 left-3 bg-white px-2 text-sm font-medium text-gray-700">
-          {required && <span className="text-red-500">* </span>}
-          {label}
-        </label>
-        <div className="pt-2">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export const AddUserPage = () => {
-=======
 // Styled Components
 const SectionCard = styled(Paper)(({ theme }) => ({
   backgroundColor: 'white',
@@ -223,7 +203,6 @@ const defaultFormData = {
 };
 
 const AddUserPage = () => {
->>>>>>> d93b2353d7dab8bda166c1ddd59e8c18822102e1
   const navigate = useNavigate();
   const { userId } = useParams<{ userId?: string }>();
   const location = useLocation();
@@ -332,22 +311,6 @@ const AddUserPage = () => {
     >
       <Box sx={{ maxWidth: '1400px', margin: '0 auto' }}>
         {/* Header */}
-<<<<<<< HEAD
-        <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
-          <div className="px-6 py-4">
-            <h1 className="text-2xl font-semibold text-[#1A1A1A]">Add User</h1>
-          </div>
-        </div>
-
-        {/* Primary Details Section with Border Title */}
-        <div className="relative mb-6">
-          <div className="border-2 border-gray-300 rounded-lg pt-6 pb-6 px-6">
-            <div className="absolute -top-4 left-6 bg-[#fafafa] px-3">
-              <span className="text-lg font-semibold text-[#1A1A1A]">Primary Details</span>
-            </div>
-
-            <div className="flex gap-6">
-=======
         <Paper
           sx={{
             backgroundColor: 'white',
@@ -393,7 +356,6 @@ const AddUserPage = () => {
 
           <Box sx={{ padding: '24px' }}>
             <Box sx={{ display: 'flex', gap: '24px' }}>
->>>>>>> d93b2353d7dab8bda166c1ddd59e8c18822102e1
               {/* Profile Photo */}
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                 <Box sx={{ position: 'relative' }}>
@@ -416,73 +378,15 @@ const AddUserPage = () => {
               </Box>
 
               {/* Form Fields */}
-<<<<<<< HEAD
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Title */}
-                <FloatingLabelField label="Select Title" required>
-=======
               <Box sx={{ flex: 1, display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: '16px' }}>
                 {/* Title */}
                 <FormControl fullWidth size="small" sx={fieldStyles}>
                   <InputLabel required>Select Title</InputLabel>
->>>>>>> d93b2353d7dab8bda166c1ddd59e8c18822102e1
                   <Select
                     value={formData.title}
                     label="Select Title"
                     onChange={(e) => handleInputChange("title", e.target.value)}
                   >
-<<<<<<< HEAD
-                    <SelectTrigger className="border-0 p-0">
-                      <SelectValue placeholder="Select Title" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Mr">Mr</SelectItem>
-                      <SelectItem value="Mrs">Mrs</SelectItem>
-                      <SelectItem value="Ms">Ms</SelectItem>
-                      <SelectItem value="Dr">Dr</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FloatingLabelField>
-
-                {/* First Name */}
-                <FloatingLabelField label="First Name" required>
-                  <Input
-                    value={formData.firstName}
-                    onChange={(e) =>
-                      handleInputChange("firstName", e.target.value)
-                    }
-                    placeholder="First Name"
-                    className="border-0 p-0 focus:outline-none focus:ring-0"
-                  />
-                </FloatingLabelField>
-
-                {/* Last Name */}
-                <FloatingLabelField label="Last Name" required>
-                  <Input
-                    value={formData.lastName}
-                    onChange={(e) =>
-                      handleInputChange("lastName", e.target.value)
-                    }
-                    placeholder="Last Name"
-                    className="border-0 p-0 focus:outline-none focus:ring-0"
-                  />
-                </FloatingLabelField>
-
-                {/* Email */}
-                <FloatingLabelField label="Email" required>
-                  <Input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    placeholder="runwal.gardens@lockated.com"
-                    className="border-0 p-0 focus:outline-none focus:ring-0"
-                  />
-                </FloatingLabelField>
-
-                {/* Mobile */}
-                <FloatingLabelField label="Mobile">
-                  <div className="flex gap-2">
-=======
                     <MenuItem value="Mr">Mr</MenuItem>
                     <MenuItem value="Mrs">Mrs</MenuItem>
                     <MenuItem value="Ms">Ms</MenuItem>
@@ -528,63 +432,11 @@ const AddUserPage = () => {
                 <Box sx={{ display: 'flex', gap: '8px' }}>
                   <FormControl size="small" sx={{ ...fieldStyles, width: '100px' }}>
                     <InputLabel>Code</InputLabel>
->>>>>>> d93b2353d7dab8bda166c1ddd59e8c18822102e1
                     <Select
                       value={formData.countryCode}
                       label="Code"
                       onChange={(e) => handleInputChange("countryCode", e.target.value)}
                     >
-<<<<<<< HEAD
-                      <SelectTrigger className="w-24 border-0 p-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="+91">🇮🇳 +91</SelectItem>
-                        <SelectItem value="+1">🇺🇸 +1</SelectItem>
-                        <SelectItem value="+44">🇬🇧 +44</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      type="tel"
-                      value={formData.mobile}
-                      onChange={(e) =>
-                        handleInputChange("mobile", e.target.value)
-                      }
-                      placeholder="Mobile Number"
-                      className="flex-1 border-0 p-0 focus:outline-none focus:ring-0"
-                    />
-                  </div>
-                </FloatingLabelField>
-
-                {/* Password */}
-                <FloatingLabelField label="Password" required>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      value={formData.password}
-                      onChange={(e) =>
-                        handleInputChange("password", e.target.value)
-                      }
-                      placeholder="••••••••••"
-                      className="border-0 p-0 focus:outline-none focus:ring-0 pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-0 top-1/2 -translate-y-1/2"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4 text-gray-500" />
-                      ) : (
-                        <Eye className="w-4 h-4 text-gray-500" />
-                      )}
-                    </button>
-                  </div>
-                </FloatingLabelField>
-
-                {/* Phase */}
-                <FloatingLabelField label="Select Phase" required>
-=======
                       <MenuItem value="+91">🇮🇳 +91</MenuItem>
                       <MenuItem value="+1">🇺🇸 +1</MenuItem>
                       <MenuItem value="+44">🇬🇧 +44</MenuItem>
@@ -628,27 +480,11 @@ const AddUserPage = () => {
                 {/* Phase */}
                 <FormControl fullWidth required size="small" sx={fieldStyles}>
                   <InputLabel>Select Phase</InputLabel>
->>>>>>> d93b2353d7dab8bda166c1ddd59e8c18822102e1
                   <Select
                     value={formData.phase}
                     label="Select Phase"
                     onChange={(e) => handleInputChange("phase", e.target.value)}
                   >
-<<<<<<< HEAD
-                    <SelectTrigger className="border-0 p-0">
-                      <SelectValue placeholder="Select Phase" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Phase 1">Phase 1</SelectItem>
-                      <SelectItem value="Phase 2">Phase 2</SelectItem>
-                      <SelectItem value="Phase 3">Phase 3</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FloatingLabelField>
-
-                {/* Status */}
-                <FloatingLabelField label="Select Status" required>
-=======
                     <MenuItem value="Phase 1">Phase 1</MenuItem>
                     <MenuItem value="Phase 2">Phase 2</MenuItem>
                     <MenuItem value="Phase 3">Phase 3</MenuItem>
@@ -658,26 +494,11 @@ const AddUserPage = () => {
                 {/* Status */}
                 <FormControl fullWidth required size="small" sx={fieldStyles}>
                   <InputLabel>Select Status</InputLabel>
->>>>>>> d93b2353d7dab8bda166c1ddd59e8c18822102e1
                   <Select
                     value={formData.status}
                     label="Select Status"
                     onChange={(e) => handleInputChange("status", e.target.value)}
                   >
-<<<<<<< HEAD
-                    <SelectTrigger className="border-0 p-0">
-                      <SelectValue placeholder="Select Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FloatingLabelField>
-
-                {/* Tower */}
-                <FloatingLabelField label="Select Tower" required>
-=======
                     <MenuItem value="Active">Active</MenuItem>
                     <MenuItem value="Inactive">Inactive</MenuItem>
                   </Select>
@@ -686,27 +507,11 @@ const AddUserPage = () => {
                 {/* Tower */}
                 <FormControl fullWidth required size="small" sx={fieldStyles}>
                   <InputLabel>Select Tower</InputLabel>
->>>>>>> d93b2353d7dab8bda166c1ddd59e8c18822102e1
                   <Select
                     value={formData.tower}
                     label="Select Tower"
                     onChange={(e) => handleInputChange("tower", e.target.value)}
                   >
-<<<<<<< HEAD
-                    <SelectTrigger className="border-0 p-0">
-                      <SelectValue placeholder="Select Tower" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Tower A">Tower A</SelectItem>
-                      <SelectItem value="Tower B">Tower B</SelectItem>
-                      <SelectItem value="Tower C">Tower C</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FloatingLabelField>
-
-                {/* Flat */}
-                <FloatingLabelField label="Select Flat" required>
-=======
                     <MenuItem value="Tower A">Tower A</MenuItem>
                     <MenuItem value="Tower B">Tower B</MenuItem>
                     <MenuItem value="Tower C">Tower C</MenuItem>
@@ -716,27 +521,11 @@ const AddUserPage = () => {
                 {/* Flat */}
                 <FormControl fullWidth required size="small" sx={fieldStyles}>
                   <InputLabel>Select Flat</InputLabel>
->>>>>>> d93b2353d7dab8bda166c1ddd59e8c18822102e1
                   <Select
                     value={formData.flat}
                     label="Select Flat"
                     onChange={(e) => handleInputChange("flat", e.target.value)}
                   >
-<<<<<<< HEAD
-                    <SelectTrigger className="border-0 p-0">
-                      <SelectValue placeholder="Select Flat" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="101">101</SelectItem>
-                      <SelectItem value="102">102</SelectItem>
-                      <SelectItem value="103">103</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FloatingLabelField>
-
-                {/* Category */}
-                <FloatingLabelField label="Select Category" required>
-=======
                     <MenuItem value="101">101</MenuItem>
                     <MenuItem value="102">102</MenuItem>
                     <MenuItem value="103">103</MenuItem>
@@ -746,41 +535,11 @@ const AddUserPage = () => {
                 {/* Category */}
                 <FormControl fullWidth required size="small" sx={fieldStyles}>
                   <InputLabel>Select Category</InputLabel>
->>>>>>> d93b2353d7dab8bda166c1ddd59e8c18822102e1
                   <Select
                     value={formData.category}
                     label="Select Category"
                     onChange={(e) => handleInputChange("category", e.target.value)}
                   >
-<<<<<<< HEAD
-                    <SelectTrigger className="border-0 p-0">
-                      <SelectValue placeholder="Select Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Resident">Resident</SelectItem>
-                      <SelectItem value="Staff">Staff</SelectItem>
-                      <SelectItem value="Vendor">Vendor</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FloatingLabelField>
-
-                {/* Alternate Address */}
-                <div className="space-y-2 md:col-span-3 relative">
-                  <div className="border-2 border-gray-300 rounded px-3 py-2">
-                    <label className="absolute -top-3 left-3 bg-white px-2 text-sm font-medium text-gray-700">
-                      Alternate Address
-                    </label>
-                    <Textarea
-                      value={formData.alternateAddress}
-                      onChange={(e) =>
-                        handleInputChange("alternateAddress", e.target.value)
-                      }
-                      placeholder="Alternate Address"
-                      className="border-0 focus:outline-none focus:ring-0 min-h-[80px] mt-2"
-                    />
-                  </div>
-                </div>
-=======
                     <MenuItem value="Resident">Resident</MenuItem>
                     <MenuItem value="Staff">Staff</MenuItem>
                     <MenuItem value="Vendor">Vendor</MenuItem>
@@ -798,7 +557,6 @@ const AddUserPage = () => {
                   onChange={(e) => handleInputChange("alternateAddress", e.target.value)}
                   sx={{ ...fieldStyles, gridColumn: { md: 'span 3' } }}
                 />
->>>>>>> d93b2353d7dab8bda166c1ddd59e8c18822102e1
 
                 {/* Resident Type */}
                 <FormControl component="fieldset" sx={{ gridColumn: { md: 'span 1' } }}>
@@ -890,140 +648,6 @@ const AddUserPage = () => {
                     <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
                     <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
                   </RadioGroup>
-<<<<<<< HEAD
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Additional Info Section with Border Title */}
-        <div className="relative mb-6">
-          <div className="border-2 border-gray-300 rounded-lg pt-6 pb-6 px-6">
-            <div className="absolute -top-4 left-6 bg-[#fafafa] px-3">
-              <span className="text-lg font-semibold text-[#1A1A1A]">Additional Info</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Birth Date */}
-              <FloatingLabelField label="Birth Date">
-                <Input
-                  type="date"
-                  value={formData.birthDate}
-                  onChange={(e) =>
-                    handleInputChange("birthDate", e.target.value)
-                  }
-                  className="border-0 p-0 focus:outline-none focus:ring-0"
-                />
-              </FloatingLabelField>
-
-              {/* Anniversary */}
-              <FloatingLabelField label="Anniversary">
-                <Input
-                  type="date"
-                  value={formData.anniversary}
-                  onChange={(e) =>
-                    handleInputChange("anniversary", e.target.value)
-                  }
-                  placeholder="Anniversary Date"
-                  className="border-0 p-0 focus:outline-none focus:ring-0"
-                />
-              </FloatingLabelField>
-
-              {/* Spouse Birth Date */}
-              <FloatingLabelField label="Spouse Birth Date">
-                <Input
-                  type="date"
-                  value={formData.spouseBirthDate}
-                  onChange={(e) =>
-                    handleInputChange("spouseBirthDate", e.target.value)
-                  }
-                  placeholder="Spouse Birth Date"
-                  className="border-0 p-0 focus:outline-none focus:ring-0"
-                />
-              </FloatingLabelField>
-
-              {/* Alternate Email 1 */}
-              <FloatingLabelField label="Alternate Email-1">
-                <Input
-                  type="email"
-                  value={formData.alternateEmail1}
-                  onChange={(e) =>
-                    handleInputChange("alternateEmail1", e.target.value)
-                  }
-                  placeholder="Alternate Email-1"
-                  className="border-0 p-0 focus:outline-none focus:ring-0"
-                />
-              </FloatingLabelField>
-
-              {/* Alternate Email 2 */}
-              <FloatingLabelField label="Alternate Email-2">
-                <Input
-                  type="email"
-                  value={formData.alternateEmail2}
-                  onChange={(e) =>
-                    handleInputChange("alternateEmail2", e.target.value)
-                  }
-                  placeholder="Alternate Email-2"
-                  className="border-0 p-0 focus:outline-none focus:ring-0"
-                />
-              </FloatingLabelField>
-
-              {/* Landline Number */}
-              <FloatingLabelField label="Landline Number">
-                <Input
-                  type="tel"
-                  value={formData.landlineNumber}
-                  onChange={(e) =>
-                    handleInputChange("landlineNumber", e.target.value)
-                  }
-                  placeholder="Landline Number"
-                  className="border-0 p-0 focus:outline-none focus:ring-0"
-                />
-              </FloatingLabelField>
-
-              {/* Intercom Number */}
-              <FloatingLabelField label="Intercom Number">
-                <Input
-                  type="text"
-                  value={formData.intercomNumber}
-                  onChange={(e) =>
-                    handleInputChange("intercomNumber", e.target.value)
-                  }
-                  placeholder="Intercom Number"
-                  className="border-0 p-0 focus:outline-none focus:ring-0"
-                />
-              </FloatingLabelField>
-
-              {/* GST Number */}
-              <FloatingLabelField label="GST Number">
-                <Input
-                  type="text"
-                  value={formData.gstNumber}
-                  onChange={(e) =>
-                    handleInputChange("gstNumber", e.target.value)
-                  }
-                  placeholder="GST Number"
-                  className="border-0 p-0 focus:outline-none focus:ring-0"
-                />
-              </FloatingLabelField>
-
-              {/* PAN Number */}
-              <FloatingLabelField label="PAN Number">
-                <Input
-                  type="text"
-                  value={formData.panNumber}
-                  onChange={(e) =>
-                    handleInputChange("panNumber", e.target.value)
-                  }
-                  placeholder="PAN Number"
-                  className="border-0 p-0 focus:outline-none focus:ring-0"
-                />
-              </FloatingLabelField>
-
-              {/* EV Connection */}
-              <FloatingLabelField label="EV Connection">
-=======
                 </FormControl>
               </Box>
             </Box>
@@ -1152,63 +776,11 @@ const AddUserPage = () => {
               {/* EV Connection */}
               <FormControl fullWidth size="small" sx={fieldStyles}>
                 <InputLabel>EV Connection</InputLabel>
->>>>>>> d93b2353d7dab8bda166c1ddd59e8c18822102e1
                 <Select
                   value={formData.evConnection}
                   label="EV Connection"
                   onChange={(e) => handleInputChange("evConnection", e.target.value)}
                 >
-<<<<<<< HEAD
-                  <SelectTrigger className="border-0 p-0">
-                    <SelectValue placeholder="NA" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NA">NA</SelectItem>
-                    <SelectItem value="Yes">Yes</SelectItem>
-                    <SelectItem value="No">No</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FloatingLabelField>
-
-              {/* No. of Pets */}
-              <FloatingLabelField label="No. of Pets">
-                <Input
-                  type="number"
-                  value={formData.noOfPets}
-                  onChange={(e) =>
-                    handleInputChange("noOfPets", e.target.value)
-                  }
-                  placeholder="Pets"
-                  className="border-0 p-0 focus:outline-none focus:ring-0"
-                />
-              </FloatingLabelField>
-
-              {/* No. of Adult Family Members Residing */}
-              <FloatingLabelField label="No. of Adults Residing">
-                <Input
-                  type="number"
-                  value={formData.noOfAdults}
-                  onChange={(e) =>
-                    handleInputChange("noOfAdults", e.target.value)
-                  }
-                  placeholder="Adults"
-                  className="border-0 p-0 focus:outline-none focus:ring-0"
-                />
-              </FloatingLabelField>
-
-              {/* No. of Children Residing */}
-              <FloatingLabelField label="No. of Children Residing">
-                <Input
-                  type="number"
-                  value={formData.noOfChildren}
-                  onChange={(e) =>
-                    handleInputChange("noOfChildren", e.target.value)
-                  }
-                  placeholder="Children"
-                  className="border-0 p-0 focus:outline-none focus:ring-0"
-                />
-              </FloatingLabelField>
-=======
                   <MenuItem value="NA">NA</MenuItem>
                   <MenuItem value="Yes">Yes</MenuItem>
                   <MenuItem value="No">No</MenuItem>
@@ -1247,7 +819,6 @@ const AddUserPage = () => {
                 onChange={(e) => handleInputChange("noOfPets", e.target.value)}
                 sx={fieldStyles}
               />
->>>>>>> d93b2353d7dab8bda166c1ddd59e8c18822102e1
 
               {/* Differently Abled */}
               <FormControl component="fieldset">
@@ -1270,30 +841,6 @@ const AddUserPage = () => {
                   <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
                   <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
                 </RadioGroup>
-<<<<<<< HEAD
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex justify-center gap-4">
-          <Button
-            onClick={handleSubmit}
-            className="bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-12"
-          >
-            Submit
-          </Button>
-          <Button
-            onClick={handleCancel}
-            className="bg-gray-400 hover:bg-gray-500 text-white px-12"
-          >
-            Cancel
-          </Button>
-        </div>
-      </div>
-    </div>
-=======
               </FormControl>
             </Box>
           </Box>
@@ -1316,7 +863,6 @@ const AddUserPage = () => {
         </SectionCard>
       </Box>
     </Box>
->>>>>>> d93b2353d7dab8bda166c1ddd59e8c18822102e1
   );
 };
 
