@@ -14,6 +14,23 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
+// Floating Label Field Component
+const FloatingLabelField = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => {
+  return (
+    <div className="relative">
+      <div className="border-2 border-gray-300 rounded px-3 py-2">
+        <label className="absolute -top-3 left-3 bg-white px-2 text-sm font-medium text-gray-700">
+          {required && <span className="text-red-500">* </span>}
+          {label}
+        </label>
+        <div className="pt-2">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const AddUserPage = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -68,24 +85,19 @@ export const AddUserPage = () => {
     <div className="min-h-screen bg-[#fafafa] p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
+        <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
           <div className="px-6 py-4">
             <h1 className="text-2xl font-semibold text-[#1A1A1A]">Add User</h1>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm">
-          {/* Primary Details Section */}
-          <div className="border-b border-gray-200">
-            <div className="px-6 py-4 flex items-center gap-2">
-              <User className="w-5 h-5 text-[#1A1A1A]" />
-              <h2 className="text-lg font-semibold text-[#1A1A1A]">
-                Primary Details
-              </h2>
+        {/* Primary Details Section with Border Title */}
+        <div className="relative mb-6">
+          <div className="border-2 border-gray-300 rounded-lg pt-6 pb-6 px-6">
+            <div className="absolute -top-4 left-6 bg-[#fafafa] px-3">
+              <span className="text-lg font-semibold text-[#1A1A1A]">Primary Details</span>
             </div>
-          </div>
 
-          <div className="p-6">
             <div className="flex gap-6">
               {/* Profile Photo */}
               <div className="flex flex-col items-center gap-2">
@@ -98,17 +110,14 @@ export const AddUserPage = () => {
               </div>
 
               {/* Form Fields */}
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Title */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Select Title
-                  </Label>
+                <FloatingLabelField label="Select Title" required>
                   <Select
                     value={formData.title}
                     onValueChange={(value) => handleInputChange("title", value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-0 p-0">
                       <SelectValue placeholder="Select Title" />
                     </SelectTrigger>
                     <SelectContent>
@@ -118,55 +127,45 @@ export const AddUserPage = () => {
                       <SelectItem value="Dr">Dr</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </FloatingLabelField>
 
                 {/* First Name */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> First Name
-                  </Label>
+                <FloatingLabelField label="First Name" required>
                   <Input
                     value={formData.firstName}
                     onChange={(e) =>
                       handleInputChange("firstName", e.target.value)
                     }
                     placeholder="First Name"
-                    className="border-gray-300"
+                    className="border-0 p-0 focus:outline-none focus:ring-0"
                   />
-                </div>
+                </FloatingLabelField>
 
                 {/* Last Name */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Last Name
-                  </Label>
+                <FloatingLabelField label="Last Name" required>
                   <Input
                     value={formData.lastName}
                     onChange={(e) =>
                       handleInputChange("lastName", e.target.value)
                     }
                     placeholder="Last Name"
-                    className="border-gray-300"
+                    className="border-0 p-0 focus:outline-none focus:ring-0"
                   />
-                </div>
+                </FloatingLabelField>
 
                 {/* Email */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Email
-                  </Label>
+                <FloatingLabelField label="Email" required>
                   <Input
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="runwal.gardens@lockated.com"
-                    className="border-gray-300"
+                    className="border-0 p-0 focus:outline-none focus:ring-0"
                   />
-                </div>
+                </FloatingLabelField>
 
                 {/* Mobile */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">Mobile</Label>
+                <FloatingLabelField label="Mobile">
                   <div className="flex gap-2">
                     <Select
                       value={formData.countryCode}
@@ -174,7 +173,7 @@ export const AddUserPage = () => {
                         handleInputChange("countryCode", value)
                       }
                     >
-                      <SelectTrigger className="w-24">
+                      <SelectTrigger className="w-24 border-0 p-0">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -190,16 +189,13 @@ export const AddUserPage = () => {
                         handleInputChange("mobile", e.target.value)
                       }
                       placeholder="Mobile Number"
-                      className="flex-1 border-gray-300"
+                      className="flex-1 border-0 p-0 focus:outline-none focus:ring-0"
                     />
                   </div>
-                </div>
+                </FloatingLabelField>
 
                 {/* Password */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Password
-                  </Label>
+                <FloatingLabelField label="Password" required>
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
@@ -208,12 +204,12 @@ export const AddUserPage = () => {
                         handleInputChange("password", e.target.value)
                       }
                       placeholder="••••••••••"
-                      className="border-gray-300 pr-10"
+                      className="border-0 p-0 focus:outline-none focus:ring-0 pr-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      className="absolute right-0 top-1/2 -translate-y-1/2"
                     >
                       {showPassword ? (
                         <EyeOff className="w-4 h-4 text-gray-500" />
@@ -222,18 +218,15 @@ export const AddUserPage = () => {
                       )}
                     </button>
                   </div>
-                </div>
+                </FloatingLabelField>
 
                 {/* Phase */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Select Phase
-                  </Label>
+                <FloatingLabelField label="Select Phase" required>
                   <Select
                     value={formData.phase}
                     onValueChange={(value) => handleInputChange("phase", value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-0 p-0">
                       <SelectValue placeholder="Select Phase" />
                     </SelectTrigger>
                     <SelectContent>
@@ -242,20 +235,17 @@ export const AddUserPage = () => {
                       <SelectItem value="Phase 3">Phase 3</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </FloatingLabelField>
 
                 {/* Status */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Select Status
-                  </Label>
+                <FloatingLabelField label="Select Status" required>
                   <Select
                     value={formData.status}
                     onValueChange={(value) =>
                       handleInputChange("status", value)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-0 p-0">
                       <SelectValue placeholder="Select Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -263,18 +253,15 @@ export const AddUserPage = () => {
                       <SelectItem value="Inactive">Inactive</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </FloatingLabelField>
 
                 {/* Tower */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Select Tower
-                  </Label>
+                <FloatingLabelField label="Select Tower" required>
                   <Select
                     value={formData.tower}
                     onValueChange={(value) => handleInputChange("tower", value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-0 p-0">
                       <SelectValue placeholder="Select Tower" />
                     </SelectTrigger>
                     <SelectContent>
@@ -283,18 +270,15 @@ export const AddUserPage = () => {
                       <SelectItem value="Tower C">Tower C</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </FloatingLabelField>
 
                 {/* Flat */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Select Flat
-                  </Label>
+                <FloatingLabelField label="Select Flat" required>
                   <Select
                     value={formData.flat}
                     onValueChange={(value) => handleInputChange("flat", value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-0 p-0">
                       <SelectValue placeholder="Select Flat" />
                     </SelectTrigger>
                     <SelectContent>
@@ -303,20 +287,17 @@ export const AddUserPage = () => {
                       <SelectItem value="103">103</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </FloatingLabelField>
 
                 {/* Category */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    <span className="text-red-500">*</span> Select Category
-                  </Label>
+                <FloatingLabelField label="Select Category" required>
                   <Select
                     value={formData.category}
                     onValueChange={(value) =>
                       handleInputChange("category", value)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-0 p-0">
                       <SelectValue placeholder="Select Category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -325,21 +306,23 @@ export const AddUserPage = () => {
                       <SelectItem value="Vendor">Vendor</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </FloatingLabelField>
 
                 {/* Alternate Address */}
-                <div className="space-y-2 md:col-span-3">
-                  <Label className="text-sm text-gray-600">
-                    Alternate Address
-                  </Label>
-                  <Textarea
-                    value={formData.alternateAddress}
-                    onChange={(e) =>
-                      handleInputChange("alternateAddress", e.target.value)
-                    }
-                    placeholder="Alternate Address"
-                    className="border-gray-300 min-h-[80px]"
-                  />
+                <div className="space-y-2 md:col-span-3 relative">
+                  <div className="border-2 border-gray-300 rounded px-3 py-2">
+                    <label className="absolute -top-3 left-3 bg-white px-2 text-sm font-medium text-gray-700">
+                      Alternate Address
+                    </label>
+                    <Textarea
+                      value={formData.alternateAddress}
+                      onChange={(e) =>
+                        handleInputChange("alternateAddress", e.target.value)
+                      }
+                      placeholder="Alternate Address"
+                      className="border-0 focus:outline-none focus:ring-0 min-h-[80px] mt-2"
+                    />
+                  </div>
                 </div>
 
                 {/* Resident Type */}
@@ -444,35 +427,30 @@ export const AddUserPage = () => {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Additional Info Section */}
-          <div className="border-t border-gray-200">
-            <div className="px-6 py-4 flex items-center gap-2">
-              <User className="w-5 h-5 text-[#1A1A1A]" />
-              <h2 className="text-lg font-semibold text-[#1A1A1A]">
-                Additional Info
-              </h2>
+        {/* Additional Info Section with Border Title */}
+        <div className="relative mb-6">
+          <div className="border-2 border-gray-300 rounded-lg pt-6 pb-6 px-6">
+            <div className="absolute -top-4 left-6 bg-[#fafafa] px-3">
+              <span className="text-lg font-semibold text-[#1A1A1A]">Additional Info</span>
             </div>
-          </div>
 
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Birth Date */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">Birth Date:</Label>
+              <FloatingLabelField label="Birth Date">
                 <Input
                   type="date"
                   value={formData.birthDate}
                   onChange={(e) =>
                     handleInputChange("birthDate", e.target.value)
                   }
-                  className="border-gray-300"
+                  className="border-0 p-0 focus:outline-none focus:ring-0"
                 />
-              </div>
+              </FloatingLabelField>
 
               {/* Anniversary */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">Anniversary:</Label>
+              <FloatingLabelField label="Anniversary">
                 <Input
                   type="date"
                   value={formData.anniversary}
@@ -480,15 +458,12 @@ export const AddUserPage = () => {
                     handleInputChange("anniversary", e.target.value)
                   }
                   placeholder="Anniversary Date"
-                  className="border-gray-300"
+                  className="border-0 p-0 focus:outline-none focus:ring-0"
                 />
-              </div>
+              </FloatingLabelField>
 
               {/* Spouse Birth Date */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">
-                  Spouse Birth Date:
-                </Label>
+              <FloatingLabelField label="Spouse Birth Date">
                 <Input
                   type="date"
                   value={formData.spouseBirthDate}
@@ -496,12 +471,12 @@ export const AddUserPage = () => {
                     handleInputChange("spouseBirthDate", e.target.value)
                   }
                   placeholder="Spouse Birth Date"
-                  className="border-gray-300"
+                  className="border-0 p-0 focus:outline-none focus:ring-0"
                 />
-              </div>
+              </FloatingLabelField>
 
               {/* Alternate Email 1 */}
-              <div className="space-y-2">
+              <FloatingLabelField label="Alternate Email-1">
                 <Input
                   type="email"
                   value={formData.alternateEmail1}
@@ -509,12 +484,12 @@ export const AddUserPage = () => {
                     handleInputChange("alternateEmail1", e.target.value)
                   }
                   placeholder="Alternate Email-1"
-                  className="border-gray-300"
+                  className="border-0 p-0 focus:outline-none focus:ring-0"
                 />
-              </div>
+              </FloatingLabelField>
 
               {/* Alternate Email 2 */}
-              <div className="space-y-2">
+              <FloatingLabelField label="Alternate Email-2">
                 <Input
                   type="email"
                   value={formData.alternateEmail2}
@@ -522,12 +497,12 @@ export const AddUserPage = () => {
                     handleInputChange("alternateEmail2", e.target.value)
                   }
                   placeholder="Alternate Email-2"
-                  className="border-gray-300"
+                  className="border-0 p-0 focus:outline-none focus:ring-0"
                 />
-              </div>
+              </FloatingLabelField>
 
               {/* Landline Number */}
-              <div className="space-y-2">
+              <FloatingLabelField label="Landline Number">
                 <Input
                   type="tel"
                   value={formData.landlineNumber}
@@ -535,12 +510,12 @@ export const AddUserPage = () => {
                     handleInputChange("landlineNumber", e.target.value)
                   }
                   placeholder="Landline Number"
-                  className="border-gray-300"
+                  className="border-0 p-0 focus:outline-none focus:ring-0"
                 />
-              </div>
+              </FloatingLabelField>
 
               {/* Intercom Number */}
-              <div className="space-y-2">
+              <FloatingLabelField label="Intercom Number">
                 <Input
                   type="text"
                   value={formData.intercomNumber}
@@ -548,46 +523,45 @@ export const AddUserPage = () => {
                     handleInputChange("intercomNumber", e.target.value)
                   }
                   placeholder="Intercom Number"
-                  className="border-gray-300"
+                  className="border-0 p-0 focus:outline-none focus:ring-0"
                 />
-              </div>
+              </FloatingLabelField>
 
               {/* GST Number */}
-              <div className="space-y-2">
+              <FloatingLabelField label="GST Number">
                 <Input
                   type="text"
                   value={formData.gstNumber}
                   onChange={(e) =>
                     handleInputChange("gstNumber", e.target.value)
                   }
-                  placeholder="Gst Number"
-                  className="border-gray-300"
+                  placeholder="GST Number"
+                  className="border-0 p-0 focus:outline-none focus:ring-0"
                 />
-              </div>
+              </FloatingLabelField>
 
               {/* PAN Number */}
-              <div className="space-y-2">
+              <FloatingLabelField label="PAN Number">
                 <Input
                   type="text"
                   value={formData.panNumber}
                   onChange={(e) =>
                     handleInputChange("panNumber", e.target.value)
                   }
-                  placeholder="Pan Number"
-                  className="border-gray-300"
+                  placeholder="PAN Number"
+                  className="border-0 p-0 focus:outline-none focus:ring-0"
                 />
-              </div>
+              </FloatingLabelField>
 
               {/* EV Connection */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">EV Connection:</Label>
+              <FloatingLabelField label="EV Connection">
                 <Select
                   value={formData.evConnection}
                   onValueChange={(value) =>
                     handleInputChange("evConnection", value)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-0 p-0">
                     <SelectValue placeholder="NA" />
                   </SelectTrigger>
                   <SelectContent>
@@ -596,27 +570,23 @@ export const AddUserPage = () => {
                     <SelectItem value="No">No</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </FloatingLabelField>
 
               {/* No. of Pets */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">No. of Pets:</Label>
+              <FloatingLabelField label="No. of Pets">
                 <Input
                   type="number"
                   value={formData.noOfPets}
                   onChange={(e) =>
                     handleInputChange("noOfPets", e.target.value)
                   }
-                  placeholder="pets"
-                  className="border-gray-300"
+                  placeholder="Pets"
+                  className="border-0 p-0 focus:outline-none focus:ring-0"
                 />
-              </div>
+              </FloatingLabelField>
 
               {/* No. of Adult Family Members Residing */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">
-                  No. of Adult Family Members Residing:
-                </Label>
+              <FloatingLabelField label="No. of Adults Residing">
                 <Input
                   type="number"
                   value={formData.noOfAdults}
@@ -624,15 +594,12 @@ export const AddUserPage = () => {
                     handleInputChange("noOfAdults", e.target.value)
                   }
                   placeholder="Adults"
-                  className="border-gray-300"
+                  className="border-0 p-0 focus:outline-none focus:ring-0"
                 />
-              </div>
+              </FloatingLabelField>
 
               {/* No. of Children Residing */}
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-600">
-                  No. of Children Residing:
-                </Label>
+              <FloatingLabelField label="No. of Children Residing">
                 <Input
                   type="number"
                   value={formData.noOfChildren}
@@ -640,9 +607,9 @@ export const AddUserPage = () => {
                     handleInputChange("noOfChildren", e.target.value)
                   }
                   placeholder="Children"
-                  className="border-gray-300"
+                  className="border-0 p-0 focus:outline-none focus:ring-0"
                 />
-              </div>
+              </FloatingLabelField>
 
               {/* Differently Abled */}
               <div className="space-y-2">
@@ -672,16 +639,22 @@ export const AddUserPage = () => {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Submit Button */}
-          <div className="border-t border-gray-200 px-6 py-4 flex justify-center">
-            <Button
-              onClick={handleSubmit}
-              className="bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-12"
-            >
-              Submit
-            </Button>
-          </div>
+        {/* Action Buttons */}
+        <div className="flex justify-center gap-4">
+          <Button
+            onClick={handleSubmit}
+            className="bg-[#1e3a5f] hover:bg-[#152d4a] text-white px-12"
+          >
+            Submit
+          </Button>
+          <Button
+            onClick={handleCancel}
+            className="bg-gray-400 hover:bg-gray-500 text-white px-12"
+          >
+            Cancel
+          </Button>
         </div>
       </div>
     </div>

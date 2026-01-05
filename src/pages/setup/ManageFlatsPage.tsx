@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, Upload, Download, X, Edit2, Check, Filter } from "lucide-react";
+import { Plus, Upload, Download, X, Edit2, Check, Filter, ChevronDown } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
@@ -273,6 +273,7 @@ export const ManageFlatsPage = () => {
   
   // Filters Dialog states
   const [showFiltersDialog, setShowFiltersDialog] = useState(false);
+  const [showActionDropdown, setShowActionDropdown] = useState(false);
   const [filters, setFilters] = useState({
     tower: "",
     flat: "",
@@ -764,7 +765,7 @@ export const ManageFlatsPage = () => {
     <div className="min-h-screen bg-[#fafafa] p-6">
       <div className="max-w-full mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
+        <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
           <div className="px-6 py-4">
             <h1 className="text-2xl font-semibold text-[#1A1A1A]">Manage Flats</h1>
           </div>
@@ -785,15 +786,18 @@ export const ManageFlatsPage = () => {
             onSearchChange={setSearchTerm}
             searchPlaceholder="Search flats..."
             leftActions={
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                {/* Action Button */}
                 <Button
                   size="sm"
-                  onClick={handleAddFlat}
+                  onClick={() => setShowActionDropdown(true)}
                   className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add
+                  Action
                 </Button>
+
+                {/* Unit and Tower Buttons */}
                 <Button
                   size="sm"
                   onClick={handleAddUnit}
@@ -809,30 +813,6 @@ export const ManageFlatsPage = () => {
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Tower
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleImport}
-                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Import
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleExport}
-                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleFilters}
-                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
-                >
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filters
                 </Button>
               </div>
             }
@@ -885,15 +865,15 @@ export const ManageFlatsPage = () => {
 
               {/* Tower and Flat */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="tower" className="text-sm font-medium">
+                <div className="relative">
+                  <Label htmlFor="tower" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                     Tower <span className="text-red-500">*</span>
                   </Label>
                   <Select 
                     value={addFlatFormData.tower} 
                     onValueChange={(value) => handleAddFlatInputChange('tower', value)}
                   >
-                    <SelectTrigger id="tower">
+                    <SelectTrigger id="tower" className="border border-gray-400 pt-2">
                       <SelectValue placeholder="Select Tower" />
                     </SelectTrigger>
                     <SelectContent>
@@ -905,51 +885,54 @@ export const ManageFlatsPage = () => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="flat" className="text-sm font-medium">
+                <div className="relative">
+                  <Label htmlFor="flat" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                     Flat <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="flat"
-                    placeholder="Enter Flat Number"
+                    placeholder=" "
                     value={addFlatFormData.flat}
                     onChange={(e) => handleAddFlatInputChange('flat', e.target.value)}
+                    className="border border-gray-400 pt-2"
                   />
                 </div>
               </div>
 
               {/* Carpet Area and Built up Area */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="carpetArea" className="text-sm font-medium">Carpet Area</Label>
+                <div className="relative">
+                  <Label htmlFor="carpetArea" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Carpet Area</Label>
                   <Input
                     id="carpetArea"
-                    placeholder="Enter Carpet Area"
+                    placeholder=" "
                     value={addFlatFormData.carpetArea}
                     onChange={(e) => handleAddFlatInputChange('carpetArea', e.target.value)}
+                    className="border border-gray-400 pt-2"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="builtUpArea" className="text-sm font-medium">Built up Area</Label>
+                <div className="relative">
+                  <Label htmlFor="builtUpArea" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Built up Area</Label>
                   <Input
                     id="builtUpArea"
-                    placeholder="Enter Built up Area"
+                    placeholder=" "
                     value={addFlatFormData.builtUpArea}
                     onChange={(e) => handleAddFlatInputChange('builtUpArea', e.target.value)}
+                    className="border border-gray-400 pt-2"
                   />
                 </div>
               </div>
 
               {/* Flat Type and Occupied */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="flatType" className="text-sm font-medium">Flat Type</Label>
+                <div className="relative">
+                  <Label htmlFor="flatType" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Flat Type</Label>
                   <Select 
                     value={addFlatFormData.flatType} 
                     onValueChange={(value) => handleAddFlatInputChange('flatType', value)}
                   >
-                    <SelectTrigger id="flatType">
+                    <SelectTrigger id="flatType" className="border border-gray-400 pt-2">
                       <SelectValue placeholder="Select Flat Type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -961,13 +944,13 @@ export const ManageFlatsPage = () => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="occupied" className="text-sm font-medium">Occupied</Label>
+                <div className="relative">
+                  <Label htmlFor="occupied" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Occupied</Label>
                   <Select 
                     value={addFlatFormData.occupied} 
                     onValueChange={(value) => handleAddFlatInputChange('occupied', value)}
                   >
-                    <SelectTrigger id="occupied">
+                    <SelectTrigger id="occupied" className="border border-gray-400 pt-2">
                       <SelectValue placeholder="Please Select" />
                     </SelectTrigger>
                     <SelectContent>
@@ -980,36 +963,38 @@ export const ManageFlatsPage = () => {
 
               {/* Name on Bill and Date of possession */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nameOnBill" className="text-sm font-medium">Name on Bill</Label>
+                <div className="relative">
+                  <Label htmlFor="nameOnBill" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Name on Bill</Label>
                   <Input
                     id="nameOnBill"
-                    placeholder="Enter Name on Bill"
+                    placeholder=" "
                     value={addFlatFormData.nameOnBill}
                     onChange={(e) => handleAddFlatInputChange('nameOnBill', e.target.value)}
+                    className="border border-gray-400 pt-2"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="dateOfPossession" className="text-sm font-medium">Date of possession</Label>
+                <div className="relative">
+                  <Label htmlFor="dateOfPossession" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Date of possession</Label>
                   <Input
                     id="dateOfPossession"
                     type="date"
-                    placeholder="Date of Possession"
+                    placeholder=" "
                     value={addFlatFormData.dateOfPossession}
                     onChange={(e) => handleAddFlatInputChange('dateOfPossession', e.target.value)}
+                    className="border border-gray-400 pt-2"
                   />
                 </div>
               </div>
 
               {/* Rm User */}
-              <div className="space-y-2">
-                <Label htmlFor="rmUser" className="text-sm font-medium">Rm User</Label>
+              <div className="relative">
+                <Label htmlFor="rmUser" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Rm User</Label>
                 <Select 
                   value={addFlatFormData.rmUser} 
                   onValueChange={(value) => handleAddFlatInputChange('rmUser', value)}
                 >
-                  <SelectTrigger id="rmUser">
+                  <SelectTrigger id="rmUser" className="border border-gray-400 pt-2">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1050,7 +1035,7 @@ export const ManageFlatsPage = () => {
                 </div>
                 <Button
                   onClick={() => document.getElementById('fileUpload')?.click()}
-                  variant="outline"
+                  
                   className="w-fit"
                 >
                   upload
@@ -1529,6 +1514,101 @@ export const ManageFlatsPage = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Actions Modal */}
+        {showActionDropdown && (
+          <div className="fixed bg-white border border-gray-200 rounded-sm shadow-lg z-50" style={{ top: '50%', left: '30%', width: 'max-content', height: '105px' }}>
+            <div className="flex items-center h-full pr-6" style={{ width: 'max-content' }}>
+              <div className="flex items-center gap-3">
+                {/* Left Sidebar */}
+                <div className="text-[#C72030] bg-[#C4B89D] rounded-lg w-[44px] h-[105px] flex items-center justify-center text-xs font-bold">
+                  A
+                </div>
+
+                {/* Header Section */}
+                <div className="flex flex-col justify-center px-3 py-2 min-w-[140px]">
+                  <span className="text-[16px] font-semibold text-[#1A1A1A] whitespace-nowrap leading-none">
+                    Actions
+                  </span>
+                  <span className="text-[12px] font-medium text-[#6B7280] whitespace-nowrap leading-tight mt-1">
+                    Quick actions available
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center ml-8 gap-4">
+                {/* Add Button */}
+                <button
+                  onClick={() => {
+                    handleAddFlat();
+                    setShowActionDropdown(false);
+                  }}
+                  className="text-gray-600 hover:bg-gray-100 flex flex-col items-center justify-center h-auto p-2 disabled:opacity-50 min-w-[60px]"
+                  style={{ width: '60px', height: '70px' }}
+                  title="Add"
+                >
+                  <Plus className="w-5 h-5 mb-1" />
+                  <span className="text-xs font-medium text-center leading-tight">Add</span>
+                </button>
+
+                {/* Import Button */}
+                <button
+                  onClick={() => {
+                    handleImport();
+                    setShowActionDropdown(false);
+                  }}
+                  className="text-gray-600 hover:bg-gray-100 flex flex-col items-center justify-center h-auto p-2 disabled:opacity-50 min-w-[60px]"
+                  style={{ width: '60px', height: '70px' }}
+                  title="Import"
+                >
+                  <Upload className="w-5 h-5 mb-1" />
+                  <span className="text-xs font-medium text-center leading-tight">Import</span>
+                </button>
+
+                {/* Export Button */}
+                <button
+                  onClick={() => {
+                    handleExport();
+                    setShowActionDropdown(false);
+                  }}
+                  className="text-gray-600 hover:bg-gray-100 flex flex-col items-center justify-center h-auto p-2 disabled:opacity-50 min-w-[60px]"
+                  style={{ width: '60px', height: '70px' }}
+                  title="Export"
+                >
+                  <Download className="w-5 h-5 mb-1" />
+                  <span className="text-xs font-medium text-center leading-tight">Export</span>
+                </button>
+
+                {/* Filters Button */}
+                <button
+                  onClick={() => {
+                    handleFilters();
+                    setShowActionDropdown(false);
+                  }}
+                  className="text-gray-600 hover:bg-gray-100 flex flex-col items-center justify-center h-auto p-2 disabled:opacity-50 min-w-[60px]"
+                  style={{ width: '60px', height: '70px' }}
+                  title="Filters"
+                >
+                  <Filter className="w-5 h-5 mb-1" />
+                  <span className="text-xs font-medium text-center leading-tight">Filters</span>
+                </button>
+
+                {/* Divider */}
+                <div className="w-px h-12 bg-gray-300 mx-2"></div>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowActionDropdown(false)}
+                  className="text-gray-600 hover:bg-gray-100 flex items-center justify-center"
+                  style={{ width: '44px', height: '44px' }}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

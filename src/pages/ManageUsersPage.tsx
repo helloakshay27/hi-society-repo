@@ -474,7 +474,7 @@ export const ManageUsersPage = () => {
     <div className="min-h-screen bg-[#fafafa] p-6">
       <div className="max-w-full mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
+        <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
           <div className="px-6 py-4">
             <h1 className="text-2xl font-semibold text-[#1A1A1A]">Manage Users</h1>
           </div>

@@ -830,7 +830,7 @@ export const HelpdeskSetupDashboard = () => {
     <div className="min-h-screen bg-[#fafafa] p-6">
       <div className="max-w-full mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
+        <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
           <div className="px-6 py-4">
             <h1 className="text-2xl font-semibold text-[#1A1A1A]">Helpdesk Setup</h1>
           </div>
@@ -3297,7 +3297,7 @@ export const HelpdeskSetupDashboard = () => {
                   </div>
                   <div className="flex justify-end gap-3 pt-4 border-t">
                     <Button
-                      variant="outline"
+                      
                       onClick={() => {
                         setShowVendorDialog(false);
                         setEditingVendorId(null);
@@ -3388,16 +3388,16 @@ export const HelpdeskSetupDashboard = () => {
             </DialogHeader>
 
             <div className="p-6 space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="itemName" className="text-sm font-medium text-gray-700">
+              <div className="relative">
+                <Label htmlFor="itemName" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                   {getSubTabLabel(activeSetupSubTab)} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="itemName"
-                  placeholder={`Enter ${getSubTabLabel(activeSetupSubTab)}`}
+                  placeholder=" "
                   value={itemName}
                   onChange={(e) => setItemName(e.target.value)}
-                  className="w-full focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
+                  className="border border-gray-400 pt-2 focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
                 />
               </div>
 
@@ -3407,7 +3407,7 @@ export const HelpdeskSetupDashboard = () => {
                     setShowAddDialog(false);
                     setItemName("");
                   }}
-                  variant="outline"
+                  
                   className="px-6 py-2 border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
@@ -3445,16 +3445,16 @@ export const HelpdeskSetupDashboard = () => {
             </DialogHeader>
 
             <div className="p-6 space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="editItemName" className="text-sm font-medium text-gray-700">
+              <div className="relative">
+                <Label htmlFor="editItemName" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                   {getSubTabLabel(activeSetupSubTab)} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="editItemName"
-                  placeholder={`Enter ${getSubTabLabel(activeSetupSubTab)}`}
+                  placeholder=" "
                   value={itemName}
                   onChange={(e) => setItemName(e.target.value)}
-                  className="w-full focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
+                  className="border border-gray-400 pt-2 focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
                 />
               </div>
 
@@ -3465,7 +3465,7 @@ export const HelpdeskSetupDashboard = () => {
                     setItemName("");
                     setEditingItemId(null);
                   }}
-                  variant="outline"
+                  
                   className="px-6 py-2 border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
@@ -3507,15 +3507,15 @@ export const HelpdeskSetupDashboard = () => {
 
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="catIssueType" className="text-sm font-medium text-gray-700">
+                <div className="relative">
+                  <Label htmlFor="catIssueType" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                     Issue Type <span className="text-red-500">*</span>
                   </Label>
                   <select
                     id="catIssueType"
                     value={categoryIssueType}
                     onChange={(e) => setCategoryIssueType(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
+                    className="w-full px-3 py-2.5 border border-gray-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-transparent pt-1"
                   >
                     <option value="">Select Issue Type</option>
                     <option value="Flat">Flat</option>
@@ -3523,44 +3523,44 @@ export const HelpdeskSetupDashboard = () => {
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="catName" className="text-sm font-medium text-gray-700">
+                <div className="relative">
+                  <Label htmlFor="catName" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                     Category Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="catName"
-                    placeholder="Enter category name"
+                    placeholder=" "
                     value={categoryName}
                     onChange={(e) => setCategoryName(e.target.value)}
-                    className="w-full focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
+                    className="border border-gray-400 pt-2 focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="catFmTime" className="text-sm font-medium text-gray-700">
+                <div className="relative">
+                  <Label htmlFor="catFmTime" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                     FM Response Time (Min) <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="catFmTime"
                     type="number"
-                    placeholder="Enter time"
+                    placeholder=" "
                     value={categoryFmTime}
                     onChange={(e) => setCategoryFmTime(e.target.value)}
-                    className="w-full focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
+                    className="border border-gray-400 pt-2 focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="catProjectTime" className="text-sm font-medium text-gray-700">
+                <div className="relative">
+                  <Label htmlFor="catProjectTime" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                     Project Response Time (Min)
                   </Label>
                   <Input
                     id="catProjectTime"
                     type="number"
-                    placeholder="Enter time"
+                    placeholder=" "
                     value={categoryProjectTime}
                     onChange={(e) => setCategoryProjectTime(e.target.value)}
-                    className="w-full focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
+                    className="border border-gray-400 pt-2 focus:ring-2 focus:ring-[#C72030] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -3575,7 +3575,7 @@ export const HelpdeskSetupDashboard = () => {
                     setCategoryProjectTime("");
                     setEditingCategoryId(null);
                   }}
-                  variant="outline"
+                  
                   className="px-6 py-2 border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
@@ -3689,7 +3689,7 @@ export const HelpdeskSetupDashboard = () => {
                     setSubCategoryText("");
                     setEditingSubCategoryId(null);
                   }}
-                  variant="outline"
+                 
                   className="px-6 py-2 border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
@@ -3808,7 +3808,7 @@ export const HelpdeskSetupDashboard = () => {
                     setStatusColor("#000000");
                     setEditingStatusId(null);
                   }}
-                  variant="outline"
+                  
                   className="px-6 py-2 border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
@@ -3866,7 +3866,7 @@ export const HelpdeskSetupDashboard = () => {
                     setComplaintModeName("");
                     setEditingComplaintModeId(null);
                   }}
-                  variant="outline"
+                 
                   className="px-6 py-2 border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
@@ -3925,7 +3925,7 @@ export const HelpdeskSetupDashboard = () => {
                     setProjectEmail("");
                     setEditingProjectEmailId(null);
                   }}
-                  variant="outline"
+                  
                   className="px-6 py-2 border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
@@ -3991,7 +3991,7 @@ export const HelpdeskSetupDashboard = () => {
                     setAgingRuleColor("#000000");
                     setEditingAgingRuleId(null);
                   }}
-                  variant="outline"
+                  
                   className="px-6 py-2 border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
