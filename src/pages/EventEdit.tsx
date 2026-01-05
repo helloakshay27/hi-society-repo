@@ -15,7 +15,10 @@ import {
   InputLabel,
   Select as MuiSelect,
   MenuItem,
+  Avatar,
+  Box,
 } from "@mui/material";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import {
   Table,
   TableBody,
@@ -1127,33 +1130,23 @@ const EventEdit = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="w-4 h-4 text-gray-600" />
-          </button>
-          <span>Event List</span>
-          <span>{">"}</span>
-          <span className="text-gray-900 font-medium">Edit Event</span>
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900">EDIT EVENT</h1>
-      </div>
-
+    <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
-        {/* Section: Event Information */}
+        {/* Event Information Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
-                <FileText size={16} color="#C72030" />
-              </span>
-              Event Information
+              <Avatar
+                sx={{
+                  width: 32,
+                  height: 32,
+                  backgroundColor: '#E5E0D3',
+                  mr: 1.5
+                }}
+              >
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+              </Avatar>
+              Event Details
             </h2>
           </div>
           <div className="p-6 space-y-6">
@@ -1336,6 +1329,7 @@ const EventEdit = () => {
                           }))
                         }
                         className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: '#C72030' }}
                       />
                       <span className="ml-2 text-sm text-gray-700">Yes</span>
                     </label>
@@ -1351,6 +1345,7 @@ const EventEdit = () => {
                           }))
                         }
                         className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: '#C72030' }}
                       />
                       <span className="ml-2 text-sm text-gray-700">No</span>
                     </label>
@@ -1373,6 +1368,7 @@ const EventEdit = () => {
                           }))
                         }
                         className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: '#C72030' }}
                       />
                       <span className="ml-2 text-sm text-gray-700">Yes</span>
                     </label>
@@ -1388,6 +1384,7 @@ const EventEdit = () => {
                           }))
                         }
                         className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: '#C72030' }}
                       />
                       <span className="ml-2 text-sm text-gray-700">No</span>
                     </label>
@@ -1406,6 +1403,7 @@ const EventEdit = () => {
                         checked={formData.rsvp_action === "yes"}
                         onChange={handleChange}
                         className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: '#C72030' }}
                       />
                       <span className="ml-2 text-sm text-gray-700">Yes</span>
                     </label>
@@ -1417,6 +1415,7 @@ const EventEdit = () => {
                         checked={formData.rsvp_action === "no"}
                         onChange={handleChange}
                         className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: '#C72030' }}
                       />
                       <span className="ml-2 text-sm text-gray-700">No</span>
                     </label>
@@ -1596,6 +1595,7 @@ const EventEdit = () => {
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      style={{ accentColor: '#C72030' }}
                     />
                     <span className="ml-2 text-sm text-gray-700">All</span>
                   </label>
@@ -1614,6 +1614,7 @@ const EventEdit = () => {
                       }
                       disabled={!eventUserID || eventUserID.length === 0}
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] disabled:opacity-50"
+                      style={{ accentColor: '#C72030' }}
                     />
                     <span className={`ml-2 text-sm ${!eventUserID || eventUserID.length === 0 ? 'text-gray-400' : 'text-gray-700'}`}>Individuals</span>
                   </label>
@@ -1631,6 +1632,7 @@ const EventEdit = () => {
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                      style={{ accentColor: '#C72030' }}
                     />
                     <span className="ml-2 text-sm text-gray-700">Groups</span>
                   </label>
@@ -1726,12 +1728,24 @@ const EventEdit = () => {
           </div>
 
         {/* File Upload Section */}
-        <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">File Upload</h3>
+        <div className="mt-6 bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <Avatar
+                sx={{
+                  width: 32,
+                  height: 32,
+                  backgroundColor: '#E5E0D3',
+                  mr: 1.5
+                }}
+              >
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+              </Avatar>
+              Event Related Images
+            </h2>
           </div>
           
-          <div className="p-6">
+          <div className="p-6 space-y-6">
             {/* Event Cover Image */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-4">
@@ -1779,16 +1793,16 @@ const EventEdit = () => {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>File Name</TableHead>
-                        <TableHead>Preview</TableHead>
-                        <TableHead>Ratio</TableHead>
-                        <TableHead>Action</TableHead>
+                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Ratio</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                           {formData.cover_image?.document_url && (
-                            <TableRow>
+                            <TableRow className="hover:bg-gray-50">
                               <TableCell>
                                 {formData.cover_image.document_file_name ||
                                   formData.cover_image.file_name ||
@@ -1843,7 +1857,7 @@ const EventEdit = () => {
                               const ratio = file.ratio || label;
 
                               return (
-                                <TableRow key={`${key}-${file.id || index}`}>
+                                <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
                                   <TableCell>{name}</TableCell>
                                   <TableCell>
                                     {preview ? (
@@ -1953,17 +1967,17 @@ const EventEdit = () => {
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
-                          <TableRow>
-                            <TableHead>File Name</TableHead>
-                            <TableHead>Preview</TableHead>
-                            <TableHead>Ratio</TableHead>
-                            <TableHead>Action</TableHead>
+                          <TableRow style={{ backgroundColor: '#E6E2D8' }}>
+                            <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
+                            <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
+                            <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Ratio</TableHead>
+                            <TableHead className="font-semibold text-gray-900 py-3 px-4">Action</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {Array.isArray(formData.attachfile) &&
                             formData.attachfile.map((file) => (
-                              <TableRow key={`attachfile-${file.id}`}>
+                              <TableRow key={`attachfile-${file.id}`} className="hover:bg-gray-50">
                                 <TableCell>{file.document_file_name || "N/A"}</TableCell>
                                 <TableCell>
                                   {file.document_url && (
@@ -2023,7 +2037,7 @@ const EventEdit = () => {
                                   ));
 
                               return (
-                                <TableRow key={`${key}-${file.id || index}`}>
+                                <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
                                   <TableCell>{name}</TableCell>
                                   <TableCell>
                                     {isVideo ? (
