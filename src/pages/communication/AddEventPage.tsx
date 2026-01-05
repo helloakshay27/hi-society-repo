@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TextField, InputAdornment } from "@mui/material";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -76,215 +77,316 @@ const AddEventPage = () => {
     // In real implementation, send data to API
     console.log("Event Data:", formData);
     console.log("Attachments:", attachments);
-    
+
     toast.success("Event created successfully!");
     navigate("/communication/events");
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] p-6">
-      <div className="max-w-5xl mx-auto">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/communication/events")}
-          className="mb-4 hover:bg-gray-100"
+    <div className="min-h-screen bg-[#fafafa] px-0 py-6">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex items-center gap-2 mb-6">
+          <ArrowLeft className="w-5 h-5" />
+          <h1 className="text-2xl font-bold">Add Event</h1>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Row 1: Title | Venue | Start Date */}
+            <div>
+  <TextField
+    label="Title"
+    placeholder="Title"
+    value={formData.title}
+    onChange={(e) => handleInputChange("title", e.target.value)}
+    variant="outlined"
+    fullWidth
+    slotProps={{
+      inputLabel: { shrink: true },
+    }}
+    InputProps={{
+      sx: {
+        backgroundColor: "#fff",
+        borderRadius: "6px",
+        width: "350px",
+      },
+    }}
+    required
+  />
+</div>
+
+            <div>
+  <TextField
+    label="Venue"
+    placeholder="Enter Venue"
+    value={formData.venue}
+    onChange={(e) => handleInputChange("venue", e.target.value)}
+    variant="outlined"
+    fullWidth
+    slotProps={{
+      inputLabel: { shrink: true },
+    }}
+    InputProps={{
+      sx: {
+        backgroundColor: "#fff",
+        borderRadius: "6px",
+        width: "350px",
+      },
+    }}
+  />
+</div>
+
+            <div>
+  <TextField
+    label="Start Date"
+    type="date"
+    value={formData.startDate}
+    onChange={(e) => handleInputChange("startDate", e.target.value)}
+    variant="outlined"
+    fullWidth
+    slotProps={{
+      inputLabel: { shrink: true },
+    }}
+    InputProps={{
+      sx: {
+        backgroundColor: "#fff",
+        borderRadius: "6px",
+        width: "350px",
+      },
+    }}
+  />
+</div>
+
+            {/* Row 2: Start Time | End Date | End Time */}
+            <div>
+  <TextField
+    label="Start Time"
+    type="time"
+    value={formData.startTime}
+    onChange={(e) => handleInputChange("startTime", e.target.value)}
+    variant="outlined"
+    fullWidth
+    slotProps={{
+      inputLabel: { shrink: true },
+    }}
+    InputProps={{
+      sx: {
+        backgroundColor: "#fff",
+        borderRadius: "6px",
+        width: "350px",
+      },
+    }}
+  />
+</div>
+
+            <div>
+  <TextField
+    label="End Date"
+    type="date"
+    value={formData.endDate}
+    onChange={(e) => handleInputChange("endDate", e.target.value)}
+    variant="outlined"
+    fullWidth
+    slotProps={{
+      inputLabel: { shrink: true },
+    }}
+    InputProps={{
+      sx: {
+        backgroundColor: "#fff",
+        borderRadius: "6px",
+        width: "350px",
+      },
+    }}
+  />
+</div>
+
+            <div>
+  <TextField
+    label="End Time"
+    type="time"
+    value={formData.endTime}
+    onChange={(e) => handleInputChange("endTime", e.target.value)}
+    variant="outlined"
+    fullWidth
+    slotProps={{
+      inputLabel: { shrink: true },
+    }}
+    InputProps={{
+      sx: {
+        backgroundColor: "#fff",
+        borderRadius: "6px",
+        width: "350px",
+      },
+    }}
+  />
+</div>
+
+            {/* Description Field */}
+<div className="p-6">
+  <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+    <div className="md:col-span-6">
+      <div className="relative">
+
+        {/* Floating Label (MUI-style) */}
+        <label
+          htmlFor="notice-description"
+          className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-600"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Events
-        </Button>
+          Description
+        </label>
 
-        {/* EVENT INFO Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="mb-6">
-            <h2 className="text-base font-semibold text-[#1A1A1A] bg-[#C4B89D54] inline-block px-4 py-2 rounded">
-              EVENT INFO
-            </h2>
+        {/* Textarea styled like MUI TextField */}
+        <textarea
+          id="notice-description"
+          value={formData.description}
+          onChange={(e) => handleInputChange('description', e.target.value)}
+          className="
+            w-full
+            rounded-md
+            border
+            border-gray-300
+            px-3
+            py-3
+            text-sm
+            outline-none
+            transition
+            focus:border-blue-500
+            focus:ring-1
+            focus:ring-blue-500
+            resize-none
+          "
+          style={{ height: 180 }}
+        />
+
+        {/* Custom draggable resizer handle (UNCHANGED) */}
+        <div
+          id="resizer-handle"
+          className="absolute right-2 bottom-2 w-6 h-6 cursor-nwse-resize flex items-center justify-center"
+          title="Drag to resize"
+          onMouseDown={(e) => {
+            const textarea = document.getElementById(
+              "notice-description"
+            ) as HTMLTextAreaElement | null;
+            if (!textarea) return;
+
+            e.preventDefault();
+            const startY = e.clientY;
+            const startHeight = textarea.offsetHeight;
+
+            const onMouseMove = (moveEvent: MouseEvent) => {
+              const dy = moveEvent.clientY - startY;
+              const newHeight = Math.max(80, startHeight + dy);
+              textarea.style.height = `${newHeight}px`;
+            };
+
+            const onMouseUp = () => {
+              window.removeEventListener("mousemove", onMouseMove);
+              window.removeEventListener("mouseup", onMouseUp);
+            };
+
+            window.addEventListener("mousemove", onMouseMove);
+            window.addEventListener("mouseup", onMouseUp);
+          }}
+        >
+          <div className="w-full h-full flex flex-col items-center justify-center">
+            <span className="block w-3 h-[2px] bg-gray-400 mb-1 rounded" />
+            <span className="block w-3 h-[2px] bg-gray-400 rounded" />
           </div>
+        </div>
 
-          <div className="space-y-6">
-            {/* Title and Venue */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title" className="text-sm font-medium text-gray-700">
-                  Title
-                </Label>
-                <Input
-                  id="title"
-                  placeholder="Title"
-                  value={formData.title}
-                  onChange={(e) => handleInputChange("title", e.target.value)}
-                  className="w-full"
-                />
-              </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-              <div className="space-y-2">
-                <Label htmlFor="venue" className="text-sm font-medium text-gray-700">
-                  Venue
-                </Label>
-                <Input
-                  id="venue"
-                  placeholder="Enter Venue"
-                  value={formData.venue}
-                  onChange={(e) => handleInputChange("venue", e.target.value)}
-                  className="w-full"
-                />
-              </div>
-            </div>
 
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-sm font-medium text-gray-700">
-                Description
-              </Label>
-              <Textarea
-                id="description"
-                placeholder="Enter Description"
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
-                className="w-full min-h-[100px] resize-none"
+            
+          </div>
+        </div>
+
+        {/* Checkboxes: moved below description (full-width) */}
+        <div className="mb-6 ml-6">
+          <div className="flex gap-8">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="markAsImportant"
+                checked={formData.markAsImportant}
+                onCheckedChange={(checked) =>
+                  handleInputChange('markAsImportant', checked)
+                }
               />
+              <label
+                htmlFor="markAsImportant"
+                className="text-sm font-medium leading-none cursor-pointer"
+              >
+                Mark as Important
+              </label>
             </div>
 
-            {/* Date and Time Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startDate" className="text-sm font-medium text-gray-700">
-                  Start Time
-                </Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  placeholder="Start Date"
-                  value={formData.startDate}
-                  onChange={(e) => handleInputChange("startDate", e.target.value)}
-                  className="w-full"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="startTime" className="text-sm font-medium text-gray-700">
-                  &nbsp;
-                </Label>
-                <Input
-                  id="startTime"
-                  type="time"
-                  value={formData.startTime}
-                  onChange={(e) => handleInputChange("startTime", e.target.value)}
-                  className="w-full"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="endDate" className="text-sm font-medium text-gray-700">
-                  End Time
-                </Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  placeholder="End Date"
-                  value={formData.endDate}
-                  onChange={(e) => handleInputChange("endDate", e.target.value)}
-                  className="w-full"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="endTime" className="text-sm font-medium text-gray-700">
-                  &nbsp;
-                </Label>
-                <Input
-                  id="endTime"
-                  type="time"
-                  value={formData.endTime}
-                  onChange={(e) => handleInputChange("endTime", e.target.value)}
-                  className="w-full"
-                />
-              </div>
-            </div>
-
-            {/* Checkboxes */}
-            <div className="flex items-center gap-6">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="markAsImportant"
-                  checked={formData.markAsImportant}
-                  onCheckedChange={(checked) =>
-                    handleInputChange("markAsImportant", checked)
-                  }
-                />
-                <label
-                  htmlFor="markAsImportant"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                >
-                  Mark as Important
-                </label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="sendEmail"
-                  checked={formData.sendEmail}
-                  onCheckedChange={(checked) =>
-                    handleInputChange("sendEmail", checked)
-                  }
-                />
-                <label
-                  htmlFor="sendEmail"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                >
-                  Send Email
-                </label>
-              </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="sendEmail"
+                checked={formData.sendEmail}
+                onCheckedChange={(checked) =>
+                  handleInputChange('sendEmail', checked)
+                }
+              />
+              <label
+                htmlFor="sendEmail"
+                className="text-sm font-medium leading-none cursor-pointer"
+              >
+                Send Email
+              </label>
             </div>
           </div>
         </div>
 
-        {/* UPLOAD FILES Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="mb-6">
-            <h2 className="text-base font-semibold text-[#1A1A1A] bg-[#C4B89D54] inline-block px-4 py-2 rounded">
-              UPLOAD FILES
-            </h2>
-          </div>
+       {/* UPLOAD FILES Section */}
+<div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+  {/* Header */}
+  <div className="mb-6">
+    <div className="bg-[#C4B89D54] text-[#1A1A1A] px-4 py-2 rounded font-medium inline-block">
+      UPLOAD FILES
+    </div>
+  </div>
 
-          <div className="flex items-center justify-center">
-            <label
-              htmlFor="file-upload"
-              className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
-            >
-              <Plus className="w-8 h-8 text-gray-400" />
-              <input
-                id="file-upload"
-                type="file"
-                multiple
-                onChange={handleFileUpload}
-                className="hidden"
-                accept="image/*,application/pdf,.doc,.docx"
-              />
-            </label>
-          </div>
+  {/* Upload Box */}
+  <div className="border border-gray-300 rounded-md p-6">
+    <input
+      id="file-upload"
+      type="file"
+      multiple
+      onChange={handleFileUpload}
+      className="hidden"
+      accept="image/*,application/pdf,.doc,.docx"
+    />
 
-          {attachments.length > 0 && (
-            <div className="mt-4">
-              <p className="text-sm text-gray-600 mb-2">
-                {attachments.length} file(s) selected
-              </p>
-              <div className="space-y-1">
-                {attachments.map((file, index) => (
-                  <div
-                    key={index}
-                    className="text-sm text-gray-700 py-1 px-2 bg-gray-50 rounded"
-                  >
-                    {file.name}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+    <label
+      htmlFor="file-upload"
+      className="inline-flex items-center gap-3 px-5 py-2 bg-[#e0d9c859] rounded cursor-pointer hover:bg-[#EFEFEF]"
+    >
+      <span className="text-[#1A1A1A] font-medium">
+        Upload Files
+      </span>
+      <Upload className="w-5 h-5 text-[#C72030]" />
+    </label>
+
+    {/* Selected files */}
+    {attachments.length > 0 && (
+      <div className="mt-3">
+        {attachments.map((file, index) => (
+          <p
+            key={index}
+            className="text-sm text-gray-600"
+          >
+            Selected: {file.name}
+          </p>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+
 
         {/* SHARE WITH Section */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -332,7 +434,9 @@ const AddEventPage = () => {
 
           <RadioGroup
             value={formData.rsvp ? "yes" : "no"}
-            onValueChange={(value) => handleInputChange("rsvp", value === "yes")}
+            onValueChange={(value) =>
+              handleInputChange("rsvp", value === "yes")
+            }
             className="flex gap-6"
           >
             <div className="flex items-center space-x-2">
