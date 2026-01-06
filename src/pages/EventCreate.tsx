@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronRight, ArrowLeft, FileText, Calendar, Users, X, Plus, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2 } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
@@ -770,22 +770,25 @@ const EventCreate = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
+        console.log("Fetching projects from:", `${baseURL}/projects_for_dropdown.json`);
         const response = await axios.get(
-          `${baseURL}projects.json`,
-
+          `${baseURL}/projects_for_dropdown.json`,
           {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-              "Content-Type": "application/json",
-            },
+             headers: {
+                          Authorization: getAuthHeader(),
+                          "Content-Type": "application/json",
+                        },
           }
         );
+        console.log("Projects API Response:", response.data);
+        console.log("Projects array:", response.data.projects);
         setProjects(response.data.projects || []);
       } catch (error) {
         console.error(
           "Error fetching projects:",
           error.response?.data || error.message
         );
+        console.error("Full error:", error);
       }
     };
 
@@ -1163,7 +1166,7 @@ const EventCreate = () => {
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Project Select */}
-              <FormControl
+              {/* <FormControl
                 fullWidth
                 variant="outlined"
                 sx={{ '& .MuiInputBase-root': fieldStyles }}
@@ -1171,19 +1174,26 @@ const EventCreate = () => {
                 <InputLabel shrink>Project</InputLabel>
                 <MuiSelect
                   value={selectedProjectId || ""}
-                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  onChange={(e) => {
+                    console.log("Project selected:", e.target.value);
+                    setSelectedProjectId(e.target.value);
+                  }}
                   label="Project"
                   notched
                   displayEmpty
                 >
                   <MenuItem value="">Select Project</MenuItem>
-                  {projects.map((project) => (
-                    <MenuItem key={project.id} value={project.id}>
-                      {project.project_name}
-                    </MenuItem>
-                  ))}
+                  {console.log("Rendering projects dropdown, count:", projects.length)}
+                  {projects.map((project) => {
+                    console.log("Project item:", project);
+                    return (
+                      <MenuItem key={project.id} value={project.id}>
+                        {project.name}
+                      </MenuItem>
+                    );
+                  })}
                 </MuiSelect>
-              </FormControl>
+              </FormControl> */}
 
               {/* Event Type */}
               {/* <TextField
@@ -1242,6 +1252,23 @@ const EventCreate = () => {
                   sx: fieldStyles,
                 }}
               />
+              <TextField
+                label="Event Date"
+                type="date"
+                value={formData.event_date}
+                onChange={handleChange}
+                name="event_date"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
 
               <div className="md:col-span-2">            
                <TextField
@@ -1284,11 +1311,11 @@ const EventCreate = () => {
 
               {/* Event From */}
               <TextField
-                label="Event From"
-                type="datetime-local"
-                value={formData.from_time}
+                label="Event Time"
+                type="time"
+                value={formData.event_time}
                 onChange={handleChange}
-                name="from_time"
+                name="event_time"
                 fullWidth
                 variant="outlined"
                 slotProps={{
@@ -1300,31 +1327,16 @@ const EventCreate = () => {
                   sx: fieldStyles,
                 }}
               />
+             
             </div>
 
             {/* 4-column grid for Event To, Mark Important, Send Email, RSVP Action */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {/* Event To */}
-              <TextField
-                label="Event To"
-                type="datetime-local"
-                value={formData.to_time}
-                onChange={handleChange}
-                name="to_time"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
+              
 
               {/* Mark Important */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important</label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
@@ -1360,7 +1372,7 @@ const EventCreate = () => {
                     <span className="ml-2 text-sm text-gray-700">No</span>
                   </label>
                 </div>
-              </div>
+              </div> */}
 
               {/* Send Email */}
               <div>
@@ -2379,31 +2391,45 @@ const EventCreate = () => {
                             </div>
 
                             {/* Event From */}
-                            <TextField
-                              label="Event From"
-                              type="datetime-local"
-                              value={formData.from_time}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
+                           <TextField
+                label="Event Date"
+                type="date"
+                value={formData.event_date}
+                onChange={handleChange}
+                name="event_date"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
                           </div>
 
                           {/* 4-column grid for Event To, Mark Important, Send Email, RSVP Action */}
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             {/* Event To */}
-                            <TextField
-                              label="Event To"
-                              type="datetime-local"
-                              value={formData.to_time}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
+                           <TextField
+                label="Event Time"
+                type="time"
+                value={formData.event_time}
+                onChange={handleChange}
+                name="event_time"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
 
                             {/* Mark Important */}
                             <div>

@@ -10,7 +10,7 @@ import { ImageCropper } from "../components/reusable/ImageCropper";
 import { ImageUploadingButton } from "../components/reusable/ImageUploadingButton";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
-import { API_CONFIG } from "../config/apiConfig";
+import { API_CONFIG, getFullUrl, getAuthHeader } from "../config/apiConfig";
 import {
   TextField,
   FormControl,
@@ -18,7 +18,7 @@ import {
   Select as MuiSelect,
   MenuItem,
 } from "@mui/material";
-import { Building2, FileText, Trash2, ArrowLeft, Delete, DeleteIcon } from "lucide-react";
+import { Building2, FileText, Trash2, ArrowLeft, Delete, DeleteIcon, Info } from "lucide-react";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import "../styles/mor.css";
 import { DeleteForever, DeleteForeverOutlined, DeleteForeverRounded, DeleteForeverSharp, DeleteForeverTwoTone, DeleteOutlined, DeleteOutlineOutlined, DeleteOutlineRounded, DeleteSweepOutlined, DeleteSweepRounded, DeleteSweepSharp, DeleteSweepTwoTone, FileUpload } from "@mui/icons-material";
@@ -52,8 +52,6 @@ const fieldStyles = {
 };
 
 const ProjectDetailsCreate = () => {
-  const baseURL = API_CONFIG.BASE_URL;
-  const accessToken = localStorage.getItem("access_token");
   const [formData, setFormData] = useState({
     Property_Type: "",
     Property_type_id: "",
@@ -61,7 +59,7 @@ const ProjectDetailsCreate = () => {
     SFDC_Project_Id: "",
     Project_Construction_Status: "",
     Construction_Status_id: "",
-    Configuration_Type: [],
+    Configuration_Type: "",
     Project_Name: "",
     project_address: "",
     Project_Description: "",
@@ -163,6 +161,18 @@ const ProjectDetailsCreate = () => {
   const [showTooltipCover, setShowTooltipCover] = useState(false);
   const [showTooltipGallery, setShowTooltipGallery] = useState(false);
   const [showTooltipFloor, setShowTooltipFloor] = useState(false);
+  const [showTooltipPlans, setShowTooltipPlans] = useState(false);
+  const [showTooltipBrochure, setShowTooltipBrochure] = useState(false);
+  const [showTooltipPPT, setShowTooltipPPT] = useState(false);
+  const [showTooltipLayout, setShowTooltipLayout] = useState(false);
+  const [showTooltipCreatives, setShowTooltipCreatives] = useState(false);
+  const [showTooltipCreativeGenerics, setShowTooltipCreativeGenerics] = useState(false);
+  const [showTooltipCreativeOffers, setShowTooltipCreativeOffers] = useState(false);
+  const [showTooltipInteriors, setShowTooltipInteriors] = useState(false);
+  const [showTooltipExteriors, setShowTooltipExteriors] = useState(false);
+  const [showTooltipEmailer, setShowTooltipEmailer] = useState(false);
+  const [showTooltipKYA, setShowTooltipKYA] = useState(false);
+  const [showTooltipVideos, setShowTooltipVideos] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState({
     image: false,
@@ -569,7 +579,7 @@ const ProjectDetailsCreate = () => {
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/property_types.json`)
+      .get(getFullUrl('/property_types.json'))
       .then((response) => {
         const options = response.data
           .map((type) => ({
@@ -588,7 +598,7 @@ const ProjectDetailsCreate = () => {
   // Fetch amenities
   useEffect(() => {
     axios
-      .get(`${baseURL}/amenity_setups.json`)
+      .get(getFullUrl('/amenity_setups.json'))
       .then((response) => {
         setAmenities(response.data.amenities_setups || []);
       })
@@ -601,7 +611,7 @@ const ProjectDetailsCreate = () => {
   // Fetch configurations
   useEffect(() => {
     axios
-      .get(`${baseURL}/configuration_setups.json`)
+      .get(getFullUrl('/configuration_setups.json'))
       .then((response) => {
         setConfigurations(response.data);
       })
@@ -614,7 +624,7 @@ const ProjectDetailsCreate = () => {
   // Fetch status options
   useEffect(() => {
     axios
-      .get(`${baseURL}/construction_statuses.json`)
+      .get(getFullUrl('/construction_statuses.json'))
       .then((response) => {
         const options = response.data.map((status) => ({
           value: status.construction_status,
@@ -631,7 +641,7 @@ const ProjectDetailsCreate = () => {
 
   const fetchBuildingTypes = async () => {
     try {
-      const response = await axios.get(`${baseURL}/building_types.json`);
+      const response = await axios.get(getFullUrl('/building_types.json'));
       const options = response.data
         .filter((item) => item.active)
         .map((type) => ({
@@ -662,7 +672,7 @@ const ProjectDetailsCreate = () => {
 
     try {
       const response = await axios.get(
-        `${baseURL}/building_types.json?q[property_type_id_eq]=${id}`
+        getFullUrl(`/building_types.json?q[property_type_id_eq]=${id}`)
       );
 
       const formattedBuildingTypes = response.data.map((item) => ({
@@ -1335,10 +1345,10 @@ const ProjectDetailsCreate = () => {
     }
 
     try {
-      const response = await fetch(`${baseURL}plans/${planId}.json`, {
+      const response = await fetch(getFullUrl(`/plans/${planId}.json`), {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: getAuthHeader(),
         },
       });
 
@@ -1609,12 +1619,32 @@ const ProjectDetailsCreate = () => {
               `project[Rera_Number_multiple][${index}][rera_number]`,
               item.rera_number
             );
-            data.append(
-              `project[Rera_Number_multiple][${index}][rera_url]`,
-              item.rera_url
-            );
+            // Only append rera_url if it has a value
+            if (item.rera_url && item.rera_url.trim() !== "") {
+              data.append(
+                `project[Rera_Number_multiple][${index}][rera_url]`,
+                item.rera_url
+              );
+            }
           }
         });
+      } else if (key === "Specifications" && Array.isArray(value) && value.length > 0) {
+        // Only append specifications if array has items
+        value.forEach((spec) => {
+          if (spec && spec.trim() !== "") {
+            data.append("project[Specifications][]", spec);
+          }
+        });
+      } else if (key === "Amenities" && Array.isArray(value) && value.length > 0) {
+        // Only append amenities if array has items
+        value.forEach((amenityId) => {
+          if (amenityId) {
+            data.append("project[Amenities][]", amenityId);
+          }
+        });
+      } else if (key === "Configuration_Type" && value && value.trim() !== "") {
+        // Only append configuration type if it has a non-empty value
+        data.append("project[Configuration_Type]", value);
       } else if (key === "project_ppt" && Array.isArray(value)) {
         value.forEach((file) => {
           if (file instanceof File) {
@@ -1668,15 +1698,30 @@ const ProjectDetailsCreate = () => {
             data.append(backendField, img.file);
           }
         });
-      } else {
+      } else if (key === "Rera_Sellable_Area" && value && value.trim() !== "") {
+        // Only append Rera_Sellable_Area if it has a non-empty value
+        data.append(`project[${key}]`, value);
+      } else if (key === "rera_url" && value && value.trim() !== "") {
+        // Only append rera_url if it has a non-empty value
+        data.append(`project[${key}]`, value);
+      } else if (
+        key !== "Specifications" && 
+        key !== "Amenities" && 
+        key !== "Rera_Sellable_Area" && 
+        key !== "rera_url" &&
+        value !== null && 
+        value !== undefined && 
+        value !== ""
+      ) {
+        // Skip empty strings, null, and undefined for other fields
         data.append(`project[${key}]`, value);
       }
     });
 
     try {
-      const response = await axios.post(`${baseURL}/projects.json`, data, {
+      const response = await axios.post(getFullUrl('/projects.json'), data, {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: getAuthHeader(),
         },
       });
 
@@ -1721,7 +1766,7 @@ const ProjectDetailsCreate = () => {
                {/* <span>{">"}</span> */}
                {/* <span className="text-gray-900 font-medium">Create New Project</span> */}
              </div>
-             <h1 className="text-2xl font-bold text-gray-900">CREATE PROJECT</h1>
+             {/* <h1 className="text-2xl font-bold text-gray-900">CREATE PROJECT</h1> */}
            </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -1837,25 +1882,18 @@ const ProjectDetailsCreate = () => {
               >
                 <InputLabel shrink>Configuration Type</InputLabel>
                 <MuiSelect
-                  multiple
                   value={formData.Configuration_Type}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      Configuration_Type: e.target.value as string[],
+                      Configuration_Type: e.target.value,
                     }))
                   }
                   label="Configuration Type"
                   notched
                   displayEmpty
-                  renderValue={(selected) => {
-                    if ((selected as string[]).length === 0) {
-                      return "Select Configuration";
-                    }
-                    return (selected as string[]).join(", ");
-                  }}
                 >
-                  <MenuItem value="" disabled>
+                  <MenuItem value="">
                     Select Configuration
                   </MenuItem>
                   {configurations.map((config) => (
@@ -2326,6 +2364,122 @@ const ProjectDetailsCreate = () => {
                   },
                 }}
               />
+
+              {/* Enable Enquiry Toggle */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-700">Enable Enquiry</label>
+                <div className="flex items-center gap-2 text-[11px] font-medium select-none">
+                  {/* <span className={formData.enable_enquiry ? "text-[#1A1A1A]" : "text-gray-400"}>
+                    Yes
+                  </span> */}
+                  <div
+                    role="switch"
+                    aria-checked={formData.enable_enquiry}
+                    aria-label={formData.enable_enquiry ? "Deactivate enable enquiry" : "Activate enable enquiry"}
+                    tabIndex={0}
+                    onClick={() => setFormData(prev => ({ ...prev, enable_enquiry: !prev.enable_enquiry }))}
+                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setFormData(prev => ({ ...prev, enable_enquiry: !prev.enable_enquiry }))}
+                    className="cursor-pointer"
+                    style={{ transform: formData.enable_enquiry ? 'scaleX(1)' : 'scaleX(-1)' }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="20" viewBox="0 0 22 14" fill="none">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                      <g filter="url(#filter0_dd_enable_enquiry)">
+                        <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                        <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_enable_enquiry)" strokeWidth="0.255453"/>
+                        <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_enable_enquiry)" strokeWidth="0.255453"/>
+                      </g>
+                      <defs>
+                        <filter id="filter0_dd_enable_enquiry" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                          <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                          <feOffset dy="1.02181"/>
+                          <feGaussianBlur stdDeviation="0.510907"/>
+                          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_enable_enquiry"/>
+                          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                          <feOffset/>
+                          <feGaussianBlur stdDeviation="0.510907"/>
+                          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                          <feBlend mode="normal" in2="effect1_dropShadow_enable_enquiry" result="effect2_dropShadow_enable_enquiry"/>
+                          <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_enable_enquiry" result="shape"/>
+                        </filter>
+                        <linearGradient id="paint0_linear_enable_enquiry" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
+                          <stop stopOpacity="0"/>
+                          <stop offset="0.8" stopOpacity="0.02"/>
+                          <stop offset="1" stopOpacity="0.04"/>
+                        </linearGradient>
+                        <linearGradient id="paint1_linear_enable_enquiry" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
+                          <stop stopColor="white" stopOpacity="0.12"/>
+                          <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
+                          <stop offset="1" stopColor="white" stopOpacity="0"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                  {/* <span className={!formData.enable_enquiry ? "text-[#1A1A1A]" : "text-gray-400"}>
+                    No
+                  </span> */}
+                </div>
+              </div>
+
+              {/* Is Sold Toggle */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-700">Is Sold</label>
+                <div className="flex items-center gap-2 text-[11px] font-medium select-none">
+                  {/* <span className={formData.is_sold ? "text-[#1A1A1A]" : "text-gray-400"}>
+                    Yes
+                  </span> */}
+                  <div
+                    role="switch"
+                    aria-checked={formData.is_sold}
+                    aria-label={formData.is_sold ? "Deactivate is sold" : "Activate is sold"}
+                    tabIndex={0}
+                    onClick={() => setFormData(prev => ({ ...prev, is_sold: !prev.is_sold }))}
+                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setFormData(prev => ({ ...prev, is_sold: !prev.is_sold }))}
+                    className="cursor-pointer"
+                    style={{ transform: formData.is_sold ? 'scaleX(1)' : 'scaleX(-1)' }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="20" viewBox="0 0 22 14" fill="none">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                      <g filter="url(#filter0_dd_is_sold)">
+                        <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                        <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_is_sold)" strokeWidth="0.255453"/>
+                        <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_is_sold)" strokeWidth="0.255453"/>
+                      </g>
+                      <defs>
+                        <filter id="filter0_dd_is_sold" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                          <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                          <feOffset dy="1.02181"/>
+                          <feGaussianBlur stdDeviation="0.510907"/>
+                          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_is_sold"/>
+                          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                          <feOffset/>
+                          <feGaussianBlur stdDeviation="0.510907"/>
+                          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                          <feBlend mode="normal" in2="effect1_dropShadow_is_sold" result="effect2_dropShadow_is_sold"/>
+                          <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_is_sold" result="shape"/>
+                        </filter>
+                        <linearGradient id="paint0_linear_is_sold" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
+                          <stop stopOpacity="0"/>
+                          <stop offset="0.8" stopOpacity="0.02"/>
+                          <stop offset="1" stopOpacity="0.04"/>
+                        </linearGradient>
+                        <linearGradient id="paint1_linear_is_sold" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
+                          <stop stopColor="white" stopOpacity="0.12"/>
+                          <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
+                          <stop offset="1" stopColor="white" stopOpacity="0"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                  {/* <span className={!formData.is_sold ? "text-[#1A1A1A]" : "text-gray-400"}>
+                    No
+                  </span> */}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2346,223 +2500,246 @@ const ProjectDetailsCreate = () => {
                   </h2>
                 </div>
                 <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <TextField
-                        label="Tower"
-                        placeholder="Enter Tower Name"
-                        value={towerName}
-                        onChange={(e) => setTowerName(e.target.value)}
-                        fullWidth
-                        variant="outlined"
-                        slotProps={{
-                          inputLabel: {
-                            shrink: true,
-                          },
-                        }}
-                        InputProps={{
-                          sx: fieldStyles,
-                        }}
-                      />
+                  {/* Render all RERA sections */}
+                  {formData.Rera_Number_multiple.length === 0 ? (
+                    // Initial section when no RERA entries exist
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <TextField
+                          label="Tower"
+                          placeholder="Enter Tower Name"
+                          value={formData.Rera_Number_multiple[0]?.tower_name || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setFormData((prev) => {
+                              const updated = [...prev.Rera_Number_multiple];
+                              if (updated.length === 0) {
+                                updated.push({ tower_name: value, rera_number: "", rera_url: "" });
+                              } else {
+                                updated[0] = { ...updated[0], tower_name: value };
+                              }
+                              return { ...prev, Rera_Number_multiple: updated };
+                            });
+                          }}
+                          fullWidth
+                          variant="outlined"
+                          slotProps={{
+                            inputLabel: {
+                              shrink: true,
+                            },
+                          }}
+                          InputProps={{
+                            sx: fieldStyles,
+                          }}
+                        />
 
-                      <TextField
-                        label="RERA Number"
-                        placeholder="Enter RERA Number"
-                        value={reraNumber}
-                        onChange={(e) => setReraNumber(e.target.value)}
-                        inputProps={{ maxLength: 12 }}
-                        fullWidth
-                        variant="outlined"
-                        slotProps={{
-                          inputLabel: {
-                            shrink: true,
-                          },
-                        }}
-                        InputProps={{
-                          sx: fieldStyles,
-                        }}
-                      />
+                        <TextField
+                          label="RERA Number"
+                          placeholder="Enter RERA Number"
+                          value={formData.Rera_Number_multiple[0]?.rera_number || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setFormData((prev) => {
+                              const updated = [...prev.Rera_Number_multiple];
+                              if (updated.length === 0) {
+                                updated.push({ tower_name: "", rera_number: value, rera_url: "" });
+                              } else {
+                                updated[0] = { ...updated[0], rera_number: value };
+                              }
+                              return { ...prev, Rera_Number_multiple: updated };
+                            });
+                          }}
+                          inputProps={{ maxLength: 12 }}
+                          fullWidth
+                          variant="outlined"
+                          slotProps={{
+                            inputLabel: {
+                              shrink: true,
+                            },
+                          }}
+                          InputProps={{
+                            sx: fieldStyles,
+                          }}
+                        />
 
-                      <TextField
-                        label="RERA URL"
-                        placeholder="Enter RERA URL"
-                        value={reraUrl}
-                        onChange={(e) => setReraUrl(e.target.value)}
-                        fullWidth
-                        variant="outlined"
-                        slotProps={{
-                          inputLabel: {
-                            shrink: true,
-                          },
-                        }}
-                        InputProps={{
-                          sx: fieldStyles,
-                        }}
-                      />
+                        <TextField
+                          label="RERA URL"
+                          placeholder="Enter RERA URL"
+                          value={formData.Rera_Number_multiple[0]?.rera_url || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setFormData((prev) => {
+                              const updated = [...prev.Rera_Number_multiple];
+                              if (updated.length === 0) {
+                                updated.push({ tower_name: "", rera_number: "", rera_url: value });
+                              } else {
+                                updated[0] = { ...updated[0], rera_url: value };
+                              }
+                              return { ...prev, Rera_Number_multiple: updated };
+                            });
+                          }}
+                          fullWidth
+                          variant="outlined"
+                          slotProps={{
+                            inputLabel: {
+                              shrink: true,
+                            },
+                          }}
+                          InputProps={{
+                            sx: fieldStyles,
+                          }}
+                        />
+                      </div>
+
+                      {/* Project QR Code Images Section */}
+                      <div className="mt-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Project QR Code Images
+                        </label>
+                        
+                        <div className="border border-gray-300 rounded-md p-4 min-h-[150px]">
+                          {/* Hidden input */}
+                          <input
+                            type="file"
+                            onChange={handleQRCodeImageChange}
+                            className="hidden"
+                            id="qr-code-file-upload"
+                            accept="image/*"
+                            multiple
+                          />
+
+                          {/* Preview section inside the box */}
+                          {formData.project_qrcode_image.length > 0 && (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                              {formData.project_qrcode_image.map((image, index) => (
+                                <div key={index} className="relative border rounded-lg p-3 bg-gray-50">
+                                  <img
+                                    src={
+                                      image.isNew
+                                        ? URL.createObjectURL(image.project_qrcode_image)
+                                        : image.document_url || image.project_qrcode_image
+                                    }
+                                    alt={`QR Code ${index + 1}`}
+                                    className="w-full h-24 object-contain mb-2 rounded"
+                                  />
+                                  <TextField
+                                    label="Image Title"
+                                    placeholder="Enter title"
+                                    value={image.title || ""}
+                                    onChange={(e) =>
+                                      handleQRCodeImageNameChange(index, e.target.value)
+                                    }
+                                    disabled={!image.isNew}
+                                    size="small"
+                                    fullWidth
+                                    variant="outlined"
+                                  />
+                                  <button
+                                    type="button"
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                    onClick={() => handleRemoveQRCodeImage(index)}
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Upload button centered at bottom */}
+                          <div className="flex">
+                            <button
+                              type="button"
+                              onClick={() => document.getElementById("qr-code-file-upload")?.click()}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
+                              style={{ backgroundColor: "#c4b89d59" }}
+                            >
+                              <span className="font-medium text-sm text-gray-700">Upload Files</span>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#C72030"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                  ) : (
+                    <>
+                      {/* Show all saved RERA sections */}
+                      {formData.Rera_Number_multiple.map((reraEntry, entryIndex) => (
+                        <div key={entryIndex} className="p-4 border border-gray-300 rounded-md relative mb-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-sm font-medium text-gray-900">
+                              Section {entryIndex + 1}
+                            </h3>
+                            <button
+                              type="button"
+                              className="text-red-600 hover:text-red-800 p-1"
+                              onClick={() => {
+                                const updated = formData.Rera_Number_multiple.filter(
+                                  (_, i) => i !== entryIndex
+                                );
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  Rera_Number_multiple: updated,
+                                }));
+                                toast.success("RERA section deleted");
+                              }}
+                              title="Delete Section"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
 
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 px-6 py-2.5 rounded-md text-[#C72030] font-medium transition-colors"
-                        style={{
-                          height: "45px",
-                          backgroundColor: "#C4B89D59",
-                          // border: "2px solid #C4B89D59",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = "#C4B89D59";
-                          // e.currentTarget.style.borderColor = "#A01828";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "#C4B89D59";
-                          // e.currentTarget.style.borderColor = "#C72030";
-                        }}
-                        onClick={() => {
-                          if (!towerName || !reraNumber) {
-                            toast.error(
-                              "Please enter both Tower Name and RERA Number"
-                            );
-                            return;
-                          }
-                          setFormData((prev) => ({
-                            ...prev,
-                            Rera_Number_multiple: [
-                              ...prev.Rera_Number_multiple,
-                              {
-                                tower: towerName,
-                                rera_number: reraNumber,
-                                rera_url: reraUrl,
-                              },
-                            ],
-                          }));
-                          setTowerName("");
-                          setReraNumber("");
-                          setReraUrl("");
-                          toast.success("RERA entry added");
-                        }}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width={20}
-                          height={20}
-                          fill="currentColor"
-                          viewBox="0 0 16 16"
-                        >
-                          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                        </svg>
-                        Add RERA
-                      </button>
-                    </div>
-
-                    {/* <div className="flex justify-end">
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 px-6 py-2.5 rounded-md text-white font-medium transition-colors"
-                        style={{
-                          height: "45px",
-                          backgroundColor: "#C72030",
-                          border: "2px solid #C72030",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = "#A01828";
-                          e.currentTarget.style.borderColor = "#A01828";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "#C72030";
-                          e.currentTarget.style.borderColor = "#C72030";
-                        }}
-                        onClick={() => {
-                          if (!towerName || !reraNumber) {
-                            toast.error(
-                              "Please enter both Tower Name and RERA Number"
-                            );
-                            return;
-                          }
-                          setFormData((prev) => ({
-                            ...prev,
-                            Rera_Number_multiple: [
-                              ...prev.Rera_Number_multiple,
-                              {
-                                tower: towerName,
-                                rera_number: reraNumber,
-                                rera_url: reraUrl,
-                              },
-                            ],
-                          }));
-                          setTowerName("");
-                          setReraNumber("");
-                          setReraUrl("");
-                          toast.success("RERA entry added");
-                        }}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width={20}
-                          height={20}
-                          fill="currentColor"
-                          viewBox="0 0 16 16"
-                        >
-                          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                        </svg>
-                        Add
-                      </button>
-                    </div> */}
-                  </div>
-                  {formData.Rera_Number_multiple.length > 0 && (
-                    <div className="mt-4">
-                      <EnhancedTable
-                        data={formData.Rera_Number_multiple.map(
-                          (item, index) => ({ ...item, id: index })
-                        )}
-                        columns={[
-                          { key: "tower", label: "Tower Name", sortable: true },
-                          {
-                            key: "rera_number",
-                            label: "RERA Number",
-                            sortable: true,
-                          },
-                          {
-                            key: "rera_url",
-                            label: "RERA URL",
-                            sortable: false,
-                          },
-                        ]}
-                        renderCell={(item, columnKey) => {
-                          const index = item.id;
-                          if (columnKey === "tower") {
-                            return (
+                          <div className="grid grid-cols-1 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <TextField
-                                value={item.tower || ""}
+                                label="Tower"
+                                placeholder="Enter Tower Name"
+                                value={reraEntry.tower_name || reraEntry.tower || ""}
                                 onChange={(e) => {
-                                  const updated = [
-                                    ...formData.Rera_Number_multiple,
-                                  ];
-                                  updated[index] = {
-                                    ...updated[index],
-                                    tower: e.target.value,
+                                  const updated = [...formData.Rera_Number_multiple];
+                                  updated[entryIndex] = {
+                                    ...updated[entryIndex],
+                                    tower_name: e.target.value,
                                   };
                                   setFormData((prev) => ({
                                     ...prev,
                                     Rera_Number_multiple: updated,
                                   }));
                                 }}
-                                size="small"
                                 fullWidth
                                 variant="outlined"
+                                slotProps={{
+                                  inputLabel: {
+                                    shrink: true,
+                                  },
+                                }}
+                                InputProps={{
+                                  sx: fieldStyles,
+                                }}
                               />
-                            );
-                          }
-                          if (columnKey === "rera_number") {
-                            return (
+
                               <TextField
-                                value={item.rera_number || ""}
+                                label="RERA Number"
+                                placeholder="Enter RERA Number"
+                                value={reraEntry.rera_number || ""}
                                 onChange={(e) => {
-                                  const updated = [
-                                    ...formData.Rera_Number_multiple,
-                                  ];
-                                  updated[index] = {
-                                    ...updated[index],
+                                  const updated = [...formData.Rera_Number_multiple];
+                                  updated[entryIndex] = {
+                                    ...updated[entryIndex],
                                     rera_number: e.target.value,
                                   };
                                   setFormData((prev) => ({
@@ -2570,23 +2747,27 @@ const ProjectDetailsCreate = () => {
                                     Rera_Number_multiple: updated,
                                   }));
                                 }}
-                                size="small"
+                                inputProps={{ maxLength: 12 }}
                                 fullWidth
                                 variant="outlined"
-                                inputProps={{ maxLength: 12 }}
+                                slotProps={{
+                                  inputLabel: {
+                                    shrink: true,
+                                  },
+                                }}
+                                InputProps={{
+                                  sx: fieldStyles,
+                                }}
                               />
-                            );
-                          }
-                          if (columnKey === "rera_url") {
-                            return (
+
                               <TextField
-                                value={item.rera_url || ""}
+                                label="RERA URL"
+                                placeholder="Enter RERA URL"
+                                value={reraEntry.rera_url || ""}
                                 onChange={(e) => {
-                                  const updated = [
-                                    ...formData.Rera_Number_multiple,
-                                  ];
-                                  updated[index] = {
-                                    ...updated[index],
+                                  const updated = [...formData.Rera_Number_multiple];
+                                  updated[entryIndex] = {
+                                    ...updated[entryIndex],
                                     rera_url: e.target.value,
                                   };
                                   setFormData((prev) => ({
@@ -2594,134 +2775,148 @@ const ProjectDetailsCreate = () => {
                                     Rera_Number_multiple: updated,
                                   }));
                                 }}
-                                size="small"
                                 fullWidth
                                 variant="outlined"
+                                slotProps={{
+                                  inputLabel: {
+                                    shrink: true,
+                                  },
+                                }}
+                                InputProps={{
+                                  sx: fieldStyles,
+                                }}
                               />
-                            );
-                          }
-                          return item[columnKey];
-                        }}
-                        renderActions={(item) => (
-                          <button
-                            type="button"
-                            className="text-red-600 hover:text-red-800 p-1"
-                            onClick={() => {
-                              const updated =
-                                formData.Rera_Number_multiple.filter(
-                                  (_, i) => i !== item.id
-                                );
-                              setFormData((prev) => ({
-                                ...prev,
-                                Rera_Number_multiple: updated,
-                              }));
-                              toast.success("RERA entry deleted");
-                            }}
-                            title="Delete"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                        hideTableSearch
-                        hideTableExport
-                        hideColumnsButton
-                        emptyMessage="No RERA entries added yet"
-                      />
-                    </div>
-                  )}
+                            </div>
 
-                  {/* Project QR Code Images Section */}
-                  <div className="mt-6">
-                    {/* <h5 className="font-semibold mb-3">
-                      Project QR Code Images
-                      <span
-                        className="relative inline-block cursor-help ml-1"
-                        onMouseEnter={() => setShowQrTooltip(true)}
-                        onMouseLeave={() => setShowQrTooltip(false)}
-                      >
-                        <span className="text-red-500">[i]</span>
-                        {showQrTooltip && (
-                          <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                            Max Upload Size 50 MB
-                          </span>
-                        )}
-                      </span>
-                      <span className="text-red-500 ml-1">*</span>
-                    </h5> */}
+                            {/* Project QR Code Images Section */}
+                            <div className="mt-6">
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Project QR Code Images
+                              </label>
+                              
+                              <div className="border border-gray-300 rounded-md p-4 min-h-[150px]">
+                                {/* Hidden input */}
+                                <input
+                                  type="file"
+                                  onChange={handleQRCodeImageChange}
+                                  className="hidden"
+                                  id="qr-code-file-upload"
+                                  accept="image/*"
+                                  multiple
+                                />
 
-                    <TextField
-                      label="Upload QR Code Images"
-                      placeholder="Select QR Code Images"
-                      type="file"
-                      name="project_qrcode_image"
-                      onChange={handleQRCodeImageChange}
-                      rows={3}
-                      fullWidth
-                      variant="outlined"
-                      slotProps={{
-                        inputLabel: {
-                          shrink: true,
-                        },
-                        htmlInput: {
-                          accept: "image/*",
-                          multiple: true,
-                        },
-                      }}
-                      InputProps={{
-                        sx: fieldStyles,
-                      }}
-                    />
+                                {/* Preview section inside the box */}
+                                {formData.project_qrcode_image.length > 0 && (
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                    {formData.project_qrcode_image.map((image, index) => (
+                                      <div key={index} className="relative border rounded-lg p-3 bg-gray-50">
+                                        <img
+                                          src={
+                                            image.isNew
+                                              ? URL.createObjectURL(image.project_qrcode_image)
+                                              : image.document_url || image.project_qrcode_image
+                                          }
+                                          alt={`QR Code ${index + 1}`}
+                                          className="w-full h-24 object-contain mb-2 rounded"
+                                        />
+                                        <TextField
+                                          label="Image Title"
+                                          placeholder="Enter title"
+                                          value={image.title || ""}
+                                          onChange={(e) =>
+                                            handleQRCodeImageNameChange(index, e.target.value)
+                                          }
+                                          disabled={!image.isNew}
+                                          size="small"
+                                          fullWidth
+                                          variant="outlined"
+                                        />
+                                        <button
+                                          type="button"
+                                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                          onClick={() => handleRemoveQRCodeImage(index)}
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
 
-                    <div className="mt-4">
-                      {formData.project_qrcode_image.length > 0 ? (
-                        formData.project_qrcode_image.map((image, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center gap-3 mb-3 p-3 border border-gray-200 rounded-lg bg-white"
-                          >
-                            <img
-                              src={
-                                image.isNew
-                                  ? URL.createObjectURL(image.project_qrcode_image)
-                                  : image.document_url
-                              }
-                              alt="QR Code Preview"
-                              className="rounded border border-gray-300"
-                              style={{
-                                width: "100px",
-                                height: "100px",
-                                objectFit: "cover",
-                              }}
-                            />
-                            <TextField
-                              placeholder="Enter image name"
-                              value={image.title || ""}
-                              onChange={(e) =>
-                                handleQRCodeImageNameChange(index, e.target.value)
-                              }
-                              disabled={!image.isNew}
-                              size="small"
-                              fullWidth
-                              variant="outlined"
-                            />
-                            <button
-                              type="button"
-                              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors whitespace-nowrap"
-                              onClick={() => handleRemoveQRCodeImage(index)}
-                            >
-                              Remove
-                            </button>
+                                {/* Upload button centered at bottom */}
+                                <div className="flex">
+                                  <button
+                                    type="button"
+                                    onClick={() => document.getElementById("qr-code-file-upload")?.click()}
+                                    className="inline-flex  gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
+                                    style={{ backgroundColor: "#c4b89d59" }}
+                                  >
+                                    <span className="font-medium text-sm text-gray-700">Upload Files</span>
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="16"
+                                      height="16"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="#C72030"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                      <polyline points="17 8 12 3 7 8" />
+                                      <line x1="12" y1="3" x2="12" y2="15" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        ))
-                      ) : (
-                        <span className="text-gray-500">No images selected</span>
-                      )}
-                    </div>
-                  </div>
+                        </div>
+                      ))}
+
+                      {/* Add RERA Button - Only adds new empty section */}
+                      <div className="flex justify-end mt-4">
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 px-6 py-2.5 rounded-md text-[#C72030] font-medium transition-colors"
+                          style={{
+                            height: "45px",
+                            backgroundColor: "#C4B89D59",
+                          }}
+                          onClick={() => {
+                            // Add empty section - data will be saved when typing in the fields
+                            setFormData((prev) => ({
+                              ...prev,
+                              Rera_Number_multiple: [
+                                ...prev.Rera_Number_multiple,
+                                {
+                                  tower_name: "",
+                                  rera_number: "",
+                                  rera_url: "",
+                                },
+                              ],
+                            }));
+                            toast.success("New RERA section added. Fill in the details.");
+                          }}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width={20}
+                            height={20}
+                            fill="currentColor"
+                            viewBox="0 0 16 16"
+                          >
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
+                          </svg>
+                          Add RERA
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
-            </>
-          {/* // )} */}
+              </>
 
         {/* Amenities Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -2949,8 +3144,8 @@ const ProjectDetailsCreate = () => {
             </div>
           </div>
         </div>
-        {(baseURL === "https://dev-panchshil-super-app.lockated.com/" ||
-          baseURL === "https://rustomjee-live.lockated.com/") && (
+        {(API_CONFIG.BASE_URL === "https://dev-panchshil-super-app.lockated.com/" ||
+          API_CONFIG.BASE_URL === "https://rustomjee-live.lockated.com/") && (
           <div className="card mt-3 pb-4 mx-4">
             <div className="card-header3">
               <h3 className="card-title">Plans</h3>
@@ -2962,11 +3157,11 @@ const ProjectDetailsCreate = () => {
                     Project Plans{" "}
                     <span
                       className="tooltip-container"
-                      onMouseEnter={() => setShowTooltip(true)}
-                      onMouseLeave={() => setShowTooltip(false)}
+                      onMouseEnter={() => setShowTooltipPlans(true)}
+                      onMouseLeave={() => setShowTooltipPlans(false)}
                     >
-                      [i]
-                      {showTooltip && (
+                      <Info className="w-4 h-4 text-gray-600" />
+                      {showTooltipPlans && (
                         <span className="tooltip-text">
                           Max Upload Size 10 MB per image
                         </span>
@@ -3113,14 +3308,14 @@ const ProjectDetailsCreate = () => {
               <div className="mb-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
-                  <h5 className="font-semibold">
+                  <h5 className="section-heading inline-flex items-center gap-1">
                     Project Banner{" "}
                     <span
-                      className="relative inline-block cursor-help"
+                      className="relative inline-flex items-center cursor-help"
                       onMouseEnter={() => setShowTooltipBanner(true)}
                       onMouseLeave={() => setShowTooltipBanner(false)}
                     >
-                      <span className="text-red-500">[i]</span>
+                      <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipBanner && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                           Max Upload Size 3 MB and{" "}
@@ -3128,7 +3323,7 @@ const ProjectDetailsCreate = () => {
                         </span>
                       )}
                     </span>
-                    <span className="text-red-500 ml-1">*</span>
+                    <span className="text-red-500">*</span>
                   </h5>
 
                   <button
@@ -3136,7 +3331,7 @@ const ProjectDetailsCreate = () => {
                     type="button"
                     onClick={() => setShowBannerModal(true)}
                   >
-                    <svg
+                    {/* <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width={20}
                       height={20}
@@ -3144,7 +3339,7 @@ const ProjectDetailsCreate = () => {
                       viewBox="0 0 16 16"
                     >
                       <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                    </svg>
+                    </svg> */}
                     <span>Add</span>
                   </button>
                 </div>
@@ -3235,7 +3430,7 @@ const ProjectDetailsCreate = () => {
                                 // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                 onClick={() => discardImage(key, file)}
                               >
-                                <DeleteForeverRounded fontSize="small" />
+                                 <Trash2 className="w-4 h-4 text-[#C72030]" />
                               </button>
                             </td>
                           </tr>
@@ -3249,14 +3444,14 @@ const ProjectDetailsCreate = () => {
               <div className="mb-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
-                  <h5 className=" font-semibold">
+                  <h5 className="section-heading inline-flex items-center gap-1">
                     Project Cover Image{" "}
                     <span
-                      className="relative inline-block cursor-help"
+                      className="relative inline-flex items-center cursor-help"
                       onMouseEnter={() => setShowTooltipCover(true)}
                       onMouseLeave={() => setShowTooltipCover(false)}
                     >
-                      <span className="text-red-500">[i]</span>
+                      <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipCover && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                           Max Upload Size 5 MB and{" "}
@@ -3271,7 +3466,7 @@ const ProjectDetailsCreate = () => {
                     type="button"
                     onClick={() => setShowUploader(true)}
                   >
-                    <svg
+                    {/* <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width={20}
                       height={20}
@@ -3279,7 +3474,7 @@ const ProjectDetailsCreate = () => {
                       viewBox="0 0 16 16"
                     >
                       <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                    </svg>
+                    </svg> */}
                     <span>Add</span>
                   </button>
                 </div>
@@ -3389,7 +3584,7 @@ const ProjectDetailsCreate = () => {
                                   // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                   onClick={() => discardImage(key, file)}
                                 >
-                                  <DeleteForeverRounded fontSize="small" />
+                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
                                 </button>
                               </td>
                             </tr>
@@ -3420,14 +3615,14 @@ const ProjectDetailsCreate = () => {
               <div className="mb-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
-                  <h5 className=" font-semibold">
+                  <h5 className="section-heading inline-flex items-center gap-1">
                     Gallery Images{" "}
                     <span
-                      className="relative inline-block cursor-help"
+                      className="relative inline-flex items-center cursor-help"
                       onMouseEnter={() => setShowTooltipGallery(true)}
                       onMouseLeave={() => setShowTooltipGallery(false)}
                     >
-                      <span className="text-red-500">[i]</span>
+                      <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipGallery && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                           Max Upload Size 3 MB (Images), 10 MB (Videos) and{" "}
@@ -3442,7 +3637,7 @@ const ProjectDetailsCreate = () => {
                     type="button"
                     onClick={() => setShowGalleryModal(true)}
                   >
-                    <svg
+                    {/* <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width={20}
                       height={20}
@@ -3450,7 +3645,7 @@ const ProjectDetailsCreate = () => {
                       viewBox="0 0 16 16"
                     >
                       <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                    </svg>
+                    </svg> */}
                     <span>Add</span>
                   </button>
                 </div>
@@ -3606,7 +3801,7 @@ const ProjectDetailsCreate = () => {
                                   // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                   onClick={() => discardImage(key, file)}
                                 >
-                                  <DeleteForeverRounded fontSize="small" />
+                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
                                 </button>
                               </td>
                             </tr>
@@ -3622,14 +3817,14 @@ const ProjectDetailsCreate = () => {
               <div className="mb-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
-                  <h5 className="font-semibold">
+                  <h5 className="section-heading inline-flex items-center gap-1">
                     Floor Plan{" "}
                     <span
-                      className="relative inline-block cursor-help"
+                      className="relative inline-flex items-center cursor-help"
                       onMouseEnter={() => setShowTooltipFloor(true)}
                       onMouseLeave={() => setShowTooltipFloor(false)}
                     >
-                      <span className="text-red-500">[i]</span>
+                      <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipFloor && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                           Max Upload Size 3 MB and {getDynamicRatiosText("Project2DImage")}
@@ -3643,7 +3838,7 @@ const ProjectDetailsCreate = () => {
                     type="button"
                     onClick={() => setShowFloorPlanModal(true)}
                   >
-                    <svg
+                    {/* <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width={20}
                       height={20}
@@ -3651,7 +3846,7 @@ const ProjectDetailsCreate = () => {
                       viewBox="0 0 16 16"
                     >
                       <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                    </svg>
+                    </svg> */}
                     <span>Add</span>
                   </button>
                 </div>
@@ -3739,7 +3934,7 @@ const ProjectDetailsCreate = () => {
                                 // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                 onClick={() => discardImage(key, file)}
                               >
-                                 <DeleteForeverRounded fontSize="small" />
+                                 <Trash2 className="w-4 h-4 text-[#C72030]" />
                               </button>
                             </td>
                           </tr>
@@ -3753,15 +3948,15 @@ const ProjectDetailsCreate = () => {
               <div className="mb-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
-                  <h5 className="font-semibold">
+                  <h5 className="section-heading inline-flex items-center gap-1">
                     Brochure{" "}
                     <span
-                      className="relative inline-block cursor-help"
-                      onMouseEnter={() => setShowTooltip(true)}
-                      onMouseLeave={() => setShowTooltip(false)}
+                      className="relative inline-flex items-center cursor-help"
+                      onMouseEnter={() => setShowTooltipBrochure(true)}
+                      onMouseLeave={() => setShowTooltipBrochure(false)}
                     >
-                      <span className="text-red-500">[i]</span>
-                      {showTooltip && (
+                      <Info className="w-5 h-5 fill-black text-white" />
+                      {showTooltipBrochure && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                           Max Upload Size 5 MB
                         </span>
@@ -3773,9 +3968,9 @@ const ProjectDetailsCreate = () => {
                     className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                     onClick={() => document.getElementById("brochure").click()}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                    {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                       <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                    </svg>
+                    </svg> */}
                     <span>Add</span>
                   </button>
                   <input
@@ -3810,7 +4005,7 @@ const ProjectDetailsCreate = () => {
                                 // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                 onClick={() => handleDiscardFile("brochure", index)}
                               >
-                                <DeleteForeverRounded fontSize="small" />
+                                <Trash2 className="w-4 h-4 text-[#C72030]" />
                               </button>
                             </td>
                           </tr>
@@ -3820,21 +4015,21 @@ const ProjectDetailsCreate = () => {
                   </table>
                 </div>
               </div>
-              {baseURL !== "https://dev-panchshil-super-app.lockated.com/" &&
-                baseURL !== "https://rustomjee-live.lockated.com/" && (
+              {API_CONFIG.BASE_URL !== "https://dev-panchshil-super-app.lockated.com/" &&
+                API_CONFIG.BASE_URL !== "https://rustomjee-live.lockated.com/" && (
                   <>
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
-                        <h5 className=" font-semibold">
+                        <h5 className="section-heading inline-flex items-center gap-1">
                           Project PPT{" "}
                           <span
-                            className="relative inline-block cursor-help"
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
+                            className="relative inline-flex items-center cursor-help"
+                            onMouseEnter={() => setShowTooltipPPT(true)}
+                            onMouseLeave={() => setShowTooltipPPT(false)}
                           >
-                            <span className="text-red-500">[i]</span>
-                            {showTooltip && (
+                            <Info className="w-5 h-5 fill-black text-white" />
+                            {showTooltipPPT && (
                               <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 5 MB
                               </span>
@@ -3846,9 +4041,9 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_ppt").click()}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg>
+                          </svg> */}
                           <span>Add</span>
                         </button>
                       </div>
@@ -3883,7 +4078,7 @@ const ProjectDetailsCreate = () => {
                                     // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardPpt("project_ppt", index)}
                                   >
-                                    <DeleteForeverRounded fontSize="small" />
+                                    <Trash2 className="w-4 h-4 text-[#C72030]" />
                                   </button>
                                 </td>
                               </tr>
@@ -3895,15 +4090,15 @@ const ProjectDetailsCreate = () => {
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
-                        <h5 className=" font-semibold">
+                        <h5 className="section-heading inline-flex items-center gap-1">
                           Project Layout{" "}
                           <span
-                            className="relative inline-block cursor-help"
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
+                            className="relative inline-flex items-center cursor-help"
+                            onMouseEnter={() => setShowTooltipLayout(true)}
+                            onMouseLeave={() => setShowTooltipLayout(false)}
                           >
-                            <span className="text-red-500">[i]</span>
-                            {showTooltip && (
+                            <Info className="w-5 h-5 fill-black text-white" />
+                            {showTooltipLayout && (
                               <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 3 MB
                               </span>
@@ -3915,9 +4110,9 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_layout").click()}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg>
+                          </svg> */}
                           <span>Add</span>
                         </button>
                       </div>
@@ -3960,7 +4155,7 @@ const ProjectDetailsCreate = () => {
                                     // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_layout", index)}
                                   >
-                                     <DeleteForeverRounded fontSize="small" />
+                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
                                   </button>
                                 </td>
                               </tr>
@@ -3972,15 +4167,15 @@ const ProjectDetailsCreate = () => {
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
-                        <h5 className=" font-semibold">
+                        <h5 className="section-heading inline-flex items-center gap-1">
                           Project Creatives{" "}
                           <span
-                            className="relative inline-block cursor-help"
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
+                            className="relative inline-flex items-center cursor-help"
+                            onMouseEnter={() => setShowTooltipCreatives(true)}
+                            onMouseLeave={() => setShowTooltipCreatives(false)}
                           >
-                            <span className="text-red-500">[i]</span>
-                            {showTooltip && (
+                            <Info className="w-5 h-5 fill-black text-white" />
+                            {showTooltipCreatives && (
                               <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 3 MB
                               </span>
@@ -3992,9 +4187,9 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_creatives").click()}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg>
+                          </svg> */}
                           <span>Add</span>
                         </button>
                       </div>
@@ -4038,7 +4233,7 @@ const ProjectDetailsCreate = () => {
                                     // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_creatives", index)}
                                   >
-                                     <DeleteForeverRounded fontSize="small" />
+                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
                                   </button>
                                 </td>
                               </tr>
@@ -4050,15 +4245,15 @@ const ProjectDetailsCreate = () => {
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
-                        <h5 className=" font-semibold">
+                        <h5 className="section-heading inline-flex items-center gap-1">
                           Project Creative Generics{" "}
                           <span
-                            className="relative inline-block cursor-help"
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
+                            className="relative inline-flex items-center cursor-help"
+                            onMouseEnter={() => setShowTooltipCreativeGenerics(true)}
+                            onMouseLeave={() => setShowTooltipCreativeGenerics(false)}
                           >
-                            <span className="text-red-500">[i]</span>
-                            {showTooltip && (
+                           <Info className="w-5 h-5 fill-black text-white" />
+                            {showTooltipCreativeGenerics && (
                               <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 3 MB
                               </span>
@@ -4069,9 +4264,9 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_creative_generics").click()}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg>
+                          </svg> */}
                           <span>Add</span>
                         </button>
                         <input
@@ -4113,7 +4308,7 @@ const ProjectDetailsCreate = () => {
                                     // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_creative_generics", index)}
                                   >
-                                     <DeleteForeverRounded fontSize="small" />
+                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
                                   </button>
                                 </td>
                               </tr>
@@ -4125,15 +4320,15 @@ const ProjectDetailsCreate = () => {
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
-                        <h5 className=" font-semibold">
+                        <h5 className="section-heading inline-flex items-center gap-1">
                           Project Creative Offers{" "}
                           <span
-                            className="relative inline-block cursor-help"
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
+                            className="relative inline-flex items-center cursor-help"
+                            onMouseEnter={() => setShowTooltipCreativeOffers(true)}
+                            onMouseLeave={() => setShowTooltipCreativeOffers(false)}
                           >
-                            <span className="text-red-500">[i]</span>
-                            {showTooltip && (
+                            <Info className="w-5 h-5 fill-black text-white" />
+                            {showTooltipCreativeOffers && (
                               <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 3 MB
                               </span>
@@ -4144,9 +4339,9 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_creative_offers").click()}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg>
+                          </svg> */}
                           <span>Add</span>
                         </button>
                         <input
@@ -4188,7 +4383,7 @@ const ProjectDetailsCreate = () => {
                                     // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_creative_offers", index)}
                                   >
-                                     <DeleteForeverRounded fontSize="small" />
+                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
                                   </button>
                                 </td>
                               </tr>
@@ -4200,15 +4395,15 @@ const ProjectDetailsCreate = () => {
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
-                        <h5 className=" font-semibold">
+                        <h5 className="section-heading inline-flex items-center gap-1">
                           Project Interiors{" "}
                           <span
-                            className="relative inline-block cursor-help"
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
+                            className="relative inline-flex items-center cursor-help"
+                            onMouseEnter={() => setShowTooltipInteriors(true)}
+                            onMouseLeave={() => setShowTooltipInteriors(false)}
                           >
-                            <span className="text-red-500">[i]</span>
-                            {showTooltip && (
+                            <Info className="w-5 h-5 fill-black text-white" />
+                            {showTooltipInteriors && (
                               <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 3 MB
                               </span>
@@ -4219,9 +4414,9 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_interiors").click()}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg>
+                          </svg> */}
                           <span>Add</span>
                         </button>
                         <input
@@ -4263,7 +4458,7 @@ const ProjectDetailsCreate = () => {
                                     // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_interiors", index)}
                                   >
-                                     <DeleteForeverRounded fontSize="small" />
+                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
                                   </button>
                                 </td>
                               </tr>
@@ -4275,15 +4470,15 @@ const ProjectDetailsCreate = () => {
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
-                        <h5 className=" font-semibold">
+                        <h5 className="section-heading inline-flex items-center gap-1">
                           Project Exteriors{" "}
                           <span
-                            className="relative inline-block cursor-help"
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
+                            className="relative inline-flex items-center cursor-help"
+                            onMouseEnter={() => setShowTooltipExteriors(true)}
+                            onMouseLeave={() => setShowTooltipExteriors(false)}
                           >
-                            <span className="text-red-500">[i]</span>
-                            {showTooltip && (
+                            <Info className="w-5 h-5 fill-black text-white" />
+                            {showTooltipExteriors && (
                               <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 3 MB
                               </span>
@@ -4294,9 +4489,9 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_exteriors").click()}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg>
+                          </svg> */}
                           <span>Add</span>
                         </button>
                         <input
@@ -4338,7 +4533,7 @@ const ProjectDetailsCreate = () => {
                                     // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_exteriors", index)}
                                   >
-                                     <DeleteForeverRounded fontSize="small" />
+                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
                                   </button>
                                 </td>
                               </tr>
@@ -4350,15 +4545,15 @@ const ProjectDetailsCreate = () => {
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
-                        <h5 className=" font-semibold">
+                        <h5 className="section-heading inline-flex items-center gap-1">
                           Project Emailer Template{" "}
                           <span
-                            className="relative inline-block cursor-help"
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
+                            className="relative inline-flex items-center cursor-help"
+                            onMouseEnter={() => setShowTooltipEmailer(true)}
+                            onMouseLeave={() => setShowTooltipEmailer(false)}
                           >
-                            <span className="text-red-500">[i]</span>
-                            {showTooltip && (
+                            <Info className="w-5 h-5 fill-black text-white" />
+                            {showTooltipEmailer && (
                               <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 5 MB
                               </span>
@@ -4369,9 +4564,9 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_emailer_templetes").click()}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg>
+                          </svg> */}
                           <span>Add</span>
                         </button>
                         <input
@@ -4404,7 +4599,7 @@ const ProjectDetailsCreate = () => {
                                     // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("project_emailer_templetes", index)}
                                   >
-                                     <DeleteForeverRounded fontSize="small" />
+                                    <Trash2 className="w-4 h-4 text-[#C72030]" />
                                   </button>
                                 </td>
                               </tr>
@@ -4416,15 +4611,15 @@ const ProjectDetailsCreate = () => {
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
-                        <h5 className=" font-semibold">
+                        <h5 className="section-heading inline-flex items-center gap-1">
                           Project Know Your Apartment Files{" "}
                           <span
                             className="relative inline-block cursor-help"
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
+                            onMouseEnter={() => setShowTooltipKYA(true)}
+                            onMouseLeave={() => setShowTooltipKYA(false)}
                           >
-                            <span className="text-red-500">[i]</span>
-                            {showTooltip && (
+                           <Info className="w-5 h-5 fill-black text-white" />
+                            {showTooltipKYA && (
                               <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 20 MB
                               </span>
@@ -4435,9 +4630,9 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("KnwYrApt_Technical").click()}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg>
+                          </svg> */}
                           <span>Add</span>
                         </button>
                         <input
@@ -4470,7 +4665,7 @@ const ProjectDetailsCreate = () => {
                                     // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("KnwYrApt_Technical", index)}
                                   >
-                                     <DeleteForeverRounded fontSize="small" />
+                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
                                   </button>
                                 </td>
                               </tr>
@@ -4482,15 +4677,15 @@ const ProjectDetailsCreate = () => {
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
-                        <h5 className=" font-semibold">
+                        <h5 className="section-heading inline-flex items-center gap-1">
                           Videos{" "}
                           <span
                             className="relative inline-block cursor-help"
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
+                            onMouseEnter={() => setShowTooltipVideos(true)}
+                            onMouseLeave={() => setShowTooltipVideos(false)}
                           >
-                            <span className="text-red-500">[i]</span>
-                            {showTooltip && (
+                            <Info className="w-5 h-5 fill-black text-white" />
+                            {showTooltipVideos && (
                               <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 10 MB
                               </span>
@@ -4501,9 +4696,9 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("videos").click()}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg>
+                          </svg> */}
                           <span>Add</span>
                         </button>
                         <input
@@ -4546,7 +4741,7 @@ const ProjectDetailsCreate = () => {
                                     // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleDiscardFile("videos", index)}
                                   >
-                                     <DeleteForeverRounded fontSize="small" />
+                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
                                   </button>
                                 </td>
                               </tr>
@@ -4554,7 +4749,7 @@ const ProjectDetailsCreate = () => {
                           </tbody>
                         </table>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-12">
+                      <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-12">
                         <TextField
                           label="Video Preview Image URL"
                           placeholder="Enter Video URL"
@@ -4579,8 +4774,8 @@ const ProjectDetailsCreate = () => {
             </div>
           </div>
         </div>
-        {baseURL !== "https://dev-panchshil-super-app.lockated.com/" &&
-          baseURL !== "https://rustomjee-live.lockated.com/" && (
+        {API_CONFIG.BASE_URL !== "https://dev-panchshil-super-app.lockated.com/" &&
+          API_CONFIG.BASE_URL !== "https://rustomjee-live.lockated.com/" && (
             <>
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
@@ -4703,7 +4898,7 @@ const ProjectDetailsCreate = () => {
                               }}
                               title="Delete"
                             >
-                               <DeleteForeverRounded fontSize="small" />
+                               <Trash2 className="w-4 h-4 text-[#C72030]" />
                             </button>
                           )}
                           hideTableSearch

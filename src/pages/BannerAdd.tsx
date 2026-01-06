@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { API_CONFIG } from "@/config/apiConfig";
-import { ChevronRight, ArrowLeft, FileText } from "lucide-react";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { ChevronRight, ArrowLeft, FileText, Info, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -49,11 +49,10 @@ const BannerAdd = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get(`${baseURL}/projects.json`, {
+        const response = await axios.get(`${baseURL}/projects_for_dropdown.json`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+                   Authorization: getAuthHeader(),
+                 },
         });
         setProjects(response.data.projects || []);
       } catch (error) {
@@ -128,10 +127,13 @@ const BannerAdd = () => {
   )} aspect ratios`;
 
   const updateFormData = (key, files) => {
-    setFormData((prev) => ({
-      ...prev,
-      [key]: files, // Replace existing files instead of appending
-    }));
+    setFormData((prev) => {
+      const existing = Array.isArray(prev[key]) ? prev[key] : [];
+      return {
+        ...prev,
+        [key]: [...existing, ...files], // Append new files to existing ones
+      };
+    });
   };
 
   const handleCropComplete = (validImages, videoFiles = []) => {
@@ -140,7 +142,14 @@ const BannerAdd = () => {
       videoFiles.forEach((video) => {
         const formattedRatio = video.ratio.replace(":", "_by_");
         const key = `banner_video_${formattedRatio}`;
-        updateFormData(key, [video]);
+        
+        // Add unique id to the video object
+        const videoWithId = {
+          ...video,
+          id: `${key}-${Date.now()}-${Math.random()}`,
+        };
+        
+        updateFormData(key, [videoWithId]);
 
         // Set preview for the first video
         if (videoFiles[0] === video) {
@@ -161,7 +170,14 @@ const BannerAdd = () => {
     validImages.forEach((img) => {
       const formattedRatio = img.ratio.replace(":", "_by_");
       const key = `banner_video_${formattedRatio}`;
-      updateFormData(key, [img]);
+      
+      // Add unique id to the image object if it doesn't have one
+      const imgWithId = {
+        ...img,
+        id: img.id || `${key}-${Date.now()}-${Math.random()}`,
+      };
+      
+      updateFormData(key, [imgWithId]);
 
       // Set preview for the first image
       if (validImages[0] === img) {
@@ -238,7 +254,7 @@ const BannerAdd = () => {
       });
 
       toast.success("Banner created successfully");
-      navigate("/banner-list");
+      navigate("/maintenance/banner-list");
     } catch (error) {
       console.error(error);
       toast.error(`Error creating banner: ${error.message}`);
@@ -327,7 +343,7 @@ const BannerAdd = () => {
                   </MenuItem>
                   {projects.map((project) => (
                     <MenuItem key={project.id} value={project.id}>
-                      {project.project_name}
+                      {project.name}
                     </MenuItem>
                   ))}
                 </MuiSelect>
@@ -342,14 +358,14 @@ const BannerAdd = () => {
             <div className="mb-6">
               {/* Header */}
               <div className="flex justify-between items-center mb-4">
-                <h5 className="font-semibold">
+                 <h5 className="font-semibold inline-flex items-center gap-1">
                   Banner Attachment{" "}
                   <span
                     className="relative inline-block cursor-help"
                     onMouseEnter={() => setShowVideoTooltip(true)}
                     onMouseLeave={() => setShowVideoTooltip(false)}
                   >
-                    <span className="text-red-500">[i]</span>
+                     <Info className="w-5 h-5 fill-black text-white" />
                     {showVideoTooltip && (
                       <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                         Max Upload Size 5 MB. Supports 1:1, 9:16, 16:9, 3:2 aspect ratios
@@ -360,6 +376,7 @@ const BannerAdd = () => {
                 </h5>
 
                 <button
+                  type="button"
                   className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                   onClick={() => setShowUploader(true)}
                 >
@@ -476,10 +493,10 @@ const BannerAdd = () => {
                             <TableCell className="py-3 px-4">
                               <button
                                 type="button"
-                                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                 onClick={() => discardImage(key, file)}
                               >
-                                 <DeleteForeverRounded fontSize="small" />
+                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
                               </button>
                             </TableCell>
                           </TableRow>

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Trash2, CheckCircle, Video } from 'lucide-react';
 import { toast } from 'sonner';
-import ImageCropperr from './ImageCropperr';
+import { ImageCropperr } from './ImageCropperr';
 
 const ProjectImageVideoUpload = ({
   label = 'Upload Media',
@@ -316,6 +316,7 @@ const ProjectImageVideoUpload = ({
                     <div className="upload-time">Uploaded {media.uploadTime}</div>
                   </div>
                   <button
+                    type="button"
                     className="remove-btn"
                     onClick={() => handleRemoveImage(media.id)}
                     aria-label="Remove media"
@@ -328,6 +329,7 @@ const ProjectImageVideoUpload = ({
 
             <div className="continue-section">
               <button
+                type="button"
                 className="continue-btn"
                 onClick={() => {
                   // if (!areAllRatiosUploaded && validUploadedImages.length > 0 && missingRatios.length > 0) {
@@ -400,7 +402,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .modal-close-btn:hover {
-            color: #ef4444;
+            color: #c72030;
           }
 
           .project-banner-upload {
@@ -457,7 +459,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .ratio-upload-area:hover {
-            border-color: #de7007;
+            border-color: #c72030;
             background: #f8faff;
           }
 
@@ -472,7 +474,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .ratio-upload-area:hover .upload-placeholder {
-            color: #de7007;
+            color: #c72030;
           }
 
           .ratio-upload-area.disabled {
@@ -529,7 +531,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .uploaded-image-card.invalid {
-            border: 2px solid #ef4444;
+            border: 2px solid #c72030;
             background: #fef2f2;
           }
 
@@ -627,7 +629,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .continue-btn {
-            background: #de7007;
+            background: #c72030;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -638,7 +640,7 @@ const ProjectImageVideoUpload = ({
           }
 
           .continue-btn:hover {
-            background: #de7007;
+            background: #c72030;
           }
 
           @media (max-width: 768px) {

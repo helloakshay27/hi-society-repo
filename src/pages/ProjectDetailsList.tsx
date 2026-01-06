@@ -106,9 +106,9 @@ const ProjectDetailsList = () => {
     }
   };
   
-  const handleAddProject = () => navigate('/setup-member/project-details-create');
-  const handleViewProject = (id: number) => navigate(`/setup-member/project-details-view/${id}`);
-  const handleEditProject = (id: number) => navigate(`/setup-member/project-details-edit/${id}`);
+  const handleAddProject = () => navigate('/maintenance/project-details-create');
+  const handleViewProject = (id: number) => navigate(`/maintenance/project-details-view/${id}`);
+  const handleEditProject = (id: number) => navigate(`/maintenance/project-details-edit/${id}`);
   
   const handleClearSelection = () => { setShowActionPanel(false); };
 
@@ -129,10 +129,10 @@ const ProjectDetailsList = () => {
         return (
           <div className="flex gap-1">
             <Button variant="ghost" size="sm" onClick={() => handleViewProject(item.id)} title="View">
-              <Eye className="w-4 h-4" />
+              <Eye className="w-4 h-4 text-gray-700" />
             </Button>
             <Button variant="ghost" size="sm" onClick={() => handleEditProject(item.id)} title="Edit">
-              <Edit className="w-4 h-4" />
+              <Edit className="w-4 h-4 text-gray-700" />
             </Button>
           </div>
         );

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye } from "lucide-react";
+import { Plus, Eye, Pencil } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { API_CONFIG } from "@/config/apiConfig";
 
@@ -99,6 +99,7 @@ const NoticeboardList = () => {
     navigate("/maintenance/noticeboard-create");
   };
   const handleViewNoticeboard = (id: number) => navigate(`/maintenance/noticeboard-details/${id}`);
+  const handleEditNoticeboard = (id: number) => navigate(`/maintenance/noticeboard-edit/${id}`);
 
   const handleToggleNoticeboard = async (id: number, currentStatus: boolean) => {
     toast.dismiss();
@@ -166,6 +167,11 @@ const NoticeboardList = () => {
             {noticeboardPermission.show === "true" && (
               <Button variant="ghost" size="sm" onClick={() => handleViewNoticeboard(item.id)} title="View">
                 <Eye className="w-4 h-4" />
+              </Button>
+            )}
+            {noticeboardPermission.update === "true" && (
+              <Button variant="ghost" size="sm" onClick={() => handleEditNoticeboard(item.id)} title="Edit">
+                <Pencil className="w-4 h-4" />
               </Button>
             )}
           </div>

@@ -8,7 +8,7 @@ import { ImageUploadingButton } from "../components/reusable/ImageUploadingButto
 import { ImageCropper } from "../components/reusable/ImageCropper";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
-import { ArrowLeft, FileText, Calendar, Users, Plus } from "lucide-react";
+import { ArrowLeft, FileText, Calendar, Users, Plus, X, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2 } from "lucide-react";
 import {
   TextField,
   FormControl,
@@ -91,6 +91,54 @@ const EventEdit = () => {
   const [showCoverUploader, setShowCoverUploader] = useState(false);
   const [showEventUploader, setShowEventUploader] = useState(false);
   const baseURL = API_CONFIG.BASE_URL;
+
+  // Step management state
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [showPreviousSections, setShowPreviousSections] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const totalSteps = 4;
+
+  // Invite CPs state
+  const [channelPartners, setChannelPartners] = useState([]);
+  const [selectedChannelPartners, setSelectedChannelPartners] = useState([]);
+  const [csvFiles, setCsvFiles] = useState([]);
+
+  // QR Code Generation state
+  const [qrCodeData, setQrCodeData] = useState([
+    {
+      id: 1,
+      srNo: 1,
+      cpName: "Kshitij Rasal",
+      companyName: "ABD Tech",
+      emailId: "kshitij.r@demomail.com",
+      qrCodeId: "QR-EVT-1767003965366-cp2-176700403055"
+    },
+    {
+      id: 2,
+      srNo: 2,
+      cpName: "Sohail Ansari",
+      companyName: "XYZ Ltd",
+      emailId: "sohail.a@demomail.com",
+      qrCodeId: "QR-EVT-1767003965366-cp3-176700403056"
+    },
+    {
+      id: 3,
+      srNo: 3,
+      cpName: "Hamza Quazi",
+      companyName: "XYZ Ltd",
+      emailId: "hamza.q@demomail.com",
+      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056"
+    },
+    {
+      id: 4,
+      srNo: 4,
+      cpName: "Shahab Mirza",
+      companyName: "XYZ Ltd",
+      emailId: "shahab.m@demomail.com",
+      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056"
+    }
+  ]);
 
   // Field styles for Material-UI components
   const fieldStyles = {
@@ -666,6 +714,26 @@ const EventEdit = () => {
     }
   }, [formData.shared]);
 
+  // Fetch Channel Partners
+  useEffect(() => {
+    const fetchChannelPartners = async () => {
+      try {
+        const response = await axios.get(`${baseURL}channel_partners.json`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            "Content-Type": "application/json",
+          },
+        });
+        setChannelPartners(response.data.channel_partners || []);
+      } catch (error) {
+        console.error("Error fetching channel partners:", error);
+        setChannelPartners([]);
+      }
+    };
+
+    fetchChannelPartners();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -1129,10 +1197,211 @@ const EventEdit = () => {
     setDialogOpen(true);
   };
 
+  // CSV File Upload Handler
+  const handleCsvFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    
+    const validFiles = files.filter(file => {
+      const isValid = file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+      if (!isValid) {
+        toast.error(`${file.name} is not a valid CSV/Excel file`);
+      }
+      return isValid;
+    });
+
+    if (validFiles.length > 0) {
+      setCsvFiles(prev => [...prev, ...validFiles]);
+      toast.success(`${validFiles.length} file(s) added successfully`);
+    }
+    
+    // Reset input
+    e.target.value = '';
+  };
+
+  const removeCsvFile = (index) => {
+    setCsvFiles(prev => prev.filter((_, i) => i !== index));
+    toast.success('File removed');
+  };
+
+  // QR Code handlers
+  const handleDownloadQRCode = (qrCodeId, cpName) => {
+    toast.success(`Downloading QR Code for ${cpName}`);
+    console.log('Download QR Code:', qrCodeId);
+  };
+
+  const handleSendQRCodeEmail = (email, cpName) => {
+    toast.success(`Sending QR Code to ${email}`);
+    console.log('Send QR Code to:', email);
+  };
+
+  const handleDownloadAllQRCodes = () => {
+    toast.success('Downloading all QR Codes');
+    console.log('Download All QR Codes');
+  };
+
+  const handleSendAllQRCodesEmail = () => {
+    toast.success('Sending QR Codes to all channel partners');
+    console.log('Send All QR Codes via Email');
+  };
+
+  // Step navigation functions
+  const handleStepClick = (step: number) => {
+    if (isPreviewMode) {
+      const sectionId = `section-step-${step}`;
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      return;
+    }
+
+    if (step > currentStep) {
+      toast.error(`Please complete Step ${currentStep + 1} before proceeding to Step ${step + 1}`);
+      return;
+    }
+    setCurrentStep(step);
+    setShowPreviousSections(false);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  };
+
+  const handleProceedToSave = () => {
+    if (!completedSteps.includes(currentStep)) {
+      setCompletedSteps(prev => [...prev, currentStep]);
+    }
+
+    if (currentStep === totalSteps - 1) {
+      setIsPreviewMode(true);
+      setShowPreviousSections(true);
+    } else {
+      if (currentStep < totalSteps - 1) {
+        setCurrentStep(currentStep + 1);
+      }
+      setShowPreviousSections(false);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSaveToDraft = () => {
+    if (!completedSteps.includes(currentStep)) {
+      setCompletedSteps(prev => [...prev, currentStep]);
+    }
+
+    if (currentStep < totalSteps - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+    setShowPreviousSections(true);
+    toast.success("Progress saved to draft successfully!");
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Stepper component
+  const StepperComponent = () => {
+    const steps = ['Event Details', 'Invite CPs', 'QR Code Generation', 'Event Related Images'];
+
+    return (
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          gap: 0
+        }}>
+          {steps.map((label, index) => (
+            <Box key={`step-${index}`} sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box
+                sx={{
+                  width: '213px',
+                  height: '50px',
+                  padding: '5px',
+                  borderRadius: '4px',
+                  boxShadow: '0px 4px 14.2px 0px rgba(0, 0, 0, 0.1)',
+                  backgroundColor: 'rgba(255, 255, 255, 1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Box
+                  onClick={() => handleStepClick(index)}
+                  sx={{
+                    cursor: (index > currentStep && !completedSteps.includes(index - 1)) ? 'not-allowed' : 'pointer',
+                    width: '187px',
+                    height: '40px',
+                    backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#C72030' :
+                      (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
+                    color: (index === currentStep || completedSteps.includes(index)) ? 'white' :
+                      (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(150, 150, 150, 1)' : 'rgba(196, 184, 157, 1)',
+                    border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #C72030' :
+                      (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
+                    padding: '12px 20px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    textAlign: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: index === currentStep ? '0 2px 4px rgba(199, 32, 48, 0.3)' : 'none',
+                    transition: 'all 0.2s ease',
+                    fontFamily: 'Work Sans, sans-serif',
+                    position: 'relative',
+                    borderRadius: '4px',
+                    '&:hover': {
+                      opacity: (index > currentStep && !completedSteps.includes(index - 1)) ? 1 : 0.9
+                    },
+                    '&::before': completedSteps.includes(index) && index !== currentStep ? {
+                      content: '"✓"',
+                      position: 'absolute',
+                      right: '8px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    } : {}
+                  }}
+                >
+                  {label}
+                </Box>
+              </Box>
+              {index < steps.length - 1 && (
+                <Box
+                  sx={{
+                    width: '60px',
+                    height: '0px',
+                    border: '1px dashed rgba(196, 184, 157, 1)',
+                    borderWidth: '1px',
+                    borderStyle: 'dashed',
+                    borderColor: 'rgba(196, 184, 157, 1)',
+                    opacity: 1,
+                    margin: '0 0px',
+                    '@media (max-width: 1200px)': {
+                      width: '40px'
+                    },
+                    '@media (max-width: 900px)': {
+                      width: '30px'
+                    },
+                    '@media (max-width: 600px)': {
+                      width: '20px'
+                    }
+                  }}
+                />
+              )}
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    );
+  };
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
+      {!isPreviewMode && <StepperComponent />}
+      
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
-        {/* Event Information Section */}
+        {/* Step 1: Event Information */}
+        {currentStep === 0 && !isPreviewMode && (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -1175,7 +1444,7 @@ const EventEdit = () => {
               </FormControl>
 
               {/* Event Type */}
-              <TextField
+              {/* <TextField
                 label="Event Type"
                 placeholder="Enter Event Type"
                 value={formData.event_type || ""}
@@ -1191,7 +1460,7 @@ const EventEdit = () => {
                 InputProps={{
                   sx: fieldStyles,
                 }}
-              />
+              /> */}
 
               {/* Event Name */}
               <TextField
@@ -1726,9 +1995,344 @@ const EventEdit = () => {
               </div>
             </div>
           </div>
+        // </div>
+        )}
 
-        {/* File Upload Section */}
-        <div className="mt-6 bg-white rounded-lg border border-gray-200 overflow-hidden">
+        {/* Step 2: Invite CPs */}
+        {currentStep === 1 && !isPreviewMode && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    backgroundColor: '#E5E0D3',
+                    mr: 1.5
+                  }}
+                >
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                </Avatar>
+                Invite CPs
+              </h2>
+            </div>
+            <div className="p-6 space-y-6">
+              {/* Channel Partners Dropdown */}
+              <div>
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  sx={{ '& .MuiInputBase-root': fieldStyles }}
+                >
+                  <InputLabel shrink>Select Channel Partners</InputLabel>
+                  <MuiSelect
+                    multiple
+                    value={selectedChannelPartners}
+                    onChange={(e) => setSelectedChannelPartners(e.target.value)}
+                    label="Select Channel Partners"
+                    notched
+                    displayEmpty
+                    renderValue={(selected) => {
+                      if (!selected || selected.length === 0) {
+                        return <span style={{ color: '#999' }}>Select Channel Partners</span>;
+                      }
+                      return selected
+                        .map((id) => {
+                          const partner = channelPartners.find((cp) => cp.id === id || cp.id.toString() === id.toString());
+                          return partner ? partner.name || partner.company_name || `Partner ${id}` : id;
+                        })
+                        .join(", ");
+                    }}
+                  >
+                    <MenuItem value="" disabled>
+                      Select Channel Partners
+                    </MenuItem>
+                    {channelPartners.map((partner) => (
+                      <MenuItem key={partner.id} value={partner.id}>
+                        {partner.name || partner.company_name || `Partner ${partner.id}`}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+              </div>
+
+              {/* OR Divider */}
+              <div className="flex items-center justify-center">
+                <span className="text-sm font-medium text-gray-500">Or</span>
+              </div>
+
+              {/* CSV File Upload Section */}
+              <div>
+                <div className="border-2 border-dashed border-[#D9D9D9] rounded-lg p-6 min-h-[200px]">
+                  {csvFiles.length > 0 ? (
+                    <div className="flex flex-wrap gap-3">
+                      {csvFiles.map((file, index) => {
+                        const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+                        const isCsv = file.name.endsWith('.csv');
+
+                        return (
+                          <div
+                            key={`${file.name}-${file.lastModified}`}
+                            className="relative flex flex-col items-center border rounded-md pt-6 px-2 pb-3 w-[130px] bg-[#F6F4EE] shadow-sm"
+                          >
+                            {isExcel ? (
+                              <div className="w-20 h-20 flex items-center justify-center border rounded text-green-600 bg-white mb-1">
+                                <FileSpreadsheet className="w-8 h-8" />
+                              </div>
+                            ) : isCsv ? (
+                              <div className="w-20 h-20 flex items-center justify-center border rounded text-blue-600 bg-white mb-1">
+                                <FileText className="w-8 h-8" />
+                              </div>
+                            ) : (
+                              <div className="w-20 h-20 flex items-center justify-center bg-gray-100 border rounded text-gray-500 mb-1">
+                                <FileText className="w-8 h-8" />
+                              </div>
+                            )}
+                            <span className="text-[10px] text-center truncate max-w-[100px] mb-1">{file.name}</span>
+                            <button
+                              type="button"
+                              className="absolute top-1 right-1 h-6 w-6 p-0 text-gray-600 bg-white rounded-full border border-gray-300 flex items-center justify-center hover:bg-red-100 hover:text-red-600"
+                              onClick={() => removeCsvFile(index)}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full space-y-3">
+                      <div className="text-[#C72030]">
+                        <Upload className="w-12 h-12" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-semibold text-[#C72030] mb-1">Choose CSV File</p>
+                        <p className="text-xs text-gray-500">CSV should include: Name, Email, Company</p>
+                      </div>
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept=".csv,.xlsx,.xls"
+                          multiple
+                          onChange={handleCsvFileUpload}
+                          className="hidden"
+                        />
+                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors text-sm font-medium">
+                          <Upload className="w-4 h-4" />
+                          Upload Files
+                        </span>
+                      </label>
+                    </div>
+                  )}
+                  
+                  {/* Add More Files Button when files exist */}
+                  {csvFiles.length > 0 && (
+                    <div className="mt-4 flex justify-center">
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept=".csv,.xlsx,.xls"
+                          multiple
+                          onChange={handleCsvFileUpload}
+                          className="hidden"
+                        />
+                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#C72030] text-white rounded hover:bg-[#B8252F] transition-colors text-sm font-medium">
+                          <Plus className="w-4 h-4" />
+                          Add More Files
+                        </span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">CSV should include: Name, Email, Company</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: QR Code Generation */}
+        {currentStep === 2 && !isPreviewMode && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    backgroundColor: '#E5E0D3',
+                    mr: 1.5
+                  }}
+                >
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                </Avatar>
+                QR Code Generation
+              </h2>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleDownloadAllQRCodes}
+                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                >
+                  Download All QR Codes
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendAllQRCodesEmail}
+                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                >
+                  Send QR Codes via Email
+                </button>
+              </div>
+            </div>
+            <div className="p-6 space-y-6">
+              {/* QR Code Information Box */}
+              <div className="bg-[#C4B89D59] border border-gray-200 rounded-lg p-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-24 h-24 bg-white border-2 border-gray-300 rounded flex items-center justify-center">
+                      <svg width="80" height="80" viewBox="0 0 80 80">
+                        <rect width="80" height="80" fill="white"/>
+                        <g fill="black">
+                          <rect x="8" y="8" width="4" height="4"/>
+                          <rect x="16" y="8" width="4" height="4"/>
+                          <rect x="24" y="8" width="4" height="4"/>
+                          <rect x="8" y="16" width="4" height="4"/>
+                          <rect x="24" y="16" width="4" height="4"/>
+                          <rect x="8" y="24" width="4" height="4"/>
+                          <rect x="16" y="24" width="4" height="4"/>
+                          <rect x="24" y="24" width="4" height="4"/>
+                          <rect x="48" y="8" width="4" height="4"/>
+                          <rect x="56" y="8" width="4" height="4"/>
+                          <rect x="64" y="8" width="4" height="4"/>
+                          <rect x="48" y="16" width="4" height="4"/>
+                          <rect x="64" y="16" width="4" height="4"/>
+                          <rect x="48" y="24" width="4" height="4"/>
+                          <rect x="56" y="24" width="4" height="4"/>
+                          <rect x="64" y="24" width="4" height="4"/>
+                          <rect x="8" y="48" width="4" height="4"/>
+                          <rect x="16" y="48" width="4" height="4"/>
+                          <rect x="24" y="48" width="4" height="4"/>
+                          <rect x="8" y="56" width="4" height="4"/>
+                          <rect x="24" y="56" width="4" height="4"/>
+                          <rect x="8" y="64" width="4" height="4"/>
+                          <rect x="16" y="64" width="4" height="4"/>
+                          <rect x="24" y="64" width="4" height="4"/>
+                          <rect x="32" y="32" width="4" height="4"/>
+                          <rect x="40" y="40" width="4" height="4"/>
+                        </g>
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <h3 className="font-semibold mb-3" style={{ 
+                      fontFamily: 'Work Sans, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '13px',
+                      lineHeight: '20.18px',
+                      color: '#1A1A1A',
+                    }}>Each QR code is mapped to:</h3>
+                    <ul className="space-y-2" style={{
+                      fontFamily: 'Work Sans, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '13px',
+                      lineHeight: '20.18px',
+                      color: '#1A1A1A80'
+                    }}>
+                      <li className="flex items-start">
+                        <span className="mr-2">•</span>
+                        <span>Event ID: EVT-{id}</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="mr-2">•</span>
+                        <span>CP ID and Name</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="mr-2">•</span>
+                        <span>Valid only for the specified event date & time</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* QR Code Table */}
+              <div>
+                <div className="rounded-lg border border-gray-200 overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
+                          Actions
+                        </TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
+                          Sr. No.
+                        </TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                          CP Name
+                        </TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                          Company Name
+                        </TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                          Email ID
+                        </TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                          QR Code ID
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {qrCodeData.map((row) => (
+                        <TableRow key={row.id} className="hover:bg-gray-50">
+                          <TableCell className="py-3 px-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadQRCode(row.qrCodeId, row.cpName)}
+                                className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
+                                title="Download QR Code"
+                              >
+                                <Download className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSendQRCodeEmail(row.emailId, row.cpName)}
+                                className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
+                                title="Send via Email"
+                              >
+                                <Mail className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-3 px-4 text-center font-medium">
+                            {row.srNo}
+                          </TableCell>
+                          <TableCell className="py-3 px-4">
+                            {row.cpName}
+                          </TableCell>
+                          <TableCell className="py-3 px-4">
+                            {row.companyName}
+                          </TableCell>
+                          <TableCell className="py-3 px-4">
+                            {row.emailId}
+                          </TableCell>
+                          <TableCell className="py-3 px-4 text-sm text-gray-600">
+                            {row.qrCodeId}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Event Related Images */}
+        {currentStep === 3 && !isPreviewMode && (
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <Avatar
@@ -2117,8 +2721,40 @@ const EventEdit = () => {
               </div>
             </div>
           </div>
+        )}
 
-        {/* Action Buttons */}
+        {/* Navigation Buttons - Show on all steps except preview mode */}
+        {!isPreviewMode && (
+          <>
+            <div className="flex gap-4 justify-center pt-6">
+              <button
+                type="button"
+                onClick={handleProceedToSave}
+                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              >
+                Proceed to save
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveToDraft}
+                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              >
+                Save to draft
+              </button>
+            </div>
+            {currentStep > 0 && (
+              <>
+                <div className="w-full border-t border-[#C4B89D] my-4" style={{ borderTopWidth: '0.5px' }}></div>
+                <div className="text-center text-sm text-gray-600">
+                  You've completed {completedSteps.length} out of {totalSteps} steps.
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {/* Action Buttons - Show in preview mode */}
+        {isPreviewMode && (
         <div className="flex gap-4 justify-center pt-6">
             <button
               onClick={handleSubmit}
@@ -2136,7 +2772,35 @@ const EventEdit = () => {
               Cancel
             </button>
           </div>
+        )}
         </form>
+
+      {showCoverUploader && (
+        <ProjectBannerUpload
+          onClose={() => setShowCoverUploader(false)}
+          includeInvalidRatios={false}
+          selectedRatioProp={selectedCoverRatios}
+          showAsModal={true}
+          label={coverImageLabel}
+          description={dynamicCoverDescription}
+          onContinue={(validImages) => handleCroppedImages(validImages, "cover")}
+        />
+      )}
+
+      {showEventUploader && (
+        <ProjectImageVideoUpload
+          onClose={() => setShowEventUploader(false)}
+          includeInvalidRatios={false}
+          selectedRatioProp={selectedEventRatios}
+          showAsModal={true}
+          label={eventImageLabel}
+          description={dynamicEventDescription}
+          onContinue={(validImages, videoFiles) =>
+            handleEventCroppedImages(validImages, videoFiles, "event")
+          }
+          allowVideos={true}
+        />
+      )}
       </div>
 
     );

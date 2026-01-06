@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Cropper from "react-easy-crop";
 import { toast } from "sonner";
 
-const ImageCropperr = ({
+export const ImageCropperr = ({
     open,
     image,
     onComplete,
@@ -11,24 +11,27 @@ const ImageCropperr = ({
 }) => {
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-    const [imageMimeType, setImageMimeType] = useState('image/png');
+    const [imageMimeType, setImageMimeType] = useState("image/jpeg");
 
     useEffect(() => {
         if (image) {
             if (originalFile?.type) {
                 setImageMimeType(originalFile.type);
-            } else if (image.startsWith('data:image')) {
-                const mime = image.match(/data:(.*?);base64,/)[1];
-                setImageMimeType(mime);
+            } else if (image.startsWith("data:image")) {
+                const mime = image.match(/data:(.*?);base64,/)?.[1];
+                if (mime) setImageMimeType(mime);
             }
         }
     }, [image, originalFile]);
 
     const getContainerDimensions = () => {
         const baseSize = 300;
-        if (selectedRatio.ratio === 16 / 9) return { width: baseSize * 1.2, height: baseSize };
-        if (selectedRatio.ratio === 9 / 16) return { width: baseSize, height: baseSize * 1.2 };
-        if (selectedRatio.ratio === 3 / 2) return { width: baseSize * 1.1, height: baseSize * (2 / 3) };
+        if (selectedRatio.ratio === 16 / 9)
+            return { width: baseSize * 1.2, height: baseSize };
+        if (selectedRatio.ratio === 9 / 16)
+            return { width: baseSize, height: baseSize * 1.2 };
+        if (selectedRatio.ratio === 3 / 2)
+            return { width: baseSize * 1.1, height: baseSize * (2 / 3) };
         return { width: baseSize, height: baseSize };
     };
 
@@ -37,58 +40,76 @@ const ImageCropperr = ({
     const { width, height } = getContainerDimensions();
 
     return (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
-            <div className="modal-dialog modal-dialog-centered" style={{ borderRadius: '12px' }}>
-                <div className="modal-content rounded-3 overflow-hidden">
-                    <div className="modal-header border-0 justify-content-center pt-4 pb-2">
-                        <h5 className="modal-title text-center text-orange-600 fs-5 fw-semibold">
-                            Preview Image - {selectedRatio.label}
-                        </h5>
+        <div
+            className="fixed inset-0 z-[1000] flex items-center justify-center"
+            style={{ backgroundColor: "rgba(0,0,0,0.8)" }}
+            onClick={() => onComplete(null)}
+        >
+            <div
+                className="bg-white rounded-3xl overflow-hidden shadow-2xl max-w-2xl w-full mx-4"
+                style={{ maxHeight: "90vh", overflow: "auto" }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="border-0 justify-center pt-4 pb-2 px-6 text-center">
+                    <h5 className="text-orange-600 text-lg font-semibold">
+                        Preview Image - {selectedRatio.label}
+                    </h5>
+                </div>
+
+                {/* Cropper Container */}
+                <div className="px-6 py-6">
+                    <div
+                        style={{
+                            position: "relative",
+                            height,
+                            width,
+                            background: "#fff",
+                            borderRadius: "8px",
+                            overflow: "hidden",
+                            margin: "0 auto",
+                        }}
+                    >
+                        <Cropper
+                            image={image}
+                            crop={crop}
+                            zoom={1}
+                            aspect={selectedRatio.ratio}
+                            onCropChange={setCrop}
+                            onCropComplete={(_, areaPixels) =>
+                                setCroppedAreaPixels(areaPixels)
+                            }
+                        />
                     </div>
-                    <div className="modal-body px-4">
-                        <div
-                            style={{
-                                position: 'relative',
-                                height,
-                                background: '#fff',
-                                borderRadius: '8px',
-                                overflow: 'hidden',
-                            }}
-                        >
-                            <Cropper
-                                image={image}
-                                crop={crop}
-                                zoom={1}
-                                aspect={selectedRatio.ratio}
-                                onCropChange={setCrop}
-                                onCropComplete={(_, areaPixels) => setCroppedAreaPixels(areaPixels)}
-                            />
-                        </div>
-                    </div>
-                    <div className="modal-footer border-0 px-4 pb-4 pt-2 d-flex justify-content-end" style={{ gap: '10px' }}>
-                        <button
-                            className="px-4 py-2 rounded border border-gray-400 text-gray-700 bg-white hover:bg-gray-100"
-                            onClick={() => onComplete(null)}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            className="px-4 py-2 rounded purple-btn2 text-white"
-                            onClick={() => {
-                                toast.dismiss();
-                                onComplete({
-                                    base64: image,
-                                    file: originalFile
-                                });
-                            }}
-                        >
-                            Finish
-                        </button>
-                    </div>
+                </div>
+
+                {/* Footer */}
+                <div
+                    className="border-0 px-6 pb-6 pt-4 flex justify-end"
+                    style={{ gap: "10px" }}
+                >
+                    <button
+                        type="button"
+                        className="px-4 py-2 rounded border border-gray-400 text-gray-700 bg-white hover:bg-gray-100 font-medium transition"
+                        onClick={() => onComplete(null)}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        className="px-4 py-2 rounded bg-[#f2eee9] text-[#bf213e] hover:bg-[[#f2eee9]] font-medium transition"
+                        onClick={() => {
+                            toast.dismiss();
+                            onComplete({
+                                base64: image,
+                                file: originalFile,
+                            });
+                        }}
+                    >
+                        Finish
+                    </button>
                 </div>
             </div>
         </div>
     );
 };
-
-export default ImageCropperr;
