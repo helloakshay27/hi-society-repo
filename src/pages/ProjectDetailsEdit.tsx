@@ -304,11 +304,16 @@ const ProjectDetailsEdit = () => {
     toast.success("Virtual tour added successfully");
   };
 
-  // QR Code handlers
-  const handleQRCodeImageChange = (e) => {
+  // QR Code handlers with RERA number association
+  const handleQRCodeImageChange = (e, reraIndex) => {
     const files = Array.from(e.target.files) as File[];
     const MAX_SIZE = 50 * 1024 * 1024; // 50MB
     const validFiles: any[] = [];
+    
+    // Get the RERA number for this section
+    const reraNumber = reraIndex !== undefined 
+      ? (formData.Rera_Number_multiple[reraIndex]?.rera_number || `rera_${reraIndex}`)
+      : (formData.Rera_Number_multiple[0]?.rera_number || 'default_rera');
     
     files.forEach((file) => {
       if (file.size > MAX_SIZE) {
@@ -317,7 +322,8 @@ const ProjectDetailsEdit = () => {
       }
       validFiles.push({
         project_qrcode_image: file,
-        title: "",
+        title: reraNumber, // Automatically use RERA number as title
+        rera_identifier: reraNumber, // Store RERA identifier
         isNew: true,
       });
     });
@@ -327,6 +333,7 @@ const ProjectDetailsEdit = () => {
         ...prev,
         project_qrcode_image: [...prev.project_qrcode_image, ...validFiles],
       }));
+      toast.success(`${validFiles.length} QR Code(s) added for RERA: ${reraNumber}`);
     }
   };
   
@@ -345,6 +352,14 @@ const ProjectDetailsEdit = () => {
       project_qrcode_image: prev.project_qrcode_image.filter((_, i) => i !== index),
     }));
     toast.success("QR Code image removed");
+  };
+
+  // Helper function to filter QR codes by RERA number
+  const getQRCodesForRera = (reraNumber) => {
+    if (!reraNumber) return [];
+    return formData.project_qrcode_image.filter(
+      (qr) => qr.rera_identifier === reraNumber || qr.title === reraNumber
+    );
   };
 
   const updateFormData = (key, files) => {
@@ -771,6 +786,7 @@ const ProjectDetailsEdit = () => {
                 document_file_name: qr.document_file_name,
                 document_url: qr.document_url,
                 title: qr.file_name || qr.document_file_name || "",
+                rera_identifier: qr.file_name || qr.document_file_name || "", // Use existing title as identifier
                 isNew: false
               }))
             : [],
@@ -2668,56 +2684,59 @@ const ProjectDetailsEdit = () => {
                           {/* Hidden input */}
                           <input
                             type="file"
-                            onChange={handleQRCodeImageChange}
+                            onChange={(e) => handleQRCodeImageChange(e, 0)}
                             className="hidden"
-                            id="qr-code-file-upload"
+                            id="qr-code-file-upload-0"
                             accept="image/*"
                             multiple
                           />
 
                           {/* Preview section inside the box */}
-                          {formData.project_qrcode_image.length > 0 && (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                              {formData.project_qrcode_image.map((image, index) => (
-                                <div key={index} className="relative border rounded-lg p-3 bg-gray-50">
-                                  <img
-                                    src={
-                                      image.isNew
-                                        ? URL.createObjectURL(image.project_qrcode_image)
-                                        : image.document_url || image.project_qrcode_image
-                                    }
-                                    alt={`QR Code ${index + 1}`}
-                                    className="w-full h-24 object-contain mb-2 rounded"
-                                  />
-                                  <TextField
-                                    label="Image Title"
-                                    placeholder="Enter title"
-                                    value={image.title || ""}
-                                    onChange={(e) =>
-                                      handleQRCodeImageNameChange(index, e.target.value)
-                                    }
-                                    disabled={!image.isNew}
-                                    size="small"
-                                    fullWidth
-                                    variant="outlined"
-                                  />
-                                  <button
-                                    type="button"
-                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                                    onClick={() => handleRemoveQRCodeImage(index)}
-                                  >
-                                    <Trash2 size={14} />
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                          {(() => {
+                            const reraNumber = formData.Rera_Number_multiple[0]?.rera_number || 'default_rera';
+                            const filteredQRCodes = getQRCodesForRera(reraNumber);
+                            
+                            return filteredQRCodes.length > 0 && (
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                {filteredQRCodes.map((image, displayIndex) => {
+                                  // Find the actual index in the full array
+                                  const actualIndex = formData.project_qrcode_image.findIndex(
+                                    (qr) => qr === image
+                                  );
+                                  
+                                  return (
+                                    <div key={actualIndex} className="relative border rounded-lg p-3 bg-gray-50">
+                                      <img
+                                        src={
+                                          image.isNew
+                                            ? URL.createObjectURL(image.project_qrcode_image)
+                                            : image.document_url || image.project_qrcode_image
+                                        }
+                                        alt={`QR Code ${displayIndex + 1}`}
+                                        className="w-full h-24 object-contain mb-2 rounded"
+                                      />
+                                      <p className="text-xs text-gray-600 text-center">
+                                        RERA: {image.title || reraNumber}
+                                      </p>
+                                      <button
+                                        type="button"
+                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                        onClick={() => handleRemoveQRCodeImage(actualIndex)}
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
 
                           {/* Upload button centered at bottom */}
                           <div className="flex">
                             <button
                               type="button"
-                              onClick={() => document.getElementById("qr-code-file-upload")?.click()}
+                              onClick={() => document.getElementById("qr-code-file-upload-0")?.click()}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
                               style={{ backgroundColor: "#c4b89d59" }}
                             >
@@ -2865,56 +2884,59 @@ const ProjectDetailsEdit = () => {
                                 {/* Hidden input */}
                                 <input
                                   type="file"
-                                  onChange={handleQRCodeImageChange}
+                                  onChange={(e) => handleQRCodeImageChange(e, entryIndex)}
                                   className="hidden"
-                                  id="qr-code-file-upload"
+                                  id={`qr-code-file-upload-${entryIndex}`}
                                   accept="image/*"
                                   multiple
                                 />
 
                                 {/* Preview section inside the box */}
-                                {formData.project_qrcode_image.length > 0 && (
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                    {formData.project_qrcode_image.map((image, index) => (
-                                      <div key={index} className="relative border rounded-lg p-3 bg-gray-50">
-                                        <img
-                                          src={
-                                            image.isNew
-                                              ? URL.createObjectURL(image.project_qrcode_image)
-                                              : image.document_url || image.project_qrcode_image
-                                          }
-                                          alt={`QR Code ${index + 1}`}
-                                          className="w-full h-24 object-contain mb-2 rounded"
-                                        />
-                                        <TextField
-                                          label="Image Title"
-                                          placeholder="Enter title"
-                                          value={image.title || ""}
-                                          onChange={(e) =>
-                                            handleQRCodeImageNameChange(index, e.target.value)
-                                          }
-                                          disabled={!image.isNew}
-                                          size="small"
-                                          fullWidth
-                                          variant="outlined"
-                                        />
-                                        <button
-                                          type="button"
-                                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                                          onClick={() => handleRemoveQRCodeImage(index)}
-                                        >
-                                          <Trash2 size={14} />
-                                        </button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
+                                {(() => {
+                                  const reraNumber = reraEntry.rera_number || `rera_${entryIndex}`;
+                                  const filteredQRCodes = getQRCodesForRera(reraNumber);
+                                  
+                                  return filteredQRCodes.length > 0 && (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                      {filteredQRCodes.map((image, displayIndex) => {
+                                        // Find the actual index in the full array
+                                        const actualIndex = formData.project_qrcode_image.findIndex(
+                                          (qr) => qr === image
+                                        );
+                                        
+                                        return (
+                                          <div key={actualIndex} className="relative border rounded-lg p-3 bg-gray-50">
+                                            <img
+                                              src={
+                                                image.isNew
+                                                  ? URL.createObjectURL(image.project_qrcode_image)
+                                                  : image.document_url || image.project_qrcode_image
+                                              }
+                                              alt={`QR Code ${displayIndex + 1}`}
+                                              className="w-full h-24 object-contain mb-2 rounded"
+                                            />
+                                            <p className="text-xs text-gray-600 text-center">
+                                              RERA: {image.title || reraNumber}
+                                            </p>
+                                            <button
+                                              type="button"
+                                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                              onClick={() => handleRemoveQRCodeImage(actualIndex)}
+                                            >
+                                              <Trash2 size={14} />
+                                            </button>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  );
+                                })()}
 
                                 {/* Upload button centered at bottom */}
                                 <div className="flex">
                                   <button
                                     type="button"
-                                    onClick={() => document.getElementById("qr-code-file-upload")?.click()}
+                                    onClick={() => document.getElementById(`qr-code-file-upload-${entryIndex}`)?.click()}
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
                                     style={{ backgroundColor: "#c4b89d59" }}
                                   >

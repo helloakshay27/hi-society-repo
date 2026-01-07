@@ -276,7 +276,7 @@ const FaqCreate = () => {
       });
 
       toast.success("FAQs created successfully!");
-      navigate("/faq-list"); // Adjust navigation path as needed
+      navigate("/maintenance/faq-list"); // Adjust navigation path as needed
     } catch (error) {
       console.error("Error:", error);
       const errorMessage =
@@ -300,7 +300,7 @@ const FaqCreate = () => {
             >
               <ArrowLeft className="w-4 h-4 text-gray-600" />
             </button>
-            <span className="hover:text-[#C72030] cursor-pointer" onClick={() => navigate("/setup-member/faq-list")}>FAQ List</span>
+            <span className="hover:text-[#C72030] cursor-pointer" onClick={() => navigate("/maintenance/faq-list")}>FAQ List</span>
             <ChevronRight className="w-4 h-4" />
             <span className="text-gray-900 font-medium">Create New FAQ</span>
           </div>
@@ -503,7 +503,7 @@ const FaqCreate = () => {
             </button>
             <button
               type="button"
-              onClick={() => navigate("/setup-member/faq-list")}
+              onClick={() => navigate("/maintenance/faq-list")}
               disabled={loading}
               className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
             >

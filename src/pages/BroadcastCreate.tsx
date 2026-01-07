@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, FileText, Trash2 } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
@@ -27,16 +27,16 @@ const BroadcastCreate = () => {
     notice_text: "",
     expire_time: "",
     expire_date: "",
-    shared: "all",
+    shared: "0",
     group_id: [],
     user_ids: [],
     is_important: false,
-    email_trigger_enabled: "",
-    status: "active",
+    email_trigger_enabled: false,
+    active: true,
     publish: "1",
-    of_phase: "pms",
-    of_atype: "Pms::Site",
-    notice_type: "",
+    of_phase: "post_possession",
+    of_atype_id: null,
+    notice_type: "General",
     from_time: "",
     to_time: "",
     cover_image_1_by_1: [],
@@ -47,6 +47,7 @@ const BroadcastCreate = () => {
     broadcast_images_9_by_16: [],
     broadcast_images_3_by_2: [],
     broadcast_images_16_by_9: [],
+    attached_files: [],
   });
 
   const [loading, setLoading] = useState(false);
@@ -263,54 +264,41 @@ const BroadcastCreate = () => {
       return;
     }
 
-    const data = new FormData();
-    data.append("noticeboard[notice_heading]", formData.notice_heading);
-    data.append("noticeboard[expire_time]", `${formData.expire_date}T${formData.expire_time}`);
-    data.append("noticeboard[notice_text]", formData.notice_text);
-    data.append("noticeboard[shared]", formData.shared === "all" ? "2" : "1");
-    data.append("noticeboard[of_phase]", formData.of_phase);
-    data.append("noticeboard[of_atype]", formData.of_atype);
-    data.append("noticeboard[of_atype_id]", localStorage.getItem("selectedSiteId") || "");
-    data.append("noticeboard[publish]", formData.status === "active" ? "1" : "0");
-    data.append("noticeboard[is_important]", formData.is_important ? "1" : "0");
+    // Prepare the payload according to API structure
+    const payload: any = {
+      noticeboard: {
+        notice_heading: formData.notice_heading,
+        notice_text: formData.notice_text,
+        active: formData.active,
+        publish: parseInt(formData.publish),
+        notice_type: formData.notice_type || "General",
+        shared: parseInt(formData.shared),
+        is_important: formData.is_important,
+        email_trigger_enabled: formData.email_trigger_enabled,
+        attached_files: [],
+      }
+    };
 
-    if (formData.shared === "individual" && formData.user_ids.length > 0) {
-      data.append("noticeboard[swusers]", formData.user_ids.join(","));
+    // Add expire_time if provided
+    if (formData.expire_date && formData.expire_time) {
+      payload.noticeboard.expire_time = `${formData.expire_date}T${formData.expire_time}`;
     }
 
-    if (formData.shared === "group" && formData.group_id.length > 0) {
-      data.append("noticeboard[group_id]", formData.group_id.join(","));
+    // Add conditional fields based on shared type
+    if (formData.shared === "1" && formData.user_ids.length > 0) {
+      payload.noticeboard.swusers = formData.user_ids.join(",");
     }
 
-    // For coverImageRatios
-    coverImageRatios.forEach(({ key }) => {
-      const images = formData[key];
-      if (Array.isArray(images) && images.length > 0) {
-        const img = images[0];
-        if (img?.file instanceof File) {
-          data.append(`noticeboard[${key}]`, img.file);
-        }
-      }
-    });
-
-    // For broadcastImageRatios
-    broadcastImageRatios.forEach(({ key }) => {
-      const images = formData[key];
-      if (Array.isArray(images) && images.length > 0) {
-        images.forEach((img) => {
-          if (img?.file instanceof File) {
-            data.append(`noticeboard[files_attached][]`, img.file);
-          }
-        });
-      }
-    });
+    if (formData.shared === "2" && formData.group_id.length > 0) {
+      payload.noticeboard.group_id = formData.group_id.join(",");
+    }
 
     try {
-      const response = await axios.post(`${baseURL}noticeboards.json`, data, {
+      const response = await axios.post(`${baseURL}/crm/admin/noticeboards.json`, payload, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          "Content-Type": "multipart/form-data",
-        },
+                                 Authorization: getAuthHeader(),
+                                 "Content-Type": "application/json",
+                               },
       });
       toast.success("Broadcast created successfully!");
       navigate("/maintenance/noticeboard-list");
@@ -329,7 +317,7 @@ const BroadcastCreate = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${baseURL}users/get_users.json`, {
+        const response = await axios.get(`${baseURL}/users/get_users.json`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
             "Content-Type": "application/json",
@@ -346,11 +334,11 @@ const BroadcastCreate = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get(`${baseURL}projects.json`, {
+        const response = await axios.get(`${baseURL}/projects.json`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+                                  Authorization: getAuthHeader(),
+                                  "Content-Type": "application/json",
+                                },
         });
         setProjects(response.data.projects || []);
       } catch (error) {
@@ -367,11 +355,11 @@ const BroadcastCreate = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get(`${baseURL}usergroups.json`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+        const response = await axios.get(`${baseURL}/crm/usergroups.json`, {
+         headers: {
+                                  Authorization: getAuthHeader(),
+                                  "Content-Type": "application/json",
+                                },
         });
         const groupsData = Array.isArray(response.data) ? response.data : response.data.usergroups || [];
         setGroups(groupsData);
@@ -380,7 +368,7 @@ const BroadcastCreate = () => {
       }
     };
 
-    if (formData.shared === "group" && groups.length === 0) {
+    if (formData.shared === "2" && groups.length === 0) {
       fetchGroups();
     }
   }, [formData.shared, baseURL, groups.length]);
@@ -475,11 +463,11 @@ const BroadcastCreate = () => {
                   displayEmpty
                 >
                   <MenuItem value="">Select Type</MenuItem>
-                  <MenuItem value="general">General</MenuItem>
-                  <MenuItem value="urgent">Urgent</MenuItem>
-                  <MenuItem value="announcement">Announcement</MenuItem>
-                  <MenuItem value="event">Event</MenuItem>
-                  <MenuItem value="maintenance">Maintenance</MenuItem>
+                  <MenuItem value="Maintenance">Maintenance</MenuItem>
+                  <MenuItem value="General ">General </MenuItem>
+                  <MenuItem value="Emergency">Emergency</MenuItem>
+                  <MenuItem value="Announcement">Announcement</MenuItem>
+                  <MenuItem value="Event">Event</MenuItem>
                 </MuiSelect>
               </FormControl>
 
@@ -595,12 +583,11 @@ const BroadcastCreate = () => {
                     <input
                       type="radio"
                       name="email_trigger_enabled"
-                      value="true"
-                      checked={formData.email_trigger_enabled === "true"}
-                      onChange={(e) =>
+                      checked={formData.email_trigger_enabled === true}
+                      onChange={() =>
                         setFormData((prev) => ({
                           ...prev,
-                          email_trigger_enabled: e.target.value,
+                          email_trigger_enabled: true,
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
@@ -612,12 +599,11 @@ const BroadcastCreate = () => {
                     <input
                       type="radio"
                       name="email_trigger_enabled"
-                      value="false"
-                      checked={formData.email_trigger_enabled === "false"}
-                      onChange={(e) =>
+                      checked={formData.email_trigger_enabled === false}
+                      onChange={() =>
                         setFormData((prev) => ({
                           ...prev,
-                          email_trigger_enabled: e.target.value,
+                          email_trigger_enabled: false,
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
@@ -635,13 +621,12 @@ const BroadcastCreate = () => {
                   <label className="flex items-center">
                     <input
                       type="radio"
-                      name="status"
-                      value="active"
-                      checked={formData.status === "active"}
-                      onChange={(e) =>
+                      name="active"
+                      checked={formData.active === true}
+                      onChange={() =>
                         setFormData((prev) => ({
                           ...prev,
-                          status: e.target.value,
+                          active: true,
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
@@ -652,13 +637,12 @@ const BroadcastCreate = () => {
                   <label className="flex items-center">
                     <input
                       type="radio"
-                      name="status"
-                      value="inactive"
-                      checked={formData.status === "inactive"}
-                      onChange={(e) =>
+                      name="active"
+                      checked={formData.active === false}
+                      onChange={() =>
                         setFormData((prev) => ({
                           ...prev,
-                          status: e.target.value,
+                          active: false,
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
@@ -681,12 +665,12 @@ const BroadcastCreate = () => {
                     <input
                       type="radio"
                       name="shared"
-                      value="all"
-                      checked={formData.shared === "all"}
+                      value="0"
+                      checked={formData.shared === "0"}
                       onChange={() =>
                         setFormData((prev) => ({
                           ...prev,
-                          shared: "all",
+                          shared: "0",
                           user_ids: [],
                           group_id: [],
                         }))
@@ -700,12 +684,12 @@ const BroadcastCreate = () => {
                     <input
                       type="radio"
                       name="shared"
-                      value="individual"
-                      checked={formData.shared === "individual"}
+                      value="1"
+                      checked={formData.shared === "1"}
                       onChange={() =>
                         setFormData((prev) => ({
                           ...prev,
-                          shared: "individual",
+                          shared: "1",
                           group_id: [],
                         }))
                       }
@@ -718,12 +702,12 @@ const BroadcastCreate = () => {
                     <input
                       type="radio"
                       name="shared"
-                      value="group"
-                      checked={formData.shared === "group"}
+                      value="2"
+                      checked={formData.shared === "2"}
                       onChange={() =>
                         setFormData((prev) => ({
                           ...prev,
-                          shared: "group",
+                          shared: "2",
                           user_ids: [],
                         }))
                       }
@@ -735,7 +719,7 @@ const BroadcastCreate = () => {
                 </div>
 
                 {/* Individual Select */}
-                {formData.shared === "individual" && (
+                {formData.shared === "1" && (
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -748,7 +732,7 @@ const BroadcastCreate = () => {
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          user_ids: e.target.value,
+                          user_ids: Array.isArray(e.target.value) ? e.target.value : [],
                         }))
                       }
                       label="Select Users"
@@ -779,7 +763,7 @@ const BroadcastCreate = () => {
                 )}
 
                 {/* Group Select */}
-                {formData.shared === "group" && (
+                {formData.shared === "2" && (
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -792,7 +776,7 @@ const BroadcastCreate = () => {
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          group_id: e.target.value,
+                          group_id: Array.isArray(e.target.value) ? e.target.value : [],
                         }))
                       }
                       label="Select Groups"

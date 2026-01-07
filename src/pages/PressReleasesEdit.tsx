@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { ChevronRight, ArrowLeft, FileText } from "lucide-react";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
@@ -68,12 +68,24 @@ const PressReleasesEdit = () => {
             `${baseURL}/press_releases/${id}.json`,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                Authorization: getAuthHeader(),
                 "Content-Type": "application/json",
               },
             }
           );
           const data = response.data;
+
+          // Helper function to format image data
+          const formatImageData = (imageData, ratio) => {
+            if (!imageData) return [];
+            return [{
+              id: imageData.id,
+              preview: imageData.document_url,
+              name: imageData.document_file_name || `image-${ratio}.${imageData.document_content_type?.split('/')[1] || 'jpg'}`,
+              ratio: ratio,
+              isNew: false
+            }];
+          };
 
           setFormData({
             title: data.title || "",
@@ -81,11 +93,9 @@ const PressReleasesEdit = () => {
             release_date: data.release_date
               ? formatDateForInput(data.release_date)
               : "",
-            pr_image_16_by_9: data.attachfile?.document_url
-              ? [{ preview: data.attachfile.document_url, name: "existing-image.jpg", ratio: "16:9" }]
-              : [],
-            pr_image_9_by_16: [],
-            pr_image_1_by_1: [],
+            pr_image_16_by_9: formatImageData(data.pr_image_16_by_9, "16:9"),
+            pr_image_9_by_16: formatImageData(data.pr_image_9_by_16, "9:16"),
+            pr_image_1_by_1: formatImageData(data.pr_image_1_by_1, "1:1"),
             attachment_url: data.attachment_url || "",
             press_source: data.press_source || "",
           });
@@ -99,7 +109,7 @@ const PressReleasesEdit = () => {
 
       fetchPressRelease();
     }
-  }, [id]);
+  }, [id, baseURL]);
 
   const formatDateForInput = (dateString) => {
     const date = new Date(dateString);
@@ -185,21 +195,37 @@ const PressReleasesEdit = () => {
   };
 
   const validateForm = () => {
-    let newErrors = {};
-
-    if (
-      !formData.title.trim() ||
-      !formData.release_date ||
-      !formData.description.trim() ||
-      formData.pr_image.length === 0 ||
-      !formData.attachment_url.trim()
-    ) {
-      toast.dismiss();
-      toast.error("Please fill in all the required fields.");
+    if (!formData.title.trim()) {
+      toast.error("Title is mandatory");
       return false;
     }
 
-    setErrors({});
+    if (!formData.release_date) {
+      toast.error("Press Releases Date is mandatory");
+      return false;
+    }
+
+    if (!formData.description.trim()) {
+      toast.error("Description is mandatory");
+      return false;
+    }
+
+    // Check if at least one image ratio is uploaded
+    const hasAnyImage =
+      (formData.pr_image_16_by_9 && formData.pr_image_16_by_9.length > 0) ||
+      (formData.pr_image_9_by_16 && formData.pr_image_9_by_16.length > 0) ||
+      (formData.pr_image_1_by_1 && formData.pr_image_1_by_1.length > 0);
+
+    if (!hasAnyImage) {
+      toast.error("At least one image attachment is mandatory");
+      return false;
+    }
+
+    if (!formData.attachment_url.trim()) {
+      toast.error("Attachment URL is mandatory");
+      return false;
+    }
+
     return true;
   };
 
@@ -259,11 +285,7 @@ const PressReleasesEdit = () => {
 
       return newFormData;
     });
-
-    // If the removed image is being previewed, reset previewImg
-    if (previewImg === imageToRemove.preview) {
-      setPreviewImg(null);
-    }
+    toast.success("Image removed");
   };
 
   const handleSubmit = async (e) => {
@@ -274,7 +296,6 @@ const PressReleasesEdit = () => {
     }
 
     setLoading(true);
-    const token = localStorage.getItem("access_token");
 
     try {
       const sendData = new FormData();
@@ -300,7 +321,7 @@ const PressReleasesEdit = () => {
 
       await axios.put(`${baseURL}/press_releases/${id}.json`, sendData, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: getAuthHeader(),
           "Content-Type": "multipart/form-data",
         },
       });
@@ -317,66 +338,6 @@ const PressReleasesEdit = () => {
 
   const handleCancel = () => {
     navigate("/maintenance/press-releases-list");
-  };
-
-  const handleImageUpload = (newImageList) => {
-    if (!newImageList || newImageList.length === 0) return;
-
-    const file = newImageList[0].file;
-    if (!file) return;
-
-    const allowedImageTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "image/bmp",
-      "image/tiff",
-    ];
-
-    const fileType = file.type;
-    const sizeInMB = file.size / (1024 * 1024);
-
-    if (!allowedImageTypes.includes(fileType)) {
-      toast.error("❌ Please upload a valid image file.");
-      return;
-    }
-
-    if (sizeInMB > 3) {
-      toast.error("❌ Image size must be less than 3MB.");
-      return;
-    }
-
-    setImage(newImageList);
-    setDialogOpen(true);
-  };
-
-  const isImageFile = (file) => {
-    if (!file) return false;
-    const imageTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "image/svg+xml",
-      "image/bmp",
-      "image/tiff",
-    ];
-    if (typeof file === "string") {
-      if (file.startsWith("data:image")) return true;
-      const extension = file.split(".").pop().toLowerCase();
-      return [
-        "jpg",
-        "jpeg",
-        "png",
-        "gif",
-        "webp",
-        "svg",
-        "bmp",
-        "tiff",
-      ].includes(extension);
-    }
-    return file.type && imageTypes.includes(file.type);
   };
 
   // Get all uploaded images for display

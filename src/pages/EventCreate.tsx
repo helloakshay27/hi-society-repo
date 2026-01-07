@@ -89,6 +89,14 @@ const EventCreate = () => {
   const [selectedChannelPartners, setSelectedChannelPartners] = useState([]);
   const [csvFiles, setCsvFiles] = useState([]);
 
+  // Visibility state
+  const [visibility, setVisibility] = useState({
+    showOnHomePage: false,
+    showOnProjectDetailPage: false,
+    showOnBookingPage: false,
+    featuredEvent: false,
+  });
+
   // QR Code Generation state
   const [qrCodeData, setQrCodeData] = useState([
     {
@@ -1603,7 +1611,295 @@ const EventCreate = () => {
               </div> */}
 
               
-              <div className="md:col-span-3">
+              {/* Share With section moved to Step 2: Invite CPs */}
+            </div>
+          </div>
+        </div>
+        )}
+
+        {/* Visibility Card */}
+        {currentStep === 0 && !isPreviewMode && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    backgroundColor: '#E5E0D3',
+                    mr: 1.5
+                  }}
+                >
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                </Avatar>
+                Visibility
+              </h2>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Show on Home Page */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
+                  <p className="text-sm text-gray-500">Display this event on the home page</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer" onClick={(e) => { e.preventDefault(); setVisibility(prev => ({ ...prev, showOnHomePage: !prev.showOnHomePage })); }}>
+                  <input
+                    type="checkbox"
+                    checked={visibility.showOnHomePage}
+                    onChange={(e) => setVisibility(prev => ({ ...prev, showOnHomePage: e.target.checked }))}
+                    className="sr-only"
+                  />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnHomePage ? 'scaleX(-1)' : 'scaleX(1)', transition: 'transform 0.3s ease' }}>
+                    <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                    <g filter="url(#filter0_dd_2611_3818)">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_2611_3818)" strokeWidth="0.255453"/>
+                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_2611_3818)" strokeWidth="0.255453"/>
+                    </g>
+                    <defs>
+                      <filter id="filter0_dd_2611_3818" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                        <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                        <feOffset dy="1.02181"/>
+                        <feGaussianBlur stdDeviation="0.510907"/>
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2611_3818"/>
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                        <feOffset/>
+                        <feGaussianBlur stdDeviation="0.510907"/>
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                        <feBlend mode="normal" in2="effect1_dropShadow_2611_3818" result="effect2_dropShadow_2611_3818"/>
+                        <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_2611_3818" result="shape"/>
+                      </filter>
+                      <linearGradient id="paint0_linear_2611_3818" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
+                        <stop stopOpacity="0"/>
+                        <stop offset="0.8" stopOpacity="0.02"/>
+                        <stop offset="1" stopOpacity="0.04"/>
+                      </linearGradient>
+                      <linearGradient id="paint1_linear_2611_3818" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="white" stopOpacity="0.12"/>
+                        <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
+                        <stop offset="1" stopColor="white" stopOpacity="0"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </label>
+              </div>
+
+              {/* Show on Project Detail Page */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
+                  <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer" onClick={(e) => { e.preventDefault(); setVisibility(prev => ({ ...prev, showOnProjectDetailPage: !prev.showOnProjectDetailPage })); }}>
+                  <input
+                    type="checkbox"
+                    checked={visibility.showOnProjectDetailPage}
+                    onChange={(e) => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: e.target.checked }))}
+                    className="sr-only"
+                  />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnProjectDetailPage ? 'scaleX(-1)' : 'scaleX(1)', transition: 'transform 0.3s ease' }}>
+                    <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                    <g filter="url(#filter0_dd_2611_3819)">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_2611_3819)" strokeWidth="0.255453"/>
+                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_2611_3819)" strokeWidth="0.255453"/>
+                    </g>
+                    <defs>
+                      <filter id="filter0_dd_2611_3819" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                        <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                        <feOffset dy="1.02181"/>
+                        <feGaussianBlur stdDeviation="0.510907"/>
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2611_3819"/>
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                        <feOffset/>
+                        <feGaussianBlur stdDeviation="0.510907"/>
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                        <feBlend mode="normal" in2="effect1_dropShadow_2611_3819" result="effect2_dropShadow_2611_3819"/>
+                        <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_2611_3819" result="shape"/>
+                      </filter>
+                      <linearGradient id="paint0_linear_2611_3819" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
+                        <stop stopOpacity="0"/>
+                        <stop offset="0.8" stopOpacity="0.02"/>
+                        <stop offset="1" stopOpacity="0.04"/>
+                      </linearGradient>
+                      <linearGradient id="paint1_linear_2611_3819" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="white" stopOpacity="0.12"/>
+                        <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
+                        <stop offset="1" stopColor="white" stopOpacity="0"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </label>
+              </div>
+
+              {/* Show on Booking Page */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
+                  <p className="text-sm text-gray-500">Display this event on the home page</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer" onClick={(e) => { e.preventDefault(); setVisibility(prev => ({ ...prev, showOnBookingPage: !prev.showOnBookingPage })); }}>
+                  <input
+                    type="checkbox"
+                    checked={visibility.showOnBookingPage}
+                    onChange={(e) => setVisibility(prev => ({ ...prev, showOnBookingPage: e.target.checked }))}
+                    className="sr-only"
+                  />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnBookingPage ? 'scaleX(-1)' : 'scaleX(1)', transition: 'transform 0.3s ease' }}>
+                    <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                    <g filter="url(#filter0_dd_2611_3820)">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_2611_3820)" strokeWidth="0.255453"/>
+                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_2611_3820)" strokeWidth="0.255453"/>
+                    </g>
+                    <defs>
+                      <filter id="filter0_dd_2611_3820" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                        <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                        <feOffset dy="1.02181"/>
+                        <feGaussianBlur stdDeviation="0.510907"/>
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2611_3820"/>
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                        <feOffset/>
+                        <feGaussianBlur stdDeviation="0.510907"/>
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                        <feBlend mode="normal" in2="effect1_dropShadow_2611_3820" result="effect2_dropShadow_2611_3820"/>
+                        <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_2611_3820" result="shape"/>
+                      </filter>
+                      <linearGradient id="paint0_linear_2611_3820" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
+                        <stop stopOpacity="0"/>
+                        <stop offset="0.8" stopOpacity="0.02"/>
+                        <stop offset="1" stopOpacity="0.04"/>
+                      </linearGradient>
+                      <linearGradient id="paint1_linear_2611_3820" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="white" stopOpacity="0.12"/>
+                        <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
+                        <stop offset="1" stopColor="white" stopOpacity="0"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </label>
+              </div>
+
+              {/* Featured Event */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
+                  <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer" onClick={(e) => { e.preventDefault(); setVisibility(prev => ({ ...prev, featuredEvent: !prev.featuredEvent })); }}>
+                  <input
+                    type="checkbox"
+                    checked={visibility.featuredEvent}
+                    onChange={(e) => setVisibility(prev => ({ ...prev, featuredEvent: e.target.checked }))}
+                    className="sr-only"
+                  />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.featuredEvent ? 'scaleX(-1)' : 'scaleX(1)', transition: 'transform 0.3s ease' }}>
+                    <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                    <g filter="url(#filter0_dd_2611_3821)">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_2611_3821)" strokeWidth="0.255453"/>
+                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_2611_3821)" strokeWidth="0.255453"/>
+                    </g>
+                    <defs>
+                      <filter id="filter0_dd_2611_3821" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                        <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                        <feOffset dy="1.02181"/>
+                        <feGaussianBlur stdDeviation="0.510907"/>
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2611_3821"/>
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                        <feOffset/>
+                        <feGaussianBlur stdDeviation="0.510907"/>
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                        <feBlend mode="normal" in2="effect1_dropShadow_2611_3821" result="effect2_dropShadow_2611_3821"/>
+                        <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_2611_3821" result="shape"/>
+                      </filter>
+                      <linearGradient id="paint0_linear_2611_3821" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
+                        <stop stopOpacity="0"/>
+                        <stop offset="0.8" stopOpacity="0.02"/>
+                        <stop offset="1" stopOpacity="0.04"/>
+                      </linearGradient>
+                      <linearGradient id="paint1_linear_2611_3821" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="white" stopOpacity="0.12"/>
+                        <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
+                        <stop offset="1" stopColor="white" stopOpacity="0"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Invite CPs */}
+        {currentStep === 1 && !isPreviewMode && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    backgroundColor: '#E5E0D3',
+                    mr: 1.5
+                  }}
+                >
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                </Avatar>
+                Invite CPs
+              </h2>
+            </div>
+            <div className="p-6 space-y-6">
+              {/* Channel Partners Dropdown */}
+              <div>
+                {/* <label className="block text-sm font-semibold mb-2 text-[#1a1a1a]">Channel Partners Names</label> */}
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  sx={{ '& .MuiInputBase-root': fieldStyles }}
+                >
+                  <InputLabel shrink>Select Channel Partners</InputLabel>
+                  <MuiSelect
+                    multiple
+                    value={selectedChannelPartners}
+                    onChange={(e) => setSelectedChannelPartners(e.target.value)}
+                    label="Select Channel Partners"
+                    notched
+                    displayEmpty
+                    renderValue={(selected) => {
+                      if (!selected || selected.length === 0) {
+                        return <span style={{ color: '#999' }}>Select Channel Partners</span>;
+                      }
+                      return selected
+                        .map((id) => {
+                          const partner = channelPartners.find((cp) => cp.id === id || cp.id.toString() === id.toString());
+                          return partner ? partner.name || partner.company_name || `Partner ${id}` : id;
+                        })
+                        .join(", ");
+                    }}
+                  >
+                    <MenuItem value="" disabled>
+                      Select Channel Partners
+                    </MenuItem>
+                    {channelPartners.map((partner) => (
+                      <MenuItem key={partner.id} value={partner.id}>
+                        {partner.name || partner.company_name || `Partner ${partner.id}`}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+              </div>
+
+              {/* Share With Section */}
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
                 <div className="flex gap-6 mb-4">
                   <label className="flex items-center">
@@ -1748,69 +2044,6 @@ const EventCreate = () => {
                     </MuiSelect>
                   </FormControl>
                 )}
-              </div>
-            </div>
-          </div>
-        </div>
-        )}
-
-        {/* Step 2: Invite CPs */}
-        {currentStep === 1 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
-                  }}
-                >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-                </Avatar>
-                Invite CPs
-              </h2>
-            </div>
-            <div className="p-6 space-y-6">
-              {/* Channel Partners Dropdown */}
-              <div>
-                {/* <label className="block text-sm font-semibold mb-2 text-[#1a1a1a]">Channel Partners Names</label> */}
-                <FormControl
-                  fullWidth
-                  variant="outlined"
-                  sx={{ '& .MuiInputBase-root': fieldStyles }}
-                >
-                  <InputLabel shrink>Select Channel Partners</InputLabel>
-                  <MuiSelect
-                    multiple
-                    value={selectedChannelPartners}
-                    onChange={(e) => setSelectedChannelPartners(e.target.value)}
-                    label="Select Channel Partners"
-                    notched
-                    displayEmpty
-                    renderValue={(selected) => {
-                      if (!selected || selected.length === 0) {
-                        return <span style={{ color: '#999' }}>Select Channel Partners</span>;
-                      }
-                      return selected
-                        .map((id) => {
-                          const partner = channelPartners.find((cp) => cp.id === id || cp.id.toString() === id.toString());
-                          return partner ? partner.name || partner.company_name || `Partner ${id}` : id;
-                        })
-                        .join(", ");
-                    }}
-                  >
-                    <MenuItem value="" disabled>
-                      Select Channel Partners
-                    </MenuItem>
-                    {channelPartners.map((partner) => (
-                      <MenuItem key={partner.id} value={partner.id}>
-                        {partner.name || partner.company_name || `Partner ${partner.id}`}
-                      </MenuItem>
-                    ))}
-                  </MuiSelect>
-                </FormControl>
               </div>
 
               {/* OR Divider */}
@@ -2338,7 +2571,7 @@ const EventCreate = () => {
                     <div className="p-6 space-y-6 opacity-75 pointer-events-none">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {/* Project */}
-                            <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                            {/* <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
                               <InputLabel shrink>Project</InputLabel>
                               <MuiSelect
                                 value={selectedProjectId || ""}
@@ -2354,7 +2587,7 @@ const EventCreate = () => {
                                   </MenuItem>
                                 ))}
                               </MuiSelect>
-                            </FormControl>
+                            </FormControl> */}
 
                             {/* Event Name */}
                             <TextField
@@ -2377,21 +2610,7 @@ const EventCreate = () => {
                               slotProps={{ inputLabel: { shrink: true } }}
                               InputProps={{ sx: fieldStyles }}
                             />
-
-                            {/* Event Description */}
-                            <div className="md:col-span-2">
-                              <TextField
-                                label="Event Description"
-                                value={formData.description}
-                                fullWidth
-                                variant="outlined"
-                                disabled
-                                slotProps={{ inputLabel: { shrink: true } }}
-                              />
-                            </div>
-
-                            {/* Event From */}
-                           <TextField
+                             <TextField
                 label="Event Date"
                 type="date"
                 value={formData.event_date}
@@ -2408,12 +2627,20 @@ const EventCreate = () => {
                   sx: fieldStyles,
                 }}
               />
-                          </div>
 
-                          {/* 4-column grid for Event To, Mark Important, Send Email, RSVP Action */}
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            {/* Event To */}
-                           <TextField
+                            {/* Event Description */}
+                            <div className="md:col-span-2">
+                              <TextField
+                                label="Event Description"
+                                value={formData.description}
+                                fullWidth
+                                variant="outlined"
+                                disabled
+                                slotProps={{ inputLabel: { shrink: true } }}
+                              />
+                            </div>
+
+                             <TextField
                 label="Event Time"
                 type="time"
                 value={formData.event_time}
@@ -2431,8 +2658,17 @@ const EventCreate = () => {
                 }}
               />
 
+                            {/* Event From */}
+                          
+                          </div>
+
+                          {/* 4-column grid for Event To, Mark Important, Send Email, RSVP Action */}
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            {/* Event To */}
+                          
+
                             {/* Mark Important */}
-                            <div>
+                            {/* <div>
                               <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important</label>
                               <div className="flex gap-4">
                                 <label className="flex items-center">
@@ -2456,7 +2692,7 @@ const EventCreate = () => {
                                   <span className="ml-2 text-sm text-gray-700">No</span>
                                 </label>
                               </div>
-                            </div>
+                            </div> */}
 
                             {/* Send Email */}
                             <div>
@@ -2538,7 +2774,7 @@ const EventCreate = () => {
                           )}
 
                           {/* Share With */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="md:col-span-3">
                               <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
                               <div className="flex gap-6 mb-4">
@@ -2635,11 +2871,163 @@ const EventCreate = () => {
                                 </FormControl>
                               )}
                             </div>
-                          </div>
+                          </div> */}
                         </div>
                       </div>
                     // </div>
                   )}
+
+                {/* Visibility Card - Completed */}
+                {stepIndex === 0 && (
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mt-6">
+                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                        <Avatar
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            backgroundColor: '#E5E0D3',
+                            mr: 1.5
+                          }}
+                        >
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        </Avatar>
+                        Visibility
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentStep(0);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      >
+                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                      </button>
+                    </div>
+                    <div className="p-6 space-y-4 opacity-75 pointer-events-none">
+                      {/* Show on Home Page */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
+                          <p className="text-sm text-gray-500">Display this event on the home page</p>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnHomePage ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                          <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                          <g filter="url(#filter0_completed_1)">
+                            <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                          </g>
+                          <defs>
+                            <filter id="filter0_completed_1" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                              <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                              <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                              <feOffset dy="1.02181"/>
+                              <feGaussianBlur stdDeviation="0.510907"/>
+                              <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                              <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                              <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                              <feOffset/>
+                              <feGaussianBlur stdDeviation="0.510907"/>
+                              <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                              <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
+                              <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
+                            </filter>
+                          </defs>
+                        </svg>
+                      </div>
+
+                      {/* Show on Project Detail Page */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
+                          <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnProjectDetailPage ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                          <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                          <g filter="url(#filter0_completed_2)">
+                            <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                          </g>
+                          <defs>
+                            <filter id="filter0_completed_2" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                              <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                              <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                              <feOffset dy="1.02181"/>
+                              <feGaussianBlur stdDeviation="0.510907"/>
+                              <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                              <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                              <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                              <feOffset/>
+                              <feGaussianBlur stdDeviation="0.510907"/>
+                              <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                              <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
+                              <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
+                            </filter>
+                          </defs>
+                        </svg>
+                      </div>
+
+                      {/* Show on Booking Page */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
+                          <p className="text-sm text-gray-500">Display this event on the home page</p>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnBookingPage ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                          <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                          <g filter="url(#filter0_completed_3)">
+                            <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                          </g>
+                          <defs>
+                            <filter id="filter0_completed_3" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                              <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                              <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                              <feOffset dy="1.02181"/>
+                              <feGaussianBlur stdDeviation="0.510907"/>
+                              <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                              <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                              <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                              <feOffset/>
+                              <feGaussianBlur stdDeviation="0.510907"/>
+                              <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                              <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
+                              <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
+                            </filter>
+                          </defs>
+                        </svg>
+                      </div>
+
+                      {/* Featured Event */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
+                          <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.featuredEvent ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                          <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                          <g filter="url(#filter0_completed_4)">
+                            <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                          </g>
+                          <defs>
+                            <filter id="filter0_completed_4" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                              <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                              <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                              <feOffset dy="1.02181"/>
+                              <feGaussianBlur stdDeviation="0.510907"/>
+                              <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                              <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                              <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                              <feOffset/>
+                              <feGaussianBlur stdDeviation="0.510907"/>
+                              <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                              <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
+                              <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
+                            </filter>
+                          </defs>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
 
                 {stepIndex === 1 && (
@@ -2703,6 +3091,104 @@ const EventCreate = () => {
                             ))}
                           </MuiSelect>
                         </FormControl>
+                      </div>
+
+                      {/* Share With Section */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
+                        <div className="flex gap-6 mb-4">
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              checked={formData.shared === "all"}
+                              disabled
+                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                              style={{ accentColor: '#C72030' }}
+                            />
+                            <span className="ml-2 text-sm text-gray-700">All</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              checked={formData.shared === "individual"}
+                              disabled
+                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                              style={{ accentColor: '#C72030' }}
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Individuals</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              checked={formData.shared === "group"}
+                              disabled
+                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                              style={{ accentColor: '#C72030' }}
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Groups</span>
+                          </label>
+                        </div>
+
+                        {formData.shared === "individual" && (
+                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                            <InputLabel shrink>Event User ID</InputLabel>
+                            <MuiSelect
+                              multiple
+                              value={formData.user_id ? formData.user_id.split(",") : []}
+                              label="Event User ID"
+                              notched
+                              displayEmpty
+                              disabled
+                              renderValue={(selected) => {
+                                if (!selected || selected.length === 0) {
+                                  return <span style={{ color: '#999' }}>Select Users</span>;
+                                }
+                                return selected
+                                  .map((id) => {
+                                    const user = eventUserID.find((u) => u.id.toString() === id);
+                                    return user ? `${user.firstname} ${user.lastname}` : id;
+                                  })
+                                  .join(", ");
+                              }}
+                            >
+                              {eventUserID.map((user) => (
+                                <MenuItem key={user.id} value={user.id.toString()}>
+                                  {user.firstname} {user.lastname}
+                                </MenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
+                        )}
+                        {formData.shared === "group" && (
+                          <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                            <InputLabel shrink>Share with Groups</InputLabel>
+                            <MuiSelect
+                              multiple
+                              value={Array.isArray(formData.group_id) ? formData.group_id : []}
+                              label="Share with Groups"
+                              notched
+                              displayEmpty
+                              disabled
+                              renderValue={(selected) => {
+                                if (!selected || selected.length === 0) {
+                                  return <span style={{ color: '#999' }}>Select Groups</span>;
+                                }
+                                return selected
+                                  .map((id) => {
+                                    const group = groups.find((g) => g.id === id || g.id.toString() === id.toString());
+                                    return group ? group.name : id;
+                                  })
+                                  .join(", ");
+                              }}
+                            >
+                              {groups.map((group) => (
+                                <MenuItem key={group.id} value={group.id}>
+                                  {group.name}
+                                </MenuItem>
+                              ))}
+                            </MuiSelect>
+                          </FormControl>
+                        )}
                       </div>
 
                       {/* CSV Files */}
@@ -3117,6 +3603,159 @@ const EventCreate = () => {
                 </div>
               </div>
 
+              {/* Visibility Card Preview */}
+              <div className="mb-6">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                      <Avatar
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          backgroundColor: '#E5E0D3',
+                          mr: 1.5
+                        }}
+                      >
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      </Avatar>
+                      Visibility
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsPreviewMode(false);
+                        setCurrentStep(0);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                    >
+                      <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                    </button>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    {/* Show on Home Page */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
+                        <p className="text-sm text-gray-500">Display this event on the home page</p>
+                      </div>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnHomePage ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                        <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                        <g filter="url(#filter0_preview_1)">
+                          <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                        </g>
+                        <defs>
+                          <filter id="filter0_preview_1" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                            <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                            <feOffset dy="1.02181"/>
+                            <feGaussianBlur stdDeviation="0.510907"/>
+                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                            <feOffset/>
+                            <feGaussianBlur stdDeviation="0.510907"/>
+                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                            <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
+                            <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
+                          </filter>
+                        </defs>
+                      </svg>
+                    </div>
+
+                    {/* Show on Project Detail Page */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
+                        <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
+                      </div>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnProjectDetailPage ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                        <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                        <g filter="url(#filter0_preview_2)">
+                          <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                        </g>
+                        <defs>
+                          <filter id="filter0_preview_2" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                            <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                            <feOffset dy="1.02181"/>
+                            <feGaussianBlur stdDeviation="0.510907"/>
+                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                            <feOffset/>
+                            <feGaussianBlur stdDeviation="0.510907"/>
+                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                            <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
+                            <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
+                          </filter>
+                        </defs>
+                      </svg>
+                    </div>
+
+                    {/* Show on Booking Page */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
+                        <p className="text-sm text-gray-500">Display this event on the home page</p>
+                      </div>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnBookingPage ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                        <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                        <g filter="url(#filter0_preview_3)">
+                          <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                        </g>
+                        <defs>
+                          <filter id="filter0_preview_3" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                            <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                            <feOffset dy="1.02181"/>
+                            <feGaussianBlur stdDeviation="0.510907"/>
+                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                            <feOffset/>
+                            <feGaussianBlur stdDeviation="0.510907"/>
+                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                            <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
+                            <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
+                          </filter>
+                        </defs>
+                      </svg>
+                    </div>
+
+                    {/* Featured Event */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
+                        <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
+                      </div>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.featuredEvent ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                        <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                        <g filter="url(#filter0_preview_4)">
+                          <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                        </g>
+                        <defs>
+                          <filter id="filter0_preview_4" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                            <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                            <feOffset dy="1.02181"/>
+                            <feGaussianBlur stdDeviation="0.510907"/>
+                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                            <feOffset/>
+                            <feGaussianBlur stdDeviation="0.510907"/>
+                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                            <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
+                            <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
+                          </filter>
+                        </defs>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Step 2: Invite CPs Preview */}
               <div className="mb-6">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -3177,6 +3816,104 @@ const EventCreate = () => {
                           ))}
                         </MuiSelect>
                       </FormControl>
+                    </div>
+
+                    {/* Share With Section */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
+                      <div className="flex gap-6 mb-4">
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            checked={formData.shared === "all"}
+                            disabled
+                            className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                            style={{ accentColor: '#C72030' }}
+                          />
+                          <span className="ml-2 text-sm text-gray-700">All</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            checked={formData.shared === "individual"}
+                            disabled
+                            className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                            style={{ accentColor: '#C72030' }}
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Individuals</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            checked={formData.shared === "group"}
+                            disabled
+                            className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                            style={{ accentColor: '#C72030' }}
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Groups</span>
+                        </label>
+                      </div>
+
+                      {formData.shared === "individual" && (
+                        <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                          <InputLabel shrink>Event User ID</InputLabel>
+                          <MuiSelect
+                            multiple
+                            value={formData.user_id ? formData.user_id.split(",") : []}
+                            label="Event User ID"
+                            notched
+                            displayEmpty
+                            disabled
+                            renderValue={(selected) => {
+                              if (!selected || selected.length === 0) {
+                                return <span style={{ color: '#999' }}>Select Users</span>;
+                              }
+                              return selected
+                                .map((id) => {
+                                  const user = eventUserID.find((u) => u.id.toString() === id);
+                                  return user ? `${user.firstname} ${user.lastname}` : id;
+                                })
+                                .join(", ");
+                            }}
+                          >
+                            {eventUserID.map((user) => (
+                              <MenuItem key={user.id} value={user.id.toString()}>
+                                {user.firstname} {user.lastname}
+                              </MenuItem>
+                            ))}
+                          </MuiSelect>
+                        </FormControl>
+                      )}
+                      {formData.shared === "group" && (
+                        <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                          <InputLabel shrink>Share with Groups</InputLabel>
+                          <MuiSelect
+                            multiple
+                            value={Array.isArray(formData.group_id) ? formData.group_id : []}
+                            label="Share with Groups"
+                            notched
+                            displayEmpty
+                            disabled
+                            renderValue={(selected) => {
+                              if (!selected || selected.length === 0) {
+                                return <span style={{ color: '#999' }}>Select Groups</span>;
+                              }
+                              return selected
+                                .map((id) => {
+                                  const group = groups.find((g) => g.id === id || g.id.toString() === id.toString());
+                                  return group ? group.name : id;
+                                })
+                                .join(", ");
+                            }}
+                          >
+                            {groups.map((group) => (
+                              <MenuItem key={group.id} value={group.id}>
+                                {group.name}
+                              </MenuItem>
+                            ))}
+                          </MuiSelect>
+                        </FormControl>
+                      )}
                     </div>
 
                     {/* CSV Files */}

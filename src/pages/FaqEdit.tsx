@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { ArrowLeft, FileText } from "lucide-react";
 import {
   Table,
@@ -46,7 +46,8 @@ const FaqEdit = () => {
   const [hasFetched, setHasFetched] = useState(false);
 
   const navigate = useNavigate();
-  const { faqId } = useParams();
+  const { id } = useParams();
+  const faqId = id;
 
   // Field styles for Material-UI components
   const fieldStyles = {
@@ -72,17 +73,15 @@ const FaqEdit = () => {
     },
   };
 
-  const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-    "Content-Type": "application/json",
-  });
-
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setCategoriesLoading(true);
-        const res = await axios.get(`${baseURL}faq_categories.json`, {
-          headers: getAuthHeaders(),
+        const res = await axios.get(`${baseURL}/faq_categories.json`, {
+           headers: {
+                    'Authorization': getAuthHeader(),
+                    'Content-Type': 'application/json',
+                  },
         });
 
         const categoriesData = res.data?.faq_categories || res.data || [];
@@ -100,15 +99,18 @@ const FaqEdit = () => {
       }
     };
     fetchCategories();
-  }, []);
+  }, [baseURL]);
 
   useEffect(() => {
     if (formData.faq_category_id) {
       const fetchSubCategories = async () => {
         try {
           setSubCategoriesLoading(true);
-          const res = await axios.get(`${baseURL}faq_sub_categories.json`, {
-            headers: getAuthHeaders(),
+          const res = await axios.get(`${baseURL}/faq_sub_categories.json`, {
+             headers: {
+                      'Authorization': getAuthHeader(),
+                      'Content-Type': 'application/json',
+                    },
           });
 
           const subCategoriesData =
@@ -137,15 +139,18 @@ const FaqEdit = () => {
     } else {
       setSubCategories([]);
     }
-  }, [formData.faq_category_id]);
+  }, [formData.faq_category_id, baseURL]);
 
   // Fetch sites
   useEffect(() => {
     const fetchSites = async () => {
       try {
         setSitesLoading(true);
-        const res = await axios.get(`${baseURL}sites.json`, {
-          headers: getAuthHeaders(),
+        const res = await axios.get(`${baseURL}/sites.json`, {
+           headers: {
+                    'Authorization': getAuthHeader(),
+                    'Content-Type': 'application/json',
+                  },
         });
 
         const sitesData = res.data?.sites || res.data || [];
@@ -163,7 +168,7 @@ const FaqEdit = () => {
       }
     };
     fetchSites();
-  }, []);
+  }, [baseURL]);
 
   // Fetch existing FAQ data
   // useEffect(() => {
@@ -214,8 +219,11 @@ const FaqEdit = () => {
     const fetchFaqData = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${baseURL}faqs/${faqId}.json`, {
-          headers: getAuthHeaders(),
+        const res = await axios.get(`${baseURL}/faqs/${faqId}.json`, {
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
         });
 
         const faqData = res.data?.faq || res.data;
@@ -254,7 +262,7 @@ const FaqEdit = () => {
     };
     fetchFaqData();
   }
-}, [faqId, hasFetched]);
+}, [faqId, hasFetched, baseURL]);
 
   const handleCategoryChange = (value) => {
     setFormData((prev) => ({
@@ -443,7 +451,10 @@ const FaqEdit = () => {
     };
 
     await axios.put(`${baseURL}faqs/${faqId}.json`, payload, {
-      headers: getAuthHeaders(),
+      headers: {
+        'Authorization': getAuthHeader(),
+        'Content-Type': 'application/json',
+      },
     });
 
     toast.success("FAQ updated successfully!");
