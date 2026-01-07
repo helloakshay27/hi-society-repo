@@ -140,7 +140,10 @@ const FaqCreate = () => {
       try {
         setSitesLoading(true);
         const res = await axios.get(`${baseURL}/sites.json`, {
-          headers: getAuthHeaders(),
+          headers: {
+                    Authorization: getAuthHeader(),
+                    "Content-Type": "multipart/form-data",
+                  },
         });
 
         const sitesData = res.data?.sites || res.data || [];

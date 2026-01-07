@@ -450,7 +450,7 @@ const FaqEdit = () => {
       },
     };
 
-    await axios.put(`${baseURL}faqs/${faqId}.json`, payload, {
+    await axios.put(`${baseURL}/faqs/${faqId}.json`, payload, {
       headers: {
         'Authorization': getAuthHeader(),
         'Content-Type': 'application/json',
@@ -458,7 +458,7 @@ const FaqEdit = () => {
     });
 
     toast.success("FAQ updated successfully!");
-    navigate("/faq-list");
+    navigate("/maintenance/faq-list");
   } catch (error) {
     console.error("Error:", error);
     const errorMessage =
@@ -617,7 +617,7 @@ const FaqEdit = () => {
             </button>
             <button
               type="button"
-              onClick={() => navigate("/faq-list")}
+              onClick={() => navigate("/maintenance/faq-list")}
               disabled={loading}
               className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
             >

@@ -21,6 +21,18 @@ interface PressRelease {
   };
   company_name?: string;
   project_name?: string;
+  pr_image_1_by_1?: {
+    document_url: string;
+  };
+  pr_image_9_by_16?: {
+    document_url: string;
+  };
+  pr_image_3_by_2?: {
+    document_url: string;
+  };
+  pr_image_16_by_9?: {
+    document_url: string;
+  };
 }
 
 interface PressReleasePermissions {
@@ -178,11 +190,17 @@ const PressReleasesList = () => {
       case "release_date":
         return <span>{item.release_date || "-"}</span>;
       case "attachment":
+        const imageUrl = item.pr_image_16_by_9?.document_url || 
+                        item.pr_image_1_by_1?.document_url || 
+                        item.pr_image_3_by_2?.document_url || 
+                        item.pr_image_9_by_16?.document_url ||
+                        item.attachfile?.document_url;
+        
         return (
           <div className="flex justify-center items-center">
-            {item.attachfile?.document_url ? (
+            {imageUrl ? (
               <img
-                src={item.attachfile.document_url}
+                src={imageUrl}
                 alt="Press Release"
                 className="rounded-lg border border-gray-200"
                 style={{ width: "80px", height: "80px", objectFit: "cover" }}

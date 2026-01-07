@@ -317,13 +317,13 @@ const BroadcastCreate = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${baseURL}/users/get_users.json`, {
+        const response = await axios.get(`${baseURL}/crm/usergroups/get_members_list.json`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            Authorization: getAuthHeader(),
             "Content-Type": "application/json",
           },
         });
-        setUsers(response?.data.users || []);
+        setUsers(response?.data || []);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
@@ -334,7 +334,7 @@ const BroadcastCreate = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get(`${baseURL}/projects.json`, {
+        const response = await axios.get(`${baseURL}/projects_for_dropdown.json`, {
           headers: {
                                   Authorization: getAuthHeader(),
                                   "Content-Type": "application/json",
@@ -422,7 +422,7 @@ const BroadcastCreate = () => {
                   <MenuItem value="">Select Project</MenuItem>
                   {projects.map((project) => (
                     <MenuItem key={project.id} value={project.id}>
-                      {project.project_name}
+                      {project.name}
                     </MenuItem>
                   ))}
                 </MuiSelect>
@@ -744,18 +744,19 @@ const BroadcastCreate = () => {
                         }
                         return selected
                           .map((id) => {
-                            const user = users.find((u) => u.id.toString() === id.toString());
-                            return user?.full_name || `${user?.firstname} ${user?.lastname}`;
+                            const member = users.find((u) => u.id.toString() === id.toString());
+                            return member ? `${member.user?.firstname || ''} ${member.user?.lastname || ''}`.trim() : '';
                           })
+                          .filter(Boolean)
                           .join(", ");
                       }}
                     >
                       <MenuItem value="" disabled>
                         Select Users
                       </MenuItem>
-                      {users.map((user) => (
-                        <MenuItem key={user.id} value={user.id}>
-                          {user.full_name || `${user.firstname} ${user.lastname}`}
+                      {users.map((member) => (
+                        <MenuItem key={member.id} value={member.id}>
+                          {`${member.user?.firstname || ''} ${member.user?.lastname || ''}`.trim()}
                         </MenuItem>
                       ))}
                     </MuiSelect>

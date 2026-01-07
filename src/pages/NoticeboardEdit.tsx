@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, FileText, Trash2 } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
@@ -395,13 +395,13 @@ const NoticeboardEdit = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${baseURL}users/get_users.json`, {
+        const response = await axios.get(`${baseURL}/crm/usergroups/get_members_list.json`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
             "Content-Type": "application/json",
           },
         });
-        setUsers(response?.data.users || []);
+        setUsers(response?.data || []);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
@@ -412,11 +412,11 @@ const NoticeboardEdit = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get(`${baseURL}projects.json`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+        const response = await axios.get(`${baseURL}/projects_for_dropdown.json`, {
+           headers: {
+                                            Authorization: getAuthHeader(),
+                                            "Content-Type": "application/json",
+                                          },
         });
         setProjects(response.data.projects || []);
       } catch (error) {
@@ -501,7 +501,7 @@ const NoticeboardEdit = () => {
                   <MenuItem value="">Select Project</MenuItem>
                   {projects.map((project) => (
                     <MenuItem key={project.id} value={project.id}>
-                      {project.project_name}
+                      {project.name}
                     </MenuItem>
                   ))}
                 </MuiSelect>
@@ -744,9 +744,9 @@ const NoticeboardEdit = () => {
                 {formData.shared === "individual" && (
                   <div className="mt-4">
                     <MultiSelectBox
-                      options={users.map((user) => ({
-                        value: user.id,
-                        label: `${user.first_name} ${user.last_name}`,
+                      options={users.map((member) => ({
+                        value: member.id,
+                        label: `${member.user?.firstname || ''} ${member.user?.lastname || ''}`.trim(),
                       }))}
                       selectedValues={formData.user_ids}
                       onChange={(selectedIds) =>

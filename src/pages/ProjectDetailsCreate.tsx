@@ -17,11 +17,12 @@ import {
   InputLabel,
   Select as MuiSelect,
   MenuItem,
+  Avatar,
 } from "@mui/material";
 import { Building2, FileText, Trash2, ArrowLeft, Delete, DeleteIcon, Info } from "lucide-react";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import "../styles/mor.css";
-import { DeleteForever, DeleteForeverOutlined, DeleteForeverRounded, DeleteForeverSharp, DeleteForeverTwoTone, DeleteOutlined, DeleteOutlineOutlined, DeleteOutlineRounded, DeleteSweepOutlined, DeleteSweepRounded, DeleteSweepSharp, DeleteSweepTwoTone, FileUpload } from "@mui/icons-material";
+import { DeleteForever, DeleteForeverOutlined, DeleteForeverRounded, DeleteForeverSharp, DeleteForeverTwoTone, DeleteOutlined, DeleteOutlineOutlined, DeleteOutlineRounded, DeleteSweepOutlined, DeleteSweepRounded, DeleteSweepSharp, DeleteSweepTwoTone, FileUpload, SettingsOutlined as SettingsOutlinedIcon } from "@mui/icons-material";
 import { Button } from "react-day-picker";
 import { DeleteCompanyModal } from "@/components/DeleteCompanyModal";
 import { DeleteCountryModal } from "@/components/DeleteCountryModal";
@@ -173,6 +174,12 @@ const ProjectDetailsCreate = () => {
   const [showTooltipEmailer, setShowTooltipEmailer] = useState(false);
   const [showTooltipKYA, setShowTooltipKYA] = useState(false);
   const [showTooltipVideos, setShowTooltipVideos] = useState(false);
+  const [visibility, setVisibility] = useState({
+    showOnHomePage: false,
+    showOnProjectDetailPage: false,
+    showOnBookingPage: false,
+    featuredEvent: false,
+  });
 
   const [dialogOpen, setDialogOpen] = useState({
     image: false,
@@ -2011,7 +2018,7 @@ const ProjectDetailsCreate = () => {
                   <MenuItem value="Upcoming">Upcoming</MenuItem>
                 </MuiSelect>
               </FormControl>
-                <TextField
+                {/* <TextField
                   label="Project Description"
                   placeholder="Enter Project Description"
                   value={formData.Project_Description}
@@ -2029,8 +2036,7 @@ const ProjectDetailsCreate = () => {
                       shrink: true,
                     },
                   }}
-                 
-                />
+                /> */}
                  <TextField
                 label="Price Onward"
                 placeholder="Enter Price Onward"
@@ -4924,6 +4930,247 @@ const ProjectDetailsCreate = () => {
               </div>
             </>
           )}
+
+        {/* Visibility Section */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <Avatar
+                sx={{
+                  width: 32,
+                  height: 32,
+                  backgroundColor: '#E5E0D3',
+                  mr: 1.5
+                }}
+              >
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+              </Avatar>
+              Visibility
+            </h2>
+          </div>
+          <div className="p-6 space-y-4">
+            {/* Show on Home Page */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
+                <p className="text-sm text-gray-500">Display this project on the home page</p>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] font-medium select-none">
+                <div
+                  role="switch"
+                  aria-checked={visibility.showOnHomePage}
+                  aria-label={visibility.showOnHomePage ? "Deactivate show on home page" : "Activate show on home page"}
+                  tabIndex={0}
+                  onClick={() => setVisibility(prev => ({ ...prev, showOnHomePage: !prev.showOnHomePage }))}
+                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, showOnHomePage: !prev.showOnHomePage }))}
+                  className="cursor-pointer"
+                  style={{ transform: visibility.showOnHomePage ? 'scaleX(1)' : 'scaleX(-1)' }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                  <g filter="url(#filter0_dd_visibility_home_create)">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                    <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_visibility_home_create)" strokeWidth="0.255453"/>
+                    <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_visibility_home_create)" strokeWidth="0.255453"/>
+                  </g>
+                  <defs>
+                    <filter id="filter0_dd_visibility_home_create" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                      <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                      <feOffset dy="1.02181"/>
+                      <feGaussianBlur stdDeviation="0.510907"/>
+                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_visibility_home_create"/>
+                      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                      <feOffset/>
+                      <feGaussianBlur stdDeviation="0.510907"/>
+                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                      <feBlend mode="normal" in2="effect1_dropShadow_visibility_home_create" result="effect2_dropShadow_visibility_home_create"/>
+                      <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_visibility_home_create" result="shape"/>
+                    </filter>
+                    <linearGradient id="paint0_linear_visibility_home_create" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
+                      <stop stopOpacity="0"/>
+                      <stop offset="0.8" stopOpacity="0.02"/>
+                      <stop offset="1" stopOpacity="0.04"/>
+                    </linearGradient>
+                    <linearGradient id="paint1_linear_visibility_home_create" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="white" stopOpacity="0.12"/>
+                      <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
+                      <stop offset="1" stopColor="white" stopOpacity="0"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Show on Project Detail Page */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
+                <p className="text-sm text-gray-500">Display this project on individual project detail pages</p>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] font-medium select-none">
+                <div
+                  role="switch"
+                  aria-checked={visibility.showOnProjectDetailPage}
+                  aria-label={visibility.showOnProjectDetailPage ? "Deactivate show on project detail page" : "Activate show on project detail page"}
+                  tabIndex={0}
+                  onClick={() => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: !prev.showOnProjectDetailPage }))}
+                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, showOnProjectDetailPage: !prev.showOnProjectDetailPage }))}
+                  className="cursor-pointer"
+                  style={{ transform: visibility.showOnProjectDetailPage ? 'scaleX(1)' : 'scaleX(-1)' }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                  <g filter="url(#filter0_dd_visibility_detail_create)">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                    <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_visibility_detail_create)" strokeWidth="0.255453"/>
+                    <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_visibility_detail_create)" strokeWidth="0.255453"/>
+                  </g>
+                  <defs>
+                    <filter id="filter0_dd_visibility_detail_create" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                      <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                      <feOffset dy="1.02181"/>
+                      <feGaussianBlur stdDeviation="0.510907"/>
+                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_visibility_detail_create"/>
+                      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                      <feOffset/>
+                      <feGaussianBlur stdDeviation="0.510907"/>
+                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                      <feBlend mode="normal" in2="effect1_dropShadow_visibility_detail_create" result="effect2_dropShadow_visibility_detail_create"/>
+                      <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_visibility_detail_create" result="shape"/>
+                    </filter>
+                    <linearGradient id="paint0_linear_visibility_detail_create" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
+                      <stop stopOpacity="0"/>
+                      <stop offset="0.8" stopOpacity="0.02"/>
+                      <stop offset="1" stopOpacity="0.04"/>
+                    </linearGradient>
+                    <linearGradient id="paint1_linear_visibility_detail_create" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="white" stopOpacity="0.12"/>
+                      <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
+                      <stop offset="1" stopColor="white" stopOpacity="0"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Show on Booking Page */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
+                <p className="text-sm text-gray-500">Display this project on the booking page</p>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] font-medium select-none">
+                <div
+                  role="switch"
+                  aria-checked={visibility.showOnBookingPage}
+                  aria-label={visibility.showOnBookingPage ? "Deactivate show on booking page" : "Activate show on booking page"}
+                  tabIndex={0}
+                  onClick={() => setVisibility(prev => ({ ...prev, showOnBookingPage: !prev.showOnBookingPage }))}
+                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, showOnBookingPage: !prev.showOnBookingPage }))}
+                  className="cursor-pointer"
+                  style={{ transform: visibility.showOnBookingPage ? 'scaleX(1)' : 'scaleX(-1)' }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                  <g filter="url(#filter0_dd_visibility_booking_create)">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                    <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_visibility_booking_create)" strokeWidth="0.255453"/>
+                    <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_visibility_booking_create)" strokeWidth="0.255453"/>
+                  </g>
+                  <defs>
+                    <filter id="filter0_dd_visibility_booking_create" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                      <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                      <feOffset dy="1.02181"/>
+                      <feGaussianBlur stdDeviation="0.510907"/>
+                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_visibility_booking_create"/>
+                      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                      <feOffset/>
+                      <feGaussianBlur stdDeviation="0.510907"/>
+                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                      <feBlend mode="normal" in2="effect1_dropShadow_visibility_booking_create" result="effect2_dropShadow_visibility_booking_create"/>
+                      <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_visibility_booking_create" result="shape"/>
+                    </filter>
+                    <linearGradient id="paint0_linear_visibility_booking_create" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
+                      <stop stopOpacity="0"/>
+                      <stop offset="0.8" stopOpacity="0.02"/>
+                      <stop offset="1" stopOpacity="0.04"/>
+                    </linearGradient>
+                    <linearGradient id="paint1_linear_visibility_booking_create" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="white" stopOpacity="0.12"/>
+                      <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
+                      <stop offset="1" stopColor="white" stopOpacity="0"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Featured Project */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Featured Project</h3>
+                <p className="text-sm text-gray-500">Mark as a featured project for priority display</p>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] font-medium select-none">
+                <div
+                  role="switch"
+                  aria-checked={visibility.featuredEvent}
+                  aria-label={visibility.featuredEvent ? "Deactivate featured project" : "Activate featured project"}
+                  tabIndex={0}
+                  onClick={() => setVisibility(prev => ({ ...prev, featuredEvent: !prev.featuredEvent }))}
+                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, featuredEvent: !prev.featuredEvent }))}
+                  className="cursor-pointer"
+                  style={{ transform: visibility.featuredEvent ? 'scaleX(1)' : 'scaleX(-1)' }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
+                  <g filter="url(#filter0_dd_visibility_featured_create)">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
+                    <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_visibility_featured_create)" strokeWidth="0.255453"/>
+                    <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_visibility_featured_create)" strokeWidth="0.255453"/>
+                  </g>
+                  <defs>
+                    <filter id="filter0_dd_visibility_featured_create" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                      <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                      <feOffset dy="1.02181"/>
+                      <feGaussianBlur stdDeviation="0.510907"/>
+                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
+                      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_visibility_featured_create"/>
+                      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                      <feOffset/>
+                      <feGaussianBlur stdDeviation="0.510907"/>
+                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
+                      <feBlend mode="normal" in2="effect1_dropShadow_visibility_featured_create" result="effect2_dropShadow_visibility_featured_create"/>
+                      <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_visibility_featured_create" result="shape"/>
+                    </filter>
+                    <linearGradient id="paint0_linear_visibility_featured_create" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
+                      <stop stopOpacity="0"/>
+                      <stop offset="0.8" stopOpacity="0.02"/>
+                      <stop offset="1" stopOpacity="0.04"/>
+                    </linearGradient>
+                    <linearGradient id="paint1_linear_visibility_featured_create" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="white" stopOpacity="0.12"/>
+                      <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
+                      <stop offset="1" stopColor="white" stopOpacity="0"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
   <div className="card-body pb-0"></div>
         {/* Sticky footer for Submit/Cancel */}
         <div className=" bottom-0 left-0 w-full flex justify-center ">

@@ -1642,14 +1642,18 @@ const EventCreate = () => {
                   <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
                   <p className="text-sm text-gray-500">Display this event on the home page</p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer" onClick={(e) => { e.preventDefault(); setVisibility(prev => ({ ...prev, showOnHomePage: !prev.showOnHomePage })); }}>
-                  <input
-                    type="checkbox"
-                    checked={visibility.showOnHomePage}
-                    onChange={(e) => setVisibility(prev => ({ ...prev, showOnHomePage: e.target.checked }))}
-                    className="sr-only"
-                  />
-                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnHomePage ? 'scaleX(-1)' : 'scaleX(1)', transition: 'transform 0.3s ease' }}>
+                <div className="flex items-center gap-2 text-[11px] font-medium select-none">
+                  <div
+                    role="switch"
+                    aria-checked={visibility.showOnHomePage}
+                    aria-label={visibility.showOnHomePage ? "Deactivate show on home page" : "Activate show on home page"}
+                    tabIndex={0}
+                    onClick={() => setVisibility(prev => ({ ...prev, showOnHomePage: !prev.showOnHomePage }))}
+                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, showOnHomePage: !prev.showOnHomePage }))}
+                    className="cursor-pointer"
+                    style={{ transform: visibility.showOnHomePage ? 'scaleX(1)' : 'scaleX(-1)' }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
                     <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                     <g filter="url(#filter0_dd_2611_3818)">
                       <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -1683,7 +1687,8 @@ const EventCreate = () => {
                       </linearGradient>
                     </defs>
                   </svg>
-                </label>
+                  </div>
+                </div>
               </div>
 
               {/* Show on Project Detail Page */}
@@ -1692,14 +1697,18 @@ const EventCreate = () => {
                   <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
                   <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer" onClick={(e) => { e.preventDefault(); setVisibility(prev => ({ ...prev, showOnProjectDetailPage: !prev.showOnProjectDetailPage })); }}>
-                  <input
-                    type="checkbox"
-                    checked={visibility.showOnProjectDetailPage}
-                    onChange={(e) => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: e.target.checked }))}
-                    className="sr-only"
-                  />
-                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnProjectDetailPage ? 'scaleX(-1)' : 'scaleX(1)', transition: 'transform 0.3s ease' }}>
+                <div className="flex items-center gap-2 text-[11px] font-medium select-none">
+                  <div
+                    role="switch"
+                    aria-checked={visibility.showOnProjectDetailPage}
+                    aria-label={visibility.showOnProjectDetailPage ? "Deactivate show on project detail page" : "Activate show on project detail page"}
+                    tabIndex={0}
+                    onClick={() => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: !prev.showOnProjectDetailPage }))}
+                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, showOnProjectDetailPage: !prev.showOnProjectDetailPage }))}
+                    className="cursor-pointer"
+                    style={{ transform: visibility.showOnProjectDetailPage ? 'scaleX(1)' : 'scaleX(-1)' }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
                     <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                     <g filter="url(#filter0_dd_2611_3819)">
                       <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -1733,7 +1742,8 @@ const EventCreate = () => {
                       </linearGradient>
                     </defs>
                   </svg>
-                </label>
+                  </div>
+                </div>
               </div>
 
               {/* Show on Booking Page */}
@@ -1742,14 +1752,18 @@ const EventCreate = () => {
                   <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
                   <p className="text-sm text-gray-500">Display this event on the home page</p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer" onClick={(e) => { e.preventDefault(); setVisibility(prev => ({ ...prev, showOnBookingPage: !prev.showOnBookingPage })); }}>
-                  <input
-                    type="checkbox"
-                    checked={visibility.showOnBookingPage}
-                    onChange={(e) => setVisibility(prev => ({ ...prev, showOnBookingPage: e.target.checked }))}
-                    className="sr-only"
-                  />
-                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnBookingPage ? 'scaleX(-1)' : 'scaleX(1)', transition: 'transform 0.3s ease' }}>
+                <div className="flex items-center gap-2 text-[11px] font-medium select-none">
+                  <div
+                    role="switch"
+                    aria-checked={visibility.showOnBookingPage}
+                    aria-label={visibility.showOnBookingPage ? "Deactivate show on booking page" : "Activate show on booking page"}
+                    tabIndex={0}
+                    onClick={() => setVisibility(prev => ({ ...prev, showOnBookingPage: !prev.showOnBookingPage }))}
+                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, showOnBookingPage: !prev.showOnBookingPage }))}
+                    className="cursor-pointer"
+                    style={{ transform: visibility.showOnBookingPage ? 'scaleX(1)' : 'scaleX(-1)' }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
                     <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                     <g filter="url(#filter0_dd_2611_3820)">
                       <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -1783,7 +1797,8 @@ const EventCreate = () => {
                       </linearGradient>
                     </defs>
                   </svg>
-                </label>
+                  </div>
+                </div>
               </div>
 
               {/* Featured Event */}
@@ -1792,14 +1807,18 @@ const EventCreate = () => {
                   <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
                   <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer" onClick={(e) => { e.preventDefault(); setVisibility(prev => ({ ...prev, featuredEvent: !prev.featuredEvent })); }}>
-                  <input
-                    type="checkbox"
-                    checked={visibility.featuredEvent}
-                    onChange={(e) => setVisibility(prev => ({ ...prev, featuredEvent: e.target.checked }))}
-                    className="sr-only"
-                  />
-                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.featuredEvent ? 'scaleX(-1)' : 'scaleX(1)', transition: 'transform 0.3s ease' }}>
+                <div className="flex items-center gap-2 text-[11px] font-medium select-none">
+                  <div
+                    role="switch"
+                    aria-checked={visibility.featuredEvent}
+                    aria-label={visibility.featuredEvent ? "Deactivate featured event" : "Activate featured event"}
+                    tabIndex={0}
+                    onClick={() => setVisibility(prev => ({ ...prev, featuredEvent: !prev.featuredEvent }))}
+                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, featuredEvent: !prev.featuredEvent }))}
+                    className="cursor-pointer"
+                    style={{ transform: visibility.featuredEvent ? 'scaleX(1)' : 'scaleX(-1)' }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
                     <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                     <g filter="url(#filter0_dd_2611_3821)">
                       <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -1833,7 +1852,8 @@ const EventCreate = () => {
                       </linearGradient>
                     </defs>
                   </svg>
-                </label>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -2912,7 +2932,7 @@ const EventCreate = () => {
                           <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
                           <p className="text-sm text-gray-500">Display this event on the home page</p>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnHomePage ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnHomePage ? 'scaleX(1)' : 'scaleX(-1)' }}>
                           <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                           <g filter="url(#filter0_completed_1)">
                             <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -2942,7 +2962,7 @@ const EventCreate = () => {
                           <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
                           <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnProjectDetailPage ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnProjectDetailPage ? 'scaleX(1)' : 'scaleX(-1)' }}>
                           <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                           <g filter="url(#filter0_completed_2)">
                             <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -2972,7 +2992,7 @@ const EventCreate = () => {
                           <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
                           <p className="text-sm text-gray-500">Display this event on the home page</p>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnBookingPage ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnBookingPage ? 'scaleX(1)' : 'scaleX(-1)' }}>
                           <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                           <g filter="url(#filter0_completed_3)">
                             <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -3002,7 +3022,7 @@ const EventCreate = () => {
                           <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
                           <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.featuredEvent ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.featuredEvent ? 'scaleX(1)' : 'scaleX(-1)' }}>
                           <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                           <g filter="url(#filter0_completed_4)">
                             <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -3639,7 +3659,7 @@ const EventCreate = () => {
                         <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
                         <p className="text-sm text-gray-500">Display this event on the home page</p>
                       </div>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnHomePage ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnHomePage ? 'scaleX(1)' : 'scaleX(-1)' }}>
                         <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                         <g filter="url(#filter0_preview_1)">
                           <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -3669,7 +3689,7 @@ const EventCreate = () => {
                         <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
                         <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
                       </div>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnProjectDetailPage ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnProjectDetailPage ? 'scaleX(1)' : 'scaleX(-1)' }}>
                         <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                         <g filter="url(#filter0_preview_2)">
                           <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -3699,7 +3719,7 @@ const EventCreate = () => {
                         <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
                         <p className="text-sm text-gray-500">Display this event on the home page</p>
                       </div>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnBookingPage ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnBookingPage ? 'scaleX(1)' : 'scaleX(-1)' }}>
                         <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                         <g filter="url(#filter0_preview_3)">
                           <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -3729,7 +3749,7 @@ const EventCreate = () => {
                         <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
                         <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
                       </div>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="14" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.featuredEvent ? 'scaleX(-1)' : 'scaleX(1)' }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.featuredEvent ? 'scaleX(1)' : 'scaleX(-1)' }}>
                         <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                         <g filter="url(#filter0_preview_4)">
                           <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>

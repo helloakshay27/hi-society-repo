@@ -131,18 +131,18 @@ export const BMSSidebar: React.FC = () => {
       icon: MessageSquare,
       path: "/maintenance/noticeboard-list",
     },
-    {
-      id: "company",
-      label: "Company",
-      icon: Building,
-      path: "/maintenance/company-list",
-    },
-    {
-      id: "site",
-      label: "Site",
-      icon: MapPin,
-      path: "/maintenance/site-list",
-    },
+    // {
+    //   id: "company",
+    //   label: "Company",
+    //   icon: Building,
+    //   path: "/maintenance/company-list",
+    // },
+    // {
+    //   id: "site",
+    //   label: "Site",
+    //   icon: MapPin,
+    //   path: "/maintenance/site-list",
+    // },
     {
       id: "press-releases",
       label: "Press Releases",
