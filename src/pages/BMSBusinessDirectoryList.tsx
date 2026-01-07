@@ -152,7 +152,7 @@ const BMSBusinessDirectoryList: React.FC = () => {
       </Button>
       <Button
         onClick={handleFilters}
-        variant="outline"
+       
         className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90"
       >
         <Filter className="w-4 h-4 mr-2" />

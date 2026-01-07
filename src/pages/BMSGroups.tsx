@@ -1,7 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Plus, Eye, Edit, Trash2, Download, RefreshCw, Loader2, Users, UserPlus } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Download, RefreshCw, Loader2, Users, UserPlus, X, Search } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "/src/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+} from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { toast } from "sonner";
@@ -27,6 +46,19 @@ const BMSGroups: React.FC = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    groupName: "",
+    description: "",
+    members: [] as string[],
+    primaryMember: "",
+  });
+  const [searchMember, setSearchMember] = useState("");
+  const [filters, setFilters] = useState({
+    memberTypes: [] as string[],
+    tower: "",
+  });
+  const [isGroupNameFocused, setIsGroupNameFocused] = useState(false);
 
   // Debounce search query
   useEffect(() => {
@@ -203,8 +235,171 @@ const BMSGroups: React.FC = () => {
     { key: "actions", label: "Actions", sortable: false },
   ];
 
+  // Mock member data with additional properties for filtering
+  const members = [
+    { 
+      id: '1', 
+      name: 'John Doe', 
+      email: 'john@example.com',
+      type: 'Owner',
+      tower: 'A',
+      isPrimary: true,
+      livesHere: true
+    },
+    { 
+      id: '2', 
+      name: 'Jane Smith', 
+      email: 'jane@example.com',
+      type: 'Tenant',
+      tower: 'B',
+      isPrimary: false,
+      livesHere: true
+    },
+    { 
+      id: '3', 
+      name: 'Robert Johnson', 
+      email: 'robert@example.com',
+      type: 'Owner',
+      tower: 'C',
+      isPrimary: true,
+      livesHere: false
+    },
+    { 
+      id: '4', 
+      name: 'Emily Davis', 
+      email: 'emily@example.com',
+      type: 'Tenant',
+      tower: 'A',
+      isPrimary: false,
+      livesHere: true
+    },
+    { 
+      id: '5', 
+      name: 'Michael Brown', 
+      email: 'michael@example.com',
+      type: 'Owner',
+      tower: 'D',
+      isPrimary: true,
+      livesHere: true
+    },
+  ];
+
+  // Filter members based on search and filters
+  const filteredMembers = members.filter(member => {
+    const matchesSearch = 
+      member.name.toLowerCase().includes(searchMember.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchMember.toLowerCase());
+    
+    const matchesType = filters.memberTypes.length === 0 || 
+      (filters.memberTypes.includes('Owner') && member.type === 'Owner') ||
+      (filters.memberTypes.includes('Tenant') && member.type === 'Tenant') ||
+      (filters.memberTypes.includes('Primary') && member.isPrimary) ||
+      (filters.memberTypes.includes('Secondary') && !member.isPrimary) ||
+      (filters.memberTypes.includes('Lives Here') && member.livesHere);
+      
+    const matchesTower = !filters.tower || member.tower === filters.tower;
+    
+    return matchesSearch && matchesType && matchesTower;
+  });
+  
+  // Handle filter changes
+  const handleFilterChange = (type: string, value: string) => {
+    if (type === 'tower') {
+      setFilters(prev => ({
+        ...prev,
+        tower: prev.tower === value ? '' : value
+      }));
+    } else {
+      setFilters(prev => ({
+        ...prev,
+        memberTypes: prev.memberTypes.includes(value)
+          ? prev.memberTypes.filter(t => t !== value)
+          : [...prev.memberTypes, value]
+      }));
+    }
+  };
+  
+  // Clear all filters
+  const clearFilters = () => {
+    setFilters({
+      memberTypes: [],
+      tower: '',
+    });
+  };
+
+  // Handle member selection
+  const handleMemberToggle = (memberId: string) => {
+    setFormData(prev => {
+      const members = [...prev.members];
+      const index = members.indexOf(memberId);
+      
+      if (index === -1) {
+        members.push(memberId);
+        // If this is the first member, set as primary
+        if (members.length === 1) {
+          return { ...prev, members, primaryMember: memberId };
+        }
+        return { ...prev, members };
+      } else {
+        members.splice(index, 1);
+        // If removing the primary member, set a new primary if available
+        if (prev.primaryMember === memberId) {
+          const newPrimary = members.length > 0 ? members[0] : '';
+          return { ...prev, members, primaryMember: newPrimary };
+        }
+        return { ...prev, members };
+      }
+    });
+  };
+
+  // Set primary member
+  const setPrimaryMember = (memberId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      primaryMember: memberId
+    }));
+  };
+
+  // Handle form input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement actual API call
+    console.log('Form submitted:', formData);
+    // Reset form and close modal
+    setFormData({
+      groupName: "",
+      description: "",
+      members: [],
+      primaryMember: "",
+    });
+    setIsAddModalOpen(false);
+    toast.success("Group created successfully!");
+  };
+
+  // Handle add group
   const handleAddGroup = () => {
-    navigate("/groups/add");
+    setIsAddModalOpen(true);
+  };
+
+  // Close modal and reset form
+  const handleCloseModal = () => {
+    setIsAddModalOpen(false);
+    setFormData({
+      groupName: "",
+      description: "",
+      members: [],
+      primaryMember: "",
+    });
+    setSearchMember("");
   };
 
   const handleViewGroup = (item: Group) => {
@@ -435,6 +630,173 @@ const BMSGroups: React.FC = () => {
     return items;
   };
 
+  // Add Group Modal
+  const renderAddGroupModal = () => (
+    <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold text-gray-800">Add Group</DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+          {/* Group Name with floating label */}
+          <div className="relative">
+            <Input
+              id="groupName"
+              name="groupName"
+              value={formData.groupName}
+              onChange={handleInputChange}
+              onFocus={() => setIsGroupNameFocused(true)}
+              onBlur={() => setIsGroupNameFocused(false)}
+              className={`w-full pt-5 pb-2 px-3 h-12 ${isGroupNameFocused || formData.groupName ? 'pt-5 pb-1' : ''}`}
+              required
+            />
+            <Label 
+              htmlFor="groupName" 
+              className={`absolute left-3 transition-all duration-200 ease-in-out ${
+                isGroupNameFocused || formData.groupName 
+                  ? 'top-1.5 text-xs text-gray-500' 
+                  : 'top-3 text-sm text-gray-400'
+              }`}
+            >
+              Enter Group Name
+            </Label>
+          </div>
+
+          {/* Add Members Section */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <Label className="text-sm font-medium text-gray-700">Add Members</Label>
+              <div className="flex items-center space-x-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search members..."
+                    value={searchMember}
+                    onChange={(e) => setSearchMember(e.target.value)}
+                    className="pl-8 h-9 w-48 text-sm"
+                  />
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="outline" size="sm" className="h-9">
+                      <span className="text-sm font-medium">Filter</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="text-xs font-medium text-gray-500">
+                      Owner/Tenant/Primary/Secondary/Lives Here
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {['Owner', 'Tenant', 'Primary', 'Secondary', 'Lives Here'].map((type) => (
+                      <DropdownMenuCheckboxItem
+                        key={type}
+                        checked={filters.memberTypes.includes(type)}
+                        onCheckedChange={() => handleFilterChange('memberType', type)}
+                        className="text-sm"
+                      >
+                        {type}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                    
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs font-medium text-gray-500">
+                      Filter by Tower
+                    </DropdownMenuLabel>
+                    <div className="grid grid-cols-3 gap-1 p-2">
+                      {['FM', 'A', 'B', 'C', 'Common Area', 'GL', 'D'].map((tower) => (
+                        <Button
+                          key={tower}
+                          type="button"
+                          variant={filters.tower === tower ? 'default' : 'outline'}
+                          size="sm"
+                          className={`h-8 text-xs ${filters.tower === tower ? 'bg-[#1A3765] hover:bg-[#1A3765]/90' : ''}`}
+                          onClick={() => handleFilterChange('tower', tower)}
+                        >
+                          {tower}
+                        </Button>
+                      ))}
+                    </div>
+                    
+                    {(filters.memberTypes.length > 0 || filters.tower) && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          className="text-sm text-red-500 focus:bg-red-50 focus:text-red-600"
+                          onClick={clearFilters}
+                        >
+                          Clear Filters
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+
+            {/* Members List */}
+            <div className="border rounded-md divide-y">
+              {filteredMembers.length > 0 ? (
+                filteredMembers.map((member) => (
+                  <div key={member.id} className="flex items-center p-3 hover:bg-gray-50">
+                    <div className="flex items-center space-x-3 flex-1">
+                      <input
+                        type="checkbox"
+                        id={`member-${member.id}`}
+                        checked={formData.members.includes(member.id)}
+                        onChange={() => handleMemberToggle(member.id)}
+                        className="h-4 w-4 rounded border-gray-300 text-[#1A3765] focus:ring-[#1A3765]"
+                      />
+                      <div>
+                        <div className="font-medium text-gray-900">{member.name}</div>
+                        <div className="text-sm text-gray-500">{member.email}</div>
+                      </div>
+                    </div>
+                    {formData.members.includes(member.id) && (
+                      <Button
+                        type="button"
+                        variant={formData.primaryMember === member.id ? "default" : "outline"}
+                        size="sm"
+                        className={`h-7 text-xs ${formData.primaryMember === member.id ? 'bg-[#1A3765] hover:bg-[#1A3765]/90' : ''}`}
+                        onClick={() => setPrimaryMember(member.id)}
+                      >
+                        {formData.primaryMember === member.id ? 'Primary' : 'Make Primary'}
+                      </Button>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="p-4 text-center text-sm text-gray-500">
+                  No members found. Try a different search term.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCloseModal}
+              className="h-9 px-4 text-sm font-medium"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="bg-[#1A3765] hover:bg-[#1A3765]/90 h-9 px-4 text-sm font-medium"
+              disabled={!formData.groupName || formData.members.length === 0}
+            >
+              Create Group
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+
   // Render custom left actions
   const renderLeftActions = () => (
     <Button
@@ -491,6 +853,9 @@ const BMSGroups: React.FC = () => {
         pagination={false}
         storageKey="bms-groups-table"
       />
+      
+      {/* Add Group Modal */}
+      {renderAddGroupModal()}
 
       {/* Custom Pagination */}
       {totalPages > 1 && (

@@ -50,7 +50,7 @@ const NotificationsPage = () => {
   return (
     <div className="min-h-screen bg-[#fafafa] p-6" >
       {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
+        <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
         <div className="px-6 py-4">
            
           <h1 className="text-2xl font-semibold text-gray-900">Send Notifications</h1>
@@ -66,13 +66,30 @@ const NotificationsPage = () => {
              <div className="grid grid-cols-3 md:grid-cols-2 gap-6 items-center">
                 <TextField
                  label="Title"
-                 name="name"
+                 name="title"
                  placeholder="Enter notification title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 fullWidth
-              variant="outlined"
-       />
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ 
+                  sx: { 
+                    backgroundColor: '#fff',
+                    borderRadius: '6px',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#D1D5DB',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#9CA3AF',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#C72030',
+                      borderWidth: '1px',
+                    },
+                  } 
+                }}
+              />
              </div>
            </div>
 

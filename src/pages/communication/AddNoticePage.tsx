@@ -77,15 +77,16 @@ const AddNoticePage = () => {
           <h1 className="text-2xl font-semibold text-[#1A1A1A]">Add Notice</h1>
         </div>
 
+        {/* NOTICE INFO Header */}
+        <div className="mb-3 px-6">
+          <div className="bg-[#C4B89D54] text-[#1A1A1A] px-4 py-2 rounded font-medium">
+            NOTICE INFO
+          </div>
+        </div>
+
         {/* Form Container */}
         <div className="bg-white rounded-lg shadow-sm p-8 border border-gray-200 mx-6 mb-6">
-          {/* NOTICE INFO Section */}
-          <div className="mb-8">
-            <div className="bg-[#C4B89D54] text-[#1A1A1A] px-4 py-2 rounded font-medium mb-6">
-              NOTICE INFO
-            </div>
-
-            {/* Title */}
+          {/* Title */}
 <div className="p-6">
   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
 
@@ -123,86 +124,20 @@ const AddNoticePage = () => {
     />
 
   </div>
-</div>
 
-              
-           
 {/* Description Field */}
-<div className="p-6">
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div className="md:col-span-2">
-      <div className="relative">
-
-        {/* Floating Label (MUI-style) */}
-        <label
-          htmlFor="notice-description"
-          className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-600"
-        >
-          Description
-        </label>
-
-        {/* Textarea styled like MUI TextField */}
-        <textarea
-          id="notice-description"
-          value={formData.description}
-          onChange={(e) => handleInputChange('description', e.target.value)}
-          className="
-            w-full
-            rounded-md
-            border
-            border-gray-300
-            px-3
-            py-3
-            text-sm
-            outline-none
-            transition
-            focus:border-blue-500
-            focus:ring-1
-            focus:ring-blue-500
-            resize-none
-          "
-          style={{ height: 180 }}
-        />
-
-        {/* Custom draggable resizer handle (UNCHANGED) */}
-        <div
-          id="resizer-handle"
-          className="absolute right-2 bottom-2 w-6 h-6 cursor-nwse-resize flex items-center justify-center"
-          title="Drag to resize"
-          onMouseDown={(e) => {
-            const textarea = document.getElementById(
-              "notice-description"
-            ) as HTMLTextAreaElement | null;
-            if (!textarea) return;
-
-            e.preventDefault();
-            const startY = e.clientY;
-            const startHeight = textarea.offsetHeight;
-
-            const onMouseMove = (moveEvent: MouseEvent) => {
-              const dy = moveEvent.clientY - startY;
-              const newHeight = Math.max(80, startHeight + dy);
-              textarea.style.height = `${newHeight}px`;
-            };
-
-            const onMouseUp = () => {
-              window.removeEventListener("mousemove", onMouseMove);
-              window.removeEventListener("mouseup", onMouseUp);
-            };
-
-            window.addEventListener("mousemove", onMouseMove);
-            window.addEventListener("mouseup", onMouseUp);
-          }}
-        >
-          <div className="w-full h-full flex flex-col items-center justify-center">
-            <span className="block w-3 h-[2px] bg-gray-400 mb-1 rounded" />
-            <span className="block w-3 h-[2px] bg-gray-400 rounded" />
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
+            <div className="mb-8 mt-8 relative">
+          <label className="absolute -top-3 left-3 bg-white px-2 text-sm font-medium text-[#1a1a1a]">
+            Description
+          </label>
+      <textarea
+           id="notice-description"
+           value={formData.description}
+           onChange={(e) => handleInputChange('description', e.target.value)}
+           className="w-full px-4 py-3 border border-[#D5DbDB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:border-transparent resize-vertical"
+          placeholder="Enter notice description"
+          rows={8}
+         />
 </div>
 
 

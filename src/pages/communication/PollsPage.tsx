@@ -61,7 +61,7 @@ const PollsPage = () => {
   return (
     <div className="min-h-screen bg-[#fafafa] p-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm mb-6">
+      <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
         <div className="px-6 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-900">Polls</h1>
           <Button 
