@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { ChevronRight, ArrowLeft, Upload, X, FileText } from "lucide-react";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
@@ -161,12 +161,6 @@ const PressReleasesCreate = () => {
     }
 
     setLoading(true);
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      toast.error("Authentication error: Please log in again.");
-      setLoading(false);
-      return;
-    }
 
     try {
       const sendData = new FormData();
@@ -193,7 +187,7 @@ const PressReleasesCreate = () => {
 
       await axios.post(`${baseURL}/press_releases.json`, sendData, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: getAuthHeader(),
           "Content-Type": "multipart/form-data",
         },
       });

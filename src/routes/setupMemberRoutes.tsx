@@ -83,6 +83,7 @@ const LoyaltyManagersEdit = lazy(() => import("@/pages/LoyaltyManagersEdit"));
 const LoyaltyManagersList = lazy(() => import("@/pages/LoyaltyManagersList"));
 const NewGallery = lazy(() => import("@/pages/NewGallery"));
 const NoticeboardCreate = lazy(() => import("@/pages/NoticeboardCreate"));
+const NoticeboardEdit = lazy(() => import("@/pages/NoticeboardEdit"));
 const NoticeboardList = lazy(() => import("@/pages/NoticeboardList"));
 const NoticeboardDetails = lazy(() => import("@/pages/NoticeboardDetails"));
 const OrganizationCreate = lazy(() => import("@/pages/OrganizationCreate"));
@@ -323,7 +324,7 @@ export const setupMemberRoutes = (
     {/* Noticeboard Routes (Broadcast) */}
     <Route path="/maintenance/noticeboard-list" Component={withSuspense(NoticeboardList)} />
     <Route path="/maintenance/noticeboard-create" Component={withSuspense(BroadcastCreate)} />
-    <Route path="/maintenance/noticeboard-edit/:id" Component={withSuspense(NoticeboardCreate)} />
+    <Route path="/maintenance/noticeboard-edit/:id" Component={withSuspense(NoticeboardEdit)} />
     <Route path="/maintenance/noticeboard-details/:id" Component={withSuspense(NoticeboardDetails)} />
 
     {/* FAQ Routes */}

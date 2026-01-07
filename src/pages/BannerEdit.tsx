@@ -2,8 +2,8 @@ import axios from "axios";
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
-import { API_CONFIG } from "@/config/apiConfig";
-import { ArrowLeft, FileText } from "lucide-react";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { ArrowLeft, FileText, Info, Trash2 } from "lucide-react";
 import { ImageCropper } from "../components/reusable/ImageCropper";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
@@ -71,10 +71,10 @@ const BannerEdit = () => {
     project_id: "",
     banner_video: null,
     active: true,
-    banner_video_1_by_1: null,
-    banner_video_9_by_16: null,
-    banner_video_16_by_9: null,
-    banner_video_3_by_2: null,
+    banner_video_1_by_1: [],
+    banner_video_9_by_16: [],
+    banner_video_16_by_9: [],
+    banner_video_3_by_2: [],
   });
 
   const fetchBanner = useCallback(async () => {
@@ -87,14 +87,34 @@ const BannerEdit = () => {
       });
       if (response.data) {
         const bannerData = response.data;
+        
+        // Helper function to convert banner data to array format with unique IDs
+        const convertToArrayFormat = (data, ratio) => {
+          if (!data) return [];
+          if (Array.isArray(data)) return data;
+          
+          // If it's an object with document_url, convert to array format
+          if (data.document_url || data.url) {
+            return [{
+              id: data.id || `existing-${ratio}-${Date.now()}`,
+              preview: data.document_url || data.url,
+              document_url: data.document_url || data.url,
+              document_file_name: data.document_file_name || data.file_name || `${ratio} Image`,
+              name: data.document_file_name || data.file_name || `${ratio} Image`,
+              ratio: ratio,
+            }];
+          }
+          return [];
+        };
+        
         setFormData({
           title: bannerData.title,
           project_id: bannerData.project_id,
           banner_video: bannerData.banner_video?.document_url || null,
-          banner_video_1_by_1: bannerData.banner_video_1_by_1 || null,
-          banner_video_9_by_16: bannerData.banner_video_9_by_16 || null,
-          banner_video_16_by_9: bannerData.banner_video_16_by_9 || null,
-          banner_video_3_by_2: bannerData.banner_video_3_by_2 || null,
+          banner_video_1_by_1: convertToArrayFormat(bannerData.banner_video_1_by_1, "1:1"),
+          banner_video_9_by_16: convertToArrayFormat(bannerData.banner_video_9_by_16, "9:16"),
+          banner_video_16_by_9: convertToArrayFormat(bannerData.banner_video_16_by_9, "16:9"),
+          banner_video_3_by_2: convertToArrayFormat(bannerData.banner_video_3_by_2, "3:2"),
           active: true,
         });
         setOriginalBannerVideo(bannerData.banner_video?.document_url || null);
@@ -121,10 +141,10 @@ const BannerEdit = () => {
 
   const fetchProjects = useCallback(async () => {
     try {
-      const response = await axios.get(`${baseURL}/projects.json`, {
+      const response = await axios.get(`${baseURL}/projects_for_dropdown.json`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
+                 Authorization: getAuthHeader(),
+               },
       });
       setProjects(response.data.projects || []);
     } catch (error) {
@@ -140,12 +160,22 @@ const BannerEdit = () => {
     }
     fetchBanner();
     fetchProjects();
+  }, [id, fetchBanner, fetchProjects, navigate]);
+
+  // Cleanup URLs on unmount
+  useEffect(() => {
     return () => {
-      if (previewImg) URL.revokeObjectURL(previewImg);
-      if (previewVideo) URL.revokeObjectURL(previewVideo);
-      if (image?.data_url) URL.revokeObjectURL(image.data_url);
+      if (previewImg && typeof previewImg === 'string' && previewImg.startsWith('blob:')) {
+        URL.revokeObjectURL(previewImg);
+      }
+      if (previewVideo && typeof previewVideo === 'string' && previewVideo.startsWith('blob:')) {
+        URL.revokeObjectURL(previewVideo);
+      }
+      if (image?.data_url) {
+        URL.revokeObjectURL(image.data_url);
+      }
     };
-  }, [id, fetchBanner, fetchProjects, navigate, previewImg, previewVideo, image]);
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -304,10 +334,16 @@ const BannerEdit = () => {
   // };
 
   const updateFormData = (key, files) => {
-    setFormData((prev) => ({
-      ...prev,
-      [key]: files, // Replace existing files instead of appending
-    }));
+    console.log("updateFormData called with:", key, files);
+    setFormData((prev) => {
+      const existing = Array.isArray(prev[key]) ? prev[key] : [];
+      const updated = {
+        ...prev,
+        [key]: [...existing, ...files], // Append new files to existing ones
+      };
+      console.log("Updated formData:", updated);
+      return updated;
+    });
   };
 
   // const handleCropComplete = (validImages) => {
@@ -327,39 +363,35 @@ const BannerEdit = () => {
   //   setShowUploader(false);
   // };
 
-  const handleCropComplete = (validImages, videoFiles = []) => {
-    // Handle video files first
-    if (videoFiles && videoFiles.length > 0) {
-      videoFiles.forEach((video) => {
-        const formattedRatio = video.ratio.replace(":", "_by_");
-        const key = `banner_video_${formattedRatio}`;
-        updateFormData(key, [video]);
-
-        // Set preview for the first video
-        if (videoFiles[0] === video) {
-          setPreviewVideo(URL.createObjectURL(video.file));
-          setFileType("video");
-        }
-      });
-      return;
-    }
-
-    // Handle images (existing logic)
-    if (!validImages || validImages.length === 0) {
+  const handleCropComplete = (validMedia) => {
+    console.log("handleCropComplete called with:", validMedia);
+    
+    if (!validMedia || validMedia.length === 0) {
       toast.error("No valid files selected.");
       setShowUploader(false);
       return;
     }
 
-    validImages.forEach((img) => {
-      const formattedRatio = img.ratio.replace(":", "_by_");
+    validMedia.forEach((media) => {
+      const formattedRatio = media.ratio.replace(":", "_by_");
       const key = `banner_video_${formattedRatio}`;
-      updateFormData(key, [img]);
+      
+      // Add unique id to the media object if it doesn't have one
+      const mediaWithId = {
+        ...media,
+        id: media.id || `${key}-${Date.now()}-${Math.random()}`,
+      };
+      
+      console.log("Adding media to key:", key, mediaWithId);
+      updateFormData(key, [mediaWithId]);
 
-      // Set preview for the first image
-      if (validImages[0] === img) {
-        setPreviewImg(img.preview);
-        setFileType("image");
+      // Set preview for the first media
+      if (validMedia[0] === media) {
+        if (media.type === 'video' && media.file) {
+          setPreviewVideo(URL.createObjectURL(media.file));
+        } else {
+          setPreviewImg(media.preview);
+        }
       }
     });
 
@@ -451,7 +483,7 @@ const BannerEdit = () => {
       });
 
       toast.success("Banner updated successfully");
-      navigate("/banner-list");
+      navigate("/maintenance/banner-list");
     } catch (error) {
       toast.error("Error updating banner");
     } finally {
@@ -720,6 +752,14 @@ const BannerEdit = () => {
   //     </div>
   //   </div>
   // );
+  console.log("Current formData in render:", formData);
+  console.log("Banner videos in formData:", {
+    "1x1": formData.banner_video_1_by_1,
+    "16x9": formData.banner_video_16_by_9,
+    "9x16": formData.banner_video_9_by_16,
+    "3x2": formData.banner_video_3_by_2
+  });
+  
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -799,7 +839,7 @@ const BannerEdit = () => {
                       <MenuItem value="">Select Project</MenuItem>
                       {projects.map((project) => (
                         <MenuItem key={project.id} value={project.id}>
-                          {project.project_name}
+                          {project.name}
                         </MenuItem>
                       ))}
                     </MuiSelect>
@@ -814,14 +854,14 @@ const BannerEdit = () => {
                 <div className="mb-6">
                   {/* Header */}
                   <div className="flex justify-between items-center mb-4">
-                    <h5 className="font-semibold">
+                    <h5 className="font-semibold inline-flex items-center gap-1">
                       Banner Attachment{" "}
                       <span
                         className="relative inline-block cursor-help"
                         onMouseEnter={() => setShowVideoTooltip(true)}
                         onMouseLeave={() => setShowVideoTooltip(false)}
                       >
-                        <span className="text-red-500">[i]</span>
+                        <Info className="w-5 h-5 fill-black text-white" />
                         {showVideoTooltip && (
                           <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                             Max Upload Size 5 MB. Supports 1:1, 9:16, 16:9, 3:2 aspect ratios
@@ -832,8 +872,8 @@ const BannerEdit = () => {
                     </h5>
 
                     <button
-                      className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                       type="button"
+                      className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                       onClick={() => setShowUploader(true)}
                     >
                       <svg
@@ -948,12 +988,16 @@ const BannerEdit = () => {
                         </TableRow>
                       )}
 
-                      {project_banner.map(({ key, label }) => {
+                      {project_banner.flatMap(({ key, label }) => {
+                        console.log(`Rendering ${key}:`, formData[key]);
                         const files = Array.isArray(formData[key])
                           ? formData[key]
                           : formData[key]
                           ? [formData[key]]
                           : [];
+
+                        console.log(`Files array for ${key}:`, files);
+                        if (files.length === 0) return [];
 
                         return files.map((file, index) => {
                           const preview = file.preview || file.document_url || "";
@@ -968,7 +1012,7 @@ const BannerEdit = () => {
 
                           return (
                             <TableRow
-                              key={`${key}-${index}`}
+                              key={`${key}-${file.id || index}`}
                               className="hover:bg-gray-50 transition-colors"
                             >
                               <TableCell className="py-3 px-4 font-medium">
@@ -979,7 +1023,7 @@ const BannerEdit = () => {
                                   <video
                                     controls
                                     className="rounded border border-gray-200"
-                                    style={{ maxWidth: 100, maxHeight: 100 }}
+                                    style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
                                   >
                                     <source
                                       src={preview}
@@ -993,7 +1037,7 @@ const BannerEdit = () => {
                                 ) : (
                                   <img
                                     className="rounded border border-gray-200"
-                                    style={{ maxWidth: 100, maxHeight: 100 }}
+                                    style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
                                     src={preview}
                                     alt={name}
                                   />
@@ -1005,10 +1049,9 @@ const BannerEdit = () => {
                               <TableCell className="py-3 px-4">
                                 <button
                                   type="button"
-                                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                   onClick={() => handleFetchedDiscardGallery(key, index, file.id)}
                                 >
-                                  ×
+                                   <Trash2 className="w-4 h-4 text-[#C72030]" />
                                 </button>
                               </TableCell>
                             </TableRow>

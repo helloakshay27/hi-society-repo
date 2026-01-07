@@ -167,10 +167,12 @@ export const HiSocietyHeader = () => {
   // Fetch Hi-Society account and approved societies data
   const fetchHiSocietyData = async (token: string) => {
     try {
+      let accountData: any = null;
+      
       // Fetch account data
       const accountResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`);
       if (accountResponse.ok) {
-        const accountData = await accountResponse.json();
+        accountData = await accountResponse.json();
         localStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
         localStorage.setItem("selectedUserSociety", accountData.selected_user_society?.toString() || "");
         sessionStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));

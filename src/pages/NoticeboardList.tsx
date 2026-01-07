@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye } from "lucide-react";
+import { Plus, Eye, Pencil } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 
 const NoticeboardList = () => {
   const baseURL = API_CONFIG.BASE_URL;
@@ -43,10 +43,9 @@ const NoticeboardList = () => {
     setLoading(true);
     setIsSearching(!!search);
     try {
-      const response = await fetch(`${baseURL}noticeboards.json`, {
+      const response = await fetch(`${baseURL}/crm/admin/noticeboards.json`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
         },
       });
       
@@ -56,6 +55,7 @@ const NoticeboardList = () => {
       
       const data = await response.json();
 
+      // API returns array directly
       let noticeboardsData = [];
       if (Array.isArray(data)) {
         noticeboardsData = data;
@@ -72,7 +72,8 @@ const NoticeboardList = () => {
           (noticeboard.notice_heading || "").toLowerCase().includes(searchLower) ||
           (noticeboard.notice_text || "").toLowerCase().includes(searchLower) ||
           (noticeboard.notice_type || "").toLowerCase().includes(searchLower) ||
-          (noticeboard.project_name || "").toLowerCase().includes(searchLower)
+          (noticeboard.society_name || "").toLowerCase().includes(searchLower) ||
+          (noticeboard.user_name || "").toLowerCase().includes(searchLower)
         );
       }
 
@@ -99,11 +100,10 @@ const NoticeboardList = () => {
     navigate("/maintenance/noticeboard-create");
   };
   const handleViewNoticeboard = (id: number) => navigate(`/maintenance/noticeboard-details/${id}`);
-
   const handleToggleNoticeboard = async (id: number, currentStatus: boolean) => {
     toast.dismiss();
     try {
-      const response = await fetch(`${baseURL}noticeboards/${id}.json`, {
+      const response = await fetch(`${baseURL}admin/noticeboards/${id}.json`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -124,6 +124,8 @@ const NoticeboardList = () => {
     }
   };
 
+  const handleEditNoticeboard = (id: number) => navigate(`/maintenance/noticeboard-edit/${id}`);
+
   function formatDateTimeManual(datetime: string) {
     if (!datetime) return "-";
     const date = new Date(datetime);
@@ -142,7 +144,9 @@ const NoticeboardList = () => {
     { key: 'id', label: 'Sr No', sortable: true },
     { key: 'notice_heading', label: 'Notice Heading', sortable: true },
     { key: 'notice_type', label: 'Notice Type', sortable: true },
-    { key: 'project_name', label: 'Project', sortable: true },
+    { key: 'user_name', label: 'Created By', sortable: true },
+    { key: 'society_name', label: 'Society', sortable: true },
+    { key: 'is_important', label: 'Important', sortable: false },
     { key: 'expire_time', label: 'Expire Time', sortable: false },
     { key: 'active', label: 'Status', sortable: false },
   ];
@@ -153,7 +157,9 @@ const NoticeboardList = () => {
     notice_heading?: string;
     notice_text?: string;
     notice_type?: string;
-    project_name?: string;
+    user_name?: string;
+    society_name?: string;
+    is_important?: boolean;
     expire_time?: string;
     active: boolean;
     [key: string]: any;
@@ -168,6 +174,11 @@ const NoticeboardList = () => {
                 <Eye className="w-4 h-4" />
               </Button>
             )}
+            {noticeboardPermission.update === "true" && (
+              <Button variant="ghost" size="sm" onClick={() => handleEditNoticeboard(item.id)} title="Edit">
+                <Pencil className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         );
       case 'notice_heading':
@@ -176,8 +187,20 @@ const NoticeboardList = () => {
         return item.notice_type
           ? item.notice_type.charAt(0).toUpperCase() + item.notice_type.slice(1).toLowerCase()
           : "-";
-      case 'project_name':
-        return item.project_name || "-";
+      case 'user_name':
+        return item.user_name || "-";
+      case 'society_name':
+        return item.society_name || "-";
+      case 'is_important':
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            item.is_important 
+              ? 'bg-red-100 text-red-700' 
+              : 'bg-gray-100 text-gray-700'
+          }`}>
+            {item.is_important ? 'Yes' : 'No'}
+          </span>
+        );
       case 'expire_time':
         return formatDateTimeManual(item.expire_time);
       case 'active':

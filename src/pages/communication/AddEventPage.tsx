@@ -201,112 +201,62 @@ const AddEventPage = () => {
 </div>
 
             <div>
-  <TextField
-    label="End Time"
-    type="time"
-    value={formData.endTime}
-    onChange={(e) => handleInputChange("endTime", e.target.value)}
-    variant="outlined"
-    fullWidth
-    slotProps={{
-      inputLabel: { shrink: true },
-    }}
-    InputProps={{
-      sx: {
-        backgroundColor: "#fff",
-        borderRadius: "6px",
-        width: "350px",
-      },
-    }}
-  />
-</div>
+              <TextField
+                label="End Time"
+                type="time"
+                value={formData.endTime}
+                onChange={(e) => handleInputChange("endTime", e.target.value)}
+                variant="outlined"
+                fullWidth
+                slotProps={{
+                  inputLabel: { shrink: true },
+                }}
+                InputProps={{
+                  sx: {
+                    backgroundColor: "#fff",
+                    borderRadius: "6px",
+                    width: "350px",
+                  },
+                }}
+              />
+            </div>
 
             {/* Description Field */}
-<div className="p-6">
-  <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-    <div className="md:col-span-6">
-      <div className="relative">
+            <div className="col-span-3 px-6 py-4">
+              <div className="relative">
+                <label 
+                  htmlFor="notice-description"
+                  className="absolute -top-2 left-3 bg-white px-1 text-xs font-medium text-gray-600"
+                >
+                  Description
+                </label>
+                <textarea
+                  id="notice-description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  className="
+                    w-full
+                    min-h-[150px]
+                    border
+                    border-gray-300
+                    rounded-md
+                    px-4
+                    py-3
+                    pt-4
+                    text-sm
+                    text-gray-700
+                    focus:outline-none
+                    focus:ring-2
+                    focus:ring-blue-500
+                    focus:border-transparent
+                    resize-y
+                  "
+                  placeholder="Enter notice description"
+                />
+              </div>
+            </div>
 
-        {/* Floating Label (MUI-style) */}
-        <label
-          htmlFor="notice-description"
-          className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-600"
-        >
-          Description
-        </label>
-
-        {/* Textarea styled like MUI TextField */}
-        <textarea
-          id="notice-description"
-          value={formData.description}
-          onChange={(e) => handleInputChange('description', e.target.value)}
-          className="
-            w-full
-            rounded-md
-            border
-            border-gray-300
-            px-3
-            py-3
-            text-sm
-            outline-none
-            transition
-            focus:border-blue-500
-            focus:ring-1
-            focus:ring-blue-500
-            resize-none
-          "
-          style={{ height: 180 }}
-        />
-
-        {/* Custom draggable resizer handle (UNCHANGED) */}
-        <div
-          id="resizer-handle"
-          className="absolute right-2 bottom-2 w-6 h-6 cursor-nwse-resize flex items-center justify-center"
-          title="Drag to resize"
-          onMouseDown={(e) => {
-            const textarea = document.getElementById(
-              "notice-description"
-            ) as HTMLTextAreaElement | null;
-            if (!textarea) return;
-
-            e.preventDefault();
-            const startY = e.clientY;
-            const startHeight = textarea.offsetHeight;
-
-            const onMouseMove = (moveEvent: MouseEvent) => {
-              const dy = moveEvent.clientY - startY;
-              const newHeight = Math.max(80, startHeight + dy);
-              textarea.style.height = `${newHeight}px`;
-            };
-
-            const onMouseUp = () => {
-              window.removeEventListener("mousemove", onMouseMove);
-              window.removeEventListener("mouseup", onMouseUp);
-            };
-
-            window.addEventListener("mousemove", onMouseMove);
-            window.addEventListener("mouseup", onMouseUp);
-          }}
-        >
-          <div className="w-full h-full flex flex-col items-center justify-center">
-            <span className="block w-3 h-[2px] bg-gray-400 mb-1 rounded" />
-            <span className="block w-3 h-[2px] bg-gray-400 rounded" />
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</div>
-
-
-            
-          </div>
-        </div>
-
-        {/* Checkboxes: moved below description (full-width) */}
-        <div className="mb-6 ml-6">
-          <div className="flex gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
             <div className="flex items-center gap-2">
               <Checkbox
                 id="markAsImportant"

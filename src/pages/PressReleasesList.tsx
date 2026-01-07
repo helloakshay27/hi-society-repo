@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Edit, Plus } from "lucide-react";
@@ -66,7 +66,7 @@ const PressReleasesList = () => {
     try {
       const response = await axios.get(`${baseURL}/press_releases.json`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          Authorization: getAuthHeader(),
           "Content-Type": "application/json",
         },
       });
@@ -151,7 +151,7 @@ const PressReleasesList = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            {permissions.update === "true" && (
+            {/* {permissions.update === "true" && ( */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -160,7 +160,7 @@ const PressReleasesList = () => {
               >
                 <Edit className="h-4 w-4" />
               </Button>
-            )}
+            {/* )} */}
           </div>
         );
       case "id":

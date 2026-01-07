@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Calendar, Clock, Plus, X } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Plus, X, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PollOption {
@@ -22,6 +22,9 @@ interface PollOption {
 
 const AddPollPage = () => {
   const navigate = useNavigate();
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
   
   const [formData, setFormData] = useState({
     subject: '',
@@ -94,7 +97,7 @@ const AddPollPage = () => {
   return (
     <div className="min-h-screen bg-[#fafafa] px-0 py-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm mb-6" >
+      <div className="bg-[#f6f4ee] rounded-lg shadow-sm mb-6" >
         <div className="px-6 py-4 flex items-center gap-4">
           <button
             onClick={() => navigate('/communication/polls')}
@@ -206,14 +209,37 @@ const AddPollPage = () => {
 
           {/* Flat select and description */}
           <div className="md:col-span-1">
-            <Select value={formData.flat} onValueChange={(value) => setFormData({ ...formData, flat: value })}>
+            <Select value={formData.flat} onValueChange={(value) => setFormData({ ...formData, flat: value })}
+              onOpenChange={(open) => setShowSearch(open)}
+            >
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select Flat*" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="flat1">Flat 1</SelectItem>
-                <SelectItem value="flat2">Flat 2</SelectItem>
-                <SelectItem value="flat3">Flat 3</SelectItem>
+              <SelectContent className="p-0">
+                {showSearch && (
+                  <div className="p-2 border-b">
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-2.5 text-muted-foreground">🔍</span>
+                      <Input
+                        type="search"
+                        placeholder="SEARCH FLATS"
+                        className="w-full pl-8 uppercase"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="max-h-[200px] overflow-y-auto">
+                  {["Flat 1", "Flat 2", "Flat 3", "Flat 4", "Flat 5"]
+                    .filter(flat => flat.toLowerCase().includes(searchTerm.toLowerCase()))
+                    .map(flat => (
+                      <SelectItem key={flat} value={flat.toLowerCase().replace(' ', '')}>
+                        {flat}
+                      </SelectItem>
+                    ))}
+                </div>
               </SelectContent>
             </Select>
           </div>
@@ -249,7 +275,7 @@ const AddPollPage = () => {
           </div>
 
           <div className="md:col-span-1 flex items-center">
-            <Button type="button" onClick={handleAddOption} variant="outline" className="border-[#6b2b4e] bg-[#6b2b4e] text-white hover:opacity-90 px-4 py-2">
+            <Button type="button" onClick={handleAddOption}  className="border-[#C4B89D59] bg-[#C4B89D59] text-white hover:opacity-90 px-4 py-2">
               <Plus className="w-4 h-4 mr-2" />
               Add option
             </Button>

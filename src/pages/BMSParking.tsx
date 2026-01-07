@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Plus, Eye, Edit, Trash2, Download, Filter, RefreshCw, Loader2, Car, MapPin } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Download, Filter, RefreshCw, Loader2, Car, MapPin, X, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
@@ -31,6 +35,18 @@ const BMSParking: React.FC = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    slotNumber: "",
+    vehicleType: "",
+    parkingType: "",
+    stickerNumber: "",
+    tower: "",
+    flat: "",
+    vehicleNumber: "",
+    chargeApplicable: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Debounce search query
   useEffect(() => {
@@ -252,8 +268,59 @@ const BMSParking: React.FC = () => {
   ];
 
   const handleAddParking = () => {
-    navigate("/parking/add");
+    setIsAddModalOpen(true);
   };
+
+  const handleCloseModal = () => {
+    setIsAddModalOpen(false);
+    setFormData({
+      slotNumber: "",
+      vehicleType: "",
+      parkingType: "",
+      stickerNumber: "",
+      tower: "",
+      flat: "",
+      vehicleNumber: "",
+      chargeApplicable: "",
+    });
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      console.log("Form submitted:", formData);
+      setIsSubmitting(false);
+      toast.success("Parking slot added successfully!");
+      handleCloseModal();
+      // Refresh the parking data
+      refetch();
+    }, 1000);
+  };
+
+  // Mock data for dropdowns
+  const vehicleTypes = ["Two Wheeler", "Four Wheeler", "Electric Vehicle"];
+  const parkingTypes = ["Covered", "Open", "Basement"];
+  const towers = ["Tower A", "Tower B", "Tower C"];
+  const flats = ["101", "102", "201", "202", "301", "302"];
+  const chargeOptions = ["Yes", "No"];
 
   const handleViewParking = (item: ParkingSlot) => {
     navigate(`/parking/view/${item.id}`);
@@ -579,6 +646,298 @@ const BMSParking: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Add Parking Slot Modal */}
+      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex justify-between items-center">
+              <DialogTitle className="text-xl font-bold text-gray-800">Parking Slot</DialogTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleCloseModal}
+                className="h-8 w-8 rounded-full"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="py-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="p-4 border border-gray-200 rounded-lg space-y-4">
+                <h3 className="text-sm font-medium text-gray-500">PARKING SLOT</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Slot Number */}
+                  <div className="relative border border-gray-200 rounded-md px-3 pb-2 pt-5">
+                    <Label 
+                      htmlFor="slotNumber" 
+                      className="absolute -top-2.5 left-2 px-1 bg-white text-xs font-medium text-gray-700"
+                    >
+                      Slot Number <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      className="h-9 text-sm border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      id="slotNumber"
+                      name="slotNumber"
+                      value={formData.slotNumber}
+                      onChange={handleInputChange}
+                      placeholder="Enter slot number"
+                      required
+                    />
+                  </div>
+
+                  {/* Vehicle Type */}
+                  <div className="relative border border-gray-200 rounded-md px-3 pb-2 pt-5">
+                    <Label 
+                      htmlFor="vehicleType" 
+                      className="absolute -top-2.5 left-2 px-1 bg-white text-xs font-medium text-gray-700"
+                    >
+                      Vehicle Type <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={formData.vehicleType}
+                      onValueChange={(value) => handleSelectChange("vehicleType", value)}
+                      required
+                    >
+                      <SelectTrigger className="h-9 text-sm border-0 p-0 focus:ring-0 focus:ring-offset-0 shadow-none">
+                        <SelectValue placeholder="Select vehicle type" />
+                      </SelectTrigger>
+                      <SelectContent className="p-0">
+                        <div className="p-3 border-b">
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-2.5 text-gray-500">🔍</span>
+                            <Input
+                              placeholder="Search..."
+                              className="h-9 pl-8 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="p-1">
+                          {vehicleTypes.map((type) => (
+                            <SelectItem key={type} value={type} className="text-sm pl-8">
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </div>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Parking Type */}
+                  <div className="relative border border-gray-200 rounded-md px-3 pb-2 pt-5">
+                    <Label 
+                      htmlFor="parkingType" 
+                      className="absolute -top-2.5 left-2 px-1 bg-white text-xs font-medium text-gray-700"
+                    >
+                      Parking Type <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={formData.parkingType}
+                      onValueChange={(value) => handleSelectChange("parkingType", value)}
+                      required
+                    >
+                      <SelectTrigger className="h-9 text-sm border-0 p-0 focus:ring-0 focus:ring-offset-0 shadow-none">
+                        <SelectValue placeholder="Select parking type" />
+                      </SelectTrigger>
+                      <SelectContent className="p-0">
+                        <div className="p-3 border-b">
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-2.5 text-gray-500">🔍</span>
+                            <Input
+                              placeholder="Search..."
+                              className="h-9 pl-8 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="p-1">
+                          {parkingTypes.map((type) => (
+                            <SelectItem key={type} value={type} className="text-sm pl-8">
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </div>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Sticker Number */}
+                  <div className="relative border border-gray-200 rounded-md px-3 pb-2 pt-5">
+                    <Label 
+                      htmlFor="stickerNumber" 
+                      className="absolute -top-2.5 left-2 px-1 bg-white text-xs font-medium text-gray-700"
+                    >
+                      Sticker Number
+                    </Label>
+                    <Input
+                      className="h-9 text-sm border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      id="stickerNumber"
+                      name="stickerNumber"
+                      value={formData.stickerNumber}
+                      onChange={handleInputChange}
+                      placeholder="Enter sticker number"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Associate With Flat Section */}
+              <div className="p-4 border border-gray-200 rounded-lg space-y-4">
+                <h3 className="text-sm font-medium text-gray-500">ASSOCIATE WITH FLAT</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Tower */}
+                  <div className="relative border border-gray-200 rounded-md px-3 pb-2 pt-5">
+                    <Label 
+                      htmlFor="tower" 
+                      className="absolute -top-2.5 left-2 px-1 bg-white text-xs font-medium text-gray-700"
+                    >
+                      Tower <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                    value={formData.tower}
+                    onValueChange={(value) => handleSelectChange("tower", value)}
+                  >
+                    <SelectTrigger className="h-9 text-sm border-0 p-0 focus:ring-0 focus:ring-offset-0 shadow-none">
+                      <SelectValue placeholder="Select tower" />
+                    </SelectTrigger>
+                    <SelectContent className="p-0">
+                      <div className="p-3 border-b">
+                        <div className="relative">
+                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                          <Input
+                            placeholder="Search..."
+                            className="h-9 pl-8 text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="p-1">
+                        {towers.map((tower) => (
+                          <SelectItem key={tower} value={tower} className="text-sm pl-8">
+                            {tower}
+                          </SelectItem>
+                        ))}
+                      </div>
+                    </SelectContent>
+                  </Select>
+                  </div>
+
+                  {/* Flat */}
+                  <div className="relative border border-gray-200 rounded-md px-3 pb-2 pt-5">
+                    <Label 
+                      htmlFor="flat" 
+                      className="absolute -top-2.5 left-2 px-1 bg-white text-xs font-medium text-gray-700"
+                    >
+                      Select Flat <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                    value={formData.flat}
+                    onValueChange={(value) => handleSelectChange("flat", value)}
+                  >
+                    <SelectTrigger className="h-9 text-sm border-0 p-0 focus:ring-0 focus:ring-offset-0 shadow-none">
+                      <SelectValue placeholder="Select flat" />
+                    </SelectTrigger>
+                    <SelectContent className="p-0">
+                      <div className="p-3 border-b">
+                        <div className="relative">
+                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                          <Input
+                            placeholder="Search..."
+                            className="h-9 pl-8 text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="p-1">
+                        {flats.map((flat) => (
+                          <SelectItem key={flat} value={flat} className="text-sm pl-8">
+                            {flat}
+                          </SelectItem>
+                        ))}
+                      </div>
+                    </SelectContent>
+                  </Select>
+                  </div>
+
+                  {/* Vehicle Number */}
+                  <div className="relative border border-gray-200 rounded-md px-3 pb-2 pt-5">
+                    <Label 
+                      htmlFor="vehicleNumber" 
+                      className="absolute -top-2.5 left-2 px-1 bg-white text-xs font-medium text-gray-700"
+                    >
+                      Vehicle Number <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      className="h-9 text-sm border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      id="vehicleNumber"
+                      name="vehicleNumber"
+                      value={formData.vehicleNumber}
+                      onChange={handleInputChange}
+                      placeholder="Enter vehicle number"
+                    />
+                  </div>
+
+                  {/* Charge Applicable */}
+                  <div className="relative border border-gray-200 rounded-md px-3 pb-2 pt-5">
+                    <Label 
+                      htmlFor="chargeApplicable" 
+                      className="absolute -top-2.5 left-2 px-1 bg-white text-xs font-medium text-gray-700"
+                    >
+                      Charge Applicable <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                    value={formData.chargeApplicable}
+                    onValueChange={(value) =>
+                      handleSelectChange("chargeApplicable", value)
+                    }
+                  >
+                    <SelectTrigger className="h-9 text-sm border-0 p-0 focus:ring-0 focus:ring-offset-0 shadow-none">
+                      <SelectValue placeholder="Select if charge is applicable" />
+                    </SelectTrigger>
+                    <SelectContent className="p-0">
+                      <div className="p-3 border-b">
+                        <div className="relative">
+                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                          <Input
+                            placeholder="Search..."
+                            className="h-9 pl-8 text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="p-1">
+                        {chargeOptions.map((option) => (
+                          <SelectItem key={option} value={option} className="text-sm pl-8">
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </div>
+                    </SelectContent>
+                  </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Actions */}
+              <div className="flex justify-end space-x-4 pt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCloseModal}
+                  className="px-6 bg-red-500 text-white hover:bg-red-600"
+                  disabled={isSubmitting}
+                >
+                  Close
+                </Button>
+                <Button
+                  type="submit"
+                  className="px-6 bg-[#1A3765] text-white hover:bg-[#1A3765]/90"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Saving..." : "Save changes"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

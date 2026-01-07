@@ -46,7 +46,7 @@ const FaqList = () => {
         params["s[question_cont]"] = searchParam;
       }
 
-      const response = await axios.get(`${baseURL}faqs.json`, {
+      const response = await axios.get(`${baseURL}/faqs.json`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,

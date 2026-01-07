@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Trash2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import ImageCropperr from './ImageCropperr';
+import { ImageCropperr } from './ImageCropperr';
 
 const ProjectBannerUpload = ({
   label = 'Upload Images',
@@ -227,6 +227,7 @@ const ProjectBannerUpload = ({
                     <div className="upload-time">Uploaded {image.uploadTime}</div>
                   </div>
                   <button
+                    type="button"
                     className="remove-btn"
                     onClick={() => handleRemoveImage(image.id)}
                     aria-label="Remove image"
@@ -239,6 +240,7 @@ const ProjectBannerUpload = ({
 
             <div className="continue-section">
               <button
+                type="button"
                 className="continue-btn"
                 onClick={() => {
                   // if (!areAllRatiosUploaded) {

@@ -194,7 +194,7 @@ const AddPollPage = () => {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
-        <h1 className="text-2xl font-bold mb-6">NEW POLL</h1>
+        <h1 className="text-2xl font-bold mb-6 bg-[#f6f4ee] px-4 py-2 rounded">NEW POLL</h1>
       </div>
       <Container maxWidth="lg">
         <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>

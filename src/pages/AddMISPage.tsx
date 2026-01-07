@@ -30,8 +30,8 @@ const SectionHeader = styled(Box)(({ theme }) => ({
 }));
 
 const RedIcon = styled(Box)(({ theme }) => ({
-  color: "white",
-  backgroundColor: "#C72030",
+  color: "red",
+  backgroundColor: "#C4B89D59",
   borderRadius: "50%",
   padding: "8px",
   display: "flex",
@@ -42,8 +42,8 @@ const RedIcon = styled(Box)(({ theme }) => ({
 }));
 
 const RedButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: "#C72030",
-  color: "white",
+  backgroundColor: "#C4B89D59",
+  color: "#C72030",
   borderRadius: 0,
   textTransform: "none",
   padding: "8px 16px",
@@ -51,8 +51,8 @@ const RedButton = styled(MuiButton)(({ theme }) => ({
   fontWeight: 500,
   boxShadow: "0 2px 4px rgba(199, 32, 48, 0.2)",
   "&:hover": {
-    backgroundColor: "#B8252F",
-    boxShadow: "0 4px 8px rgba(199, 32, 48, 0.3)",
+    backgroundColor: "#C4B89D59",
+   
   },
 }));
 
@@ -210,7 +210,7 @@ const AddMISPage: React.FC = () => {
         {/* Header */}
         <Paper
           sx={{
-            backgroundColor: "white",
+            backgroundColor: "#F6F4EE",
             borderRadius: 0,
             boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
             marginBottom: "24px",
@@ -221,7 +221,7 @@ const AddMISPage: React.FC = () => {
             style={{
               fontSize: "24px",
               fontWeight: 600,
-              color: "#1A1A1A",
+              color: "#000000",
               margin: 0,
               fontFamily: "Work Sans, sans-serif",
             }}
@@ -241,7 +241,7 @@ const AddMISPage: React.FC = () => {
                 style={{
                   fontSize: "18px",
                   fontWeight: 600,
-                  color: "#1A1A1A",
+                  color: "#000000",
                   margin: 0,
                   fontFamily: "Work Sans, sans-serif",
                 }}

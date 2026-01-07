@@ -3,38 +3,40 @@ import {
   Box,
   Paper,
   Typography,
+  TextField,
+  Button as MuiButton,
+  styled,
+  TextareaAutosize,
+  InputAdornment,
+  IconButton,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  TextField,
-  Button as MuiButton,
-  styled,
-  Avatar,
+  SelectChangeEvent,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { Info } from "lucide-react";
+import { X, Calendar, Info } from "lucide-react";
 
-// Styled Components (copied from AddUserPage)
-const SectionCard = styled(Paper)(({ theme }) => ({
+// Styled Components
+const SectionCard = styled(Paper)({
   backgroundColor: "white",
-  boxShadow:
-    "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+  boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
   borderRadius: 0,
   overflow: "hidden",
   marginBottom: "24px",
-}));
+});
 
-const SectionHeader = styled(Box)(({ theme }) => ({
+const SectionHeader = styled(Box)({
   display: "flex",
   alignItems: "center",
   gap: "12px",
   padding: "16px 24px",
   backgroundColor: "#f9fafb",
   borderBottom: "1px solid #e5e7eb",
-}));
+});
 
-const RedIcon = styled(Box)(({ theme }) => ({
+const RedIcon = styled(Box)({
   color: "white",
   backgroundColor: "#C72030",
   borderRadius: "50%",
@@ -44,24 +46,29 @@ const RedIcon = styled(Box)(({ theme }) => ({
   justifyContent: "center",
   width: "32px",
   height: "32px",
-}));
+});
 
-const RedButton = styled(MuiButton)(({ theme }) => ({
+const RedButton = styled(MuiButton)({
   backgroundColor: "#C72030",
   color: "white",
-  borderRadius: 0,
+  "&:hover": {
+    backgroundColor: "#a61a2a",
+  },
   textTransform: "none",
   padding: "8px 16px",
+  borderRadius: 0,
   fontFamily: "Work Sans, sans-serif",
   fontWeight: 500,
-  boxShadow: "0 2px 4px rgba(199, 32, 48, 0.2)",
+  fontSize: "0.875rem",
+  lineHeight: "1.5",
+  boxShadow: "none",
   "&:hover": {
     backgroundColor: "#B8252F",
     boxShadow: "0 4px 8px rgba(199, 32, 48, 0.3)",
   },
-}));
+});
 
-const DraftButton = styled(MuiButton)(({ theme }) => ({
+const DraftButton = styled(MuiButton)({
   backgroundColor: "#e7e3d9",
   color: "#C72030",
   borderRadius: 0,
@@ -72,7 +79,7 @@ const DraftButton = styled(MuiButton)(({ theme }) => ({
   "&:hover": {
     backgroundColor: "#d9d5c9",
   },
-}));
+});
 
 const fieldStyles = {
   "& .MuiOutlinedInput-root": {
@@ -103,10 +110,19 @@ const AddQuarantinePage: React.FC = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  const handleTowerChange = (event: SelectChangeEvent) => {
+    setTower(event.target.value as string);
+  };
+
+  const handleFlatChange = (event: SelectChangeEvent) => {
+    setFlat(event.target.value as string);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Submit logic
-    navigate(-1);
+    console.log({ tower, flat, startDate, endDate });
+    // navigate(-1);
   };
 
   const handleCancel = () => {
@@ -122,28 +138,20 @@ const AddQuarantinePage: React.FC = () => {
         fontFamily: "Work Sans, sans-serif",
       }}
     >
-      <Box sx={{ maxWidth: "800px", margin: "0 auto" }}>
+      <Box sx={{ width: "100%" }}>
         {/* Header */}
         <Paper
           sx={{
-            backgroundColor: "white",
+            backgroundColor: "#f6f4ee",
             borderRadius: 0,
             boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
             marginBottom: "24px",
             padding: "16px 24px",
           }}
         >
-          <h1
-            style={{
-              fontSize: "24px",
-              fontWeight: 600,
-              color: "#1A1A1A",
-              margin: 0,
-              fontFamily: "Work Sans, sans-serif",
-            }}
-          >
-            Add Flat to Quarantine
-          </h1>
+          <Typography variant="h5" sx={{ fontWeight: 600, color: "#1A1A1A" }}>
+            Add Quarantine Record
+          </Typography>
         </Paper>
 
         {/* Quarantine Details Section */}
@@ -152,17 +160,9 @@ const AddQuarantinePage: React.FC = () => {
             <RedIcon>
               <Info size={16} />
             </RedIcon>
-            <h2
-              style={{
-                fontSize: "18px",
-                fontWeight: 600,
-                color: "#1A1A1A",
-                margin: 0,
-                fontFamily: "Work Sans, sans-serif",
-              }}
-            >
+            <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600, color: "#1A1A1A" }}>
               Quarantine Details
-            </h2>
+            </Typography>
           </SectionHeader>
 
           <Box sx={{ padding: "24px" }}>
@@ -175,33 +175,37 @@ const AddQuarantinePage: React.FC = () => {
                     md: "repeat(2, 1fr)",
                   },
                   gap: "16px",
-                  mb: 2,
+                  mb: 3,
                 }}
               >
                 <FormControl fullWidth sx={fieldStyles}>
-                  <InputLabel>Select Tower</InputLabel>
+                  <InputLabel id="tower-label">Select Tower</InputLabel>
                   <Select
+                    labelId="tower-label"
                     value={tower}
                     label="Select Tower"
-                    onChange={(e) => setTower(e.target.value)}
+                    onChange={handleTowerChange}
                   >
                     <MenuItem value="A">Tower A</MenuItem>
                     <MenuItem value="B">Tower B</MenuItem>
                     <MenuItem value="C">Tower C</MenuItem>
                   </Select>
                 </FormControl>
+
                 <FormControl fullWidth sx={fieldStyles}>
-                  <InputLabel>Select Flat</InputLabel>
+                  <InputLabel id="flat-label">Select Flat</InputLabel>
                   <Select
+                    labelId="flat-label"
                     value={flat}
                     label="Select Flat"
-                    onChange={(e) => setFlat(e.target.value)}
+                    onChange={handleFlatChange}
                   >
                     <MenuItem value="101">101</MenuItem>
                     <MenuItem value="102">102</MenuItem>
                     <MenuItem value="103">103</MenuItem>
                   </Select>
                 </FormControl>
+
                 <TextField
                   label="Start Date"
                   type="date"
@@ -211,6 +215,7 @@ const AddQuarantinePage: React.FC = () => {
                   sx={fieldStyles}
                   fullWidth
                 />
+
                 <TextField
                   label="End Date"
                   type="date"
@@ -221,26 +226,22 @@ const AddQuarantinePage: React.FC = () => {
                   fullWidth
                 />
               </Box>
-              <Typography sx={{ mt: 2, mb: 1, fontWeight: 500 }}>
-                List of Residents
-              </Typography>
-              {/* Placeholder for residents list */}
-              <Box sx={{ minHeight: 32, mb: 3, color: "#888" }}>
-                {/* TODO: Populate with residents */}
-              </Box>
-              <Box
-                sx={{
-                  borderTop: "1px solid #e5e7eb",
-                  padding: "16px 0 0 0",
-                  display: "flex",
-                  justifyContent: "center",
-                  gap: 2,
-                }}
-              >
-                <RedButton type="submit">Submit</RedButton>
-                <DraftButton type="button" onClick={handleCancel}>
+
+              <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2 }}>
+                <DraftButton
+                  
+                  onClick={handleCancel}
+                  startIcon={<X size={16} />}
+                >
                   Cancel
                 </DraftButton>
+                <RedButton
+                  type="submit"
+                  variant="contained"
+                  startIcon={<Info size={16} />}
+                >
+                  Save
+                </RedButton>
               </Box>
             </form>
           </Box>

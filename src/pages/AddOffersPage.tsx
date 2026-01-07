@@ -42,18 +42,13 @@ const RedIcon = styled(Box)(({ theme }) => ({
 }));
 
 const RedButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: "#C72030",
-  color: "white",
+  backgroundColor: "#C4B89D59",
+  color: "#C72030",
   borderRadius: 0,
   textTransform: "none",
   padding: "8px 16px",
   fontFamily: "Work Sans, sans-serif",
   fontWeight: 500,
-  boxShadow: "0 2px 4px rgba(199, 32, 48, 0.2)",
-  "&:hover": {
-    backgroundColor: "#B8252F",
-    boxShadow: "0 4px 8px rgba(199, 32, 48, 0.3)",
-  },
 }));
 
 const DraftButton = styled(MuiButton)(({ theme }) => ({
@@ -118,11 +113,11 @@ const AddOffersPage: React.FC = () => {
         fontFamily: "Work Sans, sans-serif",
       }}
     >
-      <Box sx={{ maxWidth: "800px", margin: "0 auto" }}>
+      <Box sx={{ width: "100%" }}>
         {/* Header */}
         <Paper
           sx={{
-            backgroundColor: "white",
+            backgroundColor: "#f6f4ee",
             borderRadius: 0,
             boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
             marginBottom: "24px",
