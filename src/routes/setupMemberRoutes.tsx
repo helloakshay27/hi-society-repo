@@ -20,8 +20,11 @@ const EditAmenities = lazy(() => import("@/pages/EditAmenities"));
 const AddMISPage = lazy(() => import("@/pages/AddMISPage"));
 const AddUserPage = lazy(() => import("@/pages/AddUserPage"));
 const AddQuarantinePage = lazy(() => import("@/pages/AddQuarantinePage"));
+const AddOfferPage = lazy(() => import("@/pages/AddOfferPage"));
 const AddOffersPage = lazy(() => import("@/pages/AddOffersPage"));
 const AddBusinessDirectoryPage = lazy(() => import("@/pages/AddBusinessDirectoryPage"));
+const TemplateList = lazy(() => import("@/pages/TemplateList"));
+const AddTemplatePage = lazy(() => import("@/pages/AddTemplatePage"));
 const Amenities = lazy(() => import("@/pages/Amenities"));
 const AmenitiesList = lazy(() => import("@/pages/AmenitiesList"));
 const BankDetailsCreate = lazy(() => import("@/pages/BankDetailsCreate"));
@@ -51,6 +54,7 @@ const EnquiryList = lazy(() => import("@/pages/EnquiryList"));
 const EventCreate = lazy(() => import("@/pages/EventCreate"));
 const EventEdit = lazy(() => import("@/pages/EventEdit"));
 const EventList = lazy(() => import("@/pages/EventList"));
+const OffersList = lazy(() => import("@/pages/OffersList"));
 const FaqCategoryForm = lazy(() => import("@/pages/FaqCategoryForm"));
 const FaqCategoryList = lazy(() => import("@/pages/FaqCategoryList"));
 const FaqCreate = lazy(() => import("@/pages/FaqCreate"));
@@ -313,6 +317,8 @@ export const setupMemberRoutes = (
      <Route path="/maintenance/event-details/:id" element={<EventDetails />} />
     <Route path="/maintenance/event-edit/:id" Component={withSuspense(EventEdit)} />
     <Route path="/maintenance/event-list" Component={withSuspense(EventList)} />
+
+    <Route path="/maintenance/offers-list" Component={withSuspense(OffersList)} />
 
     {/* Noticeboard Routes (Broadcast) */}
     <Route path="/maintenance/noticeboard-list" Component={withSuspense(NoticeboardList)} />
@@ -581,7 +587,14 @@ export const setupMemberRoutes = (
 
     {/* Offers Routes */}
     <Route path="/offers/add" Component={withSuspense(AddOffersPage)} />
+    <Route path="/offer/add" Component={withSuspense(AddOfferPage)} />
     <Route path="/business-directory/add" Component={withSuspense(AddBusinessDirectoryPage)} />
     <Route path="/mis/add" Component={withSuspense(AddMISPage)} />
+
+    {/* Template Routes */}
+    <Route path="/settings/template-list" Component={withSuspense(TemplateList)} />
+    <Route path="/settings/template/add" Component={withSuspense(AddTemplatePage)} />
+    <Route path="/settings/template/edit/:id" Component={withSuspense(AddTemplatePage)} />
+    <Route path="/settings/template/view/:id" Component={withSuspense(AddTemplatePage)} />
   </>
 );

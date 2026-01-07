@@ -68,6 +68,12 @@ export const SettingsSidebar: React.FC = () => {
       icon: Headset,
       path: "/settings/helpdesk-setup",
     },
+    {
+      id: "template-list",
+      label: "Template",
+      icon: FileText,
+      path: "/settings/template-list",
+    },
   ];
 
   // Setup Member sub-items

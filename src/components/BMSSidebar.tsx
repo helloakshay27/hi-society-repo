@@ -120,6 +120,12 @@ export const BMSSidebar: React.FC = () => {
       path: "/maintenance/event-list",
     },
     {
+      id: "offers",
+      label: "Offers",
+      icon: Tag,
+      path: "/maintenance/offers-list",
+    },
+    {
       id: "broadcast",
       label: "Broadcast",
       icon: MessageSquare,
