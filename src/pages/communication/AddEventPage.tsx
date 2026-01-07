@@ -94,26 +94,26 @@ const AddEventPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Row 1: Title | Venue | Start Date */}
             <div>
-  <TextField
-    label="Title"
-    placeholder="Title"
-    value={formData.title}
-    onChange={(e) => handleInputChange("title", e.target.value)}
-    variant="outlined"
-    fullWidth
-    slotProps={{
-      inputLabel: { shrink: true },
-    }}
-    InputProps={{
-      sx: {
-        backgroundColor: "#fff",
-        borderRadius: "6px",
-        width: "350px",
-      },
-    }}
-    required
-  />
-</div>
+              <TextField
+                label="Title"
+                placeholder="Title"
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                variant="outlined"
+                fullWidth
+                slotProps={{
+                  inputLabel: { shrink: true },
+                }}
+                InputProps={{
+                  sx: {
+                    backgroundColor: "#fff",
+                    borderRadius: "6px",
+                    width: "350px",
+                  },
+                }}
+                required
+              />
+            </div>
 
             <div>
   <TextField
@@ -413,6 +413,7 @@ const AddEventPage = () => {
             Submit
           </Button>
         </div>
+      </div>
       </div>
     </div>
   );
