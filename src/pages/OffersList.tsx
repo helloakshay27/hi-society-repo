@@ -197,6 +197,7 @@ export default function OffersList() {
   // All columns from API
   const columns = [
     { key: 'srNo', label: 'Sr. No.', sortable: false },
+    { key: 'actions', label: 'Actions', sortable: false },
     { key: 'offerId', label: 'Offer ID', sortable: true },
     { key: 'image', label: 'Image', sortable: false },
     { key: 'offerTitle', label: 'Offer Title', sortable: true },
@@ -208,8 +209,7 @@ export default function OffersList() {
     { key: 'featured', label: 'Featured', sortable: true },
     { key: 'showOnHome', label: 'Show on Home', sortable: true },
     { key: 'createdAt', label: 'Created At', sortable: true },
-    { key: 'lastDateUpdated', label: 'Last Updated', sortable: true },
-    { key: 'actions', label: 'Actions', sortable: false }
+    { key: 'lastDateUpdated', label: 'Last Updated', sortable: true }
   ];
 
   // Render cell function for EnhancedTable
@@ -254,14 +254,21 @@ export default function OffersList() {
       
       case 'status':
         return (
-          <div className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-            item.status === 'Active' 
-              ? 'bg-green-100 text-green-800' 
-              : item.status === 'Expired'
-              ? 'bg-red-100 text-red-800'
-              : 'bg-gray-100 text-gray-800'
-          }`}>
-            {item.status}
+          <div
+            className="inline-flex px-auto text-center text-xs font-medium"
+            style={{ width: 200, maxWidth: 200 }}
+          >
+            <div className={ ` py-2.5
+              ${item.status === 'Active'
+                ? 'bg-[#d5dbdb] w-full'
+                : item.status === 'Inactive'
+                ? 'bg-[#e4626f] w-full'
+                : 'bg-[#d5dbdb] w-full'}
+            `}>
+              <p className="text-center mx-auto">
+                {item.status === 'Active' ? 'Active' : item.status === 'Inactive' ? 'Expired' : 'Expired'}
+              </p>
+            </div>
           </div>
         );
       
@@ -279,21 +286,23 @@ export default function OffersList() {
       
       case 'actions':
         return (
-          <div className="flex gap-2">
-            <button
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => navigate(`/offer/view/${item.id}`)}
-              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-              title="View Offer"
+              title="View"
             >
-              <Eye className="w-4 h-4" />
-            </button>
-            <button
+              <Eye className="w-4 h-4 text-gray-700" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => navigate(`/offer/edit/${item.id}`)}
-              className="p-1.5 text-gray-600 hover:bg-gray-50 rounded transition-colors"
-              title="Edit Offer"
+              title="Edit"
             >
-              <Pencil className="w-4 h-4" />
-            </button>
+              <Pencil className="w-4 h-4 text-gray-700" />
+            </Button>
           </div>
         );
       

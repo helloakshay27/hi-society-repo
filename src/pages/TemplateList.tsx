@@ -58,11 +58,11 @@ export default function TemplateList() {
 
   const columns = [
     { key: 'srNo', label: 'Sr. No.', sortable: false },
+    { key: 'actions', label: 'Actions', sortable: false },
     { key: 'title', label: 'Title', sortable: true },
     { key: 'created_at', label: 'Created On', sortable: true },
     { key: 'updated_at', label: 'Last Updated Date', sortable: true },
-    { key: 'status', label: 'Status', sortable: true },
-    { key: 'actions', label: 'Actions', sortable: false },
+    { key: 'status', label: 'Status', sortable: true }
   ];
 
   const renderCell = (item: Template, columnKey: string, index?: number) => {
@@ -100,21 +100,23 @@ export default function TemplateList() {
       
       case 'actions':
         return (
-          <div className="flex gap-2 justify-center">
-            <button
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => navigate(`/settings/template/view/${item.id}`)}
-              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-              title="View Template"
+              title="View"
             >
-              <Eye className="w-4 h-4" />
-            </button>
-            <button
+              <Eye className="w-4 h-4 text-gray-700" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => navigate(`/settings/template/edit/${item.id}`)}
-              className="p-1.5 text-gray-600 hover:bg-gray-50 rounded transition-colors"
-              title="Edit Template"
+              title="Edit"
             >
-              <Pencil className="w-4 h-4" />
-            </button>
+              <Pencil className="w-4 h-4 text-gray-700" />
+            </Button>
           </div>
         );
       
