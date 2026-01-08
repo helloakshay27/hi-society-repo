@@ -297,13 +297,13 @@ const BroadcastCreate = () => {
       // Individuals
       data.append("noticeboard[shared]", "1");
       formData.user_ids.forEach((userId) => {
-        data.append("noticeboard[ppusers][]", userId.toString());
+        data.append("noticeboard[cpusers][]", userId.toString());
       });
     } else if (formData.shared === "2" && formData.group_id.length > 0) {
       // Groups
       data.append("noticeboard[shared]", "1");
       formData.group_id.forEach((groupId) => {
-        data.append("noticeboard[ppusers][]", groupId.toString());
+        data.append("noticeboard[cp_group_id][]", groupId.toString());
       });
     }
 

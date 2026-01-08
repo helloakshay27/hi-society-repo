@@ -81,7 +81,7 @@ const EventCreate = () => {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
-  const totalSteps = 4;
+  const totalSteps = 3;
   const EVENT_DRAFT_STORAGE_KEY = 'event_create_draft';
 
   // Invite CPs state
@@ -1050,7 +1050,7 @@ const EventCreate = () => {
 
   // Stepper component
   const StepperComponent = () => {
-    const steps = ['Event Details', 'Invite CPs', 'QR Code Generation', 'Event Related Images'];
+    const steps = ['Event Details', 'Event Related Images', 'Invite CPs'];
 
     return (
       <Box sx={{ mb: 4 }}>
@@ -1859,8 +1859,8 @@ const EventCreate = () => {
           </div>
         )}
 
-        {/* Step 2: Invite CPs */}
-        {currentStep === 1 && !isPreviewMode && (
+        {/* Step 3: Invite CPs */}
+        {currentStep === 2 && !isPreviewMode && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -2162,193 +2162,10 @@ const EventCreate = () => {
           </div>
         )}
 
-        {/* Step 3: QR Code Generation */}
-        {currentStep === 2 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
-                  }}
-                >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-                </Avatar>
-                QR Code Generation
-              </h2>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleDownloadAllQRCodes}
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-                >
-                  Download All QR Codes
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSendAllQRCodesEmail}
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-                >
-                  Send QR Codes via Email
-                </button>
-              </div>
-            </div>
-            <div className="p-6 space-y-6">
-              {/* QR Code Information Box */}
-              <div className="bg-[#C4B89D59] border border-gray-200 rounded-lg p-6">
-                <div className="flex items-start gap-4">
-                  {/* QR Code Image Placeholder */}
-                  <div className="flex-shrink-0">
-                    <div className="w-24 h-24 bg-white border-2 border-gray-300 rounded flex items-center justify-center">
-                      <svg width="80" height="80" viewBox="0 0 80 80">
-                        <rect width="80" height="80" fill="white"/>
-                        <g fill="black">
-                          <rect x="8" y="8" width="4" height="4"/>
-                          <rect x="16" y="8" width="4" height="4"/>
-                          <rect x="24" y="8" width="4" height="4"/>
-                          <rect x="8" y="16" width="4" height="4"/>
-                          <rect x="24" y="16" width="4" height="4"/>
-                          <rect x="8" y="24" width="4" height="4"/>
-                          <rect x="16" y="24" width="4" height="4"/>
-                          <rect x="24" y="24" width="4" height="4"/>
-                          <rect x="48" y="8" width="4" height="4"/>
-                          <rect x="56" y="8" width="4" height="4"/>
-                          <rect x="64" y="8" width="4" height="4"/>
-                          <rect x="48" y="16" width="4" height="4"/>
-                          <rect x="64" y="16" width="4" height="4"/>
-                          <rect x="48" y="24" width="4" height="4"/>
-                          <rect x="56" y="24" width="4" height="4"/>
-                          <rect x="64" y="24" width="4" height="4"/>
-                          <rect x="8" y="48" width="4" height="4"/>
-                          <rect x="16" y="48" width="4" height="4"/>
-                          <rect x="24" y="48" width="4" height="4"/>
-                          <rect x="8" y="56" width="4" height="4"/>
-                          <rect x="24" y="56" width="4" height="4"/>
-                          <rect x="8" y="64" width="4" height="4"/>
-                          <rect x="16" y="64" width="4" height="4"/>
-                          <rect x="24" y="64" width="4" height="4"/>
-                          <rect x="32" y="32" width="4" height="4"/>
-                          <rect x="40" y="40" width="4" height="4"/>
-                        </g>
-                      </svg>
-                    </div>
-                  </div>
-                  
-                  {/* QR Code Information */}
-                  <div className="flex-1">
-                    <h3 className="font-semibold mb-3" style={{ 
-                      fontFamily: 'Work Sans, sans-serif',
-                      fontWeight: 400,
-                      fontSize: '13px',
-                      lineHeight: '20.18px',
-                      letterSpacing: '0%',
-                      color: '#1A1A1A',
-                      // textAlign: 'center'
-                    }}>Each QR code is mapped to:</h3>
-                    <ul className="space-y-2" style={{
-                      fontFamily: 'Work Sans, sans-serif',
-                      fontWeight: 400,
-                      fontSize: '13px',
-                      lineHeight: '20.18px',
-                      letterSpacing: '0%',
-                      color: '#1A1A1A80'
-                    }}>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Event ID: EVT-1767003965366</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>CP ID and Name</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Valid only for the specified event date & time</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
 
-              {/* QR Code Table */}
-              <div>
-                <div className="rounded-lg border border-gray-200 overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
-                          Actions
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
-                          Sr. No.
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
-                          CP Name
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
-                          Company Name
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
-                          Email ID
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">
-                          QR Code ID
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {qrCodeData.map((row) => (
-                        <TableRow key={row.id} className="hover:bg-gray-50">
-                          <TableCell className="py-3 px-4">
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleDownloadQRCode(row.qrCodeId, row.cpName)}
-                                className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
-                                title="Download QR Code"
-                              >
-                                <Download className="w-4 h-4" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleSendQRCodeEmail(row.emailId, row.cpName)}
-                                className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
-                                title="Send via Email"
-                              >
-                                <Mail className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-3 px-4 text-center font-medium">
-                            {row.srNo}
-                          </TableCell>
-                          <TableCell className="py-3 px-4">
-                            {row.cpName}
-                          </TableCell>
-                          <TableCell className="py-3 px-4">
-                            {row.companyName}
-                          </TableCell>
-                          <TableCell className="py-3 px-4">
-                            {row.emailId}
-                          </TableCell>
-                          <TableCell className="py-3 px-4 text-sm text-gray-600">
-                            {row.qrCodeId}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Step 4: Event Related Images */}
-        {currentStep === 3 && !isPreviewMode && (
+        {/* Step 2: Event Related Images */}
+        {currentStep === 1 && !isPreviewMode && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -3067,12 +2884,45 @@ const EventCreate = () => {
                         >
                           <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
                         </Avatar>
-                        Invite CPs
+                        Event Related Images
                       </h2>
                       <button
                         type="button"
                         onClick={() => {
                           setCurrentStep(1);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      >
+                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                      </button>
+                    </div>
+                    <div className="p-6 opacity-75 pointer-events-none">
+                      <p className="text-sm text-gray-600">Event images have been uploaded.</p>
+                    </div>
+                  </div>
+                )}
+
+                {stepIndex === 2 && (
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                        <Avatar
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            backgroundColor: '#E5E0D3',
+                            mr: 1.5
+                          }}
+                        >
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        </Avatar>
+                        Invite CPs
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentStep(2);
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
                         className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
@@ -3222,71 +3072,6 @@ const EventCreate = () => {
                           </div>
                         </div>
                       )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 3: QR Code Generation - Completed */}
-                {stepIndex === 2 && (
-                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                      {/* <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm mr-3 font-medium">
-                        ✓
-                      </span> */}
-                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            backgroundColor: '#E5E0D3',
-                            mr: 1.5
-                          }}
-                        >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-                        </Avatar>
-                        QR Code Generation
-                      </h2>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCurrentStep(2);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                       className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
-                      >
-                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
-                      </button>
-                    </div>
-                    <div className="p-6 opacity-75 pointer-events-none">
-
-                      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                        <div className="p-6 opacity-75 pointer-events-none">
-                          <div className="rounded-lg border border-gray-200 overflow-hidden">
-                            <Table>
-                              <TableHeader>
-                                <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                                  <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">Sr. No.</TableHead>
-                                  <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">CP Name</TableHead>
-                                  <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Company Name</TableHead>
-                                  <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Email ID</TableHead>
-                                  <TableHead className="font-semibold text-gray-900 py-3 px-4">QR Code ID</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {qrCodeData.map((row) => (
-                                  <TableRow key={row.id} className="hover:bg-gray-50">
-                                    <TableCell className="py-3 px-4 text-center font-medium">{row.srNo}</TableCell>
-                                    <TableCell className="py-3 px-4">{row.cpName}</TableCell>
-                                    <TableCell className="py-3 px-4">{row.companyName}</TableCell>
-                                    <TableCell className="py-3 px-4">{row.emailId}</TableCell>
-                                    <TableCell className="py-3 px-4 text-sm text-gray-600">{row.qrCodeId}</TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 )}
@@ -3776,7 +3561,7 @@ const EventCreate = () => {
                 </div>
               </div>
 
-              {/* Step 2: Invite CPs Preview */}
+              {/* Step 3: Invite CPs Preview */}
               <div className="mb-6">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
@@ -3797,7 +3582,7 @@ const EventCreate = () => {
                       type="button"
                       onClick={() => {
                         setIsPreviewMode(false);
-                        setCurrentStep(1);
+                        setCurrentStep(2);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
@@ -3951,65 +3736,7 @@ const EventCreate = () => {
                 </div>
               </div>
 
-              {/* Step 3: QR Code Generation Preview */}
-              <div className="mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                      <Avatar
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          backgroundColor: '#E5E0D3',
-                          mr: 1.5
-                        }}
-                      >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-                      </Avatar>
-                      QR Code Generation
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsPreviewMode(false);
-                        setCurrentStep(2);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
-                      >
-                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
-                    </button>
-                  </div>
-                  <div className="p-6">
-                    <div className="rounded-lg border border-gray-200 overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                            <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">Sr. No.</TableHead>
-                            <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">CP Name</TableHead>
-                            <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Company Name</TableHead>
-                            <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Email ID</TableHead>
-                            <TableHead className="font-semibold text-gray-900 py-3 px-4">QR Code ID</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {qrCodeData.map((row) => (
-                            <TableRow key={row.id} className="hover:bg-gray-50">
-                              <TableCell className="py-3 px-4 text-center font-medium">{row.srNo}</TableCell>
-                              <TableCell className="py-3 px-4">{row.cpName}</TableCell>
-                              <TableCell className="py-3 px-4">{row.companyName}</TableCell>
-                              <TableCell className="py-3 px-4">{row.emailId}</TableCell>
-                              <TableCell className="py-3 px-4 text-sm text-gray-600">{row.qrCodeId}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 4: Event Related Images Preview */}
+              {/* Step 2: Event Related Images Preview */}
               <div className="mb-6">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
@@ -4030,7 +3757,7 @@ const EventCreate = () => {
                       type="button"
                       onClick={() => {
                         setIsPreviewMode(false);
-                        setCurrentStep(3);
+                        setCurrentStep(1);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
                       className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
@@ -4116,6 +3843,190 @@ const EventCreate = () => {
                                   })
                                 : null
                             )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* QR Code Generation Preview - At the End */}
+              <div className="mb-6">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                      <Avatar
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          backgroundColor: '#E5E0D3',
+                          mr: 1.5
+                        }}
+                      >
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      </Avatar>
+                      QR Code Generation
+                    </h2>
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={handleDownloadAllQRCodes}
+                        className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                      >
+                        Download All QR Codes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSendAllQRCodesEmail}
+                        className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                      >
+                        Send QR Codes via Email
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-6">
+                    {/* QR Code Information Box */}
+                    <div className="bg-[#C4B89D59] border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-start gap-4">
+                        {/* QR Code Image Placeholder */}
+                        <div className="flex-shrink-0">
+                          <div className="w-24 h-24 bg-white border-2 border-gray-300 rounded flex items-center justify-center">
+                            <svg width="80" height="80" viewBox="0 0 80 80">
+                              <rect width="80" height="80" fill="white"/>
+                              <g fill="black">
+                                <rect x="8" y="8" width="4" height="4"/>
+                                <rect x="16" y="8" width="4" height="4"/>
+                                <rect x="24" y="8" width="4" height="4"/>
+                                <rect x="8" y="16" width="4" height="4"/>
+                                <rect x="24" y="16" width="4" height="4"/>
+                                <rect x="8" y="24" width="4" height="4"/>
+                                <rect x="16" y="24" width="4" height="4"/>
+                                <rect x="24" y="24" width="4" height="4"/>
+                                <rect x="48" y="8" width="4" height="4"/>
+                                <rect x="56" y="8" width="4" height="4"/>
+                                <rect x="64" y="8" width="4" height="4"/>
+                                <rect x="48" y="16" width="4" height="4"/>
+                                <rect x="64" y="16" width="4" height="4"/>
+                                <rect x="48" y="24" width="4" height="4"/>
+                                <rect x="56" y="24" width="4" height="4"/>
+                                <rect x="64" y="24" width="4" height="4"/>
+                                <rect x="8" y="48" width="4" height="4"/>
+                                <rect x="16" y="48" width="4" height="4"/>
+                                <rect x="24" y="48" width="4" height="4"/>
+                                <rect x="8" y="56" width="4" height="4"/>
+                                <rect x="24" y="56" width="4" height="4"/>
+                                <rect x="8" y="64" width="4" height="4"/>
+                                <rect x="16" y="64" width="4" height="4"/>
+                                <rect x="24" y="64" width="4" height="4"/>
+                                <rect x="32" y="32" width="4" height="4"/>
+                                <rect x="40" y="40" width="4" height="4"/>
+                              </g>
+                            </svg>
+                          </div>
+                        </div>
+                        
+                        {/* QR Code Information */}
+                        <div className="flex-1">
+                          <h3 className="font-semibold mb-3" style={{ 
+                            fontFamily: 'Work Sans, sans-serif',
+                            fontWeight: 400,
+                            fontSize: '13px',
+                            lineHeight: '20.18px',
+                            letterSpacing: '0%',
+                            color: '#1A1A1A',
+                          }}>Each QR code is mapped to:</h3>
+                          <ul className="space-y-2" style={{
+                            fontFamily: 'Work Sans, sans-serif',
+                            fontWeight: 400,
+                            fontSize: '13px',
+                            lineHeight: '20.18px',
+                            letterSpacing: '0%',
+                            color: '#1A1A1A80'
+                          }}>
+                            <li className="flex items-start">
+                              <span className="mr-2">•</span>
+                              <span>Event ID: EVT-1767003965366</span>
+                            </li>
+                            <li className="flex items-start">
+                              <span className="mr-2">•</span>
+                              <span>CP ID and Name</span>
+                            </li>
+                            <li className="flex items-start">
+                              <span className="mr-2">•</span>
+                              <span>Valid only for the specified event date & time</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* QR Code Table */}
+                    <div>
+                      <div className="rounded-lg border border-gray-200 overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow style={{ backgroundColor: '#E6E2D8' }}>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
+                                Actions
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
+                                Sr. No.
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                CP Name
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                Company Name
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                Email ID
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                                QR Code ID
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {qrCodeData.map((row) => (
+                              <TableRow key={row.id} className="hover:bg-gray-50">
+                                <TableCell className="py-3 px-4">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDownloadQRCode(row.qrCodeId, row.cpName)}
+                                      className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
+                                      title="Download QR Code"
+                                    >
+                                      <Download className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSendQRCodeEmail(row.emailId, row.cpName)}
+                                      className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
+                                      title="Send via Email"
+                                    >
+                                      <Mail className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="py-3 px-4 text-center font-medium">
+                                  {row.srNo}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {row.cpName}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {row.companyName}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {row.emailId}
+                                </TableCell>
+                                <TableCell className="py-3 px-4 text-sm text-gray-600">
+                                  {row.qrCodeId}
+                                </TableCell>
+                              </TableRow>
+                            ))}
                           </TableBody>
                         </Table>
                       </div>

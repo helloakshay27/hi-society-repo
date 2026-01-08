@@ -103,7 +103,7 @@ const NoticeboardList = () => {
   const handleToggleNoticeboard = async (id: number, currentStatus: boolean) => {
     toast.dismiss();
     try {
-      const response = await fetch(`${baseURL}admin/noticeboards/${id}.json`, {
+      const response = await fetch(`${baseURL}/crm/admin/noticeboards/${id}.json`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -174,11 +174,11 @@ const NoticeboardList = () => {
                 <Eye className="w-4 h-4" />
               </Button>
             )}
-            {noticeboardPermission.update === "true" && (
+            {/* {noticeboardPermission.update === "true" && (
               <Button variant="ghost" size="sm" onClick={() => handleEditNoticeboard(item.id)} title="Edit">
                 <Pencil className="w-4 h-4" />
               </Button>
-            )}
+            )} */}
           </div>
         );
       case 'notice_heading':

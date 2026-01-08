@@ -4,10 +4,9 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAppDispatch } from '@/store/hooks';
-import { fetchFMUsers } from '@/store/slices/fmUserSlice';
-import { createUserGroup, updateUserGroup } from '@/store/slices/userGroupSlice';
 import { Dialog, DialogContent, TextField } from '@mui/material';
+import axios from 'axios';
+import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
 
 interface AddGroupModalProps {
   isOpen: boolean;
@@ -25,10 +24,7 @@ const fieldStyles = {
 };
 
 export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record }: AddGroupModalProps) => {
-  const dispatch = useAppDispatch()
-
-  const baseUrl = localStorage.getItem("baseUrl")
-  const token = localStorage.getItem("token")
+  const baseURL = API_CONFIG.BASE_URL;
 
   const [groupName, setGroupName] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
@@ -40,21 +36,30 @@ export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await dispatch(fetchFMUsers()).unwrap();
-        setMembers(response.users);
+        const response = await axios.get(`${baseURL}/usergroups/cp_members_list.json`, {
+          headers: {
+            Authorization: getAuthHeader(),
+          },
+        });
+        setMembers(response.data);
       } catch (error) {
         console.log(error);
         toast.error("Failed to fetch users")
       }
     }
 
-    fetchUsers();
-  }, [])
+    if (isOpen) {
+      fetchUsers();
+    }
+  }, [isOpen, baseURL])
 
   useEffect(() => {
-    if (isEditing && record) {
-      setGroupName(record.groupName)
-      setSelectedMembers(record.membersList.filter(m => m.active).map(m => m.user_id))
+    if (isEditing && record && record.membersList) {
+      setGroupName(record.groupName || '')
+      const activeMembers = record.membersList
+        .filter((m: any) => m.active === 1 && m.user_society_id)
+        .map((m: any) => m.user_society_id.toString());
+      setSelectedMembers(activeMembers);
     }
   }, [isEditing, record])
 
@@ -62,16 +67,16 @@ export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record 
     if (selectAll) {
       setSelectedMembers([]);
     } else {
-      setSelectedMembers(members.map(member => member.id));
+      setSelectedMembers(members.map(member => member.id.toString()));
     }
     setSelectAll(!selectAll);
   };
 
-  const handleMemberToggle = (member: string) => {
-    if (selectedMembers.includes(member)) {
-      setSelectedMembers(selectedMembers.filter(m => m !== member));
+  const handleMemberToggle = (memberId: string) => {
+    if (selectedMembers.includes(memberId)) {
+      setSelectedMembers(selectedMembers.filter(m => m !== memberId));
     } else {
-      setSelectedMembers([...selectedMembers, member]);
+      setSelectedMembers([...selectedMembers, memberId]);
     }
   };
 
@@ -79,38 +84,54 @@ export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record 
     setSearchTerm(e.target.value)
   }
 
-  const filteredMembers = members.filter(member =>
-    member.full_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredMembers = members.filter(member => {
+    const fullName = `${member.firstname} ${member.lastname}`.toLowerCase();
+    return fullName.includes(searchTerm.toLowerCase()) || 
+           member.email.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   const handleClose = () => {
     setGroupName('');
     setSelectedMembers([]);
     setSelectAll(false);
+    setSearchTerm('');
     onClose();
   };
 
   const handleSubmit = async () => {
+    if (!groupName.trim()) {
+      toast.error("Group name is required");
+      return;
+    }
+
+    if (selectedMembers.length === 0) {
+      toast.error("Please select at least one member");
+      return;
+    }
+
     if (isEditing) {
       setLoading(true)
       try {
         const payload = {
-          pms_usergroups: {
-            user_id: localStorage.getItem("userId"),
+          usergroup: {
             name: groupName,
-            company_id: localStorage.getItem("selectedCompanyId"),
             swusersoc: selectedMembers
           }
         }
 
-        await dispatch(updateUserGroup({ baseUrl, token, data: payload, id: record.id })).unwrap()
+        await axios.put(`${baseURL}/crm/usergroups/${record.id}.json`, payload, {
+           headers: {
+                   Authorization: getAuthHeader(),
+                   "Content-Type": "application/json",
+                 },
+        });
 
         toast.success("Group updated successfully")
         handleClose();
         fetchGroups();
       } catch (error) {
         console.log(error)
-        toast.error(error)
+        toast.error("Failed to update group")
       } finally {
         setLoading(false)
       }
@@ -118,23 +139,25 @@ export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record 
       setLoading(true)
       try {
         const payload = {
-          pms_usergroups: {
-            user_id: localStorage.getItem("userId"),
+          usergroup: {
             name: groupName,
-            active: true,
-            company_id: localStorage.getItem("selectedCompanyId"),
             swusersoc: selectedMembers
           }
         }
 
-        await dispatch(createUserGroup({ baseUrl, token, data: payload })).unwrap()
+        await axios.post(`${baseURL}/crm/usergroups.json`, payload, {
+            headers: {
+                    Authorization: getAuthHeader(),
+                    "Content-Type": "application/json",
+                  },
+        });
 
         toast.success("Group created successfully")
         handleClose();
         fetchGroups();
       } catch (error) {
         console.log(error)
-        toast.error(error)
+        toast.error("Failed to create group")
       } finally {
         setLoading(false)
       }
@@ -180,9 +203,9 @@ export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record 
 
               <Button
                 onClick={handleSelectAll}
-                className="bg-purple-700 hover:bg-purple-800 text-white text-sm px-4 py-2"
+                className="bg-[#C72030] hover:bg-[#B8252F] text-white text-sm px-4 py-2"
               >
-                Select All Members
+                {selectAll ? 'Deselect All' : 'Select All Members'}
               </Button>
             </div>
             <TextField
@@ -198,31 +221,47 @@ export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record 
               sx={{ mt: 1 }}
             />
             <div className="space-y-2 max-h-60 overflow-y-auto">
-              {filteredMembers.map((member) => (
-                <div key={member.id} className="flex items-center space-x-3 p-2">
-                  <Checkbox
-                    id={member.id}
-                    checked={selectedMembers.includes(member.id)}
-                    onCheckedChange={() => handleMemberToggle(member.id)}
-                  />
-                  <Label
-                    className="text-sm font-normal cursor-pointer flex-1"
-                  >
-                    {member.full_name}
-                  </Label>
+              {filteredMembers.length > 0 ? (
+                filteredMembers.map((member) => (
+                  <div key={member.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+                    <Checkbox
+                      id={member.id.toString()}
+                      checked={selectedMembers.includes(member.id.toString())}
+                      onCheckedChange={() => handleMemberToggle(member.id.toString())}
+                    />
+                    <Label
+                      htmlFor={member.id.toString()}
+                      className="text-sm font-normal cursor-pointer flex-1"
+                    >
+                      {member.firstname} {member.lastname}
+                      <span className="text-gray-500 text-xs ml-2">({member.email})</span>
+                    </Label>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-500 py-4">
+                  No members found
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
 
-        <div className="flex justify-center px-6 py-4 border-t border-gray-200">
+        <div className="flex justify-center gap-3 px-6 py-4 border-t border-gray-200">
           <Button
             onClick={handleSubmit}
-            className="bg-green-600 hover:bg-green-700 text-white px-6"
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
             disabled={loading}
           >
             {loading ? 'Submitting...' : 'Submit'}
+          </Button>
+          <Button
+            onClick={handleClose}
+            variant="outline"
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8"
+            disabled={loading}
+          >
+            Cancel
           </Button>
         </div>
       </DialogContent>

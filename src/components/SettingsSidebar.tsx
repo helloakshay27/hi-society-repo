@@ -97,6 +97,12 @@ export const SettingsSidebar: React.FC = () => {
     //   path: "/settings/lock-function-list",
     // },
     {
+      id: "groups",
+      label: "Groups",
+      icon: Users,
+      path: "/settings/groups-list",
+    },
+    {
       id: "property-type-list",
       label: "Property Types",
       icon: Home,
