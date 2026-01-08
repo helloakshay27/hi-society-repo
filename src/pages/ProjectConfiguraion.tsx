@@ -86,7 +86,7 @@ const ProjectConfiguration = () => {
       });
 
       toast.success("Project configuration created successfully!");
-      navigate("/setup-member/project-configuration-list");
+      navigate("/settings/project-configuration-list");
     } catch (error) {
       console.error("Submission failed:", error);
       toast.error("Submission Failed!");

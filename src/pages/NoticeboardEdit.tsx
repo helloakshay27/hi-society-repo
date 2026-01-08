@@ -28,18 +28,18 @@ const NoticeboardEdit = () => {
     notice_text: "",
     expire_time: "",
     expire_date: "",
-    shared: "all",
+    shared: "0",
     group_id: [],
     user_ids: [],
     is_important: false,
-    email_trigger_enabled: "",
-    status: "active",
+    email_trigger_enabled: false,
+    active: true,
     publish: "1",
-    of_phase: "pms",
-    of_atype: "Pms::Site",
-    notice_type: "",
-    from_time: "",
-    to_time: "",
+    notice_type: "General",
+    project_id: "",
+    flag_expire: false,
+    deny: false,
+    IsDelete: false,
     cover_image_1_by_1: [],
     cover_image_9_by_16: [],
     cover_image_3_by_2: [],
@@ -264,43 +264,67 @@ const NoticeboardEdit = () => {
       return;
     }
 
+    // Prepare FormData for file uploads
     const data = new FormData();
+    
+    // Basic fields
     data.append("noticeboard[notice_heading]", formData.notice_heading);
-    data.append("noticeboard[expire_time]", `${formData.expire_date}T${formData.expire_time}`);
     data.append("noticeboard[notice_text]", formData.notice_text);
-    data.append("noticeboard[shared]", formData.shared === "all" ? "2" : "1");
-    data.append("noticeboard[of_phase]", formData.of_phase);
-    data.append("noticeboard[of_atype]", formData.of_atype);
-    data.append("noticeboard[of_atype_id]", localStorage.getItem("selectedSiteId") || "");
-    data.append("noticeboard[publish]", formData.status === "active" ? "1" : "0");
+    data.append("noticeboard[active]", formData.active ? "1" : "0");
+    data.append("noticeboard[IsDelete]", formData.IsDelete ? "1" : "0");
+    data.append("noticeboard[notice_type]", formData.notice_type || "General");
+    data.append("noticeboard[publish]", formData.publish);
+    data.append("noticeboard[flag_expire]", formData.flag_expire ? "1" : "0");
     data.append("noticeboard[is_important]", formData.is_important ? "1" : "0");
+    data.append("noticeboard[email_trigger_enabled]", formData.email_trigger_enabled ? "1" : "0");
+    data.append("noticeboard[deny]", formData.deny ? "1" : "0");
 
-    if (formData.shared === "individual" && formData.user_ids.length > 0) {
-      data.append("noticeboard[swusers]", formData.user_ids.join(","));
+    // Project ID
+    if (selectedProjectId) {
+      data.append("noticeboard[project_id]", selectedProjectId);
     }
 
-    if (formData.shared === "group" && formData.group_id.length > 0) {
-      data.append("noticeboard[group_id]", formData.group_id.join(","));
+    // Expire time
+    if (formData.expire_date && formData.expire_time) {
+      data.append("noticeboard[expire_time]", `${formData.expire_date}T${formData.expire_time}`);
     }
 
-    // For coverImageRatios
+    // Shared logic: 0 for all, 1 for individuals/groups
+    if (formData.shared === "0") {
+      // All users
+      data.append("noticeboard[shared]", "0");
+    } else if (formData.shared === "1" && formData.user_ids.length > 0) {
+      // Individuals
+      data.append("noticeboard[shared]", "1");
+      formData.user_ids.forEach((userId) => {
+        data.append("noticeboard[ppusers][]", userId.toString());
+      });
+    } else if (formData.shared === "2" && formData.group_id.length > 0) {
+      // Groups
+      data.append("noticeboard[shared]", "1");
+      formData.group_id.forEach((groupId) => {
+        data.append("noticeboard[ppusers][]", groupId.toString());
+      });
+    }
+
+    // Cover image (single image)
     coverImageRatios.forEach(({ key }) => {
       const images = formData[key];
       if (Array.isArray(images) && images.length > 0) {
         const img = images[0];
         if (img?.file instanceof File) {
-          data.append(`noticeboard[${key}]`, img.file);
+          data.append("noticeboard[image]", img.file);
         }
       }
     });
 
-    // For broadcastImageRatios
+    // Broadcast images (multiple files)
     broadcastImageRatios.forEach(({ key }) => {
       const images = formData[key];
       if (Array.isArray(images) && images.length > 0) {
         images.forEach((img) => {
           if (img?.file instanceof File) {
-            data.append(`noticeboard[files_attached][]`, img.file);
+            data.append("noticeboard[files_attached][]", img.file);
           }
         });
       }
@@ -349,24 +373,34 @@ const NoticeboardEdit = () => {
           expireTime = dateObj.toTimeString().slice(0, 5);
         }
 
+        // Map shared value: API returns 0 for all, 1 for individuals/groups
+        let sharedValue = "0";
+        if (noticeboard.shared === 1 || noticeboard.shared === "1") {
+          // Check if it's individuals or groups based on ppusers or group_id
+          if (noticeboard.ppusers && noticeboard.ppusers.length > 0) {
+            sharedValue = "1"; // Individuals
+          } else if (noticeboard.group_id) {
+            sharedValue = "2"; // Groups
+          }
+        }
+
         setFormData({
           notice_heading: noticeboard.notice_heading || "",
           notice_text: noticeboard.notice_text || "",
           expire_time: expireTime,
           expire_date: expireDate,
-          shared: noticeboard.shared === "2" || noticeboard.shared === 2 ? "all" : 
-                  noticeboard.shared === "1" || noticeboard.shared === 1 ? "individual" : "all",
+          shared: sharedValue,
           group_id: noticeboard.group_id ? (Array.isArray(noticeboard.group_id) ? noticeboard.group_id : [noticeboard.group_id]) : [],
-          user_ids: noticeboard.swusers ? (typeof noticeboard.swusers === 'string' ? noticeboard.swusers.split(',').map(Number) : noticeboard.swusers) : [],
+          user_ids: noticeboard.ppusers ? (Array.isArray(noticeboard.ppusers) ? noticeboard.ppusers.map(Number) : [Number(noticeboard.ppusers)]) : [],
           is_important: noticeboard.is_important === "1" || noticeboard.is_important === 1 || noticeboard.is_important === true,
-          email_trigger_enabled: noticeboard.email_trigger_enabled || "",
-          status: noticeboard.publish === "1" || noticeboard.publish === 1 ? "active" : "inactive",
-          publish: noticeboard.publish || "1",
-          of_phase: noticeboard.of_phase || "pms",
-          of_atype: noticeboard.of_atype || "Pms::Site",
-          notice_type: noticeboard.notice_type || "",
-          from_time: noticeboard.from_time || "",
-          to_time: noticeboard.to_time || "",
+          email_trigger_enabled: noticeboard.email_trigger_enabled === "1" || noticeboard.email_trigger_enabled === 1 || noticeboard.email_trigger_enabled === true,
+          active: noticeboard.active === "1" || noticeboard.active === 1 || noticeboard.active === true,
+          publish: noticeboard.publish ? noticeboard.publish.toString() : "1",
+          notice_type: noticeboard.notice_type || "General",
+          project_id: noticeboard.project_id || "",
+          flag_expire: noticeboard.flag_expire === "1" || noticeboard.flag_expire === 1 || noticeboard.flag_expire === true,
+          deny: noticeboard.deny === "1" || noticeboard.deny === 1 || noticeboard.deny === true,
+          IsDelete: noticeboard.IsDelete === "1" || noticeboard.IsDelete === 1 || noticeboard.IsDelete === true,
           cover_image_1_by_1: [],
           cover_image_9_by_16: [],
           cover_image_3_by_2: [],
@@ -377,8 +411,8 @@ const NoticeboardEdit = () => {
           broadcast_images_16_by_9: [],
         });
 
-        if (noticeboard.of_atype_id) {
-          setSelectedProjectId(noticeboard.of_atype_id);
+        if (noticeboard.project_id) {
+          setSelectedProjectId(noticeboard.project_id.toString());
         }
 
       } catch (error) {
@@ -446,7 +480,7 @@ const NoticeboardEdit = () => {
       }
     };
 
-    if (formData.shared === "group" && groups.length === 0) {
+    if (formData.shared === "2" && groups.length === 0) {
       fetchGroups();
     }
   }, [formData.shared, baseURL, groups.length]);
@@ -493,6 +527,7 @@ const NoticeboardEdit = () => {
                   value={selectedProjectId || ""}
                   onChange={(e) => {
                     setSelectedProjectId(e.target.value);
+                    setFormData((prev) => ({ ...prev, project_id: e.target.value }));
                   }}
                   label="Project"
                   notched
@@ -535,8 +570,8 @@ const NoticeboardEdit = () => {
               >
                 <InputLabel shrink>Status</InputLabel>
                 <MuiSelect
-                  value={formData.status}
-                  onChange={handleChange}
+                  value={formData.active ? "active" : "inactive"}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, active: e.target.value === "active" }))}
                   name="status"
                   label="Status"
                   notched
@@ -657,8 +692,8 @@ const NoticeboardEdit = () => {
                       type="radio"
                       name="email_trigger_enabled"
                       value="yes"
-                      checked={formData.email_trigger_enabled === "yes"}
-                      onChange={handleChange}
+                      checked={formData.email_trigger_enabled === true}
+                      onChange={() => setFormData((prev) => ({ ...prev, email_trigger_enabled: true }))}
                       className="w-4 h-4 text-[#C72030] border-gray-300 focus:ring-[#C72030]"
                     />
                     <span className="ml-2 text-sm text-gray-700">Yes</span>
@@ -668,8 +703,8 @@ const NoticeboardEdit = () => {
                       type="radio"
                       name="email_trigger_enabled"
                       value="no"
-                      checked={formData.email_trigger_enabled === "no"}
-                      onChange={handleChange}
+                      checked={formData.email_trigger_enabled === false}
+                      onChange={() => setFormData((prev) => ({ ...prev, email_trigger_enabled: false }))}
                       className="w-4 h-4 text-[#C72030] border-gray-300 focus:ring-[#C72030]"
                     />
                     <span className="ml-2 text-sm text-gray-700">No</span>
@@ -709,8 +744,8 @@ const NoticeboardEdit = () => {
                     <input
                       type="radio"
                       name="shared"
-                      value="all"
-                      checked={formData.shared === "all"}
+                      value="0"
+                      checked={formData.shared === "0"}
                       onChange={handleChange}
                       className="w-4 h-4 text-[#C72030] border-gray-300 focus:ring-[#C72030]"
                     />
@@ -720,35 +755,35 @@ const NoticeboardEdit = () => {
                     <input
                       type="radio"
                       name="shared"
-                      value="individual"
-                      checked={formData.shared === "individual"}
+                      value="1"
+                      checked={formData.shared === "1"}
                       onChange={handleChange}
                       className="w-4 h-4 text-[#C72030] border-gray-300 focus:ring-[#C72030]"
                     />
-                    <span className="ml-2 text-sm text-gray-700">Individual</span>
+                    <span className="ml-2 text-sm text-gray-700">Individuals</span>
                   </label>
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="radio"
                       name="shared"
-                      value="group"
-                      checked={formData.shared === "group"}
+                      value="2"
+                      checked={formData.shared === "2"}
                       onChange={handleChange}
                       className="w-4 h-4 text-[#C72030] border-gray-300 focus:ring-[#C72030]"
                     />
-                    <span className="ml-2 text-sm text-gray-700">Group</span>
+                    <span className="ml-2 text-sm text-gray-700">Groups</span>
                   </label>
                 </div>
 
                 {/* Conditional Individual Dropdown */}
-                {formData.shared === "individual" && (
+                {formData.shared === "1" && (
                   <div className="mt-4">
                     <MultiSelectBox
                       options={users.map((member) => ({
                         value: member.id,
                         label: `${member.user?.firstname || ''} ${member.user?.lastname || ''}`.trim(),
                       }))}
-                      selectedValues={formData.user_ids}
+                      value={formData.user_ids}
                       onChange={(selectedIds) =>
                         setFormData({ ...formData, user_ids: selectedIds })
                       }
@@ -758,14 +793,14 @@ const NoticeboardEdit = () => {
                 )}
 
                 {/* Conditional Group Dropdown */}
-                {formData.shared === "group" && (
+                {formData.shared === "2" && (
                   <div className="mt-4">
                     <MultiSelectBox
                       options={groups.map((group) => ({
                         value: group.id,
                         label: group.name,
                       }))}
-                      selectedValues={formData.group_id}
+                      value={formData.group_id}
                       onChange={(selectedIds) =>
                         setFormData({ ...formData, group_id: selectedIds })
                       }

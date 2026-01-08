@@ -63,7 +63,7 @@ const PropertyType = () => {
       );
 
       toast.success("Property Type added successfully!");
-      navigate("/setup-member/property-type-list"); // ✅ Navigate after success
+      navigate("/settings/property-type-list"); // ✅ Navigate after success
     } catch (error) {
       console.error("Error submitting property type:", error);
 
@@ -136,11 +136,11 @@ const PropertyType = () => {
               className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
               disabled={loading}
             >
-              {loading ? "Submitting..." : "Create Property Type"}
+              {loading ? "Submitting..." : "Submit"}
             </Button>
             <Button
               type="button"
-              onClick={() => navigate("/setup-member/property-type-list")}
+              onClick={() => navigate("/settings/property-type-list")}
               className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
               disabled={loading}
             >

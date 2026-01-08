@@ -52,7 +52,7 @@ const EditAmenities = () => {
     const fetchAmenity = async () => {
       try {
         const response = await axios.get(
-          `${baseURL}amenity_setups/${id}.json`
+          `${baseURL}/amenity_setups/${id}.json`
         );
 
         setName(response.data.name);
@@ -116,13 +116,13 @@ const EditAmenities = () => {
 
     try {
       await axios.put(
-        `${baseURL}amenity_setups/${id}.json`,
+        `${baseURL}/amenity_setups/${id}.json`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
       toast.success("Amenity updated successfully!");
-      navigate("/setup-member/amenities-list");
+      navigate("/settings/amenities-list");
     } catch (error: any) {
       toast.error(
         `Failed to update amenity: ${
@@ -207,93 +207,105 @@ const EditAmenities = () => {
               Add Attachments
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-                    {/* Icon Upload */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Upload Icon <span className="text-red-500">*</span>
-                      </label>
+          <div className="p-6">
+            {/* Icon Upload */}
+            <div className="border border-gray-300 rounded-md p-4 mb-4">
+              <span className="block text-sm font-medium text-gray-700 mb-3">
+                Upload Icon <span className="text-red-500">*</span>
+              </span>
 
-                      <input
-                        type="file"
-                        id="icon-upload"
-                        className="hidden"
-                        accept=".png,.jpg,.jpeg,.svg"
-                        onChange={handleFileChange}
-                        disabled={loading}
-                      />
+              <input
+                type="file"
+                id="icon-upload"
+                className="hidden"
+                accept=".png,.jpg,.jpeg,.svg"
+                onChange={handleFileChange}
+                disabled={loading}
+              />
 
-                      <button
-                        type="button"
-                        onClick={() => document.getElementById("icon-upload")?.click()}
-                        className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-[#C72030] text-[#C72030] rounded-md bg-white hover:bg-[#C72030]/5 transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C72030" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                          <polyline points="17 8 12 3 7 8" />
-                          <line x1="12" y1="3" x2="12" y2="15" />
-                        </svg>
-                        <span className="font-medium">Upload Files</span>
-                      </button>
+              <button
+                type="button"
+                onClick={() => document.getElementById("icon-upload")?.click()}
+                className="inline-flex items-center gap-2 px-2 py-1 border rounded-md border-[#e0d9c859] bg-[#e0d9c859] text-gray-800 transition"
+              >
+                <span className="font-medium">Upload Files</span>
 
-                      {showTooltip && (
-                        <div className="text-xs bg-gray-800 text-white rounded px-2 py-1">
-                          Max Upload Size 10 MB
-                        </div>
-                      )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#C72030"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </button>
 
-                      {previewImage && (
-                        <img
-                          src={previewImage}
-                          alt="Icon Preview"
-                          style={{ width: 100, height: 100 }}
-                        />
-                      )}
-                    </div>
+              {previewImage && (
+                <img
+                  src={previewImage}
+                  alt="Icon Preview"
+                  className="mt-4 rounded-md border"
+                  style={{ width: "100px", height: "100px", objectFit: "cover" }}
+                />
+              )}
+            </div>
 
-                    {/* Dark Mode Icon */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Dark Mode Icon <span className="text-red-500">*</span>
-                      </label>
+            {/* Dark Mode Icon Upload */}
+            <div className="border border-gray-300 rounded-md p-4">
+              <span className="block text-sm font-medium text-gray-700 mb-3">
+                Dark Mode Icon <span className="text-red-500">*</span>
+              </span>
 
-                      <input
-                        type="file"
-                        id="dark-mode-icon-upload"
-                        className="hidden"
-                        accept=".png,.jpg,.jpeg,.svg"
-                        onChange={handleDarkModeFileChange}
-                        disabled={loading}
-                      />
+              <input
+                type="file"
+                id="dark-mode-icon-upload"
+                className="hidden"
+                accept=".png,.jpg,.jpeg,.svg"
+                onChange={handleDarkModeFileChange}
+                disabled={loading}
+              />
 
-                      <button
-                        type="button"
-                        onClick={() => document.getElementById("dark-mode-icon-upload")?.click()}
-                        className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-[#C72030] text-[#C72030] rounded-md bg-white hover:bg-[#C72030]/5 transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C72030" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                          <polyline points="17 8 12 3 7 8" />
-                          <line x1="12" y1="3" x2="12" y2="15" />
-                        </svg>
-                        <span className="font-medium">Upload Files</span>
-                      </button>
+              <button
+                type="button"
+                onClick={() => document.getElementById("dark-mode-icon-upload")?.click()}
+                className="inline-flex items-center gap-2 px-2 py-1 border rounded-md border-[#e0d9c859] bg-[#e0d9c859] text-gray-800 transition"
+              >
+                <span className="font-medium">Upload Files</span>
 
-                      {showDarkModeTooltip && (
-                        <div className="text-xs bg-gray-800 text-white rounded px-2 py-1">
-                          Max Upload Size 10 MB
-                        </div>
-                      )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#C72030"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </button>
 
-                      {previewDarkModeImage && (
-                        <img
-                          src={previewDarkModeImage}
-                          alt="Dark Mode Preview"
-                          style={{ width: 100, height: 100 }}
-                        />
-                      )}
-                    </div>
-                  </div>
+              {previewDarkModeImage && (
+                <img
+                  src={previewDarkModeImage}
+                  alt="Dark Mode Preview"
+                  className="mt-4 rounded-md border"
+                  style={{ width: "100px", height: "100px", objectFit: "cover" }}
+                />
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="flex gap-4 justify-center pt-6">
@@ -302,7 +314,7 @@ const EditAmenities = () => {
             className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
             disabled={loading}
           >
-            {loading ? "Updating..." : "Update Amenity"}
+            {loading ? "Updating..." : "Update"}
           </Button>
           <Button
             type="button"

@@ -115,11 +115,11 @@ const ProjectBuildingTypeList = () => {
   };
 
   const handleAddBuildingType = () => {
-    navigate("/setup-member/project-building-type");
+    navigate("/settings/project-building-type");
   };
 
   const handleEditBuildingType = (id: number) => {
-    navigate(`/setup-member/project-building-type-edit/${id}`);
+    navigate(`/settings/project-building-type-edit/${id}`);
   };
 
   const handleToggle = async (id: number, currentStatus: boolean) => {

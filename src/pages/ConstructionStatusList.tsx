@@ -94,11 +94,11 @@ const ConstructionStatusList = () => {
   };
 
   const handleAdd = () => {
-    navigate("/setup-member/construction-status");
+    navigate("/settings/construction-status");
   };
 
   const handleEdit = (id) => {
-    navigate(`/setup-member/construction-status-edit/${id}`);
+    navigate(`/settings/construction-status-edit/${id}`);
   };
 
   const handleToggle = async (id, currentStatus) => {

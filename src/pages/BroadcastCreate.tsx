@@ -34,11 +34,11 @@ const BroadcastCreate = () => {
     email_trigger_enabled: false,
     active: true,
     publish: "1",
-    of_phase: "post_possession",
-    of_atype_id: null,
     notice_type: "General",
-    from_time: "",
-    to_time: "",
+    project_id: "",
+    flag_expire: false,
+    deny: false,
+    IsDelete: false,
     cover_image_1_by_1: [],
     cover_image_9_by_16: [],
     cover_image_3_by_2: [],
@@ -264,41 +264,78 @@ const BroadcastCreate = () => {
       return;
     }
 
-    // Prepare the payload according to API structure
-    const payload: any = {
-      noticeboard: {
-        notice_heading: formData.notice_heading,
-        notice_text: formData.notice_text,
-        active: formData.active,
-        publish: parseInt(formData.publish),
-        notice_type: formData.notice_type || "General",
-        shared: parseInt(formData.shared),
-        is_important: formData.is_important,
-        email_trigger_enabled: formData.email_trigger_enabled,
-        attached_files: [],
-      }
-    };
+    // Prepare FormData for file uploads
+    const data = new FormData();
+    
+    // Basic fields
+    data.append("noticeboard[notice_heading]", formData.notice_heading);
+    data.append("noticeboard[notice_text]", formData.notice_text);
+    data.append("noticeboard[active]", formData.active ? "1" : "0");
+    data.append("noticeboard[IsDelete]", formData.IsDelete ? "1" : "0");
+    data.append("noticeboard[notice_type]", formData.notice_type || "General");
+    data.append("noticeboard[publish]", formData.publish);
+    data.append("noticeboard[flag_expire]", formData.flag_expire ? "1" : "0");
+    data.append("noticeboard[is_important]", formData.is_important ? "1" : "0");
+    data.append("noticeboard[email_trigger_enabled]", formData.email_trigger_enabled ? "1" : "0");
+    data.append("noticeboard[deny]", formData.deny ? "1" : "0");
 
-    // Add expire_time if provided
+    // Project ID
+    if (selectedProjectId) {
+      data.append("noticeboard[project_id]", selectedProjectId);
+    }
+
+    // Expire time
     if (formData.expire_date && formData.expire_time) {
-      payload.noticeboard.expire_time = `${formData.expire_date}T${formData.expire_time}`;
+      data.append("noticeboard[expire_time]", `${formData.expire_date}T${formData.expire_time}`);
     }
 
-    // Add conditional fields based on shared type
-    if (formData.shared === "1" && formData.user_ids.length > 0) {
-      payload.noticeboard.swusers = formData.user_ids.join(",");
+    // Shared logic: 0 for all, 1 for individuals/groups
+    if (formData.shared === "0") {
+      // All users
+      data.append("noticeboard[shared]", "0");
+    } else if (formData.shared === "1" && formData.user_ids.length > 0) {
+      // Individuals
+      data.append("noticeboard[shared]", "1");
+      formData.user_ids.forEach((userId) => {
+        data.append("noticeboard[ppusers][]", userId.toString());
+      });
+    } else if (formData.shared === "2" && formData.group_id.length > 0) {
+      // Groups
+      data.append("noticeboard[shared]", "1");
+      formData.group_id.forEach((groupId) => {
+        data.append("noticeboard[ppusers][]", groupId.toString());
+      });
     }
 
-    if (formData.shared === "2" && formData.group_id.length > 0) {
-      payload.noticeboard.group_id = formData.group_id.join(",");
-    }
+    // Cover image (single image)
+    coverImageRatios.forEach(({ key }) => {
+      const images = formData[key];
+      if (Array.isArray(images) && images.length > 0) {
+        const img = images[0];
+        if (img?.file instanceof File) {
+          data.append("noticeboard[image]", img.file);
+        }
+      }
+    });
+
+    // Broadcast images (multiple files)
+    broadcastImageRatios.forEach(({ key }) => {
+      const images = formData[key];
+      if (Array.isArray(images) && images.length > 0) {
+        images.forEach((img) => {
+          if (img?.file instanceof File) {
+            data.append("noticeboard[files_attached][]", img.file);
+          }
+        });
+      }
+    });
 
     try {
-      const response = await axios.post(`${baseURL}/crm/admin/noticeboards.json`, payload, {
+      const response = await axios.post(`${baseURL}/crm/admin/noticeboards.json`, data, {
         headers: {
-                                 Authorization: getAuthHeader(),
-                                 "Content-Type": "application/json",
-                               },
+          Authorization: getAuthHeader(),
+          "Content-Type": "multipart/form-data",
+        },
       });
       toast.success("Broadcast created successfully!");
       navigate("/maintenance/noticeboard-list");
@@ -414,7 +451,10 @@ const BroadcastCreate = () => {
                 <InputLabel shrink>Project</InputLabel>
                 <MuiSelect
                   value={selectedProjectId || ""}
-                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedProjectId(e.target.value);
+                    setFormData((prev) => ({ ...prev, project_id: e.target.value }));
+                  }}
                   label="Project"
                   notched
                   displayEmpty

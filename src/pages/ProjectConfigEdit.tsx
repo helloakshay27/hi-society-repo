@@ -49,7 +49,7 @@ const ProjectConfigEdit = () => {
     const fetchConfiguration = async () => {
       try {
         const response = await axios.get(
-          `${baseURL}configuration_setups/${id}.json`,
+          `${baseURL}/configuration_setups/${id}.json`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -106,7 +106,7 @@ const ProjectConfigEdit = () => {
 
     try {
       await axios.put(
-        `${baseURL}configuration_setups/${id}.json`,
+        `${baseURL}/configuration_setups/${id}.json`,
         formDataToSend,
         {
           headers: {
@@ -117,7 +117,7 @@ const ProjectConfigEdit = () => {
       );
 
       toast.success("Project configuration updated successfully!");
-      navigate("/setup-member/project-configuration-list");
+      navigate("/settings/project-configuration-list");
     } catch {
       toast.error("Failed to update configuration");
     } finally {

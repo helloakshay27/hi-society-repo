@@ -115,6 +115,7 @@ const ProjectDetailsEdit = () => {
     cover_images: [],
     is_sold: false,
     plans: [],
+    show_on_home: false,
   });
 
   const [projectsType, setprojectsType] = useState([]);
@@ -308,7 +309,7 @@ const ProjectDetailsEdit = () => {
 
     setVirtualTourName("");
     setVirtualTourUrl("");
-    toast.success("Virtual tour added successfully");
+    toast.success("Virtual tour added successfully!", { description: "Success" });
   };
 
   // QR Code handlers with RERA number association
@@ -340,7 +341,7 @@ const ProjectDetailsEdit = () => {
         ...prev,
         project_qrcode_image: [...prev.project_qrcode_image, ...validFiles],
       }));
-      toast.success(`${validFiles.length} QR Code(s) added for RERA: ${reraNumber}`);
+      toast.success(`${validFiles.length} QR Code(s) added for RERA: ${reraNumber}`, { description: "Success" });
     }
   };
   
@@ -358,7 +359,7 @@ const ProjectDetailsEdit = () => {
       ...prev,
       project_qrcode_image: prev.project_qrcode_image.filter((_, i) => i !== index),
     }));
-    toast.success("QR Code image removed");
+    toast.success("QR Code image removed", { description: "Success" });
   };
 
   // Helper function to filter QR codes by RERA number
@@ -1765,7 +1766,7 @@ const ProjectDetailsEdit = () => {
         }
       );
 
-      toast.success("Project updated successfully");
+      toast.success("Project updated successfully!", { description: "Changes have been saved" });
       navigate("/maintenance/project-details-list");
     } catch (error) {
       console.error("Error updating project:", error);
@@ -1775,9 +1776,9 @@ const ProjectDetailsEdit = () => {
         error.response.data &&
         (error.response.data.project_name || error.response.data.Project_Name)
       ) {
-        toast.error("Project name already exists.");
+        toast.error("Project name already exists.", { description: "Validation Error" });
       } else {
-        toast.error("Failed to update the project. Please try again.");
+        toast.error("Failed to update the project. Please try again.", { description: "Error" });
       }
     } finally {
       setLoading(false);
@@ -1806,7 +1807,7 @@ const ProjectDetailsEdit = () => {
             return updated;
         });
 
-        toast.success("Plan deleted");
+        toast.success("Plan deleted", { description: "Success" });
     }
     function handleDiscardPpt(fileType: string, index: number): void {
         // Safely remove a PPT file at given index from formData and revoke any blob preview URL
@@ -1829,7 +1830,7 @@ const ProjectDetailsEdit = () => {
             }
 
             next[fileType] = list;
-            toast.success("PPT removed");
+            toast.success("PPT removed", { description: "Success" });
             return next;
         });
     }
@@ -2788,7 +2789,7 @@ const ProjectDetailsEdit = () => {
                                   ...prev,
                                   Rera_Number_multiple: updated,
                                 }));
-                                toast.success("RERA section deleted");
+                                toast.success("RERA section deleted", { description: "Success" });
                               }}
                               title="Delete Section"
                             >
@@ -2993,7 +2994,7 @@ const ProjectDetailsEdit = () => {
                                 },
                               ],
                             }));
-                            toast.success("New RERA section added. Fill in the details and click Update to save.");
+                            toast.success("New RERA section added. Fill in the details and click Update to save.", { description: "Success" });
                           }}
                         >
                           <svg
@@ -5505,7 +5506,7 @@ const ProjectDetailsEdit = () => {
                                   ...prev,
                                   virtual_tour_url_multiple: updated,
                                 }));
-                                toast.success("Virtual tour deleted");
+                                toast.success("Virtual tour deleted", { description: "Success" });
                               }}
                               title="Delete"
                             >
@@ -5553,13 +5554,13 @@ const ProjectDetailsEdit = () => {
               <div className="flex items-center gap-2 text-[11px] font-medium select-none">
                 <div
                   role="switch"
-                  aria-checked={visibility.showOnHomePage}
-                  aria-label={visibility.showOnHomePage ? "Deactivate show on home page" : "Activate show on home page"}
+                  aria-checked={formData.show_on_home}
+                  aria-label={formData.show_on_home ? "Deactivate show on home page" : "Activate show on home page"}
                   tabIndex={0}
-                  onClick={() => setVisibility(prev => ({ ...prev, showOnHomePage: !prev.showOnHomePage }))}
-                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, showOnHomePage: !prev.showOnHomePage }))}
+                  onClick={() => setFormData(prev => ({ ...prev, show_on_home: !prev.show_on_home }))}
+                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setFormData(prev => ({ ...prev, show_on_home: !prev.show_on_home }))}
                   className="cursor-pointer"
-                  style={{ transform: visibility.showOnHomePage ? 'scaleX(1)' : 'scaleX(-1)' }}
+                  style={{ transform: formData.show_on_home ? 'scaleX(1)' : 'scaleX(-1)' }}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
                   <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>

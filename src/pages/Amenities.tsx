@@ -103,7 +103,7 @@ const Amenities = () => {
       });
 
       toast.success("Amenity added successfully");
-      navigate("/setup-member/amenities-list");
+      navigate("/settings/amenities-list");
     } catch (err) {
       if (err.response?.status === 422) {
         toast.error("Amenity with this name already exists.");
@@ -234,173 +234,110 @@ const Amenities = () => {
     </h2>
   </div>
 
-  {/* Icon Upload */}
-<div className="space-y-2">
-  <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-    <span>Upload Icon</span>
-    <span
-      className="relative cursor-pointer text-blue-600"
-      onMouseEnter={() => setShowTooltip(true)}
-      onMouseLeave={() => setShowTooltip(false)}
-    >
-      {showTooltip && (
-        <span className="absolute left-6 top-0 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
-          Max Upload Size 10 MB
-        </span>
-      )}
-    </span>
-    <span className="text-red-500">*</span>
-  </label>
-
-  {/* Hidden File Input */}
-  <input
-    type="file"
-    id="icon-upload"
-    className="hidden"
-    accept=".png,.jpg,.jpeg,.svg"
-    onChange={handleFileChange}
-    disabled={loading}
-  />
-
-  {/* Red Dashed Upload Button (MATCHES IMAGE) */}
-  <button
-    type="button"
-    onClick={() => document.getElementById("icon-upload")?.click()}
-    className="flex items-center justify-center gap-2 px-6 py-2
-               border-2 border-dashed border-[#C72030]
-               text-[#C72030] rounded-md bg-white
-               hover:bg-[#C72030]/5 transition-colors"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="#C72030"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="17 8 12 3 7 8" />
-      <line x1="12" y1="3" x2="12" y2="15" />
-    </svg>
-    <span className="text-sm font-medium">Upload Files</span>
-  </button>
-
-  {/* Preview (UNCHANGED) */}
-  {previewImage && (
-    <div className="mt-2 relative inline-block">
-      <img
-        src={previewImage}
-        alt="Icon Preview"
-        className="rounded-lg border border-gray-200"
-        style={{ width: "100px", height: "100px", objectFit: "cover" }}
-      />
-      <button
-        type="button"
-        onClick={() => {
-          setIcon(null);
-          setPreviewImage(null);
-        }}
-        className="absolute -top-2 -right-2 w-6 h-6
-                   bg-red-600 text-white rounded-full
-                   flex items-center justify-center
-                   hover:bg-red-700 transition-colors"
-      >
-        ×
-      </button>
-    </div>
-  )}
-</div>
-
- {/* Dark Mode Icon Upload */}
-<div className="space-y-2">
-  <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-    <span>Dark Mode Icon</span>
-    <span
-      className="relative cursor-pointer text-blue-600"
-      onMouseEnter={() => setShowDarkModeTooltip(true)}
-      onMouseLeave={() => setShowDarkModeTooltip(false)}
-    >
-      {showDarkModeTooltip && (
-        <span className="absolute left-6 top-0 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
-          Max Upload Size 10 MB
-        </span>
-      )}
-    </span>
-    <span className="text-red-500">*</span>
-  </label>
-
-  {/* Hidden File Input */}
-  <input
-    type="file"
-    id="dark-mode-icon-upload"
-    className="hidden"
-    accept=".png,.jpg,.jpeg,.svg"
-    onChange={handleDarkModeFileChange}
-    disabled={loading}
-  />
-
-  {/* Red Dashed Upload Button (SAME AS ICON UPLOAD) */}
-  <button
-    type="button"
-    onClick={() =>
-      document.getElementById("dark-mode-icon-upload")?.click()
-    }
-    className="flex items-center justify-center gap-2 px-6 py-2
-               border-2 border-dashed border-[#C72030]
-               text-[#C72030] rounded-md bg-white
-               hover:bg-[#C72030]/5 transition-colors"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="#C72030"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="17 8 12 3 7 8" />
-      <line x1="12" y1="3" x2="12" y2="15" />
-    </svg>
-    <span className="text-sm font-medium">Upload Files</span>
-  </button>
-
-  {/* Preview (UNCHANGED) */}
-  {previewDarkModeImage && (
-    <div className="mt-2 relative inline-block">
-      <img
-        src={previewDarkModeImage}
-        alt="Dark Mode Preview"
-        className="rounded-lg border border-gray-200"
-        style={{ width: "100px", height: "100px", objectFit: "cover" }}
-      />
-      <button
-        type="button"
-        onClick={() => {
-          setDarkModeIcon(null);
-          setPreviewDarkModeImage(null);
-        }}
-        className="absolute -top-2 -right-2 w-6 h-6
-                   bg-red-600 text-white rounded-full
-                   flex items-center justify-center
-                   hover:bg-red-700 transition-colors"
-      >
-        ×
-      </button>
-    </div>
-  )}
-</div>
-
-  {/* IMPORTANT */}
   <div className="p-6">
-    {/* put upload buttons / content here */}
+    {/* Icon Upload */}
+    <div className="border border-gray-300 rounded-md p-4 mb-4">
+      <span className="block text-sm font-medium text-gray-700 mb-3">
+        Upload Icon <span className="text-red-500">*</span>
+      </span>
+
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        id="icon-upload"
+        className="hidden"
+        accept=".png,.jpg,.jpeg,.svg"
+        onChange={handleFileChange}
+        disabled={loading}
+      />
+
+      {/* Upload button */}
+      <button
+        type="button"
+        onClick={() => document.getElementById("icon-upload")?.click()}
+        className="inline-flex items-center gap-2 px-2 py-1 border rounded-md border-[#e0d9c859] bg-[#e0d9c859] text-gray-800 transition"
+      >
+        <span className="font-medium">Upload Files</span>
+
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#C72030"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+      </button>
+
+      {/* Preview */}
+      {previewImage && (
+        <img
+          src={previewImage}
+          alt="Icon Preview"
+          className="mt-4 rounded-md border"
+          style={{ width: "100px", height: "100px", objectFit: "cover" }}
+        />
+      )}
+    </div>
+
+    {/* Dark Mode Icon Upload */}
+    <div className="border border-gray-300 rounded-md p-4">
+      <span className="block text-sm font-medium text-gray-700 mb-3">
+        Dark Mode Icon <span className="text-red-500">*</span>
+      </span>
+
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        id="dark-mode-icon-upload"
+        className="hidden"
+        accept=".png,.jpg,.jpeg,.svg"
+        onChange={handleDarkModeFileChange}
+        disabled={loading}
+      />
+
+      {/* Upload button */}
+      <button
+        type="button"
+        onClick={() => document.getElementById("dark-mode-icon-upload")?.click()}
+        className="inline-flex items-center gap-2 px-2 py-1 border rounded-md border-[#e0d9c859] bg-[#e0d9c859] text-gray-800 transition"
+      >
+        <span className="font-medium">Upload Files</span>
+
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#C72030"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+      </button>
+
+      {/* Preview */}
+      {previewDarkModeImage && (
+        <img
+          src={previewDarkModeImage}
+          alt="Dark Mode Preview"
+          className="mt-4 rounded-md border"
+          style={{ width: "100px", height: "100px", objectFit: "cover" }}
+        />
+      )}
+    </div>
   </div>
 </div>
 
@@ -411,7 +348,7 @@ const Amenities = () => {
             className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
             disabled={loading}
           >
-            {loading ? "Creating..." : "Create Amenity"}
+            {loading ? "Creating..." : "Submit"}
           </Button>
           <Button
             type="button"

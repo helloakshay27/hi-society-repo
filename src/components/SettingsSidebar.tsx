@@ -78,24 +78,24 @@ export const SettingsSidebar: React.FC = () => {
 
   // Setup Member sub-items
   const setupMemberItems: MenuItem[] = [
-    {
-      id: "user-list",
-      label: "User Module",
-      icon: Users,
-      path: "/settings/user-list",
-    },
-    {
-      id: "lock-role-list",
-      label: "User Role",
-      icon: Shield,
-      path: "/settings/lock-role-list",
-    },
-    {
-      id: "lock-function-list",
-      label: "Lock Function",
-      icon: Shield,
-      path: "/settings/lock-function-list",
-    },
+    // {
+    //   id: "user-list",
+    //   label: "User Module",
+    //   icon: Users,
+    //   path: "/settings/user-list",
+    // },
+    // {
+    //   id: "lock-role-list",
+    //   label: "User Role",
+    //   icon: Shield,
+    //   path: "/settings/lock-role-list",
+    // },
+    // {
+    //   id: "lock-function-list",
+    //   label: "Lock Function",
+    //   icon: Shield,
+    //   path: "/settings/lock-function-list",
+    // },
     {
       id: "property-type-list",
       label: "Property Types",
@@ -126,12 +126,12 @@ export const SettingsSidebar: React.FC = () => {
       icon: Gift,
       path: "/settings/amenities-list",
     },
-    {
-      id: "department-list",
-      label: "Department",
-      icon: Building,
-      path: "/settings/department-list",
-    },
+    // {
+    //   id: "department-list",
+    //   label: "Department",
+    //   icon: Building,
+    //   path: "/settings/department-list",
+    // },
     {
       id: "visitslot-list",
       label: "Visit Slot",

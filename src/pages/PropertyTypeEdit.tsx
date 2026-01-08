@@ -43,7 +43,7 @@ const PropertyTypeEdit = () => {
     const fetchPropertyType = async () => {
       try {
         const response = await axios.get(
-          `${baseURL}property_types/${id}.json`,
+          `${baseURL}/property_types/${id}.json`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -72,7 +72,7 @@ const PropertyTypeEdit = () => {
 
     try {
       await axios.put(
-        `${baseURL}property_types/${id}.json`,
+        `${baseURL}/property_types/${id}.json`,
         { property_type: { property_type: name } },
         {
           headers: {
@@ -83,7 +83,7 @@ const PropertyTypeEdit = () => {
       );
 
       toast.success("Property Type updated successfully!");
-      navigate("/setup-member/property-type-list");
+      navigate("/settings/property-type-list");
     } catch (error) {
       console.error("Error updating property type:", error);
       const errorMessage =
@@ -159,7 +159,7 @@ const PropertyTypeEdit = () => {
           <Button
             type="button"
             
-            onClick={() => navigate("/setup-member/property-type-list")}
+            onClick={() => navigate("/settings/property-type-list")}
             className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
             disabled={loading}
           >

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { ChevronRight, ArrowLeft, FileText } from "lucide-react";
 import SelectBox from "../components/ui/select-box";
 import {
@@ -66,7 +66,10 @@ const FaqCategoryForm = () => {
       try {
         setSitesLoading(true);
         const res = await axios.get(`${baseURL}/sites.json`, {
-          headers: getAuthHeaders()
+          headers: {
+                             Authorization: getAuthHeader(),
+                             "Content-Type": "multipart/form-data",
+                           },
         });
         
         const sitesData = res.data?.sites || res.data || [];
@@ -159,7 +162,7 @@ const FaqCategoryForm = () => {
         toast.success("FAQ Category created successfully!");
       }
 
-      navigate("/setup-member/faq-category-list");
+      navigate("/settings/faq-category-list");
     } catch (error) {
       console.error("Error:", error);
       const errorMessage = error.response?.data?.message || "Failed to submit form";
@@ -258,7 +261,7 @@ const FaqCategoryForm = () => {
           </button>
           <button
             type="button"
-            onClick={() => navigate("/setup-member/faq-category-list")}
+            onClick={() => navigate("/settings/faq-category-list")}
             disabled={loading}
             className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2 rounded transition-colors"
           >

@@ -56,7 +56,7 @@ const ConstructionStatus = () => {
       });
 
       toast.success("Construction status added successfully!");
-      navigate("/setup-member/construction-status-list"); // Redirect after success
+      navigate("/settings/construction-status-list"); // Redirect after success
     } catch (error) {
       console.error("Error adding construction status:", error);
       toast.error("Failed to add construction status");

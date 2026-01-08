@@ -111,8 +111,8 @@ const PropertyTypeList = () => {
     }
   };
 
-  const handleAddPropertyType = () => navigate("/setup-member/property-type");
-  const handleEditPropertyType = (id: number) => navigate(`/setup-member/property-type-edit/${id}`);
+  const handleAddPropertyType = () => navigate("/settings/property-type");
+  const handleEditPropertyType = (id: number) => navigate(`/settings/property-type-edit/${id}`);
 
   const handleToggle = async (id: number, currentStatus: boolean) => {
     toast.dismiss();
@@ -152,17 +152,17 @@ const PropertyTypeList = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            {propertyTypePermission.update === "true" && (
+            {/* {propertyTypePermission.update === "true" && ( */}
               <Button variant="ghost" size="sm" onClick={() => handleEditPropertyType(item.id)} title="Edit">
                 <Edit className="w-4 h-4" />
               </Button>
-            )}
+            {/* )} */}
           </div>
         );
       case 'status':
         return (
           <div className="flex justify-center">
-            {propertyTypePermission.show === "true" && (
+            {/* {propertyTypePermission.show === "true" && ( */}
               <button
                 onClick={() => handleToggle(item.id, item.active)}
                 className="text-gray-600 hover:opacity-80 transition-opacity"
@@ -177,7 +177,7 @@ const PropertyTypeList = () => {
                   </svg>
                 )}
               </button>
-            )}
+            {/* )} */}
           </div>
         );
       default:

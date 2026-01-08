@@ -46,7 +46,7 @@ const ConstructionStatusEdit = () => {
       setLoading(true);
       try {
         const response = await axios.get(
-          `${baseURL}construction_statuses/${id}.json`
+          `${baseURL}/construction_statuses/${id}.json`
         );
 
         setFormData({
@@ -74,14 +74,14 @@ const ConstructionStatusEdit = () => {
 
     try {
       await axios.put(
-        `${baseURL}construction_statuses/${id}.json`,
+        `${baseURL}/construction_statuses/${id}.json`,
         {
           construction_status: formData,
         }
       );
 
       toast.success("Construction status updated successfully!");
-      navigate("/setup-member/construction-status-list");
+      navigate("/settings/construction-status-list");
     } catch {
       toast.error("Failed to update status.");
     } finally {

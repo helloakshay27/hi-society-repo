@@ -91,11 +91,11 @@ const AmenitiesList = () => {
   };
 
   const handleAdd = () => {
-    navigate("/setup-member/amenities");
+    navigate("/settings/amenities");
   };
 
   const handleEdit = (id) => {
-    navigate(`/setup-member/edit-amenities/${id}`);
+    navigate(`/settings/amenities-edit/${id}`);
   };
 
   const handleToggle = async (id, currentStatus) => {
@@ -146,6 +146,7 @@ const AmenitiesList = () => {
     { key: "name", label: "Name", sortable: true },
     { key: "icon", label: "Icon", sortable: false },
     { key: "dark_mode_icon", label: "Dark Mode Icon", sortable: false },
+    { key: "status", label: "Status", sortable: false },
     { key: "night_mode", label: "Night Mode", sortable: false },
   ];
 
@@ -157,7 +158,7 @@ const AmenitiesList = () => {
       case "actions":
         return (
           <div className="flex gap-2">
-            {amenitiesPermissions.update === "true" && (
+            {/* {amenitiesPermissions.update === "true" && ( */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -166,7 +167,46 @@ const AmenitiesList = () => {
               >
                 <Edit className="h-4 w-4" />
               </Button>
+            {/* )} */}
+          </div>
+        );
+      case "id":
+        return <span className="font-medium">{startIndex + index + 1}</span>;
+      case "name":
+        return <span>{item.name || "-"}</span>;
+      case "icon":
+        return (
+          <div className="flex justify-center">
+            {item.icon_url ? (
+              <img
+                src={item.icon_url}
+                alt={item.name}
+                className="rounded-lg border border-gray-200"
+                style={{ width: "60px", height: "60px", objectFit: "cover" }}
+              />
+            ) : (
+              <span className="text-sm text-gray-500 italic">No Icon</span>
             )}
+          </div>
+        );
+      case "dark_mode_icon":
+        return (
+          <div className="flex justify-center">
+            {item.dark_mode_icon_url ? (
+              <img
+                src={item.dark_mode_icon_url}
+                alt={item.name}
+                className="rounded-lg border border-gray-200"
+                style={{ width: "60px", height: "60px", objectFit: "cover" }}
+              />
+            ) : (
+              <span className="text-sm text-gray-500 italic">No Icon</span>
+            )}
+          </div>
+        );
+      case "status":
+        return (
+          <div className="flex justify-center">
             <button
               onClick={() => handleToggle(item.id, item.active)}
               className="toggle-button"
@@ -202,40 +242,6 @@ const AmenitiesList = () => {
                 </svg>
               )}
             </button>
-          </div>
-        );
-      case "id":
-        return <span className="font-medium">{startIndex + index + 1}</span>;
-      case "name":
-        return <span>{item.name || "-"}</span>;
-      case "icon":
-        return (
-          <div className="flex justify-center">
-            {item.icon_url ? (
-              <img
-                src={item.icon_url}
-                alt={item.name}
-                className="rounded-lg border border-gray-200"
-                style={{ width: "60px", height: "60px", objectFit: "cover" }}
-              />
-            ) : (
-              <span className="text-sm text-gray-500 italic">No Icon</span>
-            )}
-          </div>
-        );
-      case "dark_mode_icon":
-        return (
-          <div className="flex justify-center">
-            {item.dark_mode_icon_url ? (
-              <img
-                src={item.dark_mode_icon_url}
-                alt={item.name}
-                className="rounded-lg border border-gray-200"
-                style={{ width: "60px", height: "60px", objectFit: "cover" }}
-              />
-            ) : (
-              <span className="text-sm text-gray-500 italic">No Icon</span>
-            )}
           </div>
         );
       case "night_mode":

@@ -117,6 +117,7 @@ const ProjectDetailsCreate = () => {
     cover_images: [],
     is_sold: false,
     plans: [],
+    show_on_home: false,
   });
 
   const [projectsType, setprojectsType] = useState([]);
@@ -312,7 +313,7 @@ const ProjectDetailsCreate = () => {
 
     setVirtualTourName("");
     setVirtualTourUrl("");
-    toast.success("Virtual tour added successfully");
+    toast.success("Virtual tour added successfully!");
   };
 
   const updateFormData = (key, files) => {
@@ -548,12 +549,12 @@ const ProjectDetailsCreate = () => {
     const sizeInMB = file.size / (1024 * 1024);
 
     if (!allowedImageTypes.includes(fileType)) {
-      toast.error("❌ Please upload a valid image.");
+      toast.error("Please upload a valid image.");
       return;
     }
 
     if (sizeInMB > 5) {
-      toast.error("❌ Image size must be less than 5MB.");
+      toast.error("Image size must be less than 5MB.");
       return;
     }
 
@@ -1747,7 +1748,7 @@ const ProjectDetailsCreate = () => {
         },
       });
 
-      toast.success("Project submitted successfully");
+      toast.success("Project created successfully!");
       sessionStorage.removeItem("cached_projects");
       Navigate("/maintenance/project-details-list");
     } catch (error) {
@@ -4958,13 +4959,13 @@ const ProjectDetailsCreate = () => {
               <div className="flex items-center gap-2 text-[11px] font-medium select-none">
                 <div
                   role="switch"
-                  aria-checked={visibility.showOnHomePage}
-                  aria-label={visibility.showOnHomePage ? "Deactivate show on home page" : "Activate show on home page"}
+                  aria-checked={formData.show_on_home}
+                  aria-label={formData.show_on_home ? "Deactivate show on home page" : "Activate show on home page"}
                   tabIndex={0}
-                  onClick={() => setVisibility(prev => ({ ...prev, showOnHomePage: !prev.showOnHomePage }))}
-                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, showOnHomePage: !prev.showOnHomePage }))}
+                  onClick={() => setFormData(prev => ({ ...prev, show_on_home: !prev.show_on_home }))}
+                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setFormData(prev => ({ ...prev, show_on_home: !prev.show_on_home }))}
                   className="cursor-pointer"
-                  style={{ transform: visibility.showOnHomePage ? 'scaleX(1)' : 'scaleX(-1)' }}
+                  style={{ transform: formData.show_on_home ? 'scaleX(1)' : 'scaleX(-1)' }}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
                   <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
@@ -5005,7 +5006,7 @@ const ProjectDetailsCreate = () => {
             </div>
 
             {/* Show on Project Detail Page */}
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
                 <p className="text-sm text-gray-500">Display this project on individual project detail pages</p>
@@ -5057,10 +5058,10 @@ const ProjectDetailsCreate = () => {
                 </svg>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Show on Booking Page */}
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
                 <p className="text-sm text-gray-500">Display this project on the booking page</p>
@@ -5112,10 +5113,10 @@ const ProjectDetailsCreate = () => {
                 </svg>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Featured Project */}
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-medium text-gray-900">Featured Project</h3>
                 <p className="text-sm text-gray-500">Mark as a featured project for priority display</p>
@@ -5167,7 +5168,7 @@ const ProjectDetailsCreate = () => {
                 </svg>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 

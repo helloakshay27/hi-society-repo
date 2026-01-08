@@ -101,9 +101,9 @@ const ProjectBuildingType = () => {
         }
       );
       toast.success("Building type added successfully");
-      navigate("/setup-member/project-building-type-list");
+      navigate("/settings/project-building-type-list");
     } catch (error) {
-      console.error("Error adding building type:", error);
+      console.error("Error ading building type:", error);
       toast.error("Failed to add building type");
     } finally {
       setLoading(false);

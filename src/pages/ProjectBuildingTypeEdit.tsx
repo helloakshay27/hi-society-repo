@@ -49,7 +49,7 @@ const ProjectBuildingTypeEdit = () => {
   useEffect(() => {
     const fetchPropertyTypes = async () => {
       try {
-        const response = await axios.get(`${baseURL}property_types.json`, {
+        const response = await axios.get(`${baseURL}/property_types.json`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
@@ -74,7 +74,7 @@ const ProjectBuildingTypeEdit = () => {
     const fetchBuildingType = async (options) => {
       try {
         const response = await axios.get(
-          `${baseURL}building_types/${id}.json`,
+          `${baseURL}/building_types/${id}.json`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -130,7 +130,7 @@ const ProjectBuildingTypeEdit = () => {
     setLoading(true);
     try {
       await axios.put(
-        `${baseURL}building_types/${id}.json`,
+        `${baseURL}/building_types/${id}.json`,
         {
           building_type: {
             building_type: buildingType,
@@ -145,7 +145,7 @@ const ProjectBuildingTypeEdit = () => {
       );
 
       toast.success("Building type updated successfully");
-      navigate("/setup-member/project-building-type-list");
+      navigate("/settings/project-building-type-list");
     } catch {
       toast.error("Failed to update building type");
     } finally {

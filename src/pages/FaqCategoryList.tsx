@@ -127,8 +127,8 @@ const FaqCategoryList = () => {
     }
   };
 
-  const handleEdit = (id: number) => navigate(`/setup-member/faq-category-form/${id}`);
-  const handleAdd = () => navigate('/setup-member/faq-category-form');
+  const handleEdit = (id: number) => navigate(`/settings/faq-category-form/${id}`);
+  const handleAdd = () => navigate('/settings/faq-category-form');
 
   const handleToggle = async (id: number, currentStatus: boolean) => {
     toast.dismiss();

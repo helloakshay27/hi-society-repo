@@ -93,11 +93,11 @@ const ProjectConfigurationList = () => {
   };
 
   const handleAdd = () => {
-    navigate("/setup-member/project-configuration");
+    navigate("/settings/project-configuration");
   };
 
   const handleEdit = (id) => {
-    navigate(`/setup-member/project-configuration-edit/${id}`);
+    navigate(`/settings/project-configuration-edit/${id}`);
   };
 
   const handleToggleStatus = async (id, currentStatus) => {

@@ -126,8 +126,8 @@ const DepartmentList = () => {
     }
   };
 
-  const handleAddDepartment = () => navigate('/setup-member/department-create');
-  const handleEditDepartment = (id: number) => navigate(`/setup-member/department-edit/${id}`);
+  const handleAddDepartment = () => navigate('/settings/department-create');
+  const handleEditDepartment = (id: number) => navigate(`/settings/department-edit/${id}`);
 
   const handleToggleUser = async (id: number, active: boolean) => {
     try {
