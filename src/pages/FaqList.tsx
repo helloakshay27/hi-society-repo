@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Plus, Edit } from "lucide-react";
+import { Plus, Edit, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { API_CONFIG } from "@/config/apiConfig";
@@ -178,7 +178,7 @@ const FaqList = () => {
               onClick={() => handleEdit(item.id)}
               className="h-8 w-8 text-gray-600 hover:text-[#C72030] hover:bg-gray-100"
             >
-              <Edit className="h-4 w-4" />
+              <Pencil className="h-4 w-4" />
             </Button>
           </div>
         );

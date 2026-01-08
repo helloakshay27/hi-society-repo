@@ -384,7 +384,6 @@ const FaqCreate = () => {
                     label="Question"
                     variant="outlined"
                     fullWidth
-                    required
                     placeholder="Enter FAQ Question"
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
@@ -398,7 +397,6 @@ const FaqCreate = () => {
                     label="Answer"
                     variant="outlined"
                     fullWidth
-                    required
                     placeholder="Enter FAQ Answer"
                     value={answer}
                     onChange={(e) => setAnswer(e.target.value)}

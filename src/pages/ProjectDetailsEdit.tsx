@@ -3444,7 +3444,7 @@ const ProjectDetailsEdit = () => {
                    <h5 className="section-heading inline-flex items-center gap-1">
                     Project Banner{" "}
                     <span
-                      className="relative inline-block cursor-help"
+                      className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowTooltipBanner(true)}
                       onMouseLeave={() => setShowTooltipBanner(false)}
                     >
@@ -3580,7 +3580,7 @@ const ProjectDetailsEdit = () => {
                     <h5 className="section-heading inline-flex items-center gap-1">
                     Project Cover Image{" "}
                     <span
-                      className="relative inline-block cursor-help"
+                      className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowTooltipCover(true)}
                       onMouseLeave={() => setShowTooltipCover(false)}
                     >
@@ -3743,7 +3743,7 @@ const ProjectDetailsEdit = () => {
                     <h5 className="section-heading inline-flex items-center gap-1">
                     Gallery Images{" "}
                     <span
-                      className="relative inline-block cursor-help"
+                      className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowTooltipGallery(true)}
                       onMouseLeave={() => setShowTooltipGallery(false)}
                     >
@@ -3945,7 +3945,7 @@ const ProjectDetailsEdit = () => {
                     <h5 className="section-heading inline-flex items-center gap-1">
                     Floor Plan{" "}
                     <span
-                      className="relative inline-block cursor-help"
+                      className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowTooltipFloor(true)}
                       onMouseLeave={() => setShowTooltipFloor(false)}
                     >
@@ -4079,7 +4079,7 @@ const ProjectDetailsEdit = () => {
                   <h5 className="section-heading inline-flex items-center gap-1">
                     Brochure{" "}
                     <span
-                      className="relative inline-block cursor-help"
+                      className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowTooltipBrochure(true)}
                       onMouseLeave={() => setShowTooltipBrochure(false)}
                     >
@@ -4181,7 +4181,7 @@ const ProjectDetailsEdit = () => {
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project PPT{" "}
                           <span
-                            className="relative inline-block cursor-help"
+                            className="relative inline-block cursor-pointer"
                             onMouseEnter={() => setShowTooltipPPT(true)}
                             onMouseLeave={() => setShowTooltipPPT(false)}
                           >
@@ -4273,7 +4273,7 @@ const ProjectDetailsEdit = () => {
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Layout{" "}
                           <span
-                            className="relative inline-block cursor-help"
+                            className="relative inline-block cursor-pointer"
                             onMouseEnter={() => setShowTooltipLayout(true)}
                             onMouseLeave={() => setShowTooltipLayout(false)}
                           >
@@ -4396,7 +4396,7 @@ const ProjectDetailsEdit = () => {
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Creatives{" "}
                           <span
-                            className="relative inline-block cursor-help"
+                            className="relative inline-block cursor-pointer"
                             onMouseEnter={() => setShowTooltipCreatives(true)}
                              onMouseLeave={() => setShowTooltipCreatives(false)}
                             // onMouseLeave(() => setShowTooltipCreatives(false))
@@ -4524,7 +4524,7 @@ const ProjectDetailsEdit = () => {
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Creative Generics{" "}
                           <span
-                            className="relative inline-block cursor-help"
+                            className="relative inline-block cursor-pointer"
                             onMouseEnter={() => setShowTooltipCreativeGenerics(true)}
                             onMouseLeave={() => setShowTooltipCreativeGenerics(false)}
                           >
@@ -4657,7 +4657,7 @@ const ProjectDetailsEdit = () => {
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Creative Offers{" "}
                           <span
-                            className="relative inline-block cursor-help"
+                            className="relative inline-block cursor-pointer"
                             onMouseEnter={() => setShowTooltipCreativeOffers(true)}
                             onMouseLeave={() => setShowTooltipCreativeOffers(false)}
                           >
@@ -4790,7 +4790,7 @@ const ProjectDetailsEdit = () => {
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Interiors{" "}
                           <span
-                            className="relative inline-block cursor-help"
+                            className="relative inline-block cursor-pointer"
                             onMouseEnter={() => setShowTooltipInteriors(true)}
                             onMouseLeave={() => setShowTooltipInteriors(false)}
                           >
@@ -4919,7 +4919,7 @@ const ProjectDetailsEdit = () => {
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Exteriors{" "}
                           <span
-                            className="relative inline-block cursor-help"
+                            className="relative inline-block cursor-pointer"
                             onMouseEnter={() => setShowTooltipExteriors(true)}
                             onMouseLeave={() => setShowTooltipExteriors(false)}
                           >
@@ -5048,7 +5048,7 @@ const ProjectDetailsEdit = () => {
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Emailer Template{" "}
                           <span
-                            className="relative inline-block cursor-help"
+                            className="relative inline-block cursor-pointer"
                             onMouseEnter={() => setShowTooltipEmailer(true)}
                             onMouseLeave={() => setShowTooltipEmailer(false)}
                           >
@@ -5156,7 +5156,7 @@ const ProjectDetailsEdit = () => {
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Know Your Apartment Files{" "}
                           <span
-                            className="relative inline-block cursor-help"
+                            className="relative inline-block cursor-pointer"
                             onMouseEnter={() => setShowTooltipKYA(true)}
                             onMouseLeave={() => setShowTooltipKYA(false)}
                           >
@@ -5264,7 +5264,7 @@ const ProjectDetailsEdit = () => {
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Videos{" "}
                           <span
-                            className="relative inline-block cursor-help"
+                            className="relative inline-block cursor-pointer"
                             onMouseEnter={() => setShowTooltipVideos(true)}
                             onMouseLeave={() => setShowTooltipVideos(false)}
                           >
@@ -5412,7 +5412,7 @@ const ProjectDetailsEdit = () => {
           baseURL !== "https://rustomjee-live.lockated.com/" && ( */}
             <>
                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                        <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+                        <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: "#F6F4EE" }}>
                           <h2 className="text-lg font-medium text-gray-900 flex items-center">
                             <span
                               className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -5422,9 +5422,25 @@ const ProjectDetailsEdit = () => {
                             </span>
                             Virtual Tours
                           </h2>
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                            onClick={handleAddVirtualTour}
+                          >
+                            {/* <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width={18}
+                              height={18}
+                              fill="currentColor"
+                              viewBox="0 0 16 16"
+                            >
+                              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                            </svg> */}
+                            <span>Add</span>
+                          </button>
                         </div>
                   <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                     <TextField
                       label="Virtual Tour Name"
                       placeholder="Enter Virtual Tour Name"
@@ -5449,14 +5465,6 @@ const ProjectDetailsEdit = () => {
                       slotProps={{ inputLabel: { shrink: true } }}
                       InputProps={{ sx: fieldStyles }}
                     />
-                    <button
-                      type="button"
-                      className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
-                      onClick={handleAddVirtualTour}
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Add</span>
-                    </button>
                   </div>
                   {formData.virtual_tour_url_multiple.length > 0 && (
                     <div className="col-md-12 mt-2">

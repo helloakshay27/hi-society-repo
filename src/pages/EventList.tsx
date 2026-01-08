@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Eye, Settings, Users, UserCheck, UserX, Clock } from "lucide-react";
+import { Plus, Edit, Eye, Settings, Users, UserCheck, UserX, Clock, Pencil } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
@@ -186,14 +186,15 @@ const Eventlist = () => {
       case 'actions':
         return (
           <div className="flex gap-1">
-            {/* {eventPermissions.update === "true" && ( */}
-              <Button variant="ghost" size="sm" onClick={() => handleEditEvent(item.id)} title="Edit">
-                <Edit className="w-4 h-4" />
-              </Button>
-            {/* )} */}
+
             {/* {eventPermissions.show === "true" && ( */}
               <Button variant="ghost" size="sm" onClick={() => handleViewEvent(item.id)} title="View">
                 <Eye className="w-4 h-4" />
+              </Button>
+            {/* )} */}
+                        {/* {eventPermissions.update === "true" && ( */}
+              <Button variant="ghost" size="sm" onClick={() => handleEditEvent(item.id)} title="Edit">
+                <Pencil className="w-4 h-4" />
               </Button>
             {/* )} */}
           </div>

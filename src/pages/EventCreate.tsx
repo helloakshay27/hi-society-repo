@@ -752,27 +752,25 @@ const EventCreate = () => {
   }, []);
 
   useEffect(() => {
-    const fetchEvent = async () => {
+    const fetchUsers = async () => {
       try {
         const response = await axios.get(
-          `${baseURL}users/get_users.json`,
-
+          `${baseURL}/usergroups/cp_members_list.json`,
           {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-              "Content-Type": "application/json",
-            },
+             headers: {
+                      Authorization: getAuthHeader(),
+                      "Content-Type": "multipart/form-data",
+                    },
           }
         );
 
-        setEventUserID(response?.data.users || []);
-        // console.log("User", response)
-        console.log("eventUserID", eventUserID);
+        setEventUserID(response?.data || []);
+        console.log("eventUserID", response?.data);
       } catch (error) {
-        console.error("Error fetching Event:", error);
+        console.error("Error fetching Users:", error);
       }
     };
-    fetchEvent();
+    fetchUsers();
   }, []);
 
   useEffect(() => {
@@ -810,17 +808,14 @@ const EventCreate = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get(`${baseURL}usergroups.json`, {
+        const response = await axios.get(`${baseURL}/crm/usergroups.json?q[group_type_eq]=cp`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+                   Authorization: getAuthHeader(),
+                   "Content-Type": "multipart/form-data",
+                 },
         });
 
-        // If response.data is an array, use it directly
-        const groupsData = Array.isArray(response.data)
-          ? response.data
-          : response.data.usergroups || [];
+        const groupsData = response.data.usergroups || [];
         setGroups(groupsData);
         console.log("Fetched Groups:", groupsData);
       } catch (error) {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Plus, Eye, Edit } from 'lucide-react';
+import { Plus, Eye, Edit, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
@@ -132,7 +132,7 @@ const ProjectDetailsList = () => {
               <Eye className="w-4 h-4 text-gray-700" />
             </Button>
             <Button variant="ghost" size="sm" onClick={() => handleEditProject(item.id)} title="Edit">
-              <Edit className="w-4 h-4 text-gray-700" />
+              <Pencil className="w-4 h-4" />
             </Button>
           </div>
         );

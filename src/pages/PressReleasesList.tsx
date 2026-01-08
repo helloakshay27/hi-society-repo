@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Edit, Plus } from "lucide-react";
+import { Edit, Pencil, Plus } from "lucide-react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -170,7 +170,7 @@ const PressReleasesList = () => {
                 onClick={() => handleEdit(item.id)}
                 className="h-8 w-8 text-gray-600 hover:text-[#C72030] hover:bg-gray-100"
               >
-                <Edit className="h-4 w-4" />
+                <Pencil className="h-4 w-4" />
               </Button>
             {/* )} */}
           </div>

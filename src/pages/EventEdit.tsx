@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import MultiSelectBox from "../components/ui/multi-selector";
 import { ImageUploadingButton } from "../components/reusable/ImageUploadingButton";
 import { ImageCropper } from "../components/reusable/ImageCropper";
@@ -675,13 +675,13 @@ const EventEdit = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${baseURL}users/get_users`, {
+        const response = await axios.get(`${baseURL}/usergroups/cp_members_list.json`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
+            Authorization: getAuthHeader(),
+            "Content-Type": "multipart/form-data",
           },
         });
-        setEventUserID(response.data.users || []);
+        setEventUserID(response.data || []);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
@@ -693,15 +693,13 @@ const EventEdit = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get(`${baseURL}usergroups.json`, {
+        const response = await axios.get(`${baseURL}/crm/usergroups.json?q[group_type_eq]=cp`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+                   Authorization: getAuthHeader(),
+                   "Content-Type": "multipart/form-data",
+                 },
         });
-        const groupsData = Array.isArray(response.data)
-          ? response.data
-          : response.data.usergroups || [];
+        const groupsData = response.data.usergroups || [];
         setGroups(groupsData);
       } catch (error) {
         console.error("Error fetching Groups:", error);
