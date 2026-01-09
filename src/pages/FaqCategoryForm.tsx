@@ -95,8 +95,10 @@ const FaqCategoryForm = () => {
       const fetchData = async () => {
         try {
           setLoading(true);
-          const res = await axios.get(`${baseURL}faq_categories/${faqId}.json`, {
-            headers: getAuthHeaders()
+          const res = await axios.get(`${baseURL}/faq_categories/${faqId}.json`, {
+            headers: {
+              Authorization: getAuthHeader(),
+            }
           });
           
           const categoryData = res.data?.faq_category || res.data;
@@ -118,7 +120,7 @@ const FaqCategoryForm = () => {
       };
       fetchData();
     }
-  }, [faqId, isEditMode, hasFetched]);
+  }, [faqId, isEditMode, hasFetched, baseURL]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -136,11 +138,6 @@ const FaqCategoryForm = () => {
       return;
     }
 
-    if (!formData.site_id) {
-      toast.error("Site is required");
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -148,16 +145,24 @@ const FaqCategoryForm = () => {
       
       if (isEditMode) {
         await axios.put(
-          `${baseURL}faq_categories/${faqId}.json`,
+          `${baseURL}/faq_categories/${faqId}.json`,
           payload,
-          { headers: getAuthHeaders() }
+          { 
+             headers: {
+                        Authorization: getAuthHeader(),
+                      },
+          }
         );
         toast.success("FAQ Category updated successfully!");
       } else {
         await axios.post(
-          `${baseURL}faq_categories.json`,
+          `${baseURL}/faq_categories.json`,
           payload,
-          { headers: getAuthHeaders() }
+          { 
+            headers: {
+                       Authorization: getAuthHeader(),
+                     },
+          }
         );
         toast.success("FAQ Category created successfully!");
       }
@@ -222,7 +227,7 @@ const FaqCategoryForm = () => {
                 />
 
                 {/* Site */}
-                <FormControl fullWidth variant="outlined" required>
+                <FormControl fullWidth variant="outlined">
                   <InputLabel shrink htmlFor="site-select">
                     Site
                   </InputLabel>
@@ -255,7 +260,7 @@ const FaqCategoryForm = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#C4B89D59] text-red-700 px-8 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[#f2eee9] hover:bg-[#f2eee9] text-[#B8252F] px-8 py-2"
           >
             {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update' : 'Submit')}
           </button>
@@ -263,7 +268,7 @@ const FaqCategoryForm = () => {
             type="button"
             onClick={() => navigate("/settings/faq-category-list")}
             disabled={loading}
-            className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2 rounded transition-colors"
+            className="border-[#bf213e] text-[#bf213e] hover:bg-gray-50 px-8 py-2 border-[1px]"
           >
             Cancel
           </button>

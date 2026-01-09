@@ -297,13 +297,13 @@ const NoticeboardEdit = () => {
       // Individuals
       data.append("noticeboard[shared]", "1");
       formData.user_ids.forEach((userId) => {
-        data.append("noticeboard[ppusers][]", userId.toString());
+        data.append("noticeboard[cpusers][]", userId.toString());
       });
     } else if (formData.shared === "2" && formData.group_id.length > 0) {
       // Groups
       data.append("noticeboard[shared]", "1");
       formData.group_id.forEach((groupId) => {
-        data.append("noticeboard[ppusers][]", groupId.toString());
+        data.append("noticeboard[cp_group_id][]", groupId.toString());
       });
     }
 
@@ -355,11 +355,11 @@ const NoticeboardEdit = () => {
   useEffect(() => {
     const fetchNoticeboard = async () => {
       try {
-        const response = await axios.get(`${baseURL}noticeboards/${id}.json`, {
+        const response = await axios.get(`${baseURL}/crm/admin/noticeboards/${id}.json`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+                   Authorization: getAuthHeader(),
+                   "Content-Type": "multipart/form-data",
+                 },
         });
         
         const noticeboard = response.data.noticeboard || response.data;
@@ -831,9 +831,43 @@ const NoticeboardEdit = () => {
                 <h3 className="text-sm font-medium text-gray-900">
                   Broadcast Cover Image
                 </h3>
+                <input
+                  type="file"
+                  id="editCoverImageInput"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    if (files.length === 0) return;
+                    
+                    const validFiles = files.filter(file => {
+                      const maxSize = 3 * 1024 * 1024; // 3MB
+                      if (file.size > maxSize) {
+                        toast.error(`${file.name} exceeds 3MB limit`);
+                        return false;
+                      }
+                      return true;
+                    });
+
+                    if (validFiles.length > 0) {
+                      const key = 'cover_image_1_by_1';
+                      const newFiles = validFiles.map(file => ({
+                        file,
+                        name: file.name,
+                        preview: URL.createObjectURL(file),
+                        ratio: '1:1',
+                        id: `${key}-${Date.now()}-${Math.random()}`,
+                      }));
+                      updateFormData(key, newFiles);
+                      toast.success(`${validFiles.length} image(s) uploaded`);
+                    }
+                    e.target.value = '';
+                  }}
+                />
                 <button
                   type="button"
-                  onClick={() => setShowCoverUploader(true)}
+                  onClick={() => document.getElementById('editCoverImageInput')?.click()}
                   className="text-sm text-[#C72030] hover:underline font-medium"
                 >
                   + Upload
@@ -896,9 +930,56 @@ const NoticeboardEdit = () => {
                 <h3 className="text-sm font-medium text-gray-900">
                   Broadcast Attachment
                 </h3>
+                <input
+                  type="file"
+                  id="editBroadcastAttachmentInput"
+                  accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    if (files.length === 0) return;
+                    
+                    const validFiles = files.filter(file => {
+                      const isVideo = file.type.startsWith('video/');
+                      const isDocument = file.type === 'application/pdf' || 
+                                       file.type.includes('document') || 
+                                       file.type.includes('word') || 
+                                       file.type.includes('excel') || 
+                                       file.type.includes('text');
+                      const maxSize = isVideo ? 10 * 1024 * 1024 : (isDocument ? 10 * 1024 * 1024 : 3 * 1024 * 1024);
+                      
+                      if (file.size > maxSize) {
+                        const sizeMB = Math.round(maxSize / (1024 * 1024));
+                        toast.error(`${file.name} exceeds ${sizeMB}MB limit`);
+                        return false;
+                      }
+                      return true;
+                    });
+
+                    if (validFiles.length > 0) {
+                      const key = 'broadcast_images_1_by_1';
+                      const newFiles = validFiles.map(file => {
+                        const isVideo = file.type.startsWith('video/');
+                        const isImage = file.type.startsWith('image/');
+                        return {
+                          file,
+                          name: file.name,
+                          preview: isImage || isVideo ? URL.createObjectURL(file) : null,
+                          ratio: '1:1',
+                          type: isVideo ? 'video' : (isImage ? 'image' : 'document'),
+                          id: `${key}-${Date.now()}-${Math.random()}`,
+                        };
+                      });
+                      updateFormData(key, newFiles);
+                      toast.success(`${validFiles.length} file(s) uploaded`);
+                    }
+                    e.target.value = '';
+                  }}
+                />
                 <button
                   type="button"
-                  onClick={() => setShowBroadcastUploader(true)}
+                  onClick={() => document.getElementById('editBroadcastAttachmentInput')?.click()}
                   className="text-sm text-[#C72030] hover:underline font-medium"
                 >
                   + Upload
@@ -926,7 +1007,11 @@ const NoticeboardEdit = () => {
                             </TableCell>
                             <TableCell>{label}</TableCell>
                             <TableCell>
-                              {img.type === "video" ? (
+                              {img.type === "document" || (!img.type && !img.preview) ? (
+                                <div className="flex items-center justify-center w-16 h-16">
+                                  <FileText className="w-8 h-8 text-[#C72030]" />
+                                </div>
+                              ) : img.type === "video" ? (
                                 <video
                                   src={img.preview}
                                   className="w-16 h-16 object-cover rounded"

@@ -57,10 +57,6 @@ svg path{
   stroke: var(--red);
 }
 
-table path {
-  fill: var(--red);
-}
-
 /* .tab-content svg path{
   fill: var(--red) !important;
 

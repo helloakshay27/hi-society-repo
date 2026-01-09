@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-
-
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 
 const NoticeboardDetails = () => {
+  const baseURL = API_CONFIG.BASE_URL;
   const { id } = useParams();
   const navigate = useNavigate();
   const [noticeboardData, setNoticeboardData] = useState(null);
@@ -28,13 +30,12 @@ const NoticeboardDetails = () => {
         }
 
         console.log("Fetching broadcast details for ID:", noticeboardId);
-        console.log("API URL:", `${baseURL}noticeboards/${noticeboardId}.json`);
+        console.log("API URL:", `${baseURL}/crm/admin/noticeboards/${noticeboardId}.json`);
         
-        const response = await axios.get(`${baseURL}noticeboards/${noticeboardId}.json`, {
+        const response = await axios.get(`${baseURL}/crm/admin/noticeboards/${noticeboardId}.json`, {
           headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+                   Authorization: getAuthHeader(),
+                 },
         });
         
         if (!response.data) {
@@ -43,8 +44,9 @@ const NoticeboardDetails = () => {
           return;
         }
 
-        // The API returns the noticeboard data directly in response.data
-        setNoticeboardData(response.data);
+        // The API returns an array with a single noticeboard object
+        const noticeboardDetails = Array.isArray(response.data) ? response.data[0] : response.data;
+        setNoticeboardData(noticeboardDetails);
         
         // Debug logging to understand the image data structure
         console.log("Broadcast details loaded for ID:", noticeboardId);
@@ -140,6 +142,7 @@ if (loading) {
 
   return (
     <>
+      <Toaster position="top-right" richColors closeButton />
       {/* Debug info */}
       <div style={{ display: 'none' }}>
         Debug: ID={noticeboardId}, Loading={loading.toString()}, HasData={!!noticeboardData}

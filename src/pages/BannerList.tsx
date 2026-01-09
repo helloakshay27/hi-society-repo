@@ -5,7 +5,7 @@ import { API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit } from "lucide-react";
+import { Plus, Edit, Pencil } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
@@ -172,7 +172,7 @@ const BannerList = () => {
           <div className="flex gap-1">
             {/* {bannerPermissions.update === "true" && ( */}
               <Button variant="ghost" size="sm" onClick={() => handleEditBanner(item.id)} title="Edit">
-                <Edit className="w-4 h-4" />
+                <Pencil className="w-4 h-4" />
               </Button>
             {/* )} */}
           </div>

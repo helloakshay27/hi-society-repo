@@ -27,13 +27,13 @@ const BroadcastCreate = () => {
     notice_text: "",
     expire_time: "",
     expire_date: "",
-    shared: "0",
+    shared: "",
     group_id: [],
     user_ids: [],
-    is_important: false,
-    email_trigger_enabled: false,
-    active: true,
-    publish: "1",
+    is_important: "",
+    email_trigger_enabled: "",
+    active: "",
+    publish: "",
     notice_type: "General",
     project_id: "",
     flag_expire: false,
@@ -297,13 +297,13 @@ const BroadcastCreate = () => {
       // Individuals
       data.append("noticeboard[shared]", "1");
       formData.user_ids.forEach((userId) => {
-        data.append("noticeboard[ppusers][]", userId.toString());
+        data.append("noticeboard[cpusers][]", userId.toString());
       });
     } else if (formData.shared === "2" && formData.group_id.length > 0) {
       // Groups
       data.append("noticeboard[shared]", "1");
       formData.group_id.forEach((groupId) => {
-        data.append("noticeboard[ppusers][]", groupId.toString());
+        data.append("noticeboard[cp_group_id][]", groupId.toString());
       });
     }
 
@@ -354,7 +354,7 @@ const BroadcastCreate = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${baseURL}/crm/usergroups/get_members_list.json`, {
+        const response = await axios.get(`${baseURL}/usergroups/cp_members_list.json`, {
           headers: {
             Authorization: getAuthHeader(),
             "Content-Type": "application/json",
@@ -785,7 +785,7 @@ const BroadcastCreate = () => {
                         return selected
                           .map((id) => {
                             const member = users.find((u) => u.id.toString() === id.toString());
-                            return member ? `${member.user?.firstname || ''} ${member.user?.lastname || ''}`.trim() : '';
+                            return member ? `${member.firstname || ''} ${member.lastname || ''}`.trim() : '';
                           })
                           .filter(Boolean)
                           .join(", ");
@@ -796,7 +796,7 @@ const BroadcastCreate = () => {
                       </MenuItem>
                       {users.map((member) => (
                         <MenuItem key={member.id} value={member.id}>
-                          {`${member.user?.firstname || ''} ${member.user?.lastname || ''}`.trim()}
+                          {`${member.firstname || ''} ${member.lastname || ''}`.trim()}
                         </MenuItem>
                       ))}
                     </MuiSelect>
@@ -869,7 +869,7 @@ const BroadcastCreate = () => {
                 <h5 className="text-base font-semibold">
                   Broadcast Cover Image{" "}
                   <span
-                    className="relative inline-block cursor-help"
+                    className="relative inline-block cursor-pointer"
                     onMouseEnter={() => setShowTooltip(true)}
                     onMouseLeave={() => setShowTooltip(false)}
                   >
@@ -881,10 +881,45 @@ const BroadcastCreate = () => {
                     )}
                   </span>
                 </h5>
+                <input
+                  type="file"
+                  id="coverImageInput"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    if (files.length === 0) return;
+                    
+                    const validFiles = files.filter(file => {
+                      const maxSize = 3 * 1024 * 1024; // 3MB
+                      if (file.size > maxSize) {
+                        toast.error(`${file.name} exceeds 3MB limit`);
+                        return false;
+                      }
+                      return true;
+                    });
+
+                    if (validFiles.length > 0) {
+                      // Add to first available ratio (1:1 by default)
+                      const key = 'cover_image_1_by_1';
+                      const newFiles = validFiles.map(file => ({
+                        file,
+                        name: file.name,
+                        preview: URL.createObjectURL(file),
+                        ratio: '1:1',
+                        id: `${key}-${Date.now()}-${Math.random()}`,
+                      }));
+                      updateFormData(key, newFiles);
+                      toast.success(`${validFiles.length} image(s) uploaded`);
+                    }
+                    e.target.value = '';
+                  }}
+                />
                 <button
                   className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                   type="button"
-                  onClick={() => setShowCoverUploader(true)}
+                  onClick={() => document.getElementById('coverImageInput')?.click()}
                 >
                   {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
@@ -943,22 +978,69 @@ const BroadcastCreate = () => {
                 <h5 className="text-base font-semibold">
                   Broadcast Attachment{" "}
                   <span
-                    className="relative inline-block cursor-help"
+                    className="relative inline-block cursor-pointer"
                     onMouseEnter={() => setShowAttachmentTooltip(true)}
                     onMouseLeave={() => setShowAttachmentTooltip(false)}
                   >
                     <span className="text-blue-500">[i]</span>
                     {showAttachmentTooltip && (
                       <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                        Max Upload Size 3 MB (Images), 10 MB (Videos)
+                        Max Upload Size 3 MB (Images), 10 MB (PDFs/Docs), 10 MB (Videos)
                       </span>
                     )}
                   </span>
                 </h5>
+                <input
+                  type="file"
+                  id="broadcastAttachmentInput"
+                  accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    if (files.length === 0) return;
+                    
+                    const validFiles = files.filter(file => {
+                      const isVideo = file.type.startsWith('video/');
+                      const isDocument = file.type === 'application/pdf' || 
+                                       file.type.includes('document') || 
+                                       file.type.includes('word') || 
+                                       file.type.includes('excel') || 
+                                       file.type.includes('text');
+                      const maxSize = isVideo ? 10 * 1024 * 1024 : (isDocument ? 10 * 1024 * 1024 : 3 * 1024 * 1024);
+                      
+                      if (file.size > maxSize) {
+                        const sizeMB = Math.round(maxSize / (1024 * 1024));
+                        toast.error(`${file.name} exceeds ${sizeMB}MB limit`);
+                        return false;
+                      }
+                      return true;
+                    });
+
+                    if (validFiles.length > 0) {
+                      const key = 'broadcast_images_1_by_1';
+                      const newFiles = validFiles.map(file => {
+                        const isVideo = file.type.startsWith('video/');
+                        const isImage = file.type.startsWith('image/');
+                        return {
+                          file,
+                          name: file.name,
+                          preview: isImage || isVideo ? URL.createObjectURL(file) : null,
+                          ratio: '1:1',
+                          type: isVideo ? 'video' : (isImage ? 'image' : 'document'),
+                          id: `${key}-${Date.now()}-${Math.random()}`,
+                        };
+                      });
+                      updateFormData(key, newFiles);
+                      toast.success(`${validFiles.length} file(s) uploaded`);
+                    }
+                    e.target.value = '';
+                  }}
+                />
                 <button
                   className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-[45px] px-4 text-sm font-medium rounded-md flex items-center gap-2"
                   type="button"
-                  onClick={() => setShowBroadcastUploader(true)}
+                  onClick={() => document.getElementById('broadcastAttachmentInput')?.click()}
                 >
                   {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
@@ -982,11 +1064,16 @@ const BroadcastCreate = () => {
                       (formData[key] || []).length > 0
                         ? formData[key].map((file, index) => {
                             const isVideo = file.type === "video" || (file.file && file.file.type.startsWith("video/"));
+                            const isDocument = file.type === "document" || (!isVideo && !file.preview);
                             return (
                               <TableRow key={`${key}-${file.id}`} className="hover:bg-gray-50 transition-colors">
                                 <TableCell className="py-3 px-4 font-medium">{file.name || "Unnamed File"}</TableCell>
                                 <TableCell className="py-3 px-4">
-                                  {isVideo ? (
+                                  {isDocument ? (
+                                    <div className="flex items-center justify-center" style={{ width: 100, height: 100 }}>
+                                      <FileText className="w-12 h-12 text-[#C72030]" />
+                                    </div>
+                                  ) : isVideo ? (
                                     <video controls style={{ maxWidth: 100, maxHeight: 100 }} className="rounded border border-gray-200">
                                       <source src={file.preview} type={file.file?.type || "video/mp4"} />
                                     </video>

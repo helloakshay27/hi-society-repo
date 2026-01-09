@@ -568,7 +568,6 @@ const FaqEdit = () => {
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   name="question"
-                  required
                   fullWidth
                   variant="outlined"
                   slotProps={{
@@ -589,7 +588,6 @@ const FaqEdit = () => {
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   name="answer"
-                  required
                   fullWidth
                   variant="outlined"
                   slotProps={{

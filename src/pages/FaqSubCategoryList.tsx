@@ -135,11 +135,11 @@ const FaqSubCategoryList = () => {
   };
 
   const handleEdit = (id: number) => {
-    navigate(`/setup-member/faq-subcategory/${id}`);
+    navigate(`/settings/faq-subcategory/${id}`);
   };
 
   const handleAdd = () => {
-    navigate('/setup-member/faq-subcategory');
+    navigate('/settings/faq-subcategory');
   };
 
   const handleToggle = async (id: number, currentStatus: boolean) => {

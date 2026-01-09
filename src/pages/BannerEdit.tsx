@@ -857,7 +857,7 @@ const BannerEdit = () => {
                     <h5 className="font-semibold inline-flex items-center gap-1">
                       Banner Attachment{" "}
                       <span
-                        className="relative inline-block cursor-help"
+                        className="relative inline-block cursor-pointer"
                         onMouseEnter={() => setShowVideoTooltip(true)}
                         onMouseLeave={() => setShowVideoTooltip(false)}
                       >

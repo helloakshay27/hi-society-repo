@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { ChevronRight, ArrowLeft, FileText } from "lucide-react";
 import SelectBox from "../components/ui/select-box";
 import {
@@ -58,17 +58,14 @@ const FaqSubCategory = () => {
     },
   };
 
-  const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-    "Content-Type": "application/json",
-  });
-
   useEffect(() => {
     const fetchFaqCategories = async () => {
       try {
         setCategoriesLoading(true);
         const res = await axios.get(`${baseURL}/faq_categories.json`, {
-          headers: getAuthHeaders()
+          headers: {
+            Authorization: getAuthHeader(),
+          }
         });
         
         let categoriesData = [];
@@ -102,7 +99,9 @@ const FaqSubCategory = () => {
         try {
           setLoading(true);
           const res = await axios.get(`${baseURL}/faq_sub_categories/${faqSubId}.json`, {
-            headers: getAuthHeaders()
+            headers: {
+              Authorization: getAuthHeader(),
+            }
           });
           
           const subCategoryData = res.data?.faq_sub_category || res.data;
@@ -166,19 +165,25 @@ const FaqSubCategory = () => {
         await axios.put(
           `${baseURL}/faq_sub_categories/${faqSubId}.json`,
           payload,
-          { headers: getAuthHeaders() }
+          { headers: {
+              Authorization: getAuthHeader(),
+            }
+          }
         );
         toast.success("FAQ Sub Category updated successfully!");
       } else {
         await axios.post(
           `${baseURL}/faq_sub_categories.json`,
           payload,
-          { headers: getAuthHeaders() }
+          { headers: {
+              Authorization: getAuthHeader(),
+            }
+          }
         );
         toast.success("FAQ Sub Category created successfully!");
       }
 
-      navigate("/setup-member/faq-subcategory-list");
+      navigate("/settings/faq-subcategory-list");
     } catch (error) {
       console.error("Error:", error);
       const errorMessage = error.response?.data?.message || "Failed to submit form";
@@ -276,15 +281,15 @@ const FaqSubCategory = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[#f2eee9] hover:bg-[#f2eee9] text-[#B8252F] px-8 py-2"
           >
             {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update' : 'Submit')}
           </button>
           <button
             type="button"
-            onClick={() => navigate("/setup-member/faq-subcategory-list")}
+            onClick={() => navigate("/settings/faq-subcategory-list")}
             disabled={loading}
-            className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2 rounded transition-colors"
+            className="border-[#bf213e] text-[#bf213e] hover:bg-gray-50 px-8 py-2 border-[1px]"
           >
             Cancel
           </button>

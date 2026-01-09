@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import MultiSelectBox from "../components/ui/multi-selector";
 import { ImageUploadingButton } from "../components/reusable/ImageUploadingButton";
 import { ImageCropper } from "../components/reusable/ImageCropper";
@@ -97,7 +97,7 @@ const EventEdit = () => {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [showPreviousSections, setShowPreviousSections] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const totalSteps = 4;
+  const totalSteps = 3;
 
   // Invite CPs state
   const [channelPartners, setChannelPartners] = useState([]);
@@ -675,13 +675,13 @@ const EventEdit = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${baseURL}users/get_users`, {
+        const response = await axios.get(`${baseURL}/usergroups/cp_members_list.json`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
+            Authorization: getAuthHeader(),
+            "Content-Type": "multipart/form-data",
           },
         });
-        setEventUserID(response.data.users || []);
+        setEventUserID(response.data || []);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
@@ -693,15 +693,13 @@ const EventEdit = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get(`${baseURL}usergroups.json`, {
+        const response = await axios.get(`${baseURL}/crm/usergroups.json?q[group_type_eq]=cp`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+                   Authorization: getAuthHeader(),
+                   "Content-Type": "multipart/form-data",
+                 },
         });
-        const groupsData = Array.isArray(response.data)
-          ? response.data
-          : response.data.usergroups || [];
+        const groupsData = response.data.usergroups || [];
         setGroups(groupsData);
       } catch (error) {
         console.error("Error fetching Groups:", error);
@@ -1298,7 +1296,7 @@ const EventEdit = () => {
 
   // Stepper component
   const StepperComponent = () => {
-    const steps = ['Event Details', 'Invite CPs', 'QR Code Generation', 'Event Related Images'];
+    const steps = ['Event Details', 'Event Related Images', 'Invite CPs'];
 
     return (
       <Box sx={{ mb: 4 }}>
@@ -1998,8 +1996,8 @@ const EventEdit = () => {
         // </div>
         )}
 
-        {/* Step 2: Invite CPs */}
-        {currentStep === 1 && !isPreviewMode && (
+        {/* Step 3: Invite CPs */}
+        {currentStep === 2 && !isPreviewMode && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -2150,188 +2148,8 @@ const EventEdit = () => {
           </div>
         )}
 
-        {/* Step 3: QR Code Generation */}
-        {currentStep === 2 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
-                  }}
-                >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-                </Avatar>
-                QR Code Generation
-              </h2>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleDownloadAllQRCodes}
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-                >
-                  Download All QR Codes
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSendAllQRCodesEmail}
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-                >
-                  Send QR Codes via Email
-                </button>
-              </div>
-            </div>
-            <div className="p-6 space-y-6">
-              {/* QR Code Information Box */}
-              <div className="bg-[#C4B89D59] border border-gray-200 rounded-lg p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-24 h-24 bg-white border-2 border-gray-300 rounded flex items-center justify-center">
-                      <svg width="80" height="80" viewBox="0 0 80 80">
-                        <rect width="80" height="80" fill="white"/>
-                        <g fill="black">
-                          <rect x="8" y="8" width="4" height="4"/>
-                          <rect x="16" y="8" width="4" height="4"/>
-                          <rect x="24" y="8" width="4" height="4"/>
-                          <rect x="8" y="16" width="4" height="4"/>
-                          <rect x="24" y="16" width="4" height="4"/>
-                          <rect x="8" y="24" width="4" height="4"/>
-                          <rect x="16" y="24" width="4" height="4"/>
-                          <rect x="24" y="24" width="4" height="4"/>
-                          <rect x="48" y="8" width="4" height="4"/>
-                          <rect x="56" y="8" width="4" height="4"/>
-                          <rect x="64" y="8" width="4" height="4"/>
-                          <rect x="48" y="16" width="4" height="4"/>
-                          <rect x="64" y="16" width="4" height="4"/>
-                          <rect x="48" y="24" width="4" height="4"/>
-                          <rect x="56" y="24" width="4" height="4"/>
-                          <rect x="64" y="24" width="4" height="4"/>
-                          <rect x="8" y="48" width="4" height="4"/>
-                          <rect x="16" y="48" width="4" height="4"/>
-                          <rect x="24" y="48" width="4" height="4"/>
-                          <rect x="8" y="56" width="4" height="4"/>
-                          <rect x="24" y="56" width="4" height="4"/>
-                          <rect x="8" y="64" width="4" height="4"/>
-                          <rect x="16" y="64" width="4" height="4"/>
-                          <rect x="24" y="64" width="4" height="4"/>
-                          <rect x="32" y="32" width="4" height="4"/>
-                          <rect x="40" y="40" width="4" height="4"/>
-                        </g>
-                      </svg>
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1">
-                    <h3 className="font-semibold mb-3" style={{ 
-                      fontFamily: 'Work Sans, sans-serif',
-                      fontWeight: 400,
-                      fontSize: '13px',
-                      lineHeight: '20.18px',
-                      color: '#1A1A1A',
-                    }}>Each QR code is mapped to:</h3>
-                    <ul className="space-y-2" style={{
-                      fontFamily: 'Work Sans, sans-serif',
-                      fontWeight: 400,
-                      fontSize: '13px',
-                      lineHeight: '20.18px',
-                      color: '#1A1A1A80'
-                    }}>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Event ID: EVT-{id}</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>CP ID and Name</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Valid only for the specified event date & time</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              {/* QR Code Table */}
-              <div>
-                <div className="rounded-lg border border-gray-200 overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
-                          Actions
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 text-center border-r border-white">
-                          Sr. No.
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
-                          CP Name
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
-                          Company Name
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
-                          Email ID
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">
-                          QR Code ID
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {qrCodeData.map((row) => (
-                        <TableRow key={row.id} className="hover:bg-gray-50">
-                          <TableCell className="py-3 px-4">
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleDownloadQRCode(row.qrCodeId, row.cpName)}
-                                className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
-                                title="Download QR Code"
-                              >
-                                <Download className="w-4 h-4" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleSendQRCodeEmail(row.emailId, row.cpName)}
-                                className="p-1.5 text-[#C72030] hover:bg-[#FFF5F5] rounded transition-colors"
-                                title="Send via Email"
-                              >
-                                <Mail className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-3 px-4 text-center font-medium">
-                            {row.srNo}
-                          </TableCell>
-                          <TableCell className="py-3 px-4">
-                            {row.cpName}
-                          </TableCell>
-                          <TableCell className="py-3 px-4">
-                            {row.companyName}
-                          </TableCell>
-                          <TableCell className="py-3 px-4">
-                            {row.emailId}
-                          </TableCell>
-                          <TableCell className="py-3 px-4 text-sm text-gray-600">
-                            {row.qrCodeId}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 4: Event Related Images */}
-        {currentStep === 3 && !isPreviewMode && (
+        {/* Step 2: Event Related Images */}
+        {currentStep === 1 && !isPreviewMode && (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">

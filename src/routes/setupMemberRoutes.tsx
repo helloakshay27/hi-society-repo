@@ -87,6 +87,7 @@ const NoticeboardCreate = lazy(() => import("@/pages/NoticeboardCreate"));
 const NoticeboardEdit = lazy(() => import("@/pages/NoticeboardEdit"));
 const NoticeboardList = lazy(() => import("@/pages/NoticeboardList"));
 const NoticeboardDetails = lazy(() => import("@/pages/NoticeboardDetails"));
+const BroadcastDetails = lazy(() => import("@/pages/BroadcastDetails"));
 const OrganizationCreate = lazy(() => import("@/pages/OrganizationCreate"));
 const OrganizationList = lazy(() => import("@/pages/OrganizationList"));
 const OrganizationUpdate = lazy(() => import("@/pages/OrganizationUpdate"));
@@ -132,6 +133,7 @@ const UserEdit = lazy(() => import("@/pages/UserEdit"));
 const UserGroupsCreate = lazy(() => import("@/pages/UserGroupsCreate"));
 const UserGroupsEdit = lazy(() => import("@/pages/UserGroupsEdit"));
 const UserGroupsList = lazy(() => import("@/pages/UserGroupsList"));
+const FMGroupDashboard = lazy(() => import("@/pages/setup/FMGroupDashboard"));
 const UserList = lazy(() => import("@/pages/UserList"));
 const PressReleasesCreate = lazy(() => import("@/pages/PressReleasesCreate"));
 const PressReleasesEdit = lazy(() => import("@/pages/PressReleasesEdit"));
@@ -326,15 +328,17 @@ export const setupMemberRoutes = (
     <Route path="/maintenance/noticeboard-list" Component={withSuspense(NoticeboardList)} />
     <Route path="/maintenance/noticeboard-create" Component={withSuspense(BroadcastCreate)} />
     <Route path="/maintenance/noticeboard-edit/:id" Component={withSuspense(NoticeboardEdit)} />
-    <Route path="/maintenance/noticeboard-details/:id" Component={withSuspense(NoticeboardDetails)} />
+    <Route path="/maintenance/noticeboard-details/:id" Component={withSuspense(BroadcastDetails)} />
 
     {/* FAQ Routes */}
     <Route path="/settings/faq-category-form" Component={withSuspense(FaqCategoryForm)} />
+    <Route path="/settings/faq-category-form/:faqId" Component={withSuspense(FaqCategoryForm)} />
     <Route path="/settings/faq-category-list" Component={withSuspense(FaqCategoryList)} />
     <Route path="/maintenance/faq-create" Component={withSuspense(FaqCreate)} />
     <Route path="/maintenance/faq-edit/:id" Component={withSuspense(FaqEdit)} />
     <Route path="/maintenance/faq-list" Component={withSuspense(FaqList)} />
     <Route path="/settings/faq-subcategory" Component={withSuspense(FaqSubCategory)} />
+    <Route path="/settings/faq-subcategory/:faqSubId" Component={withSuspense(FaqSubCategory)} />
     <Route path="/settings/faq-subcategory/:faqSubId/edit" Component={withSuspense(FaqSubCategory)} />
     <Route path="/settings/faq-subcategory-list" Component={withSuspense(FaqSubCategoryList)} />
 
@@ -470,6 +474,7 @@ export const setupMemberRoutes = (
     <Route path="/settings/user-groups-create" Component={withSuspense(UserGroupsCreate)} />
     <Route path="/settings/user-groups-edit/:id" Component={withSuspense(UserGroupsEdit)} />
     <Route path="/settings/user-groups-list" Component={withSuspense(UserGroupsList)} />
+    <Route path="/settings/groups-list" Component={withSuspense(FMGroupDashboard)} />
 
     {/* Press Releases Routes */}
     <Route path="/maintenance/press-releases-create" Component={withSuspense(PressReleasesCreate)} />
