@@ -501,7 +501,7 @@ export const HiSocietyHeader = () => {
           </DropdownMenu>
 
           {/* Flat Display */}
-          {selectedSociety?.user_flat && (
+          {/* {selectedSociety?.user_flat && (
             <div className="flex items-center gap-2 text-[#1a1a1a]">
               <Home className="w-4 h-4" />
               <span className="text-sm font-medium">
@@ -509,7 +509,7 @@ export const HiSocietyHeader = () => {
                 {selectedSociety.user_flat.flat}
               </span>
             </div>
-          )}
+          )} */}
 
           <div className="relative">
             <button className="p-2 hover:bg-[#f6f4ee] rounded-lg transition-colors">

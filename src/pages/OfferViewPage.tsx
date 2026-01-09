@@ -5,65 +5,10 @@ import axios from 'axios';
 import {
   Box,
   Typography,
-  Paper,
   Tabs,
   Tab,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
 import { Settings } from '@mui/icons-material';
-
-// Styled components for card and tab UI
-const IconWrapper = styled(Box)(() => ({
-  width: '40px',
-  height: '40px',
-  borderRadius: '50%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  backgroundColor: '#E5E0D3',
-}));
-
-const RedIcon = styled(Settings)(() => ({
-  color: '#C72030',
-  fontSize: '24px',
-}));
-
-const CardHeader = styled(Box)(() => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '16px',
-  background: '#FAF8F2',
-  borderBottom: '1px solid #E5E5E5',
-  padding: '24px 32px',
-}));
-
-const CardBody = styled(Box)(() => ({
-  background: '#FAFBFB',
-  padding: '32px',
-  borderRadius: '0 0 8px 8px',
-}));
-
-const InfoRow = styled(Box)(() => ({
-  display: 'flex',
-  alignItems: 'center',
-  padding: '24px 0',
-  borderBottom: '1px solid #F2F2F2',
-  '&:last-child': { borderBottom: 'none' },
-}));
-
-const InfoLabel = styled(Typography)(() => ({
-  flex: 1,
-  color: '#A3A3A3',
-  fontWeight: 400,
-  fontSize: 18,
-}));
-
-const InfoValue = styled(Typography)(() => ({
-  flex: 2,
-  color: '#222',
-  fontWeight: 700,
-  fontSize: 18,
-}));
 
 const steps = [
   'Basic Info',
@@ -166,15 +111,7 @@ export default function OfferViewPage() {
   const getProjectNames = () => {
     // Check for offer_applicable_projects array
     if (offer?.offer_applicable_projects && Array.isArray(offer.offer_applicable_projects) && offer.offer_applicable_projects.length > 0) {
-      return offer.offer_applicable_projects.map((p: any) => p.name || p).join(', ');
-    }
-    // Check for projects array
-    if (offer?.projects && Array.isArray(offer.projects) && offer.projects.length > 0) {
-      return offer.projects.map((p: any) => p.name || p).join(', ');
-    }
-    // Check for project_ids array
-    if (offer?.project_ids && Array.isArray(offer.project_ids) && offer.project_ids.length > 0) {
-      return offer.project_ids.join(', ');
+      return offer.offer_applicable_projects.map((oap: any) => oap.project_name || `Project ${oap.project_id}`).join(', ');
     }
     // If offer_applicable_projects is empty array, show appropriate message
     if (offer?.offer_applicable_projects && Array.isArray(offer.offer_applicable_projects) && offer.offer_applicable_projects.length === 0) {
@@ -189,84 +126,93 @@ export default function OfferViewPage() {
     switch (activeTab) {
       case 0: // Basic Info
         return (
-          <Paper sx={{ borderRadius: 2, mb: 3, border: '1px solid #E5E5E5', overflow: 'hidden' }}>
-            <CardHeader>
-              <IconWrapper>
-                <RedIcon />
-              </IconWrapper>
-              <Typography variant="h5" sx={{ fontWeight: 700, fontFamily: 'Work Sans, sans-serif' }}>
-                Basic Info
-              </Typography>
-            </CardHeader>
-            <CardBody>
-              <InfoRow>
-                <InfoLabel>Offer Title</InfoLabel>
-                <InfoValue>{offer.title || '-'}</InfoValue>
-                <InfoLabel>Legal Policies</InfoLabel>
-                <InfoValue>
-                  {offer.offer_template_name || '-'}
-                </InfoValue>
-              </InfoRow>
-              <InfoRow>
-                <InfoLabel>Offer Description</InfoLabel>
-                <InfoValue sx={{ flex: 3 }}>{offer.description || '-'}</InfoValue>
-              </InfoRow>
-            </CardBody>
-          </Paper>
+          <div className="w-full bg-white rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                  <Settings sx={{ color: '#C72030', fontSize: '24px' }} />
+                </div>
+                <h3 className="text-lg font-semibold uppercase text-black">
+                  Basic Info
+                </h3>
+              </div>
+            </div>
+            
+            <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-8">
+                <div className="flex items-start">
+                  <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                    Offer Title
+                  </div>
+                  <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                    {offer.title || '-'}
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                    Legal Policies
+                  </div>
+                  <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                    {offer.offer_template_name || '-'}
+                  </div>
+                </div>
+                
+                <div className="flex items-start lg:col-span-2">
+                  <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                    Offer Description
+                  </div>
+                  <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                    {offer.description || '-'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         );
       case 1: // Media & Display
         return (
-          <Paper sx={{ borderRadius: 2, mb: 3, border: '1px solid #E5E5E5', overflow: 'hidden' }}>
-            <CardHeader>
-              <IconWrapper>
-                <RedIcon />
-              </IconWrapper>
-              <Typography variant="h5" sx={{ fontWeight: 700, fontFamily: 'Work Sans, sans-serif' }}>
-                Media & Display
-              </Typography>
-            </CardHeader>
-            <CardBody>
-              <Typography sx={{ fontWeight: 600, mb: 3, fontSize: 18, color: '#222' }}>
+          <div className="w-full bg-white rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                  <Settings sx={{ color: '#C72030', fontSize: '24px' }} />
+                </div>
+                <h3 className="text-lg font-semibold uppercase text-black">
+                  Media & Display
+                </h3>
+              </div>
+            </div>
+            
+            <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+              <div className="text-[14px] font-medium text-gray-700 mb-3">
                 Offer Banner Image
-              </Typography>
+              </div>
               
               {/* Table Header */}
-              <Box sx={{ 
-                display: 'grid', 
-                gridTemplateColumns: '2fr 2fr 1fr 1fr',
-                gap: 2,
-                px: 3,
-                py: 2,
-                background: '#F3EFE7',
-                borderRadius: '8px 8px 0 0',
-                mb: 0
-              }}>
-                <Typography sx={{ fontWeight: 600, fontSize: 16, color: '#222' }}>File Name</Typography>
-                <Typography sx={{ fontWeight: 600, fontSize: 16, color: '#222' }}>Preview</Typography>
-                <Typography sx={{ fontWeight: 600, fontSize: 16, color: '#222' }}>Ratio</Typography>
-                <Typography sx={{ fontWeight: 600, fontSize: 16, color: '#222' }}>Action</Typography>
-              </Box>
+              <div className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 px-3 py-2 bg-[#F3EFE7] rounded-t-lg">
+                <div className="text-[14px] font-semibold text-gray-900">File Name</div>
+                <div className="text-[14px] font-semibold text-gray-900">Preview</div>
+                <div className="text-[14px] font-semibold text-gray-900">Ratio</div>
+                <div className="text-[14px] font-semibold text-gray-900">Action</div>
+              </div>
 
               {/* Table Body */}
-              <Box sx={{ background: '#F7F8F9', borderRadius: '0 0 8px 8px', p: 3 }}>
+              <div className="bg-[#F7F8F9] px-3 py-3 rounded-b-lg">
                 {getImages().some(img => img.data && img.data.document_file_name) ? (
                   getImages().map((img, index) =>
                     img.data && img.data.document_file_name ? (
-                      <Box 
+                      <div 
                         key={img.label} 
-                        sx={{ 
-                          display: 'grid', 
-                          gridTemplateColumns: '2fr 2fr 1fr 1fr',
-                          gap: 2,
-                          alignItems: 'center',
-                          py: 2,
+                        className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 items-center py-2"
+                        style={{
                           borderBottom: index !== getImages().filter(i => i.data && i.data.document_file_name).length - 1 ? '1px solid #E5E5E5' : 'none'
                         }}
                       >
-                        <Typography sx={{ fontSize: 16, color: '#222' }}>
+                        <div className="text-[14px] text-gray-900">
                           {img.data.document_file_name}
-                        </Typography>
-                        <Box>
+                        </div>
+                        <div>
                           <img
                             src={img.data.document_url}
                             alt={img.data.document_file_name}
@@ -278,89 +224,135 @@ export default function OfferViewPage() {
                               border: '1px solid #E5E5E5'
                             }}
                           />
-                        </Box>
-                        <Typography sx={{ fontSize: 16, color: '#222' }}>
+                        </div>
+                        <div className="text-[14px] text-gray-900">
                           NA
-                        </Typography>
-                        <Box>
-                          <Typography sx={{ fontSize: 16, color: '#C72030', cursor: 'pointer' }}>🗑️</Typography>
-                        </Box>
-                      </Box>
+                        </div>
+                        <div>
+                          <span className="text-[14px] text-[#C72030] cursor-pointer">🗑️</span>
+                        </div>
+                      </div>
                     ) : null
                   )
                 ) : (
-                  <Typography sx={{ textAlign: 'center', color: '#A3A3A3', py: 4 }}>
+                  <div className="text-center text-gray-400 py-4 text-[14px]">
                     No images uploaded
-                  </Typography>
+                  </div>
                 )}
-              </Box>
-            </CardBody>
-          </Paper>
+              </div>
+            </div>
+          </div>
         );
       case 2: // Applicability
         return (
-          <Paper sx={{ borderRadius: 2, mb: 3, border: '1px solid #E5E5E5', overflow: 'hidden' }}>
-            <CardHeader>
-              <IconWrapper>
-                <RedIcon />
-              </IconWrapper>
-              <Typography variant="h5" sx={{ fontWeight: 700, fontFamily: 'Work Sans, sans-serif' }}>
-                Applicability
-              </Typography>
-            </CardHeader>
-            <CardBody>
-              <InfoRow>
-                <InfoLabel>Applicable Project(s)</InfoLabel>
-                <InfoValue sx={{ flex: 3 }}>{getProjectNames()}</InfoValue>
-              </InfoRow>
-            </CardBody>
-          </Paper>
+          <div className="w-full bg-white rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                  <Settings sx={{ color: '#C72030', fontSize: '24px' }} />
+                </div>
+                <h3 className="text-lg font-semibold uppercase text-black">
+                  Applicability
+                </h3>
+              </div>
+            </div>
+            
+            <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-8">
+                <div className="flex items-start lg:col-span-4">
+                  <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                    Applicable Project(s)
+                  </div>
+                  <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                    {getProjectNames()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         );
       case 3: // Validity & Status
         return (
-          <Paper sx={{ borderRadius: 2, mb: 3, border: '1px solid #E5E5E5', overflow: 'hidden' }}>
-            <CardHeader>
-              <IconWrapper>
-                <RedIcon />
-              </IconWrapper>
-              <Typography variant="h5" sx={{ fontWeight: 700, fontFamily: 'Work Sans, sans-serif' }}>
-                Validity & Status
-              </Typography>
-            </CardHeader>
-            <CardBody>
-              <InfoRow>
-                <InfoLabel>Start Date</InfoLabel>
-                <InfoValue>{formatDate(offer.start_date)}</InfoValue>
-                <InfoLabel>End Date</InfoLabel>
-                <InfoValue>{formatDate(offer.expiry)}</InfoValue>
-              </InfoRow>
-              <InfoRow>
-                <InfoLabel>Status</InfoLabel>
-                <InfoValue sx={{ flex: 3 }}>{getOfferStatus()}</InfoValue>
-              </InfoRow>
-            </CardBody>
-          </Paper>
+          <div className="w-full bg-white rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                  <Settings sx={{ color: '#C72030', fontSize: '24px' }} />
+                </div>
+                <h3 className="text-lg font-semibold uppercase text-black">
+                  Validity & Status
+                </h3>
+              </div>
+            </div>
+            
+            <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-8">
+                <div className="flex items-start">
+                  <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                    Start Date
+                  </div>
+                  <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                    {formatDate(offer.start_date)}
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                    End Date
+                  </div>
+                  <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                    {formatDate(offer.expiry)}
+                  </div>
+                </div>
+                
+                <div className="flex items-start lg:col-span-2">
+                  <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                    Status
+                  </div>
+                  <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                    {getOfferStatus()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         );
       case 4: // Visibility
         return (
-          <Paper sx={{ borderRadius: 2, mb: 3, border: '1px solid #E5E5E5', overflow: 'hidden' }}>
-            <CardHeader>
-              <IconWrapper>
-                <RedIcon />
-              </IconWrapper>
-              <Typography variant="h5" sx={{ fontWeight: 700, fontFamily: 'Work Sans, sans-serif' }}>
-                Visibility
-              </Typography>
-            </CardHeader>
-            <CardBody>
-              <InfoRow>
-                <InfoLabel>Show on Home Page</InfoLabel>
-                <InfoValue>{getShowOnHome()}</InfoValue>
-                <InfoLabel>Featured Offer</InfoLabel>
-                <InfoValue>{getFeatured()}</InfoValue>
-              </InfoRow>
-            </CardBody>
-          </Paper>
+          <div className="w-full bg-white rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                  <Settings sx={{ color: '#C72030', fontSize: '24px' }} />
+                </div>
+                <h3 className="text-lg font-semibold uppercase text-black">
+                  Visibility
+                </h3>
+              </div>
+            </div>
+            
+            <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-8">
+                <div className="flex items-start">
+                  <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                    Show on Home Page
+                  </div>
+                  <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                    {getShowOnHome()}
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                    Featured Offer
+                  </div>
+                  <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                    {getFeatured()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         );
       default:
         return null;
@@ -372,44 +364,42 @@ export default function OfferViewPage() {
       <Typography variant="body2" sx={{ mb: 3, color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
         Offer &gt; Details
       </Typography>
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 3, background: '#f6f7f7', p: 1 }}>
         <Tabs
           value={activeTab}
-          onChange={(_, v) => setActiveTab(v)}
+          onChange={(e, val) => setActiveTab(val)}
           variant="fullWidth"
+          scrollButtons={false}
+          TabIndicatorProps={{ style: { display: 'none' } }}
           sx={{
-            background: '#fff',
-            borderRadius: '8px 8px 0 0',
-            border: '1px solid #E5E5E5',
-            minHeight: 56,
-            mb: 0,
-            '& .MuiTabs-indicator': {
-              backgroundColor: '#C72030',
-              height: 3,
+            minHeight: 48,
+            '& .MuiTabs-flexContainer': {
+              justifyContent: 'space-around',
+            },
+            '& .MuiTab-root': {
+              textTransform: 'none',
+              fontWeight: 500,
+              fontSize: 14,
+              minHeight: 40,
+              px: 3,
+              color: '#000 !important',
+              background: '#f6f7f7',
+              marginRight: 0.5,
+              flex: 1,
+            },
+            '& .Mui-selected': {
+              background: '#edeae3',
+              color: '#000 !important',
+              fontWeight: 500,
+              margin: '4px',
             },
           }}
         >
-          {steps.map((label, idx) => (
-            <Tab
-              key={label}
-              label={label}
-              sx={{
-                fontFamily: 'Work Sans, sans-serif',
-                fontWeight: 600,
-                fontSize: 18,
-                color: activeTab === idx ? '#222' : '#222',
-                textTransform: 'none',
-                minHeight: 56,
-                px: 0,
-                background: activeTab === idx ? '#F6F4EE' : '#fff',
-                borderRight: idx !== steps.length - 1 ? '1px solid #F6F4EE' : 'none',
-                '&.Mui-selected': {
-                  color: '#222',
-                  background: '#F6F4EE',
-                },
-              }}
-            />
-          ))}
+          <Tab label="Basic Info" />
+          <Tab label="Media & Display" />
+          <Tab label="Applicability" />
+          <Tab label="Validity & Status" />
+          <Tab label="Visibility" />
         </Tabs>
       </Box>
       {loading ? (

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Settings, Edit } from '@mui/icons-material';
 import { toast, Toaster } from 'sonner';
 import axios from 'axios';
 import { getFullUrl } from '@/config/apiConfig';
+import Select from 'react-select';
 import {
     Box,
     Typography,
@@ -14,7 +15,7 @@ import {
     StepLabel,
     StepConnector,
     Button as MuiButton,
-    Select,
+    Select as MuiSelect,
     MenuItem,
     FormControl,
     InputLabel,
@@ -28,6 +29,136 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { boxShadow } from 'html2canvas/dist/types/css/property-descriptors/box-shadow';
+
+const CustomMultiValue = (props) => (
+  <div
+    style={{
+      position: "relative",
+      backgroundColor: "#E5E0D3",
+      borderRadius: "2px",
+      margin: "3px",
+      marginTop: "10px",
+      padding: "4px 10px 6px 10px",
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      paddingRight: "28px",
+    }}
+  >
+    <span
+      style={{
+        color: "#1a1a1a8a",
+        fontSize: "13px",
+        fontWeight: "500",
+      }}
+    >
+      {props.data.label}
+    </span>
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        props.removeProps.onClick(e);
+      }}
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        props.removeProps.onMouseDown(e);
+      }}
+      onTouchEnd={(e) => {
+        e.stopPropagation();
+        props.removeProps.onTouchEnd(e);
+      }}
+      style={{
+        position: "absolute",
+        right: "-10px",
+        top: "3px",
+        transform: "translateY(-50%), translateX(-50%)",
+        background: "transparent",
+        border: "1px solid #ccc",
+        borderRadius: "50%",
+        cursor: "pointer",
+        padding: "0",
+        display: "flex",
+        alignItems: "start",
+        justifyContent: "center",
+        color: "#666",
+        fontSize: "16px",
+        lineHeight: "1",
+        width: "20px",
+        height: "20px",
+      }}
+      type="button"
+    >
+      ×
+    </button>
+  </div>
+);
+
+const customStyles = {
+  control: (provided, state) => ({
+    ...provided,
+    minHeight: "44px",
+    borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
+    boxShadow: "none",
+    fontSize: "14px",
+    paddingTop: "6px",
+    backgroundColor: "transparent",
+    "&:hover": { borderColor: "#C72030" },
+  }),
+  valueContainer: (provided) => ({
+    ...provided,
+    padding: "4px 6px",
+    flexWrap: "wrap",
+    backgroundColor: "transparent",
+  }),
+  dropdownIndicator: (provided, state) => ({
+    ...provided,
+    padding: "4px 8px",
+    color: state.isFocused ? "#C72030" : "#666",
+    "&:hover": { color: "#C72030" },
+  }),
+  indicatorSeparator: () => ({ display: "none" }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: "#999",
+    fontSize: "14px",
+  }),
+  menu: (provided) => ({
+    ...provided,
+    zIndex: 9999,
+    fontSize: "14px",
+    backgroundColor: "#fff",
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "#C72030"
+      : state.isFocused
+        ? "#F6F4EE"
+        : "#fff",
+    color: state.isSelected ? "#fff" : "#1A1A1A",
+    fontSize: "14px",
+    padding: "8px 12px",
+    cursor: "pointer",
+    "&:hover": {
+      backgroundColor: "#F6F4EE",
+      color: "#1A1A1A",
+    },
+    "&:active": {
+      backgroundColor: "#C72030",
+      color: "#fff",
+    },
+  }),
+  multiValue: (provided) => ({
+    ...provided,
+    backgroundColor: "transparent",
+  }),
+  multiValueLabel: (provided) => ({
+    ...provided,
+    color: "#1a1a1a8a",
+    fontSize: "13px",
+    fontWeight: "500",
+  }),
+};
 
 // Styled Components
 const CustomStepConnector = styled(StepConnector)(() => ({
@@ -213,12 +344,9 @@ interface OfferFormData {
     featuredOffer: boolean;
 }
 
-interface AddOfferPageProps {
-    offerId?: string;
-}
-
-export default function AddOfferPage({ offerId }: AddOfferPageProps) {
+export default function AddOfferPage() {
     const navigate = useNavigate();
+    const { id: offerId } = useParams<{ id: string }>();
     const [activeStep, setActiveStep] = useState(0);
     const [completedSteps, setCompletedSteps] = useState<number[]>([]);
     const [editingStep, setEditingStep] = useState<number | null>(null);
@@ -309,21 +437,40 @@ export default function AddOfferPage({ offerId }: AddOfferPageProps) {
                     }
                 }
             );
-            const offer = response.data.offer;
+            // Handle both response.data and response.data.offer structures
+            const offer = response.data.offer || response.data;
+            console.log('Fetched offer data for edit:', offer);
+            
+            // Map offer_applicable_projects to get project IDs
+            const projectIds = offer.offer_applicable_projects && Array.isArray(offer.offer_applicable_projects)
+                ? offer.offer_applicable_projects.map((oap: any) => oap.project_id.toString())
+                : [];
+            
             setFormData({
                 offerTitle: offer.title || '',
                 offerDescription: offer.description || '',
                 legalPoliciesTemplate: offer.offer_template_id?.toString() || '',
-                bannerImage: null, // You may want to handle existing images
-                applicableProjects: offer.project_ids?.map((id: number) => id.toString()) || [],
+                bannerImage: null,
+                applicableProjects: projectIds,
                 startDate: offer.start_date || '',
                 endDate: offer.expiry || '',
                 status: offer.active === 1 ? 'Active' : 'Inactive',
-                showOnHomePage: !!offer.show_on_home,
-                featuredOffer: !!offer.status,
+                showOnHomePage: offer.show_on_home === 1 || offer.show_on_home === true,
+                featuredOffer: offer.featured === 1 || offer.featured === true,
             });
-            // Optionally, handle images if needed
+            
+            // Handle existing images if available
+            if (offer.image_1_by_1?.document_url) {
+                // You can optionally set uploaded images here if needed
+                console.log('Existing images found:', {
+                    image_1_by_1: offer.image_1_by_1,
+                    image_16_by_9: offer.image_16_by_9,
+                    image_3_by_2: offer.image_3_by_2,
+                    image_9_by_16: offer.image_9_by_16
+                });
+            }
         } catch (error) {
+            console.error('Error fetching offer details:', error);
             toast.error('Failed to fetch offer details');
         }
     };
@@ -558,7 +705,7 @@ export default function AddOfferPage({ offerId }: AddOfferPageProps) {
                             <Box sx={{ mt: 3 }}>
                                 <FormControl fullWidth sx={fieldStyles}>
                                     <InputLabel>Legal Policies Template</InputLabel>
-                                    <Select
+                                    <MuiSelect
                                         value={formData.legalPoliciesTemplate}
                                         onChange={(e) => handleInputChange('legalPoliciesTemplate', e.target.value)}
                                         label="Legal Policies Template"
@@ -574,7 +721,7 @@ export default function AddOfferPage({ offerId }: AddOfferPageProps) {
                                                 </MenuItem>
                                             ))
                                         )}
-                                    </Select>
+                                    </MuiSelect>
                                 </FormControl>
                             </Box>
                         </SectionBody>
@@ -700,28 +847,36 @@ export default function AddOfferPage({ offerId }: AddOfferPageProps) {
                             </Box>
                         </SectionHeader>
                         <SectionBody>
-                            <FormControl fullWidth sx={fieldStyles}>
-                                <InputLabel>Applicable Project(s)</InputLabel>
-                                <Select
-                                    multiple
-                                    value={formData.applicableProjects}
-                                    onChange={(e) => handleInputChange('applicableProjects', e.target.value)}
-                                    label="Applicable Project(s)"
-                                    disabled={loadingProjects}
-                                >
-                                    {loadingProjects ? (
-                                        <MenuItem disabled>Loading projects...</MenuItem>
-                                    ) : projects.length === 0 ? (
-                                        <MenuItem disabled>No projects available</MenuItem>
-                                    ) : (
-                                        projects.map((project) => (
-                                            <MenuItem key={project.id} value={project.id.toString()}>
-                                                {project.name}
-                                            </MenuItem>
-                                        ))
-                                    )}
-                                </Select>
-                            </FormControl>
+                            <div className="space-y-4">
+                                {/* Applicable Projects Multi-Select */}
+                                <div className="relative">
+                                    <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
+                                        Applicable Project(s)
+                                    </label>
+                                    <Select
+                                        isMulti
+                                        value={projects
+                                            .filter(p => formData.applicableProjects.includes(p.id.toString()))
+                                            .map(p => ({ value: p.id.toString(), label: p.name }))}
+                                        onChange={(selected) => {
+                                            const selectedIds = selected ? selected.map(s => s.value) : [];
+                                            handleInputChange('applicableProjects', selectedIds);
+                                        }}
+                                        options={projects.map(p => ({ value: p.id.toString(), label: p.name }))}
+                                        styles={customStyles}
+                                        components={{
+                                            MultiValue: CustomMultiValue,
+                                            MultiValueRemove: () => null,
+                                        }}
+                                        closeMenuOnSelect={false}
+                                        placeholder="Select Projects..."
+                                        isDisabled={loadingProjects}
+                                        isLoading={loadingProjects}
+                                        menuPortalTarget={document.body}
+                                        menuPosition="fixed"
+                                    />
+                                </div>
+                            </div>
                         </SectionBody>
                     </SectionCard>
                 );
@@ -765,14 +920,14 @@ export default function AddOfferPage({ offerId }: AddOfferPageProps) {
                                 />
                                 <FormControl fullWidth sx={fieldStyles}>
                                     <InputLabel>Status</InputLabel>
-                                    <Select
+                                    <MuiSelect
                                         value={formData.status}
                                         onChange={(e) => handleInputChange('status', e.target.value)}
                                         label="Status"
                                     >
                                         <MenuItem value="Active">Active</MenuItem>
                                         <MenuItem value="Inactive">Inactive</MenuItem>
-                                    </Select>
+                                    </MuiSelect>
                                 </FormControl>
                             </Box>
                         </SectionBody>

@@ -595,6 +595,7 @@ export const setupMemberRoutes = (
     {/* Offers Routes */}
     <Route path="/offers/add" Component={withSuspense(AddOffersPage)} />
     <Route path="/offer/add" Component={withSuspense(AddOfferPage)} />
+    <Route path="/offer/add/:id" Component={withSuspense(AddOfferPage)} />
     <Route path="/offer/view/:id" Component={withSuspense(OfferViewPage)} />
     <Route path="/business-directory/add" Component={withSuspense(AddBusinessDirectoryPage)} />
     <Route path="/mis/add" Component={withSuspense(AddMISPage)} />

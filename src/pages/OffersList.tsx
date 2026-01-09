@@ -32,6 +32,11 @@ interface ApiOffer {
   image_9_by_16: any;
   image_3_by_2: any;
   image_16_by_9: any;
+  offer_applicable_projects: Array<{
+    id: number;
+    project_id: number;
+    project_name: string;
+  }>;
 }
 
 interface ApiResponse {
@@ -95,14 +100,12 @@ export default function OffersList() {
     return expiry < today ? 'Expired' : 'Active';
   };
 
-  // Helper function to get project name by ID (you may need to fetch projects separately)
-  const getProjectName = (projectId: number): string => {
-    // For now, return project ID. You can implement project mapping later
-    const projectMap: { [key: number]: string } = {
-      10: 'Runwal Avenue',
-      // Add more mappings as needed
-    };
-    return projectMap[projectId] || `Project ${projectId}`;
+  // Helper function to get project names from offer_applicable_projects array
+  const getProjectNames = (offerApplicableProjects: any[]): string => {
+    if (!offerApplicableProjects || !Array.isArray(offerApplicableProjects) || offerApplicableProjects.length === 0) {
+      return '-';
+    }
+    return offerApplicableProjects.map((oap: any) => oap.project_name || `Project ${oap.project_id}`).join(', ');
   };
 
   const fetchOffers = async () => {
@@ -118,14 +121,14 @@ export default function OffersList() {
       );
 
       if (response.data.code === 200 && response.data.offers) {
-        const mappedOffers: Offer[] = response.data.offers.map((apiOffer) => {
+        const mappedOffers: Offer[] = response.data.offers.map((apiOffer: any) => {
           const status = getOfferStatus(apiOffer.active, apiOffer.expiry);
           return {
             id: apiOffer.id,
             offerId: `OFF-${String(apiOffer.id).padStart(4, '0')}`,
             offerTitle: apiOffer.title,
             description: apiOffer.description || '-',
-            applicableProjects: getProjectName(apiOffer.project_id),
+            applicableProjects: getProjectNames(apiOffer.offer_applicable_projects),
             startDate: formatDate(apiOffer.start_date),
             endDate: formatDate(apiOffer.expiry),
             status: status,
@@ -298,7 +301,7 @@ export default function OffersList() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/offer/edit/${item.id}`)}
+              onClick={() => navigate(`/offer/add/${item.id}`)}
               title="Edit"
             >
               <Pencil className="w-4 h-4 text-gray-700" />
