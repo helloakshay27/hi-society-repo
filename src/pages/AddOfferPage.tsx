@@ -446,28 +446,58 @@ export default function AddOfferPage() {
                 ? offer.offer_applicable_projects.map((oap: any) => oap.project_id.toString())
                 : [];
             
+            // Format dates to YYYY-MM-DD for HTML date inputs
+            const formatDateForInput = (dateString: string) => {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return '';
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+            
             setFormData({
                 offerTitle: offer.title || '',
                 offerDescription: offer.description || '',
                 legalPoliciesTemplate: offer.offer_template_id?.toString() || '',
                 bannerImage: null,
                 applicableProjects: projectIds,
-                startDate: offer.start_date || '',
-                endDate: offer.expiry || '',
+                startDate: formatDateForInput(offer.start_date),
+                endDate: formatDateForInput(offer.expiry),
                 status: offer.active === 1 ? 'Active' : 'Inactive',
                 showOnHomePage: offer.show_on_home === 1 || offer.show_on_home === true,
                 featuredOffer: offer.featured === 1 || offer.featured === true,
             });
             
             // Handle existing images if available
-            if (offer.image_1_by_1?.document_url) {
-                // You can optionally set uploaded images here if needed
-                console.log('Existing images found:', {
-                    image_1_by_1: offer.image_1_by_1,
-                    image_16_by_9: offer.image_16_by_9,
-                    image_3_by_2: offer.image_3_by_2,
-                    image_9_by_16: offer.image_9_by_16
-                });
+            const existingImages: Array<{ id: string; name: string; file: File; preview: string }> = [];
+            const seenFileNames = new Set<string>(); // Track unique image filenames
+            const imageFields = [
+                { data: offer.image_1_by_1, ratio: '1:1' },
+                { data: offer.image_16_by_9, ratio: '16:9' },
+                { data: offer.image_3_by_2, ratio: '3:2' },
+                { data: offer.image_9_by_16, ratio: '9:16' }
+            ];
+            
+            for (const imgField of imageFields) {
+                if (imgField.data?.document_url && imgField.data?.document_file_name) {
+                    // Only add unique images (avoid duplicates when same image is used for all ratios)
+                    if (!seenFileNames.has(imgField.data.document_file_name)) {
+                        seenFileNames.add(imgField.data.document_file_name);
+                        existingImages.push({
+                            id: `existing-${imgField.ratio}-${Date.now()}`,
+                            name: imgField.data.document_file_name,
+                            file: null as any, // Existing images don't have File object
+                            preview: imgField.data.document_url
+                        });
+                    }
+                }
+            }
+            
+            if (existingImages.length > 0) {
+                setUploadedImages(existingImages);
+                console.log('Loaded existing images:', existingImages);
             }
         } catch (error) {
             console.error('Error fetching offer details:', error);
@@ -591,6 +621,8 @@ export default function AddOfferPage() {
             formDataPayload.append('offer[start_date]', formData.startDate);
             formDataPayload.append('offer[expiry]', formData.endDate);
             formDataPayload.append('offer[active]', formData.status === 'Active' ? '1' : '0');
+            formDataPayload.append('offer[show_on_home]', formData.showOnHomePage ? '1' : '0');
+            formDataPayload.append('offer[featured]', formData.featuredOffer ? '1' : '0');
             formDataPayload.append('offer[status]', formData.featuredOffer ? '1' : '0');
 
             // Add template ID if selected
@@ -598,11 +630,12 @@ export default function AddOfferPage() {
                 formDataPayload.append('offer[offer_template_id]', formData.legalPoliciesTemplate);
             }
 
-            // Add images if uploaded
-            if (uploadedImages.length > 0) {
-                // For now, use the first image for all ratios
+            // Add only NEW images (those with actual File objects)
+            const newImages = uploadedImages.filter(img => img.file !== null && img.file instanceof File);
+            if (newImages.length > 0) {
+                // For now, use the first new image for all ratios
                 // You can enhance this to support different ratios
-                const firstImage = uploadedImages[0];
+                const firstImage = newImages[0];
                 formDataPayload.append('offer[image_1_by_1]', firstImage.file);
                 formDataPayload.append('offer[image_16_by_9]', firstImage.file);
                 formDataPayload.append('offer[image_3_by_2]', firstImage.file);
@@ -663,6 +696,21 @@ export default function AddOfferPage() {
 
     const handleRemoveImage = (id: string) => {
         setUploadedImages(prev => prev.filter(img => img.id !== id));
+    };
+
+    // Get unique images for display (deduplicate by preview URL)
+    const getUniqueImages = () => {
+        const seenPreviews = new Set<string>();
+        const uniqueImages: Array<{ id: string; name: string; file: File; preview: string }> = [];
+
+        for (const img of uploadedImages) {
+            if (!seenPreviews.has(img.preview)) {
+                seenPreviews.add(img.preview);
+                uniqueImages.push(img);
+            }
+        }
+
+        return uniqueImages;
     };
 
     // Render step content
@@ -784,14 +832,14 @@ export default function AddOfferPage() {
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {uploadedImages.length === 0 ? (
+                                        {getUniqueImages().length === 0 ? (
                                             <TableRow>
                                                 <TableCell colSpan={4} align="center" sx={{ py: 4, color: '#999', fontSize: '14px' }}>
                                                     No images uploaded yet
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            uploadedImages.map((image) => (
+                                            getUniqueImages().map((image) => (
                                                 <TableRow key={image.id}>
                                                     <TableCell sx={{ fontSize: '14px', color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
                                                         {image.name}
@@ -804,7 +852,7 @@ export default function AddOfferPage() {
                                                         />
                                                     </TableCell>
                                                     <TableCell sx={{ fontSize: '14px', color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
-                                                        16:9
+                                                        NA
                                                     </TableCell>
                                                     <TableCell>
                                                         <MuiButton

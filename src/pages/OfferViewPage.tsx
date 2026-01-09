@@ -80,6 +80,21 @@ export default function OfferViewPage() {
     },
   ];
 
+  const getUniqueImages = () => {
+    const allImages = getImages();
+    const seenFileNames = new Set<string>();
+    const uniqueImages: Array<{ label: string; data: any }> = [];
+
+    for (const img of allImages) {
+      if (img.data && img.data.document_file_name && !seenFileNames.has(img.data.document_file_name)) {
+        seenFileNames.add(img.data.document_file_name);
+        uniqueImages.push(img);
+      }
+    }
+
+    return uniqueImages;
+  };
+
   const getOfferStatus = () => {
     if (offer?.active === 1) return 'Active';
     if (offer?.active === 0) return 'Inactive';
@@ -199,41 +214,39 @@ export default function OfferViewPage() {
 
               {/* Table Body */}
               <div className="bg-[#F7F8F9] px-3 py-3 rounded-b-lg">
-                {getImages().some(img => img.data && img.data.document_file_name) ? (
-                  getImages().map((img, index) =>
-                    img.data && img.data.document_file_name ? (
-                      <div 
-                        key={img.label} 
-                        className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 items-center py-2"
-                        style={{
-                          borderBottom: index !== getImages().filter(i => i.data && i.data.document_file_name).length - 1 ? '1px solid #E5E5E5' : 'none'
-                        }}
-                      >
-                        <div className="text-[14px] text-gray-900">
-                          {img.data.document_file_name}
-                        </div>
-                        <div>
-                          <img
-                            src={img.data.document_url}
-                            alt={img.data.document_file_name}
-                            style={{ 
-                              width: 80, 
-                              height: 80, 
-                              objectFit: 'cover', 
-                              borderRadius: 8,
-                              border: '1px solid #E5E5E5'
-                            }}
-                          />
-                        </div>
-                        <div className="text-[14px] text-gray-900">
-                          NA
-                        </div>
-                        <div>
-                          <span className="text-[14px] text-[#C72030] cursor-pointer">🗑️</span>
-                        </div>
+                {getUniqueImages().length > 0 ? (
+                  getUniqueImages().map((img, index) => (
+                    <div 
+                      key={img.data.document_url} 
+                      className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 items-center py-2"
+                      style={{
+                        borderBottom: index !== getUniqueImages().length - 1 ? '1px solid #E5E5E5' : 'none'
+                      }}
+                    >
+                      <div className="text-[14px] text-gray-900">
+                        {img.data.document_file_name}
                       </div>
-                    ) : null
-                  )
+                      <div>
+                        <img
+                          src={img.data.document_url}
+                          alt={img.data.document_file_name}
+                          style={{ 
+                            width: 80, 
+                            height: 80, 
+                            objectFit: 'cover', 
+                            borderRadius: 8,
+                            border: '1px solid #E5E5E5'
+                          }}
+                        />
+                      </div>
+                      <div className="text-[14px] text-gray-900">
+                        NA
+                      </div>
+                      <div>
+                        <span className="text-[14px] text-[#C72030] cursor-pointer">🗑️</span>
+                      </div>
+                    </div>
+                  ))
                 ) : (
                   <div className="text-center text-gray-400 py-4 text-[14px]">
                     No images uploaded
