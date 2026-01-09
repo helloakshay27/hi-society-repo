@@ -23,6 +23,7 @@ const AddQuarantinePage = lazy(() => import("@/pages/AddQuarantinePage"));
 const AddOfferPage = lazy(() => import("@/pages/AddOfferPage"));
 const AddOffersPage = lazy(() => import("@/pages/AddOffersPage"));
 const AddBusinessDirectoryPage = lazy(() => import("@/pages/AddBusinessDirectoryPage"));
+const OfferViewPage = lazy(() => import("@/pages/OfferViewPage"));
 const TemplateList = lazy(() => import("@/pages/TemplateList"));
 const AddTemplatePage = lazy(() => import("@/pages/AddTemplatePage"));
 const Amenities = lazy(() => import("@/pages/Amenities"));
@@ -589,6 +590,7 @@ export const setupMemberRoutes = (
     {/* Offers Routes */}
     <Route path="/offers/add" Component={withSuspense(AddOffersPage)} />
     <Route path="/offer/add" Component={withSuspense(AddOfferPage)} />
+    <Route path="/offer/view/:id" Component={withSuspense(OfferViewPage)} />
     <Route path="/business-directory/add" Component={withSuspense(AddBusinessDirectoryPage)} />
     <Route path="/mis/add" Component={withSuspense(AddMISPage)} />
 

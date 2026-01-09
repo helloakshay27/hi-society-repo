@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Settings, Edit } from '@mui/icons-material';
 import { toast, Toaster } from 'sonner';
 import axios from 'axios';
+import { getFullUrl } from '@/config/apiConfig';
 import {
     Box,
     Typography,
@@ -212,7 +213,11 @@ interface OfferFormData {
     featuredOffer: boolean;
 }
 
-export default function AddOfferPage() {
+interface AddOfferPageProps {
+    offerId?: string;
+}
+
+export default function AddOfferPage({ offerId }: AddOfferPageProps) {
     const navigate = useNavigate();
     const [activeStep, setActiveStep] = useState(0);
     const [completedSteps, setCompletedSteps] = useState<number[]>([]);
@@ -237,12 +242,21 @@ export default function AddOfferPage() {
     const [loadingTemplates, setLoadingTemplates] = useState(false);
     const [projects, setProjects] = useState<Project[]>([]);
     const [loadingProjects, setLoadingProjects] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(!!offerId);
 
     // Fetch offer templates and projects on component mount
     useEffect(() => {
         fetchOfferTemplates();
         fetchProjects();
     }, []);
+
+    // Fetch offer details if editing
+    useEffect(() => {
+        if (offerId) {
+            setIsEditMode(true);
+            fetchOfferDetails(offerId);
+        }
+    }, [offerId]);
 
     const fetchOfferTemplates = async () => {
         setLoadingTemplates(true);
@@ -282,6 +296,35 @@ export default function AddOfferPage() {
             toast.error('Failed to load projects');
         } finally {
             setLoadingProjects(false);
+        }
+    };
+
+    const fetchOfferDetails = async (id: string) => {
+        try {
+            const response = await axios.get(
+                getFullUrl(`/crm/offers/${id}.json`),
+                {
+                    params: {
+                        token: 'bfa5004e7b0175622be8f7e69b37d01290b737f82e078414'
+                    }
+                }
+            );
+            const offer = response.data.offer;
+            setFormData({
+                offerTitle: offer.title || '',
+                offerDescription: offer.description || '',
+                legalPoliciesTemplate: offer.offer_template_id?.toString() || '',
+                bannerImage: null, // You may want to handle existing images
+                applicableProjects: offer.project_ids?.map((id: number) => id.toString()) || [],
+                startDate: offer.start_date || '',
+                endDate: offer.expiry || '',
+                status: offer.active === 1 ? 'Active' : 'Inactive',
+                showOnHomePage: !!offer.show_on_home,
+                featuredOffer: !!offer.status,
+            });
+            // Optionally, handle images if needed
+        } catch (error) {
+            toast.error('Failed to fetch offer details');
         }
     };
 
@@ -419,22 +462,28 @@ export default function AddOfferPage() {
                 formDataPayload.append('offer[image_9_by_16]', firstImage.file);
             }
 
-            // Make API call
-            const response = await axios.post(
-                'https://uat-hi-society.lockated.com/crm/offers.json',
-                formDataPayload,
-                {
-                    params: {
-                        token: 'bfa5004e7b0175622be8f7e69b37d01290b737f82e078414'
-                    },
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }
-            );
+            let apiUrl = getFullUrl('/crm/offers.json');
+            let method: 'post' | 'put' = 'post';
 
-            console.log('Offer created successfully:', response.data);
-            toast.success('Offer created successfully!');
+            if (isEditMode && offerId) {
+                apiUrl = getFullUrl(`/crm/offers/${offerId}.json`);
+                method = 'put';
+            }
+
+            // Make API call
+            const response = await axios({
+                url: apiUrl,
+                method,
+                data: formDataPayload,
+                params: {
+                    token: 'bfa5004e7b0175622be8f7e69b37d01290b737f82e078414'
+                },
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            toast.success(isEditMode ? 'Offer updated successfully!' : 'Offer created successfully!');
 
             // Navigate after a short delay to show success message
             setTimeout(() => {
