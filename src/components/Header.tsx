@@ -490,7 +490,6 @@ export const Header = () => {
 
         <div className="flex items-center gap-3">
           {/* Society Dropdown */}
-          <p style={{color:'black'}}>okmlk</p>
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
               <Building2 className="w-4 h-4" />
