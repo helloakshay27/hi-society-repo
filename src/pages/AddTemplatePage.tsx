@@ -50,8 +50,8 @@ const IconWrapper = styled(Box)(() => ({
 }));
 
 const RedButton = styled(MuiButton)(() => ({
-    backgroundColor: '#C72030',
-    color: 'white',
+    backgroundColor: '#e7e3d9',
+    color: '#B8252F',
     borderRadius: 0,
     textTransform: 'none',
     padding: '8px 16px',
@@ -59,7 +59,7 @@ const RedButton = styled(MuiButton)(() => ({
     fontWeight: 500,
     boxShadow: '0 2px 4px rgba(199, 32, 48, 0.2)',
     '&:hover': {
-        backgroundColor: '#B8252F',
+        backgroundColor: '#e7e3d9',
         boxShadow: '0 4px 8px rgba(199, 32, 48, 0.3)',
     },
 }));
@@ -288,20 +288,46 @@ export default function AddTemplatePage() {
                                 <MenuItem value="Inactive">Inactive</MenuItem>
                             </Select>
                         </FormControl>
-                    </Box>
-                    <Box sx={{ mt: 3 }}>
-                        <TextField
-                            label="Description"
+                    <Box sx={{ mt: 3, width: "100%" }}>
+                          <TextField
+                           label="Description"
                             required={!formData.externalUrl}
                             value={formData.description}
-                            onChange={(e) => handleInputChange('description', e.target.value)}
-                            placeholder="Enter Description"
-                            sx={fieldStyles}
-                            fullWidth
-                            multiline
-                            rows={4}
-                        />
-                    </Box>
+                            onChange={(e) =>
+                        handleInputChange("description", e.target.value)
+                    }
+                    placeholder="Enter Description"
+                    fullWidth
+                    multiline
+                    minRows={6}
+                    maxRows={12}
+                    sx={{
+                          ...fieldStyles,
+
+                        "& .MuiOutlinedInput-root": {
+                         alignItems: "flex-start", // 🔑 VERY IMPORTANT
+
+                         "& textarea": {
+                         resize: "vertical",
+                         overflow: "hidden", // 🔑 remove middle scrollbar
+                         padding: "16.5px 14px",
+                      },
+
+                        "& fieldset": {
+                        borderColor: "#ddd",
+                     },
+                         "&:hover fieldset": {
+                        borderColor: "#C72030",
+                     },
+                         "&.Mui-focused fieldset": {
+                        borderColor: "#C72030",
+                     },
+                   },
+                 }}
+                 />
+            </Box>
+
+                       
                     <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         <Typography variant="body2" sx={{ color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
                             Or

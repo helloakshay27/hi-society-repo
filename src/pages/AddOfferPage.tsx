@@ -690,11 +690,11 @@ export default function AddOfferPage({ offerId }: AddOfferPageProps) {
                 return (
                     <SectionCard>
                         <SectionHeader>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px', width: '50%' }}>
                                 <IconWrapper>
                                     <RedIcon />
                                 </IconWrapper>
-                                <Typography variant="h6" sx={{ fontWeight: 600, fontFamily: 'Work Sans, sans-serif', textTransform: 'uppercase', fontSize: '18px' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 500, fontFamily: 'Work Sans, sans-serif', textTransform: 'uppercase', fontSize: '13px' }}>
                                     Applicability
                                 </Typography>
                             </Box>
@@ -749,7 +749,7 @@ export default function AddOfferPage({ offerId }: AddOfferPageProps) {
                                     onChange={(e) => handleInputChange('startDate', e.target.value)}
                                     InputLabelProps={{ shrink: true }}
                                     placeholder="DD/MM/YYYY"
-                                    sx={fieldStyles}
+                                    sx={{ ...fieldStyles, width: '50%' }}
                                     fullWidth
                                 />
                                 <TextField
@@ -760,7 +760,7 @@ export default function AddOfferPage({ offerId }: AddOfferPageProps) {
                                     onChange={(e) => handleInputChange('endDate', e.target.value)}
                                     InputLabelProps={{ shrink: true }}
                                     placeholder="DD/MM/YYYY"
-                                    sx={fieldStyles}
+                                    sx={{ ...fieldStyles, width: '50%' }}
                                     fullWidth
                                 />
                                 <FormControl fullWidth sx={fieldStyles}>
