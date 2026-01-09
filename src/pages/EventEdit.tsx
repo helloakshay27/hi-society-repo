@@ -1691,7 +1691,7 @@ const EventEdit = () => {
               </div>
 
               {/* RSVP Fields */}
-              {formData.rsvp_action === "yes" && (
+              {/* {formData.rsvp_action === "yes" && (
                 <>
                   <TextField
                     label="RSVP Name"
@@ -1728,7 +1728,7 @@ const EventEdit = () => {
                     }}
                   />
                 </>
-              )}
+              )} */}
 
               {/* Set Reminders */}
               <div className="md:col-span-3">

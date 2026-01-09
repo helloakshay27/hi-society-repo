@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { API_CONFIG } from '@/config/apiConfig';
+import { Switch } from '@mui/material';
 
 interface BuildingType {
   id: number;
@@ -171,34 +172,18 @@ const ProjectBuildingTypeList = () => {
         return (
           <div className="flex justify-center">
             {/* {String(projectBuildingPermission.show) === "true" && ( */}
-              <button
-  type="button"
-  onClick={() => handleToggle(item.id, item.active)}
-  style={{
-    width: "32px",          
-    height: "12px",        
-    backgroundColor: "#e5e5e5",
-    borderRadius: "999px",
-    border: "none",
-    padding: "0",
-    cursor: "pointer",
-    position: "relative",
-  }}
->
-  <span
-    style={{
-      width: "14px",       
-      height: "14px",
-      borderRadius: "50%",
-      backgroundColor: "#C72030",
-      position: "absolute",
-      top: "-1px",         
-      left: "0px",
-      transform: item.active ? "translateX(18px)" : "translateX(0px)", 
-      transition: "transform 0.2s ease",
-    }}
-  />
-</button>
+              <Switch
+                checked={item.active}
+                onChange={() => handleToggle(item.id, item.active)}
+                sx={{
+                  '& .MuiSwitch-switchBase.Mui-checked': {
+                    color: '#C72030',
+                  },
+                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                    backgroundColor: '#C72030',
+                  },
+                }}
+              />
             {/* )} */}
           </div>
         );

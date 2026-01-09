@@ -50,6 +50,7 @@ const PropertyType = () => {
     try {
       const payload = new FormData();
       payload.append("property_type[property_type]", name); // ✅ Correct format
+      payload.append("property_type[active]", "true"); // ✅ Set status as active by default
 
       await axios.post(
         `${baseURL}/property_types.json`,

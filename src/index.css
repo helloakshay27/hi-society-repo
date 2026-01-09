@@ -923,9 +923,9 @@ td div,
 td span,
 th div,
 td button,
-td a {
+/* td a {
   padding-left: 2px !important;
-}
+} */
 
 /* ===========================================
    GLOBAL CARD STYLES - FIGMA DESIGN

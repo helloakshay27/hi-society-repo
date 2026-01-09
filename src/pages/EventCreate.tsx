@@ -27,19 +27,21 @@ const EventCreate = () => {
     event_type: "",
     event_name: "",
     event_at: "",
+    event_date: "",
+    event_time: "",
     from_time: "",
     to_time: "",
     rsvp_action: "",
     description: "",
     publish: "",
-    user_id: "",
+    user_id: [],
     comment: "",
-    shared: 1,
+    shared: "all",
     group_id: [],
     attachfile: [],
     cover_image: [],
-    is_important: "",
-    email_trigger_enabled: "",
+    is_important: false,
+    email_trigger_enabled: false,
     set_reminders_attributes: [],
     cover_image_1_by_1: [],
     cover_image_9_by_16: [],
@@ -553,9 +555,6 @@ const EventCreate = () => {
 
     const preparedReminders = prepareRemindersForSubmission();
 
-    // Use backend value for shared
-    const backendSharedValue = formData.shared === "all" ? 0 : 1;
-
     const validationErrors = validateForm(formData);
     if (validationErrors.length > 0) {
       validationErrors.forEach((error) => toast.error(error));
@@ -563,142 +562,157 @@ const EventCreate = () => {
       return;
     }
 
-    const data = new FormData();
-    data.append("event[event_type]", formData.event_type);
-    data.append("event[event_name]", formData.event_name);
-    data.append("event[event_at]", formData.event_at);
-    data.append("event[from_time]", formData.from_time);
-    data.append("event[to_time]", formData.to_time);
-    data.append("event[rsvp_action]", formData.rsvp_action);
-    data.append("event[description]", formData.description);
-    data.append("event[publish]", formData.publish);
-    data.append("event[user_ids]", formData.user_id);
-    data.append("event[comment]", formData.comment);
-    data.append("event[shared]", backendSharedValue); // <-- use backend value here
-    // data.append("event[group_id]", formData.group_id);
-    data.append("event[is_important]", formData.is_important);
-    data.append("event[email_trigger_enabled]", formData.email_trigger_enabled);
-    data.append("event[project_id]", selectedProjectId);
+    // Prepare FormData for multipart/form-data submission
+    const formDataToSend = new FormData();
 
-    if (formData.cover_image && formData.cover_image.length > 0) {
-      const file = formData.cover_image[0];
-      if (file instanceof File) {
-        data.append("event[cover_image]", file);
-      }
-    }
+    // Add basic event fields
+    formDataToSend.append("event[event_type]", formData.event_type || "");
+    formDataToSend.append("event[event_name]", formData.event_name);
+    formDataToSend.append("event[description]", formData.description || "");
+    formDataToSend.append("event[event_at]", formData.event_date || "");
+    formDataToSend.append("event[from_time]", formData.event_time || "");
+    formDataToSend.append("event[to_time]", formData.to_time || "");
+    formDataToSend.append("event[shared]", formData.shared === "all" ? "0" : "1");
+    formDataToSend.append("event[is_important]", formData.is_important === true ? "1" : "0");
+    formDataToSend.append("event[email_trigger_enabled]", formData.email_trigger_enabled === true ? "1" : "0");
 
-    if (formData.rsvp_action === "yes") {
-      data.append("event[rsvp_name]", formData.rsvp_name);
-      data.append("event[rsvp_number]", formData.rsvp_number);
-    }
-
-    // For coverImageRatios
-    coverImageRatios.forEach(({ key }) => {
-      const images = formData[key];
-      if (Array.isArray(images) && images.length > 0) {
-        const img = images[0]; // 👈 only the first image
-        if (img?.file instanceof File) {
-          data.append(`event[${key}]`, img.file); // 👈 flat key format
-        }
-      }
-    });
-
-    // For eventImageRatios
-    eventImageRatios.forEach(({ key }) => {
-      const images = formData[key];
-      if (Array.isArray(images) && images.length > 0) {
-        images.forEach((img) => {
-          if (img?.file instanceof File) {
-            data.append(`event[${key}][]`, img.file);
-          }
-        });
-      }
-    });
-
-    // Updated reminder data appending
-    preparedReminders.forEach((reminder, index) => {
-      if (reminder.id)
-        data.append(
-          `event[set_reminders_attributes][${index}][id]`,
-          reminder.id
-        );
-      if (reminder._destroy) {
-        data.append(`event[set_reminders_attributes][${index}][_destroy]`, "1");
-      } else {
-        if (reminder.days)
-          data.append(
-            `event[set_reminders_attributes][${index}][days]`,
-            reminder.days
-          );
-        if (reminder.hours)
-          data.append(
-            `event[set_reminders_attributes][${index}][hours]`,
-            reminder.hours
-          );
-        if (reminder.minutes)
-          data.append(
-            `event[set_reminders_attributes][${index}][minutes]`,
-            reminder.minutes
-          );
-        if (reminder.weeks)
-          data.append(
-            `event[set_reminders_attributes][${index}][weeks]`,
-            reminder.weeks
-          );
-      }
-    });
-
-    // if (formData.attachfile && formData.attachfile.length > 0) {
-    //   formData.attachfile.forEach((file) => {
-    //     if (file instanceof File) {
-    //       data.append("event[event_images][]", file);
-    //     } else {
-    //       console.warn("Invalid file detected:", file);
-    //     }
-    //   });
-    // } else {
-    //   // toast.error("Attachment is required.");
-    //   setLoading(false);
-    //   return;
-    // }
-
-    if (Array.isArray(formData.group_id)) {
-      formData.group_id.forEach((id) => {
-        data.append("event[group_id][]", id);
+    // Add swusers (individual users) if shared with individuals
+    if (formData.shared === "individual" && Array.isArray(formData.user_id)) {
+      formData.user_id.forEach((id, index) => {
+        formDataToSend.append(`event[swusers][]`, id);
       });
-    } else if (formData.group_id) {
-      data.append("event[group_id][]", formData.group_id);
+    } else if (formData.shared === "individual" && formData.user_id) {
+      formDataToSend.append(`event[swusers][]`, formData.user_id);
     }
 
-    console.log("dta to be sent:", Array.from(data.entries()));
+    // Add cpusers (channel partner users) from selected channel partners
+    if (Array.isArray(selectedChannelPartners) && selectedChannelPartners.length > 0) {
+      selectedChannelPartners.forEach((id, index) => {
+        formDataToSend.append(`event[cpusers][]`, id);
+      });
+    }
+
+    // Add cp_group_id if shared with groups
+    if (formData.shared === "group" && Array.isArray(formData.group_id) && formData.group_id.length > 0) {
+      formDataToSend.append("event[cp_group_id]", formData.group_id[0]);
+    } else if (formData.shared === "group" && formData.group_id) {
+      formDataToSend.append("event[cp_group_id]", formData.group_id);
+    }
+
+    // Add cover images (single file for each ratio)
+    if (formData.cover_image_1_by_1 && formData.cover_image_1_by_1.length > 0) {
+      const img = formData.cover_image_1_by_1[0];
+      if (img.file) {
+        formDataToSend.append("event[cover_image_1_by_1]", img.file);
+      }
+    }
+
+    if (formData.cover_image_16_by_9 && formData.cover_image_16_by_9.length > 0) {
+      const img = formData.cover_image_16_by_9[0];
+      if (img.file) {
+        formDataToSend.append("event[cover_image_16_by_9]", img.file);
+      }
+    }
+
+    if (formData.cover_image_9_by_16 && formData.cover_image_9_by_16.length > 0) {
+      const img = formData.cover_image_9_by_16[0];
+      if (img.file) {
+        formDataToSend.append("event[cover_image_9_by_16]", img.file);
+      }
+    }
+
+    if (formData.cover_image_3_by_2 && formData.cover_image_3_by_2.length > 0) {
+      const img = formData.cover_image_3_by_2[0];
+      if (img.file) {
+        formDataToSend.append("event[cover_image_3_by_2]", img.file);
+      }
+    }
+
+    // Add event images (all ratios)
+    if (formData.event_images_1_by_1 && formData.event_images_1_by_1.length > 0) {
+      formData.event_images_1_by_1.forEach((img) => {
+        if (img.file) {
+          formDataToSend.append("event[event_images_1_by_1][]", img.file);
+        }
+      });
+    }
+
+    if (formData.event_images_16_by_9 && formData.event_images_16_by_9.length > 0) {
+      formData.event_images_16_by_9.forEach((img) => {
+        if (img.file) {
+          formDataToSend.append("event[event_images_16_by_9][]", img.file);
+        }
+      });
+    }
+
+    if (formData.event_images_9_by_16 && formData.event_images_9_by_16.length > 0) {
+      formData.event_images_9_by_16.forEach((img) => {
+        if (img.file) {
+          formDataToSend.append("event[event_images_9_by_16][]", img.file);
+        }
+      });
+    }
+
+    if (formData.event_images_3_by_2 && formData.event_images_3_by_2.length > 0) {
+      formData.event_images_3_by_2.forEach((img) => {
+        if (img.file) {
+          formDataToSend.append("event[event_images_3_by_2][]", img.file);
+        }
+      });
+    }
+
+    // Add attachments
+    if (formData.attachfile && formData.attachfile.length > 0) {
+      formData.attachfile.forEach((file) => {
+        if (file.file) {
+          formDataToSend.append("event[attachfile][]", file.file);
+        } else if (file instanceof File) {
+          formDataToSend.append("event[attachfile][]", file);
+        }
+      });
+    }
+
+    // Add reminders
+    if (preparedReminders && preparedReminders.length > 0) {
+      preparedReminders.forEach((reminder, index) => {
+        Object.keys(reminder).forEach((key) => {
+          formDataToSend.append(`event[set_reminders_attributes][${index}][${key}]`, reminder[key]);
+        });
+      });
+    }
+
+    console.log("FormData entries:");
+    for (let pair of formDataToSend.entries()) {
+      console.log(pair[0], pair[1]);
+    }
 
     try {
-      console.log("dta to be sent:", Array.from(data.entries()));
-
-      const response = await axios.post(`${baseURL}events.json`, data, {
+      const response = await axios.post(`${baseURL}/crm/admin/events.json`, formDataToSend, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          "Content-Type": "multipart/form-data",
-        },
+                      Authorization: getAuthHeader(),
+                      "Content-Type": "multipart/form-data",
+                    },
       });
       toast.success("Event created successfully!");
       setFormData({
         event_type: "",
         event_name: "",
         event_at: "",
+        event_date: "",
+        event_time: "",
         from_time: "",
         to_time: "",
         rsvp_action: "",
         description: "",
         publish: "",
-        user_id: "",
+        user_id: [],
         comment: "",
-        shared: "",
-        group_id: "",
+        shared: "all",
+        group_id: [],
         attachfile: [],
         cover_image: [],
-        is_important: "",
-        email_trigger_enabled: "",
+        is_important: false,
+        email_trigger_enabled: false,
         set_reminders_attributes: [],
         cover_image_1_by_1: [],
         cover_image_9_by_16: [],
@@ -709,8 +723,9 @@ const EventCreate = () => {
         event_images_3_by_2: [],
         event_images_16_by_9: [],
       });
+      setSelectedChannelPartners([]);
 
-      navigate("/event-list");
+      navigate("/maintenance/event-list");
     } catch (error) {
       console.error("Error submitting the form:", error);
       if (error.response && error.response.data) {
@@ -727,17 +742,17 @@ const EventCreate = () => {
 
   useEffect(() => {
     const fetchEvent = async () => {
-      const url = `${baseURL}events.json`;
+      const url = `${baseURL}/events.json`;
 
       try {
         const response = await axios.get(
-          `${baseURL}events.json`,
+          `${baseURL}/events.json`,
 
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-              "Content-Type": "application/json",
-            },
+                   Authorization: getAuthHeader(),
+                   "Content-Type": "multipart/form-data",
+                 },
           }
         );
 
@@ -832,11 +847,11 @@ const EventCreate = () => {
   useEffect(() => {
     const fetchChannelPartners = async () => {
       try {
-        const response = await axios.get(`${baseURL}channel_partners.json`, {
+        const response = await axios.get(`${baseURL}/channel_partners.json`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+                   Authorization: getAuthHeader(),
+                   "Content-Type": "multipart/form-data",
+                 },
         });
 
         const partnersData = Array.isArray(response.data)
@@ -1018,6 +1033,39 @@ const EventCreate = () => {
       setCompletedSteps(prev => [...prev, currentStep]);
     }
 
+    // If on Step 0 (Event Details) and RSVP is No, skip to Step 1 (Event Images)
+    if (currentStep === 0 && formData.rsvp_action === "no") {
+      setCurrentStep(1);
+      setShowPreviousSections(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // If on Step 0 (Event Details) and RSVP is Yes, go to Step 1 (Event Images)
+    if (currentStep === 0 && formData.rsvp_action === "yes") {
+      setCurrentStep(1);
+      setShowPreviousSections(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // If on Step 1 (Event Images) and RSVP is Yes, go to Step 2 (Invite CPs)
+    if (currentStep === 1 && formData.rsvp_action === "yes") {
+      setCurrentStep(2);
+      setShowPreviousSections(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // If on Step 1 (Event Images) and RSVP is No, go directly to preview
+    if (currentStep === 1 && formData.rsvp_action === "no") {
+      setIsPreviewMode(true);
+      setShowPreviousSections(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // If on Step 2 (Invite CPs), go to preview
     if (currentStep === totalSteps - 1) {
       setIsPreviewMode(true);
       setShowPreviousSections(true);
@@ -1035,6 +1083,15 @@ const EventCreate = () => {
       setCompletedSteps(prev => [...prev, currentStep]);
     }
 
+    // If on Step 0 (Event Details) and RSVP is No, skip to Step 1 (Event Images)
+    if (currentStep === 0 && formData.rsvp_action === "no") {
+      setCurrentStep(1);
+      setShowPreviousSections(true);
+      toast.success("Progress saved to draft successfully!");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1);
     }
@@ -1045,7 +1102,9 @@ const EventCreate = () => {
 
   // Stepper component
   const StepperComponent = () => {
-    const steps = ['Event Details', 'Event Related Images', 'Invite CPs'];
+    const steps = formData.rsvp_action === "yes" 
+      ? ['Event Details', 'Event Related Images', 'Invite CPs']
+      : ['Event Details', 'Event Related Images'];
 
     return (
       <Box sx={{ mb: 4 }}>
@@ -1449,46 +1508,6 @@ const EventCreate = () => {
                 </div>
               </div>
             </div>
-
-            {/* RSVP Fields - Conditional display */}
-            {formData.rsvp_action === "yes" && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <TextField
-                  label="RSVP Name"
-                  placeholder="Enter RSVP Name"
-                  value={formData.rsvp_name || ""}
-                  onChange={handleChange}
-                  name="rsvp_name"
-                  fullWidth
-                  variant="outlined"
-                  slotProps={{
-                    inputLabel: {
-                      shrink: true,
-                    },
-                  }}
-                  InputProps={{
-                    sx: fieldStyles,
-                  }}
-                />
-                <TextField
-                  label="RSVP Number"
-                  placeholder="Enter RSVP Number"
-                  value={formData.rsvp_number || ""}
-                  onChange={handleChange}
-                  name="rsvp_number"
-                  fullWidth
-                  variant="outlined"
-                  slotProps={{
-                    inputLabel: {
-                      shrink: true,
-                    },
-                  }}
-                  InputProps={{
-                    sx: fieldStyles,
-                  }}
-                />
-              </div>
-            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
@@ -1927,8 +1946,8 @@ const EventCreate = () => {
                         setFormData((prev) => ({
                           ...prev,
                           shared: "all",
-                          user_id: "",
-                          group_id: "",
+                          user_id: [],
+                          group_id: [],
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
@@ -1946,7 +1965,7 @@ const EventCreate = () => {
                         setFormData((prev) => ({
                           ...prev,
                           shared: "individual",
-                          group_id: "",
+                          group_id: [],
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
@@ -1964,7 +1983,7 @@ const EventCreate = () => {
                         setFormData((prev) => ({
                           ...prev,
                           shared: "group",
-                          user_id: "",
+                          user_id: [],
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
@@ -1983,12 +2002,11 @@ const EventCreate = () => {
                     <InputLabel shrink>Event User ID</InputLabel>
                     <MuiSelect
                       multiple
-                      value={formData.user_id ? formData.user_id.split(",") : []}
+                      value={Array.isArray(formData.user_id) ? formData.user_id : []}
                       onChange={(e) => {
-                        const selectedIds = e.target.value;
                         setFormData((prev) => ({
                           ...prev,
-                          user_id: Array.isArray(selectedIds) ? selectedIds.join(",") : selectedIds,
+                          user_id: e.target.value,
                         }));
                       }}
                       label="Event User ID"
@@ -2000,7 +2018,7 @@ const EventCreate = () => {
                         }
                         return selected
                           .map((id) => {
-                            const user = eventUserID.find((u) => u.id.toString() === id);
+                            const user = eventUserID.find((u) => u.id === id || u.id === id || u.id.toString() === id.toString().toString());
                             return user ? `${user.firstname} ${user.lastname}` : id;
                           })
                           .join(", ");
@@ -2010,7 +2028,7 @@ const EventCreate = () => {
                         Select Users
                       </MenuItem>
                       {eventUserID.map((user) => (
-                        <MenuItem key={user.id} value={user.id.toString()}>
+                        <MenuItem key={user.id} value={user.id}>
                           {user.firstname} {user.lastname}
                         </MenuItem>
                       ))}
@@ -2581,30 +2599,6 @@ const EventCreate = () => {
                             </div>
                           </div>
 
-                          {/* RSVP Fields - Conditional display */}
-                          {formData.rsvp_action === "yes" && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                              <TextField
-                                label="RSVP Name"
-                                value={formData.rsvp_name || ""}
-                                fullWidth
-                                variant="outlined"
-                                disabled
-                                slotProps={{ inputLabel: { shrink: true } }}
-                                InputProps={{ sx: fieldStyles }}
-                              />
-                              <TextField
-                                label="RSVP Number"
-                                value={formData.rsvp_number || ""}
-                                fullWidth
-                                variant="outlined"
-                                disabled
-                                slotProps={{ inputLabel: { shrink: true } }}
-                                InputProps={{ sx: fieldStyles }}
-                              />
-                            </div>
-                          )}
-
                           {/* Share With */}
                           {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="md:col-span-3">
@@ -2647,7 +2641,7 @@ const EventCreate = () => {
                                   <InputLabel shrink>Event User ID</InputLabel>
                                   <MuiSelect
                                     multiple
-                                    value={formData.user_id ? formData.user_id.split(",") : []}
+                                    value={Array.isArray(formData.user_id) ? formData.user_id : []}
                                     label="Event User ID"
                                     notched
                                     displayEmpty
@@ -2658,14 +2652,14 @@ const EventCreate = () => {
                                       }
                                       return selected
                                         .map((id) => {
-                                          const user = eventUserID.find((u) => u.id.toString() === id);
+                                          const user = eventUserID.find((u) => u.id === id || u.id === id || u.id.toString() === id.toString().toString());
                                           return user ? `${user.firstname} ${user.lastname}` : id;
                                         })
                                         .join(", ");
                                     }}
                                   >
                                     {eventUserID.map((user) => (
-                                      <MenuItem key={user.id} value={user.id.toString()}>
+                                      <MenuItem key={user.id} value={user.id}>
                                         {user.firstname} {user.lastname}
                                       </MenuItem>
                                     ))}
@@ -2999,7 +2993,7 @@ const EventCreate = () => {
                             <InputLabel shrink>Event User ID</InputLabel>
                             <MuiSelect
                               multiple
-                              value={formData.user_id ? formData.user_id.split(",") : []}
+                              value={Array.isArray(formData.user_id) ? formData.user_id : []}
                               label="Event User ID"
                               notched
                               displayEmpty
@@ -3010,14 +3004,14 @@ const EventCreate = () => {
                                 }
                                 return selected
                                   .map((id) => {
-                                    const user = eventUserID.find((u) => u.id.toString() === id);
+                                    const user = eventUserID.find((u) => u.id === id || u.id.toString() === id.toString());
                                     return user ? `${user.firstname} ${user.lastname}` : id;
                                   })
                                   .join(", ");
                               }}
                             >
                               {eventUserID.map((user) => (
-                                <MenuItem key={user.id} value={user.id.toString()}>
+                                <MenuItem key={user.id} value={user.id}>
                                   {user.firstname} {user.lastname}
                                 </MenuItem>
                               ))}
@@ -3342,7 +3336,7 @@ const EventCreate = () => {
                             <InputLabel shrink>Event User ID</InputLabel>
                             <MuiSelect
                               multiple
-                              value={formData.user_id ? formData.user_id.split(",") : []}
+                              value={Array.isArray(formData.user_id) ? formData.user_id : []}
                               label="Event User ID"
                               notched
                               displayEmpty
@@ -3353,14 +3347,14 @@ const EventCreate = () => {
                                 }
                                 return selected
                                   .map((id) => {
-                                    const user = eventUserID.find((u) => u.id.toString() === id);
+                                    const user = eventUserID.find((u) => u.id === id || u.id.toString() === id.toString());
                                     return user ? `${user.firstname} ${user.lastname}` : id;
                                   })
                                   .join(", ");
                               }}
                             >
                               {eventUserID.map((user) => (
-                                <MenuItem key={user.id} value={user.id.toString()}>
+                                <MenuItem key={user.id} value={user.id}>
                                   {user.firstname} {user.lastname}
                                 </MenuItem>
                               ))}
@@ -3659,7 +3653,7 @@ const EventCreate = () => {
                           <InputLabel shrink>Event User ID</InputLabel>
                           <MuiSelect
                             multiple
-                            value={formData.user_id ? formData.user_id.split(",") : []}
+                            value={Array.isArray(formData.user_id) ? formData.user_id : []}
                             label="Event User ID"
                             notched
                             displayEmpty
@@ -3670,14 +3664,14 @@ const EventCreate = () => {
                               }
                               return selected
                                 .map((id) => {
-                                  const user = eventUserID.find((u) => u.id.toString() === id);
+                                  const user = eventUserID.find((u) => u.id === id || u.id.toString() === id.toString());
                                   return user ? `${user.firstname} ${user.lastname}` : id;
                                 })
                                 .join(", ");
                             }}
                           >
                             {eventUserID.map((user) => (
-                              <MenuItem key={user.id} value={user.id.toString()}>
+                              <MenuItem key={user.id} value={user.id}>
                                 {user.firstname} {user.lastname}
                               </MenuItem>
                             ))}

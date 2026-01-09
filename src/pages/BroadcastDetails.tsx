@@ -1,33 +1,54 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
+import axios from "axios";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 
 const BroadcastDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const baseURL = API_CONFIG.BASE_URL;
   
-  // Mock data for UI display (no API calls)
-  const broadcastData = {
-    notice_heading: "Water Supply Maintenance Notice",
-    notice_type: "Maintenance",
-    society_name: "Runwal Garden",
-    active: true,
-    is_important: true,
-    email_trigger_enabled: false,
-    expire_time: "2025-11-25T18:30:00",
-    notice_text: "Please note that there will be a temporary water supply shutdown in Runwal Garden due to scheduled maintenance work. Residents are requested to store sufficient water in advance.",
-    image: {
-      document_url: "https://via.placeholder.com/400x225/4A90E2/ffffff?text=Maintenance+Notice",
-      document_file_name: "Maintenance_Notice_Runwal_Garden.png"
-    },
-    attached_files: [
-      {
-        document_url: "https://via.placeholder.com/400x225/E74C3C/ffffff?text=PDF+Document",
-        document_file_name: "Maintenance_Notice_Runwal_Garden.pdf",
-        document_content_type: "application/pdf"
+  const [broadcastData, setBroadcastData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBroadcastDetails = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        const response = await axios.get(`${baseURL}/crm/admin/noticeboards/${id}.json`, {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+          maxRedirects: 0,
+          validateStatus: function (status) {
+            return status >= 200 && status < 400;
+          },
+        });
+        
+        console.log("API Response:", response.data);
+        // The API returns the data directly, not nested
+        setBroadcastData(response.data);
+      } catch (error) {
+        console.error("Error fetching broadcast details:", error);
+        if (error.response?.status === 302 || error.response?.status === 401) {
+          toast.error("Session expired. Please login again.");
+          // Optionally redirect to login
+          // navigate("/login");
+        } else {
+          toast.error("Failed to load broadcast details");
+        }
+      } finally {
+        setLoading(false);
       }
-    ]
-  };
+    };
+
+    fetchBroadcastDetails();
+  }, [id, baseURL]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -44,6 +65,59 @@ const BroadcastDetails = () => {
       return "Invalid Date";
     }
   };
+
+  const decodeUrl = (url) => {
+    if (!url) return "";
+    try {
+      // Decode the URL-encoded string
+      let decodedUrl = decodeURIComponent(url);
+      
+      // If it starts with //, add https:
+      if (decodedUrl.startsWith("//")) {
+        decodedUrl = `https:${decodedUrl}`;
+      }
+      // If it starts with /, it's a relative path, add the full domain
+      else if (decodedUrl.startsWith("/")) {
+        decodedUrl = `https:${decodedUrl}`;
+      }
+      // If it doesn't start with http, assume it needs https://
+      else if (!decodedUrl.startsWith("http")) {
+        decodedUrl = `https://${decodedUrl}`;
+      }
+      
+      return decodedUrl;
+    } catch (error) {
+      console.error("Error decoding URL:", error);
+      return url;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-50 h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C72030]"></div>
+          <p className="mt-4 text-gray-600">Loading broadcast details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!broadcastData || Object.keys(broadcastData).length === 0) {
+    return (
+      <div className="p-6 bg-gray-50 h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">No broadcast data found</p>
+          <button
+            onClick={() => navigate("/maintenance/noticeboard-list")}
+            className="mt-4 px-4 py-2 bg-[#C72030] text-white rounded hover:bg-[#A01828]"
+          >
+            Back to List
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50 h-screen overflow-y-auto scrollbar-thin pb-28">
@@ -138,7 +212,7 @@ const BroadcastDetails = () => {
                   Project Name
                 </div>
                 <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                  {broadcastData.society_name || "-"}
+                  {broadcastData.project_name || "-"}
                 </div>
               </div>
 
@@ -225,14 +299,14 @@ const BroadcastDetails = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {broadcastData.image ? (
+                      {broadcastData.image && broadcastData.image.document_url ? (
                         <tr>
                           <td>{broadcastData.image.document_file_name || "Cover Image"}</td>
-                          <td>image/jpeg</td>
+                          <td>{broadcastData.image.document_content_type || "image/jpeg"}</td>
                           <td>16:9</td>
                           <td>
                             <img
-                              src={broadcastData.image.document_url}
+                              src={decodeUrl(broadcastData.image.document_url)}
                               alt="Cover"
                               style={{
                                 width: "100px",
@@ -240,6 +314,10 @@ const BroadcastDetails = () => {
                                 objectFit: "contain",
                                 display: "block",
                                 borderRadius: "4px",
+                              }}
+                              onError={(e) => {
+                                console.error("Failed to load image:", decodeUrl(broadcastData.image.document_url));
+                                e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f3f4f6' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-size='12'%3EImage%3C/text%3E%3C/svg%3E";
                               }}
                             />
                           </td>
@@ -271,53 +349,119 @@ const BroadcastDetails = () => {
                     </thead>
                     <tbody>
                       {broadcastData.attached_files && broadcastData.attached_files.length > 0 ? (
-                        broadcastData.attached_files.map((file, index) => (
-                          <tr key={index}>
-                            <td>{file.document_file_name || `Attachment ${index + 1}`}</td>
-                            <td>{file.document_content_type || "image/jpeg"}</td>
-                            <td>16:9</td>
-                            <td>
-                              {file.document_content_type?.includes('pdf') ? (
-                                <a 
-                                  href={file.document_url} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    padding: '8px 12px',
-                                    backgroundColor: '#fef2f2',
-                                    color: '#dc2626',
-                                    borderRadius: '4px',
-                                    textDecoration: 'none',
-                                    fontSize: '13px',
-                                    fontWeight: '500',
-                                  }}
-                                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
-                                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
-                                >
-                                  <svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-                                  </svg>
-                                  View PDF
-                                </a>
-                              ) : (
-                                <img
-                                  src={file.document_url}
-                                  alt={`Attachment ${index + 1}`}
-                                  style={{
-                                    width: "100px",
-                                    height: "100px",
-                                    objectFit: "contain",
-                                    display: "block",
-                                    borderRadius: "4px",
-                                  }}
-                                />
-                              )}
-                            </td>
-                          </tr>
-                        ))
+                        broadcastData.attached_files.map((file, index) => {
+                          const fileUrl = decodeUrl(file.document_url);
+                          const fileName = file.document_file_name || `Attachment ${index + 1}`;
+                          const fileType = file.document_content_type || "";
+                          
+                          // Check if it's a video file
+                          const isVideo = fileUrl.toLowerCase().includes('.mp4') || 
+                                         fileUrl.toLowerCase().includes('.webm') || 
+                                         fileUrl.toLowerCase().includes('.mov') ||
+                                         fileType.includes('video');
+                          
+                          // Check if it's a PDF file
+                          const isPDF = fileUrl.toLowerCase().includes('.pdf') || fileType.includes('pdf');
+                          
+                          // Check if it's an image
+                          const isImage = fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) || 
+                                         fileType.includes('image');
+                          
+                          return (
+                            <tr key={index}>
+                              <td>{fileName}</td>
+                              <td>{fileType || (isVideo ? "video/mp4" : isPDF ? "application/pdf" : "image/jpeg")}</td>
+                              <td>16:9</td>
+                              <td>
+                                {isPDF ? (
+                                  <a 
+                                    href={fileUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '8px',
+                                      padding: '8px 12px',
+                                      backgroundColor: '#fef2f2',
+                                      color: '#dc2626',
+                                      borderRadius: '4px',
+                                      textDecoration: 'none',
+                                      fontSize: '13px',
+                                      fontWeight: '500',
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
+                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                  >
+                                    <svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 20 20">
+                                      <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                                    </svg>
+                                    View PDF
+                                  </a>
+                                ) : isVideo ? (
+                                  <video
+                                    controls
+                                    style={{
+                                      width: "200px",
+                                      height: "100px",
+                                      objectFit: "contain",
+                                      display: "block",
+                                      borderRadius: "4px",
+                                      backgroundColor: "#000",
+                                    }}
+                                    onError={(e) => {
+                                      console.error("Failed to load video:", fileUrl);
+                                    }}
+                                  >
+                                    <source src={fileUrl} type="video/mp4" />
+                                    Your browser does not support the video tag.
+                                  </video>
+                                ) : isImage ? (
+                                  <img
+                                    src={fileUrl}
+                                    alt={fileName}
+                                    style={{
+                                      width: "100px",
+                                      height: "100px",
+                                      objectFit: "contain",
+                                      display: "block",
+                                      borderRadius: "4px",
+                                    }}
+                                    onError={(e) => {
+                                      console.error("Failed to load image:", fileUrl);
+                                      e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f3f4f6' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-size='12'%3EImage%3C/text%3E%3C/svg%3E";
+                                    }}
+                                  />
+                                ) : (
+                                  <a 
+                                    href={fileUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '8px',
+                                      padding: '8px 12px',
+                                      backgroundColor: '#eff6ff',
+                                      color: '#2563eb',
+                                      borderRadius: '4px',
+                                      textDecoration: 'none',
+                                      fontSize: '13px',
+                                      fontWeight: '500',
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
+                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#eff6ff'}
+                                  >
+                                    <svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                                    </svg>
+                                    Download File
+                                  </a>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })
                       ) : (
                         <tr>
                           <td colSpan={4} style={{ textAlign: 'center', color: '#6b7280', padding: '24px' }}>

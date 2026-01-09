@@ -590,6 +590,7 @@ const ProjectDetailsCreate = () => {
       .get(getFullUrl('/property_types.json'))
       .then((response) => {
         const options = response.data
+          .filter((type) => type.active === true)
           .map((type) => ({
             value: type.property_type,
             label: type.property_type,

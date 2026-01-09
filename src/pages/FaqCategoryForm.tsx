@@ -227,7 +227,7 @@ const FaqCategoryForm = () => {
                 />
 
                 {/* Site */}
-                <FormControl fullWidth variant="outlined">
+                {/* <FormControl fullWidth variant="outlined">
                   <InputLabel shrink htmlFor="site-select">
                     Site
                   </InputLabel>
@@ -250,7 +250,7 @@ const FaqCategoryForm = () => {
                       </MenuItem>
                     ))}
                   </MuiSelect>
-                </FormControl>
+                </FormControl> */}
               </div>
           </div>
         </div>

@@ -5,7 +5,7 @@ import { ArrowLeft, FileText, Users, QrCode, Image as ImageIcon, Calendar, Setti
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 
 const EventDetails = () => {
@@ -58,55 +58,27 @@ const EventDetails = () => {
     const fetchEventData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_CONFIG.BASE_URL}/events/${eventId}.json`, {
+        const response = await axios.get(`${API_CONFIG.BASE_URL}/crm/admin/events/${eventId}.json`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+                               Authorization: getAuthHeader(),
+                               "Content-Type": "multipart/form-data",
+                             },
         });
+        console.log("Event Data:", response.data);
         setEventData(response.data);
         setError(null);
       } catch (error) {
-        // Show mock data for UI preview
-        setEventData({
-          event_name: "Annual Society Gathering 2026",
-          event_type: "Cultural",
-          project_name: "Runwal Gardens",
-          event_at: "Community Hall",
-          from_time: "2026-01-15T18:00:00",
-          to_time: "2026-01-15T22:00:00",
-          is_important: "Yes",
-          shared: "All Members",
-          email_trigger_enabled: true,
-          rsvp_action: "yes",
-          rsvp_name: "John Doe",
-          rsvp_number: "+91 9876543210",
-          description: "Join us for our annual society gathering! This is a wonderful opportunity to meet your neighbors, enjoy cultural performances, and participate in fun activities. We'll have food, music, and entertainment for all ages. Don't miss this chance to strengthen our community bonds and create lasting memories together.",
-          reminders: [
-            { days: 1, hours: 0, minutes: 0 },
-            { days: 0, hours: 2, minutes: 0 }
-          ],
-          cover_image_1_by_1: [{
-            document_file_name: "event-cover-1.jpg",
-            document_content_type: "image/jpeg",
-            document_updated_at: "2026-01-10",
-            document_url: "https://via.placeholder.com/400x400"
-          }],
-          event_images_16_by_9: [{
-            document_file_name: "event-gallery-1.jpg",
-            document_content_type: "image/jpeg",
-            document_updated_at: "2026-01-10",
-            document_url: "https://via.placeholder.com/800x450"
-          }]
-        });
-        setError(null);
-        console.error("Showing mock data for UI preview", error);
+        console.error("Error fetching event data:", error);
+        setError("Failed to load event details");
+        toast.error("Failed to load event details");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchEventData();
+    if (eventId) {
+      fetchEventData();
+    }
   }, [eventId]);
 
   const formatDate = (dateString) => {
@@ -310,6 +282,15 @@ const EventDetails = () => {
 
                         <div className="flex items-start">
                           <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                            Event Type
+                          </div>
+                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                            {eventData.event_type || "—"}
+                          </div>
+                        </div>
+
+                        <div className="flex items-start">
+                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
                             Event At
                           </div>
                           <div className="text-[14px] font-semibold text-gray-900 flex-1">
@@ -319,28 +300,19 @@ const EventDetails = () => {
 
                         <div className="flex items-start">
                           <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Project Name
+                            From Time
                           </div>
                           <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.project_name || "—"}
+                            {formatDate(eventData.from_time)} {formatTime(eventData.from_time)}
                           </div>
                         </div>
 
                         <div className="flex items-start">
                           <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Event Time
+                            To Time
                           </div>
                           <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {formatTime(eventData.from_time)} - {formatTime(eventData.to_time)}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Event Date
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {formatDate(eventData.from_time)}
+                            {formatDate(eventData.to_time)} {formatTime(eventData.to_time)}
                           </div>
                         </div>
 
@@ -349,49 +321,75 @@ const EventDetails = () => {
                             RSVP Action
                           </div>
                           <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.rsvp_action || "—"}
+                            {eventData.rsvp_action_int === 1 ? "Yes" : "No"}
                           </div>
                         </div>
 
                         <div className="flex items-start">
                           <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Mark Important
+                            Status
                           </div>
                           <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.is_important || "—"}
+                            {eventData.status || "—"}
                           </div>
                         </div>
 
                         <div className="flex items-start">
+                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                            Is Expired
+                          </div>
+                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                            {eventData.is_expired === 1 ? "Yes" : "No"}
+                          </div>
+                        </div>
+
+                        <div className="flex items-start">
+                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                            Shared With
+                          </div>
+                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                            {eventData.shared === 0 ? "All Members" : "Selected Users/Groups"}
+                          </div>
+                        </div>
+
+                        <div className="flex items-start">
+                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                            Created By
+                          </div>
+                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                            {eventData.created_by || "—"}
+                          </div>
+                        </div>
+
+                        <div className="flex items-start col-span-1 md:col-span-2">
                           <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
                             Event Description
                           </div>
                           <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.description ? (
-                              eventData.description.length > 50 ? `${eventData.description.substring(0, 50)}...` : eventData.description
-                            ) : "—"}
+                            {eventData.description || "—"}
                           </div>
                         </div>
 
-                        <div className="flex items-start">
+                        {/* RSVP Stats */}
+                        <div className="flex items-start col-span-1 md:col-span-2 pt-4 border-t border-gray-200">
                           <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Event Shared
+                            RSVP Stats
                           </div>
                           <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.shared || "—"}
+                            <div className="flex gap-6">
+                              <span className="text-green-600">Going: {eventData.going || 0}</span>
+                              <span className="text-red-600">Not Going: {eventData.not_going || 0}</span>
+                              <span className="text-yellow-600">Maybe: {eventData.maybe || 0}</span>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="flex items-start">
+                        <div className="flex items-start col-span-1 md:col-span-2">
                           <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Send Email
+                            Total Likes
                           </div>
                           <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.email_trigger_enabled === true
-                              ? "Yes"
-                              : eventData.email_trigger_enabled === false
-                              ? "No"
-                              : "—"}
+                            {eventData.total_likes || 0}
                           </div>
                         </div>
                       </div>
