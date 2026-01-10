@@ -1397,6 +1397,39 @@ const EventEdit = () => {
       setCompletedSteps(prev => [...prev, currentStep]);
     }
 
+    // If on Step 0 (Event Details) and RSVP is No, skip to Step 1 (Event Images)
+    if (currentStep === 0 && formData.rsvp_action === "no") {
+      setCurrentStep(1);
+      setShowPreviousSections(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // If on Step 0 (Event Details) and RSVP is Yes, go to Step 1 (Event Images)
+    if (currentStep === 0 && formData.rsvp_action === "yes") {
+      setCurrentStep(1);
+      setShowPreviousSections(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // If on Step 1 (Event Images) and RSVP is Yes, go to Step 2 (Invite CPs)
+    if (currentStep === 1 && formData.rsvp_action === "yes") {
+      setCurrentStep(2);
+      setShowPreviousSections(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // If on Step 1 (Event Images) and RSVP is No, go directly to preview
+    if (currentStep === 1 && formData.rsvp_action === "no") {
+      setIsPreviewMode(true);
+      setShowPreviousSections(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // If on Step 2 (Invite CPs), go to preview
     if (currentStep === totalSteps - 1) {
       setIsPreviewMode(true);
       setShowPreviousSections(true);
@@ -1414,6 +1447,15 @@ const EventEdit = () => {
       setCompletedSteps(prev => [...prev, currentStep]);
     }
 
+    // If on Step 0 (Event Details) and RSVP is No, skip to Step 1 (Event Images)
+    if (currentStep === 0 && formData.rsvp_action === "no") {
+      setCurrentStep(1);
+      setShowPreviousSections(true);
+      toast.success("Progress saved to draft successfully!");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1);
     }
@@ -1424,7 +1466,9 @@ const EventEdit = () => {
 
   // Stepper component
   const StepperComponent = () => {
-    const steps = ['Event Details', 'Event Related Images', 'Invite CPs'];
+    const steps = formData.rsvp_action === "yes" 
+      ? ['Event Details', 'Event Related Images', 'Invite CPs']
+      : ['Event Details', 'Event Related Images'];
 
     return (
       <Box sx={{ mb: 4 }}>
@@ -2992,8 +3036,113 @@ const EventEdit = () => {
                         <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
                       </button>
                     </div>
-                    <div className="p-6 opacity-75 pointer-events-none">
-                      <p className="text-sm text-gray-600">Event images have been uploaded.</p>
+                    <div className="p-6 space-y-6 opacity-75 pointer-events-none">
+                      {/* Cover Images */}
+                      <div>
+                        <h5 className="text-base font-semibold mb-4">Event Cover Images</h5>
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow style={{ backgroundColor: '#E6E2D8' }}>
+                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
+                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
+                                <TableHead className="font-semibold text-gray-900 py-3 px-4">Ratio</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {coverImageRatios.flatMap(({ key, label }) => {
+                                const files = Array.isArray(formData[key]) ? formData[key] : formData[key] ? [formData[key]] : [];
+                                if (files.length === 0) return [];
+                                return files.map((file, index) => {
+                                  const preview = file.url || file.preview || file.document_url || "";
+                                  const name = file.name || file.document_file_name || `File ${index + 1}`;
+                                  const ratio = file.ratio || label;
+                                  return (
+                                    <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
+                                      <TableCell>{name}</TableCell>
+                                      <TableCell>
+                                        {preview && (
+                                          <img
+                                            style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                            className="img-fluid rounded"
+                                            src={preview}
+                                            alt={name}
+                                          />
+                                        )}
+                                      </TableCell>
+                                      <TableCell>{ratio}</TableCell>
+                                    </TableRow>
+                                  );
+                                });
+                              })}
+                              {coverImageRatios.every(({ key }) => !(formData[key] && formData[key].length > 0)) && (
+                                <TableRow>
+                                  <TableCell colSpan={3} className="text-center text-gray-500">
+                                    No cover images uploaded
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+
+                      {/* Event Attachment Images */}
+                      <div>
+                        <h5 className="text-base font-semibold mb-4">Event Attachment Images</h5>
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow style={{ backgroundColor: '#E6E2D8' }}>
+                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
+                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
+                                <TableHead className="font-semibold text-gray-900 py-3 px-4">Ratio</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {eventImageRatios.flatMap(({ key, label }) => {
+                                const files = Array.isArray(formData[key]) ? formData[key] : formData[key] ? [formData[key]] : [];
+                                if (files.length === 0) return [];
+                                return files.map((file, index) => {
+                                  const preview = file.url || file.preview || file.document_url || "";
+                                  const name = file.name || file.document_file_name || `File ${index + 1}`;
+                                  const ratio = file.ratio || label;
+                                  const isVideo = file.type === "video" || (preview && ['.mp4', '.webm', '.ogg'].some(ext => preview.toLowerCase().endsWith(ext)));
+                                  return (
+                                    <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
+                                      <TableCell>{name}</TableCell>
+                                      <TableCell>
+                                        {preview && (
+                                          isVideo ? (
+                                            <video controls style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }} className="img-fluid rounded">
+                                              <source src={preview} type="video/mp4" />
+                                            </video>
+                                          ) : (
+                                            <img
+                                              style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                              className="img-fluid rounded"
+                                              src={preview}
+                                              alt={name}
+                                            />
+                                          )
+                                        )}
+                                      </TableCell>
+                                      <TableCell>{ratio}</TableCell>
+                                    </TableRow>
+                                  );
+                                });
+                              })}
+                              {eventImageRatios.every(({ key }) => !(formData[key] && formData[key].length > 0)) && (
+                                <TableRow>
+                                  <TableCell colSpan={3} className="text-center text-gray-500">
+                                    No event images uploaded
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -3389,23 +3538,119 @@ const EventEdit = () => {
                     }}
                     className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                   >
-                    <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
-                  </button>
-                </div>
-                <div className="p-6 space-y-6">
-                  <div>
-                    <h5 className="text-base font-semibold mb-4">Event Cover Image</h5>
-                    <p className="text-sm text-gray-600">Cover images uploaded successfully.</p>
+                  <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                </button>
+              </div>
+              <div className="p-6 space-y-6">
+                {/* Cover Images */}
+                <div>
+                  <h5 className="text-base font-semibold mb-4">Event Cover Images</h5>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow style={{ backgroundColor: '#E6E2D8' }}>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4">Ratio</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {coverImageRatios.flatMap(({ key, label }) => {
+                          const files = Array.isArray(formData[key]) ? formData[key] : formData[key] ? [formData[key]] : [];
+                          if (files.length === 0) return [];
+                          return files.map((file, index) => {
+                            const preview = file.url || file.preview || file.document_url || "";
+                            const name = file.name || file.document_file_name || `File ${index + 1}`;
+                            const ratio = file.ratio || label;
+                            return (
+                              <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
+                                <TableCell>{name}</TableCell>
+                                <TableCell>
+                                  {preview && (
+                                    <img
+                                      style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                      className="img-fluid rounded"
+                                      src={preview}
+                                      alt={name}
+                                    />
+                                  )}
+                                </TableCell>
+                                <TableCell>{ratio}</TableCell>
+                              </TableRow>
+                            );
+                          });
+                        })}
+                        {coverImageRatios.every(({ key }) => !(formData[key] && formData[key].length > 0)) && (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center text-gray-500">
+                              No cover images uploaded
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
                   </div>
-                  <div>
-                    <h5 className="text-base font-semibold mb-4">Event Attachment Images</h5>
-                    <p className="text-sm text-gray-600">Event images uploaded successfully.</p>
+                </div>
+
+                {/* Event Attachment Images */}
+                <div>
+                  <h5 className="text-base font-semibold mb-4">Event Attachment Images</h5>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow style={{ backgroundColor: '#E6E2D8' }}>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4">Ratio</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {eventImageRatios.flatMap(({ key, label }) => {
+                          const files = Array.isArray(formData[key]) ? formData[key] : formData[key] ? [formData[key]] : [];
+                          if (files.length === 0) return [];
+                          return files.map((file, index) => {
+                            const preview = file.url || file.preview || file.document_url || "";
+                            const name = file.name || file.document_file_name || `File ${index + 1}`;
+                            const ratio = file.ratio || label;
+                            const isVideo = file.type === "video" || (preview && ['.mp4', '.webm', '.ogg'].some(ext => preview.toLowerCase().endsWith(ext)));
+                            return (
+                              <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
+                                <TableCell>{name}</TableCell>
+                                <TableCell>
+                                  {preview && (
+                                    isVideo ? (
+                                      <video controls style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }} className="img-fluid rounded">
+                                        <source src={preview} type="video/mp4" />
+                                      </video>
+                                    ) : (
+                                      <img
+                                        style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                        className="img-fluid rounded"
+                                        src={preview}
+                                        alt={name}
+                                      />
+                                    )
+                                  )}
+                                </TableCell>
+                                <TableCell>{ratio}</TableCell>
+                              </TableRow>
+                            );
+                          });
+                        })}
+                        {eventImageRatios.every(({ key }) => !(formData[key] && formData[key].length > 0)) && (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center text-gray-500">
+                              No event images uploaded
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Step 3: Invite CPs Preview */}
+            </div>            {/* Step 3: Invite CPs Preview */}
             <div className="mb-6">
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>

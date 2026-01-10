@@ -8,6 +8,7 @@ import { Plus, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
+import { Switch } from "@mui/material";
 
 const AmenitiesList = () => {
   const baseURL = API_CONFIG.BASE_URL;
@@ -206,83 +207,33 @@ const AmenitiesList = () => {
         );
       case "status":
         return (
-          <div className="flex justify-center">
-            <button
-              onClick={() => handleToggle(item.id, item.active)}
-              className="toggle-button"
-              style={{
-                border: "none",
-                background: "none",
-                cursor: "pointer",
-                padding: 0,
-                width: "70px",
-              }}
-            >
-              {item.active ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="40"
-                  height="25"
-                  fill="#de7008"
-                  className="bi bi-toggle-on"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="40"
-                  height="25"
-                  fill="#667085"
-                  className="bi bi-toggle-off"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-                </svg>
-              )}
-            </button>
-          </div>
+          <Switch
+            checked={item.active}
+            onChange={(e) => handleToggle(item.id, item.active)}
+            sx={{
+              '& .MuiSwitch-switchBase.Mui-checked': {
+                color: '#C72030',
+              },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: '#C72030',
+              },
+            }}
+          />
         );
       case "night_mode":
         return (
-          <div className="flex justify-center">
-            <button
-              onClick={() => handleNightModeToggle(item.id, item.night_mode)}
-              className="toggle-button"
-              style={{
-                border: "none",
-                background: "none",
-                cursor: "pointer",
-                padding: 0,
-                width: "70px",
-              }}
-            >
-              {item.night_mode ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="40"
-                  height="25"
-                  fill="#de7008"
-                  className="bi bi-toggle-on"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="40"
-                  height="25"
-                  fill="#667085"
-                  className="bi bi-toggle-off"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-                </svg>
-              )}
-            </button>
-          </div>
+          <Switch
+            checked={item.night_mode}
+            onChange={(e) => handleNightModeToggle(item.id, item.night_mode)}
+            sx={{
+              '& .MuiSwitch-switchBase.Mui-checked': {
+                color: '#C72030',
+              },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: '#C72030',
+              },
+            }}
+          />
         );
       default:
         return null;

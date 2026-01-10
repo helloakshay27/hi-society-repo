@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/apiConfig";
 import { ArrowLeft, Home } from "lucide-react";
-import { TextField } from "@mui/material";
+import { TextField, Switch } from "@mui/material";
 import { Button } from "@/components/ui/button";
 
 const fieldStyles = {
@@ -167,40 +167,18 @@ const Amenities = () => {
                 <label className="block text-sm font-medium text-gray-700">
                   Night Mode
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setNightMode(!nightMode)}
-                  className="toggle-button"
-                  style={{
-                    border: "none",
-                    background: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                    width: "70px",
+                <Switch
+                  checked={nightMode}
+                  onChange={(e) => setNightMode(e.target.checked)}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#C72030',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#C72030',
+                    },
                   }}
-                >
-                  {nightMode ? (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="40"
-                      height="25"
-                      fill="#de7008"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-                    </svg>
-                  ) : (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="40"
-                      height="25"
-                      fill="#667085"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zM5 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-                    </svg>
-                  )}
-                </button>
+                />
               </div>
             </div>
           </div>

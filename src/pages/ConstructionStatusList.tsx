@@ -10,6 +10,7 @@ import { Plus, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
+import { Switch } from "@mui/material";
 
 const ConstructionStatusList = () => {
   const baseURL = API_CONFIG.BASE_URL;
@@ -154,36 +155,18 @@ const ConstructionStatusList = () => {
         return <span>{item.construction_status || "-"}</span>;
       case "status":
         return (
-         <button
-  type="button"
-  onClick={() => handleToggle(item.id, item.active)}
-  style={{
-    width: "32px",          
-    height: "12px",         
-    backgroundColor: "#e5e5e5",
-    borderRadius: "999px",
-    border: "none",
-    padding: "0",
-    cursor: "pointer",
-    position: "relative",
-  }}
->
-  <span
-    style={{
-      width: "14px",        
-      height: "14px",
-      borderRadius: "50%",
-      backgroundColor: "#d32f2f",
-      position: "absolute",
-      top: "-1px",          
-      left: "0px",
-      transform: item.active ? "translateX(18px)" : "translateX(0px)",
-      transition: "transform 0.2s ease",
-    }}
-  />
-</button>
-
-
+          <Switch
+            checked={item.active}
+            onChange={(e) => handleToggle(item.id, item.active)}
+            sx={{
+              '& .MuiSwitch-switchBase.Mui-checked': {
+                color: '#C72030',
+              },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: '#C72030',
+              },
+            }}
+          />
         );
       default:
         return null;

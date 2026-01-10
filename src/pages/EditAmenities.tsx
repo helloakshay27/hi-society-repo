@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { TextField } from "@mui/material";
+import { TextField, Switch } from "@mui/material";
 import { API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { ArrowLeft, Home } from "lucide-react";
@@ -191,6 +191,24 @@ const EditAmenities = () => {
                 InputProps={{ sx: fieldStyles }}
                 required
               />
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Night Mode
+                </label>
+                <Switch
+                  checked={nightMode}
+                  onChange={(e) => setNightMode(e.target.checked)}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#C72030',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#C72030',
+                    },
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
