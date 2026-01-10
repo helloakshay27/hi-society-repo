@@ -868,7 +868,7 @@ const BroadcastCreate = () => {
               <div className="flex justify-between items-center mb-4">
                 <h5 className="text-base font-semibold">
                   Broadcast Cover Image{" "}
-                  <span
+                  {/* <span
                     className="relative inline-block cursor-pointer"
                     onMouseEnter={() => setShowTooltip(true)}
                     onMouseLeave={() => setShowTooltip(false)}
@@ -879,7 +879,7 @@ const BroadcastCreate = () => {
                         Max Upload Size 3 MB and Required ratio is 16:9
                       </span>
                     )}
-                  </span>
+                  </span> */}
                 </h5>
                 <input
                   type="file"
@@ -977,7 +977,7 @@ const BroadcastCreate = () => {
               <div className="flex justify-between items-center mb-4">
                 <h5 className="text-base font-semibold">
                   Broadcast Attachment{" "}
-                  <span
+                  {/* <span
                     className="relative inline-block cursor-pointer"
                     onMouseEnter={() => setShowAttachmentTooltip(true)}
                     onMouseLeave={() => setShowAttachmentTooltip(false)}
@@ -988,7 +988,7 @@ const BroadcastCreate = () => {
                         Max Upload Size 3 MB (Images), 10 MB (PDFs/Docs), 10 MB (Videos)
                       </span>
                     )}
-                  </span>
+                  </span> */}
                 </h5>
                 <input
                   type="file"

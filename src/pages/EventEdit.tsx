@@ -17,6 +17,7 @@ import {
   MenuItem,
   Avatar,
   Box,
+  Switch,
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import {
@@ -139,6 +140,14 @@ const EventEdit = () => {
       qrCodeId: "QR-EVT-1767003965366-cp4-176700403056"
     }
   ]);
+
+  // Visibility state
+  const [visibility, setVisibility] = useState({
+    showOnHomePage: false,
+    showOnProjectDetailPage: false,
+    showOnBookingPage: false,
+    featuredEvent: false,
+  });
 
   // Field styles for Material-UI components
   const fieldStyles = {
@@ -475,9 +484,9 @@ const EventEdit = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const response = await axios.get(`${baseURL}events/${id}.json`, {
+        const response = await axios.get(`${baseURL}/crm/admin/events/${id}.json`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            Authorization: getAuthHeader(),
             "Content-Type": "application/json",
           },
         });
@@ -553,60 +562,178 @@ const EventEdit = () => {
           }
         }
 
-        // Prepare cover image preview
-        const existingCoverImage =
-          data.cover_image && data.cover_image.document_url
-            ? {
-                url: data.cover_image.document_url,
-                id: data.cover_image.id,
-                isExisting: true,
-              }
-            : null;
+        // Prepare cover image previews for all ratios
+        const coverImage1by1 = data.cover_image_1_by_1 ? [{
+          url: data.cover_image_1_by_1.document_url,
+          document_url: data.cover_image_1_by_1.document_url,
+          document_file_name: data.cover_image_1_by_1.document_file_name,
+          id: data.cover_image_1_by_1.id,
+          ratio: '1:1',
+          isExisting: true,
+          type: 'image'
+        }] : [];
 
-        // Prepare existing event image previews
-        const existingImages =
-          data.event_images?.map((img) => ({
-            url: img.document_url,
-            type: img.document_content_type,
-            id: img.id,
-            isExisting: true,
-          })) || [];
+        const coverImage9by16 = data.cover_image_9_by_16 ? [{
+          url: data.cover_image_9_by_16.document_url,
+          document_url: data.cover_image_9_by_16.document_url,
+          document_file_name: data.cover_image_9_by_16.document_file_name,
+          id: data.cover_image_9_by_16.id,
+          ratio: '9:16',
+          isExisting: true,
+          type: 'image'
+        }] : [];
 
-        const attachfileData = data.attachfile
-          ? Array.isArray(data.attachfile)
-            ? data.attachfile
-            : [data.attachfile]
+        const coverImage3by2 = data.cover_image_3_by_2 ? [{
+          url: data.cover_image_3_by_2.document_url,
+          document_url: data.cover_image_3_by_2.document_url,
+          document_file_name: data.cover_image_3_by_2.document_file_name,
+          id: data.cover_image_3_by_2.id,
+          ratio: '3:2',
+          isExisting: true,
+          type: 'image'
+        }] : [];
+
+        const coverImage16by9 = data.cover_image_16_by_9 ? [{
+          url: data.cover_image_16_by_9.document_url,
+          document_url: data.cover_image_16_by_9.document_url,
+          document_file_name: data.cover_image_16_by_9.document_file_name,
+          id: data.cover_image_16_by_9.id,
+          ratio: '16:9',
+          isExisting: true,
+          type: 'image'
+        }] : [];
+
+        // Prepare event image previews for all ratios
+        const eventImages1by1 = Array.isArray(data.event_images_1_by_1) 
+          ? data.event_images_1_by_1.map(img => ({
+              url: img.document_url,
+              document_url: img.document_url,
+              document_file_name: img.document_file_name,
+              id: img.id,
+              ratio: '1:1',
+              isExisting: true,
+              type: img.document_content_type?.startsWith('video') ? 'video' : 'image'
+            }))
+          : data.event_images_1_by_1 ? [{
+              url: data.event_images_1_by_1.document_url,
+              document_url: data.event_images_1_by_1.document_url,
+              document_file_name: data.event_images_1_by_1.document_file_name,
+              id: data.event_images_1_by_1.id,
+              ratio: '1:1',
+              isExisting: true,
+              type: 'image'
+            }] : [];
+
+        const eventImages9by16 = Array.isArray(data.event_images_9_by_16)
+          ? data.event_images_9_by_16.map(img => ({
+              url: img.document_url,
+              document_url: img.document_url,
+              document_file_name: img.document_file_name,
+              id: img.id,
+              ratio: '9:16',
+              isExisting: true,
+              type: img.document_content_type?.startsWith('video') ? 'video' : 'image'
+            }))
+          : data.event_images_9_by_16 ? [{
+              url: data.event_images_9_by_16.document_url,
+              document_url: data.event_images_9_by_16.document_url,
+              document_file_name: data.event_images_9_by_16.document_file_name,
+              id: data.event_images_9_by_16.id,
+              ratio: '9:16',
+              isExisting: true,
+              type: 'image'
+            }] : [];
+
+        const eventImages3by2 = Array.isArray(data.event_images_3_by_2)
+          ? data.event_images_3_by_2.map(img => ({
+              url: img.document_url,
+              document_url: img.document_url,
+              document_file_name: img.document_file_name,
+              id: img.id,
+              ratio: '3:2',
+              isExisting: true,
+              type: img.document_content_type?.startsWith('video') ? 'video' : 'image'
+            }))
+          : data.event_images_3_by_2 ? [{
+              url: data.event_images_3_by_2.document_url,
+              document_url: data.event_images_3_by_2.document_url,
+              document_file_name: data.event_images_3_by_2.document_file_name,
+              id: data.event_images_3_by_2.id,
+              ratio: '3:2',
+              isExisting: true,
+              type: 'image'
+            }] : [];
+
+        const eventImages16by9 = Array.isArray(data.event_images_16_by_9)
+          ? data.event_images_16_by_9.map(img => ({
+              url: img.document_url,
+              document_url: img.document_url,
+              document_file_name: img.document_file_name,
+              id: img.id,
+              ratio: '16:9',
+              isExisting: true,
+              type: img.document_content_type?.startsWith('video') ? 'video' : 'image'
+            }))
+          : data.event_images_16_by_9 ? [{
+              url: data.event_images_16_by_9.document_url,
+              document_url: data.event_images_16_by_9.document_url,
+              document_file_name: data.event_images_16_by_9.document_file_name,
+              id: data.event_images_16_by_9.id,
+              ratio: '16:9',
+              isExisting: true,
+              type: 'image'
+            }] : [];
+
+        // Prepare home cover image (16:9 is used for home)
+        const existingCoverImage = data.home_cover_image && data.home_cover_image.document_url
+          ? {
+              url: data.home_cover_image.document_url,
+              id: data.home_cover_image.id,
+              isExisting: true,
+            }
+          : null;
+
+        // Prepare existing event image previews from home_event_images
+        const existingImages = Array.isArray(data.home_event_images)
+          ? data.home_event_images.map((img) => ({
+              url: img.document_url,
+              type: img.document_content_type,
+              id: img.id,
+              isExisting: true,
+            }))
           : [];
 
-        const coverImageData = data.cover_image || null;
+        const attachfileData = [];
+        const coverImageData = data.home_cover_image || null;
 
         setFormData((prev) => ({
           ...prev,
           ...data,
           user_id: userIds,
-          group_id: groupIds, // Store as array
+          group_id: groupIds,
           shared: shared,
-          // attachfile: data.attachfile || [],
           attachfile: attachfileData,
           newImages: [],
           existingImages: existingImages,
           previewImage: existingImages,
-          existingCoverImage: existingCoverImage, // <-- use the correct object
+          existingCoverImage: existingCoverImage,
           cover_image: coverImageData,
           set_reminders_attributes: formattedReminders,
-          cover_image_1_by_1: data.cover_image_1_by_1 || [],
-          cover_image_9_by_16: data.cover_image_9_by_16 || [],
-          cover_image_3_by_2: data.cover_image_3_by_2 || [],
-          cover_image_16_by_9: data.cover_image_16_by_9 || [],
-          event_images_1_by_1: data.event_images_1_by_1 || [],
-          event_images_9_by_16: data.event_images_9_by_16 || [],
-          event_images_3_by_2: data.event_images_3_by_2 || [],
-          event_images_16_by_9: data.event_images_16_by_9 || [],
+          cover_image_1_by_1: coverImage1by1,
+          cover_image_9_by_16: coverImage9by16,
+          cover_image_3_by_2: coverImage3by2,
+          cover_image_16_by_9: coverImage16by9,
+          event_images_1_by_1: eventImages1by1,
+          event_images_9_by_16: eventImages9by16,
+          event_images_3_by_2: eventImages3by2,
+          event_images_16_by_9: eventImages16by9,
         }));
 
-        console.log("project_id: ", data.project_id);
+        console.log("Fetched event data:", data);
+        toast.success("Event details loaded successfully");
       } catch (error) {
         console.error("Error fetching event:", error);
+        toast.error("Failed to load event details");
       }
     };
 
@@ -654,7 +781,7 @@ const EventEdit = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get(`${baseURL}get_all_projects.json`, {
+        const response = await axios.get(`${baseURL}/get_all_projects.json`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
             "Content-Type": "application/json",
@@ -716,7 +843,7 @@ const EventEdit = () => {
   useEffect(() => {
     const fetchChannelPartners = async () => {
       try {
-        const response = await axios.get(`${baseURL}channel_partners.json`, {
+        const response = await axios.get(`${baseURL}/channel_partners.json`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
             "Content-Type": "application/json",
@@ -860,12 +987,12 @@ const EventEdit = () => {
     // Existing image: delete from server, then remove locally
     try {
       const response = await fetch(
-        `${baseURL}events/${id}/remove_image/${imageId}.json`,
+        `${baseURL}/crm/admin/events/${id}/remove_image/${imageId}.json`,
         {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            Authorization: getAuthHeader(),
           },
         }
       );
@@ -903,14 +1030,14 @@ const EventEdit = () => {
   };
 
   const validateForm = () => {
-    const errors = {};
+    const errors: any = {};
     if (!formData.event_name) {
       errors.event_name = "Event Name is required.";
     }
     setFormErrors(errors); // Update state with errors
 
     if (Object.keys(errors).length > 0) {
-      toast.error(Object.values(errors)[0]);
+      toast.error(Object.values(errors)[0] as string);
       return false;
     }
     return true; // Return true if no errors
@@ -965,7 +1092,7 @@ const EventEdit = () => {
     const preparedReminders = prepareRemindersForSubmission();
 
     const backendSharedValue = formData.shared === "all" ? 0 : 1;
-    data.append("event[shared]", backendSharedValue);
+    data.append("event[shared]", backendSharedValue.toString());
 
     // === COVER IMAGE ===
     if (formData.cover_image && formData.cover_image instanceof File) {
@@ -1129,18 +1256,19 @@ const EventEdit = () => {
 
     // === SEND REQUEST ===
     try {
-      const response = await axios.put(`${baseURL}events/${id}.json`, data, {
+      const response = await axios.put(`${baseURL}/crm/admin/events/${id}.json`, data, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          Authorization: getAuthHeader(),
           "Content-Type": "multipart/form-data",
         },
       });
 
       toast.success("Event updated successfully!");
-      navigate("/event-list");
+      navigate("/maintenance/event-list");
     } catch (error) {
       console.error("Submit error:", error);
-      toast.error("Failed to update event.");
+      const errorMessage = error.response?.data?.message || "Failed to update event.";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -1418,48 +1546,6 @@ const EventEdit = () => {
           </div>
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Project Select */}
-              <FormControl
-                fullWidth
-                variant="outlined"
-                sx={{ '& .MuiInputBase-root': fieldStyles }}
-              >
-                <InputLabel shrink>Project</InputLabel>
-                <MuiSelect
-                  value={formData.project_id || ""}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, project_id: e.target.value }))}
-                  label="Project"
-                  notched
-                  displayEmpty
-                >
-                  <MenuItem value="">Select Project</MenuItem>
-                  {projects.map((project) => (
-                    <MenuItem key={project.id} value={project.id}>
-                      {project.project_name}
-                    </MenuItem>
-                  ))}
-                </MuiSelect>
-              </FormControl>
-
-              {/* Event Type */}
-              {/* <TextField
-                label="Event Type"
-                placeholder="Enter Event Type"
-                value={formData.event_type || ""}
-                onChange={handleChange}
-                name="event_type"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              /> */}
-
               {/* Event Name */}
               <TextField
                 label="Event Name"
@@ -1499,32 +1585,17 @@ const EventEdit = () => {
                 }}
               />
 
-              {/* Event From */}
+              {/* Event Date */}
               <TextField
-                label="Event From"
-                type="datetime-local"
-                value={formatDateForInput(formData.from_time) || ""}
-                onChange={handleChange}
-                name="from_time"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
+                label="Event Date"
+                type="date"
+                value={formData.from_time ? formData.from_time.split('T')[0] : ""}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  const currentTime = formData.from_time ? formData.from_time.split('T')[1] : '00:00';
+                  handleChange({ target: { name: 'from_time', value: `${newDate}T${currentTime}` } });
                 }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-
-              {/* Event To */}
-              <TextField
-                label="Event To"
-                type="datetime-local"
-                value={formatDateForInput(formData.to_time)}
-                onChange={handleChange}
-                name="to_time"
+                name="event_date"
                 fullWidth
                 variant="outlined"
                 slotProps={{
@@ -1538,87 +1609,52 @@ const EventEdit = () => {
               />
 
               {/* Event Description */}
-              <div className="md:col-span-3">
+              <div className="md:col-span-2">
                 <TextField
                   label="Event Description"
-                  placeholder="Enter Event Description"
+                  placeholder="Enter Description"
                   value={formData.description}
                   onChange={handleChange}
                   name="description"
                   fullWidth
-                  multiline
-                  rows={3}
                   variant="outlined"
                   slotProps={{
                     inputLabel: {
                       shrink: true,
                     },
                   }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      minHeight: '90px',
-                      alignItems: 'flex-start',
-                      '& fieldset': {
-                        borderColor: '#ddd',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#C72030',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#C72030',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      '&.Mui-focused': {
-                        color: '#C72030',
-                      },
-                    },
+                  InputProps={{
+                    sx: fieldStyles,
                   }}
                 />
               </div>
+
+              {/* Event Time */}
+              <TextField
+                label="Event Time"
+                type="time"
+                value={formData.from_time ? formData.from_time.split('T')[1]?.substring(0, 5) : ""}
+                onChange={(e) => {
+                  const newTime = e.target.value;
+                  const currentDate = formData.from_time ? formData.from_time.split('T')[0] : new Date().toISOString().split('T')[0];
+                  handleChange({ target: { name: 'from_time', value: `${currentDate}T${newTime}` } });
+                }}
+                name="event_time"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
             </div>
 
-              {/* Radio Button Groups in a Row */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Mark Important */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important</label>
-                  <div className="flex gap-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="is_important"
-                        checked={formData.is_important === true}
-                        onChange={() =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            is_important: true,
-                          }))
-                        }
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                        style={{ accentColor: '#C72030' }}
-                      />
-                      <span className="ml-2 text-sm text-gray-700">Yes</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="is_important"
-                        checked={formData.is_important === false}
-                        onChange={() =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            is_important: false,
-                          }))
-                        }
-                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                        style={{ accentColor: '#C72030' }}
-                      />
-                      <span className="ml-2 text-sm text-gray-700">No</span>
-                    </label>
-                  </div>
-                </div>
-
+            {/* Radio Button Groups in a Row */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {/* Send Email */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
@@ -1731,7 +1767,7 @@ const EventEdit = () => {
               )} */}
 
               {/* Set Reminders */}
-              <div className="md:col-span-3">
+              {/* <div className="md:col-span-3">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Set Reminders</label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
                   <FormControl
@@ -1792,7 +1828,7 @@ const EventEdit = () => {
                   </button>
                 </div>
 
-                {/* Display Reminders */}
+               
                 {formData.set_reminders_attributes
                   .filter((reminder) => !reminder._destroy)
                   .map((reminder, index) => (
@@ -1841,10 +1877,173 @@ const EventEdit = () => {
                       </button>
                     </div>
                   ))}
+              </div> */}
+            </div>
+          </div>
+        )}
+
+        {/* Visibility Card */}
+        {currentStep === 0 && !isPreviewMode && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    backgroundColor: '#E5E0D3',
+                    mr: 1.5
+                  }}
+                >
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                </Avatar>
+                Visibility
+              </h2>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Show on Home Page */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
+                  <p className="text-sm text-gray-500">Display this event on the home page</p>
+                </div>
+                <Switch
+                  checked={visibility.showOnHomePage}
+                  onChange={(e) => setVisibility(prev => ({ ...prev, showOnHomePage: e.target.checked }))}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#C72030',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#C72030',
+                    },
+                  }}
+                />
               </div>
 
-              {/* Share With */}
-              <div className="md:col-span-3">
+              {/* Show on Project Detail Page */}
+              {/* <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
+                  <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
+                </div>
+                <Switch
+                  checked={visibility.showOnProjectDetailPage}
+                  onChange={(e) => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: e.target.checked }))}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#C72030',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#C72030',
+                    },
+                  }}
+                />
+              </div> */}
+
+              {/* Show on Booking Page */}
+              {/* <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
+                  <p className="text-sm text-gray-500">Display this event on the home page</p>
+                </div>
+                <Switch
+                  checked={visibility.showOnBookingPage}
+                  onChange={(e) => setVisibility(prev => ({ ...prev, showOnBookingPage: e.target.checked }))}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#C72030',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#C72030',
+                    },
+                  }}
+                />
+              </div> */}
+
+              {/* Featured Event */}
+              {/* <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
+                  <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
+                </div>
+                <Switch
+                  checked={visibility.featuredEvent}
+                  onChange={(e) => setVisibility(prev => ({ ...prev, featuredEvent: e.target.checked }))}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#C72030',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#C72030',
+                    },
+                  }}
+                />
+              </div> */}
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Invite CPs */}
+        {currentStep === 2 && !isPreviewMode && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    backgroundColor: '#E5E0D3',
+                    mr: 1.5
+                  }}
+                >
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                </Avatar>
+                Invite CPs
+              </h2>
+            </div>
+            <div className="p-6 space-y-6">
+              {/* Channel Partners Dropdown */}
+              <div>
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  sx={{ '& .MuiInputBase-root': fieldStyles }}
+                >
+                  <InputLabel shrink>Select Channel Partners</InputLabel>
+                  <MuiSelect
+                    multiple
+                    value={selectedChannelPartners}
+                    onChange={(e) => setSelectedChannelPartners(e.target.value)}
+                    label="Select Channel Partners"
+                    notched
+                    displayEmpty
+                    renderValue={(selected) => {
+                      if (!selected || selected.length === 0) {
+                        return <span style={{ color: '#999' }}>Select Channel Partners</span>;
+                      }
+                      return selected
+                        .map((id) => {
+                          const partner = channelPartners.find((cp) => cp.id === id || cp.id.toString() === id.toString());
+                          return partner ? partner.name || partner.company_name || `Partner ${id}` : id;
+                        })
+                        .join(", ");
+                    }}
+                  >
+                    <MenuItem value="" disabled>
+                      Select Channel Partners
+                    </MenuItem>
+                    {channelPartners.map((partner) => (
+                      <MenuItem key={partner.id} value={partner.id}>
+                        {partner.name || partner.company_name || `Partner ${partner.id}`}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+              </div>
+
+              {/* Share With Section */}
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
                 <div className="flex gap-6 mb-4">
                   <label className="flex items-center">
@@ -1858,7 +2057,7 @@ const EventEdit = () => {
                           ...prev,
                           shared: "all",
                           user_id: [],
-                          group_id: "",
+                          group_id: [],
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
@@ -1876,14 +2075,13 @@ const EventEdit = () => {
                         setFormData((prev) => ({
                           ...prev,
                           shared: "individual",
-                          group_id: "",
+                          group_id: [],
                         }))
                       }
-                      disabled={!eventUserID || eventUserID.length === 0}
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030] disabled:opacity-50"
+                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
                       style={{ accentColor: '#C72030' }}
                     />
-                    <span className={`ml-2 text-sm ${!eventUserID || eventUserID.length === 0 ? 'text-gray-400' : 'text-gray-700'}`}>Individuals</span>
+                    <span className="ml-2 text-sm text-gray-700">Individuals</span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -1990,68 +2188,6 @@ const EventEdit = () => {
                     </MuiSelect>
                   </FormControl>
                 )}
-              </div>
-            </div>
-          </div>
-        // </div>
-        )}
-
-        {/* Step 3: Invite CPs */}
-        {currentStep === 2 && !isPreviewMode && (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
-                  }}
-                >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-                </Avatar>
-                Invite CPs
-              </h2>
-            </div>
-            <div className="p-6 space-y-6">
-              {/* Channel Partners Dropdown */}
-              <div>
-                <FormControl
-                  fullWidth
-                  variant="outlined"
-                  sx={{ '& .MuiInputBase-root': fieldStyles }}
-                >
-                  <InputLabel shrink>Select Channel Partners</InputLabel>
-                  <MuiSelect
-                    multiple
-                    value={selectedChannelPartners}
-                    onChange={(e) => setSelectedChannelPartners(e.target.value)}
-                    label="Select Channel Partners"
-                    notched
-                    displayEmpty
-                    renderValue={(selected) => {
-                      if (!selected || selected.length === 0) {
-                        return <span style={{ color: '#999' }}>Select Channel Partners</span>;
-                      }
-                      return selected
-                        .map((id) => {
-                          const partner = channelPartners.find((cp) => cp.id === id || cp.id.toString() === id.toString());
-                          return partner ? partner.name || partner.company_name || `Partner ${id}` : id;
-                        })
-                        .join(", ");
-                    }}
-                  >
-                    <MenuItem value="" disabled>
-                      Select Channel Partners
-                    </MenuItem>
-                    {channelPartners.map((partner) => (
-                      <MenuItem key={partner.id} value={partner.id}>
-                        {partner.name || partner.company_name || `Partner ${partner.id}`}
-                      </MenuItem>
-                    ))}
-                  </MuiSelect>
-                </FormControl>
               </div>
 
               {/* OR Divider */}
@@ -2398,40 +2534,48 @@ const EventEdit = () => {
                         </TableHeader>
                         <TableBody>
                           {Array.isArray(formData.attachfile) &&
-                            formData.attachfile.map((file) => (
-                              <TableRow key={`attachfile-${file.id}`} className="hover:bg-gray-50">
-                                <TableCell>{file.document_file_name || "N/A"}</TableCell>
-                                <TableCell>
-                                  {file.document_url && (
-                                    <img
-                                      style={{
-                                        maxWidth: "100px",
-                                        maxHeight: "100px",
-                                      }}
-                                      className="img-fluid rounded"
-                                      src={file.document_url}
-                                      alt={
-                                        file.document_file_name ||
-                                        "Attached file"
+                            formData.attachfile.length > 0 &&
+                            formData.attachfile.map((file, idx) => {
+                              const preview = file.document_url || file.url || file.preview || "";
+                              const fileName = file.document_file_name || file.name || `File ${idx + 1}`;
+                              const fileId = file.id || `temp-${idx}`;
+                              
+                              return (
+                                <TableRow key={`attachfile-${fileId}`} className="hover:bg-gray-50">
+                                  <TableCell>{fileName}</TableCell>
+                                  <TableCell>
+                                    {preview && (
+                                      <img
+                                        style={{
+                                          maxWidth: "100px",
+                                          maxHeight: "100px",
+                                          objectFit: "cover",
+                                        }}
+                                        className="img-fluid rounded"
+                                        src={preview}
+                                        alt={fileName}
+                                        onError={(e) => {
+                                          e.target.src = "https://via.placeholder.com/100?text=No+Preview";
+                                        }}
+                                      />
+                                    )}
+                                  </TableCell>
+                                  <TableCell>N/A</TableCell>
+                                  <TableCell>
+                                    <button
+                                      type="button"
+                                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors duration-200"
+                                      onClick={() =>
+                                        handleFetchedDiscardGallery("attachfile", idx, file.id)
                                       }
-                                    />
-                                  )}
-                                </TableCell>
-                                <TableCell>N/A</TableCell>
-                                <TableCell>
-                                  <button
-                                    type="button"
-                                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors duration-200"
-                                    onClick={() =>
-                                      handleFetchedDiscardGallery(file.id)
-                                    }
-                                    title="Remove attached file"
-                                  >
-                                    Delete
-                                  </button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
+                                      title="Remove attached file"
+                                    >
+                                      Delete
+                                    </button>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
                           {eventImageRatios.flatMap(({ key, label }) => {
                             const files = Array.isArray(formData[key])
                               ? formData[key]
@@ -2443,7 +2587,7 @@ const EventEdit = () => {
 
                             return files.map((file, index) => {
                               const preview =
-                                file.preview || file.document_url || "";
+                                file.url || file.preview || file.document_url || "";
                               const name =
                                 file.name ||
                                 file.document_file_name ||
@@ -2462,41 +2606,45 @@ const EventEdit = () => {
                                 <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
                                   <TableCell>{name}</TableCell>
                                   <TableCell>
-                                    {isVideo ? (
-                                      <video
-                                        controls
-                                        style={{
-                                          maxWidth: 100,
-                                          maxHeight: 100,
-                                          objectFit: "cover",
-                                        }}
-                                        className="img-fluid rounded"
-                                      >
-                                        <source
+                                    {preview ? (
+                                      isVideo ? (
+                                        <video
+                                          controls
+                                          style={{
+                                            maxWidth: 100,
+                                            maxHeight: 100,
+                                            objectFit: "cover",
+                                          }}
+                                          className="img-fluid rounded"
+                                        >
+                                          <source
+                                            src={preview}
+                                            type={file.file?.type || "video/mp4"}
+                                          />
+                                          Your browser does not support the video
+                                          tag.
+                                        </video>
+                                      ) : (
+                                        <img
+                                          style={{
+                                            maxWidth: 100,
+                                            maxHeight: 100,
+                                            objectFit: "cover",
+                                          }}
+                                          className="img-fluid rounded"
                                           src={preview}
-                                          type={file.file?.type || "video/mp4"}
+                                          alt={name}
+                                          onError={(e) => {
+                                            console.error(
+                                              `Failed to load image: ${preview}`
+                                            );
+                                            e.target.src =
+                                              "https://via.placeholder.com/100?text=Preview+Failed";
+                                          }}
                                         />
-                                        Your browser does not support the video
-                                        tag.
-                                      </video>
+                                      )
                                     ) : (
-                                      <img
-                                        style={{
-                                          maxWidth: 100,
-                                          maxHeight: 100,
-                                          objectFit: "cover",
-                                        }}
-                                        className="img-fluid rounded"
-                                        src={preview}
-                                        alt={name}
-                                        onError={(e) => {
-                                          console.error(
-                                            `Failed to load image: ${preview}`
-                                          );
-                                          e.target.src =
-                                            "https://via.placeholder.com/100?text=Preview+Failed";
-                                        }}
-                                      />
+                                      <span className="text-gray-500 text-sm">No Preview Available</span>
                                     )}
                                   </TableCell>
                                   <TableCell>{ratio}</TableCell>
@@ -2524,7 +2672,7 @@ const EventEdit = () => {
                             ({ key }) =>
                               !(formData[key] && formData[key].length > 0)
                           ) &&
-                            !Array.isArray(formData.attachfile) && (
+                            (!Array.isArray(formData.attachfile) || formData.attachfile.length === 0) && (
                               <TableRow>
                                 <TableCell colSpan={4} className="text-center text-gray-500">
                                   No event attachments uploaded
@@ -2571,27 +2719,822 @@ const EventEdit = () => {
           </>
         )}
 
-        {/* Action Buttons - Show in preview mode */}
-        {isPreviewMode && (
-        <div className="flex gap-4 justify-center pt-6">
-            <button
-              onClick={handleSubmit}
-              type="submit"
-              className="px-6 py-2.5 bg-[#C72030] hover:bg-[#B8252F] text-white rounded-lg transition-colors duration-200"
-              disabled={loading}
-            >
-              Submit
-            </button>
-            <button
-              type="button"
-              className="px-6 py-2.5 border-2 border-[#C72030] text-[#C72030] hover:bg-[#C72030] hover:text-white rounded-lg transition-colors duration-200"
-              onClick={handleCancel}
-            >
-              Cancel
-            </button>
+        {/* Completed Sections - Show completed steps below current step */}
+        {!isPreviewMode && completedSteps.length > 0 && currentStep > 0 && (
+          <div className="mt-8 space-y-6">
+            {completedSteps.filter(step => step < currentStep).map((stepIndex) => (
+              <div key={`completed-section-${stepIndex}`}>
+                {/* Step 0: Event Details - Completed */}
+                {stepIndex === 0 && (
+                  <>
+                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                      <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              backgroundColor: '#E5E0D3',
+                              mr: 1.5
+                            }}
+                          >
+                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                          </Avatar>
+                          Event Details
+                        </h2>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentStep(0);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                        >
+                          <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                        </button>
+                      </div>
+                      <div className="p-6 space-y-6 opacity-75 pointer-events-none">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <TextField
+                            label="Event Name"
+                            value={formData.event_name}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            InputProps={{ sx: fieldStyles }}
+                          />
+                          <TextField
+                            label="Event At"
+                            value={formData.event_at}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            InputProps={{ sx: fieldStyles }}
+                          />
+                          <TextField
+                            label="Event Date"
+                            type="date"
+                            value={formData.from_time ? formData.from_time.split('T')[0] : ""}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            InputProps={{ sx: fieldStyles }}
+                          />
+                          <div className="md:col-span-2">
+                            <TextField
+                              label="Event Description"
+                              value={formData.description}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                            />
+                          </div>
+                          <TextField
+                            label="Event Time"
+                            type="time"
+                            value={formData.from_time ? formData.from_time.split('T')[1]?.substring(0, 5) : ""}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            InputProps={{ sx: fieldStyles }}
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
+                            <div className="flex gap-4">
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  checked={formData.email_trigger_enabled === true}
+                                  disabled
+                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                  style={{ accentColor: '#C72030' }}
+                                />
+                                <span className="ml-2 text-sm text-gray-700">Yes</span>
+                              </label>
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  checked={formData.email_trigger_enabled === false}
+                                  disabled
+                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                  style={{ accentColor: '#C72030' }}
+                                />
+                                <span className="ml-2 text-sm text-gray-700">No</span>
+                              </label>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action</label>
+                            <div className="flex gap-4">
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  checked={formData.rsvp_action === "yes"}
+                                  disabled
+                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                  style={{ accentColor: '#C72030' }}
+                                />
+                                <span className="ml-2 text-sm text-gray-700">Yes</span>
+                              </label>
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  checked={formData.rsvp_action === "no"}
+                                  disabled
+                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                  style={{ accentColor: '#C72030' }}
+                                />
+                                <span className="ml-2 text-sm text-gray-700">No</span>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Visibility Card - Completed */}
+                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mt-6">
+                      <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              backgroundColor: '#E5E0D3',
+                              mr: 1.5
+                            }}
+                          >
+                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                          </Avatar>
+                          Visibility
+                        </h2>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentStep(0);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                        >
+                          <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                        </button>
+                      </div>
+                      <div className="p-6 space-y-4 opacity-75 pointer-events-none">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
+                            <p className="text-sm text-gray-500">Display this event on the home page</p>
+                          </div>
+                          <Switch
+                            checked={visibility.showOnHomePage}
+                            disabled
+                            sx={{
+                              '& .MuiSwitch-switchBase.Mui-checked': {
+                                color: '#C72030',
+                              },
+                              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                backgroundColor: '#C72030',
+                              },
+                            }}
+                          />
+                        </div>
+                        {/* <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
+                            <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
+                          </div>
+                          <Switch
+                            checked={visibility.showOnProjectDetailPage}
+                            disabled
+                            sx={{
+                              '& .MuiSwitch-switchBase.Mui-checked': {
+                                color: '#C72030',
+                              },
+                              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                backgroundColor: '#C72030',
+                              },
+                            }}
+                          />
+                        </div> */}
+                        {/* <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
+                            <p className="text-sm text-gray-500">Display this event on the home page</p>
+                          </div>
+                          <Switch
+                            checked={visibility.showOnBookingPage}
+                            disabled
+                            sx={{
+                              '& .MuiSwitch-switchBase.Mui-checked': {
+                                color: '#C72030',
+                              },
+                              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                backgroundColor: '#C72030',
+                              },
+                            }}
+                          />
+                        </div> */}
+                        {/* <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
+                            <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
+                          </div>
+                          <Switch
+                            checked={visibility.featuredEvent}
+                            disabled
+                            sx={{
+                              '& .MuiSwitch-switchBase.Mui-checked': {
+                                color: '#C72030',
+                              },
+                              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                backgroundColor: '#C72030',
+                              },
+                            }}
+                          />
+                        </div> */}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Step 1: Event Related Images - Completed */}
+                {stepIndex === 1 && (
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                        <Avatar
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            backgroundColor: '#E5E0D3',
+                            mr: 1.5
+                          }}
+                        >
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        </Avatar>
+                        Event Related Images
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentStep(1);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      >
+                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                      </button>
+                    </div>
+                    <div className="p-6 opacity-75 pointer-events-none">
+                      <p className="text-sm text-gray-600">Event images have been uploaded.</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2: Invite CPs - Completed */}
+                {stepIndex === 2 && (
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                        <Avatar
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            backgroundColor: '#E5E0D3',
+                            mr: 1.5
+                          }}
+                        >
+                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        </Avatar>
+                        Invite CPs
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentStep(2);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                      >
+                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                      </button>
+                    </div>
+                    <div className="p-6 space-y-6 opacity-75 pointer-events-none">
+                      <div>
+                        <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                          <InputLabel shrink>Selected Channel Partners</InputLabel>
+                          <MuiSelect
+                            multiple
+                            value={selectedChannelPartners}
+                            label="Selected Channel Partners"
+                            notched
+                            displayEmpty
+                            disabled
+                            renderValue={(selected) => {
+                              if (!selected || selected.length === 0) {
+                                return <span style={{ color: '#999' }}>No Channel Partners Selected</span>;
+                              }
+                              return selected
+                                .map((id) => {
+                                  const partner = channelPartners.find((cp) => cp.id === id || cp.id.toString() === id.toString());
+                                  return partner ? partner.name || partner.company_name || `Partner ${id}` : id;
+                                })
+                                .join(", ");
+                            }}
+                          >
+                            {channelPartners.map((partner) => (
+                              <MenuItem key={partner.id} value={partner.id}>
+                                {partner.name || partner.company_name || `Partner ${partner.id}`}
+                              </MenuItem>
+                            ))}
+                          </MuiSelect>
+                        </FormControl>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
+                        <div className="flex gap-6 mb-4">
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              checked={formData.shared === "all"}
+                              disabled
+                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                              style={{ accentColor: '#C72030' }}
+                            />
+                            <span className="ml-2 text-sm text-gray-700">All</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              checked={formData.shared === "individual"}
+                              disabled
+                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                              style={{ accentColor: '#C72030' }}
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Individuals</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              checked={formData.shared === "group"}
+                              disabled
+                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                              style={{ accentColor: '#C72030' }}
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Groups</span>
+                          </label>
+                        </div>
+                      </div>
+                      {csvFiles.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Uploaded CSV Files</label>
+                          <div className="border-2 border-dashed border-[#D9D9D9] rounded-lg p-6 text-center">
+                            <p className="text-sm text-gray-600">
+                              {csvFiles.length} file(s) uploaded
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
-        </form>
+
+        {/* Preview Mode - Show all sections */}
+        {isPreviewMode && (
+          <>
+            <div className="px-4 md:px-6 py-4">
+              {/* Step 1: Event Details Preview */}
+              <div className="mb-6">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                      <Avatar
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          backgroundColor: '#E5E0D3',
+                          mr: 1.5
+                        }}
+                      >
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      </Avatar>
+                      Event Details
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsPreviewMode(false);
+                        setCurrentStep(0);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                    >
+                      <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                    </button>
+                  </div>
+                  <div className="p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <TextField
+                        label="Event Name"
+                        value={formData.event_name}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
+                      <TextField
+                        label="Event At"
+                        value={formData.event_at}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
+                      <TextField
+                        label="Event Date"
+                        type="date"
+                        value={formData.from_time ? formData.from_time.split('T')[0] : ""}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
+                      <div className="md:col-span-2">
+                        <TextField
+                          label="Event Description"
+                          value={formData.description}
+                          fullWidth
+                          variant="outlined"
+                          disabled
+                          slotProps={{ inputLabel: { shrink: true } }}
+                        />
+                      </div>
+                      <TextField
+                        label="Event Time"
+                        type="time"
+                        value={formData.from_time ? formData.from_time.split('T')[1]?.substring(0, 5) : ""}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
+                        <div className="flex gap-4">
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              checked={formData.email_trigger_enabled === true}
+                              disabled
+                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                              style={{ accentColor: '#C72030' }}
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Yes</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              checked={formData.email_trigger_enabled === false}
+                              disabled
+                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                              style={{ accentColor: '#C72030' }}
+                            />
+                            <span className="ml-2 text-sm text-gray-700">No</span>
+                          </label>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action</label>
+                        <div className="flex gap-4">
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              checked={formData.rsvp_action === "yes"}
+                              disabled
+                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                              style={{ accentColor: '#C72030' }}
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Yes</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              checked={formData.rsvp_action === "no"}
+                              disabled
+                              className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                              style={{ accentColor: '#C72030' }}
+                            />
+                            <span className="ml-2 text-sm text-gray-700">No</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Visibility Card Preview */}
+              <div className="mb-6">
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                  <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                    <Avatar
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        backgroundColor: '#E5E0D3',
+                        mr: 1.5
+                      }}
+                    >
+                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                    </Avatar>
+                    Visibility
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPreviewMode(false);
+                      setCurrentStep(0);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                  >
+                    <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                  </button>
+                </div>
+                <div className="p-6 space-y-4">
+                  {/* Show on Home Page */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
+                      <p className="text-sm text-gray-500">Display this event on the home page</p>
+                    </div>
+                    <Switch
+                      checked={visibility.showOnHomePage}
+                      onChange={(e) => setVisibility(prev => ({ ...prev, showOnHomePage: e.target.checked }))}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#C72030',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#C72030',
+                        },
+                      }}
+                    />
+                  </div>
+
+                  {/* Show on Project Detail Page */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
+                      <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
+                    </div>
+                    <Switch
+                      checked={visibility.showOnProjectDetailPage}
+                      onChange={(e) => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: e.target.checked }))}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#C72030',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#C72030',
+                        },
+                      }}
+                    />
+                  </div>
+
+                  {/* Show on Booking Page */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
+                      <p className="text-sm text-gray-500">Display this event on the home page</p>
+                    </div>
+                    <Switch
+                      checked={visibility.showOnBookingPage}
+                      onChange={(e) => setVisibility(prev => ({ ...prev, showOnBookingPage: e.target.checked }))}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#C72030',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#C72030',
+                        },
+                      }}
+                    />
+                  </div>
+
+                  {/* Featured Event */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
+                      <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
+                    </div>
+                    <Switch
+                      checked={visibility.featuredEvent}
+                      onChange={(e) => setVisibility(prev => ({ ...prev, featuredEvent: e.target.checked }))}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#C72030',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#C72030',
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2: Event Related Images Preview */}
+            <div className="mb-6">
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                  <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                    <Avatar
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        backgroundColor: '#E5E0D3',
+                        mr: 1.5
+                      }}
+                    >
+                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                    </Avatar>
+                    Event Related Images
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPreviewMode(false);
+                      setCurrentStep(1);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                  >
+                    <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                  </button>
+                </div>
+                <div className="p-6 space-y-6">
+                  <div>
+                    <h5 className="text-base font-semibold mb-4">Event Cover Image</h5>
+                    <p className="text-sm text-gray-600">Cover images uploaded successfully.</p>
+                  </div>
+                  <div>
+                    <h5 className="text-base font-semibold mb-4">Event Attachment Images</h5>
+                    <p className="text-sm text-gray-600">Event images uploaded successfully.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 3: Invite CPs Preview */}
+            <div className="mb-6">
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                  <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                    <Avatar
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        backgroundColor: '#E5E0D3',
+                        mr: 1.5
+                      }}
+                    >
+                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                    </Avatar>
+                    Invite CPs
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPreviewMode(false);
+                      setCurrentStep(2);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                  >
+                    <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                  </button>
+                </div>
+                <div className="p-6 space-y-6">
+                  <div>
+                    <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                      <InputLabel shrink>Selected Channel Partners</InputLabel>
+                      <MuiSelect
+                        multiple
+                        value={selectedChannelPartners}
+                        label="Selected Channel Partners"
+                        notched
+                        displayEmpty
+                        disabled
+                        renderValue={(selected) => {
+                          if (!selected || selected.length === 0) {
+                            return <span style={{ color: '#999' }}>No Channel Partners Selected</span>;
+                          }
+                          return selected
+                            .map((id) => {
+                              const partner = channelPartners.find((cp) => cp.id === id || cp.id.toString() === id.toString());
+                              return partner ? partner.name || partner.company_name || `Partner ${id}` : id;
+                            })
+                            .join(", ");
+                        }}
+                      >
+                        {channelPartners.map((partner) => (
+                          <MenuItem key={partner.id} value={partner.id}>
+                            {partner.name || partner.company_name || `Partner ${partner.id}`}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </FormControl>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
+                    <div className="flex gap-6 mb-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          checked={formData.shared === "all"}
+                          disabled
+                          className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                          style={{ accentColor: '#C72030' }}
+                        />
+                        <span className="ml-2 text-sm text-gray-700">All</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          checked={formData.shared === "individual"}
+                          disabled
+                          className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                          style={{ accentColor: '#C72030' }}
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Individuals</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          checked={formData.shared === "group"}
+                          disabled
+                          className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                          style={{ accentColor: '#C72030' }}
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Groups</span>
+                      </label>
+                    </div>
+                  </div>
+                  {csvFiles.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Uploaded CSV Files</label>
+                      <div className="border-2 border-dashed border-[#D9D9D9] rounded-lg p-6 text-center">
+                        <p className="text-sm text-gray-600">
+                          {csvFiles.length} file(s) uploaded
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+              <div className="flex gap-4 justify-center pt-6">
+                <button
+                  onClick={handleSubmit}
+                  type="submit"
+                  className="px-6 py-2.5 bg-[#C72030] hover:bg-[#B8252F] text-white rounded-lg transition-colors duration-200"
+                  disabled={loading}
+                >
+                  Submit
+                </button>
+                <button
+                  type="button"
+                  className="px-6 py-2.5 border-2 border-[#C72030] text-[#C72030] hover:bg-[#C72030] hover:text-white rounded-lg transition-colors duration-200"
+                  onClick={handleCancel}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </form>
 
       {showCoverUploader && (
         <ProjectBannerUpload
@@ -2601,7 +3544,7 @@ const EventEdit = () => {
           showAsModal={true}
           label={coverImageLabel}
           description={dynamicCoverDescription}
-          onContinue={(validImages) => handleCroppedImages(validImages, "cover")}
+          onContinue={(validImages) => handleCoverImageCropComplete(validImages)}
         />
       )}
 

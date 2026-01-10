@@ -2089,7 +2089,7 @@ const ProjectDetailsEdit = () => {
                   <MenuItem value="Upcoming">Upcoming</MenuItem>
                 </MuiSelect>
               </FormControl>
-              {/* <TextField
+              <TextField
                   label="Project Description"
                   placeholder="Enter Project Description"
                   value={formData.Project_Description}
@@ -2109,7 +2109,7 @@ const ProjectDetailsEdit = () => {
                   InputProps={{
                     sx: fieldStyles,
                   }}
-                /> */}
+                />
               <TextField
                 label="Price Onward"
                 placeholder="Enter Price Onward"

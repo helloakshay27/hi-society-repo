@@ -17,6 +17,7 @@ import {
   MenuItem,
   Box,
   Avatar,
+  Switch,
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 
@@ -1107,19 +1108,19 @@ const EventCreate = () => {
       : ['Event Details', 'Event Related Images'];
 
     return (
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 4, width: '100%' }}>
         <Box sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'flex-start',
           width: '100%',
           gap: 0
         }}>
           {steps.map((label, index) => (
-            <Box key={`step-${index}`} sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box key={`step-${index}`} sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
               <Box
                 sx={{
-                  width: '213px',
+                  width: '100%',
                   height: '50px',
                   padding: '5px',
                   borderRadius: '4px',
@@ -1134,7 +1135,7 @@ const EventCreate = () => {
                   onClick={() => handleStepClick(index)}
                   sx={{
                     cursor: (index > currentStep && !completedSteps.includes(index - 1)) ? 'not-allowed' : 'pointer',
-                    width: '187px',
+                    width: '100%',
                     height: '40px',
                     backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#C72030' :
                       (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
@@ -1175,21 +1176,25 @@ const EventCreate = () => {
                 <Box
                   sx={{
                     width: '60px',
+                    minWidth: '60px',
                     height: '0px',
                     border: '1px dashed rgba(196, 184, 157, 1)',
                     borderWidth: '1px',
                     borderStyle: 'dashed',
                     borderColor: 'rgba(196, 184, 157, 1)',
                     opacity: 1,
-                    margin: '0 0px',
+                    margin: '0',
                     '@media (max-width: 1200px)': {
-                      width: '40px'
+                      width: '40px',
+                      minWidth: '40px'
                     },
                     '@media (max-width: 900px)': {
-                      width: '30px'
+                      width: '30px',
+                      minWidth: '30px'
                     },
                     '@media (max-width: 600px)': {
-                      width: '20px'
+                      width: '20px',
+                      minWidth: '20px'
                     }
                   }}
                 />
@@ -1656,18 +1661,19 @@ const EventCreate = () => {
                   <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
                   <p className="text-sm text-gray-500">Display this event on the home page</p>
                 </div>
-                <div className="flex items-center gap-2 text-[11px] font-medium select-none">
-                  <div
-                    role="switch"
-                    aria-checked={visibility.showOnHomePage}
-                    aria-label={visibility.showOnHomePage ? "Deactivate show on home page" : "Activate show on home page"}
-                    tabIndex={0}
-                    onClick={() => setVisibility(prev => ({ ...prev, showOnHomePage: !prev.showOnHomePage }))}
-                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, showOnHomePage: !prev.showOnHomePage }))}
-                    className="cursor-pointer"
-                    style={{ transform: visibility.showOnHomePage ? 'scaleX(1)' : 'scaleX(-1)' }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
+                <Switch
+                  checked={visibility.showOnHomePage}
+                  onChange={(e) => setVisibility(prev => ({ ...prev, showOnHomePage: e.target.checked }))}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#C72030',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#C72030',
+                    },
+                  }}
+                />
+                    {/* <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
                     <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                     <g filter="url(#filter0_dd_2611_3818)">
                       <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -1699,176 +1705,68 @@ const EventCreate = () => {
                         <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
                         <stop offset="1" stopColor="white" stopOpacity="0"/>
                       </linearGradient>
-                    </defs>
-                  </svg>
-                  </div>
-                </div>
+                    </defs> */}
               </div>
 
               {/* Show on Project Detail Page */}
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
                   <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
                 </div>
-                <div className="flex items-center gap-2 text-[11px] font-medium select-none">
-                  <div
-                    role="switch"
-                    aria-checked={visibility.showOnProjectDetailPage}
-                    aria-label={visibility.showOnProjectDetailPage ? "Deactivate show on project detail page" : "Activate show on project detail page"}
-                    tabIndex={0}
-                    onClick={() => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: !prev.showOnProjectDetailPage }))}
-                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, showOnProjectDetailPage: !prev.showOnProjectDetailPage }))}
-                    className="cursor-pointer"
-                    style={{ transform: visibility.showOnProjectDetailPage ? 'scaleX(1)' : 'scaleX(-1)' }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
-                    <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
-                    <g filter="url(#filter0_dd_2611_3819)">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
-                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_2611_3819)" strokeWidth="0.255453"/>
-                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_2611_3819)" strokeWidth="0.255453"/>
-                    </g>
-                    <defs>
-                      <filter id="filter0_dd_2611_3819" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                        <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                        <feOffset dy="1.02181"/>
-                        <feGaussianBlur stdDeviation="0.510907"/>
-                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
-                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2611_3819"/>
-                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                        <feOffset/>
-                        <feGaussianBlur stdDeviation="0.510907"/>
-                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
-                        <feBlend mode="normal" in2="effect1_dropShadow_2611_3819" result="effect2_dropShadow_2611_3819"/>
-                        <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_2611_3819" result="shape"/>
-                      </filter>
-                      <linearGradient id="paint0_linear_2611_3819" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
-                        <stop stopOpacity="0"/>
-                        <stop offset="0.8" stopOpacity="0.02"/>
-                        <stop offset="1" stopOpacity="0.04"/>
-                      </linearGradient>
-                      <linearGradient id="paint1_linear_2611_3819" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="white" stopOpacity="0.12"/>
-                        <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
-                        <stop offset="1" stopColor="white" stopOpacity="0"/>
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  </div>
-                </div>
-              </div>
+                <Switch
+                  checked={visibility.showOnProjectDetailPage}
+                  onChange={(e) => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: e.target.checked }))}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#C72030',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#C72030',
+                    },
+                  }}
+                />
+              </div> */}
 
               {/* Show on Booking Page */}
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
                   <p className="text-sm text-gray-500">Display this event on the home page</p>
                 </div>
-                <div className="flex items-center gap-2 text-[11px] font-medium select-none">
-                  <div
-                    role="switch"
-                    aria-checked={visibility.showOnBookingPage}
-                    aria-label={visibility.showOnBookingPage ? "Deactivate show on booking page" : "Activate show on booking page"}
-                    tabIndex={0}
-                    onClick={() => setVisibility(prev => ({ ...prev, showOnBookingPage: !prev.showOnBookingPage }))}
-                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, showOnBookingPage: !prev.showOnBookingPage }))}
-                    className="cursor-pointer"
-                    style={{ transform: visibility.showOnBookingPage ? 'scaleX(1)' : 'scaleX(-1)' }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
-                    <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
-                    <g filter="url(#filter0_dd_2611_3820)">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
-                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_2611_3820)" strokeWidth="0.255453"/>
-                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_2611_3820)" strokeWidth="0.255453"/>
-                    </g>
-                    <defs>
-                      <filter id="filter0_dd_2611_3820" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                        <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                        <feOffset dy="1.02181"/>
-                        <feGaussianBlur stdDeviation="0.510907"/>
-                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
-                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2611_3820"/>
-                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                        <feOffset/>
-                        <feGaussianBlur stdDeviation="0.510907"/>
-                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
-                        <feBlend mode="normal" in2="effect1_dropShadow_2611_3820" result="effect2_dropShadow_2611_3820"/>
-                        <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_2611_3820" result="shape"/>
-                      </filter>
-                      <linearGradient id="paint0_linear_2611_3820" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
-                        <stop stopOpacity="0"/>
-                        <stop offset="0.8" stopOpacity="0.02"/>
-                        <stop offset="1" stopOpacity="0.04"/>
-                      </linearGradient>
-                      <linearGradient id="paint1_linear_2611_3820" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="white" stopOpacity="0.12"/>
-                        <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
-                        <stop offset="1" stopColor="white" stopOpacity="0"/>
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  </div>
-                </div>
-              </div>
+                <Switch
+                  checked={visibility.showOnBookingPage}
+                  onChange={(e) => setVisibility(prev => ({ ...prev, showOnBookingPage: e.target.checked }))}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#C72030',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#C72030',
+                    },
+                  }}
+                />
+              </div> */}
 
               {/* Featured Event */}
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
                   <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
                 </div>
-                <div className="flex items-center gap-2 text-[11px] font-medium select-none">
-                  <div
-                    role="switch"
-                    aria-checked={visibility.featuredEvent}
-                    aria-label={visibility.featuredEvent ? "Deactivate featured event" : "Activate featured event"}
-                    tabIndex={0}
-                    onClick={() => setVisibility(prev => ({ ...prev, featuredEvent: !prev.featuredEvent }))}
-                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setVisibility(prev => ({ ...prev, featuredEvent: !prev.featuredEvent }))}
-                    className="cursor-pointer"
-                    style={{ transform: visibility.featuredEvent ? 'scaleX(1)' : 'scaleX(-1)' }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
-                    <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
-                    <g filter="url(#filter0_dd_2611_3821)">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
-                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_2611_3821)" strokeWidth="0.255453"/>
-                      <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_2611_3821)" strokeWidth="0.255453"/>
-                    </g>
-                    <defs>
-                      <filter id="filter0_dd_2611_3821" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                        <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                        <feOffset dy="1.02181"/>
-                        <feGaussianBlur stdDeviation="0.510907"/>
-                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
-                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2611_3821"/>
-                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                        <feOffset/>
-                        <feGaussianBlur stdDeviation="0.510907"/>
-                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
-                        <feBlend mode="normal" in2="effect1_dropShadow_2611_3821" result="effect2_dropShadow_2611_3821"/>
-                        <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_2611_3821" result="shape"/>
-                      </filter>
-                      <linearGradient id="paint0_linear_2611_3821" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
-                        <stop stopOpacity="0"/>
-                        <stop offset="0.8" stopOpacity="0.02"/>
-                        <stop offset="1" stopOpacity="0.04"/>
-                      </linearGradient>
-                      <linearGradient id="paint1_linear_2611_3821" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="white" stopOpacity="0.12"/>
-                        <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
-                        <stop offset="1" stopColor="white" stopOpacity="0"/>
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  </div>
-                </div>
-              </div>
+                <Switch
+                  checked={visibility.featuredEvent}
+                  onChange={(e) => setVisibility(prev => ({ ...prev, featuredEvent: e.target.checked }))}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#C72030',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#C72030',
+                    },
+                  }}
+                />
+              </div> */}
             </div>
           </div>
         )}
@@ -3433,119 +3331,79 @@ const EventCreate = () => {
                         <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
                         <p className="text-sm text-gray-500">Display this event on the home page</p>
                       </div>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnHomePage ? 'scaleX(1)' : 'scaleX(-1)' }}>
-                        <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
-                        <g filter="url(#filter0_preview_1)">
-                          <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
-                        </g>
-                        <defs>
-                          <filter id="filter0_preview_1" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                            <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                            <feOffset dy="1.02181"/>
-                            <feGaussianBlur stdDeviation="0.510907"/>
-                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
-                            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
-                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                            <feOffset/>
-                            <feGaussianBlur stdDeviation="0.510907"/>
-                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
-                            <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
-                            <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
-                          </filter>
-                        </defs>
-                      </svg>
+                      <Switch
+                        checked={visibility.showOnHomePage}
+                        onChange={(e) => setVisibility(prev => ({ ...prev, showOnHomePage: e.target.checked }))}
+                        sx={{
+                          '& .MuiSwitch-switchBase.Mui-checked': {
+                            color: '#C72030',
+                          },
+                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                            backgroundColor: '#C72030',
+                          },
+                        }}
+                      />
                     </div>
 
                     {/* Show on Project Detail Page */}
-                    <div className="flex items-center justify-between">
+                    {/* <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
                         <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
                       </div>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnProjectDetailPage ? 'scaleX(1)' : 'scaleX(-1)' }}>
-                        <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
-                        <g filter="url(#filter0_preview_2)">
-                          <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
-                        </g>
-                        <defs>
-                          <filter id="filter0_preview_2" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                            <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                            <feOffset dy="1.02181"/>
-                            <feGaussianBlur stdDeviation="0.510907"/>
-                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
-                            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
-                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                            <feOffset/>
-                            <feGaussianBlur stdDeviation="0.510907"/>
-                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
-                            <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
-                            <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
-                          </filter>
-                        </defs>
-                      </svg>
-                    </div>
+                      <Switch
+                        checked={visibility.showOnProjectDetailPage}
+                        onChange={(e) => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: e.target.checked }))}
+                        sx={{
+                          '& .MuiSwitch-switchBase.Mui-checked': {
+                            color: '#C72030',
+                          },
+                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                            backgroundColor: '#C72030',
+                          },
+                        }}
+                      />
+                    </div> */}
 
                     {/* Show on Booking Page */}
-                    <div className="flex items-center justify-between">
+                    {/* <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
                         <p className="text-sm text-gray-500">Display this event on the home page</p>
                       </div>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnBookingPage ? 'scaleX(1)' : 'scaleX(-1)' }}>
-                        <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
-                        <g filter="url(#filter0_preview_3)">
-                          <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
-                        </g>
-                        <defs>
-                          <filter id="filter0_preview_3" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                            <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                            <feOffset dy="1.02181"/>
-                            <feGaussianBlur stdDeviation="0.510907"/>
-                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
-                            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
-                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                            <feOffset/>
-                            <feGaussianBlur stdDeviation="0.510907"/>
-                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
-                            <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
-                            <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
-                          </filter>
-                        </defs>
-                      </svg>
-                    </div>
+                      <Switch
+                        checked={visibility.showOnBookingPage}
+                        onChange={(e) => setVisibility(prev => ({ ...prev, showOnBookingPage: e.target.checked }))}
+                        sx={{
+                          '& .MuiSwitch-switchBase.Mui-checked': {
+                            color: '#C72030',
+                          },
+                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                            backgroundColor: '#C72030',
+                          },
+                        }}
+                      />
+                    </div> */}
 
                     {/* Featured Event */}
-                    <div className="flex items-center justify-between">
+                    {/* <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
                         <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
                       </div>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.featuredEvent ? 'scaleX(1)' : 'scaleX(-1)' }}>
-                        <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
-                        <g filter="url(#filter0_preview_4)">
-                          <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
-                        </g>
-                        <defs>
-                          <filter id="filter0_preview_4" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                            <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                            <feOffset dy="1.02181"/>
-                            <feGaussianBlur stdDeviation="0.510907"/>
-                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
-                            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
-                            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                            <feOffset/>
-                            <feGaussianBlur stdDeviation="0.510907"/>
-                            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
-                            <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
-                            <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
-                          </filter>
-                        </defs>
-                      </svg>
-                    </div>
+                      <Switch
+                        checked={visibility.featuredEvent}
+                        onChange={(e) => setVisibility(prev => ({ ...prev, featuredEvent: e.target.checked }))}
+                        sx={{
+                          '& .MuiSwitch-switchBase.Mui-checked': {
+                            color: '#C72030',
+                          },
+                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                            backgroundColor: '#C72030',
+                          },
+                        }}
+                      />
+                    </div> */}
                   </div>
                 </div>
               </div>
