@@ -138,12 +138,12 @@ export const SettingsSidebar: React.FC = () => {
     //   icon: Building,
     //   path: "/settings/department-list",
     // },
-    {
-      id: "visitslot-list",
-      label: "Visit Slot",
-      icon: Calendar,
-      path: "/settings/site-visit-slot-config-list",
-    },
+    // {
+    //   id: "visitslot-list",
+    //   label: "Visit Slot",
+    //   icon: Calendar,
+    //   path: "/settings/site-visit-slot-config-list",
+    // },
     {
       id: "faq-category-list",
       label: "FAQ Category",
@@ -158,8 +158,27 @@ export const SettingsSidebar: React.FC = () => {
     },
   ];
 
-  const isActive = (path: string) =>
-    location.pathname === path || location.pathname.startsWith(path + "/");
+  const isActive = (path: string) => {
+    // Exact match
+    if (location.pathname === path) return true;
+    
+    // Check if current path starts with the menu item path followed by a slash
+    // This handles nested routes like /settings/special-users-category/create
+    if (location.pathname.startsWith(path + "/")) return true;
+    
+    // Additional check for routes with query parameters or hash
+    if (location.pathname.startsWith(path + "?") || location.pathname.startsWith(path + "#")) return true;
+    
+    // Handle cases where the route might have a different suffix
+    // e.g., /settings/property-type should match /settings/property-type-list
+    // Extract the base path without the -list, -create, etc.
+    const basePath = path.replace(/-list$/, '');
+    if (basePath !== path && location.pathname.startsWith(basePath)) {
+      return true;
+    }
+    
+    return false;
+  };
 
   const handleNavigation = (path: string) => {
     navigate(path);

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, ArrowLeft, FileText, Calendar, Users, X, Plus, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2 } from "lucide-react";
+import { ChevronRight, ArrowLeft, FileText, Calendar, Users, X, Plus, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
@@ -443,6 +443,13 @@ const EventCreate = () => {
       ...formData,
       [name]: value,
     });
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   //for files into array
@@ -1791,8 +1798,7 @@ const EventCreate = () => {
             </div>
             <div className="p-6 space-y-6">
               {/* Channel Partners Dropdown */}
-              <div>
-                {/* <label className="block text-sm font-semibold mb-2 text-[#1a1a1a]">Channel Partners Names</label> */}
+              {/* <div>
                 <FormControl
                   fullWidth
                   variant="outlined"
@@ -1828,7 +1834,7 @@ const EventCreate = () => {
                     ))}
                   </MuiSelect>
                 </FormControl>
-              </div>
+              </div> */}
 
               {/* Share With Section */}
               <div>
@@ -2097,17 +2103,17 @@ const EventCreate = () => {
               {/* Event Cover Image */}
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <h5 className="text-base font-semibold">
+                  <h5 className="text-base font-semibold inline-flex items-center gap-1">
                     Event Cover Image{" "}
                     <span
-                      className="relative inline-block cursor-help"
+                      className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowTooltip(true)}
                       onMouseLeave={() => setShowTooltip(false)}
                     >
-                      <span className="text-blue-500">[i]</span>
+                      <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltip && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                          Max Upload Size 3 MB and Required ratio is 16:9
+                          Max Upload Size 3 MB. Supports 1:1, 9:16, 16:9, 3:2 aspect ratios
                         </span>
                       )}
                     </span>
@@ -2171,17 +2177,17 @@ const EventCreate = () => {
               {/* Event Attachment */}
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <h5 className="text-base font-semibold">
+                  <h5 className="text-base font-semibold inline-flex items-center gap-1">
                     Event Attachment{" "}
                     <span
-                      className="relative inline-block cursor-help"
+                      className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowAttachmentTooltip(true)}
                       onMouseLeave={() => setShowAttachmentTooltip(false)}
                     >
-                      <span className="text-blue-500">[i]</span>
+                      <Info className="w-5 h-5 fill-black text-white" />
                       {showAttachmentTooltip && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                          Max Upload Size 3 MB (Images), 10 MB (Videos)
+                          Max Upload Size 3 MB (Images), 10 MB (Videos). Supports 1:1, 9:16, 16:9, 3:2 aspect ratios
                         </span>
                       )}
                     </span>
@@ -2636,32 +2642,23 @@ const EventCreate = () => {
                           <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
                           <p className="text-sm text-gray-500">Display this event on the home page</p>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none" style={{ transform: visibility.showOnHomePage ? 'scaleX(1)' : 'scaleX(-1)' }}>
-                          <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
-                          <g filter="url(#filter0_completed_1)">
-                            <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
-                          </g>
-                          <defs>
-                            <filter id="filter0_completed_1" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                              <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                              <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                              <feOffset dy="1.02181"/>
-                              <feGaussianBlur stdDeviation="0.510907"/>
-                              <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
-                              <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
-                              <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                              <feOffset/>
-                              <feGaussianBlur stdDeviation="0.510907"/>
-                              <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
-                              <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow"/>
-                              <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape"/>
-                            </filter>
-                          </defs>
-                        </svg>
+                        <Switch
+                          checked={formData.showOnHomePage || false}
+                          onChange={(e) => handleInputChange('showOnHomePage', e.target.checked)}
+                          disabled
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: '#C72030',
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                              backgroundColor: '#C72030',
+                            },
+                          }}
+                        />
                       </div>
 
                       {/* Show on Project Detail Page */}
-                      <div className="flex items-center justify-between">
+                      {/* <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
                           <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
@@ -2688,10 +2685,10 @@ const EventCreate = () => {
                             </filter>
                           </defs>
                         </svg>
-                      </div>
+                      </div> */}
 
                       {/* Show on Booking Page */}
-                      <div className="flex items-center justify-between">
+                      {/* <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
                           <p className="text-sm text-gray-500">Display this event on the home page</p>
@@ -2718,10 +2715,10 @@ const EventCreate = () => {
                             </filter>
                           </defs>
                         </svg>
-                      </div>
+                      </div> */}
 
                       {/* Featured Event */}
-                      <div className="flex items-center justify-between">
+                      {/* <div className="flex items-center justify-between">
                         <div>
                           <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
                           <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
@@ -2748,7 +2745,7 @@ const EventCreate = () => {
                             </filter>
                           </defs>
                         </svg>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 )}
@@ -2819,7 +2816,7 @@ const EventCreate = () => {
                     </div>
                     <div className="p-6 space-y-6 opacity-75 pointer-events-none">
                       {/* Channel Partners */}
-                      <div>
+                      {/* <div>
                         <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
                           <InputLabel shrink>Selected Channel Partners</InputLabel>
                           <MuiSelect
@@ -2848,7 +2845,7 @@ const EventCreate = () => {
                             ))}
                           </MuiSelect>
                         </FormControl>
-                      </div>
+                      </div> */}
 
                       {/* Share With Section */}
                       <div>
@@ -3699,7 +3696,7 @@ const EventCreate = () => {
               </div>
 
               {/* QR Code Generation Preview - At the End */}
-              <div className="mb-6">
+              {/* <div className="mb-6">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                     <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -3733,10 +3730,10 @@ const EventCreate = () => {
                     </div>
                   </div>
                   <div className="p-6 space-y-6">
-                    {/* QR Code Information Box */}
+                  
                     <div className="bg-[#C4B89D59] border border-gray-200 rounded-lg p-6">
                       <div className="flex items-start gap-4">
-                        {/* QR Code Image Placeholder */}
+                       
                         <div className="flex-shrink-0">
                           <div className="w-24 h-24 bg-white border-2 border-gray-300 rounded flex items-center justify-center">
                             <svg width="80" height="80" viewBox="0 0 80 80">
@@ -3773,7 +3770,7 @@ const EventCreate = () => {
                           </div>
                         </div>
                         
-                        {/* QR Code Information */}
+                       
                         <div className="flex-1">
                           <h3 className="font-semibold mb-3" style={{ 
                             fontFamily: 'Work Sans, sans-serif',
@@ -3808,7 +3805,7 @@ const EventCreate = () => {
                       </div>
                     </div>
 
-                    {/* QR Code Table */}
+                   
                     <div>
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <Table>
@@ -3880,7 +3877,7 @@ const EventCreate = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Final Submit Buttons in Preview Mode */}

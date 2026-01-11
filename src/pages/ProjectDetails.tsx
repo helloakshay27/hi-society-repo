@@ -3,13 +3,16 @@ import axios from "axios";
 import Select from "react-select";
 
 import "../styles/mor.css";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { API_CONFIG, getFullUrl, getAuthHeader } from "../config/apiConfig";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Avatar } from "@mui/material";
+import { Settings as SettingsOutlinedIcon, ArrowLeft } from "lucide-react";
 
 
 const ProjectDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   console.log("id", id);
 
@@ -76,6 +79,31 @@ const ProjectDetails = () => {
     rera_url: "",
     isDay: true,
     video_url: "",
+    // Visibility
+    show_on_home: false,
+    show_on_project_detail_page: false,
+    show_on_booking_page: false,
+    featured_projects: false,
+    // Banner Images (ratio-based)
+    image_1_by_1: null,
+    image_9_by_16: null,
+    image_3_by_2: null,
+    image_16_by_9: null,
+    // Cover Images (ratio-based)
+    cover_images_1_by_1: [],
+    cover_images_9_by_16: [],
+    cover_images_3_by_2: [],
+    cover_images_16_by_9: [],
+    // Gallery Images (ratio-based)
+    gallery_image_1_by_1: [],
+    gallery_image_9_by_16: [],
+    gallery_image_3_by_2: [],
+    gallery_image_16_by_9: [],
+    // Floor Plan / 2D Images (ratio-based)
+    project_2d_image_1_by_1: [],
+    project_2d_image_9_by_16: [],
+    project_2d_image_3_by_2: [],
+    project_2d_image_16_by_9: [],
   });
 
   console.log("formdata", formData);
@@ -136,10 +164,11 @@ const ProjectDetails = () => {
             land_area: project.land_area || "",
             land_uom: project.land_uom || "",
             project_tag: project.project_tag || "",
+            project_disclaimer: project.project_disclaimer || "",
             virtual_tour_url_multiple: project.virtual_tour_url_multiple || [],
             map_url: project.map_url || "",
             image: project.image || [],
-            location: project.address || {
+            location: project.location || {
               address: project.project_address || "",
               addressLine1: "",
               address_line_two: "",
@@ -171,6 +200,31 @@ const ProjectDetails = () => {
             rera_url: project.rera_url || "",
             isDay: project.isDay !== undefined ? project.isDay : true,
             video_url: project.video_url || "",
+            // Visibility
+            show_on_home: project.show_on_home || false,
+            show_on_project_detail_page: project.show_on_project_detail_page || false,
+            show_on_booking_page: project.show_on_booking_page || false,
+            featured_projects: project.featured_projects || false,
+            // Banner Images (ratio-based)
+            image_1_by_1: project.image_1_by_1 || null,
+            image_9_by_16: project.image_9_by_16 || null,
+            image_3_by_2: project.image_3_by_2 || null,
+            image_16_by_9: project.image_16_by_9 || null,
+            // Cover Images (ratio-based)
+            cover_images_1_by_1: project.cover_images_1_by_1 || [],
+            cover_images_9_by_16: project.cover_images_9_by_16 || [],
+            cover_images_3_by_2: project.cover_images_3_by_2 || [],
+            cover_images_16_by_9: project.cover_images_16_by_9 || [],
+            // Gallery Images (ratio-based)
+            gallery_image_1_by_1: project.gallery_image?.[0]?.gallery_image_1_by_1 || [],
+            gallery_image_9_by_16: project.gallery_image?.[0]?.gallery_image_9_by_16 || [],
+            gallery_image_3_by_2: project.gallery_image?.[0]?.gallery_image_3_by_2 || [],
+            gallery_image_16_by_9: project.gallery_image?.[0]?.gallery_image_16_by_9 || [],
+            // Floor Plan / 2D Images (ratio-based)
+            project_2d_image_1_by_1: project.project_2d_image_1_by_1 || [],
+            project_2d_image_9_by_16: project.project_2d_image_9_by_16 || [],
+            project_2d_image_3_by_2: project.project_2d_image_3_by_2 || [],
+            project_2d_image_16_by_9: project.project_2d_image_16_by_9 || [],
           });
         } else {
           setError("Project not found");
@@ -235,6 +289,18 @@ const ProjectDetails = () => {
           }
         `}
       </style>
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Back to Project List</span>
+        </div>
+      </div>
       <div>
         <div className="w-full bg-white rounded-lg shadow-sm border mt-3">
           <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
@@ -537,7 +603,7 @@ const ProjectDetails = () => {
                     Disclaimer
                   </div>
                   <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                    {formData.disclaimer ? (
+                    {formData.project_disclaimer ? (
                       <p
                         style={{
                           display: "-webkit-box",
@@ -550,7 +616,7 @@ const ProjectDetails = () => {
                         }}
                         onClick={() => setIsExpanded(!isExpanded)}
                       >
-                        {formData.disclaimer}{" "}
+                        {formData.project_disclaimer}{" "}
                         {!isExpanded && (
                           <span style={{ color: "black", cursor: "pointer" }}>
                             ...
@@ -670,23 +736,23 @@ const ProjectDetails = () => {
             </div>
           </div>
           <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
-            <div className="space-y-3">
+            <div className="space-y-3 mx-6">
               {formData?.rera_number_multiple?.length > 0 ? (
                 formData.rera_number_multiple.map((rera, idx) => (
-                  <div key={idx} className="text-[14px] leading-relaxed">
-                    <strong className="text-gray-900">Tower Name:</strong>{" "}
-                    <span className="text-gray-700">{rera.tower_name}</span>
+                  <div key={idx} className="text-[14px] leading-relaxed text-gray-900">
+                    <span className="font-semibold">Tower Name :</span>
+                    <span className="font-semibold">{rera.tower_name}</span>
                     {", "}
-                    <strong className="text-gray-900">Rera Number:</strong>{" "}
-                    <span className="text-gray-700">{rera.rera_number}</span>
+                    <span className="font-semibold">Rera Number :</span>
+                    <span className="font-semibold">{rera.rera_number}</span>
                     {", "}
                     <a
                       href={rera.rera_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline"
+                      className="text-black-600 hover:text-black-800 underline font-semibold"
                     >
-                      Rera URL: {rera.rera_url}
+                      Rera URL : {rera.rera_url}
                     </a>
                   </div>
                 ))
@@ -804,40 +870,20 @@ const ProjectDetails = () => {
                 <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
                   Map URL
                 </div>
-                <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                <div className="text-[14px] font-semibold text-gray-900 flex-1 min-w-0">
                   {formData.map_url ? (
-                    <p
+                    <a
+                      href={formData.map_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-black-600 hover:text-black-800 underline break-all"
                       style={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: isExpanded ? "unset" : 1,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "normal",
-                        cursor: "pointer",
+                        wordBreak: "break-all",
+                        overflowWrap: "break-word"
                       }}
-                      onClick={() => setIsExpanded(!isExpanded)}
                     >
-                      <a
-                        href={formData.map_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 underline"
-                      >
-                        {formData.map_url}
-                      </a>
-                      {!isExpanded && (
-                        <span
-                          style={{
-                            color: "black",
-                            cursor: "pointer",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          ...
-                        </span>
-                      )}
-                    </p>
+                      {formData.map_url}
+                    </a>
                   ) : (
                     "—"
                   )}
@@ -1242,13 +1288,13 @@ const ProjectDetails = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody className="bg-white">
-                      {formData.brochure ? (
+                      {formData.brochure && formData.brochure.document_url ? (
                         <TableRow className="hover:bg-gray-50">
                           <TableCell className="text-gray-900 py-3 px-4">{formData.brochure?.document_file_name}</TableCell>
                           <TableCell className="text-gray-900 py-3 px-4">{formData.brochure?.document_content_type}</TableCell>
                           <TableCell className="text-gray-900 py-3 px-4">{formData.brochure?.document_updated_at}</TableCell>
                           <TableCell className="py-3 px-4">
-                            <a href={formData.brochure?.document_url} className="text-blue-600 hover:underline">Download</a>
+                            <a href={formData.brochure?.document_url} className="text-black-600 hover:underline">Download</a>
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -1276,13 +1322,13 @@ const ProjectDetails = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody className="bg-white">
-                      {formData.ProjectPPT ? (
+                      {formData.ProjectPPT && formData.ProjectPPT.document_url ? (
                         <TableRow className="hover:bg-gray-50">
                           <TableCell className="text-gray-900 py-3 px-4">{formData.ProjectPPT?.document_file_name}</TableCell>
                           <TableCell className="text-gray-900 py-3 px-4">{formData.ProjectPPT?.document_content_type}</TableCell>
                           <TableCell className="text-gray-900 py-3 px-4">{formData.ProjectPPT?.document_updated_at}</TableCell>
                           <TableCell className="py-3 px-4">
-                            <a href={formData.ProjectPPT?.document_url} className="text-blue-600 hover:underline">Download</a>
+                            <a href={formData.ProjectPPT?.document_url} className="text-black-600 hover:underline">Download</a>
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -1569,7 +1615,7 @@ const ProjectDetails = () => {
                             <TableCell className="text-gray-900 py-3 px-4">{doc.document_content_type}</TableCell>
                             <TableCell className="text-gray-900 py-3 px-4">{doc.document_updated_at}</TableCell>
                             <TableCell className="py-3 px-4">
-                              <a href={doc.document_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Download</a>
+                              <a href={doc.document_url} target="_blank" rel="noopener noreferrer" className="text-black-600 hover:underline">Download</a>
                             </TableCell>
                           </TableRow>
                         ))
@@ -1620,7 +1666,7 @@ const ProjectDetails = () => {
                   </Table>
                 </div>
               </div>
-              <div className="col-md-12 mt-2">
+              {/* <div className="col-md-12 mt-2">
                 <h5 className="">
                   Video Preview Image Url :{" "}
                   <a
@@ -1637,7 +1683,7 @@ const ProjectDetails = () => {
                     Check Here
                   </a>
                 </h5>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -1667,7 +1713,7 @@ const ProjectDetails = () => {
                       href={virtual.virtual_tour_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline"
+                      className="text-black-600 hover:text-black-800 underline"
                     >
                       {virtual.virtual_tour_url}
                     </a>
@@ -1676,6 +1722,63 @@ const ProjectDetails = () => {
               ) : (
                 <span className="text-gray-500">—</span>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* Visibility Section */}
+        <div className="w-full bg-white rounded-lg shadow-sm border mt-4">
+          <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                <SettingsOutlinedIcon className="w-5 h-5 text-[#C72030]" />
+              </div>
+              <h3 className="text-[16px] font-bold text-gray-900 tracking-wide">
+                Visibility
+              </h3>
+            </div>
+          </div>
+          <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 mx-6">
+              {/* Show on Home Page */}
+              <div className="flex items-start gap-6">
+                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+                  Show on Home Page
+                </div>
+                <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                  {formData.show_on_home ? "Yes" : "No"}
+                </div>
+              </div>
+
+              {/* Show on Project Detail Page */}
+              {/* <div className="flex items-start gap-6">
+                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+                  Show on Project Detail Page
+                </div>
+                <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                  {formData.show_on_project_detail_page ? "Yes" : "No"}
+                </div>
+              </div> */}
+
+              {/* Show on Booking Page */}
+              {/* <div className="flex items-start gap-6">
+                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+                  Show on Booking Page
+                </div>
+                <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                  {formData.show_on_booking_page ? "Yes" : "No"}
+                </div>
+              </div> */}
+
+              {/* Featured Projects */}
+              {/* <div className="flex items-start gap-6">
+                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+                  Featured Projects
+                </div>
+                <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                  {formData.featured_projects ? "Yes" : "No"}
+                </div>
+              </div> */}
             </div>
           </div>
         </div>

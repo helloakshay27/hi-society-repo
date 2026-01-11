@@ -229,7 +229,8 @@ const EditAmenities = () => {
             {/* Icon Upload */}
             <div className="border border-gray-300 rounded-md p-4 mb-4">
               <span className="block text-sm font-medium text-gray-700 mb-3">
-                Upload Icon <span className="text-red-500">*</span>
+                Upload Icon 
+                {/* <span className="text-red-500">*</span> */}
               </span>
 
               <input
@@ -278,7 +279,8 @@ const EditAmenities = () => {
             {/* Dark Mode Icon Upload */}
             <div className="border border-gray-300 rounded-md p-4">
               <span className="block text-sm font-medium text-gray-700 mb-3">
-                Dark Mode Icon <span className="text-red-500">*</span>
+                Dark Mode Icon 
+                {/* <span className="text-red-500">*</span> */}
               </span>
 
               <input

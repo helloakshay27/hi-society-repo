@@ -78,6 +78,18 @@ const BannerAdd = () => {
     let newErrors = {};
     if (!formData.title.trim()) newErrors.title = "Title is mandatory";
     if (!formData.project_id) newErrors.project_id = "Project is mandatory";
+    
+    // Check if at least one banner attachment exists
+    const hasAttachment = project_banner.some(({ key }) => {
+      const files = formData[key];
+      return Array.isArray(files) && files.length > 0;
+    });
+    
+    if (!hasAttachment) {
+      toast.error("Please add at least one banner attachment");
+      return false;
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

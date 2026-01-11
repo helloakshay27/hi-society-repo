@@ -18,6 +18,7 @@ import {
   Select as MuiSelect,
   MenuItem,
   Avatar,
+  Switch,
 } from "@mui/material";
 import { Building2, FileText, Trash2, ArrowLeft, Delete, DeleteIcon, Info } from "lucide-react";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
@@ -2080,6 +2081,9 @@ const ProjectDetailsCreate = () => {
                   inputLabel: {
                     shrink: true,
                   },
+                  htmlInput: {
+                    min: 0,
+                  },
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -2102,6 +2106,9 @@ const ProjectDetailsCreate = () => {
                 slotProps={{
                   inputLabel: {
                     shrink: true,
+                  },
+                  htmlInput: {
+                    min: 0,
                   },
                 }}
                 InputProps={{
@@ -2126,6 +2133,9 @@ const ProjectDetailsCreate = () => {
                   inputLabel: {
                     shrink: true,
                   },
+                  htmlInput: {
+                    min: 0,
+                  },
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -2149,6 +2159,9 @@ const ProjectDetailsCreate = () => {
                   inputLabel: {
                     shrink: true,
                   },
+                  htmlInput: {
+                    min: 0,
+                  },
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -2170,6 +2183,9 @@ const ProjectDetailsCreate = () => {
                 slotProps={{
                   inputLabel: {
                     shrink: true,
+                  },
+                  htmlInput: {
+                    min: 0,
                   },
                 }}
                 InputProps={{
@@ -2194,6 +2210,9 @@ const ProjectDetailsCreate = () => {
                   inputLabel: {
                     shrink: true,
                   },
+                  htmlInput: {
+                    min: 0,
+                  },
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -2216,6 +2235,9 @@ const ProjectDetailsCreate = () => {
                 slotProps={{
                   inputLabel: {
                     shrink: true,
+                  },
+                  htmlInput: {
+                    min: 0,
                   },
                 }}
                 InputProps={{
@@ -2240,6 +2262,9 @@ const ProjectDetailsCreate = () => {
                   inputLabel: {
                     shrink: true,
                   },
+                  htmlInput: {
+                    min: 0,
+                  },
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -2261,6 +2286,9 @@ const ProjectDetailsCreate = () => {
                 slotProps={{
                   inputLabel: {
                     shrink: true,
+                  },
+                  htmlInput: {
+                    min: 0,
                   },
                 }}
                 InputProps={{
@@ -2284,6 +2312,9 @@ const ProjectDetailsCreate = () => {
                 slotProps={{
                   inputLabel: {
                     shrink: true,
+                  },
+                  htmlInput: {
+                    min: 0,
                   },
                 }}
                 InputProps={{
@@ -2361,6 +2392,9 @@ const ProjectDetailsCreate = () => {
                   inputLabel: {
                     shrink: true,
                   },
+                  htmlInput: {
+                    min: 0,
+                  },
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -2391,117 +2425,35 @@ const ProjectDetailsCreate = () => {
               {/* Enable Enquiry Toggle */}
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-gray-700">Enable Enquiry</label>
-                <div className="flex items-center gap-2 text-[11px] font-medium select-none">
-                  {/* <span className={formData.enable_enquiry ? "text-[#1A1A1A]" : "text-gray-400"}>
-                    Yes
-                  </span> */}
-                  <div
-                    role="switch"
-                    aria-checked={formData.enable_enquiry}
-                    aria-label={formData.enable_enquiry ? "Deactivate enable enquiry" : "Activate enable enquiry"}
-                    tabIndex={0}
-                    onClick={() => setFormData(prev => ({ ...prev, enable_enquiry: !prev.enable_enquiry }))}
-                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setFormData(prev => ({ ...prev, enable_enquiry: !prev.enable_enquiry }))}
-                    className="cursor-pointer"
-                    style={{ transform: formData.enable_enquiry ? 'scaleX(1)' : 'scaleX(-1)' }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="20" viewBox="0 0 22 14" fill="none">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
-                      <g filter="url(#filter0_dd_enable_enquiry)">
-                        <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
-                        <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_enable_enquiry)" strokeWidth="0.255453"/>
-                        <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_enable_enquiry)" strokeWidth="0.255453"/>
-                      </g>
-                      <defs>
-                        <filter id="filter0_dd_enable_enquiry" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                          <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                          <feOffset dy="1.02181"/>
-                          <feGaussianBlur stdDeviation="0.510907"/>
-                          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
-                          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_enable_enquiry"/>
-                          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                          <feOffset/>
-                          <feGaussianBlur stdDeviation="0.510907"/>
-                          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
-                          <feBlend mode="normal" in2="effect1_dropShadow_enable_enquiry" result="effect2_dropShadow_enable_enquiry"/>
-                          <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_enable_enquiry" result="shape"/>
-                        </filter>
-                        <linearGradient id="paint0_linear_enable_enquiry" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
-                          <stop stopOpacity="0"/>
-                          <stop offset="0.8" stopOpacity="0.02"/>
-                          <stop offset="1" stopOpacity="0.04"/>
-                        </linearGradient>
-                        <linearGradient id="paint1_linear_enable_enquiry" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
-                          <stop stopColor="white" stopOpacity="0.12"/>
-                          <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
-                          <stop offset="1" stopColor="white" stopOpacity="0"/>
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  </div>
-                  {/* <span className={!formData.enable_enquiry ? "text-[#1A1A1A]" : "text-gray-400"}>
-                    No
-                  </span> */}
-                </div>
+                <Switch
+                  checked={formData.enable_enquiry}
+                  onChange={(e) => setFormData(prev => ({ ...prev, enable_enquiry: e.target.checked }))}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#C72030',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#C72030',
+                    },
+                  }}
+                />
               </div>
 
               {/* Is Sold Toggle */}
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-gray-700">Is Sold</label>
-                <div className="flex items-center gap-2 text-[11px] font-medium select-none">
-                  {/* <span className={formData.is_sold ? "text-[#1A1A1A]" : "text-gray-400"}>
-                    Yes
-                  </span> */}
-                  <div
-                    role="switch"
-                    aria-checked={formData.is_sold}
-                    aria-label={formData.is_sold ? "Deactivate is sold" : "Activate is sold"}
-                    tabIndex={0}
-                    onClick={() => setFormData(prev => ({ ...prev, is_sold: !prev.is_sold }))}
-                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setFormData(prev => ({ ...prev, is_sold: !prev.is_sold }))}
-                    className="cursor-pointer"
-                    style={{ transform: formData.is_sold ? 'scaleX(1)' : 'scaleX(-1)' }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="20" viewBox="0 0 22 14" fill="none">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
-                      <g filter="url(#filter0_dd_is_sold)">
-                        <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
-                        <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_is_sold)" strokeWidth="0.255453"/>
-                        <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_is_sold)" strokeWidth="0.255453"/>
-                      </g>
-                      <defs>
-                        <filter id="filter0_dd_is_sold" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                          <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                          <feOffset dy="1.02181"/>
-                          <feGaussianBlur stdDeviation="0.510907"/>
-                          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
-                          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_is_sold"/>
-                          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                          <feOffset/>
-                          <feGaussianBlur stdDeviation="0.510907"/>
-                          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
-                          <feBlend mode="normal" in2="effect1_dropShadow_is_sold" result="effect2_dropShadow_is_sold"/>
-                          <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_is_sold" result="shape"/>
-                        </filter>
-                        <linearGradient id="paint0_linear_is_sold" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
-                          <stop stopOpacity="0"/>
-                          <stop offset="0.8" stopOpacity="0.02"/>
-                          <stop offset="1" stopOpacity="0.04"/>
-                        </linearGradient>
-                        <linearGradient id="paint1_linear_is_sold" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
-                          <stop stopColor="white" stopOpacity="0.12"/>
-                          <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
-                          <stop offset="1" stopColor="white" stopOpacity="0"/>
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  </div>
-                  {/* <span className={!formData.is_sold ? "text-[#1A1A1A]" : "text-gray-400"}>
-                    No
-                  </span> */}
-                </div>
+                <Switch
+                  checked={formData.is_sold}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_sold: e.target.checked }))}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#C72030',
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#C72030',
+                    },
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -4768,7 +4720,7 @@ const ProjectDetailsCreate = () => {
                           </tbody>
                         </table>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-12">
+                      {/* <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-12">
                         <TextField
                           label="Video Preview Image URL"
                           placeholder="Enter Video URL"
@@ -4786,7 +4738,7 @@ const ProjectDetailsCreate = () => {
                             sx: fieldStyles,
                           }}
                         />
-                      </div>
+                      </div> */}
                     </div>
                   </>
                 )}
@@ -4956,53 +4908,18 @@ const ProjectDetailsCreate = () => {
                 <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
                 <p className="text-sm text-gray-500">Display this project on the home page</p>
               </div>
-              <div className="flex items-center gap-2 text-[11px] font-medium select-none">
-                <div
-                  role="switch"
-                  aria-checked={formData.show_on_home}
-                  aria-label={formData.show_on_home ? "Deactivate show on home page" : "Activate show on home page"}
-                  tabIndex={0}
-                  onClick={() => setFormData(prev => ({ ...prev, show_on_home: !prev.show_on_home }))}
-                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setFormData(prev => ({ ...prev, show_on_home: !prev.show_on_home }))}
-                  className="cursor-pointer"
-                  style={{ transform: formData.show_on_home ? 'scaleX(1)' : 'scaleX(-1)' }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
-                  <g filter="url(#filter0_dd_visibility_home_create)">
-                    <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
-                    <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint0_linear_visibility_home_create)" strokeWidth="0.255453"/>
-                    <path d="M6.1311 1.14941C8.88208 1.14958 11.1125 3.37984 11.1125 6.13086C11.1124 8.88174 8.88198 11.1121 6.1311 11.1123C3.38009 11.1123 1.14982 8.88184 1.14966 6.13086C1.14966 3.37974 3.37998 1.14941 6.1311 1.14941Z" stroke="url(#paint1_linear_visibility_home_create)" strokeWidth="0.255453"/>
-                  </g>
-                  <defs>
-                    <filter id="filter0_dd_visibility_home_create" x="-8.54731e-05" y="-0.000329614" width="12.2619" height="13.2842" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                      <feFlood floodOpacity="0" result="BackgroundImageFix"/>
-                      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                      <feOffset dy="1.02181"/>
-                      <feGaussianBlur stdDeviation="0.510907"/>
-                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.24 0"/>
-                      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_visibility_home_create"/>
-                      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                      <feOffset/>
-                      <feGaussianBlur stdDeviation="0.510907"/>
-                      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"/>
-                      <feBlend mode="normal" in2="effect1_dropShadow_visibility_home_create" result="effect2_dropShadow_visibility_home_create"/>
-                      <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_visibility_home_create" result="shape"/>
-                    </filter>
-                    <linearGradient id="paint0_linear_visibility_home_create" x1="1.07172" y1="1.02148" x2="1.07172" y2="11.1396" gradientUnits="userSpaceOnUse">
-                      <stop stopOpacity="0"/>
-                      <stop offset="0.8" stopOpacity="0.02"/>
-                      <stop offset="1" stopOpacity="0.04"/>
-                    </linearGradient>
-                    <linearGradient id="paint1_linear_visibility_home_create" x1="1.02173" y1="1.02148" x2="1.02173" y2="11.2396" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="white" stopOpacity="0.12"/>
-                      <stop offset="0.2" stopColor="white" stopOpacity="0.06"/>
-                      <stop offset="1" stopColor="white" stopOpacity="0"/>
-                    </linearGradient>
-                  </defs>
-                </svg>
-                </div>
-              </div>
+              <Switch
+                checked={formData.show_on_home}
+                onChange={(e) => setFormData(prev => ({ ...prev, show_on_home: e.target.checked }))}
+                sx={{
+                  '& .MuiSwitch-switchBase.Mui-checked': {
+                    color: '#C72030',
+                  },
+                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                    backgroundColor: '#C72030',
+                  },
+                }}
+              />
             </div>
 
             {/* Show on Project Detail Page */}

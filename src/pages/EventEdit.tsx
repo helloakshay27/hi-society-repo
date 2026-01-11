@@ -8,7 +8,7 @@ import { ImageUploadingButton } from "../components/reusable/ImageUploadingButto
 import { ImageCropper } from "../components/reusable/ImageCropper";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
-import { ArrowLeft, FileText, Calendar, Users, Plus, X, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2 } from "lucide-react";
+import { ArrowLeft, FileText, Calendar, Users, Plus, X, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info } from "lucide-react";
 import {
   TextField,
   FormControl,
@@ -867,6 +867,13 @@ const EventEdit = () => {
     });
   };
 
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
 
@@ -1471,97 +1478,101 @@ const EventEdit = () => {
       : ['Event Details', 'Event Related Images'];
 
     return (
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '100%',
-          gap: 0
-        }}>
-          {steps.map((label, index) => (
-            <Box key={`step-${index}`} sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box
-                sx={{
-                  width: '213px',
-                  height: '50px',
-                  padding: '5px',
-                  borderRadius: '4px',
-                  boxShadow: '0px 4px 14.2px 0px rgba(0, 0, 0, 0.1)',
-                  backgroundColor: 'rgba(255, 255, 255, 1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <Box
-                  onClick={() => handleStepClick(index)}
-                  sx={{
-                    cursor: (index > currentStep && !completedSteps.includes(index - 1)) ? 'not-allowed' : 'pointer',
-                    width: '187px',
-                    height: '40px',
-                    backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#C72030' :
-                      (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
-                    color: (index === currentStep || completedSteps.includes(index)) ? 'white' :
-                      (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(150, 150, 150, 1)' : 'rgba(196, 184, 157, 1)',
-                    border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #C72030' :
-                      (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
-                    padding: '12px 20px',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    textAlign: 'center',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: index === currentStep ? '0 2px 4px rgba(199, 32, 48, 0.3)' : 'none',
-                    transition: 'all 0.2s ease',
-                    fontFamily: 'Work Sans, sans-serif',
-                    position: 'relative',
-                    borderRadius: '4px',
-                    '&:hover': {
-                      opacity: (index > currentStep && !completedSteps.includes(index - 1)) ? 1 : 0.9
-                    },
-                    '&::before': completedSteps.includes(index) && index !== currentStep ? {
-                      content: '"✓"',
-                      position: 'absolute',
-                      right: '8px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
-                    } : {}
-                  }}
-                >
-                  {label}
-                </Box>
-              </Box>
-              {index < steps.length - 1 && (
-                <Box
-                  sx={{
-                    width: '60px',
-                    height: '0px',
-                    border: '1px dashed rgba(196, 184, 157, 1)',
-                    borderWidth: '1px',
-                    borderStyle: 'dashed',
-                    borderColor: 'rgba(196, 184, 157, 1)',
-                    opacity: 1,
-                    margin: '0 0px',
-                    '@media (max-width: 1200px)': {
-                      width: '40px'
-                    },
-                    '@media (max-width: 900px)': {
-                      width: '30px'
-                    },
-                    '@media (max-width: 600px)': {
-                      width: '20px'
-                    }
-                  }}
-                />
-              )}
-            </Box>
-          ))}
-        </Box>
-      </Box>
+     <Box sx={{ mb: 4, width: '100%' }}>
+             <Box sx={{
+               display: 'flex',
+               alignItems: 'center',
+               justifyContent: 'flex-start',
+               width: '100%',
+               gap: 0
+             }}>
+               {steps.map((label, index) => (
+                 <Box key={`step-${index}`} sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                   <Box
+                     sx={{
+                       width: '100%',
+                       height: '50px',
+                       padding: '5px',
+                       borderRadius: '4px',
+                       boxShadow: '0px 4px 14.2px 0px rgba(0, 0, 0, 0.1)',
+                       backgroundColor: 'rgba(255, 255, 255, 1)',
+                       display: 'flex',
+                       alignItems: 'center',
+                       justifyContent: 'center'
+                     }}
+                   >
+                     <Box
+                       onClick={() => handleStepClick(index)}
+                       sx={{
+                         cursor: (index > currentStep && !completedSteps.includes(index - 1)) ? 'not-allowed' : 'pointer',
+                         width: '100%',
+                         height: '40px',
+                         backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#C72030' :
+                           (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
+                         color: (index === currentStep || completedSteps.includes(index)) ? 'white' :
+                           (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(150, 150, 150, 1)' : 'rgba(196, 184, 157, 1)',
+                         border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #C72030' :
+                           (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
+                         padding: '12px 20px',
+                         fontSize: '13px',
+                         fontWeight: 500,
+                         textAlign: 'center',
+                         display: 'flex',
+                         alignItems: 'center',
+                         justifyContent: 'center',
+                         boxShadow: index === currentStep ? '0 2px 4px rgba(199, 32, 48, 0.3)' : 'none',
+                         transition: 'all 0.2s ease',
+                         fontFamily: 'Work Sans, sans-serif',
+                         position: 'relative',
+                         borderRadius: '4px',
+                         '&:hover': {
+                           opacity: (index > currentStep && !completedSteps.includes(index - 1)) ? 1 : 0.9
+                         },
+                         '&::before': completedSteps.includes(index) && index !== currentStep ? {
+                           content: '"✓"',
+                           position: 'absolute',
+                           right: '8px',
+                           top: '50%',
+                           transform: 'translateY(-50%)',
+                           fontSize: '12px',
+                           fontWeight: 'bold'
+                         } : {}
+                       }}
+                     >
+                       {label}
+                     </Box>
+                   </Box>
+                   {index < steps.length - 1 && (
+                     <Box
+                       sx={{
+                         width: '60px',
+                         minWidth: '60px',
+                         height: '0px',
+                         border: '1px dashed rgba(196, 184, 157, 1)',
+                         borderWidth: '1px',
+                         borderStyle: 'dashed',
+                         borderColor: 'rgba(196, 184, 157, 1)',
+                         opacity: 1,
+                         margin: '0',
+                         '@media (max-width: 1200px)': {
+                           width: '40px',
+                           minWidth: '40px'
+                         },
+                         '@media (max-width: 900px)': {
+                           width: '30px',
+                           minWidth: '30px'
+                         },
+                         '@media (max-width: 600px)': {
+                           width: '20px',
+                           minWidth: '20px'
+                         }
+                       }}
+                     />
+                   )}
+                 </Box>
+               ))}
+             </Box>
+           </Box>
     );
   };
 
@@ -2048,7 +2059,7 @@ const EventEdit = () => {
             </div>
             <div className="p-6 space-y-6">
               {/* Channel Partners Dropdown */}
-              <div>
+              {/* <div>
                 <FormControl
                   fullWidth
                   variant="outlined"
@@ -2084,7 +2095,7 @@ const EventEdit = () => {
                     ))}
                   </MuiSelect>
                 </FormControl>
-              </div>
+              </div> */}
 
               {/* Share With Section */}
               <div>
@@ -2351,29 +2362,28 @@ const EventEdit = () => {
             {/* Event Cover Image */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-4">
-                <h5 className="text-base font-semibold">
+                <h5 className="text-base font-semibold inline-flex items-center gap-1">
                   Event Cover Image{" "}
                   <span
-                    className="tooltip-container relative inline-block cursor-pointer"
+                    className="relative inline-block cursor-pointer"
                     onMouseEnter={() => setShowTooltip(true)}
                     onMouseLeave={() => setShowTooltip(false)}
                   >
-                    [i]
+                    <Info className="w-5 h-5 fill-black text-white" />
                     {showTooltip && (
-                      <span className="tooltip-text absolute bg-gray-800 text-white text-xs rounded py-1 px-2 -top-8 left-0 whitespace-nowrap">
-                        Max Upload Size 3 MB and Required ratio is 16:9
+                      <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                        Max Upload Size 3 MB. Supports 1:1, 9:16, 16:9, 3:2 aspect ratios
                       </span>
                     )}
                   </span>
                 </h5>
 
                 <button
-                  className="bg-[#C72030] hover:bg-[#B8252F] text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59] transition-colors"
                   type="button"
                   onClick={() => setShowCoverUploader(true)}
                 >
-                  <Plus size={16} />
-                  <span>Add Cover Image</span>
+                  <span>Add</span>
                 </button>
               </div>
 
@@ -2403,43 +2413,6 @@ const EventEdit = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                          {formData.cover_image?.document_url && (
-                            <TableRow className="hover:bg-gray-50">
-                              <TableCell>
-                                {formData.cover_image.document_file_name ||
-                                  formData.cover_image.file_name ||
-                                  formData.cover_image.document_url
-                                    ?.split("/")
-                                    ?.pop() ||
-                                  "Cover Image"}
-                              </TableCell>
-                              <TableCell>
-                                <img
-                                  src={formData.cover_image.document_url}
-                                  alt="Cover Preview"
-                                  className="img-fluid rounded"
-                                  style={{
-                                    maxWidth: "100px",
-                                    maxHeight: "100px",
-                                    objectFit: "cover",
-                                  }}
-                                />
-                              </TableCell>
-                              <TableCell>N/A</TableCell>
-                              <TableCell>
-                                <button
-                                  type="button"
-                                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors duration-200"
-                                  onClick={() =>
-                                    handleFetchedDiscardGallery("cover_image")
-                                  }
-                                >
-                                  Delete
-                                </button>
-                              </TableCell>
-                            </TableRow>
-                          )}
-
                           {coverImageRatios.flatMap(({ key, label }) => {
                             const files = Array.isArray(formData[key])
                               ? formData[key]
@@ -2488,7 +2461,6 @@ const EventEdit = () => {
                                   <TableCell>
                                     <button
                                       type="button"
-                                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors duration-200"
                                       onClick={() =>
                                         handleFetchedDiscardGallery(
                                           key,
@@ -2497,7 +2469,7 @@ const EventEdit = () => {
                                         )
                                       }
                                     >
-                                      Delete
+                                      <Trash2 className="w-4 h-4 text-[#C72030]" />
                                     </button>
                                   </TableCell>
                                 </TableRow>
@@ -2522,28 +2494,27 @@ const EventEdit = () => {
 
                   <div className="mb-6">
                     <div className="flex justify-between items-center mb-4">
-                      <h5 className="text-base font-semibold">
+                      <h5 className="text-base font-semibold inline-flex items-center gap-1">
                         Event Attachment Images{" "}
                         <span
-                          className="tooltip-container relative inline-block cursor-pointer"
+                          className="relative inline-block cursor-pointer"
                           onMouseEnter={() => setShowAttachmentTooltip(true)}
                           onMouseLeave={() => setShowAttachmentTooltip(false)}
                         >
-                          [i]
+                          <Info className="w-5 h-5 fill-black text-white" />
                           {showAttachmentTooltip && (
-                            <span className="tooltip-text">
-                              Max Upload Size for video 10 MB and for image 3 MB
+                            <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                              Max Upload Size 3 MB (Images), 10 MB (Videos). Supports 1:1, 9:16, 16:9, 3:2 aspect ratios
                             </span>
                           )}
                         </span>
                       </h5>
                       <button
-                        className="bg-[#C72030] hover:bg-[#B8252F] text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59] transition-colors"
                         type="button"
                         onClick={() => setShowEventUploader(true)}
                       >
-                        <Plus size={16} />
-                        <span>Add Event Images</span>
+                        <span>Add</span>
                       </button>
                       {showEventUploader && (
                         <ProjectImageVideoUpload
@@ -2608,13 +2579,12 @@ const EventEdit = () => {
                                   <TableCell>
                                     <button
                                       type="button"
-                                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors duration-200"
                                       onClick={() =>
                                         handleFetchedDiscardGallery("attachfile", idx, file.id)
                                       }
                                       title="Remove attached file"
                                     >
-                                      Delete
+                                      <Trash2 className="w-4 h-4 text-[#C72030]" />
                                     </button>
                                   </TableCell>
                                 </TableRow>
@@ -2695,7 +2665,6 @@ const EventEdit = () => {
                                   <TableCell>
                                     <button
                                       type="button"
-                                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors duration-200"
                                       onClick={() =>
                                         handleFetchedDiscardGallery(
                                           key,
@@ -2704,7 +2673,7 @@ const EventEdit = () => {
                                         )
                                       }
                                     >
-                                      Delete
+                                      <Trash2 className="w-4 h-4 text-[#C72030]" />
                                     </button>
                                   </TableCell>
                                 </TableRow>
@@ -3436,8 +3405,8 @@ const EventEdit = () => {
                       <p className="text-sm text-gray-500">Display this event on the home page</p>
                     </div>
                     <Switch
-                      checked={visibility.showOnHomePage}
-                      onChange={(e) => setVisibility(prev => ({ ...prev, showOnHomePage: e.target.checked }))}
+                      checked={formData.showOnHomePage || false}
+                      onChange={(e) => handleInputChange('showOnHomePage', e.target.checked)}
                       sx={{
                         '& .MuiSwitch-switchBase.Mui-checked': {
                           color: '#C72030',
@@ -3450,14 +3419,14 @@ const EventEdit = () => {
                   </div>
 
                   {/* Show on Project Detail Page */}
-                  <div className="flex items-center justify-between">
+                  {/* <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
                       <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
                     </div>
                     <Switch
-                      checked={visibility.showOnProjectDetailPage}
-                      onChange={(e) => setVisibility(prev => ({ ...prev, showOnProjectDetailPage: e.target.checked }))}
+                      checked={formData.showOnProjectDetailPage || false}
+                      onChange={(e) => handleInputChange('showOnProjectDetailPage', e.target.checked)}
                       sx={{
                         '& .MuiSwitch-switchBase.Mui-checked': {
                           color: '#C72030',
@@ -3467,17 +3436,17 @@ const EventEdit = () => {
                         },
                       }}
                     />
-                  </div>
+                  </div> */}
 
                   {/* Show on Booking Page */}
-                  <div className="flex items-center justify-between">
+                  {/* <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
                       <p className="text-sm text-gray-500">Display this event on the home page</p>
                     </div>
                     <Switch
-                      checked={visibility.showOnBookingPage}
-                      onChange={(e) => setVisibility(prev => ({ ...prev, showOnBookingPage: e.target.checked }))}
+                      checked={formData.showOnBookingPage || false}
+                      onChange={(e) => handleInputChange('showOnBookingPage', e.target.checked)}
                       sx={{
                         '& .MuiSwitch-switchBase.Mui-checked': {
                           color: '#C72030',
@@ -3487,17 +3456,17 @@ const EventEdit = () => {
                         },
                       }}
                     />
-                  </div>
+                  </div> */}
 
                   {/* Featured Event */}
-                  <div className="flex items-center justify-between">
+                  {/* <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
                       <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
                     </div>
                     <Switch
-                      checked={visibility.featuredEvent}
-                      onChange={(e) => setVisibility(prev => ({ ...prev, featuredEvent: e.target.checked }))}
+                      checked={formData.featuredEvent || false}
+                      onChange={(e) => handleInputChange('featuredEvent', e.target.checked)}
                       sx={{
                         '& .MuiSwitch-switchBase.Mui-checked': {
                           color: '#C72030',
@@ -3507,7 +3476,7 @@ const EventEdit = () => {
                         },
                       }}
                     />
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
@@ -3680,7 +3649,7 @@ const EventEdit = () => {
                   </button>
                 </div>
                 <div className="p-6 space-y-6">
-                  <div>
+                  {/* <div>
                     <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
                       <InputLabel shrink>Selected Channel Partners</InputLabel>
                       <MuiSelect
@@ -3709,7 +3678,7 @@ const EventEdit = () => {
                         ))}
                       </MuiSelect>
                     </FormControl>
-                  </div>
+                  </div> */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
                     <div className="flex gap-6 mb-4">
@@ -3761,17 +3730,17 @@ const EventEdit = () => {
 
               <div className="flex gap-4 justify-center pt-6">
                 <button
-                  onClick={handleSubmit}
                   type="submit"
-                  className="px-6 py-2.5 bg-[#C72030] hover:bg-[#B8252F] text-white rounded-lg transition-colors duration-200"
+                  onClick={handleSubmit}
                   disabled={loading}
+                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Submit
+                  {loading ? 'Submitting...' : 'Submit Event'}
                 </button>
                 <button
                   type="button"
-                  className="px-6 py-2.5 border-2 border-[#C72030] text-[#C72030] hover:bg-[#C72030] hover:text-white rounded-lg transition-colors duration-200"
                   onClick={handleCancel}
+                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
                 >
                   Cancel
                 </button>

@@ -86,6 +86,7 @@ const Amenities = () => {
     const formData = new FormData();
     formData.append("amenity_setup[name]", name);
     formData.append("amenity_setup[night_mode]", nightMode);
+    formData.append("amenity_setup[active]", "true");
     if (icon) {
       formData.append("icon", icon);
     }
@@ -216,7 +217,8 @@ const Amenities = () => {
     {/* Icon Upload */}
     <div className="border border-gray-300 rounded-md p-4 mb-4">
       <span className="block text-sm font-medium text-gray-700 mb-3">
-        Upload Icon <span className="text-red-500">*</span>
+        Upload Icon 
+        {/* <span className="text-red-500">*</span> */}
       </span>
 
       {/* Hidden File Input */}
@@ -268,7 +270,8 @@ const Amenities = () => {
     {/* Dark Mode Icon Upload */}
     <div className="border border-gray-300 rounded-md p-4">
       <span className="block text-sm font-medium text-gray-700 mb-3">
-        Dark Mode Icon <span className="text-red-500">*</span>
+        Dark Mode Icon 
+        {/* <span className="text-red-500">*</span> */}
       </span>
 
       {/* Hidden File Input */}
