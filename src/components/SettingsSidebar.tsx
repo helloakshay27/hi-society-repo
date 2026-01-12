@@ -156,6 +156,12 @@ export const SettingsSidebar: React.FC = () => {
       icon: HelpCircle,
       path: "/settings/faq-subcategory-list",
     },
+      {
+      id: "image-configuration-list",
+      label: "Image Configuration",
+      icon: HelpCircle,
+      path: "/settings/image-config-list",
+    },
   ];
 
   const isActive = (path: string) => {

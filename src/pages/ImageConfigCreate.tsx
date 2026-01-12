@@ -1,12 +1,38 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "../styles/mor.css";
 import { toast } from "sonner";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { ArrowLeft, Image } from "lucide-react";
+import { FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { Button } from "@/components/ui/button";
+
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
 
 
 const CreateImageConfiguration = () => {
+  const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [selectedName, setSelectedName] = useState("");
@@ -127,18 +153,18 @@ const CreateImageConfiguration = () => {
       };
 
       await axios.post(
-        `${baseURL}system_constants.json`,
+        `${baseURL}/system_constants.json`,
         createData,
         {
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
+                   'Authorization': getAuthHeader(),
+                   'Content-Type': 'application/json',
+                 },
         }
       );
 
       toast.success("Image configuration created successfully!");
-      navigate("/setup-member/image-config-list");
+      navigate("/settings/image-config-list");
     } catch (error) {
       console.error("API Error:", error.response?.data || error.message);
       toast.error(
@@ -152,89 +178,132 @@ const CreateImageConfiguration = () => {
   };
 
   const handleCancel = () => {
-    navigate("/setup-member/image-config-list");
+    navigate("/settings/image-config-list");
+  };
+
+  const handleGoBack = () => {
+    navigate(-1);
   };
 
   return (
-    <div className="main-content">
-      <div className="website-content overflow-auto">
-        <div className="module-data-section container-fluid">
-          <form onSubmit={handleSubmit}>
-            <div className="card mt-4 pb-4 mx-4">
-              <div className="card-header">
-                <h3 className="card-title">Add Image Configuration</h3>
-              </div>
-              <div className="card-body">
-                <div className="row">
-                  <div className="col-md-3 mb-4">
-                    <div className="form-group">
-                      <label>
-                        Name <span className="otp-asterisk">*</span>
-                      </label>
-                      <SelectBox
-                        options={nameOptions}
-                        defaultValue={selectedName}
-                        onChange={handleNameChange}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col-md-3 mb-4">
-                    <div className="form-group">
-                      <label>
-                        Value <span className="otp-asterisk">*</span>
-                      </label>
-                      <SelectBox
-                        options={selectedName ? valueOptionsMap[selectedName] : []}
-                        defaultValue={selectedValue}
-                        onChange={handleValueChange}
-                      />
-                      {!selectedName && (
-                        <small className="text-muted">
-                          Please select a name first
-                        </small>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Submit and Cancel Buttons */}
-            <div className="row mt-2 justify-content-center">
-              <div className="col-md-2">
-                <button
-                  type="submit"
-                  className="purple-btn2 w-100"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                      Submitting...
-                    </>
-                  ) : (
-                    "Submit"
-                  )}
-                </button>
-              </div>
-              <div className="col-md-2">
-                <button
-                  type="button"
-                  className="purple-btn2 w-100"
-                  onClick={handleCancel}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </form>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button 
+            onClick={handleGoBack}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Setup Member</span>
+          <span>{">"}</span>
+          <span>Image Configuration</span>
+          <span>{">"}</span>
+          <span className="text-gray-900 font-medium">Create</span>
         </div>
+        <h1 className="text-2xl font-bold text-gray-900">CREATE IMAGE CONFIGURATION</h1>
       </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#E5E0D3' }}>
+                <Image size={16} color="#C72030" />
+              </span>
+              Image Configuration Details
+            </h2>
+          </div>
+         
+          <div className="p-6 space-y-6">
+            <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
+              {/* Name Field */}
+              <div>
+                <FormControl
+                  variant="outlined"
+                  sx={{
+                    width: "350px",
+                    "& .MuiInputBase-root": fieldStyles,
+                  }}
+                  required
+                >
+                  <InputLabel shrink>Name</InputLabel>
+                  <MuiSelect
+                    value={selectedName}
+                    onChange={(e) => handleNameChange(e.target.value)}
+                    label="Name"
+                    notched
+                    displayEmpty
+                    disabled={loading}
+                  >
+                    <MenuItem value="">Select Name</MenuItem>
+                    {nameOptions.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+              </div>
+
+              {/* Value Field */}
+              <div>
+                <FormControl
+                  variant="outlined"
+                  sx={{
+                    width: "350px",
+                    "& .MuiInputBase-root": fieldStyles,
+                  }}
+                  required
+                  disabled={!selectedName}
+                >
+                  <InputLabel shrink>Value</InputLabel>
+                  <MuiSelect
+                    value={selectedValue}
+                    onChange={(e) => handleValueChange(e.target.value)}
+                    label="Value"
+                    notched
+                    displayEmpty
+                    disabled={loading || !selectedName}
+                  >
+                    <MenuItem value="">Select Value</MenuItem>
+                    {selectedName && valueOptionsMap[selectedName]?.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+                {!selectedName && (
+                  <small className="text-gray-500 mt-1 block">
+                    Please select a name first
+                  </small>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 justify-center pt-6">
+          <Button
+            type="submit"
+            className="bg-[#C72030] hover:bg-[#C72030] text-white px-8 py-2"
+            disabled={loading}
+          >
+            {loading ? "Submitting..." : "Submit"}
+          </Button>
+          <Button
+            type="button"
+            onClick={handleGoBack}
+            className="border-[#C4B89D59] text-gray-700 hover:bg-gray-50 px-8 py-2"
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };
