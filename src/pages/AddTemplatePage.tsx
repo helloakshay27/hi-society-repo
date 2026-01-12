@@ -288,6 +288,7 @@ export default function AddTemplatePage() {
                                 <MenuItem value="Inactive">Inactive</MenuItem>
                             </Select>
                         </FormControl>
+                    </Box>
                     <Box sx={{ mt: 3, width: "100%" }}>
                           <TextField
                            label="Description"
