@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import axios from 'axios';
+import { getFullUrl } from '@/config/apiConfig';
 
 const SectionCard = styled(Paper)(() => ({
     backgroundColor: 'white',
@@ -134,7 +135,7 @@ export default function AddTemplatePage() {
         setLoading(true);
         try {
             const response = await axios.get(
-                `https://uat-hi-society.lockated.com/offer_templates/${id}.json`,
+                getFullUrl(`/offer_templates/${id}.json`),
                 {
                     params: {
                         token: 'bfa5004e7b0175622be8f7e69b37d01290b737f82e078414'
@@ -193,7 +194,7 @@ export default function AddTemplatePage() {
 
             if (isEditMode) {
                 await axios.put(
-                    `https://uat-hi-society.lockated.com/offer_templates/${id}.json`,
+                    getFullUrl(`/offer_templates/${id}.json`),
                     payload,
                     {
                         params: {
@@ -204,7 +205,7 @@ export default function AddTemplatePage() {
                 toast.success('Template updated successfully!');
             } else {
                 await axios.post(
-                    'https://uat-hi-society.lockated.com/offer_templates.json',
+                    getFullUrl('/offer_templates.json'),
                     payload,
                     {
                         params: {

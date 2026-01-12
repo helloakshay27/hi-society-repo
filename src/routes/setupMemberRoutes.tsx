@@ -26,6 +26,7 @@ const AddBusinessDirectoryPage = lazy(() => import("@/pages/AddBusinessDirectory
 const OfferViewPage = lazy(() => import("@/pages/OfferViewPage"));
 const TemplateList = lazy(() => import("@/pages/TemplateList"));
 const AddTemplatePage = lazy(() => import("@/pages/AddTemplatePage"));
+const TemplateView = lazy(() => import("@/pages/TemplateView"));
 const Amenities = lazy(() => import("@/pages/Amenities"));
 const AmenitiesList = lazy(() => import("@/pages/AmenitiesList"));
 const BankDetailsCreate = lazy(() => import("@/pages/BankDetailsCreate"));
@@ -602,8 +603,9 @@ export const setupMemberRoutes = (
 
     {/* Template Routes */}
     <Route path="/settings/template-list" Component={withSuspense(TemplateList)} />
+    <Route path="/settings/template/list" Component={withSuspense(TemplateList)} />
     <Route path="/settings/template/add" Component={withSuspense(AddTemplatePage)} />
     <Route path="/settings/template/edit/:id" Component={withSuspense(AddTemplatePage)} />
-    <Route path="/settings/template/view/:id" Component={withSuspense(AddTemplatePage)} />
+    <Route path="/settings/template/view/:id" Component={withSuspense(TemplateView)} />
   </>
 );

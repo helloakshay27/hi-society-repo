@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getFullUrl } from '@/config/apiConfig';
 
 interface Template {
   id: number;
@@ -31,7 +32,7 @@ export default function TemplateList() {
     setLoading(true);
     try {
       const response = await axios.get<Template[]>(
-        'https://uat-hi-society.lockated.com/offer_templates.json',
+        getFullUrl('/offer_templates.json'),
         {
           params: {
             token: 'bfa5004e7b0175622be8f7e69b37d01290b737f82e078414'
@@ -127,11 +128,23 @@ export default function TemplateList() {
 
   const handleToggleStatus = async (id: number, newStatus: boolean) => {
     try {
-      // TODO: Implement actual API call to update status
-      console.log('Toggle status for template:', id, newStatus);
+      await axios.put(
+        getFullUrl(`/offer_templates/${id}.json`),
+        {
+          offer_template: {
+            active: newStatus ? 1 : 0
+          }
+        },
+        {
+          params: {
+            token: 'bfa5004e7b0175622be8f7e69b37d01290b737f82e078414'
+          }
+        }
+      );
       toast.success('Status updated successfully');
       fetchTemplates();
     } catch (error) {
+      console.error('Error updating status:', error);
       toast.error('Failed to update status');
     }
   };

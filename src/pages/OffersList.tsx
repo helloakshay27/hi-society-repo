@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Settings, Calendar, Filter, Eye, Pencil, Plus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Button as MuiButton } from '@mui/material';
+import { toast, Toaster } from 'sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -70,6 +73,38 @@ export default function OffersList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [showDraftModal, setShowDraftModal] = useState(false);
+
+  // LocalStorage keys (must match AddOfferPage)
+  const STORAGE_KEYS = {
+    FORM_DATA: 'addOffer_formData',
+    UPLOADED_IMAGES: 'addOffer_uploadedImages',
+    ACTIVE_STEP: 'addOffer_activeStep',
+    COMPLETED_STEPS: 'addOffer_completedSteps',
+  };
+
+  // Check if draft exists in localStorage
+  const checkDraftExists = () => {
+    try {
+      const savedFormData = localStorage.getItem(STORAGE_KEYS.FORM_DATA);
+      const savedActiveStep = localStorage.getItem(STORAGE_KEYS.ACTIVE_STEP);
+      return !!(savedFormData || savedActiveStep);
+    } catch (error) {
+      console.error('Error checking draft:', error);
+      return false;
+    }
+  };
+
+  // Clear all draft data from localStorage
+  const clearDraft = () => {
+    try {
+      Object.values(STORAGE_KEYS).forEach(key => {
+        localStorage.removeItem(key);
+      });
+    } catch (error) {
+      console.error('Error clearing draft:', error);
+    }
+  };
 
   // Stats
   const [totalOffers, setTotalOffers] = useState(0);
@@ -315,7 +350,27 @@ export default function OffersList() {
   };
 
   const handleAddOffer = () => {
+    // Check if draft exists before navigating
+    if (checkDraftExists()) {
+      setShowDraftModal(true);
+    } else {
+      navigate('/offer/add');
+    }
+  };
+
+  const handleContinueDraft = () => {
+    setShowDraftModal(false);
     navigate('/offer/add');
+    // The AddOfferPage will handle loading the draft
+  };
+
+  const handleStartFresh = () => {
+    clearDraft();
+    setShowDraftModal(false);
+    navigate('/offer/add');
+    toast.info('Starting fresh! Previous draft has been cleared.', {
+      duration: 3000,
+    });
   };
 
   const renderCustomActions = () => {
@@ -344,6 +399,56 @@ export default function OffersList() {
 
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
+      <Toaster position="top-right" richColors closeButton />
+      
+      {/* Draft Detection Modal */}
+      <Dialog open={showDraftModal} onClose={() => setShowDraftModal(false)}>
+        <DialogTitle sx={{ fontFamily: 'Work Sans, sans-serif', fontWeight: 600 }}>
+          Draft Found
+        </DialogTitle>
+        <DialogContent sx={{ fontFamily: 'Work Sans, sans-serif' }}>
+          We found a saved draft for creating an offer. Would you like to continue where you left off or start fresh?
+        </DialogContent>
+        <DialogActions sx={{ padding: '16px 24px' }}>
+          <MuiButton
+            onClick={handleStartFresh}
+            sx={{
+              backgroundColor: '#e7e3d9',
+              color: '#C72030',
+              borderRadius: 0,
+              textTransform: 'none',
+              padding: '8px 16px',
+              fontFamily: 'Work Sans, sans-serif',
+              fontWeight: 500,
+              '&:hover': {
+                backgroundColor: '#d9d5c9',
+              },
+            }}
+          >
+            Start Fresh
+          </MuiButton>
+          <MuiButton
+            onClick={handleContinueDraft}
+            sx={{
+              backgroundColor: '#C72030',
+              color: 'white',
+              borderRadius: 0,
+              textTransform: 'none',
+              padding: '8px 16px',
+              fontFamily: 'Work Sans, sans-serif',
+              fontWeight: 500,
+              boxShadow: '0 2px 4px rgba(199, 32, 48, 0.2)',
+              '&:hover': {
+                backgroundColor: '#B8252F',
+                boxShadow: '0 4px 8px rgba(199, 32, 48, 0.3)',
+              },
+            }}
+          >
+            Continue Draft
+          </MuiButton>
+        </DialogActions>
+      </Dialog>
+
       <Tabs defaultValue="offers" className="w-full" onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
           <TabsTrigger

@@ -4,6 +4,7 @@ import { Settings, Edit } from '@mui/icons-material';
 import { toast, Toaster } from 'sonner';
 import axios from 'axios';
 import { getFullUrl } from '@/config/apiConfig';
+import ProjectBannerUpload from '@/components/reusable/ProjectBannerUpload';
 import Select from 'react-select';
 import {
     Box,
@@ -26,7 +27,11 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    IconButton,
+    CircularProgress,
+    Backdrop,
 } from '@mui/material';
+import { InfoOutlined, Close as CloseIcon } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { boxShadow } from 'html2canvas/dist/types/css/property-descriptors/box-shadow';
 
@@ -323,7 +328,6 @@ interface OfferTemplate {
     updated_at: string;
     url: string;
 }
-
 interface Project {
     id: number;
     name: string;
@@ -342,6 +346,11 @@ interface OfferFormData {
     status: string;
     showOnHomePage: boolean;
     featuredOffer: boolean;
+    image_1_by_1?: any[];
+    image_16_by_9?: any[];
+    image_3_by_2?: any[];
+    image_9_by_16?: any[];
+    offer_pdf?: any[];
 }
 
 export default function AddOfferPage() {
@@ -363,6 +372,11 @@ export default function AddOfferPage() {
         status: 'Active',
         showOnHomePage: false,
         featuredOffer: false,
+        image_1_by_1: [],
+        image_16_by_9: [],
+        image_3_by_2: [],
+        image_9_by_16: [],
+        offer_pdf: [],
     });
 
     const [uploadedImages, setUploadedImages] = useState<Array<{ id: string; name: string; file: File; preview: string }>>([]);
@@ -371,6 +385,129 @@ export default function AddOfferPage() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loadingProjects, setLoadingProjects] = useState(false);
     const [isEditMode, setIsEditMode] = useState(!!offerId);
+    const [showDraftModal, setShowDraftModal] = useState(false);
+    const [hasSavedDraft, setHasSavedDraft] = useState(false);
+    const [showBannerModal, setShowBannerModal] = useState(false);
+    const [showTooltipBanner, setShowTooltipBanner] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // LocalStorage keys for draft persistence
+    const STORAGE_KEYS = {
+        FORM_DATA: 'addOffer_formData',
+        UPLOADED_IMAGES: 'addOffer_uploadedImages',
+        ACTIVE_STEP: 'addOffer_activeStep',
+        COMPLETED_STEPS: 'addOffer_completedSteps',
+    };
+
+    // Save to localStorage
+    const saveToLocalStorage = (key: string, data: any) => {
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+        } catch (error) {
+            console.error('Error saving to localStorage:', error);
+        }
+    };
+
+    // Load from localStorage
+    const loadFromLocalStorage = (key: string) => {
+        try {
+            const item = localStorage.getItem(key);
+            return item ? JSON.parse(item) : null;
+        } catch (error) {
+            console.error('Error loading from localStorage:', error);
+            return null;
+        }
+    };
+
+    // Clear all form data from localStorage
+    const clearAllFromLocalStorage = () => {
+        Object.values(STORAGE_KEYS).forEach(key => {
+            localStorage.removeItem(key);
+        });
+    };
+
+    // Image ratio configuration
+    const projectUploadConfig = {
+        image: ["9:16", "1:1", "16:9", "3:2"],
+    };
+
+    const bannerImageType = "image";
+    const selectedBannerRatios = projectUploadConfig[bannerImageType] || [];
+    const bannerImageLabel = bannerImageType.replace(/(^\w|\s\w)/g, (m) =>
+        m.toUpperCase()
+    );
+    const dynamicDescription = `Supports ${selectedBannerRatios.join(", ")} aspect ratios`;
+
+    const project_banner = [
+        { key: "image_1_by_1", label: "1:1" },
+        { key: "image_16_by_9", label: "16:9" },
+        { key: "image_9_by_16", label: "9:16" },
+        { key: "image_3_by_2", label: "3:2" },
+    ];
+
+    // Helper function to format ratio
+    const formatRatio = (value) => {
+        if (!value) return "";
+        const match = value.match(/(\d+)_by_(\d+)/);
+        if (match) {
+            return `${match[1]}:${match[2]}`;
+        }
+        return value;
+    };
+
+    // Update formData helper
+    const updateFormData = (key, files) => {
+        setFormData((prev) => {
+            const existing = Array.isArray(prev[key]) ? prev[key] : [];
+            return {
+                ...prev,
+                [key]: [...existing, ...files],
+            };
+        });
+    };
+
+    // Handle cropped images
+    const handleCroppedImages = (validImages, type = "banner") => {
+        if (!validImages || validImages.length === 0) {
+            toast.error(`No valid ${type} image${type === "banner" ? "" : "s"} selected.`);
+            setShowBannerModal(false);
+            return;
+        }
+
+        validImages.forEach((img) => {
+            const formattedRatio = img.ratio.replace(":", "_by_");
+            const key = `image_${formattedRatio}`.replace(/\s+/g, "_").toLowerCase();
+
+            // Add file_name property to the image object
+            const imageWithName = {
+                ...img,
+                file_name: img.name || `Banner Image ${Date.now()}`,
+            };
+
+            updateFormData(key, [imageWithName]);
+        });
+
+        setShowBannerModal(false);
+        toast.success('Images uploaded successfully');
+    };
+
+    // Discard image by ratio key
+    const discardImage = (key, imageToRemove) => {
+        setFormData((prev) => {
+            const updatedArray = (prev[key] || []).filter(
+                (img) => img.id !== imageToRemove.id
+            );
+
+            const newFormData = { ...prev };
+            if (updatedArray.length === 0) {
+                delete newFormData[key];
+            } else {
+                newFormData[key] = updatedArray;
+            }
+
+            return newFormData;
+        });
+    };
 
     // Fetch offer templates and projects on component mount
     useEffect(() => {
@@ -385,6 +522,64 @@ export default function AddOfferPage() {
             fetchOfferDetails(offerId);
         }
     }, [offerId]);
+
+    // Check for saved draft on component mount (only if not in edit mode)
+    useEffect(() => {
+        if (!offerId) {
+            const savedActiveStep = loadFromLocalStorage(STORAGE_KEYS.ACTIVE_STEP);
+            const savedFormData = loadFromLocalStorage(STORAGE_KEYS.FORM_DATA);
+            
+            // If there's a saved draft, show modal
+            if (savedActiveStep !== null || savedFormData !== null) {
+                setShowDraftModal(true);
+            }
+        }
+    }, [offerId]);
+
+    // Handler for continuing with draft
+    const handleContinueWithDraft = () => {
+        const savedActiveStep = loadFromLocalStorage(STORAGE_KEYS.ACTIVE_STEP);
+        const savedFormData = loadFromLocalStorage(STORAGE_KEYS.FORM_DATA);
+        const savedUploadedImages = loadFromLocalStorage(STORAGE_KEYS.UPLOADED_IMAGES);
+        const savedCompletedSteps = loadFromLocalStorage(STORAGE_KEYS.COMPLETED_STEPS);
+
+        // Restore active step
+        if (savedActiveStep !== null && typeof savedActiveStep === 'number') {
+            setActiveStep(savedActiveStep);
+        }
+
+        // Restore form data
+        if (savedFormData) {
+            setFormData(savedFormData);
+        }
+
+        // Restore uploaded images (without File objects for existing images)
+        if (savedUploadedImages && Array.isArray(savedUploadedImages)) {
+            setUploadedImages(savedUploadedImages);
+        }
+
+        // Restore completed steps
+        if (savedCompletedSteps && Array.isArray(savedCompletedSteps)) {
+            setCompletedSteps(savedCompletedSteps);
+        }
+
+        setShowDraftModal(false);
+
+        toast.info("Draft restored! Continue from where you left off.", {
+            duration: 3000,
+        });
+    };
+
+    // Handler for starting fresh
+    const handleStartFresh = () => {
+        clearAllFromLocalStorage();
+        setShowDraftModal(false);
+        setHasSavedDraft(false);
+
+        toast.info("Starting fresh! Previous draft has been cleared.", {
+            duration: 3000,
+        });
+    };
 
     const fetchOfferTemplates = async () => {
         setLoadingTemplates(true);
@@ -468,36 +663,49 @@ export default function AddOfferPage() {
                 status: offer.active === 1 ? 'Active' : 'Inactive',
                 showOnHomePage: offer.show_on_home === 1 || offer.show_on_home === true,
                 featuredOffer: offer.featured === 1 || offer.featured === true,
+                image_1_by_1: [],
+                image_16_by_9: [],
+                image_3_by_2: [],
+                image_9_by_16: [],
+                offer_pdf: [],
             });
             
-            // Handle existing images if available
-            const existingImages: Array<{ id: string; name: string; file: File; preview: string }> = [];
-            const seenFileNames = new Set<string>(); // Track unique image filenames
-            const imageFields = [
-                { data: offer.image_1_by_1, ratio: '1:1' },
-                { data: offer.image_16_by_9, ratio: '16:9' },
-                { data: offer.image_3_by_2, ratio: '3:2' },
-                { data: offer.image_9_by_16, ratio: '9:16' }
+            // Handle existing images by ratio
+            const imageRatioFields = [
+                { data: offer.image_1_by_1, key: 'image_1_by_1' },
+                { data: offer.image_16_by_9, key: 'image_16_by_9' },
+                { data: offer.image_3_by_2, key: 'image_3_by_2' },
+                { data: offer.image_9_by_16, key: 'image_9_by_16' }
             ];
             
-            for (const imgField of imageFields) {
-                if (imgField.data?.document_url && imgField.data?.document_file_name) {
-                    // Only add unique images (avoid duplicates when same image is used for all ratios)
-                    if (!seenFileNames.has(imgField.data.document_file_name)) {
-                        seenFileNames.add(imgField.data.document_file_name);
-                        existingImages.push({
-                            id: `existing-${imgField.ratio}-${Date.now()}`,
-                            name: imgField.data.document_file_name,
-                            file: null as any, // Existing images don't have File object
-                            preview: imgField.data.document_url
-                        });
-                    }
+            for (const field of imageRatioFields) {
+                if (field.data?.document_url && field.data?.document_file_name) {
+                    setFormData(prev => ({
+                        ...prev,
+                        [field.key]: [{
+                            id: field.data.id,
+                            document_file_name: field.data.document_file_name,
+                            document_url: field.data.document_url,
+                            file_name: field.data.document_file_name,
+                            preview: field.data.document_url,
+                            file: null,
+                        }]
+                    }));
                 }
             }
             
-            if (existingImages.length > 0) {
-                setUploadedImages(existingImages);
-                console.log('Loaded existing images:', existingImages);
+            // Handle existing PDF
+            if (offer.offer_pdf?.document_url && offer.offer_pdf?.document_file_name) {
+                setFormData(prev => ({
+                    ...prev,
+                    offer_pdf: [{
+                        id: offer.offer_pdf.id,
+                        document_file_name: offer.offer_pdf.document_file_name,
+                        document_url: offer.offer_pdf.document_url,
+                        file_name: offer.offer_pdf.document_file_name,
+                        file: null,
+                    }]
+                }));
             }
         } catch (error) {
             console.error('Error fetching offer details:', error);
@@ -583,9 +791,53 @@ export default function AddOfferPage() {
 
     const handleSaveDraft = async () => {
         try {
-            // TODO: Replace with actual API call
-            toast.success('Draft saved successfully!');
+            // Validate current step before saving
+            if (!validateStep(activeStep)) {
+                return;
+            }
+
+            // Mark current step as completed
+            if (!completedSteps.includes(activeStep)) {
+                setCompletedSteps(prev => {
+                    const updated = [...prev, activeStep];
+                    saveToLocalStorage(STORAGE_KEYS.COMPLETED_STEPS, updated);
+                    return updated;
+                });
+            }
+
+            // Save form data to localStorage
+            saveToLocalStorage(STORAGE_KEYS.FORM_DATA, formData);
+
+            // Save uploaded images to localStorage (serialize preview URLs only)
+            const imagesToSave = uploadedImages.map(img => ({
+                id: img.id,
+                name: img.name,
+                preview: img.preview,
+                file: null // Don't save File objects to localStorage
+            }));
+            saveToLocalStorage(STORAGE_KEYS.UPLOADED_IMAGES, imagesToSave);
+
+            // If not on the last step, move to next step
+            if (activeStep < steps.length - 1) {
+                const nextStep = activeStep + 1;
+                setActiveStep(nextStep);
+                saveToLocalStorage(STORAGE_KEYS.ACTIVE_STEP, nextStep);
+
+                toast.success('Draft saved successfully! Moving to next step.', {
+                    duration: 3000,
+                });
+            } else {
+                // On last step, just save without moving
+                saveToLocalStorage(STORAGE_KEYS.ACTIVE_STEP, activeStep);
+                
+                toast.success('Draft saved successfully!', {
+                    duration: 3000,
+                });
+            }
+
+            setHasSavedDraft(true);
         } catch (error) {
+            console.error('Error saving draft:', error);
             toast.error('Failed to save draft');
         }
     };
@@ -605,6 +857,7 @@ export default function AddOfferPage() {
             setCompletedSteps([...completedSteps, activeStep]);
         }
 
+        setIsSubmitting(true);
         try {
             const formDataPayload = new FormData();
 
@@ -630,16 +883,24 @@ export default function AddOfferPage() {
                 formDataPayload.append('offer[offer_template_id]', formData.legalPoliciesTemplate);
             }
 
-            // Add only NEW images (those with actual File objects)
-            const newImages = uploadedImages.filter(img => img.file !== null && img.file instanceof File);
-            if (newImages.length > 0) {
-                // For now, use the first new image for all ratios
-                // You can enhance this to support different ratios
-                const firstImage = newImages[0];
-                formDataPayload.append('offer[image_1_by_1]', firstImage.file);
-                formDataPayload.append('offer[image_16_by_9]', firstImage.file);
-                formDataPayload.append('offer[image_3_by_2]', firstImage.file);
-                formDataPayload.append('offer[image_9_by_16]', firstImage.file);
+            // Add images for each ratio
+            const imageRatioKeys = ['image_1_by_1', 'image_16_by_9', 'image_3_by_2', 'image_9_by_16'];
+            
+            for (const ratioKey of imageRatioKeys) {
+                const images = formData[ratioKey] || [];
+                const newImages = images.filter(img => img.file && img.file instanceof File);
+                
+                if (newImages.length > 0) {
+                    // Use the first image for this ratio
+                    formDataPayload.append(`offer[${ratioKey}]`, newImages[0].file);
+                }
+            }
+            
+            // Add PDF
+            const pdfFiles = formData.offer_pdf || [];
+            const newPdfFiles = pdfFiles.filter(pdf => pdf.file && pdf.file instanceof File);
+            if (newPdfFiles.length > 0) {
+                formDataPayload.append('offer[offer_pdf]', newPdfFiles[0].file);
             }
 
             let apiUrl = getFullUrl('/crm/offers.json');
@@ -665,6 +926,9 @@ export default function AddOfferPage() {
 
             toast.success(isEditMode ? 'Offer updated successfully!' : 'Offer created successfully!');
 
+            // Clear draft from localStorage after successful submission
+            clearAllFromLocalStorage();
+
             // Navigate after a short delay to show success message
             setTimeout(() => {
                 navigate('/maintenance/offers-list');
@@ -673,6 +937,8 @@ export default function AddOfferPage() {
             console.error('Error creating offer:', error);
             const errorMessage = error.response?.data?.message || 'Failed to create offer. Please try again.';
             toast.error(errorMessage);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -740,15 +1006,33 @@ export default function AddOfferPage() {
                                     sx={fieldStyles}
                                     fullWidth
                                 />
-                                <TextField
-                                    label="Offer Description"
-                                    required
-                                    value={formData.offerDescription}
-                                    onChange={(e) => handleInputChange('offerDescription', e.target.value)}
-                                    placeholder="Enter Description"
-                                    sx={fieldStyles}
-                                    fullWidth
-                                />
+                                <div className="relative">
+                                    <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
+                                        Offer Description <span className="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                        value={formData.offerDescription}
+                                        onChange={(e) => handleInputChange('offerDescription', e.target.value)}
+                                        className="
+                                            w-full
+                                            min-h-[150px]
+                                            border
+                                            border-gray-300
+                                            rounded-md
+                                            px-4
+                                            py-3
+                                            pt-4
+                                            text-sm
+                                            text-gray-700
+                                            focus:outline-none
+                                            focus:ring-2
+                                            focus:ring-[#C72030]
+                                            focus:border-transparent
+                                            resize-y
+                                        "
+                                        placeholder="Enter Description"
+                                    />
+                                </div>
                             </Box>
                             <Box sx={{ mt: 3 }}>
                                 <FormControl fullWidth sx={fieldStyles}>
@@ -789,93 +1073,247 @@ export default function AddOfferPage() {
                                 </Typography>
                             </Box>
                         </SectionHeader>
-                        <SectionBody>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                <Typography variant="body2" sx={{ fontFamily: 'Work Sans, sans-serif', fontWeight: 500 }}>
-                                    Offer Banner Image
-                                </Typography>
-                                <MuiButton
-                                    variant="outlined"
-                                    component="label"
-                                    sx={{
-                                        color: '#C72030',
-                                        borderColor: '#C72030',
-                                        textTransform: 'none',
-                                        borderRadius: 0,
-                                        fontSize: '14px',
-                                        fontFamily: 'Work Sans, sans-serif',
-                                        '&:hover': { borderColor: '#B8252F', backgroundColor: '#FFF5F5' }
-                                    }}
-                                >
-                                    Add
-                                    <input type="file" hidden accept="image/*" onChange={handleImageUpload} />
-                                </MuiButton>
-                            </Box>
+                        <SectionBody sx={{ maxHeight: '600px', overflowY: 'auto' }}>
+                            {/* Offer Banner Image Section */}
+                            <Box sx={{ mb: 4 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                    <Typography variant="body2" sx={{ fontFamily: 'Work Sans, sans-serif', fontWeight: 500, fontSize: '14px' }}>
+                                        Offer Banner Image
+                                    </Typography>
+                                    <button
+                                        className="px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded hover:bg-[#C4B89D59]/90 transition-colors"
+                                        type="button"
+                                        onClick={() => setShowBannerModal(true)}
+                                        style={{ fontSize: '14px', fontFamily: 'Work Sans, sans-serif' }}
+                                    >
+                                        Add
+                                    </button>
+                                </Box>
 
-                            {/* Image Table */}
-                            <TableContainer sx={{ border: '1px solid #ddd', borderRadius: '4px', overflow: 'hidden' }}>
-                                <Table>
-                                    <TableHead sx={{ backgroundColor: '#e7e3d9' }}>
-                                        <TableRow>
-                                            <TableCell sx={{ fontSize: '14px', fontWeight: 600, fontFamily: 'Work Sans, sans-serif', color: '#333' }}>
-                                                File Name
-                                            </TableCell>
-                                            <TableCell sx={{ fontSize: '14px', fontWeight: 600, fontFamily: 'Work Sans, sans-serif', color: '#333' }}>
-                                                Preview
-                                            </TableCell>
-                                            <TableCell sx={{ fontSize: '14px', fontWeight: 600, fontFamily: 'Work Sans, sans-serif', color: '#333' }}>
-                                                Ratio
-                                            </TableCell>
-                                            <TableCell sx={{ fontSize: '14px', fontWeight: 600, fontFamily: 'Work Sans, sans-serif', color: '#333' }}>
-                                                Action
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {getUniqueImages().length === 0 ? (
+                                {/* Upload Modal */}
+                                {showBannerModal && (
+                                    <ProjectBannerUpload
+                                        onClose={() => setShowBannerModal(false)}
+                                        includeInvalidRatios={false}
+                                        selectedRatioProp={selectedBannerRatios}
+                                        showAsModal
+                                        label={bannerImageLabel}
+                                        description={dynamicDescription}
+                                        onContinue={(validImages) =>
+                                            handleCroppedImages(validImages, "banner")
+                                        }
+                                    />
+                                )}
+
+                                {/* Banner Images Table */}
+                                <TableContainer sx={{ border: '1px solid #ddd', borderRadius: '4px' }}>
+                                    <Table>
+                                        <TableHead sx={{ backgroundColor: '#e7e3d9' }}>
                                             <TableRow>
-                                                <TableCell colSpan={4} align="center" sx={{ py: 4, color: '#999', fontSize: '14px' }}>
-                                                    No images uploaded yet
+                                                <TableCell sx={{ fontSize: '14px', fontWeight: 600, fontFamily: 'Work Sans, sans-serif', color: '#333' }}>
+                                                    File Name
+                                                </TableCell>
+                                                <TableCell sx={{ fontSize: '14px', fontWeight: 600, fontFamily: 'Work Sans, sans-serif', color: '#333' }}>
+                                                    Preview
+                                                </TableCell>
+                                                <TableCell sx={{ fontSize: '14px', fontWeight: 600, fontFamily: 'Work Sans, sans-serif', color: '#333' }}>
+                                                    Ratio
+                                                </TableCell>
+                                                <TableCell sx={{ fontSize: '14px', fontWeight: 600, fontFamily: 'Work Sans, sans-serif', color: '#333' }}>
+                                                    Action
                                                 </TableCell>
                                             </TableRow>
-                                        ) : (
-                                            getUniqueImages().map((image) => (
-                                                <TableRow key={image.id}>
-                                                    <TableCell sx={{ fontSize: '14px', color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
-                                                        {image.name}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <img
-                                                            src={image.preview}
-                                                            alt={image.name}
-                                                            style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '4px' }}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell sx={{ fontSize: '14px', color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
-                                                        NA
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <MuiButton
-                                                            onClick={() => handleRemoveImage(image.id)}
-                                                            sx={{
-                                                                color: '#C72030',
-                                                                textTransform: 'none',
-                                                                fontSize: '13px',
-                                                                fontFamily: 'Work Sans, sans-serif',
-                                                                p: 0,
-                                                                minWidth: 'auto',
-                                                                '&:hover': { backgroundColor: '#FFF5F5' }
-                                                            }}
-                                                        >
-                                                            Delete
-                                                        </MuiButton>
+                                        </TableHead>
+                                        <TableBody>
+                                            {(() => {
+                                                const allImages: any[] = [];
+                                                project_banner.forEach((ratio) => {
+                                                    const images = formData[ratio.key] || [];
+                                                    images.forEach((img) => {
+                                                        allImages.push({ ...img, ratio: ratio.label, ratioKey: ratio.key });
+                                                    });
+                                                });
+                                                
+                                                if (allImages.length === 0) {
+                                                    return (
+                                                        <TableRow>
+                                                            <TableCell colSpan={4} align="center" sx={{ py: 4, color: '#999', fontSize: '14px' }}>
+                                                                No images uploaded yet
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                }
+                                                
+                                                return allImages.map((img, index) => (
+                                                    <TableRow key={index}>
+                                                        <TableCell sx={{ fontSize: '14px', color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
+                                                            {img.file_name || img.document_file_name || 'Banner Image'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <img
+                                                                src={img.preview || img.document_url || (img.file ? URL.createObjectURL(img.file) : '')}
+                                                                alt={img.file_name || img.document_file_name || 'Banner'}
+                                                                style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '4px' }}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell sx={{ fontSize: '14px', color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
+                                                            {img.ratio}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <MuiButton
+                                                                onClick={() => discardImage(img.ratioKey, img)}
+                                                                sx={{
+                                                                    color: '#C72030',
+                                                                    textTransform: 'none',
+                                                                    fontSize: '13px',
+                                                                    fontFamily: 'Work Sans, sans-serif',
+                                                                    p: 0,
+                                                                    minWidth: 'auto',
+                                                                    '&:hover': { backgroundColor: '#FFF5F5' }
+                                                                }}
+                                                            >
+                                                                Delete
+                                                            </MuiButton>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ));
+                                            })()}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </Box>
+
+                            {/* File Upload Section (PDF) */}
+                            <Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                    <Box>
+                                        <Typography variant="body2" sx={{ fontFamily: 'Work Sans, sans-serif', fontWeight: 500, fontSize: '14px' }}>
+                                            File Upload
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ fontFamily: 'Work Sans, sans-serif', fontSize: '12px', color: '#999' }}>
+                                            File Upload: Only (.pdf) or (.docx) files are accepted
+                                        </Typography>
+                                    </Box>
+                                    <MuiButton
+                                        variant="outlined"
+                                        component="label"
+                                        sx={{
+                                            color: '#C72030',
+                                            borderColor: '#C72030',
+                                            textTransform: 'none',
+                                            borderRadius: 0,
+                                            fontSize: '14px',
+                                            fontFamily: 'Work Sans, sans-serif',
+                                            '&:hover': { borderColor: '#B8252F', backgroundColor: '#FFF5F5' }
+                                        }}
+                                    >
+                                        Add
+                                        <input
+                                            type="file"
+                                            hidden
+                                            accept=".pdf,.docx"
+                                            onChange={(e) => {
+                                                if (e.target.files && e.target.files[0]) {
+                                                    const file = e.target.files[0];
+                                                    const maxSize = 20 * 1024 * 1024; // 20MB
+                                                    
+                                                    if (file.size > maxSize) {
+                                                        toast.error('File size must be less than 20MB');
+                                                        return;
+                                                    }
+                                                    
+                                                    const newPdf = {
+                                                        id: Date.now().toString(),
+                                                        file_name: file.name,
+                                                        file: file,
+                                                        preview: null,
+                                                    };
+                                                    
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        offer_pdf: [...(prev.offer_pdf || []), newPdf]
+                                                    }));
+                                                    
+                                                    toast.success('PDF uploaded successfully');
+                                                }
+                                            }}
+                                        />
+                                    </MuiButton>
+                                </Box>
+
+                                {/* PDF Files Table */}
+                                <TableContainer sx={{ border: '1px solid #ddd', borderRadius: '4px' }}>
+                                    <Table>
+                                        <TableHead sx={{ backgroundColor: '#e7e3d9' }}>
+                                            <TableRow>
+                                                <TableCell sx={{ fontSize: '14px', fontWeight: 600, fontFamily: 'Work Sans, sans-serif', color: '#333' }}>
+                                                    File Name
+                                                </TableCell>
+                                                <TableCell sx={{ fontSize: '14px', fontWeight: 600, fontFamily: 'Work Sans, sans-serif', color: '#333' }}>
+                                                    Preview
+                                                </TableCell>
+                                                <TableCell sx={{ fontSize: '14px', fontWeight: 600, fontFamily: 'Work Sans, sans-serif', color: '#333' }}>
+                                                    Ratio
+                                                </TableCell>
+                                                <TableCell sx={{ fontSize: '14px', fontWeight: 600, fontFamily: 'Work Sans, sans-serif', color: '#333' }}>
+                                                    Action
+                                                </TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {(!formData.offer_pdf || formData.offer_pdf.length === 0) ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={4} align="center" sx={{ py: 4, color: '#999', fontSize: '14px' }}>
+                                                        No files uploaded yet
                                                     </TableCell>
                                                 </TableRow>
-                                            ))
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+                                            ) : (
+                                                formData.offer_pdf.map((pdf, index) => (
+                                                    <TableRow key={index}>
+                                                        <TableCell sx={{ fontSize: '14px', color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
+                                                            {pdf.file_name || pdf.document_file_name || 'Document'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {pdf.document_url ? (
+                                                                <a href={pdf.document_url} target="_blank" rel="noopener noreferrer" style={{ color: '#C72030', textDecoration: 'underline' }}>
+                                                                    View
+                                                                </a>
+                                                            ) : (
+                                                                <Typography sx={{ fontSize: '13px', color: '#999' }}>-</Typography>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell sx={{ fontSize: '14px', color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
+                                                            -
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <MuiButton
+                                                                onClick={() => {
+                                                                    setFormData(prev => ({
+                                                                        ...prev,
+                                                                        offer_pdf: (prev.offer_pdf || []).filter((_, i) => i !== index)
+                                                                    }));
+                                                                    toast.success('PDF removed successfully');
+                                                                }}
+                                                                sx={{
+                                                                    color: '#C72030',
+                                                                    textTransform: 'none',
+                                                                    fontSize: '13px',
+                                                                    fontFamily: 'Work Sans, sans-serif',
+                                                                    p: 0,
+                                                                    minWidth: 'auto',
+                                                                    '&:hover': { backgroundColor: '#FFF5F5' }
+                                                                }}
+                                                            >
+                                                                Delete
+                                                            </MuiButton>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </Box>
                         </SectionBody>
                     </SectionCard>
                 )
@@ -1053,8 +1491,67 @@ export default function AddOfferPage() {
     };
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 4, lg: 6 }, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+        <Box sx={{ p: { xs: 2, sm: 4, lg: 6 }, backgroundColor: '#f5f5f5', maxHeight: '90vh', overflowY: 'auto' }}>
             <Toaster position="top-right" richColors closeButton />
+
+            {/* Draft Restoration Modal */}
+            {showDraftModal && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 9999,
+                    }}
+                >
+                    <Box
+                        sx={{
+                            backgroundColor: 'white',
+                            borderRadius: '8px',
+                            padding: '32px',
+                            maxWidth: '500px',
+                            width: '90%',
+                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                        }}
+                    >
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontFamily: 'Work Sans, sans-serif',
+                                fontWeight: 600,
+                                marginBottom: '16px',
+                                color: '#333',
+                            }}
+                        >
+                            Draft Found
+                        </Typography>
+                        <Typography
+                            variant="body1"
+                            sx={{
+                                fontFamily: 'Work Sans, sans-serif',
+                                marginBottom: '24px',
+                                color: '#666',
+                            }}
+                        >
+                            We found a saved draft for this offer. Would you like to continue where you left off or start fresh?
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                            <DraftButton onClick={handleStartFresh}>
+                                Start Fresh
+                            </DraftButton>
+                            <RedButton onClick={handleContinueWithDraft}>
+                                Continue Draft
+                            </RedButton>
+                        </Box>
+                    </Box>
+                </Box>
+            )}
 
             {/* Breadcrumb */}
             <Typography variant="body2" sx={{ mb: 3, color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
@@ -1098,10 +1595,11 @@ export default function AddOfferPage() {
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
                 <DraftButton
                     onClick={activeStep === steps.length - 1 ? handleSubmit : handleNext}
+                    disabled={isSubmitting}
                 >
-                    {activeStep === steps.length - 1 ? 'Submit' : 'Proceed to save'}
+                    {activeStep === steps.length - 1 ? (isSubmitting ? 'Submitting...' : 'Submit') : 'Proceed to save'}
                 </DraftButton>
-                <DraftButton onClick={handleSaveDraft}>
+                <DraftButton onClick={handleSaveDraft} disabled={isSubmitting}>
                     Save to draft
                 </DraftButton>
             </Box>
@@ -1265,6 +1763,23 @@ export default function AddOfferPage() {
                     </SectionCard>
                 );
             })}
+
+            {/* Loading Backdrop */}
+            <Backdrop
+                sx={{
+                    color: '#fff',
+                    zIndex: (theme) => theme.zIndex.drawer + 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2
+                }}
+                open={isSubmitting}
+            >
+                <CircularProgress color="inherit" size={60} />
+                <Typography variant="h6" sx={{ fontFamily: 'Work Sans, sans-serif', fontWeight: 500 }}>
+                    {isEditMode ? 'Updating Offer...' : 'Creating Offer...'}
+                </Typography>
+            </Backdrop>
         </Box>
     );
 }

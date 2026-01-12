@@ -200,58 +200,107 @@ export default function OfferViewPage() {
             </div>
             
             <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
-              <div className="text-[14px] font-medium text-gray-700 mb-3">
-                Offer Banner Image
-              </div>
-              
-              {/* Table Header */}
-              <div className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 px-3 py-2 bg-[#F3EFE7] rounded-t-lg">
-                <div className="text-[14px] font-semibold text-gray-900">File Name</div>
-                <div className="text-[14px] font-semibold text-gray-900">Preview</div>
-                <div className="text-[14px] font-semibold text-gray-900">Ratio</div>
-                <div className="text-[14px] font-semibold text-gray-900">Action</div>
+              {/* Offer Banner Image Section */}
+              <div className="mb-6">
+                <div className="text-[14px] font-medium text-gray-700 mb-3">
+                  Offer Banner Image
+                </div>
+                
+                {/* Table Header */}
+                <div className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 px-3 py-2 bg-[#F3EFE7] rounded-t-lg">
+                  <div className="text-[14px] font-semibold text-gray-900">File Name</div>
+                  <div className="text-[14px] font-semibold text-gray-900">Preview</div>
+                  <div className="text-[14px] font-semibold text-gray-900">Ratio</div>
+                  <div className="text-[14px] font-semibold text-gray-900">Action</div>
+                </div>
+
+                {/* Table Body */}
+                <div className="bg-[#F7F8F9] px-3 py-3 rounded-b-lg">
+                  {getUniqueImages().length > 0 ? (
+                    getUniqueImages().map((img, index) => (
+                      <div 
+                        key={img.data.document_url} 
+                        className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 items-center py-2"
+                        style={{
+                          borderBottom: index !== getUniqueImages().length - 1 ? '1px solid #E5E5E5' : 'none'
+                        }}
+                      >
+                        <div className="text-[14px] text-gray-900">
+                          {img.data.document_file_name}
+                        </div>
+                        <div>
+                          <img
+                            src={img.data.document_url}
+                            alt={img.data.document_file_name}
+                            style={{ 
+                              width: 80, 
+                              height: 80, 
+                              objectFit: 'cover', 
+                              borderRadius: 8,
+                              border: '1px solid #E5E5E5'
+                            }}
+                          />
+                        </div>
+                        <div className="text-[14px] text-gray-900">
+                          {img.label}
+                        </div>
+                        <div>
+                          <span className="text-[14px] text-[#C72030] cursor-pointer">🗑️</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center text-gray-400 py-4 text-[14px]">
+                      No images uploaded
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Table Body */}
-              <div className="bg-[#F7F8F9] px-3 py-3 rounded-b-lg">
-                {getUniqueImages().length > 0 ? (
-                  getUniqueImages().map((img, index) => (
-                    <div 
-                      key={img.data.document_url} 
-                      className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 items-center py-2"
-                      style={{
-                        borderBottom: index !== getUniqueImages().length - 1 ? '1px solid #E5E5E5' : 'none'
-                      }}
-                    >
+              {/* File Upload Section (PDF) */}
+              <div>
+                <div className="text-[14px] font-medium text-gray-700 mb-3">
+                  File Upload
+                </div>
+                
+                {/* Table Header */}
+                <div className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 px-3 py-2 bg-[#F3EFE7] rounded-t-lg">
+                  <div className="text-[14px] font-semibold text-gray-900">File Name</div>
+                  <div className="text-[14px] font-semibold text-gray-900">Preview</div>
+                  <div className="text-[14px] font-semibold text-gray-900">Ratio</div>
+                  <div className="text-[14px] font-semibold text-gray-900">Action</div>
+                </div>
+
+                {/* Table Body */}
+                <div className="bg-[#F7F8F9] px-3 py-3 rounded-b-lg">
+                  {offer?.offer_pdf ? (
+                    <div className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 items-center py-2">
                       <div className="text-[14px] text-gray-900">
-                        {img.data.document_file_name}
+                        {offer.offer_pdf.document_file_name}
                       </div>
                       <div>
-                        <img
-                          src={img.data.document_url}
-                          alt={img.data.document_file_name}
-                          style={{ 
-                            width: 80, 
-                            height: 80, 
-                            objectFit: 'cover', 
-                            borderRadius: 8,
-                            border: '1px solid #E5E5E5'
-                          }}
-                        />
+                        <a 
+                          href={offer.offer_pdf.document_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-[14px] text-[#C72030] underline"
+                        >
+                          View
+                        </a>
                       </div>
                       <div className="text-[14px] text-gray-900">
-                        NA
+                        -
                       </div>
                       <div>
                         <span className="text-[14px] text-[#C72030] cursor-pointer">🗑️</span>
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center text-gray-400 py-4 text-[14px]">
-                    No images uploaded
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-center text-gray-400 py-4 text-[14px]">
+                      No files uploaded
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
