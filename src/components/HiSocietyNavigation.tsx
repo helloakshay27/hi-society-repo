@@ -18,6 +18,12 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   {
+    id: "home",
+    label: "Home",
+    icon: <Home className="w-4 h-4" />,
+    path: "/maintenance/project-details-list",
+  },
+  {
     id: "bms",
     label: "BMS",
     icon: <Home className="w-4 h-4" />,
@@ -85,6 +91,14 @@ export const HiSocietyNavigation: React.FC = () => {
   const { isSidebarCollapsed } = useLayout();
   const [activeNav, setActiveNav] = useState<string>("home");
 
+  // Check if current domain is CMS domain
+  const isCMSDomain = window.location.hostname === 'ui-cms.lockated.com';
+
+  // Filter navigation items based on domain
+  const filteredNavigationItems = isCMSDomain
+    ? navigationItems.filter(item => item.id === 'home' || item.id === 'settings')
+    : navigationItems.filter(item => item.id !== 'home');
+
   // Detect active navigation based on current path
   useEffect(() => {
     const path = location.pathname;
@@ -107,11 +121,11 @@ export const HiSocietyNavigation: React.FC = () => {
     } else if (path.startsWith("/settings")) {
       setActiveNav("settings");
     } else if (path.startsWith("/bms") || path.startsWith("/maintenance") || path.startsWith("/communication") || path.startsWith("/loyalty") || path.startsWith("/setup-member") || path.startsWith("/setup")) {
-      setActiveNav("bms");
+      setActiveNav(isCMSDomain ? "home" : "bms");
     } else {
-      setActiveNav("bms");
+      setActiveNav(isCMSDomain ? "home" : "bms");
     }
-  }, [location.pathname]);
+  }, [location.pathname, isCMSDomain]);
 
   const handleNavClick = (item: NavigationItem) => {
     setActiveNav(item.id);
@@ -127,7 +141,7 @@ export const HiSocietyNavigation: React.FC = () => {
         <div className="w-full overflow-x-auto md:overflow-visible no-scrollbar">
           {/* Mobile & Tablet: scroll + spacing; Desktop: full width and justify-between */}
           <div className="flex w-max lg:w-full space-x-4 md:space-x-6 lg:space-x-0 md:justify-start lg:justify-between whitespace-nowrap">
-            {navigationItems.map((item) => {
+            {filteredNavigationItems.map((item) => {
               const isActive = activeNav === item.id;
               return (
                 <button

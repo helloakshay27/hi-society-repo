@@ -32,6 +32,9 @@ export const SettingsSidebar: React.FC = () => {
   const location = useLocation();
   const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
 
+  // Check if current domain is CMS domain
+  const isCMSDomain = window.location.hostname === 'ui-cms.lockated.com';
+
   // State for collapsible parent items
   const [setupOpen, setSetupOpen] = useState(true);
   const [setupMemberOpen, setSetupMemberOpen] = useState(true);
@@ -68,16 +71,16 @@ export const SettingsSidebar: React.FC = () => {
       icon: Headset,
       path: "/settings/helpdesk-setup",
     },
+  ];
+
+  // Setup Member sub-items
+  const setupMemberItems: MenuItem[] = [
     {
       id: "template-list",
       label: "Template",
       icon: FileText,
       path: "/settings/template-list",
     },
-  ];
-
-  // Setup Member sub-items
-  const setupMemberItems: MenuItem[] = [
     // {
     //   id: "user-list",
     //   label: "User Module",
@@ -248,7 +251,8 @@ export const SettingsSidebar: React.FC = () => {
 
         {/* Menu Items */}
         <nav className="space-y-1">
-          {/* Setup Parent */}
+          {/* Setup Parent - Hidden on CMS domain */}
+          {!isCMSDomain && (
           <div>
             <button
               onClick={() => setSetupOpen(!setupOpen)}
@@ -268,6 +272,7 @@ export const SettingsSidebar: React.FC = () => {
               </div>
             )}
           </div>
+          )}
 
           {/* Setup Member Parent */}
           <div>

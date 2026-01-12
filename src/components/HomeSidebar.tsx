@@ -28,6 +28,14 @@ export const HomeSidebar: React.FC = () => {
   const location = useLocation();
   const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
 
+  // Check if current domain is CMS domain
+  const isCMSDomain = window.location.hostname === 'ui-cms.lockated.com';
+  
+  // Show sidebar for BMS/maintenance routes or for home routes on CMS domain
+  const shouldShowSidebar = location.pathname.startsWith('/maintenance') || 
+                            location.pathname.startsWith('/bms') ||
+                            isCMSDomain;
+
   const homeMenuItems: MenuItem[] = [
     {
       id: "project",
@@ -110,6 +118,11 @@ export const HomeSidebar: React.FC = () => {
   const handleNavigation = (path: string) => {
     navigate(path);
   };
+
+  // Don't render sidebar if not on appropriate routes
+  if (!shouldShowSidebar) {
+    return null;
+  }
 
   return (
     <div
