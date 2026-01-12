@@ -8,6 +8,7 @@ import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { Switch } from '@mui/material';
 
 interface Project {
   id: number;
@@ -112,19 +113,59 @@ const ProjectDetailsList = () => {
   
   const handleClearSelection = () => { setShowActionPanel(false); };
 
+  const handleToggleShowOnHome = async (projectId: number, currentValue: boolean) => {
+    try {
+      // Update the local state immediately for better UX
+      setProjects(prevProjects => 
+        prevProjects.map(project => 
+          project.id === projectId 
+            ? { ...project, show_on_home: !currentValue }
+            : project
+        )
+      );
+
+      // TODO: Add API call here to update the server
+      // const response = await fetch(getFullUrl(`/projects/${projectId}.json`), {
+      //   method: 'PATCH',
+      //   headers: {
+      //     'Authorization': getAuthHeader(),
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({ project: { show_on_home: !currentValue } }),
+      // });
+
+      toast.success('Show on Home updated successfully');
+    } catch (error) {
+      console.error('Error updating show_on_home:', error);
+      toast.error('Failed to update Show on Home');
+      // Revert the change on error
+      setProjects(prevProjects => 
+        prevProjects.map(project => 
+          project.id === projectId 
+            ? { ...project, show_on_home: currentValue }
+            : project
+        )
+      );
+    }
+  };
+
   const columns = [
+   
     { key: 'actions', label: 'Action', sortable: false },
-    { key: 'id', label: 'ID', sortable: true },
+     { key: 'sr_no', label: 'Sr. No.', sortable: false },
+    // { key: 'id', label: 'ID', sortable: true },
     { key: 'project_name', label: 'Project Name', sortable: true },
     { key: 'property_type', label: 'Property Type', sortable: true },
-    { key: 'SFDC_Project_Id', label: 'SFDC Project ID', sortable: true },
-    { key: 'status', label: 'Construction Status', sortable: true },
+    { key: 'SFDC_Project_Id', label: 'CMS Project ID', sortable: true },
+    { key: 'status', label: 'Project Construction Status', sortable: true },
     { key: 'configurations', label: 'Configuration Type', sortable: true },
     { key: 'project_tag', label: 'Project Tag', sortable: true },
+    { key: 'show_on_home', label: 'Show on Home', sortable: false },
   ];
 
-  const renderCell = (item: Project, columnKey: string) => {
+  const renderCell = (item: Project, columnKey: string, index?: number) => {
     switch (columnKey) {
+    
       case 'actions':
         return (
           <div className="flex gap-1">
@@ -135,6 +176,27 @@ const ProjectDetailsList = () => {
               <Pencil className="w-4 h-4" />
             </Button>
           </div>
+        );
+          case 'sr_no':
+        return (
+          <span className="text-sm text-gray-700">
+            {((currentPage - 1) * 10) + (index || 0) + 1}
+          </span>
+        );
+      case 'show_on_home':
+        return (
+          <Switch
+            checked={item.show_on_home || false}
+            onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
+            sx={{
+              '& .MuiSwitch-switchBase.Mui-checked': {
+                color: '#C72030',
+              },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: '#C72030',
+              },
+            }}
+          />
         );
       case 'configurations':
         const configs = item.configurations;

@@ -1221,7 +1221,7 @@ const ProjectDetails = () => {
                 </div>
               </div>
               <div className="col-md-12 mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Floor Plan</h4>
+                <h4 className="text-base font-semibold text-gray-900 mb-3">Layouts & Floor Plans</h4>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -1276,7 +1276,7 @@ const ProjectDetails = () => {
                 </div>
               </div>
               <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Brochure</h4>
+                <h4 className="text-base font-semibold text-gray-900 mb-3">Project Brochure</h4>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -1309,7 +1309,7 @@ const ProjectDetails = () => {
                 </div>
               </div>
 
-              <div className="mt-4">
+              {/* <div className="mt-4">
                 <h4 className="text-base font-semibold text-gray-900 mb-3">Project PPT</h4>
                 <div className="overflow-x-auto">
                   <Table>
@@ -1341,10 +1341,10 @@ const ProjectDetails = () => {
                     </TableBody>
                   </Table>
                 </div>
-              </div>
+              </div> */}
 
-              <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Floor Plan</h4>
+              {/* <div className="mt-4">
+                <h4 className="text-base font-semibold text-gray-900 mb-3">Layouts & Floor Plans</h4>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -1377,9 +1377,80 @@ const ProjectDetails = () => {
                     </TableBody>
                   </Table>
                 </div>
-              </div>
+              </div> */}
 
               <div className="mt-4">
+                <h4 className="text-base font-semibold text-gray-900 mb-3">Project Offers</h4>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="bg-white">
+                      {formData.project_creative_offers.length > 0 ? (
+                        formData.project_creative_offers.map((file, index) => (
+                          <TableRow key={`offers-${index}`} className="hover:bg-gray-50">
+                            <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
+                            <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
+                            <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
+                            <TableCell className="py-3 px-4">
+                              <img src={file.document_url} alt={`Offer ${index}`} className="w-20 h-20 object-cover rounded" />
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
+                            No Project Creatives Offers
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+              <div className="mt-4">
+                <h4 className="text-base font-semibold text-gray-900 mb-3">Videos</h4>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="bg-white">
+                      {formData.videos.length > 0 ? (
+                        formData.videos.map((file, index) => (
+                          <TableRow key={`video-${index}`} className="hover:bg-gray-50">
+                            <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
+                            <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
+                            <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
+                            <TableCell className="py-3 px-4">
+                              <img src={file.document_url} alt={`Video ${index}`} className="w-20 h-20 object-cover rounded" />
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
+                            No Videos
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              {/* <div className="mt-4">
                 <h4 className="text-base font-semibold text-gray-900 mb-3">Project Layout</h4>
                 <div className="overflow-x-auto">
                   <Table>
@@ -1487,41 +1558,7 @@ const ProjectDetails = () => {
                 </div>
               </div>
 
-              <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Project Creatives Offers</h4>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {formData.project_creative_offers.length > 0 ? (
-                        formData.project_creative_offers.map((file, index) => (
-                          <TableRow key={`offers-${index}`} className="hover:bg-gray-50">
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <img src={file.document_url} alt={`Offer ${index}`} className="w-20 h-20 object-cover rounded" />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                            No Project Creatives Offers
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+              
 
               <div className="mt-4">
                 <h4 className="text-base font-semibold text-gray-900 mb-3">Project Interiors</h4>
@@ -1631,41 +1668,7 @@ const ProjectDetails = () => {
                 </div>
               </div>
 
-              <div className="mt-4">
-                <h4 className="text-base font-semibold text-gray-900 mb-3">Videos</h4>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="bg-white">
-                      {formData.videos.length > 0 ? (
-                        formData.videos.map((file, index) => (
-                          <TableRow key={`video-${index}`} className="hover:bg-gray-50">
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
-                            <TableCell className="py-3 px-4">
-                              <img src={file.document_url} alt={`Video ${index}`} className="w-20 h-20 object-cover rounded" />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                            No Videos
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+              
               {/* <div className="col-md-12 mt-2">
                 <h5 className="">
                   Video Preview Image Url :{" "}

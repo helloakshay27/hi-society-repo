@@ -1953,8 +1953,8 @@ const ProjectDetailsCreate = () => {
               />
 
                <TextField
-                label="SFDC Project ID"
-                placeholder="Enter SFDC Project ID"
+                label="CMS Project ID"
+                placeholder="Enter CMS Project ID"
                 value={formData.SFDC_Project_Id}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -3288,7 +3288,7 @@ const ProjectDetailsCreate = () => {
                     >
                       <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipBanner && (
-                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10 m-12">
                           Max Upload Size 3 MB and{" "}
                           {getDynamicRatiosText("ProjectImage")}
                         </span>
@@ -3336,24 +3336,24 @@ const ProjectDetailsCreate = () => {
                     <thead>
                       <tr style={{ backgroundColor: "#e6e2d8" }}>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           File Name
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Preview
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Ratio
                         </th>
-                        <th className="font-semibold text-gray-900 py-3 px-4">
+                        <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                           Action
                         </th>
                       </tr>
@@ -3424,7 +3424,7 @@ const ProjectDetailsCreate = () => {
                     >
                       <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipCover && (
-                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10 m-5">
                           Max Upload Size 5 MB and{" "}
                           {getDynamicRatiosText("ProjectCoverImage")}
                         </span>
@@ -3456,24 +3456,24 @@ const ProjectDetailsCreate = () => {
                     <thead>
                       <tr style={{ backgroundColor: "#e6e2d8" }}>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           File Name
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Preview
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Ratio
                         </th>
-                        <th className="font-semibold text-gray-900 py-3 px-4">
+                        <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                           Action
                         </th>
                       </tr>
@@ -3595,8 +3595,8 @@ const ProjectDetailsCreate = () => {
                     >
                       <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipGallery && (
-                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                          Max Upload Size 3 MB (Images), 10 MB (Videos) and{" "}
+                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10 m-12">
+                          Max Upload Size 3 MB and{" "}
                           {getDynamicRatiosText("ProjectGallery")}
                         </span>
                       )}
@@ -3649,30 +3649,30 @@ const ProjectDetailsCreate = () => {
                     <thead>
                       <tr style={{ backgroundColor: "#e6e2d8" }}>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Image Name
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Preview
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Ratio
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Order No.
                         </th>
-                        <th className="font-semibold text-gray-900 py-3 px-4">
+                        <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                           Action
                         </th>
                       </tr>
@@ -3789,7 +3789,7 @@ const ProjectDetailsCreate = () => {
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
                   <h5 className="section-heading inline-flex items-center gap-1">
-                    Floor Plan{" "}
+                    Layouts & Floor Plans{" "}
                     <span
                       className="relative inline-flex items-center cursor-pointer"
                       onMouseEnter={() => setShowTooltipFloor(true)}
@@ -3842,24 +3842,24 @@ const ProjectDetailsCreate = () => {
                     <thead>
                       <tr style={{ backgroundColor: "#e6e2d8" }}>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           File Name
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Preview
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Ratio
                         </th>
-                        <th className="font-semibold text-gray-900 py-3 px-4">
+                        <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                           Action
                         </th>
                       </tr>
@@ -3920,7 +3920,7 @@ const ProjectDetailsCreate = () => {
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
                   <h5 className="section-heading inline-flex items-center gap-1">
-                    Brochure{" "}
+                    Project Brochure{" "}
                     <span
                       className="relative inline-flex items-center cursor-pointer"
                       onMouseEnter={() => setShowTooltipBrochure(true)}
@@ -3961,8 +3961,8 @@ const ProjectDetailsCreate = () => {
                   <table className="w-full border-separate">
                     <thead>
                       <tr style={{ backgroundColor: "#e6e2d8" }}>
-                        <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</th>
-                        <th className="font-semibold text-gray-900 py-3 px-4">Action</th>
+                        <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
+                        <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -3986,11 +3986,10 @@ const ProjectDetailsCreate = () => {
                   </table>
                 </div>
               </div>
-              {API_CONFIG.BASE_URL !== "https://dev-panchshil-super-app.lockated.com/" &&
-                API_CONFIG.BASE_URL !== "https://rustomjee-live.lockated.com/" && (
+              
                   <>
-                    <div className="mb-6">
-                      {/* Header */}
+                    {/* <div className="mb-6">
+                      
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project PPT{" "}
@@ -4012,9 +4011,7 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_ppt").click()}
                         >
-                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                         
                           <span>Add</span>
                         </button>
                       </div>
@@ -4030,13 +4027,13 @@ const ProjectDetailsCreate = () => {
                         multiple
                         style={{ display: "none" }}
                       />
-                      {/* Table */}
+                     
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">Action</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4046,7 +4043,7 @@ const ProjectDetailsCreate = () => {
                                 <td className="py-3 px-4">
                                   <button
                                     type="button"
-                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    
                                     onClick={() => handleDiscardPpt("project_ppt", index)}
                                   >
                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
@@ -4057,9 +4054,9 @@ const ProjectDetailsCreate = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    </div> */}
+                    {/* <div className="mb-6">
+                      
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Layout{" "}
@@ -4081,9 +4078,7 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_layout").click()}
                         >
-                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                         
                           <span>Add</span>
                         </button>
                       </div>
@@ -4098,14 +4093,14 @@ const ProjectDetailsCreate = () => {
                         }
                         style={{ display: "none" }}
                       />
-                      {/* Table */}
+                     
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">Action</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4134,9 +4129,9 @@ const ProjectDetailsCreate = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    </div> */}
+                    {/* <div className="mb-6">
+                     
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Creatives{" "}
@@ -4158,9 +4153,7 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_creatives").click()}
                         >
-                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                         
                           <span>Add</span>
                         </button>
                       </div>
@@ -4176,14 +4169,14 @@ const ProjectDetailsCreate = () => {
                         multiple
                         style={{ display: "none" }}
                       />
-                      {/* Table */}
+                     
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">Action</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4212,9 +4205,9 @@ const ProjectDetailsCreate = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    </div> */}
+                    {/* <div className="mb-6">
+                    
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Creative Generics{" "}
@@ -4235,9 +4228,7 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_creative_generics").click()}
                         >
-                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                        
                           <span>Add</span>
                         </button>
                         <input
@@ -4251,14 +4242,14 @@ const ProjectDetailsCreate = () => {
                           style={{ display: "none" }}
                         />
                       </div>
-                      {/* Table */}
+                    
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">Action</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4287,12 +4278,12 @@ const ProjectDetailsCreate = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
+                    </div> */}
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
-                          Project Creative Offers{" "}
+                          Project Offers{" "}
                           <span
                             className="relative inline-flex items-center cursor-pointer"
                             onMouseEnter={() => setShowTooltipCreativeOffers(true)}
@@ -4331,9 +4322,9 @@ const ProjectDetailsCreate = () => {
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">Action</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4363,8 +4354,8 @@ const ProjectDetailsCreate = () => {
                         </table>
                       </div>
                     </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    {/* <div className="mb-6">
+                      
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Interiors{" "}
@@ -4385,9 +4376,7 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_interiors").click()}
                         >
-                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                         
                           <span>Add</span>
                         </button>
                         <input
@@ -4401,14 +4390,14 @@ const ProjectDetailsCreate = () => {
                           style={{ display: "none" }}
                         />
                       </div>
-                      {/* Table */}
+                     
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">Action</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4437,9 +4426,9 @@ const ProjectDetailsCreate = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    </div> */}
+                    {/* <div className="mb-6">
+
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Exteriors{" "}
@@ -4460,9 +4449,7 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_exteriors").click()}
                         >
-                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                          
                           <span>Add</span>
                         </button>
                         <input
@@ -4476,14 +4463,14 @@ const ProjectDetailsCreate = () => {
                           style={{ display: "none" }}
                         />
                       </div>
-                      {/* Table */}
+                     
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">Action</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4512,9 +4499,9 @@ const ProjectDetailsCreate = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    </div> */}
+                    {/* <div className="mb-6">
+                     
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Emailer Template{" "}
@@ -4535,9 +4522,7 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_emailer_templetes").click()}
                         >
-                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                         
                           <span>Add</span>
                         </button>
                         <input
@@ -4551,13 +4536,13 @@ const ProjectDetailsCreate = () => {
                           style={{ display: "none" }}
                         />
                       </div>
-                      {/* Table */}
+                     
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">Action</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4578,9 +4563,9 @@ const ProjectDetailsCreate = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    </div> */}
+                    {/* <div className="mb-6">
+                     
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Know Your Apartment Files{" "}
@@ -4601,9 +4586,7 @@ const ProjectDetailsCreate = () => {
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("KnwYrApt_Technical").click()}
                         >
-                          {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                        
                           <span>Add</span>
                         </button>
                         <input
@@ -4617,13 +4600,13 @@ const ProjectDetailsCreate = () => {
                           style={{ display: "none" }}
                         />
                       </div>
-                      {/* Table */}
+                     
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">Action</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4644,7 +4627,7 @@ const ProjectDetailsCreate = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
+                    </div> */}
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
@@ -4688,9 +4671,9 @@ const ProjectDetailsCreate = () => {
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">Action</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>File Name</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 border-r text-left" style={{ borderColor: "#fff" }}>Preview</th>
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">Action</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -4741,7 +4724,7 @@ const ProjectDetailsCreate = () => {
                       </div> */}
                     </div>
                   </>
-                )}
+                
             </div>
           </div>
         </div>

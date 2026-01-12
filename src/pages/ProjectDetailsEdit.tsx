@@ -539,11 +539,66 @@ const ProjectDetailsEdit = () => {
     }
   };
 
-  const discardImage = (key, imageToRemove) => {
+  const discardImage = async (key, imageToRemove) => {
+    // If the image has an ID, it's an existing server image - call delete API
+    if (imageToRemove.id && projectId) {
+      try {
+        // Determine which API endpoint to use based on image type
+        const isGalleryImage = key.startsWith('gallery_image_');
+        const endpoint = isGalleryImage
+          ? `/projects/${projectId}/remove_gallery_image/${imageToRemove.id}.json`
+          : `/projects/${projectId}/remove_creative_image/${imageToRemove.id}.json`;
+        
+        const response = await axios.delete(
+          getFullUrl(endpoint),
+          {
+            headers: { Authorization: getAuthHeader() },
+          }
+        );
+        
+        if (response.status === 200) {
+          toast.success("Image removed successfully");
+        }
+      } catch (error) {
+        console.error("Error deleting image:", error);
+        toast.error("Failed to delete image from server", { description: "Error" });
+        return; // Don't update local state if server delete failed
+      }
+    }
+
+    // Update local state
     setFormData((prev) => {
-      const updatedArray = (prev[key] || []).filter(
-        (img) => img.id !== imageToRemove.id
-      );
+      const currentArray = prev[key] || [];
+      
+      // Find the index of the image to remove
+      const indexToRemove = currentArray.findIndex((img) => {
+        // For images with id (existing server images)
+        if (img.id && imageToRemove.id) {
+          return img.id === imageToRemove.id;
+        }
+        // For new File objects or images without id, compare by reference
+        return img === imageToRemove;
+      });
+
+      // If not found by reference, try comparing other properties
+      let updatedArray;
+      if (indexToRemove !== -1) {
+        updatedArray = currentArray.filter((_, idx) => idx !== indexToRemove);
+      } else {
+        // Fallback: compare by file properties
+        updatedArray = currentArray.filter((img) => {
+          if (img.id && imageToRemove.id) {
+            return img.id !== imageToRemove.id;
+          }
+          if (img.document_file_name && imageToRemove.document_file_name) {
+            return img.document_file_name !== imageToRemove.document_file_name;
+          }
+          if (img.name && imageToRemove.name) {
+            return img.name !== imageToRemove.name;
+          }
+          return img !== imageToRemove;
+        });
+      }
 
       // Remove the key if the array becomes empty
       const newFormData = { ...prev };
@@ -555,6 +610,11 @@ const ProjectDetailsEdit = () => {
 
       return newFormData;
     });
+    
+    // Show success toast only for newly uploaded images (without ID)
+    if (!imageToRemove.id) {
+      toast.success("Image removed successfully", { description: "Success" });
+    }
   };
 
   const errorToastRef = useRef(null);
@@ -1429,12 +1489,40 @@ const ProjectDetailsEdit = () => {
     return true;
   };
 
-  const handleDiscardFile = (fileType, index) => {
+  const handleDiscardFile = async (fileType, index) => {
     if (fileType === "brochure") {
       if (index !== undefined) {
+        const brochureToRemove = formData.brochure[index];
+        
+        // If the brochure has an ID, it's an existing server file - call delete API
+        if (brochureToRemove?.id && projectId) {
+          try {
+            const response = await axios.delete(
+              getFullUrl(`/projects/${projectId}/remove_brochures/${brochureToRemove.id}`),
+              {
+                headers: { Authorization: getAuthHeader() },
+              }
+            );
+            
+            if (response.status === 200) {
+              toast.success("Brochure removed successfully");
+            }
+          } catch (error) {
+            console.error("Error deleting brochure:", error);
+            toast.error("Failed to delete brochure from server", { description: "Error" });
+            return; // Don't update local state if server delete failed
+          }
+        }
+        
+        // Update local state
         const updatedBrochures = [...formData.brochure];
         updatedBrochures.splice(index, 1);
         setFormData({ ...formData, brochure: updatedBrochures });
+        
+        // Show success toast only for newly uploaded files (without ID)
+        if (!brochureToRemove?.id) {
+          toast.success("Brochure removed successfully");
+        }
       } else {
         setFormData({ ...formData, brochure: [] });
       }
@@ -1442,54 +1530,94 @@ const ProjectDetailsEdit = () => {
       const updatedFiles = [...formData.two_d_images];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, two_d_images: updatedFiles });
+      toast.success("2D Image removed successfully");
     } else if (fileType === "project_creatives") {
       const updatedFiles = [...formData.project_creatives];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, project_creatives: updatedFiles });
+      toast.success("Creative removed successfully");
     } else if (fileType === "cover_images") {
       const updatedFiles = [...formData.cover_images];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, cover_images: updatedFiles });
+      toast.success("Cover image removed successfully");
     } else if (fileType === "project_creative_generics") {
       const updatedFiles = [...formData.project_creative_generics];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, project_creative_generics: updatedFiles });
+      toast.success("Creative generic removed successfully");
     } else if (fileType === "project_creative_offers") {
+      const fileToRemove = formData.project_creative_offers[index];
+      
+      // If the file has an ID, it's an existing server file - call delete API
+      if (fileToRemove?.id && projectId) {
+        try {
+          const response = await axios.delete(
+            getFullUrl(`/projects/${projectId}/remove_creative_image/${fileToRemove.id}.json`),
+            {
+              headers: { Authorization: getAuthHeader() },
+            }
+          );
+          
+          if (response.status === 200) {
+            toast.success("Creative offer removed successfully");
+          }
+        } catch (error) {
+          console.error("Error deleting creative offer:", error);
+          toast.error("Failed to delete creative offer from server", { description: "Error" });
+          return; // Don't update local state if server delete failed
+        }
+      }
+      
+      // Update local state
       const updatedFiles = [...formData.project_creative_offers];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, project_creative_offers: updatedFiles });
+      
+      // Show success toast only for newly uploaded files (without ID)
+      if (!fileToRemove?.id) {
+        toast.success("Creative offer removed successfully");
+      }
     } else if (fileType === "project_interiors") {
       const updatedFiles = [...formData.project_interiors];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, project_interiors: updatedFiles });
+      toast.success("Interior image removed successfully");
     } else if (fileType === "project_exteriors") {
       const updatedFiles = [...formData.project_exteriors];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, project_exteriors: updatedFiles });
+      toast.success("Exterior image removed successfully");
     } else if (fileType === "project_emailer_templetes") {
       const updatedFiles = [...formData.project_emailer_templetes];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, project_emailer_templetes: updatedFiles });
+      toast.success("Emailer template removed successfully");
     } else if (fileType === "KnwYrApt_Technical") {
       const updatedFiles = [...formData.KnwYrApt_Technical];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, KnwYrApt_Technical: updatedFiles });
+      toast.success("Technical file removed successfully");
     } else if (fileType === "project_layout") {
       const updatedFiles = [...formData.project_layout];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, project_layout: updatedFiles });
+      toast.success("Layout removed successfully");
     } else if (fileType === "videos") {
       const updatedVideos = [...formData.videos];
       updatedVideos.splice(index, 1);
       setFormData({ ...formData, videos: updatedVideos });
+      toast.success("Video removed successfully");
     } else if (fileType === "gallery_image") {
       const updatedGallery = [...formData.gallery_image];
       updatedGallery.splice(index, 1);
       setFormData({ ...formData, gallery_image: updatedGallery });
+      toast.success("Gallery image removed successfully");
     } else if (fileType === "plans") {
       const updatedFiles = [...formData.plans];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, plans: updatedFiles });
+      toast.success("Plan removed successfully");
     }
   };
 
@@ -2022,8 +2150,8 @@ const ProjectDetailsEdit = () => {
               />
 
               <TextField
-                label="SFDC Project ID"
-                placeholder="Enter SFDC Project ID"
+                label="CMS Project ID"
+                placeholder="Enter CMS Project ID"
                 value={formData.SFDC_Project_Id}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -3389,7 +3517,7 @@ const ProjectDetailsEdit = () => {
                     >
                       <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipBanner && (
-                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10 m-12">
                           Max Upload Size 3 MB and{" "}
                           {getDynamicRatiosText("ProjectImage")}
                         </span>
@@ -3437,24 +3565,24 @@ const ProjectDetailsEdit = () => {
                     <thead>
                       <tr style={{ backgroundColor: "#e6e2d8" }}>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           File Name
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Preview
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Ratio
                         </th>
-                        <th className="font-semibold text-gray-900 py-3 px-4">
+                        <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                           Action
                         </th>
                       </tr>
@@ -3525,7 +3653,7 @@ const ProjectDetailsEdit = () => {
                     >
                     <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipCover && (
-                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10 m-5">
                           Max Upload Size 5 MB and{" "}
                           {getDynamicRatiosText("ProjectCoverImage")}
                         </span>
@@ -3549,24 +3677,24 @@ const ProjectDetailsEdit = () => {
                     <thead>
                       <tr style={{ backgroundColor: "#e6e2d8" }}>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           File Name
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Preview
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Ratio
                         </th>
-                        <th className="font-semibold text-gray-900 py-3 px-4">
+                        <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                           Action
                         </th>
                       </tr>
@@ -3688,8 +3816,8 @@ const ProjectDetailsEdit = () => {
                     >
                       <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipGallery && (
-                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                          Max Upload Size 3 MB (Images), 10 MB (Videos) and{" "}
+                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10 m-12">
+                          Max Upload Size 3 MB and {" "}
                           {getDynamicRatiosText("ProjectGallery")}
                         </span>
                       )}
@@ -3742,30 +3870,30 @@ const ProjectDetailsEdit = () => {
                     <thead>
                       <tr style={{ backgroundColor: "#e6e2d8" }}>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Image Name
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Preview
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Ratio
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left" 
                           style={{ borderColor: "#fff" }}
                         >
                           Order No.
                         </th>
-                        <th className="font-semibold text-gray-900 py-3 px-4">
+                        <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                           Action
                         </th>
                       </tr>
@@ -3882,7 +4010,7 @@ const ProjectDetailsEdit = () => {
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
                     <h5 className="section-heading inline-flex items-center gap-1">
-                    Floor Plan{" "}
+                    Layouts & Floor Plans{" "}
                     <span
                       className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowTooltipFloor(true)}
@@ -3936,24 +4064,24 @@ const ProjectDetailsEdit = () => {
                     <thead>
                       <tr style={{ backgroundColor: "#e6e2d8" }}>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           File Name
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Preview
                         </th>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           Ratio
                         </th>
-                        <th className="font-semibold text-gray-900 py-3 px-4">
+                        <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                           Action
                         </th>
                       </tr>
@@ -4016,7 +4144,7 @@ const ProjectDetailsEdit = () => {
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
                   <h5 className="section-heading inline-flex items-center gap-1">
-                    Brochure{" "}
+                    Project Brochure{" "}
                     <span
                       className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowTooltipBrochure(true)}
@@ -4067,12 +4195,12 @@ const ProjectDetailsEdit = () => {
                     <thead>
                       <tr style={{ backgroundColor: "#e6e2d8" }}>
                         <th
-                          className="font-semibold text-gray-900 py-3 px-4 border-r"
+                          className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                           style={{ borderColor: "#fff" }}
                         >
                           File Name
                         </th>
-                        <th className="font-semibold text-gray-900 py-3 px-4">
+                        <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                           Action
                         </th>
                       </tr>
@@ -4114,8 +4242,8 @@ const ProjectDetailsEdit = () => {
               {/* {baseURL !== "https://dev-panchshil-super-app.lockated.com/" &&
                 baseURL !== "https://rustomjee-live.lockated.com/" && ( */}
                   <>
-                    <div className="mb-6">
-                      {/* Header */}
+                    {/* <div className="mb-6">
+                    
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project PPT{" "}
@@ -4126,7 +4254,7 @@ const ProjectDetailsEdit = () => {
                           >
                             <Info className="w-5 h-5 fill-black text-white" />
                             {showTooltipPPT && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 5 MB
                               </span>
                             )}
@@ -4140,15 +4268,7 @@ const ProjectDetailsEdit = () => {
                             document.getElementById("project_ppt").click()
                           }
                         >
-                          {/* <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={20}
-                            height={20}
-                            fill="currentColor"
-                            viewBox="0 0 16 16"
-                          >
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                         
                           <span>Add</span>
                         </button>
                       </div>
@@ -4164,18 +4284,18 @@ const ProjectDetailsEdit = () => {
                         multiple
                         style={{ display: "none" }}
                       />
-                      {/* Table */}
+                   
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 File Name
                               </th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                                 Action
                               </th>
                             </tr>
@@ -4205,9 +4325,9 @@ const ProjectDetailsEdit = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    </div> */}
+                    {/* <div className="mb-6">
+                     
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Layout{" "}
@@ -4218,7 +4338,7 @@ const ProjectDetailsEdit = () => {
                           >
                             <Info className="w-5 h-5 fill-black text-white" />
                             {showTooltipLayout && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 3 MB
                               </span>
                             )}
@@ -4232,15 +4352,7 @@ const ProjectDetailsEdit = () => {
                             document.getElementById("project_layout").click()
                           }
                         >
-                          {/* <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={20}
-                            height={20}
-                            fill="currentColor"
-                            viewBox="0 0 16 16"
-                          >
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                         
                           <span>Add</span>
                         </button>
                       </div>
@@ -4255,24 +4367,24 @@ const ProjectDetailsEdit = () => {
                         }
                         style={{ display: "none" }}
                       />
-                      {/* Table */}
+                    
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 File Name
                               </th>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 Preview
                               </th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                                 Action
                               </th>
                             </tr>
@@ -4328,9 +4440,9 @@ const ProjectDetailsEdit = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    </div> */}
+                    {/* <div className="mb-6">
+                      
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Creatives{" "}
@@ -4342,7 +4454,7 @@ const ProjectDetailsEdit = () => {
                           >
                             <Info className="w-5 h-5 fill-black text-white" />
                             {showTooltipCreatives && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 3 MB
                               </span>
                             )}
@@ -4356,15 +4468,7 @@ const ProjectDetailsEdit = () => {
                             document.getElementById("project_creatives").click()
                           }
                         >
-                          {/* <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={20}
-                            height={20}
-                            fill="currentColor"
-                            viewBox="0 0 16 16"
-                          >
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                         
                           <span>Add</span>
                         </button>
                       </div>
@@ -4380,24 +4484,24 @@ const ProjectDetailsEdit = () => {
                         multiple
                         style={{ display: "none" }}
                       />
-                      {/* Table */}
+                     
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 File Name
                               </th>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 Preview
                               </th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                                 Action
                               </th>
                             </tr>
@@ -4456,9 +4560,9 @@ const ProjectDetailsEdit = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    </div> */}
+                    {/* <div className="mb-6">
+                     
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Creative Generics{" "}
@@ -4469,7 +4573,7 @@ const ProjectDetailsEdit = () => {
                           >
                             <Info className="w-5 h-5 fill-black text-white" />
                             {showTooltipCreativeGenerics && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 3 MB
                               </span>
                             )}
@@ -4484,15 +4588,7 @@ const ProjectDetailsEdit = () => {
                               .click()
                           }
                         >
-                          {/* <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={20}
-                            height={20}
-                            fill="currentColor"
-                            viewBox="0 0 16 16"
-                          >
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                         
                           <span>Add</span>
                         </button>
                         <input
@@ -4511,24 +4607,24 @@ const ProjectDetailsEdit = () => {
                           style={{ display: "none" }}
                         />
                       </div>
-                      {/* Table */}
+                     
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 File Name
                               </th>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 Preview
                               </th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                                 Action
                               </th>
                             </tr>
@@ -4589,12 +4685,12 @@ const ProjectDetailsEdit = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
+                    </div> */}
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
-                          Project Creative Offers{" "}
+                          Project Offers{" "}
                           <span
                             className="relative inline-block cursor-pointer"
                             onMouseEnter={() => setShowTooltipCreativeOffers(true)}
@@ -4650,18 +4746,18 @@ const ProjectDetailsEdit = () => {
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 File Name
                               </th>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 Preview
                               </th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                                 Action
                               </th>
                             </tr>
@@ -4723,8 +4819,8 @@ const ProjectDetailsEdit = () => {
                         </table>
                       </div>
                     </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    {/* <div className="mb-6">
+                     
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Interiors{" "}
@@ -4735,7 +4831,7 @@ const ProjectDetailsEdit = () => {
                           >
                             <Info className="w-5 h-5 fill-black text-white" />
                             {showTooltipInteriors && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 3 MB
                               </span>
                             )}
@@ -4748,15 +4844,7 @@ const ProjectDetailsEdit = () => {
                             document.getElementById("project_interiors").click()
                           }
                         >
-                          {/* <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={20}
-                            height={20}
-                            fill="currentColor"
-                            viewBox="0 0 16 16"
-                          >
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                        
                           <span>Add</span>
                         </button>
                         <input
@@ -4775,24 +4863,24 @@ const ProjectDetailsEdit = () => {
                           style={{ display: "none" }}
                         />
                       </div>
-                      {/* Table */}
+                    
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 File Name
                               </th>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 Preview
                               </th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                                 Action
                               </th>
                             </tr>
@@ -4851,9 +4939,9 @@ const ProjectDetailsEdit = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    </div> */}
+                    {/* <div className="mb-6">
+                    
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Exteriors{" "}
@@ -4864,7 +4952,7 @@ const ProjectDetailsEdit = () => {
                           >
                             <Info className="w-5 h-5 fill-black text-white" />
                             {showTooltipExteriors && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 3 MB
                               </span>
                             )}
@@ -4877,15 +4965,7 @@ const ProjectDetailsEdit = () => {
                             document.getElementById("project_exteriors").click()
                           }
                         >
-                          {/* <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={20}
-                            height={20}
-                            fill="currentColor"
-                            viewBox="0 0 16 16"
-                          >
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                         
                           <span>Add</span>
                         </button>
                         <input
@@ -4904,24 +4984,24 @@ const ProjectDetailsEdit = () => {
                           style={{ display: "none" }}
                         />
                       </div>
-                      {/* Table */}
+                    
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 File Name
                               </th>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 Preview
                               </th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left" >
                                 Action
                               </th>
                             </tr>
@@ -4980,9 +5060,9 @@ const ProjectDetailsEdit = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    </div> */}
+                    {/* <div className="mb-6">
+                     
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Emailer Template{" "}
@@ -4993,7 +5073,7 @@ const ProjectDetailsEdit = () => {
                           >
                             <Info className="w-5 h-5 fill-black text-white" />
                             {showTooltipEmailer && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 5 MB
                               </span>
                             )}
@@ -5008,15 +5088,7 @@ const ProjectDetailsEdit = () => {
                               .click()
                           }
                         >
-                          {/* <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={20}
-                            height={20}
-                            fill="currentColor"
-                            viewBox="0 0 16 16"
-                          >
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                          
                           <span>Add</span>
                         </button>
                         <input
@@ -5035,18 +5107,18 @@ const ProjectDetailsEdit = () => {
                           style={{ display: "none" }}
                         />
                       </div>
-                      {/* Table */}
+                     
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 File Name
                               </th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                                 Action
                               </th>
                             </tr>
@@ -5088,9 +5160,9 @@ const ProjectDetailsEdit = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                    <div className="mb-6">
-                      {/* Header */}
+                    </div> */}
+                    {/* <div className="mb-6">
+                    
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
                           Project Know Your Apartment Files{" "}
@@ -5101,7 +5173,7 @@ const ProjectDetailsEdit = () => {
                           >
                             <Info className="w-5 h-5 fill-black text-white" />
                             {showTooltipKYA && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                                 Max Upload Size 20 MB
                               </span>
                             )}
@@ -5116,15 +5188,7 @@ const ProjectDetailsEdit = () => {
                               .click()
                           }
                         >
-                          {/* <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={20}
-                            height={20}
-                            fill="currentColor"
-                            viewBox="0 0 16 16"
-                          >
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                          </svg> */}
+                         
                           <span>Add</span>
                         </button>
                         <input
@@ -5143,18 +5207,18 @@ const ProjectDetailsEdit = () => {
                           style={{ display: "none" }}
                         />
                       </div>
-                      {/* Table */}
+                    
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <table className="w-full border-separate">
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 File Name
                               </th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                                 Action
                               </th>
                             </tr>
@@ -5196,7 +5260,7 @@ const ProjectDetailsEdit = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div>
+                    </div> */}
                     <div className="mb-6">
                       {/* Header */}
                       <div className="flex justify-between items-center mb-4">
@@ -5252,18 +5316,18 @@ const ProjectDetailsEdit = () => {
                           <thead>
                             <tr style={{ backgroundColor: "#e6e2d8" }}>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 File Name
                               </th>
                               <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r"
+                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
                                 style={{ borderColor: "#fff" }}
                               >
                                 Preview
                               </th>
-                              <th className="font-semibold text-gray-900 py-3 px-4">
+                              <th className="font-semibold text-gray-900 py-3 px-4 text-left" >
                                 Action
                               </th>
                             </tr>
