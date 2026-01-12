@@ -27,6 +27,138 @@ import { Building2, FileText, Trash2, ArrowLeft, Plus, Info } from "lucide-react
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import "../styles/mor.css";
 
+// Custom MultiValue component for react-select
+const CustomMultiValue = (props) => (
+  <div
+    style={{
+      position: "relative",
+      backgroundColor: "#E5E0D3",
+      borderRadius: "2px",
+      margin: "3px",
+      marginTop: "10px",
+      padding: "4px 10px 6px 10px",
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      paddingRight: "28px",
+    }}
+  >
+    <span
+      style={{
+        color: "#1a1a1a8a",
+        fontSize: "13px",
+        fontWeight: "500",
+      }}
+    >
+      {props.data.label}
+    </span>
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        props.removeProps.onClick(e);
+      }}
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        props.removeProps.onMouseDown(e);
+      }}
+      onTouchEnd={(e) => {
+        e.stopPropagation();
+        props.removeProps.onTouchEnd(e);
+      }}
+      style={{
+        position: "absolute",
+        right: "-10px",
+        top: "3px",
+        transform: "translateY(-50%), translateX(-50%)",
+        background: "transparent",
+        border: "1px solid #ccc",
+        borderRadius: "50%",
+        cursor: "pointer",
+        padding: "0",
+        display: "flex",
+        alignItems: "start",
+        justifyContent: "center",
+        color: "#666",
+        fontSize: "16px",
+        lineHeight: "1",
+        width: "20px",
+        height: "20px",
+      }}
+      type="button"
+    >
+      ×
+    </button>
+  </div>
+);
+
+// Custom styles for react-select
+const customStyles = {
+  control: (provided, state) => ({
+    ...provided,
+    minHeight: "44px",
+    borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
+    boxShadow: "none",
+    fontSize: "14px",
+    paddingTop: "6px",
+    backgroundColor: "transparent",
+    "&:hover": { borderColor: "#C72030" },
+  }),
+  valueContainer: (provided) => ({
+    ...provided,
+    padding: "4px 6px",
+    flexWrap: "wrap",
+    backgroundColor: "transparent",
+  }),
+  dropdownIndicator: (provided, state) => ({
+    ...provided,
+    padding: "4px 8px",
+    color: state.isFocused ? "#C72030" : "#666",
+    "&:hover": { color: "#C72030" },
+  }),
+  indicatorSeparator: () => ({ display: "none" }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: "#999",
+    fontSize: "14px",
+  }),
+  menu: (provided) => ({
+    ...provided,
+    zIndex: 9999,
+    fontSize: "14px",
+    backgroundColor: "#fff",
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "#C72030"
+      : state.isFocused
+        ? "#F6F4EE"
+        : "#fff",
+    color: state.isSelected ? "#fff" : "#1A1A1A",
+    fontSize: "14px",
+    padding: "8px 12px",
+    cursor: "pointer",
+    "&:hover": {
+      backgroundColor: "#F6F4EE",
+      color: "#1A1A1A",
+    },
+    "&:active": {
+      backgroundColor: "#C72030",
+      color: "#fff",
+    },
+  }),
+  multiValue: (provided) => ({
+    ...provided,
+    backgroundColor: "transparent",
+  }),
+  multiValueLabel: (provided) => ({
+    ...provided,
+    color: "#1a1a1a8a",
+    fontSize: "13px",
+    fontWeight: "500",
+  }),
+};
+
 // Field styles for Material-UI components
 const fieldStyles = {
   height: "45px",
@@ -800,11 +932,13 @@ const ProjectDetailsEdit = () => {
           Rera_Sellable_Area: project.rera_sellable_area || "",
           Number_Of_Towers: project.no_of_towers || "",
           Number_Of_Units: project.no_of_apartments || "",
+          show_on_home: project.show_on_home || false,
           no_of_floors: project.no_of_floors || "",
           Amenities: Array.isArray(project.amenities) 
             ? project.amenities.map(a => ({
-                id: a.id || a.amenity_id, 
-                name: a.name || a.amenity_name 
+                id: a.amenity_id || a.id,
+                name: a.amenity_name || a.name,
+                association_id: a.id // This is the project_amenity association ID for deletion
               })) 
             : [],
           Specifications: project.specifications || [],
@@ -937,11 +1071,13 @@ const ProjectDetailsEdit = () => {
     return axios
       .get(getFullUrl('/construction_statuses.json'))
       .then((response) => {
-        const options = response.data.map((status) => ({
-          value: status.construction_status,
-          label: status.construction_status,
-          id: status.id,
-        }));
+        const options = response.data
+          .filter((status) => status.active === true)
+          .map((status) => ({
+            value: status.construction_status,
+            label: status.construction_status,
+            id: status.id,
+          }));
         setStatusOptions(options);
       });
   };
@@ -963,7 +1099,7 @@ const ProjectDetailsEdit = () => {
     try {
       const response = await axios.get(getFullUrl('/building_types.json'));
       const options = response.data
-        .filter((item) => item.active)
+        .filter((item) => item.active === true)
         .map((type) => ({
           value: type.building_type,
           label: type.building_type,
@@ -973,6 +1109,41 @@ const ProjectDetailsEdit = () => {
       console.error("Error fetching building types:", error);
       toast.error("Failed to fetch building types");
     }
+  };
+
+  // Handler to delete amenity via API
+  const handleDeleteAmenity = async (amenityToRemove) => {
+    // Find the amenity object that contains the association ID
+    const amenityObj = formData.Amenities.find(
+      (a) => (typeof a?.id === 'string' ? parseInt(a.id, 10) : a?.id) === amenityToRemove.value
+    );
+
+    // If amenity has an association ID, delete it from the server
+    if (amenityObj && amenityObj.association_id) {
+      try {
+        await axios.delete(
+          getFullUrl(`/amenities/${amenityObj.association_id}.json`),
+          {
+            headers: {
+              Authorization: getAuthHeader(),
+            },
+          }
+        );
+        toast.success("Amenity removed successfully");
+      } catch (error) {
+        console.error("Error deleting amenity:", error);
+        toast.error("Failed to remove amenity", { description: "Error" });
+        return; // Don't update local state if API call failed
+      }
+    }
+
+    // Update local state - remove only the specific amenity
+    setFormData((prev) => ({
+      ...prev,
+      Amenities: prev.Amenities.filter(
+        (a) => (typeof a?.id === 'string' ? parseInt(a.id, 10) : a?.id) !== amenityToRemove.value
+      ),
+    }));
   };
 
   const handlePropertyTypeChange = async (selectedOption) => {
@@ -990,10 +1161,12 @@ const ProjectDetailsEdit = () => {
         getFullUrl(`/building_types.json?q[property_type_id_eq]=${id}`)
       );
 
-      const formattedBuildingTypes = response.data.map((item) => ({
-        value: item.building_type,
-        label: item.building_type,
-      }));
+      const formattedBuildingTypes = response.data
+        .filter((item) => item.active === true)
+        .map((item) => ({
+          value: item.building_type,
+          label: item.building_type,
+        }));
 
       setBuildingTypes(formattedBuildingTypes);
     } catch (error) {
@@ -1029,7 +1202,7 @@ const ProjectDetailsEdit = () => {
         const fetchedAmenities = response.data.amenities_setups || [];
         console.log('Fetched amenities from API:', fetchedAmenities);
         console.log('Current formData.Amenities:', formData.Amenities);
-        setAmenities(fetchedAmenities);
+        setAmenities(fetchedAmenities.filter((amenity) => amenity.active === true));
       })
       .catch((error) => {
         console.error("Error fetching amenities:", error);
@@ -1042,7 +1215,7 @@ const ProjectDetailsEdit = () => {
     axios
       .get(getFullUrl('/configuration_setups.json'))
       .then((response) => {
-        setConfigurations(response.data);
+        setConfigurations(response.data.filter((config) => config.active === true));
       })
       .catch((error) => {
         console.error("Error fetching configurations:", error);
@@ -1055,11 +1228,13 @@ const ProjectDetailsEdit = () => {
     axios
       .get(getFullUrl('/construction_statuses.json'))
       .then((response) => {
-        const options = response.data.map((status) => ({
-          value: status.construction_status,
-          label: status.construction_status,
-          id: status.id,
-        }));
+        const options = response.data
+          .filter((status) => status.active === true)
+          .map((status) => ({
+            value: status.construction_status,
+            label: status.construction_status,
+            id: status.id,
+          }));
         setStatusOptions(options);
       })
       .catch((error) => {
@@ -1818,8 +1993,11 @@ const ProjectDetailsEdit = () => {
           }
         });
       } else if (key === "Amenities" && Array.isArray(value) && value.length > 0) {
-        // Convert array to comma-separated string for backend
-        const amenityNames = value.map(amenity => amenity?.name).filter(Boolean).join(",");
+        // Convert array to comma-separated string of names for backend
+        const amenityNames = value
+          .map(amenity => amenity?.name)
+          .filter(Boolean)
+          .join(",");
         if (amenityNames) {
           data.append("project[Amenities]", amenityNames);
         }
@@ -1879,6 +2057,9 @@ const ProjectDetailsEdit = () => {
         // Special handling for Price_Onward - always send it
         if (key === "Price_Onward") {
           data.append(`project[${key}]`, value || "");
+        } else if (key === "show_on_home") {
+          // Always send show_on_home as boolean
+          data.append(`project[${key}]`, value ? "true" : "false");
         } else if (value !== null && value !== undefined && value !== "") {
           data.append(`project[${key}]`, value);
         }
@@ -1886,18 +2067,30 @@ const ProjectDetailsEdit = () => {
     });
 
     try {
+      // Check if authentication token exists
+      let authHeader;
+      try {
+        authHeader = getAuthHeader();
+      } catch (authError) {
+        toast.error("Authentication token is missing. Please log in again.");
+        setLoading(false);
+        setIsSubmitting(false);
+        navigate("/login");
+        return;
+      }
+
       const response = await axios.put(
         getFullUrl(`/projects/${projectId}.json`),
         data,
         {
           headers: {
-            Authorization: getAuthHeader(),
+            Authorization: authHeader,
             "Content-Type": "multipart/form-data",
           },
         }
       );
 
-      toast.success("Project updated successfully!", { description: "Changes have been saved" });
+      toast.success("Project updated successfully!");
       navigate("/maintenance/project-details-list");
     } catch (error) {
       console.error("Error updating project:", error);
@@ -1908,6 +2101,9 @@ const ProjectDetailsEdit = () => {
         (error.response.data.project_name || error.response.data.Project_Name)
       ) {
         toast.error("Project name already exists.", { description: "Validation Error" });
+      } else if (error.response && error.response.status === 401) {
+        toast.error("Authentication failed. Please log in again.", { description: "Error" });
+        navigate("/login");
       } else {
         toast.error("Failed to update the project. Please try again.", { description: "Error" });
       }
@@ -3101,80 +3297,74 @@ const ProjectDetailsEdit = () => {
             <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
             <div className="grid grid-cols-1 gap-4">
               <div className="w-full md:w-1/3">
-                <FormControl
-                  fullWidth
-                  variant="outlined"
-                  sx={{ "& .MuiInputBase-root": fieldStyles }}
-                >
-                  <InputLabel shrink>Amenities</InputLabel>
-                  <MuiSelect
-                    multiple
-                    value={
-                      Array.isArray(formData.Amenities) 
-                        ? formData.Amenities.map(a => {
-                            const id = a?.id;
-                            const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-                            return numericId;
-                          }).filter(id => id !== null && id !== undefined && !isNaN(id)) 
-                        : []
-                    }
-                    onChange={(e) => {
-                      const selectedIds = e.target.value as number[];
-                      const selectedAmenities = selectedIds.map(id => {
-                        const amenity = amenities.find(a => a.id === id);
-                        return amenity ? { id: amenity.id, name: amenity.name } : null;
-                      }).filter(Boolean);
-                      
-                      setFormData((prev) => ({
-                        ...prev,
-                        Amenities: selectedAmenities,
-                      }));
-                    }}
-                    label="Amenities"
-                    notched
-                    displayEmpty
-                    renderValue={(selected) => {
-                      if (!Array.isArray(selected) || selected.length === 0) {
-                        return <span style={{ color: '#999' }}>Select amenities</span>;
+                <div className="relative">
+                  <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
+                    Amenities
+                  </label>
+                  <Select
+                    isMulti
+                    value={Array.isArray(formData.Amenities)
+                      ? formData.Amenities.map((a) => ({
+                          value: typeof a?.id === 'string' ? parseInt(a.id, 10) : a?.id,
+                          label: a?.name || '',
+                        })).filter((opt) => opt.value && opt.label)
+                      : []}
+                    onChange={(selected, actionMeta) => {
+                      // Handle removal
+                      if (actionMeta.action === 'remove-value' || actionMeta.action === 'pop-value') {
+                        handleDeleteAmenity(actionMeta.removedValue);
+                        return;
                       }
-                      return formData.Amenities
-                        .map((a) => a?.name)
-                        .filter(Boolean)
-                        .join(", ");
-                    }}
-                    MenuProps={{
-                      PaperProps: {
-                        style: {
-                          maxHeight: 300,
-                        },
-                      },
-                    }}
-                  >
-                    {amenities.map((ammit) => {
-                      const amenityId = typeof ammit.id === 'string' ? parseInt(ammit.id, 10) : ammit.id;
-                      const isChecked = Array.isArray(formData.Amenities) && 
-                                       formData.Amenities.some(a => {
-                                         const formDataId = typeof a?.id === 'string' ? parseInt(a.id, 10) : a?.id;
-                                         return formDataId === amenityId;
-                                       });
                       
-                      return (
-                        <MenuItem key={ammit.id} value={amenityId}>
-                          <Checkbox 
-                            checked={isChecked}
-                            sx={{
-                              color: "#C72030",
-                              '&.Mui-checked': {
-                                color: "#C72030",
-                              },
-                            }}
-                          />
-                          <span>{ammit.name}</span>
-                        </MenuItem>
-                      );
-                    })}
-                  </MuiSelect>
-                </FormControl>
+                      // Handle adding new amenities
+                      if (actionMeta.action === 'select-option') {
+                        const newAmenity = actionMeta.option;
+                        const amenity = amenities.find((a) => a.id === newAmenity.value);
+                        if (amenity) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            Amenities: [...prev.Amenities, { id: amenity.id, name: amenity.name }],
+                          }));
+                        }
+                        return;
+                      }
+
+                      // Handle clear all
+                      if (actionMeta.action === 'clear') {
+                        // Delete all amenities
+                        const deletePromises = formData.Amenities
+                          .filter(a => a.association_id)
+                          .map(a => 
+                            axios.delete(
+                              getFullUrl(`/amenities/${a.association_id}.json`),
+                              {
+                                headers: {
+                                  Authorization: getAuthHeader(),
+                                },
+                              }
+                            ).catch(err => console.error('Error deleting amenity:', err))
+                          );
+                        
+                        Promise.all(deletePromises).then(() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            Amenities: [],
+                          }));
+                          toast.success("All amenities removed", { description: "Success" });
+                        });
+                      }
+                    }}
+                    options={amenities.map((a) => ({ value: a.id, label: a.name }))}
+                    styles={customStyles}
+                    components={{
+                      MultiValue: CustomMultiValue,
+                    }}
+                    closeMenuOnSelect={false}
+                    placeholder="Select Amenities..."
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                  />
+                </div>
               </div>
             </div>
           </div>

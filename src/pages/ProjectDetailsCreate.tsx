@@ -29,6 +29,138 @@ import { DeleteCompanyModal } from "@/components/DeleteCompanyModal";
 import { DeleteCountryModal } from "@/components/DeleteCountryModal";
 import { DeletePatrollingModal } from "@/components/DeletePatrollingModal";
 
+// Custom MultiValue component for react-select
+const CustomMultiValue = (props) => (
+  <div
+    style={{
+      position: "relative",
+      backgroundColor: "#E5E0D3",
+      borderRadius: "2px",
+      margin: "3px",
+      marginTop: "10px",
+      padding: "4px 10px 6px 10px",
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      paddingRight: "28px",
+    }}
+  >
+    <span
+      style={{
+        color: "#1a1a1a8a",
+        fontSize: "13px",
+        fontWeight: "500",
+      }}
+    >
+      {props.data.label}
+    </span>
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        props.removeProps.onClick(e);
+      }}
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        props.removeProps.onMouseDown(e);
+      }}
+      onTouchEnd={(e) => {
+        e.stopPropagation();
+        props.removeProps.onTouchEnd(e);
+      }}
+      style={{
+        position: "absolute",
+        right: "-10px",
+        top: "3px",
+        transform: "translateY(-50%), translateX(-50%)",
+        background: "transparent",
+        border: "1px solid #ccc",
+        borderRadius: "50%",
+        cursor: "pointer",
+        padding: "0",
+        display: "flex",
+        alignItems: "start",
+        justifyContent: "center",
+        color: "#666",
+        fontSize: "16px",
+        lineHeight: "1",
+        width: "20px",
+        height: "20px",
+      }}
+      type="button"
+    >
+      ×
+    </button>
+  </div>
+);
+
+// Custom styles for react-select
+const customStyles = {
+  control: (provided, state) => ({
+    ...provided,
+    minHeight: "44px",
+    borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
+    boxShadow: "none",
+    fontSize: "14px",
+    paddingTop: "6px",
+    backgroundColor: "transparent",
+    "&:hover": { borderColor: "#C72030" },
+  }),
+  valueContainer: (provided) => ({
+    ...provided,
+    padding: "4px 6px",
+    flexWrap: "wrap",
+    backgroundColor: "transparent",
+  }),
+  dropdownIndicator: (provided, state) => ({
+    ...provided,
+    padding: "4px 8px",
+    color: state.isFocused ? "#C72030" : "#666",
+    "&:hover": { color: "#C72030" },
+  }),
+  indicatorSeparator: () => ({ display: "none" }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: "#999",
+    fontSize: "14px",
+  }),
+  menu: (provided) => ({
+    ...provided,
+    zIndex: 9999,
+    fontSize: "14px",
+    backgroundColor: "#fff",
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "#C72030"
+      : state.isFocused
+        ? "#F6F4EE"
+        : "#fff",
+    color: state.isSelected ? "#fff" : "#1A1A1A",
+    fontSize: "14px",
+    padding: "8px 12px",
+    cursor: "pointer",
+    "&:hover": {
+      backgroundColor: "#F6F4EE",
+      color: "#1A1A1A",
+    },
+    "&:active": {
+      backgroundColor: "#C72030",
+      color: "#fff",
+    },
+  }),
+  multiValue: (provided) => ({
+    ...provided,
+    backgroundColor: "transparent",
+  }),
+  multiValueLabel: (provided) => ({
+    ...provided,
+    color: "#1a1a1a8a",
+    fontSize: "13px",
+    fontWeight: "500",
+  }),
+};
+
 // Field styles for Material-UI components
 const fieldStyles = {
   height: "45px",
@@ -610,7 +742,8 @@ const ProjectDetailsCreate = () => {
     axios
       .get(getFullUrl('/amenity_setups.json'))
       .then((response) => {
-        setAmenities(response.data.amenities_setups || []);
+        const allAmenities = response.data.amenities_setups || [];
+        setAmenities(allAmenities.filter((amenity) => amenity.active === true));
       })
       .catch((error) => {
         console.error("Error fetching amenities:", error);
@@ -623,7 +756,7 @@ const ProjectDetailsCreate = () => {
     axios
       .get(getFullUrl('/configuration_setups.json'))
       .then((response) => {
-        setConfigurations(response.data);
+        setConfigurations(response.data.filter((config) => config.active === true));
       })
       .catch((error) => {
         console.error("Error fetching configurations:", error);
@@ -636,11 +769,13 @@ const ProjectDetailsCreate = () => {
     axios
       .get(getFullUrl('/construction_statuses.json'))
       .then((response) => {
-        const options = response.data.map((status) => ({
-          value: status.construction_status,
-          label: status.construction_status,
-          id: status.id,
-        }));
+        const options = response.data
+          .filter((status) => status.active === true)
+          .map((status) => ({
+            value: status.construction_status,
+            label: status.construction_status,
+            id: status.id,
+          }));
         setStatusOptions(options);
       })
       .catch((error) => {
@@ -653,7 +788,7 @@ const ProjectDetailsCreate = () => {
     try {
       const response = await axios.get(getFullUrl('/building_types.json'));
       const options = response.data
-        .filter((item) => item.active)
+        .filter((item) => item.active === true)
         .map((type) => ({
           value: type.building_type,
           label: type.building_type,
@@ -685,10 +820,12 @@ const ProjectDetailsCreate = () => {
         getFullUrl(`/building_types.json?q[property_type_id_eq]=${id}`)
       );
 
-      const formattedBuildingTypes = response.data.map((item) => ({
-        value: item.building_type,
-        label: item.building_type,
-      }));
+      const formattedBuildingTypes = response.data
+        .filter((item) => item.active === true)
+        .map((item) => ({
+          value: item.building_type,
+          label: item.building_type,
+        }));
 
       setBuildingTypes(formattedBuildingTypes);
     } catch (error) {
@@ -1661,12 +1798,13 @@ const ProjectDetailsCreate = () => {
           }
         });
       } else if (key === "Amenities" && Array.isArray(value) && value.length > 0) {
-        // Only append amenities if array has items
-        value.forEach((amenityId) => {
-          if (amenityId) {
-            data.append("project[Amenities][]", amenityId);
-          }
-        });
+        // Convert amenity IDs array to comma-separated string of IDs
+        const amenityIds = value
+          .filter((id) => id !== null && id !== undefined)
+          .join(",");
+        if (amenityIds) {
+          data.append("project[Amenities]", amenityIds);
+        }
       } else if (key === "Configuration_Type" && value && value.trim() !== "") {
         // Only append configuration type if it has a non-empty value
         data.append("project[Configuration_Type]", value);
@@ -1729,6 +1867,9 @@ const ProjectDetailsCreate = () => {
       } else if (key === "rera_url" && value && value.trim() !== "") {
         // Only append rera_url if it has a non-empty value
         data.append(`project[${key}]`, value);
+      } else if (key === "show_on_home") {
+        // Always send show_on_home as boolean
+        data.append(`project[${key}]`, value ? "true" : "false");
       } else if (
         key !== "Specifications" && 
         key !== "Amenities" && 
@@ -1744,9 +1885,21 @@ const ProjectDetailsCreate = () => {
     });
 
     try {
+      // Check if authentication token exists
+      let authHeader;
+      try {
+        authHeader = getAuthHeader();
+      } catch (authError) {
+        toast.error("Authentication token is missing. Please log in again.");
+        setLoading(false);
+        setIsSubmitting(false);
+        Navigate("/login");
+        return;
+      }
+
       const response = await axios.post(getFullUrl('/projects.json'), data, {
         headers: {
-          Authorization: getAuthHeader(),
+          Authorization: authHeader,
         },
       });
 
@@ -1762,6 +1915,9 @@ const ProjectDetailsCreate = () => {
         (error.response.data.project_name || error.response.data.Project_Name)
       ) {
         toast.error("Project name already exists.");
+      } else if (error.response && error.response.status === 401) {
+        toast.error("Authentication failed. Please log in again.");
+        Navigate("/login");
       } else {
         toast.error("Failed to submit the form. Please try again.");
       }
@@ -2905,47 +3061,34 @@ const ProjectDetailsCreate = () => {
           <div className="p-6" style={{ backgroundColor: "#AAB9C50D" }}>
             <div className="grid grid-cols-1 gap-4">
               <div className="w-full md:w-1/3">
-                <FormControl
-                  fullWidth
-                  variant="outlined"
-                  sx={{ "& .MuiInputBase-root": fieldStyles }}
-                >
-                  <InputLabel shrink>Amenities</InputLabel>
-                  <MuiSelect
-                    multiple
-                    value={formData.Amenities}
-                    onChange={(e) =>
+                <div className="relative">
+                  <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
+                    Amenities
+                  </label>
+                  <Select
+                    isMulti
+                    value={amenities
+                      .filter((a) => formData.Amenities.includes(a.id))
+                      .map((a) => ({ value: a.id, label: a.name }))}
+                    onChange={(selected) => {
+                      const selectedIds = selected ? selected.map((s) => s.value) : [];
                       setFormData((prev) => ({
                         ...prev,
-                        Amenities: e.target.value as number[],
-                      }))
-                    }
-                    label="Amenities"
-                    notched
-                    displayEmpty
-                    renderValue={(selected) => {
-                      if ((selected as number[]).length === 0) {
-                        return "Select amenities";
-                      }
-                      return (selected as number[])
-                        .map((id) => {
-                          const ammit = Array.isArray(amenities) ? amenities.find((ammit) => ammit.id === id) : null;
-                          return ammit ? ammit.name : "";
-                        })
-                        .filter(Boolean)
-                        .join(", ");
+                        Amenities: selectedIds,
+                      }));
                     }}
-                  >
-                    <MenuItem value="" disabled>
-                      Select amenities
-                    </MenuItem>
-                    {Array.isArray(amenities) && amenities.map((ammit) => (
-                      <MenuItem key={ammit.id} value={ammit.id}>
-                        {ammit.name}
-                      </MenuItem>
-                    ))}
-                  </MuiSelect>
-                </FormControl>
+                    options={amenities.map((a) => ({ value: a.id, label: a.name }))}
+                    styles={customStyles}
+                    components={{
+                      MultiValue: CustomMultiValue,
+                      MultiValueRemove: () => null,
+                    }}
+                    closeMenuOnSelect={false}
+                    placeholder="Select Amenities..."
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                  />
+                </div>
               </div>
             </div>
           </div>

@@ -124,15 +124,19 @@ const ProjectDetailsList = () => {
         )
       );
 
-      // TODO: Add API call here to update the server
-      // const response = await fetch(getFullUrl(`/projects/${projectId}.json`), {
-      //   method: 'PATCH',
-      //   headers: {
-      //     'Authorization': getAuthHeader(),
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ project: { show_on_home: !currentValue } }),
-      // });
+      // API call to update the server
+      const response = await fetch(getFullUrl(`/projects/${projectId}.json`), {
+        method: 'PATCH',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ project: { show_on_home: !currentValue } }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update show_on_home');
+      }
 
       toast.success('Show on Home updated successfully');
     } catch (error) {
