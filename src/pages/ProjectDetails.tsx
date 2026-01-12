@@ -104,6 +104,7 @@ const ProjectDetails = () => {
     project_2d_image_9_by_16: [],
     project_2d_image_3_by_2: [],
     project_2d_image_16_by_9: [],
+    project_qrcode_image: [],
   });
 
   console.log("formdata", formData);
@@ -225,6 +226,7 @@ const ProjectDetails = () => {
             project_2d_image_9_by_16: project.project_2d_image_9_by_16 || [],
             project_2d_image_3_by_2: project.project_2d_image_3_by_2 || [],
             project_2d_image_16_by_9: project.project_2d_image_16_by_9 || [],
+            project_qrcode_image: project.project_qrcode_images || [],
           });
         } else {
           setError("Project not found");
@@ -736,26 +738,56 @@ const ProjectDetails = () => {
             </div>
           </div>
           <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
-            <div className="space-y-3 mx-6">
+            <div className="space-y-6 mx-6">
               {formData?.rera_number_multiple?.length > 0 ? (
-                formData.rera_number_multiple.map((rera, idx) => (
-                  <div key={idx} className="text-[14px] leading-relaxed text-gray-900">
-                    <span className="font-semibold">Tower Name :</span>
-                    <span className="font-semibold">{rera.tower_name}</span>
-                    {", "}
-                    <span className="font-semibold">Rera Number :</span>
-                    <span className="font-semibold">{rera.rera_number}</span>
-                    {", "}
-                    <a
-                      href={rera.rera_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-black-600 hover:text-black-800 underline font-semibold"
-                    >
-                      Rera URL : {rera.rera_url}
-                    </a>
-                  </div>
-                ))
+                formData.rera_number_multiple.map((rera, idx) => {
+                  // Filter QR codes for this RERA number
+                  const qrCodesForRera = formData.project_qrcode_image.filter(
+                    (qr) => qr.file_name === rera.rera_number || qr.title === rera.rera_number
+                  );
+                  
+                  return (
+                    <div key={idx} className="space-y-3">
+                      <div className="text-[14px] leading-relaxed text-gray-900">
+                        <span className="font-semibold">Tower Name :</span>
+                        <span className="font-semibold">{rera.tower_name}</span>
+                        {", "}
+                        <span className="font-semibold">Rera Number :</span>
+                        <span className="font-semibold">{rera.rera_number}</span>
+                        {", "}
+                        <a
+                          href={rera.rera_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-black-600 hover:text-black-800 underline font-semibold"
+                        >
+                          Rera URL : {rera.rera_url}
+                        </a>
+                      </div>
+                      
+                      {/* QR Code Images Section */}
+                      {qrCodesForRera.length > 0 && (
+                        <div className="mt-3">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-2">Project QR Code Images</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {qrCodesForRera.map((qrImage, qrIdx) => (
+                              <div key={qrIdx} className="border border-gray-200 rounded-lg p-2 bg-white">
+                                <img
+                                  src={qrImage.document_url}
+                                  alt={qrImage.document_file_name || 'QR Code'}
+                                  className="w-full h-32 object-contain rounded"
+                                />
+                                <p className="text-xs text-gray-600 mt-2 text-center truncate" title={qrImage.document_file_name}>
+                                  {rera.rera_number || 'QR Code'}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               ) : (
                 <span className="text-gray-500">—</span>
               )}

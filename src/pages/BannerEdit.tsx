@@ -517,29 +517,14 @@ const BannerEdit = () => {
 
     // Existing image: delete from server, then remove locally
     try {
-      const response = await fetch(
-        `${baseURL}banners/${id}/remove_image/${imageId}.json`,
+      const response = await axios.delete(
+        `${baseURL}/banners/${id}/remove_image/${imageId}.json`,
         {
-          method: "DELETE",
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            Authorization: getAuthHeader(),
           },
         }
       );
-
-      if (!response.ok) {
-        // Optionally, handle 404 as a successful local delete
-        if (response.status === 404) {
-          const updatedFiles = Array.isArray(formData[key])
-            ? formData[key].filter((_, i) => i !== index)
-            : [];
-          setFormData({ ...formData, [key]: updatedFiles });
-          toast.success("Image removed from UI (already deleted on server).");
-          return;
-        }
-        throw new Error("Failed to delete image");
-      }
 
       // Remove from UI after successful delete
       setFormData((prev) => {
@@ -551,8 +536,20 @@ const BannerEdit = () => {
 
       toast.success("Image deleted successfully!");
     } catch (error) {
-      console.error("Error deleting image:", error.message);
-      toast.error("Failed to delete image. Please try again.");
+      console.error("Error deleting image:", error);
+      
+      // If 404, the image doesn't exist on server, still remove from UI
+      if (error.response?.status === 404) {
+        setFormData((prev) => {
+          const updatedFiles = Array.isArray(prev[key])
+            ? prev[key].filter((_, i) => i !== index)
+            : [];
+          return { ...prev, [key]: updatedFiles };
+        });
+        toast.success("Image removed from UI (already deleted on server).");
+      } else {
+        toast.error("Failed to delete image. Please try again.");
+      }
     }
   };
 
@@ -921,73 +918,6 @@ const BannerEdit = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                      {(previewVideo ||
-                        previewImg ||
-                        formData.banner_video?.document_url) && (
-                        <TableRow className="hover:bg-gray-50 transition-colors">
-                          <TableCell className="py-3 px-4 font-medium">
-                            {/* Try to fetch name in proper fallback order */}
-                            {previewVideo?.name ||
-                              previewImg?.name ||
-                              formData.banner_video?.document_file_name ||
-                              formData.banner_video?.file_name ||
-                              (typeof formData.banner_video === "object"
-                                ? formData.banner_video?.document_url
-                                    ?.split("/")
-                                    ?.pop()
-                                : formData.banner_video?.split("/")?.pop()) ||
-                              "Video/Image"}
-                          </TableCell>
-                          <TableCell className="py-3 px-4">
-                            {isImageFile(
-                              previewVideo ||
-                                previewImg ||
-                                formData.banner_video?.document_url
-                            ) ? (
-                              <img
-                                src={
-                                  previewImg ||
-                                  formData.banner_video?.document_url
-                                }
-                                className="img-fluid rounded"
-                                alt="Preview"
-                                style={{
-                                  maxWidth: "100px",
-                                  maxHeight: "150px",
-                                  objectFit: "cover",
-                                }}
-                              />
-                            ) : (
-                              <video
-                                src={
-                                  previewVideo ||
-                                  formData.banner_video?.document_url
-                                }
-                                controls
-                                className="img-fluid rounded"
-                                style={{
-                                  maxWidth: "200px",
-                                  maxHeight: "150px",
-                                  objectFit: "cover",
-                                }}
-                              />
-                            )}
-                          </TableCell>
-                          <TableCell className="py-3 px-4">N/A</TableCell>
-                          <TableCell className="py-3 px-4">
-                            <button
-                              type="button"
-                              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                              onClick={() =>
-                                handleFetchedDiscardGallery("banner_video", 0, null)
-                              }
-                            >
-                              ×
-                            </button>
-                          </TableCell>
-                        </TableRow>
-                      )}
-
                       {project_banner.flatMap(({ key, label }) => {
                         console.log(`Rendering ${key}:`, formData[key]);
                         const files = Array.isArray(formData[key])
