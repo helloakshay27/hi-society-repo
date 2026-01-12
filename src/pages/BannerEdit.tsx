@@ -41,6 +41,9 @@ const BannerEdit = () => {
   const [originalBannerVideo, setOriginalBannerVideo] = useState(null); // Store original preview
   const [showUploader, setShowUploader] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent multiple submissions
+  const [imageConfigurations, setImageConfigurations] = useState({
+    BannerAttachment: [],
+  });
 
   // Field styles for Material-UI components
   const fieldStyles = {
@@ -152,6 +155,49 @@ const BannerEdit = () => {
     }
   }, [baseURL]);
 
+  const fetchImageConfigurations = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `${baseURL}/system_constants.json?q[description_eq]=ImagesConfiguration`,
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+          },
+        }
+      );
+      
+      if (response.data && Array.isArray(response.data)) {
+        const configs = {};
+        
+        response.data.forEach((config) => {
+          const { name, value } = config;
+          
+          // Extract ratio from value (e.g., "banner_video_1_by_1" -> "1:1")
+          const ratioMatch = value.match(/(\d+)_by_(\d+)/);
+          if (ratioMatch) {
+            const ratio = `${ratioMatch[1]}:${ratioMatch[2]}`;
+            
+            if (!configs[name]) {
+              configs[name] = [];
+            }
+            
+            if (!configs[name].includes(ratio)) {
+              configs[name].push(ratio);
+            }
+          }
+        });
+        
+        setImageConfigurations(configs);
+      }
+    } catch (error) {
+      console.error('Error fetching image configurations:', error);
+      // Set default configurations if API fails
+      setImageConfigurations({
+        BannerAttachment: ['1:1', '9:16', '16:9', '3:2'],
+      });
+    }
+  }, [baseURL]);
+
   useEffect(() => {
     if (!id) {
       toast.error("Banner ID is missing");
@@ -160,7 +206,8 @@ const BannerEdit = () => {
     }
     fetchBanner();
     fetchProjects();
-  }, [id, fetchBanner, fetchProjects, navigate]);
+    fetchImageConfigurations();
+  }, [id, fetchBanner, fetchProjects, fetchImageConfigurations, navigate]);
 
   // Cleanup URLs on unmount
   useEffect(() => {
@@ -176,6 +223,13 @@ const BannerEdit = () => {
       }
     };
   }, []);
+
+  // Get dynamic ratios text for tooltips
+  const getDynamicRatiosText = (configName) => {
+    const ratios = imageConfigurations[configName] || [];
+    if (ratios.length === 0) return "No ratios configured";
+    return ratios.join(", ");
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -861,7 +915,7 @@ const BannerEdit = () => {
                         <Info className="w-5 h-5 fill-black text-white" />
                         {showVideoTooltip && (
                           <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                            Max Upload Size 5 MB. Supports 1:1, 9:16, 16:9, 3:2 aspect ratios
+                            Max Upload Size 5 MB. Supports {getDynamicRatiosText("BannerAttachment")} aspect ratios
                           </span>
                         )}
                       </span>

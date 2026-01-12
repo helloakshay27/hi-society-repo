@@ -287,7 +287,15 @@ const ProjectDetailsEdit = () => {
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [showFloorPlanModal, setShowFloorPlanModal] = useState(false);
   const [showBannerModal, setShowBannerModal] = useState(false);
-  const [imageConfigurations, setImageConfigurations] = useState({});
+  const [imageConfigurations, setImageConfigurations] = useState({
+    ProjectImage: [],
+    ProjectCoverImage: [],
+    ProjectGallery: [],
+    Project2DImage: [],
+    BannerAttachment: [],
+    EventImage: [],
+    EventCoverImage: [],
+  });
   const [showTooltipBanner, setShowTooltipBanner] = useState(false);
   const [showTooltipCover, setShowTooltipCover] = useState(false);
   const [showTooltipGallery, setShowTooltipGallery] = useState(false);
@@ -403,13 +411,7 @@ const ProjectDetailsEdit = () => {
 
   // Get dynamic ratios text for tooltips
   const getDynamicRatiosText = (configName) => {
-    const configMap = {
-      ProjectImage: selectedBannerRatios,
-      ProjectCoverImage: selectedCoverRatios,
-      ProjectGallery: selectedGalleryRatios,
-      Project2DImage: selectedFloorRatios,
-    };
-    const ratios = configMap[configName] || [];
+    const ratios = imageConfigurations[configName] || [];
     if (ratios.length === 0) return "No ratios configured";
     return `Required ratio${ratios.length > 1 ? "s" : ""}: ${ratios.join(", ")}`;
   };
@@ -487,12 +489,42 @@ const ProjectDetailsEdit = () => {
     }));
   };
   
-  const handleRemoveQRCodeImage = (index) => {
+  const handleRemoveQRCodeImage = async (index) => {
+    const qrImage = formData.project_qrcode_image[index];
+    
+    // If the image has an ID, it's an existing server image - call delete API
+    if (qrImage?.id && projectId) {
+      try {
+        await axios.delete(
+          getFullUrl(`/projects/${projectId}/remove_qr_code_images/${qrImage.id}.json`),
+          {
+            headers: {
+              Authorization: getAuthHeader(),
+            },
+          }
+        );
+        toast.success("QR Code image deleted successfully", { description: "Success" });
+      } catch (error) {
+        console.error("Error deleting QR code image:", error);
+        
+        // If 404, the image doesn't exist on server, still remove from UI
+        if (error.response?.status === 404) {
+          toast.success("QR Code image removed from UI (already deleted on server).", { description: "Success" });
+        } else {
+          toast.error("Failed to delete QR Code image. Please try again.");
+          return; // Don't remove from UI if delete failed
+        }
+      }
+    } else {
+      // New image without ID, just show success for local removal
+      toast.success("QR Code image removed", { description: "Success" });
+    }
+    
+    // Update local state
     setFormData((prev) => ({
       ...prev,
       project_qrcode_image: prev.project_qrcode_image.filter((_, i) => i !== index),
     }));
-    toast.success("QR Code image removed", { description: "Success" });
   };
 
   // Helper function to filter QR codes by RERA number
@@ -1245,8 +1277,54 @@ const ProjectDetailsEdit = () => {
 
   useEffect(() => {
     fetchBuildingTypes();
+    fetchImageConfigurations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Fetch image configurations from API
+  const fetchImageConfigurations = async () => {
+    try {
+      const response = await axios.get(
+        getFullUrl('/system_constants.json?q[description_eq]=ImagesConfiguration')
+      );
+      
+      if (response.data && Array.isArray(response.data)) {
+        const configs = {};
+        
+        response.data.forEach((config) => {
+          const { name, value } = config;
+          
+          // Extract ratio from value (e.g., "image_16_by_9" -> "16:9")
+          const ratioMatch = value.match(/(\d+)_by_(\d+)/);
+          if (ratioMatch) {
+            const ratio = `${ratioMatch[1]}:${ratioMatch[2]}`;
+            
+            if (!configs[name]) {
+              configs[name] = [];
+            }
+            
+            if (!configs[name].includes(ratio)) {
+              configs[name].push(ratio);
+            }
+          }
+        });
+        
+        setImageConfigurations(configs);
+      }
+    } catch (error) {
+      console.error('Error fetching image configurations:', error);
+      // Set default configurations if API fails
+      setImageConfigurations({
+        ProjectImage: ['9:16', '1:1', '16:9', '3:2'],
+        ProjectCoverImage: ['1:1', '16:9', '9:16', '3:2'],
+        ProjectGallery: ['16:9', '1:1', '9:16', '3:2'],
+        Project2DImage: ['16:9', '1:1', '9:16', '3:2'],
+        BannerAttachment: ['1:1', '9:16', '16:9', '3:2'],
+        EventImage: ['16:9', '1:1', '9:16', '3:2'],
+        EventCoverImage: ['16:9', '1:1', '9:16', '3:2'],
+      });
+    }
+  };
 
   const amenityTypes = Array.isArray(amenities)
     ? [

@@ -291,7 +291,15 @@ const ProjectDetailsCreate = () => {
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [showFloorPlanModal, setShowFloorPlanModal] = useState(false);
   const [showBannerModal, setShowBannerModal] = useState(false);
-  const [imageConfigurations, setImageConfigurations] = useState({});
+  const [imageConfigurations, setImageConfigurations] = useState({
+    ProjectImage: [],
+    ProjectCoverImage: [],
+    ProjectGallery: [],
+    Project2DImage: [],
+    BannerAttachment: [],
+    EventImage: [],
+    EventCoverImage: [],
+  });
   const [showTooltipBanner, setShowTooltipBanner] = useState(false);
   const [showTooltipCover, setShowTooltipCover] = useState(false);
   const [showTooltipGallery, setShowTooltipGallery] = useState(false);
@@ -407,13 +415,7 @@ const ProjectDetailsCreate = () => {
 
   // Get dynamic ratios text for tooltips
   const getDynamicRatiosText = (configName) => {
-    const configMap = {
-      ProjectImage: selectedBannerRatios,
-      ProjectCoverImage: selectedCoverRatios,
-      ProjectGallery: selectedGalleryRatios,
-      Project2DImage: selectedFloorRatios,
-    };
-    const ratios = configMap[configName] || [];
+    const ratios = imageConfigurations[configName] || [];
     if (ratios.length === 0) return "No ratios configured";
     return `Required ratio${ratios.length > 1 ? "s" : ""}: ${ratios.join(", ")}`;
   };
@@ -802,8 +804,54 @@ const ProjectDetailsCreate = () => {
 
   useEffect(() => {
     fetchBuildingTypes();
+    fetchImageConfigurations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Fetch image configurations from API
+  const fetchImageConfigurations = async () => {
+    try {
+      const response = await axios.get(
+        getFullUrl('/system_constants.json?q[description_eq]=ImagesConfiguration')
+      );
+      
+      if (response.data && Array.isArray(response.data)) {
+        const configs = {};
+        
+        response.data.forEach((config) => {
+          const { name, value } = config;
+          
+          // Extract ratio from value (e.g., "image_16_by_9" -> "16:9")
+          const ratioMatch = value.match(/(\d+)_by_(\d+)/);
+          if (ratioMatch) {
+            const ratio = `${ratioMatch[1]}:${ratioMatch[2]}`;
+            
+            if (!configs[name]) {
+              configs[name] = [];
+            }
+            
+            if (!configs[name].includes(ratio)) {
+              configs[name].push(ratio);
+            }
+          }
+        });
+        
+        setImageConfigurations(configs);
+      }
+    } catch (error) {
+      console.error('Error fetching image configurations:', error);
+      // Set default configurations if API fails
+      setImageConfigurations({
+        ProjectImage: ['9:16', '1:1', '16:9', '3:2'],
+        ProjectCoverImage: ['1:1', '16:9', '9:16', '3:2'],
+        ProjectGallery: ['16:9', '1:1', '9:16', '3:2'],
+        Project2DImage: ['16:9', '1:1', '9:16', '3:2'],
+        BannerAttachment: ['1:1', '9:16', '16:9', '3:2'],
+        EventImage: ['16:9', '1:1', '9:16', '3:2'],
+        EventCoverImage: ['16:9', '1:1', '9:16', '3:2'],
+      });
+    }
+  };
 
   const handlePropertyTypeChange = async (selectedOption) => {
     const { value, id } = selectedOption;

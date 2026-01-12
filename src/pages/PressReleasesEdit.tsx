@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
-import { ChevronRight, ArrowLeft, FileText } from "lucide-react";
+import { ChevronRight, ArrowLeft, FileText, Info } from "lucide-react";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import { TextField } from "@mui/material";
 import {
@@ -501,14 +501,14 @@ const PressReleasesEdit = () => {
               <div className="mb-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
-                  <h5 className="font-semibold">
+                  <h5 className="text-base font-semibold inline-flex items-center gap-1">
                     Press Release Attachment{" "}
                     <span
-                      className="relative inline-block cursor-help"
+                      className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowTooltip(true)}
                       onMouseLeave={() => setShowTooltip(false)}
                     >
-                      <span className="text-red-500">[i]</span>
+                      <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltip && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
                           Max Upload Size 5 MB. Supports 16:9, 9:16, 1:1 aspect ratios

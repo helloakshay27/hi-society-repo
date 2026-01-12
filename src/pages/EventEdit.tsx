@@ -91,7 +91,15 @@ const EventEdit = () => {
   const [showAttachmentTooltip, setShowAttachmentTooltip] = useState(false);
   const [showCoverUploader, setShowCoverUploader] = useState(false);
   const [showEventUploader, setShowEventUploader] = useState(false);
+  const [showCsvTooltip, setShowCsvTooltip] = useState(false);
+  const [showCoverImageTooltip, setShowCoverImageTooltip] = useState(false);
   const baseURL = API_CONFIG.BASE_URL;
+
+  // Image configurations from API
+  const [imageConfigurations, setImageConfigurations] = useState({
+    EventImage: [],
+    EventCoverImage: [],
+  });
 
   // Step management state
   const [currentStep, setCurrentStep] = useState(0);
@@ -148,6 +156,58 @@ const EventEdit = () => {
     showOnBookingPage: false,
     featuredEvent: false,
   });
+
+  // Fetch image configurations from API
+  const fetchImageConfigurations = async () => {
+    try {
+      const response = await axios.get(
+        `${baseURL}/system_constants.json?q[description_eq]=ImagesConfiguration`,
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+          },
+        }
+      );
+      
+      if (response.data && Array.isArray(response.data)) {
+        const configs = {};
+        
+        response.data.forEach((config) => {
+          const { name, value } = config;
+          
+          // Extract ratio from value (e.g., "event_images_16_by_9" -> "16:9")
+          const ratioMatch = value.match(/(\d+)_by_(\d+)/);
+          if (ratioMatch) {
+            const ratio = `${ratioMatch[1]}:${ratioMatch[2]}`;
+            
+            if (!configs[name]) {
+              configs[name] = [];
+            }
+            
+            if (!configs[name].includes(ratio)) {
+              configs[name].push(ratio);
+            }
+          }
+        });
+        
+        setImageConfigurations(configs);
+      }
+    } catch (error) {
+      console.error('Error fetching image configurations:', error);
+      // Set default configurations if API fails
+      setImageConfigurations({
+        EventImage: ['16:9', '1:1', '9:16', '3:2'],
+        EventCoverImage: ['16:9', '1:1', '9:16', '3:2'],
+      });
+    }
+  };
+
+  // Get dynamic ratios text for tooltips
+  const getDynamicRatiosText = (configName) => {
+    const ratios = imageConfigurations[configName] || [];
+    if (ratios.length === 0) return "No ratios configured";
+    return ratios.join(", ");
+  };
 
   // Field styles for Material-UI components
   const fieldStyles = {
@@ -797,6 +857,7 @@ const EventEdit = () => {
     };
 
     fetchProjects();
+    fetchImageConfigurations();
   }, []);
 
   useEffect(() => {
@@ -2251,8 +2312,17 @@ const EventEdit = () => {
               </div>
 
               {/* CSV File Upload Section */}
-              <div>
-                <div className="border-2 border-dashed border-[#D9D9D9] rounded-lg p-6 min-h-[200px]">
+              <div 
+                className="relative"
+                onMouseEnter={() => setShowCsvTooltip(true)}
+                onMouseLeave={() => setShowCsvTooltip(false)}
+              >
+                {showCsvTooltip && (
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium whitespace-nowrap">
+                    Coming Soon...
+                  </div>
+                )}
+                <div className="border-2 border-dashed border-[#D9D9D9] rounded-lg p-6 min-h-[200px] opacity-50 pointer-events-none cursor-not-allowed">
                   {csvFiles.length > 0 ? (
                     <div className="flex flex-wrap gap-3">
                       {csvFiles.map((file, index) => {
@@ -2366,13 +2436,13 @@ const EventEdit = () => {
                   Event Cover Image{" "}
                   <span
                     className="relative inline-block cursor-pointer"
-                    onMouseEnter={() => setShowTooltip(true)}
-                    onMouseLeave={() => setShowTooltip(false)}
+                    onMouseEnter={() => setShowCoverImageTooltip(true)}
+                    onMouseLeave={() => setShowCoverImageTooltip(false)}
                   >
                     <Info className="w-5 h-5 fill-black text-white" />
-                    {showTooltip && (
+                    {showCoverImageTooltip && (
                       <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                        Max Upload Size 3 MB. Supports 1:1, 9:16, 16:9, 3:2 aspect ratios
+                        Max Upload Size 3 MB. Supports {getDynamicRatiosText("EventCoverImage")} aspect ratios
                       </span>
                     )}
                   </span>
@@ -2504,7 +2574,7 @@ const EventEdit = () => {
                           <Info className="w-5 h-5 fill-black text-white" />
                           {showAttachmentTooltip && (
                             <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                              Max Upload Size 3 MB (Images), 10 MB (Videos). Supports 1:1, 9:16, 16:9, 3:2 aspect ratios
+                              Max Upload Size 3 MB (Images), 10 MB (Videos). Supports {getDynamicRatiosText("EventImage")} aspect ratios
                             </span>
                           )}
                         </span>

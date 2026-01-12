@@ -163,9 +163,8 @@ const EventDetails = () => {
           <TabsList className="top-level-tabs w-full flex flex-nowrap rounded-t-lg p-0 overflow-x-auto mb-4" style={{ gap: '0', padding: '0', backgroundColor: 'rgba(246, 247, 247, 1)', height: '50px', marginBottom: '16px' }}>
             {[
               { label: 'Event Details', value: 'event-details' },
-              { label: 'Invited CPs', value: 'invited-cps' },
-              { label: 'QR Code Generation', value: 'qr-code' },
               { label: 'Events Related Images', value: 'images' },
+              { label: 'Invited CPs', value: 'invited-cps' },
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
@@ -196,283 +195,160 @@ const EventDetails = () => {
           </TabsList>
 
           {/* Event Details Tab */}
-          <TabsContent value="event-details" className="p-0">
-            {/* Sub-navigation */}
-            <div className="rounded-lg shadow-sm border border-gray-200" style={{ backgroundColor: 'rgba(250, 250, 250, 1)' }}>
-              <Tabs defaultValue="analytics" className="w-full">
-                <TabsList className="w-full flex flex-wrap bg-gray-50 rounded-t-lg h-[36px] p-0 text-sm justify-stretch border-b border-gray-200">
-                  <TabsTrigger
-                    value="analytics"
-                    className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-0 h-[36px] flex items-center gap-2 text-gray-700 data-[state=active]:text-[#C72030] data-[state=active]:border-0 [&_svg]:text-gray-700 data-[state=active]:[&_svg]:text-[#C72030]"
-                    style={{ border: '1px solid rgba(217, 217, 217, 1)', borderRight: '1px solid rgba(209, 209, 209, 1)' }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <mask id="mask0_9547_3931" style={{ maskType: 'alpha' }} maskUnits="userSpaceOnUse" x="0" y="0" width="18" height="18">
-                        <rect width="18" height="18" fill="#D9D9D9" />
-                      </mask>
-                      <g mask="url(#mask0_9547_3931)">
-                        <path d="M8.66681 13.1106C7.59669 13.0192 6.69719 12.5831 5.96831 11.8024C5.23944 11.0216 4.875 10.0875 4.875 9C4.875 7.85413 5.27606 6.88019 6.07819 6.07819C6.88019 5.27606 7.85413 4.875 9 4.875C10.0875 4.875 11.0216 5.23825 11.8024 5.96475C12.5831 6.69112 13.0192 7.58944 13.1106 8.65969L11.9179 8.30625C11.7557 7.63125 11.4066 7.07812 10.8703 6.64688C10.3342 6.21563 9.71075 6 9 6C8.175 6 7.46875 6.29375 6.88125 6.88125C6.29375 7.46875 6 8.175 6 9C6 9.7125 6.21681 10.3375 6.65044 10.875C7.08406 11.4125 7.636 11.7625 8.30625 11.925L8.66681 13.1106ZM9.56681 16.0946C9.47231 16.1149 9.37788 16.125 9.2835 16.125H9C8.01438 16.125 7.08812 15.938 6.22125 15.564C5.35437 15.19 4.60031 14.6824 3.95906 14.0413C3.31781 13.4002 2.81019 12.6463 2.43619 11.7795C2.06206 10.9128 1.875 9.98669 1.875 9.00131C1.875 8.01581 2.062 7.0895 2.436 6.22237C2.81 5.35525 3.31756 4.601 3.95869 3.95962C4.59981 3.31825 5.35375 2.81044 6.2205 2.43619C7.08725 2.06206 8.01331 1.875 8.99869 1.875C9.98419 1.875 10.9105 2.06206 11.7776 2.43619C12.6448 2.81019 13.399 3.31781 14.0404 3.95906C14.6818 4.60031 15.1896 5.35437 15.5638 6.22125C15.9379 7.08812 16.125 8.01438 16.125 9V9.27975C16.125 9.373 16.1149 9.46631 16.0946 9.55969L15 9.225V9C15 7.325 14.4187 5.90625 13.2563 4.74375C12.0938 3.58125 10.675 3 9 3C7.325 3 5.90625 3.58125 4.74375 4.74375C3.58125 5.90625 3 7.325 3 9C3 10.675 3.58125 12.0938 4.74375 13.2563C5.90625 14.4187 7.325 15 9 15H9.225L9.56681 16.0946ZM15.1052 16.2332L11.7043 12.825L10.8894 15.2884L9 9L15.2884 10.8894L12.825 11.7043L16.2332 15.1052L15.1052 16.2332Z" fill="#C72030"/>
-                      </g>
-                    </svg>
-                    Analytics
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="event-details-sub"
-                    className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-0 h-[36px] flex items-center gap-2 text-gray-700 data-[state=active]:text-[#C72030] data-[state=active]:border-0 [&_svg]:text-gray-700 data-[state=active]:[&_svg]:text-[#C72030]"
-                    style={{ border: '1px solid rgba(217, 217, 217, 1)' }}
-                  >
-                    <Settings className="w-4 h-4" />
+          <TabsContent value="event-details" className="p-6 space-y-6" style={{ backgroundColor: 'rgba(250, 249, 247, 1)' }}>
+            {/* Event Details Card */}
+            <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                    <FileText className="w-5 h-5 text-[#C72030]" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-black">
                     Event Details
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* Analytics Sub-tab */}
-                <TabsContent value="analytics" className="p-4 sm:p-6" style={{ backgroundColor: 'rgba(250, 250, 250, 1)' }}>
-                  <div className="w-full bg-white rounded-lg shadow-sm border">
-                    <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 18 18" fill="none">
-                            <mask id="mask0_9547_3931" style={{ maskType: 'alpha' }} maskUnits="userSpaceOnUse" x="0" y="0" width="18" height="18">
-                              <rect width="18" height="18" fill="#D9D9D9" />
-                            </mask>
-                            <g mask="url(#mask0_9547_3931)">
-                              <path d="M8.66681 13.1106C7.59669 13.0192 6.69719 12.5831 5.96831 11.8024C5.23944 11.0216 4.875 10.0875 4.875 9C4.875 7.85413 5.27606 6.88019 6.07819 6.07819C6.88019 5.27606 7.85413 4.875 9 4.875C10.0875 4.875 11.0216 5.23825 11.8024 5.96475C12.5831 6.69112 13.0192 7.58944 13.1106 8.65969L11.9179 8.30625C11.7557 7.63125 11.4066 7.07812 10.8703 6.64688C10.3342 6.21563 9.71075 6 9 6C8.175 6 7.46875 6.29375 6.88125 6.88125C6.29375 7.46875 6 8.175 6 9C6 9.7125 6.21681 10.3375 6.65044 10.875C7.08406 11.4125 7.636 11.7625 8.30625 11.925L8.66681 13.1106ZM9.56681 16.0946C9.47231 16.1149 9.37788 16.125 9.2835 16.125H9C8.01438 16.125 7.08812 15.938 6.22125 15.564C5.35437 15.19 4.60031 14.6824 3.95906 14.0413C3.31781 13.4002 2.81019 12.6463 2.43619 11.7795C2.06206 10.9128 1.875 9.98669 1.875 9.00131C1.875 8.01581 2.062 7.0895 2.436 6.22237C2.81 5.35525 3.31756 4.601 3.95869 3.95962C4.59981 3.31825 5.35375 2.81044 6.2205 2.43619C7.08725 2.06206 8.01331 1.875 8.99869 1.875C9.98419 1.875 10.9105 2.06206 11.7776 2.43619C12.6448 2.81019 13.399 3.31781 14.0404 3.95906C14.6818 4.60031 15.1896 5.35437 15.5638 6.22125C15.9379 7.08812 16.125 8.01438 16.125 9V9.27975C16.125 9.373 16.1149 9.46631 16.0946 9.55969L15 9.225V9C15 7.325 14.4187 5.90625 13.2563 4.74375C12.0938 3.58125 10.675 3 9 3C7.325 3 5.90625 3.58125 4.74375 4.74375C3.58125 5.90625 3 7.325 3 9C3 10.675 3.58125 12.0938 4.74375 13.2563C5.90625 14.4187 7.325 15 9 15H9.225L9.56681 16.0946ZM15.1052 16.2332L11.7043 12.825L10.8894 15.2884L9 9L15.2884 10.8894L12.825 11.7043L16.2332 15.1052L15.1052 16.2332Z" fill="#C72030"/>
-                            </g>
-                          </svg>
-                        </div>
-                        <h3 className="text-lg font-semibold uppercase text-black">
-                          Analytics
-                        </h3>
-                      </div>
-                    </div>
-
-                    {/* Body */}
-                    <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
-                      <p className="text-gray-600">Event analytics data will be displayed here</p>
-                    </div>
+                  </h3>
+                </div>
+              </div>              {/* Body */}
+              <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Event Name</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.event_name || "N/A"}
+                    </p>
                   </div>
-                </TabsContent>
 
-                {/* Event Details Sub-tab */}
-                <TabsContent value="event-details-sub" className="p-4 sm:p-6" style={{ backgroundColor: 'rgba(250, 250, 250, 1)' }}>
-                  <div className="w-full bg-white rounded-lg shadow-sm border">
-                    <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                          <FileText className="w-6 h-6 text-[#C72030]" />
-                        </div>
-                        <h3 className="text-lg font-semibold uppercase text-black">
-                          Event Details
-                        </h3>
-                      </div>
-                    </div>
-
-                    {/* Body */}
-                    <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-4 gap-x-8">
-                        <div className="flex items-start">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Event Name
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.event_name || "—"}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Event Type
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.event_type || "—"}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Event At
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.event_at || "—"}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            From Time
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {formatDate(eventData.from_time)} {formatTime(eventData.from_time)}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            To Time
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {formatDate(eventData.to_time)} {formatTime(eventData.to_time)}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            RSVP Action
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.rsvp_action_int === 1 ? "Yes" : "No"}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Status
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.status || "—"}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Is Expired
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.is_expired === 1 ? "Yes" : "No"}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Shared With
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.shared === 0 ? "All Members" : "Selected Users/Groups"}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Created By
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.created_by || "—"}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start col-span-1 md:col-span-2">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Event Description
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.description || "—"}
-                          </div>
-                        </div>
-
-                        {/* RSVP Stats */}
-                        <div className="flex items-start col-span-1 md:col-span-2 pt-4 border-t border-gray-200">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            RSVP Stats
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            <div className="flex gap-6">
-                              <span className="text-green-600">Going: {eventData.going || 0}</span>
-                              <span className="text-red-600">Not Going: {eventData.not_going || 0}</span>
-                              <span className="text-yellow-600">Maybe: {eventData.maybe || 0}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-start col-span-1 md:col-span-2">
-                          <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                            Total Likes
-                          </div>
-                          <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                            {eventData.total_likes || 0}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Event Shared</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.shared === "0" || eventData?.shared === 0 ? "All" : "Individual"}
+                    </p>
                   </div>
-                </TabsContent>
-              </Tabs>
+
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Event Description</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.description || "-"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Project Name</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.project?.name || eventData?.project_name || "N/A"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Event At</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.event_at || "Sion"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Send Email</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.email_trigger_enabled === "1" || eventData?.email_trigger_enabled === 1 || eventData?.email_trigger_enabled === true ? "Yes" : "Yes"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Event Date</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.event_at ? formatDate(eventData.event_at) : eventData?.from_time ? formatDate(eventData.from_time) : "N/A"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Event Time</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.from_time && eventData?.to_time 
+                        ? `${formatTime(eventData.from_time)} - ${formatTime(eventData.to_time)}`
+                        : "01:00 PM - 04:00 PM"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Mark Important</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.is_important === "1" || eventData?.is_important === 1 || eventData?.is_important === true ? "Yes" : "Yes"}
+                    </p>
+                  </div>
+
+                  <div className="lg:col-span-3 flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">RSVP Action</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.rsvp_action === "yes" || eventData?.rsvp_action_int === 1 ? "Yes" : "Yes"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Visibility Card */}
+            <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                    <Settings className="w-5 h-5 text-[#C72030]" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-black">
+                    Visibility
+                  </h3>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Show on Home Page</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.show_on_home_page === "1" || eventData?.show_on_home === 1 || eventData?.show_on_home === true ? "Yes" : "Yes"}
+                    </p>
+                  </div>
+
+                  {/* <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[180px]">Show on Project Detail Page</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.show_on_project_detail_page === "1" || eventData?.show_on_project_detail_page === 1 || eventData?.show_on_project_detail_page === true ? "Yes" : "Yes"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Show on Booking Page</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.show_on_booking_page === "1" || eventData?.show_on_booking_page === 1 || eventData?.show_on_booking_page === true ? "Yes" : "No"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Featured Event</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.featured_event === "1" || eventData?.featured_event === 1 || eventData?.featured_event === true ? "Yes" : "Yes"}
+                    </p>
+                  </div> */}
+                </div>
+              </div>
             </div>
           </TabsContent>
 
           {/* Invited CPs Tab */}
-          <TabsContent value="invited-cps" className="p-0">
-            <div className="rounded-lg shadow-sm border border-gray-200" style={{ backgroundColor: 'rgba(250, 250, 250, 1)' }}>
-              <Tabs defaultValue="invited-cps-sub" className="w-full">
-                <TabsList className="w-full flex flex-wrap bg-gray-50 rounded-t-lg h-[36px] p-0 text-sm justify-stretch border-b border-gray-200">
-                  <TabsTrigger
-                    value="analytics"
-                    className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-0 h-[36px] flex items-center gap-2 text-gray-700 data-[state=active]:text-[#C72030] data-[state=active]:border-0 [&_svg]:text-gray-700 data-[state=active]:[&_svg]:text-[#C72030]"
-                    style={{ border: '1px solid rgba(217, 217, 217, 1)', borderRight: '1px solid rgba(209, 209, 209, 1)' }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <mask id="mask0_9547_3931" style={{ maskType: 'alpha' }} maskUnits="userSpaceOnUse" x="0" y="0" width="18" height="18">
-                        <rect width="18" height="18" fill="#D9D9D9" />
-                      </mask>
-                      <g mask="url(#mask0_9547_3931)">
-                        <path d="M8.66681 13.1106C7.59669 13.0192 6.69719 12.5831 5.96831 11.8024C5.23944 11.0216 4.875 10.0875 4.875 9C4.875 7.85413 5.27606 6.88019 6.07819 6.07819C6.88019 5.27606 7.85413 4.875 9 4.875C10.0875 4.875 11.0216 5.23825 11.8024 5.96475C12.5831 6.69112 13.0192 7.58944 13.1106 8.65969L11.9179 8.30625C11.7557 7.63125 11.4066 7.07812 10.8703 6.64688C10.3342 6.21563 9.71075 6 9 6C8.175 6 7.46875 6.29375 6.88125 6.88125C6.29375 7.46875 6 8.175 6 9C6 9.7125 6.21681 10.3375 6.65044 10.875C7.08406 11.4125 7.636 11.7625 8.30625 11.925L8.66681 13.1106ZM9.56681 16.0946C9.47231 16.1149 9.37788 16.125 9.2835 16.125H9C8.01438 16.125 7.08812 15.938 6.22125 15.564C5.35437 15.19 4.60031 14.6824 3.95906 14.0413C3.31781 13.4002 2.81019 12.6463 2.43619 11.7795C2.06206 10.9128 1.875 9.98669 1.875 9.00131C1.875 8.01581 2.062 7.0895 2.436 6.22237C2.81 5.35525 3.31756 4.601 3.95869 3.95962C4.59981 3.31825 5.35375 2.81044 6.2205 2.43619C7.08725 2.06206 8.01331 1.875 8.99869 1.875C9.98419 1.875 10.9105 2.06206 11.7776 2.43619C12.6448 2.81019 13.399 3.31781 14.0404 3.95906C14.6818 4.60031 15.1896 5.35437 15.5638 6.22125C15.9379 7.08812 16.125 8.01438 16.125 9V9.27975C16.125 9.373 16.1149 9.46631 16.0946 9.55969L15 9.225V9C15 7.325 14.4187 5.90625 13.2563 4.74375C12.0938 3.58125 10.675 3 9 3C7.325 3 5.90625 3.58125 4.74375 4.74375C3.58125 5.90625 3 7.325 3 9C3 10.675 3.58125 12.0938 4.74375 13.2563C5.90625 14.4187 7.325 15 9 15H9.225L9.56681 16.0946ZM15.1052 16.2332L11.7043 12.825L10.8894 15.2884L9 9L15.2884 10.8894L12.825 11.7043L16.2332 15.1052L15.1052 16.2332Z" fill="#C72030"/>
-                      </g>
-                    </svg>
-                    Analytics
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="invited-cps-sub"
-                    className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-0 h-[36px] flex items-center gap-2 text-gray-700 data-[state=active]:text-[#C72030] data-[state=active]:border-0 [&_svg]:text-gray-700 data-[state=active]:[&_svg]:text-[#C72030]"
-                    style={{ border: '1px solid rgba(217, 217, 217, 1)' }}
-                  >
-                    <Users className="w-4 h-4" />
+          <TabsContent value="invited-cps" className="p-6 space-y-6" style={{ backgroundColor: 'rgba(250, 249, 247, 1)' }}>
+            <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                    <Users className="w-6 h-6 text-[#C72030]" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-black">
                     Invited CPs
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="analytics" className="p-4 sm:p-6" style={{ backgroundColor: 'rgba(250, 250, 250, 1)' }}>
-                  <div className="w-full bg-white rounded-lg shadow-sm border">
-                    <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 18 18" fill="none">
-                            <mask id="mask0_9547_3931" style={{ maskType: 'alpha' }} maskUnits="userSpaceOnUse" x="0" y="0" width="18" height="18">
-                              <rect width="18" height="18" fill="#D9D9D9" />
-                            </mask>
-                            <g mask="url(#mask0_9547_3931)">
-                              <path d="M8.66681 13.1106C7.59669 13.0192 6.69719 12.5831 5.96831 11.8024C5.23944 11.0216 4.875 10.0875 4.875 9C4.875 7.85413 5.27606 6.88019 6.07819 6.07819C6.88019 5.27606 7.85413 4.875 9 4.875C10.0875 4.875 11.0216 5.23825 11.8024 5.96475C12.5831 6.69112 13.0192 7.58944 13.1106 8.65969L11.9179 8.30625C11.7557 7.63125 11.4066 7.07812 10.8703 6.64688C10.3342 6.21563 9.71075 6 9 6C8.175 6 7.46875 6.29375 6.88125 6.88125C6.29375 7.46875 6 8.175 6 9C6 9.7125 6.21681 10.3375 6.65044 10.875C7.08406 11.4125 7.636 11.7625 8.30625 11.925L8.66681 13.1106ZM9.56681 16.0946C9.47231 16.1149 9.37788 16.125 9.2835 16.125H9C8.01438 16.125 7.08812 15.938 6.22125 15.564C5.35437 15.19 4.60031 14.6824 3.95906 14.0413C3.31781 13.4002 2.81019 12.6463 2.43619 11.7795C2.06206 10.9128 1.875 9.98669 1.875 9.00131C1.875 8.01581 2.062 7.0895 2.436 6.22237C2.81 5.35525 3.31756 4.601 3.95869 3.95962C4.59981 3.31825 5.35375 2.81044 6.2205 2.43619C7.08725 2.06206 8.01331 1.875 8.99869 1.875C9.98419 1.875 10.9105 2.06206 11.7776 2.43619C12.6448 2.81019 13.399 3.31781 14.0404 3.95906C14.6818 4.60031 15.1896 5.35437 15.5638 6.22125C15.9379 7.08812 16.125 8.01438 16.125 9V9.27975C16.125 9.373 16.1149 9.46631 16.0946 9.55969L15 9.225V9C15 7.325 14.4187 5.90625 13.2563 4.74375C12.0938 3.58125 10.675 3 9 3C7.325 3 5.90625 3.58125 4.74375 4.74375C3.58125 5.90625 3 7.325 3 9C3 10.675 3.58125 12.0938 4.74375 13.2563C5.90625 14.4187 7.325 15 9 15H9.225L9.56681 16.0946ZM15.1052 16.2332L11.7043 12.825L10.8894 15.2884L9 9L15.2884 10.8894L12.825 11.7043L16.2332 15.1052L15.1052 16.2332Z" fill="#C72030"/>
-                            </g>
-                          </svg>
-                        </div>
-                        <h3 className="text-lg font-semibold uppercase text-black">
-                          Analytics
-                        </h3>
-                      </div>
-                    </div>
-                    <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
-                      <p className="text-gray-600">Invited CPs analytics data will be displayed here</p>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="invited-cps-sub" className="p-4 sm:p-6" style={{ backgroundColor: 'rgba(250, 250, 250, 1)' }}>
-                  <div className="w-full bg-white rounded-lg shadow-sm border">
-                    <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                          <Users className="w-6 h-6 text-[#C72030]" />
-                        </div>
-                        <h3 className="text-lg font-semibold uppercase text-black">
-                          Invited CPs
-                        </h3>
-                      </div>
-                    </div>
-                    <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
-                      <p className="text-gray-600">Invited CPs content will be displayed here.</p>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
+                  </h3>
+                </div>
+              </div>
+              <div className="bg-[#FBFBFA] border-t-0 px-6 py-6">
+                <p className="text-gray-600">Invited CPs content will be displayed here.</p>
+              </div>
             </div>
           </TabsContent>
 
@@ -627,73 +503,19 @@ const EventDetails = () => {
           </TabsContent>
 
           {/* Events Related Images Tab */}
-          <TabsContent value="images" className="p-0">
-            <div className="rounded-lg shadow-sm border border-gray-200" style={{ backgroundColor: 'rgba(250, 250, 250, 1)' }}>
-              <Tabs defaultValue="images-sub" className="w-full">
-                <TabsList className="w-full flex flex-wrap bg-gray-50 rounded-t-lg h-[36px] p-0 text-sm justify-stretch border-b border-gray-200">
-                  <TabsTrigger
-                    value="analytics"
-                    className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-0 h-[36px] flex items-center gap-2 text-gray-700 data-[state=active]:text-[#C72030] data-[state=active]:border-0 [&_svg]:text-gray-700 data-[state=active]:[&_svg]:text-[#C72030]"
-                    style={{ border: '1px solid rgba(217, 217, 217, 1)', borderRight: '1px solid rgba(209, 209, 209, 1)' }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <mask id="mask0_9547_3931" style={{ maskType: 'alpha' }} maskUnits="userSpaceOnUse" x="0" y="0" width="18" height="18">
-                        <rect width="18" height="18" fill="#D9D9D9" />
-                      </mask>
-                      <g mask="url(#mask0_9547_3931)">
-                        <path d="M8.66681 13.1106C7.59669 13.0192 6.69719 12.5831 5.96831 11.8024C5.23944 11.0216 4.875 10.0875 4.875 9C4.875 7.85413 5.27606 6.88019 6.07819 6.07819C6.88019 5.27606 7.85413 4.875 9 4.875C10.0875 4.875 11.0216 5.23825 11.8024 5.96475C12.5831 6.69112 13.0192 7.58944 13.1106 8.65969L11.9179 8.30625C11.7557 7.63125 11.4066 7.07812 10.8703 6.64688C10.3342 6.21563 9.71075 6 9 6C8.175 6 7.46875 6.29375 6.88125 6.88125C6.29375 7.46875 6 8.175 6 9C6 9.7125 6.21681 10.3375 6.65044 10.875C7.08406 11.4125 7.636 11.7625 8.30625 11.925L8.66681 13.1106ZM9.56681 16.0946C9.47231 16.1149 9.37788 16.125 9.2835 16.125H9C8.01438 16.125 7.08812 15.938 6.22125 15.564C5.35437 15.19 4.60031 14.6824 3.95906 14.0413C3.31781 13.4002 2.81019 12.6463 2.43619 11.7795C2.06206 10.9128 1.875 9.98669 1.875 9.00131C1.875 8.01581 2.062 7.0895 2.436 6.22237C2.81 5.35525 3.31756 4.601 3.95869 3.95962C4.59981 3.31825 5.35375 2.81044 6.2205 2.43619C7.08725 2.06206 8.01331 1.875 8.99869 1.875C9.98419 1.875 10.9105 2.06206 11.7776 2.43619C12.6448 2.81019 13.399 3.31781 14.0404 3.95906C14.6818 4.60031 15.1896 5.35437 15.5638 6.22125C15.9379 7.08812 16.125 8.01438 16.125 9V9.27975C16.125 9.373 16.1149 9.46631 16.0946 9.55969L15 9.225V9C15 7.325 14.4187 5.90625 13.2563 4.74375C12.0938 3.58125 10.675 3 9 3C7.325 3 5.90625 3.58125 4.74375 4.74375C3.58125 5.90625 3 7.325 3 9C3 10.675 3.58125 12.0938 4.74375 13.2563C5.90625 14.4187 7.325 15 9 15H9.225L9.56681 16.0946ZM15.1052 16.2332L11.7043 12.825L10.8894 15.2884L9 9L15.2884 10.8894L12.825 11.7043L16.2332 15.1052L15.1052 16.2332Z" fill="#C72030"/>
-                      </g>
-                    </svg>
-                    Analytics
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="images-sub"
-                    className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-0 h-[36px] flex items-center gap-2 text-gray-700 data-[state=active]:text-[#C72030] data-[state=active]:border-0 [&_svg]:text-gray-700 data-[state=active]:[&_svg]:text-[#C72030]"
-                    style={{ border: '1px solid rgba(217, 217, 217, 1)' }}
-                  >
-                    <ImageIcon className="w-4 h-4" />
-                    Event Related Images
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="analytics" className="p-4 sm:p-6" style={{ backgroundColor: 'rgba(250, 250, 250, 1)' }}>
-                  <div className="w-full bg-white rounded-lg shadow-sm border">
-                    <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 18 18" fill="none">
-                            <mask id="mask0_9547_3931" style={{ maskType: 'alpha' }} maskUnits="userSpaceOnUse" x="0" y="0" width="18" height="18">
-                              <rect width="18" height="18" fill="#D9D9D9" />
-                            </mask>
-                            <g mask="url(#mask0_9547_3931)">
-                              <path d="M8.66681 13.1106C7.59669 13.0192 6.69719 12.5831 5.96831 11.8024C5.23944 11.0216 4.875 10.0875 4.875 9C4.875 7.85413 5.27606 6.88019 6.07819 6.07819C6.88019 5.27606 7.85413 4.875 9 4.875C10.0875 4.875 11.0216 5.23825 11.8024 5.96475C12.5831 6.69112 13.0192 7.58944 13.1106 8.65969L11.9179 8.30625C11.7557 7.63125 11.4066 7.07812 10.8703 6.64688C10.3342 6.21563 9.71075 6 9 6C8.175 6 7.46875 6.29375 6.88125 6.88125C6.29375 7.46875 6 8.175 6 9C6 9.7125 6.21681 10.3375 6.65044 10.875C7.08406 11.4125 7.636 11.7625 8.30625 11.925L8.66681 13.1106ZM9.56681 16.0946C9.47231 16.1149 9.37788 16.125 9.2835 16.125H9C8.01438 16.125 7.08812 15.938 6.22125 15.564C5.35437 15.19 4.60031 14.6824 3.95906 14.0413C3.31781 13.4002 2.81019 12.6463 2.43619 11.7795C2.06206 10.9128 1.875 9.98669 1.875 9.00131C1.875 8.01581 2.062 7.0895 2.436 6.22237C2.81 5.35525 3.31756 4.601 3.95869 3.95962C4.59981 3.31825 5.35375 2.81044 6.2205 2.43619C7.08725 2.06206 8.01331 1.875 8.99869 1.875C9.98419 1.875 10.9105 2.06206 11.7776 2.43619C12.6448 2.81019 13.399 3.31781 14.0404 3.95906C14.6818 4.60031 15.1896 5.35437 15.5638 6.22125C15.9379 7.08812 16.125 8.01438 16.125 9V9.27975C16.125 9.373 16.1149 9.46631 16.0946 9.55969L15 9.225V9C15 7.325 14.4187 5.90625 13.2563 4.74375C12.0938 3.58125 10.675 3 9 3C7.325 3 5.90625 3.58125 4.74375 4.74375C3.58125 5.90625 3 7.325 3 9C3 10.675 3.58125 12.0938 4.74375 13.2563C5.90625 14.4187 7.325 15 9 15H9.225L9.56681 16.0946ZM15.1052 16.2332L11.7043 12.825L10.8894 15.2884L9 9L15.2884 10.8894L12.825 11.7043L16.2332 15.1052L15.1052 16.2332Z" fill="#C72030"/>
-                            </g>
-                          </svg>
-                        </div>
-                        <h3 className="text-lg font-semibold uppercase text-black">
-                          Analytics
-                        </h3>
-                      </div>
-                    </div>
-                    <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
-                      <p className="text-gray-600">Event images analytics data will be displayed here</p>
-                    </div>
+          <TabsContent value="images" className="p-6 space-y-6" style={{ backgroundColor: 'rgba(250, 249, 247, 1)' }}>
+            <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                    <ImageIcon className="w-6 h-6 text-[#C72030]" />
                   </div>
-                </TabsContent>
-
-                <TabsContent value="images-sub" className="p-4 sm:p-6" style={{ backgroundColor: 'rgba(250, 250, 250, 1)' }}>
-                  <div className="w-full bg-white rounded-lg shadow-sm border">
-                    <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
-                          <ImageIcon className="w-6 h-6 text-[#C72030]" />
-                        </div>
-                        <h3 className="text-lg font-semibold uppercase text-black">
-                          Event Related Images
-                        </h3>
-                      </div>
-                    </div>
-                    <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4 space-y-6">
+                  <h3 className="text-lg font-semibold text-black">
+                    Event Related Images
+                  </h3>
+                </div>
+              </div>
+              <div className="bg-[#FBFBFA] border-t-0 px-6 py-6 space-y-6">
                 {/* Cover Images Section */}
                 <div>
                   <h4 className="text-base font-semibold text-gray-900 mb-3">Cover Images</h4>
@@ -809,10 +631,7 @@ const EventDetails = () => {
                     </Table>
                   </div>
                 </div>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
