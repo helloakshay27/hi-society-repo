@@ -454,6 +454,23 @@ export default function AddOfferPage() {
         return value;
     };
 
+    // Helper function to format date from YYYY-MM-DD to DD/MM/YYYY
+    const formatDateDisplay = (dateString: string) => {
+        if (!dateString) return '';
+        const [year, month, day] = dateString.split('-');
+        if (!year || !month || !day) return dateString;
+        return `${day}/${month}/${year}`;
+    };
+
+    // Helper function to get today's date in YYYY-MM-DD format
+    const getTodayDateString = () => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     // Update formData helper
     const updateFormData = (key, files) => {
         setFormData((prev) => {
@@ -748,12 +765,22 @@ export default function AddOfferPage() {
                     toast.error('Please select start date');
                     return false;
                 }
+                const today = new Date();
+                const startDate = new Date(formData.startDate);
+                const startDateNormalized = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                
+                if (startDateNormalized < todayNormalized) {
+                    toast.error('Start date cannot be in the past. Please select today or a future date.');
+                    return false;
+                }
                 if (!formData.endDate) {
                     toast.error('Please select end date');
                     return false;
                 }
-                if (new Date(formData.endDate) < new Date(formData.startDate)) {
-                    toast.error('End date must be after start date');
+                const endDate = new Date(formData.endDate);
+                if (endDate < startDate) {
+                    toast.error('End date must be equal to or after start date');
                     return false;
                 }
                 return true;
@@ -1371,6 +1398,7 @@ export default function AddOfferPage() {
                                     onChange={(e) => handleInputChange('startDate', e.target.value)}
                                     InputLabelProps={{ shrink: true }}
                                     placeholder="DD/MM/YYYY"
+                                    inputProps={{ min: getTodayDateString() }}
                                     sx={{ ...fieldStyles, width: '50%' }}
                                     fullWidth
                                 />
@@ -1382,6 +1410,7 @@ export default function AddOfferPage() {
                                     onChange={(e) => handleInputChange('endDate', e.target.value)}
                                     InputLabelProps={{ shrink: true }}
                                     placeholder="DD/MM/YYYY"
+                                    inputProps={{ min: formData.startDate || getTodayDateString() }}
                                     sx={{ ...fieldStyles, width: '50%' }}
                                     fullWidth
                                 />
@@ -1688,7 +1717,9 @@ export default function AddOfferPage() {
                                         Applicable Project(s)
                                     </Typography>
                                     <Typography variant="body2" sx={{ color: '#333', fontSize: '14px', fontFamily: 'Work Sans, sans-serif', mt: 0.5 }}>
-                                        {formData.applicableProjects.join(', ')}
+                                        {formData.applicableProjects.map(projectId => 
+                                            projects.find(p => p.id.toString() === projectId)?.name || projectId
+                                        ).join(', ')}
                                     </Typography>
                                 </Box>
                             )}
@@ -1699,7 +1730,7 @@ export default function AddOfferPage() {
                                             Start Date
                                         </Typography>
                                         <Typography variant="body2" sx={{ color: '#333', fontSize: '14px', fontFamily: 'Work Sans, sans-serif', mt: 0.5 }}>
-                                            {formData.startDate}
+                                            {formatDateDisplay(formData.startDate)}
                                         </Typography>
                                     </Box>
                                     <Box>
@@ -1707,7 +1738,7 @@ export default function AddOfferPage() {
                                             End Date
                                         </Typography>
                                         <Typography variant="body2" sx={{ color: '#333', fontSize: '14px', fontFamily: 'Work Sans, sans-serif', mt: 0.5 }}>
-                                            {formData.endDate}
+                                            {formatDateDisplay(formData.endDate)}
                                         </Typography>
                                     </Box>
                                     <Box>
