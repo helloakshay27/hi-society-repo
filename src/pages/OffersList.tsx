@@ -239,7 +239,6 @@ export default function OffersList() {
     { key: 'offerId', label: 'Offer ID', sortable: true },
     { key: 'image', label: 'Image', sortable: false },
     { key: 'offerTitle', label: 'Offer Title', sortable: true },
-    { key: 'description', label: 'Description', sortable: true },
     { key: 'applicableProjects', label: 'Applicable Project(s)', sortable: true },
     { key: 'startDate', label: 'Start Date', sortable: true },
     { key: 'endDate', label: 'End Date', sortable: true },

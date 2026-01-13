@@ -6,6 +6,7 @@ import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { getFullUrl } from '@/config/apiConfig';
+import { Switch } from '@mui/material';
 
 interface Template {
   id: number;
@@ -83,20 +84,24 @@ export default function TemplateList() {
       
       case 'status':
         return (
-          <div className="flex justify-center">
-            <div 
-              className={`w-10 h-5 rounded-full cursor-pointer transition-colors ${
-                item.active ? 'bg-green-500' : 'bg-red-500'
-              }`}
-              onClick={() => handleToggleStatus(item.id, !item.active)}
-            >
-              <div 
-                className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform ${
-                  item.active ? 'translate-x-5 mt-0.5' : 'translate-x-0.5 mt-0.5'
-                }`}
-              />
-            </div>
-          </div>
+          <Switch
+            checked={item.active || false}
+            onChange={() => handleToggleStatus(item.id, !item.active)}
+            sx={{
+              '& .MuiSwitch-switchBase.Mui-checked': {
+                color: '#04a231',
+              },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: '#7fce95',
+              },
+              '& .MuiSwitch-track': {
+                backgroundColor: '#d2d2d2',
+              },
+              '& .MuiSwitch-switchBase': {
+                color: '#c72030',
+              },
+            }}
+          />
         );
       
       case 'actions':
