@@ -267,6 +267,28 @@ export const BMSSidebar: React.FC = () => {
     });
   };
 
+  const renderDirectItems = (items: MenuItem[]) => {
+    return items.map((item) => {
+      const active = isActive(item.path);
+      const Icon = item.icon;
+
+      return (
+        <button
+          key={item.id}
+          onClick={() => handleNavigation(item.path)}
+          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+          title={item.label}
+        >
+          {active && (
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+          )}
+          <Icon className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+          {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
+        </button>
+      );
+    });
+  };
+
   return (
     <div
       className={`${
@@ -496,26 +518,32 @@ export const BMSSidebar: React.FC = () => {
             </>
           )}
 
-          {/* Home Parent */}
-          <div>
-            <button
-              onClick={() => setHomeOpen(!homeOpen)}
-              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
-            >
-              <div className="flex items-center gap-3">
-                <Home className="w-5 h-5 flex-shrink-0" />
-                {!isSidebarCollapsed && <span>Home</span>}
-              </div>
-              {!isSidebarCollapsed && (
-                homeOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+          {/* Home items - Show directly on CMS domain, as parent on non-CMS domain */}
+          {isCMSDomain ? (
+            <>
+              {renderDirectItems(homeItems)}
+            </>
+          ) : (
+            <div>
+              <button
+                onClick={() => setHomeOpen(!homeOpen)}
+                className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+              >
+                <div className="flex items-center gap-3">
+                  <Home className="w-5 h-5 flex-shrink-0" />
+                  {!isSidebarCollapsed && <span>Home</span>}
+                </div>
+                {!isSidebarCollapsed && (
+                  homeOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                )}
+              </button>
+              {homeOpen && !isSidebarCollapsed && (
+                <div className="mt-1 space-y-1">
+                  {renderSubItems(homeItems)}
+                </div>
               )}
-            </button>
-            {homeOpen && !isSidebarCollapsed && (
-              <div className="mt-1 space-y-1">
-                {renderSubItems(homeItems)}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Loyalty Parent - Only show when NOT on CMS domain */}
           {!isCMSDomain && (
