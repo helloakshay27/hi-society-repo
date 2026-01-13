@@ -217,6 +217,9 @@ const AccountingDownloadReport = lazy(() => import("@/pages/AccountingDownloadRe
 const FitoutRequests = lazy(() => import("@/pages/FitoutRequests"));
 const FitoutSetup = lazy(() => import("@/pages/FitoutSetup"));
 const FitoutChecklists = lazy(() => import("@/pages/FitoutChecklists"));
+const AddFitoutChecklistPage = lazy(() => import("@/pages/AddFitoutChecklistPage"));
+const EditFitoutChecklistPage = lazy(() => import("@/pages/EditFitoutChecklistPage"));
+const FitoutChecklistDetailsPage = lazy(() => import("@/pages/FitoutChecklistDetailsPage"));
 const FitoutDeviations = lazy(() => import("@/pages/FitoutDeviations"));
 const FitoutReport = lazy(() => import("@/pages/FitoutReport"));
 
@@ -565,6 +568,10 @@ export const setupMemberRoutes = (
     <Route path="/fitout/requests" Component={withSuspense(FitoutRequests)} />
     <Route path="/fitout/setup" Component={withSuspense(FitoutSetup)} />
     <Route path="/fitout/checklists" Component={withSuspense(FitoutChecklists)} />
+    <Route path="/master/fitout-checklists" Component={withSuspense(FitoutChecklists)} />
+    <Route path="/master/fitout-checklists/add" Component={withSuspense(AddFitoutChecklistPage)} />
+    <Route path="/master/fitout-checklists/edit/:id" Component={withSuspense(EditFitoutChecklistPage)} />
+    <Route path="/master/fitout-checklists/details/:id" Component={withSuspense(FitoutChecklistDetailsPage)} />
     <Route path="/fitout/deviations" Component={withSuspense(FitoutDeviations)} />
     <Route path="/fitout/report" Component={withSuspense(FitoutReport)} />
 

@@ -232,13 +232,6 @@ const EventDetails = () => {
                   </div>
 
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Project Name</p>
-                    <p className="text-base font-medium text-gray-900">
-                      {eventData?.project?.name || eventData?.project_name || "N/A"}
-                    </p>
-                  </div>
-
-                  <div className="flex items-start gap-2">
                     <p className="text-sm text-gray-500 min-w-[140px]">Event At</p>
                     <p className="text-base font-medium text-gray-900">
                       {eventData?.event_at || "Sion"}
@@ -255,23 +248,16 @@ const EventDetails = () => {
                   <div className="flex items-start gap-2">
                     <p className="text-sm text-gray-500 min-w-[140px]">Event Date</p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.event_at ? formatDate(eventData.event_at) : eventData?.from_time ? formatDate(eventData.from_time) : "N/A"}
+                      {eventData?.from_time ? formatDate(eventData.from_time) : "N/A"}
                     </p>
                   </div>
 
                   <div className="flex items-start gap-2">
                     <p className="text-sm text-gray-500 min-w-[140px]">Event Time</p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.from_time && eventData?.to_time 
-                        ? `${formatTime(eventData.from_time)} - ${formatTime(eventData.to_time)}`
-                        : "01:00 PM - 04:00 PM"}
-                    </p>
-                  </div>
-
-                  <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Mark Important</p>
-                    <p className="text-base font-medium text-gray-900">
-                      {eventData?.is_important === "1" || eventData?.is_important === 1 || eventData?.is_important === true ? "Yes" : "Yes"}
+                      {eventData?.from_time 
+                        ? `${formatTime(eventData.from_time)}${eventData?.to_time ? ` - ${formatTime(eventData.to_time)}` : ''}`
+                        : "N/A"}
                     </p>
                   </div>
 

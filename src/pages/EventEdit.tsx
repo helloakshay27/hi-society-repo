@@ -1296,6 +1296,25 @@ const EventEdit = () => {
     const removedIds = originalIds.filter((id) => !currentIds.includes(id));
     removedIds.forEach((id) => data.append("event[removed_image_ids][]", id));
 
+    // === DATE AND TIME HANDLING ===
+    // Combine date and time for from_time parameter if we have separate fields
+    let fromTime = "";
+    if (formData.event_date && formData.event_time) {
+      fromTime = `${formData.event_date}T${formData.event_time}`;
+    } else if (formData.from_time) {
+      fromTime = formData.from_time;
+    } else if (formData.event_date) {
+      fromTime = formData.event_date;
+    }
+    
+    if (fromTime) {
+      data.append("event[from_time]", fromTime);
+    }
+    
+    if (formData.to_time) {
+      data.append("event[to_time]", formData.to_time);
+    }
+
     // === EVERYTHING ELSE (Primitive values only) ===
     Object.entries(formData).forEach(([key, value]) => {
       if (
@@ -1312,6 +1331,10 @@ const EventEdit = () => {
           "rsvp_name",
           "rsvp_number",
           "event_images",
+          "from_time", // Skip from_time as we handle it above
+          "to_time", // Skip to_time as we handle it above
+          "event_date", // Skip event_date as it's combined into from_time
+          "event_time", // Skip event_time as it's combined into from_time
         ].includes(key)
       ) {
         return; // Skip handled keys

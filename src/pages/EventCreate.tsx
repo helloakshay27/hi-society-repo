@@ -637,8 +637,16 @@ const EventCreate = () => {
     formDataToSend.append("event[event_type]", formData.event_type || "");
     formDataToSend.append("event[event_name]", formData.event_name);
     formDataToSend.append("event[description]", formData.description || "");
-    formDataToSend.append("event[event_at]", formData.event_date || "");
-    formDataToSend.append("event[from_time]", formData.event_time || "");
+    formDataToSend.append("event[event_at]", formData.event_at || "");
+    
+    // Combine date and time for from_time parameter
+    let fromTime = "";
+    if (formData.event_date && formData.event_time) {
+      fromTime = `${formData.event_date}T${formData.event_time}`;
+    } else if (formData.event_date) {
+      fromTime = formData.event_date;
+    }
+    formDataToSend.append("event[from_time]", fromTime);
     formDataToSend.append("event[to_time]", formData.to_time || "");
     formDataToSend.append("event[shared]", formData.shared === "all" ? "0" : "1");
     formDataToSend.append("event[is_important]", formData.is_important === true ? "1" : "0");
@@ -3074,7 +3082,7 @@ const EventCreate = () => {
                   <div className="p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {/* Project */}
-                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                      {/* <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
                         <InputLabel shrink>Project</InputLabel>
                         <MuiSelect
                           value={selectedProjectId || ""}
@@ -3090,71 +3098,79 @@ const EventCreate = () => {
                             </MenuItem>
                           ))}
                         </MuiSelect>
-                      </FormControl>
+                      </FormControl> */}
 
                       {/* Event Name */}
                       <TextField
-                        label="Event Name"
-                        value={formData.event_name}
-                        fullWidth
-                        variant="outlined"
-                        disabled
-                        slotProps={{ inputLabel: { shrink: true } }}
-                        InputProps={{ sx: fieldStyles }}
-                      />
+                              label="Event Name"
+                              value={formData.event_name}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
 
-                      {/* Event At */}
-                      <TextField
-                        label="Event At"
-                        value={formData.event_at}
-                        fullWidth
-                        variant="outlined"
-                        disabled
-                        slotProps={{ inputLabel: { shrink: true } }}
-                        InputProps={{ sx: fieldStyles }}
-                      />
+                            {/* Event At */}
+                            <TextField
+                              label="Event At"
+                              value={formData.event_at}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
+                             <TextField
+                label="Event Date"
+                type="date"
+                value={formData.event_date}
+                onChange={handleChange}
+                name="event_date"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
 
-                      {/* Event Description */}
-                      <div className="md:col-span-2">
-                        <TextField
-                          label="Event Description"
-                          value={formData.description}
-                          fullWidth
-                          variant="outlined"
-                          disabled
-                          slotProps={{ inputLabel: { shrink: true } }}
-                        />
-                      </div>
+                            {/* Event Description */}
+                            <div className="md:col-span-2">
+                              <TextField
+                                label="Event Description"
+                                value={formData.description}
+                                fullWidth
+                                variant="outlined"
+                                disabled
+                                slotProps={{ inputLabel: { shrink: true } }}
+                              />
+                            </div>
 
-                      {/* Event From */}
-                      <TextField
-                        label="Event From"
-                        type="datetime-local"
-                        value={formData.from_time}
-                        fullWidth
-                        variant="outlined"
-                        disabled
-                        slotProps={{ inputLabel: { shrink: true } }}
-                        InputProps={{ sx: fieldStyles }}
-                      />
-                    </div>
-
-                    {/* 4-column grid for Event To, Mark Important, Send Email, RSVP Action */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                      {/* Event To */}
-                      <TextField
-                        label="Event To"
-                        type="datetime-local"
-                        value={formData.to_time}
-                        fullWidth
-                        variant="outlined"
-                        disabled
-                        slotProps={{ inputLabel: { shrink: true } }}
-                        InputProps={{ sx: fieldStyles }}
-                      />
+                             <TextField
+                label="Event Time"
+                type="time"
+                value={formData.event_time}
+                onChange={handleChange}
+                name="event_time"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
 
                       {/* Mark Important */}
-                      <div>
+                      {/* <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important</label>
                         <div className="flex gap-4">
                           <label className="flex items-center">
@@ -3178,7 +3194,7 @@ const EventCreate = () => {
                             <span className="ml-2 text-sm text-gray-700">No</span>
                           </label>
                         </div>
-                      </div>
+                      </div> */}
 
                       {/* Send Email */}
                       <div>
@@ -3236,7 +3252,7 @@ const EventCreate = () => {
                     </div>
 
                     {/* RSVP Fields - Conditional display */}
-                    {formData.rsvp_action === "yes" && (
+                    {/* {formData.rsvp_action === "yes" && (
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <TextField
                           label="RSVP Name"
@@ -3257,10 +3273,10 @@ const EventCreate = () => {
                           InputProps={{ sx: fieldStyles }}
                         />
                       </div>
-                    )}
+                    )} */}
 
                     {/* Share With */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="md:col-span-3">
                         <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
                         <div className="flex gap-6 mb-4">
@@ -3357,7 +3373,7 @@ const EventCreate = () => {
                           </FormControl>
                         )}
                       </div>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
@@ -3507,7 +3523,7 @@ const EventCreate = () => {
                   <div className="p-6 space-y-6">
                     {/* Channel Partners */}
                     <div>
-                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                      {/* <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
                         <InputLabel shrink>Selected Channel Partners</InputLabel>
                         <MuiSelect
                           multiple
@@ -3534,7 +3550,7 @@ const EventCreate = () => {
                             </MenuItem>
                           ))}
                         </MuiSelect>
-                      </FormControl>
+                      </FormControl> */}
                     </div>
 
                     {/* Share With Section */}

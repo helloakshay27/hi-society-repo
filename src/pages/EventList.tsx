@@ -84,6 +84,16 @@ const Eventlist = () => {
 
       const eventsData = response.data.classifieds || [];
 
+      // Extract statistics from API response
+      if (response.data) {
+        setEventStats({
+          totalInvitedCPs: response.data.total_invited || 0,
+          attendedCPs: response.data.attended_count || 0,
+          notAttendedCPs: response.data.not_attended_count || 0,
+          scanTimeEntries: 0 // This may need to be added to the API response
+        });
+      }
+
       // Client-side search filtering
       let filteredEvents = eventsData;
       if (search) {
@@ -267,7 +277,7 @@ const Eventlist = () => {
   const renderListTab = () => (
     <div className="space-y-4">
       {/* Event Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-3 gap-4 mb-6">
         {[
           {
             label: 'Total Invited CPs',
@@ -290,13 +300,13 @@ const Eventlist = () => {
             type: 'notAttended',
             clickable: false
           },
-          {
-            label: 'Scan Time & Entry Log',
-            value: eventStats.scanTimeEntries,
-            icon: Clock,
-            type: 'scanLog',
-            clickable: false
-          }
+          // {
+          //   label: 'Scan Time & Entry Log',
+          //   value: eventStats.scanTimeEntries,
+          //   icon: Clock,
+          //   type: 'scanLog',
+          //   clickable: false
+          // }
         ].map((item, i) => {
           const IconComponent = item.icon;
           return (
