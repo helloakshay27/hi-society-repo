@@ -293,7 +293,6 @@ const RedIcon = styled(Settings)(({ theme }) => ({
 
 const fieldStyles = {
     backgroundColor: '#fff',
-    borderRadius: '4px',
     '& .MuiOutlinedInput-root': {
         fontSize: '14px',
         '& fieldset': {
@@ -996,7 +995,7 @@ export default function AddOfferPage() {
                             </Box>
                         </SectionHeader>
                         <SectionBody>
-                            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                            <Box sx={{ display: 'flex', gap: 3 }}>
                                 <TextField
                                     label="Offer Title"
                                     required
@@ -1004,35 +1003,17 @@ export default function AddOfferPage() {
                                     onChange={(e) => handleInputChange('offerTitle', e.target.value)}
                                     placeholder="Enter Title"
                                     sx={fieldStyles}
+                                    style={{width:'50%'}}
+                                />
+                                <TextField
+                                    label="Offer Description"
+                                    required
+                                    value={formData.offerDescription}
+                                    onChange={(e) => handleInputChange('offerDescription', e.target.value)}
+                                    placeholder="Enter Description"
+                                    sx={fieldStyles}
                                     fullWidth
                                 />
-                                <div className="relative">
-                                    <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
-                                        Offer Description <span className="text-red-500">*</span>
-                                    </label>
-                                    <textarea
-                                        value={formData.offerDescription}
-                                        onChange={(e) => handleInputChange('offerDescription', e.target.value)}
-                                        className="
-                                            w-full
-                                            min-h-[150px]
-                                            border
-                                            border-gray-300
-                                            rounded-md
-                                            px-4
-                                            py-3
-                                            pt-4
-                                            text-sm
-                                            text-gray-700
-                                            focus:outline-none
-                                            focus:ring-2
-                                            focus:ring-[#C72030]
-                                            focus:border-transparent
-                                            resize-y
-                                        "
-                                        placeholder="Enter Description"
-                                    />
-                                </div>
                             </Box>
                             <Box sx={{ mt: 3 }}>
                                 <FormControl fullWidth sx={fieldStyles}>
