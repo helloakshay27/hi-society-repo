@@ -47,6 +47,9 @@ export const BMSSidebar: React.FC = () => {
   const location = useLocation();
   const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
 
+  // Check if current domain is CMS domain
+  const isCMSDomain = window.location.hostname === 'ui-cms.lockated.com';
+
   // State for collapsible parent items
   const [communicationOpen, setCommunicationOpen] = useState(false);
   const [helpdeskOpen, setHelpdeskOpen] = useState(false);
@@ -100,7 +103,7 @@ export const BMSSidebar: React.FC = () => {
   ];
 
   // Home sub-items
-  const homeItems: MenuItem[] = [
+  let homeItems: MenuItem[] = [
     {
       id: "project",
       label: "Project",
@@ -131,18 +134,6 @@ export const BMSSidebar: React.FC = () => {
       icon: MessageSquare,
       path: "/maintenance/noticeboard-list",
     },
-    // {
-    //   id: "company",
-    //   label: "Company",
-    //   icon: Building,
-    //   path: "/maintenance/company-list",
-    // },
-    // {
-    //   id: "site",
-    //   label: "Site",
-    //   icon: MapPin,
-    //   path: "/maintenance/site-list",
-    // },
     {
       id: "press-releases",
       label: "Press Releases",
@@ -312,193 +303,198 @@ export const BMSSidebar: React.FC = () => {
 
         {/* Menu Items */}
         <nav className="space-y-1">
-          {/* Communication Parent */}
-          <div>
-            <button
-              onClick={() => setCommunicationOpen(!communicationOpen)}
-              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
-            >
-              <div className="flex items-center gap-3">
-                <MessageSquare className="w-5 h-5 flex-shrink-0" />
-                {!isSidebarCollapsed && <span>Communication</span>}
+          {/* Only show these items when NOT on CMS domain */}
+          {!isCMSDomain && (
+            <>
+              {/* Communication Parent */}
+              <div>
+                <button
+                  onClick={() => setCommunicationOpen(!communicationOpen)}
+                  className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+                >
+                  <div className="flex items-center gap-3">
+                    <MessageSquare className="w-5 h-5 flex-shrink-0" />
+                    {!isSidebarCollapsed && <span>Communication</span>}
+                  </div>
+                  {!isSidebarCollapsed && (
+                    communicationOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+                {communicationOpen && !isSidebarCollapsed && (
+                  <div className="mt-1 space-y-1">
+                    {renderSubItems(communicationItems)}
+                  </div>
+                )}
               </div>
-              {!isSidebarCollapsed && (
-                communicationOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-              )}
-            </button>
-            {communicationOpen && !isSidebarCollapsed && (
-              <div className="mt-1 space-y-1">
-                {renderSubItems(communicationItems)}
+
+              {/* Helpdesk Parent */}
+              <div>
+                <button
+                  onClick={() => setHelpdeskOpen(!helpdeskOpen)}
+                  className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+                >
+                  <div className="flex items-center gap-3">
+                    <Headset className="w-5 h-5 flex-shrink-0" />
+                    {!isSidebarCollapsed && <span>Helpdesk</span>}
+                  </div>
+                  {!isSidebarCollapsed && (
+                    helpdeskOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+                {helpdeskOpen && !isSidebarCollapsed && (
+                  <div className="mt-1 space-y-1">
+                    {renderSubItems(helpdeskItems)}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Helpdesk Parent */}
-          <div>
-            <button
-              onClick={() => setHelpdeskOpen(!helpdeskOpen)}
-              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
-            >
-              <div className="flex items-center gap-3">
-                <Headset className="w-5 h-5 flex-shrink-0" />
-                {!isSidebarCollapsed && <span>Helpdesk</span>}
+              {/* Feedback Standalone */}
+              <button
+                onClick={() => handleNavigation("/bms/feedbacks")}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"  
+                title="Feedbacks"
+              >
+                {isActive("/bms/feedbacks") && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                )}
+                <TrendingUp className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Feedbacks</span>}
+              </button>
+
+              {/* Parking Standalone */}
+              <button
+                onClick={() => handleNavigation("/bms/parking")}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+                title="Parking"
+              >
+                {isActive("/bms/parking") && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                )}
+                <Car className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Parking</span>}
+              </button>
+
+              {/* Groups Standalone */}
+              <button
+                onClick={() => handleNavigation("/bms/groups")}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+                title="Groups"
+              >
+                {isActive("/bms/groups") && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                )}
+                <UsersRound className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Groups</span>}
+              </button>
+
+              {/* Quarantine Tracker Standalone */}
+              <button
+                onClick={() => handleNavigation("/bms/quarantine-tracker")}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+                title="Quarantine Tracker"
+              >
+                {isActive("/bms/quarantine-tracker") && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                )}
+                <Clipboard className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Quarantine Tracker</span>}
+              </button>
+
+              {/* Offers Standalone */}
+              <button
+                onClick={() => handleNavigation("/bms/offers")}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+                title="Offers"
+              >
+                {isActive("/bms/offers") && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                )}
+                <Tag className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Offers</span>}
+              </button>
+
+              {/* Documents Parent */}
+              <div>
+                <button
+                  onClick={() => setDocumentsOpen(!documentsOpen)}
+                  className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+                >
+                  <div className="flex items-center gap-3">
+                    <Cloud className="w-5 h-5 flex-shrink-0" />
+                    {!isSidebarCollapsed && <span>Documents</span>}
+                  </div>
+                  {!isSidebarCollapsed && (
+                    documentsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+                {documentsOpen && !isSidebarCollapsed && (
+                  <div className="mt-1 space-y-1">
+                    {renderSubItems(documentsItems)}
+                  </div>
+                )}
               </div>
-              {!isSidebarCollapsed && (
-                helpdeskOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-              )}
-            </button>
-            {helpdeskOpen && !isSidebarCollapsed && (
-              <div className="mt-1 space-y-1">
-                {renderSubItems(helpdeskItems)}
+
+              {/* Business Directory Parent */}
+              <div>
+                <button
+                  onClick={() => setBusinessDirectoryOpen(!businessDirectoryOpen)}
+                  className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+                >
+                  <div className="flex items-center gap-3">
+                    <Building className="w-5 h-5 flex-shrink-0" />
+                    {!isSidebarCollapsed && <span>Business Directory</span>}
+                  </div>
+                  {!isSidebarCollapsed && (
+                    businessDirectoryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+                {businessDirectoryOpen && !isSidebarCollapsed && (
+                  <div className="mt-1 space-y-1">
+                    {renderSubItems(businessDirectoryItems)}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Feedback Standalone */}
-          <button
-            onClick={() => handleNavigation("/bms/feedbacks")}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"  
-            title="Feedbacks"
-          >
-            {isActive("/bms/feedbacks") && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
-            )}
-            <TrendingUp className="w-5 h-5 flex-shrink-0" />
-            {!isSidebarCollapsed && <span>Feedbacks</span>}
-          </button>
+              {/* MIS Standalone */}
+              <button
+                onClick={() => handleNavigation("/bms/mis")}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+                title="MIS"
+              >
+                {isActive("/bms/mis") && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                )}
+                <BarChart3 className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>MIS</span>}
+              </button>
 
-          {/* Parking Standalone */}
-          <button
-            onClick={() => handleNavigation("/bms/parking")}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-            title="Parking"
-          >
-            {isActive("/bms/parking") && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
-            )}
-            <Car className="w-5 h-5 flex-shrink-0" />
-            {!isSidebarCollapsed && <span>Parking</span>}
-          </button>
+              {/* Helpdesk Report Standalone */}
+              <button
+                onClick={() => handleNavigation("/bms/helpdesk-report")}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+                title="Helpdesk Report"
+              >
+                {isActive("/bms/helpdesk-report") && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                )}
+                <BarChart3 className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Helpdesk Report</span>}
+              </button>
 
-          {/* Groups Standalone */}
-          <button
-            onClick={() => handleNavigation("/bms/groups")}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-            title="Groups"
-          >
-            {isActive("/bms/groups") && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
-            )}
-            <UsersRound className="w-5 h-5 flex-shrink-0" />
-            {!isSidebarCollapsed && <span>Groups</span>}
-          </button>
-
-          {/* Quarantine Tracker Standalone */}
-          <button
-            onClick={() => handleNavigation("/bms/quarantine-tracker")}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-            title="Quarantine Tracker"
-          >
-            {isActive("/bms/quarantine-tracker") && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
-            )}
-            <Clipboard className="w-5 h-5 flex-shrink-0" />
-            {!isSidebarCollapsed && <span>Quarantine Tracker</span>}
-          </button>
-
-          {/* Offers Standalone */}
-          <button
-            onClick={() => handleNavigation("/bms/offers")}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-            title="Offers"
-          >
-            {isActive("/bms/offers") && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
-            )}
-            <Tag className="w-5 h-5 flex-shrink-0" />
-            {!isSidebarCollapsed && <span>Offers</span>}
-          </button>
-
-          {/* Documents Parent */}
-          <div>
-            <button
-              onClick={() => setDocumentsOpen(!documentsOpen)}
-              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
-            >
-              <div className="flex items-center gap-3">
-                <Cloud className="w-5 h-5 flex-shrink-0" />
-                {!isSidebarCollapsed && <span>Documents</span>}
-              </div>
-              {!isSidebarCollapsed && (
-                documentsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-              )}
-            </button>
-            {documentsOpen && !isSidebarCollapsed && (
-              <div className="mt-1 space-y-1">
-                {renderSubItems(documentsItems)}
-              </div>
-            )}
-          </div>
-
-          {/* Business Directory Parent */}
-          <div>
-            <button
-              onClick={() => setBusinessDirectoryOpen(!businessDirectoryOpen)}
-              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
-            >
-              <div className="flex items-center gap-3">
-                <Building className="w-5 h-5 flex-shrink-0" />
-                {!isSidebarCollapsed && <span>Business Directory</span>}
-              </div>
-              {!isSidebarCollapsed && (
-                businessDirectoryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-              )}
-            </button>
-            {businessDirectoryOpen && !isSidebarCollapsed && (
-              <div className="mt-1 space-y-1">
-                {renderSubItems(businessDirectoryItems)}
-              </div>
-            )}
-          </div>
-
-          {/* MIS Standalone */}
-          <button
-            onClick={() => handleNavigation("/bms/mis")}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-            title="MIS"
-          >
-            {isActive("/bms/mis") && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
-            )}
-            <BarChart3 className="w-5 h-5 flex-shrink-0" />
-            {!isSidebarCollapsed && <span>MIS</span>}
-          </button>
-
-          {/* Helpdesk Report Standalone */}
-          <button
-            onClick={() => handleNavigation("/bms/helpdesk-report")}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-            title="Helpdesk Report"
-          >
-            {isActive("/bms/helpdesk-report") && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
-            )}
-            <BarChart3 className="w-5 h-5 flex-shrink-0" />
-            {!isSidebarCollapsed && <span>Helpdesk Report</span>}
-          </button>
-
-          {/* Invoice Report Standalone */}
-          <button
-            onClick={() => handleNavigation("/bms/invoice-report")}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
-            title="Invoice Report"
-          >
-            {isActive("/bms/invoice-report") && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
-            )}
-            <BarChart3 className="w-5 h-5 flex-shrink-0" />
-            {!isSidebarCollapsed && <span>Invoice Report</span>}
-          </button>
+              {/* Invoice Report Standalone */}
+              <button
+                onClick={() => handleNavigation("/bms/invoice-report")}
+                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+                title="Invoice Report"
+              >
+                {isActive("/bms/invoice-report") && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                )}
+                <BarChart3 className="w-5 h-5 flex-shrink-0" />
+                {!isSidebarCollapsed && <span>Invoice Report</span>}
+              </button>
+            </>
+          )}
 
           {/* Home Parent */}
           <div>
@@ -521,26 +517,28 @@ export const BMSSidebar: React.FC = () => {
             )}
           </div>
 
-          {/* Loyalty Parent */}
-          <div>
-            <button
-              onClick={() => setLoyaltyOpen(!loyaltyOpen)}
-              className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
-            >
-              <div className="flex items-center gap-3">
-                <Award className="w-5 h-5 flex-shrink-0" />
-                {!isSidebarCollapsed && <span>Loyalty</span>}
-              </div>
-              {!isSidebarCollapsed && (
-                loyaltyOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+          {/* Loyalty Parent - Only show when NOT on CMS domain */}
+          {!isCMSDomain && (
+            <div>
+              <button
+                onClick={() => setLoyaltyOpen(!loyaltyOpen)}
+                className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
+              >
+                <div className="flex items-center gap-3">
+                  <Award className="w-5 h-5 flex-shrink-0" />
+                  {!isSidebarCollapsed && <span>Loyalty</span>}
+                </div>
+                {!isSidebarCollapsed && (
+                  loyaltyOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                )}
+              </button>
+              {loyaltyOpen && !isSidebarCollapsed && (
+                <div className="mt-1 space-y-1">
+                  {renderSubItems(loyaltyItems)}
+                </div>
               )}
-            </button>
-            {loyaltyOpen && !isSidebarCollapsed && (
-              <div className="mt-1 space-y-1">
-                {renderSubItems(loyaltyItems)}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </nav>
       </div>
     </div>
