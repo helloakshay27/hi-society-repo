@@ -36,7 +36,8 @@ export const HomeSidebar: React.FC = () => {
                             location.pathname.startsWith('/bms') ||
                             isCMSDomain;
 
-  const homeMenuItems: MenuItem[] = [
+  // Only show these items for CMS domain (ui-cms.lockated.com)
+  let homeMenuItems: MenuItem[] = [
     {
       id: "project",
       label: "Project",
@@ -49,12 +50,6 @@ export const HomeSidebar: React.FC = () => {
       icon: Image,
       path: "/maintenance/banner-list",
     },
-    // {
-    //   id: "testimonial",
-    //   label: "Testimonial",
-    //   icon: MessageSquare,
-    //   path: "/maintenance/testimonial-list",
-    // },
     {
       id: "event",
       label: "Event",
@@ -62,35 +57,17 @@ export const HomeSidebar: React.FC = () => {
       path: "/maintenance/event-list",
     },
     {
+      id: "offers",
+      label: "Offers",
+      icon: Gift,
+      path: "/offers/list",
+    },
+    {
       id: "broadcast",
       label: "Broadcast",
       icon: MessageSquare,
       path: "/maintenance/noticeboard-list",
     },
-    // {
-    //   id: "specification",
-    //   label: "Specification",
-    //   icon: FileText,
-    //   path: "/maintenance/specification-list",
-    // },
-    // {
-    //   id: "organization",
-    //   label: "Organization",
-    //   icon: Building2,
-    //   path: "/maintenance/organization-list",
-    // },
-    // {
-    //   id: "company",
-    //   label: "Company",
-    //   icon: Building,
-    //   path: "/maintenance/company-list",
-    // },
-    // {
-    //   id: "site",
-    //   label: "Site",
-    //   icon: MapPin,
-    //   path: "/maintenance/site-list",
-    // },
     {
       id: "press-releases",
       label: "Press Releases",
@@ -103,13 +80,16 @@ export const HomeSidebar: React.FC = () => {
       icon: HelpCircle,
       path: "/maintenance/faq-list",
     },
-    // {
-    //   id: "referral-program",
-    //   label: "Referral Program",
-    //   icon: UserCheck,
-    //   path: "/maintenance/referral-program-list",
-    // },
   ];
+
+  // If not CMS domain, filter out home subnav items (show all except these)
+  if (!isCMSDomain) {
+    const homeSubNavIds = [
+      "project", "banner", "event", "offers", "broadcast", "press-releases", "faq"
+    ];
+    homeMenuItems = homeMenuItems.filter(item => !homeSubNavIds.includes(item.id));
+    // ...or replace with your original logic for non-CMS domains...
+  }
 
   const isActive = (path: string) =>
     location.pathname === path ||
