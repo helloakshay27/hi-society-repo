@@ -75,7 +75,7 @@ const CustomMultiValue = (props) => (
       style={{
         position: "absolute",
         right: "-10px",
-        top: "3px",
+        top: "-5px",
         transform: "translateY(-50%), translateX(-50%)",
         background: "transparent",
         border: "1px solid #ccc",
@@ -86,12 +86,23 @@ const CustomMultiValue = (props) => (
         alignItems: "start",
         justifyContent: "center",
         color: "#666",
-        fontSize: "16px",
+        fontSize: "12px",
         lineHeight: "1",
-        width: "20px",
-        height: "20px",
+        width: "16px",
+        height: "16px",
+        transition: "background 0.2s, color 0.2s, border-color 0.2s",
       }}
       type="button"
+      onMouseOver={e => {
+        (e.currentTarget as HTMLButtonElement).style.background = "#f6f4ee";
+        (e.currentTarget as HTMLButtonElement).style.color = "#C72030";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "#C72030";
+      }}
+      onMouseOut={e => {
+        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+        (e.currentTarget as HTMLButtonElement).style.color = "#666";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "#ccc";
+      }}
     >
       ×
     </button>
@@ -343,6 +354,7 @@ interface OfferFormData {
     startDate: string;
     endDate: string;
     status: string;
+    offerType: string;
     showOnHomePage: boolean;
     featuredOffer: boolean;
     image_1_by_1?: any[];
@@ -369,6 +381,7 @@ export default function AddOfferPage() {
         startDate: '',
         endDate: '',
         status: 'Active',
+        offerType: '',
         showOnHomePage: false,
         featuredOffer: false,
         image_1_by_1: [],
@@ -677,6 +690,8 @@ export default function AddOfferPage() {
                 startDate: formatDateForInput(offer.start_date),
                 endDate: formatDateForInput(offer.expiry),
                 status: offer.active === 1 ? 'Active' : 'Inactive',
+                // Backend will expose offer_type later; default to empty until available
+                offerType: offer.offer_type || '',
                 showOnHomePage: offer.show_on_home === 1 || offer.show_on_home === true,
                 featuredOffer: offer.featured === 1 || offer.featured === true,
                 image_1_by_1: [],
@@ -745,6 +760,10 @@ export default function AddOfferPage() {
                 }
                 if (!formData.offerDescription.trim()) {
                     toast.error('Please enter offer description');
+                    return false;
+                }
+                if (!formData.offerType) {
+                    toast.error('Please select offer type');
                     return false;
                 }
                 return true;
@@ -895,6 +914,7 @@ export default function AddOfferPage() {
             // Add offer details
             formDataPayload.append('offer[title]', formData.offerTitle);
             formDataPayload.append('offer[description]', formData.offerDescription);
+            formDataPayload.append('offer[offer_type]', formData.offerType);
             formDataPayload.append('offer[otype]', 'Project');
             formDataPayload.append('offer[otype_id]', '1');
             formDataPayload.append('offer[start_date]', formData.startDate);
@@ -1042,7 +1062,19 @@ export default function AddOfferPage() {
                                     fullWidth
                                 />
                             </Box>
-                            <Box sx={{ mt: 3 }}>
+                            <Box sx={{ mt: 3, display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                                <FormControl fullWidth sx={fieldStyles}>
+                                    <InputLabel>Offer Type</InputLabel>
+                                    <MuiSelect
+                                        value={formData.offerType}
+                                        onChange={(e) => handleInputChange('offerType', e.target.value)}
+                                        label="Offer Type"
+                                    >
+                                        <MenuItem value="">Select Offer Type</MenuItem>
+                                        <MenuItem value="CP Offer">CP Offer</MenuItem>
+                                        <MenuItem value="Customer Offer">Customer Offer</MenuItem>
+                                    </MuiSelect>
+                                </FormControl>
                                 <FormControl fullWidth sx={fieldStyles}>
                                     <InputLabel>Legal Policies Template</InputLabel>
                                     <MuiSelect
@@ -1679,6 +1711,14 @@ export default function AddOfferPage() {
                                         </Typography>
                                         <Typography variant="body2" sx={{ color: '#333', fontSize: '14px', fontFamily: 'Work Sans, sans-serif', mt: 0.5 }}>
                                             {formData.offerDescription}
+                                        </Typography>
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="body2" sx={{ color: '#999', fontSize: '12px', fontFamily: 'Work Sans, sans-serif' }}>
+                                            Offer Type *
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: '#333', fontSize: '14px', fontFamily: 'Work Sans, sans-serif', mt: 0.5 }}>
+                                            {formData.offerType}
                                         </Typography>
                                     </Box>
                                     {formData.legalPoliciesTemplate && (

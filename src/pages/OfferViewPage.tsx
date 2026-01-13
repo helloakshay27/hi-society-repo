@@ -117,6 +117,11 @@ export default function OfferViewPage() {
     return 'No';
   };
 
+  const getOfferType = () => {
+    if (offer?.offer_type) return offer.offer_type;
+    return '-';
+  };
+
   const getTemplateTitle = () => {
     if (offer?.offer_template_name) return offer.offer_template_name;
     if (offer?.offer_template?.title) return offer.offer_template.title;
@@ -170,6 +175,15 @@ export default function OfferViewPage() {
                   </div>
                   <div className="text-[14px] font-semibold text-gray-900 flex-1">
                     {offer.offer_template_name || '-'}
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                    Offer Type
+                  </div>
+                  <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                    {getOfferType()}
                   </div>
                 </div>
                 

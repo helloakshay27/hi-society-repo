@@ -52,6 +52,7 @@ interface Offer {
   offerId: string;
   offerTitle: string;
   description: string;
+  offerType: string;
   applicableProjects: string;
   startDate: string;
   endDate: string;
@@ -163,6 +164,7 @@ export default function OffersList() {
             offerId: `OFF-${String(apiOffer.id).padStart(4, '0')}`,
             offerTitle: apiOffer.title,
             description: apiOffer.description || '-',
+            offerType: apiOffer.offer_type || '-',
             applicableProjects: getProjectNames(apiOffer.offer_applicable_projects),
             startDate: formatDate(apiOffer.start_date),
             endDate: formatDate(apiOffer.expiry),
@@ -239,6 +241,7 @@ export default function OffersList() {
     { key: 'offerId', label: 'Offer ID', sortable: true },
     { key: 'image', label: 'Image', sortable: false },
     { key: 'offerTitle', label: 'Offer Title', sortable: true },
+    { key: 'offerType', label: 'Offer Type', sortable: true },
     { key: 'applicableProjects', label: 'Applicable Project(s)', sortable: true },
     { key: 'startDate', label: 'Start Date', sortable: true },
     { key: 'endDate', label: 'End Date', sortable: true },
@@ -276,6 +279,9 @@ export default function OffersList() {
       
       case 'offerTitle':
         return item.offerTitle;
+
+      case 'offerType':
+        return item.offerType;
       
       case 'description':
         return item.description;
