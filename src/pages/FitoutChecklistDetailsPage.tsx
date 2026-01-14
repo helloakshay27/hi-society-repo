@@ -80,7 +80,7 @@ export const FitoutChecklistDetailsPage = () => {
       <div className="flex items-center justify-between gap-4 mb-6">
         <Button
           variant="ghost"
-          onClick={() => navigate("/master/fitout-checklists")}
+          onClick={() => navigate("/fitout/checklists")}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -88,7 +88,7 @@ export const FitoutChecklistDetailsPage = () => {
         </Button>
         {!loading && checklistData && (
           <Button
-            onClick={() => navigate(`/master/fitout-checklists/edit/${id}`)}
+            onClick={() => navigate(`/fitout/checklists/edit/${id}`)}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Edit className="w-4 h-4" />

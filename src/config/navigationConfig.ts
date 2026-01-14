@@ -214,32 +214,27 @@ export const modulesByPackage = {
       icon: BarChart3,
       href: "/transitioning/design-insight",
     },
+  ],
+  Fitout: [
     {
-      name: "Fitout",
+      name: "Fitout Setup",
       icon: Wrench,
-      href: "/transitioning/fitout",
-      subItems: [
-        {
-          name: "Fitout Setup",
-          href: "/transitioning/fitout/setup",
-          color: "text-[#1a1a1a]",
-        },
-        {
-          name: "Fitout Request",
-          href: "/transitioning/fitout/request",
-          color: "text-[#1a1a1a]",
-        },
-        {
-          name: "Fitout Checklist",
-          href: "/transitioning/fitout/checklist",
-          color: "text-[#1a1a1a]",
-        },
-        {
-          name: "Fitout Violation",
-          href: "/transitioning/fitout/violation",
-          color: "text-[#1a1a1a]",
-        },
-      ],
+      href: "/fitout/setup",
+    },
+    {
+      name: "Fitout Requests",
+      icon: FileText,
+      href: "/fitout/requests",
+    },
+    {
+      name: "Fitout Checklists",
+      icon: CheckSquare,
+      href: "/fitout/checklists",
+    },
+    {
+      name: "Fitout Violations",
+      icon: AlertTriangle,
+      href: "/fitout/violations",
     },
   ],
   Maintenance: [

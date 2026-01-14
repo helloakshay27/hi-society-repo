@@ -5,21 +5,26 @@ import { Plus, Edit, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import { useToast } from "@/hooks/use-toast";
-import { apiClient } from "@/utils/apiClient";
+import axios from "axios";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
 interface FitoutRequestItem {
   id: number;
-  annexure: string;
+  fitout_category_id: number;
   description: string;
-  tower: string;
-  flat: string;
-  master_status: string;
-  created_on: string;
-  created_by: string;
-  total_amount: number;
-  amount_paid: number;
+  society_id: number;
+  user_society_id: number;
+  active: boolean | null;
+  status_id: number;
+  amount: number;
   created_at: string;
   updated_at: string;
+  category_name: string;
+  status_name: string;
+  start_date: string;
+  end_date: string;
+  osr_logs: any[];
+  lock_payment: any | null;
 }
 
 const FitoutRequests: React.FC = () => {
@@ -29,26 +34,24 @@ const FitoutRequests: React.FC = () => {
   const [fitoutRequests, setFitoutRequests] = useState<FitoutRequestItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchFitoutRequestsData();
-  }, []);
-
   const fetchFitoutRequestsData = useCallback(async () => {
     try {
       setLoading(true);
-      // Replace with your actual API endpoint
-      const url = `/crm/admin/fitout_requests.json`;
       
-      const response = await apiClient.get(url);
-      console.log("Fitout Requests response:", response.data);
-      const requestsData = response.data.data || [];
-
-      setFitoutRequests((prevRequests) => {
-        if (JSON.stringify(prevRequests) === JSON.stringify(requestsData)) {
-          return prevRequests;
+      const response = await axios.get(
+        getFullUrl("/crm/admin/fitout_requests.json"),
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
         }
-        return requestsData;
-      });
+      );
+      
+      console.log("Fitout Requests response:", response.data);
+      const requestsData = response.data.fitout_requests || [];
+
+      setFitoutRequests(requestsData);
     } catch (error) {
       console.error("Error fetching Fitout Requests data:", error);
       setFitoutRequests([]);
@@ -62,15 +65,26 @@ const FitoutRequests: React.FC = () => {
     }
   }, [toast]);
 
+  useEffect(() => {
+    fetchFitoutRequestsData();
+  }, [fetchFitoutRequestsData]);
+
   const handleAddRequest = () => {
-    navigate(`/master/fitout-requests/add`);
+    navigate(`/fitout/requests/add`);
   };
 
   const handleExportRequests = useCallback(async () => {
     try {
-      const url = `/crm/admin/fitout_requests.xlsx?export=true`;
-
-      const response = await apiClient.get(url, { responseType: "blob" });
+      const response = await axios.get(
+        getFullUrl("/crm/admin/fitout_requests.xlsx?export=true"),
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+          },
+          responseType: "blob",
+        }
+      );
+      
       const blob = new Blob([response.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
@@ -101,9 +115,9 @@ const FitoutRequests: React.FC = () => {
   const handleRowAction = (action: string, requestId: number) => {
     console.log(`${action} action for Request ${requestId}`);
     if (action === "Edit") {
-      navigate(`/master/fitout-requests/edit/${requestId}`);
+      navigate(`/fitout/requests/edit/${requestId}`);
     } else if (action === "View") {
-      navigate(`/master/fitout-requests/details/${requestId}`);
+      navigate(`/fitout/requests/details/${requestId}`);
     } else {
       toast({
         title: `${action} Action`,
@@ -129,8 +143,8 @@ const FitoutRequests: React.FC = () => {
         defaultVisible: true,
       },
       {
-        key: "annexure",
-        label: "Annexure",
+        key: "category_name",
+        label: "Category",
         sortable: true,
         draggable: true,
         defaultVisible: true,
@@ -143,50 +157,36 @@ const FitoutRequests: React.FC = () => {
         defaultVisible: true,
       },
       {
-        key: "tower",
-        label: "Tower",
+        key: "status_name",
+        label: "Status",
         sortable: true,
         draggable: true,
         defaultVisible: true,
       },
       {
-        key: "flat",
-        label: "Flat",
+        key: "start_date",
+        label: "Start Date",
         sortable: true,
         draggable: true,
         defaultVisible: true,
       },
       {
-        key: "master_status",
-        label: "Master Status",
+        key: "end_date",
+        label: "End Date",
         sortable: true,
         draggable: true,
         defaultVisible: true,
       },
       {
-        key: "created_on",
-        label: "Created on",
+        key: "amount",
+        label: "Amount",
         sortable: true,
         draggable: true,
         defaultVisible: true,
       },
       {
-        key: "created_by",
-        label: "Created by",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
-      {
-        key: "total_amount",
-        label: "Total Amount",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
-      {
-        key: "amount_paid",
-        label: "Amount Paid",
+        key: "created_at",
+        label: "Created At",
         sortable: true,
         draggable: true,
         defaultVisible: true,
@@ -219,48 +219,46 @@ const FitoutRequests: React.FC = () => {
           );
         case "id":
           return <div className="text-center">{item.id}</div>;
-        case "annexure":
-          return <span>{item.annexure || "-"}</span>;
+        case "category_name":
+          return <span>{item.category_name || "-"}</span>;
         case "description":
           return <span>{item.description || "-"}</span>;
-        case "tower":
-          return <span>{item.tower || "-"}</span>;
-        case "flat":
-          return <span>{item.flat || "-"}</span>;
-        case "master_status":
+        case "status_name":
           return (
-            <span className={`font-medium capitalize`}>
-              {item.master_status || "-"}
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              item.status_name === "Assigned to Worker"
+                ? "bg-blue-100 text-blue-800"
+                : item.status_name === "Completed"
+                ? "bg-green-100 text-green-800"
+                : item.status_name === "Pending"
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-gray-100 text-gray-800"
+            }`}>
+              {item.status_name || "-"}
             </span>
           );
-        case "created_on":
+        case "start_date":
+          return <span>{item.start_date || "-"}</span>;
+        case "end_date":
+          return <span>{item.end_date || "-"}</span>;
+        case "amount":
           return (
             <span>
-              {item.created_on
-                ? new Date(item.created_on).toLocaleDateString("en-IN", {
+              {item.amount 
+                ? `₹${item.amount.toLocaleString("en-IN")}`
+                : "₹0"}
+            </span>
+          );
+        case "created_at":
+          return (
+            <span>
+              {item.created_at
+                ? new Date(item.created_at).toLocaleDateString("en-IN", {
                     day: "2-digit",
                     month: "short",
                     year: "numeric",
                   })
                 : "-"}
-            </span>
-          );
-        case "created_by":
-          return <span>{item.created_by || "-"}</span>;
-        case "total_amount":
-          return (
-            <span>
-              {item.total_amount 
-                ? `₹${item.total_amount.toLocaleString("en-IN")}`
-                : "₹0"}
-            </span>
-          );
-        case "amount_paid":
-          return (
-            <span>
-              {item.amount_paid 
-                ? `₹${item.amount_paid.toLocaleString("en-IN")}`
-                : "₹0"}
             </span>
           );
         default:
@@ -278,12 +276,10 @@ const FitoutRequests: React.FC = () => {
   const filteredRequests = useMemo(() => {
     return fitoutRequests.filter((request) => {
       const matchesSearch =
-        request.annexure?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.category_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.tower?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.flat?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.master_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.created_by?.toLowerCase().includes(searchTerm.toLowerCase());
+        request.status_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.id?.toString().includes(searchTerm);
 
       return matchesSearch;
     });

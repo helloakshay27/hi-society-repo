@@ -10,6 +10,7 @@ import { Plus, Edit, Eye, Settings, Users, UserCheck, UserX, Clock, Pencil } fro
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
+import { Switch } from "@mui/material";
 
 
 interface Event {
@@ -239,41 +240,18 @@ const Eventlist = () => {
         return formatTimeOnly(item.from_time);
       case 'active':
         return eventPermissions.destroy === "true" ? (
-          <button
-            onClick={() => handleToggle(item.id, item.active)}
-            className="toggle-button"
-            style={{
-              border: "none",
-              background: "none",
-              cursor: "pointer",
-              padding: 0,
-              width: "70px",
+          <Switch
+            checked={item.active || false}
+            onChange={() => handleToggle(item.id, item.active)}
+            sx={{
+              '& .MuiSwitch-switchBase.Mui-checked': {
+                color: '#C72030',
+              },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: '#C72030',
+              },
             }}
-          >
-            {item.active ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="40"
-                height="25"
-                fill="#de7008"
-                className="bi bi-toggle-on"
-                viewBox="0 0 16 16"
-              >
-                <path d="M5 3a5 5 0 0 0 0 10h6a5 5 0 0 0 0-10zm6 9a4 4 0 1 1 0-8 4 4 0 0 1 0 8" />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="40"
-                height="25"
-                fill="#667085"
-                className="bi bi-toggle-off"
-                viewBox="0 0 16 16"
-              >
-                <path d="M11 4a4 4 0 0 1 0 8H8a5 5 0 0 0 2-4 5 5 0 0 0-2-4zm-6 8a4 4 0 1 1 0-8 4 4 0 0 1 0 8M0 8a5 5 0 0 0 5 5h6a5 5 0 0 0 0-10H5a5 5 0 0 0-5 5" />
-              </svg>
-            )}
-          </button>
+          />
         ) : 
         (
           <span className="text-sm text-gray-500">{item.active ? "Active" : "Inactive"}</span>

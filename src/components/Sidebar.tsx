@@ -440,6 +440,8 @@ export const Sidebar = () => {
       setCurrentSection("Market Place");
     } else if (path.startsWith("/master")) {
       setCurrentSection("Master");
+    } else if (path.startsWith("/fitout")) {
+      setCurrentSection("Fitout");
     }
   }, [location.pathname, setCurrentSection]);
 

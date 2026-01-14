@@ -104,7 +104,7 @@ const FitoutChecklists: React.FC = () => {
   );
 
   const handleAddChecklist = () => {
-    navigate(`/master/fitout-checklists/add`);
+    navigate(`/fitout/checklists/add`);
   };
 
   const handleExportChecklists = useCallback(async () => {
@@ -149,9 +149,9 @@ const FitoutChecklists: React.FC = () => {
   const handleRowAction = (action: string, checklistId: number) => {
     console.log(`${action} action for Checklist ${checklistId}`);
     if (action === "Edit") {
-      navigate(`/master/fitout-checklists/edit/${checklistId}`);
+      navigate(`/fitout/checklists/edit/${checklistId}`);
     } else if (action === "View") {
-      navigate(`/master/fitout-checklists/details/${checklistId}`);
+      navigate(`/fitout/checklists/details/${checklistId}`);
     } else {
       toast({
         title: `${action} Action`,

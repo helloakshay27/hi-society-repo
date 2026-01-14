@@ -651,6 +651,7 @@ const EventCreate = () => {
     formDataToSend.append("event[shared]", formData.shared === "all" ? "0" : "1");
     formDataToSend.append("event[is_important]", formData.is_important === true ? "1" : "0");
     formDataToSend.append("event[email_trigger_enabled]", formData.email_trigger_enabled === true ? "1" : "0");
+    formDataToSend.append("event[active]", "true");
 
     // Add swusers (individual users) if shared with individuals
     if (formData.shared === "individual" && Array.isArray(formData.user_id)) {

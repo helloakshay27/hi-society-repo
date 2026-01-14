@@ -219,12 +219,16 @@ const AccountingDownloadReport = lazy(() => import("@/pages/AccountingDownloadRe
 // Fitout Pages
 const FitoutRequests = lazy(() => import("@/pages/FitoutRequests"));
 const FitoutRequestAdd = lazy(() => import("@/pages/FitoutRequestAdd"));
+const FitoutRequestDetails = lazy(() => import("@/pages/FitoutRequestDetails"));
+const FitoutRequestEdit = lazy(() => import("@/pages/FitoutRequestEdit"));
 const FitoutSetup = lazy(() => import("@/pages/FitoutSetup"));
 const FitoutChecklists = lazy(() => import("@/pages/FitoutChecklists"));
 const AddFitoutChecklistPage = lazy(() => import("@/pages/AddFitoutChecklistPage"));
 const EditFitoutChecklistPage = lazy(() => import("@/pages/EditFitoutChecklistPage"));
 const FitoutChecklistDetailsPage = lazy(() => import("@/pages/FitoutChecklistDetailsPage"));
 const FitoutDeviations = lazy(() => import("@/pages/FitoutDeviations"));
+const FitoutDeviationDetails = lazy(() => import("@/pages/FitoutDeviationDetails"));
+const ViolationDetail = lazy(() => import("@/pages/ViolationDetail"));
 const FitoutReport = lazy(() => import("@/pages/FitoutReport"));
 
 // SmartSecure Pages
@@ -575,16 +579,19 @@ export const setupMemberRoutes = (
     <Route path="/accounting/download-report" Component={withSuspense(AccountingDownloadReport)} />
 
     {/* Fitout Routes */}
-    <Route path="/fitout/requests" Component={withSuspense(FitoutRequests)} />
     <Route path="/fitout/setup" Component={withSuspense(FitoutSetup)} />
+    <Route path="/fitout/requests" Component={withSuspense(FitoutRequests)} />
+    <Route path="/fitout/requests/add" Component={withSuspense(FitoutRequestAdd)} />
+    <Route path="/fitout/requests/details/:id" Component={withSuspense(FitoutRequestDetails)} />
+    <Route path="/fitout/requests/edit/:id" Component={withSuspense(FitoutRequestEdit)} />
     <Route path="/fitout/checklists" Component={withSuspense(FitoutChecklists)} />
-    <Route path="/master/fitout-checklists" Component={withSuspense(FitoutChecklists)} />
-    <Route path="/master/fitout-checklists/add" Component={withSuspense(AddFitoutChecklistPage)} />
-    <Route path="/master/fitout-checklists/edit/:id" Component={withSuspense(EditFitoutChecklistPage)} />
-    <Route path="/master/fitout-checklists/details/:id" Component={withSuspense(FitoutChecklistDetailsPage)} />
-    <Route path="/master/fitout-requests" Component={withSuspense(FitoutRequests)} />
-    <Route path="/master/fitout-requests/add" Component={withSuspense(FitoutRequestAdd)} />
+    <Route path="/fitout/checklists/add" Component={withSuspense(AddFitoutChecklistPage)} />
+    <Route path="/fitout/checklists/edit/:id" Component={withSuspense(EditFitoutChecklistPage)} />
+    <Route path="/fitout/checklists/details/:id" Component={withSuspense(FitoutChecklistDetailsPage)} />
     <Route path="/fitout/deviations" Component={withSuspense(FitoutDeviations)} />
+    <Route path="/maintenance/fitout-deviations" Component={withSuspense(FitoutDeviations)} />
+    <Route path="/maintenance/fitout-deviation-details/:flat_id" Component={withSuspense(FitoutDeviationDetails)} />
+    <Route path="/maintenance/fitout-deviation-detail/:deviation_id" Component={withSuspense(ViolationDetail)} />
     <Route path="/fitout/report" Component={withSuspense(FitoutReport)} />
 
     {/* SmartSecure Routes */}

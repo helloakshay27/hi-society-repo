@@ -69,6 +69,8 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
       newSection = 'Market Place';
     } else if (path.startsWith('/master')) {
       newSection = 'Master';
+    } else if (path.startsWith('/fitout')) {
+      newSection = 'Fitout';
     } else if (path.startsWith('/settings')) {
       newSection = 'Settings';
     } else if (path.startsWith('/dashboard')) {

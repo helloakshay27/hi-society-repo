@@ -2,19 +2,25 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pencil, Trash2 } from 'lucide-react';
-import axios from 'axios';
 import { toast } from 'sonner';
 import { EnhancedTable } from '../enhanced-table/EnhancedTable';
+import { apiClient } from '@/utils/apiClient';
 
 interface Category {
   id: number;
   name: string;
-  bhk_1_count: number;
-  bhk_2_count: number;
-  bhk_3_count: number;
-  bhk_4_count: number;
-  bhk_5_count: number;
-  bhk_4_5_count: number;
+  active: boolean;
+  society_id: string | number;
+  amount: number | null;
+  conv_charge: number;
+  created_at: string;
+  updated_at: string;
+  bhk_1_count?: number;
+  bhk_2_count?: number;
+  bhk_3_count?: number;
+  bhk_4_count?: number;
+  bhk_5_count?: number;
+  bhk_4_5_count?: number;
 }
 
 export const CategoryTab: React.FC = () => {
@@ -30,8 +36,10 @@ export const CategoryTab: React.FC = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/fitout/categories');
-      setCategories(Array.isArray(response.data) ? response.data : []);
+      const response = await apiClient.get('/crm/admin/fitout_categories.json');
+      // Extract fitout_categories array from the response
+      const categoriesData = response.data?.fitout_categories || [];
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast.error('Failed to load categories');
@@ -48,13 +56,35 @@ export const CategoryTab: React.FC = () => {
     }
 
     try {
-      const response = await axios.post('/api/fitout/categories', {
-        name: categoryName
+      // Get society_id from localStorage
+      const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
+      
+      // First, get the selected user society to extract id_society
+      let idSociety = '';
+      if (selectedUserSocietyId) {
+        const selectedSocietyResponse = await apiClient.get(`/crm/admin/user_societies.json`);
+        const userSocieties = selectedSocietyResponse.data || [];
+        const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
+        idSociety = selectedSociety?.id_society || '';
+      }
+      
+      if (!idSociety) {
+        toast.error('Society information not found. Please select a society.');
+        return;
+      }
+
+      const response = await apiClient.post('/crm/admin/fitout_categories.json', {
+        fitout_category: {
+          name: categoryName,
+          active: true,
+          society_id: idSociety,
+        }
       });
       toast.success('Category added successfully');
       const newCategory = response.data;
       setCategories(Array.isArray(categories) ? [...categories, newCategory] : [newCategory]);
       setCategoryName('');
+      fetchCategories(); // Refresh the list
     } catch (error) {
       console.error('Error adding category:', error);
       toast.error('Failed to add category');
@@ -69,15 +99,16 @@ export const CategoryTab: React.FC = () => {
     if (!categoryName.trim() || !editingId) return;
 
     try {
-      await axios.put(`/api/fitout/categories/${editingId}`, {
-        name: categoryName
+      await apiClient.put(`/crm/admin/fitout_categories/${editingId}.json`, {
+        fitout_category: {
+          name: categoryName,
+          active: true,
+        }
       });
       toast.success('Category updated successfully');
-      setCategories(Array.isArray(categories) ? categories.map(cat => 
-        cat.id === editingId ? { ...cat, name: categoryName } : cat
-      ) : []);
       setCategoryName('');
       setEditingId(null);
+      fetchCategories(); // Refresh the list
     } catch (error) {
       console.error('Error updating category:', error);
       toast.error('Failed to update category');
@@ -88,9 +119,9 @@ export const CategoryTab: React.FC = () => {
     if (!confirm('Are you sure you want to delete this category?')) return;
 
     try {
-      await axios.delete(`/api/fitout/categories/${id}`);
+      await apiClient.delete(`/crm/admin/fitout_categories/${id}.json`);
       toast.success('Category deleted successfully');
-      setCategories(Array.isArray(categories) ? categories.filter(cat => cat.id !== id) : []);
+      fetchCategories(); // Refresh the list
     } catch (error) {
       console.error('Error deleting category:', error);
       toast.error('Failed to delete category');
@@ -107,6 +138,13 @@ export const CategoryTab: React.FC = () => {
         defaultVisible: true,
       },
       {
+        key: 'id',
+        label: 'ID',
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
         key: 'name',
         label: 'Category',
         sortable: true,
@@ -114,43 +152,29 @@ export const CategoryTab: React.FC = () => {
         defaultVisible: true,
       },
       {
-        key: 'bhk_1_count',
-        label: '1 BHK',
+        key: 'active',
+        label: 'Status',
         sortable: true,
         draggable: true,
         defaultVisible: true,
       },
       {
-        key: 'bhk_2_count',
-        label: '2 BHK',
+        key: 'amount',
+        label: 'Amount',
         sortable: true,
         draggable: true,
         defaultVisible: true,
       },
       {
-        key: 'bhk_3_count',
-        label: '3 BHK',
+        key: 'conv_charge',
+        label: 'Convenience Charge',
         sortable: true,
         draggable: true,
         defaultVisible: true,
       },
       {
-        key: 'bhk_4_count',
-        label: '4 BHK',
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
-      {
-        key: 'bhk_5_count',
-        label: '5 BHK',
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
-      {
-        key: 'bhk_4_5_count',
-        label: '4.5 BHK',
+        key: 'created_at',
+        label: 'Created At',
         sortable: true,
         draggable: true,
         defaultVisible: true,
@@ -180,13 +204,30 @@ export const CategoryTab: React.FC = () => {
         );
       case 'name':
         return <span>{item.name}</span>;
-      case 'bhk_1_count':
-      case 'bhk_2_count':
-      case 'bhk_3_count':
-      case 'bhk_4_count':
-      case 'bhk_5_count':
-      case 'bhk_4_5_count':
-        return <div className="text-center">{item[columnKey as keyof Category] || 0}</div>;
+      case 'id':
+        return <span>{item.id}</span>;
+      case 'active':
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            item.active 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {item.active ? 'Active' : 'Inactive'}
+          </span>
+        );
+      case 'amount':
+        return <span>{item.amount !== null ? `₹${item.amount}` : '-'}</span>;
+      case 'conv_charge':
+        return <span>₹{item.conv_charge || 0}</span>;
+      case 'created_at':
+        return <span>{new Date(item.created_at).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}</span>;
       default:
         return <span>{String(item[columnKey as keyof Category] || '-')}</span>;
     }

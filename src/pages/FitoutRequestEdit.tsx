@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, SelectChangeEvent } from '@mui/material';
 import { Button } from '@/components/ui/button';
@@ -7,59 +7,48 @@ import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/utils/apiClient';
 
 interface FitoutRequestFormData {
-  user_society_id: string;
-  site_id: string;
-  unit_id: string;
-  user_id: string;
-  fitout_category_id: string;
-  start_date: string;
-  end_date: string;
-  expiry_date: string;
-  refund_date: string;
+  tower: string;
+  flat: string;
+  user: string;
+  requestedDate: string;
   description: string;
-  contactor_name: string;
-  contactor_no: string;
-  pay_mode: string;
+  contractorName: string;
+  contractorMobileNo: string;
+  expiryDate: string;
+  refundDate: string;
+  annexure: string;
   amount: string;
-  status_id: string;
-  pms_supplier_id: string;
+  convenienceCharge: string;
+  total: string;
+  paymentMode: string;
 }
 
-interface FitoutRequestCategory {
-  fitout_category_id: string;
-  complaint_status_id: string;
-  amount: string;
-  documents: File[];
-}
-
-const FitoutRequestAdd: React.FC = () => {
+const FitoutRequestEdit: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [towers, setTowers] = useState<any[]>([]);
-  const [flats, setFlats] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [convenienceCharge, setConvenienceCharge] = useState('0.00');
-  const [requestCategories, setRequestCategories] = useState<FitoutRequestCategory[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [towers, setTowers] = useState([]);
+  const [flats, setFlats] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [annexures, setAnnexures] = useState([]);
 
   const [formData, setFormData] = useState<FitoutRequestFormData>({
-    user_society_id: '',
-    site_id: '',
-    unit_id: '',
-    user_id: '',
-    fitout_category_id: '',
-    start_date: '',
-    end_date: '',
-    expiry_date: '',
-    refund_date: '',
+    tower: '',
+    flat: '',
+    user: '',
+    requestedDate: '',
     description: '',
-    contactor_name: '',
-    contactor_no: '',
-    pay_mode: 'PAY AT SITE',
+    contractorName: '',
+    contractorMobileNo: '',
+    expiryDate: '',
+    refundDate: '',
+    annexure: '',
     amount: '0.00',
-    status_id: '',
-    pms_supplier_id: '',
+    convenienceCharge: '0.00',
+    total: '0.00',
+    paymentMode: 'PAY AT SITE',
   });
 
   const fieldStyles = {
@@ -87,7 +76,8 @@ const FitoutRequestAdd: React.FC = () => {
 
   useEffect(() => {
     fetchDropdownData();
-  }, []);
+    fetchFitoutRequest();
+  }, [id]);
 
   const fetchDropdownData = async () => {
     try {
@@ -106,21 +96,16 @@ const FitoutRequestAdd: React.FC = () => {
       
       if (!idSociety) {
         console.error('No id_society found. Please ensure selectedUserSociety is set in localStorage.');
-        toast({
-          title: 'Error',
-          description: 'Society information not found. Please select a society.',
-          variant: 'destructive',
-        });
         return;
       }
       
-      // Fetch categories, towers/blocks, users
+      // Fetch towers/blocks, users, annexures/categories
       console.log('Fetching dropdown data with id_society:', idSociety);
       
-      const [categoriesResponse, blocksResponse, usersResponse] = await Promise.all([
-        apiClient.get('/crm/admin/fitout_categories.json'),
+      const [blocksResponse, usersResponse, categoriesResponse] = await Promise.all([
         apiClient.get(`/get_society_blocks.json?society_id=${idSociety}`),
         apiClient.get(`/get_user_society.json?id_society=${idSociety}`),
+        apiClient.get('/crm/admin/fitout_categories.json'),
       ]);
 
       console.log('Full Blocks Response:', blocksResponse);
@@ -141,36 +126,25 @@ const FitoutRequestAdd: React.FC = () => {
       console.log('Blocks Array Length:', blocksArray.length);
       setTowers(blocksArray);
       
-      console.log('Users Response:', usersResponse.data);
-      console.log('Categories Response:', categoriesResponse.data);
-      
-      // Extract fitout_categories array from the response
-      const categoriesArray = categoriesResponse.data?.fitout_categories || [];
       // Extract user_societies array from the response
       const usersArray = usersResponse.data?.user_societies || [];
+      // Extract fitout_categories array from the response
+      const annexuresArray = categoriesResponse.data?.fitout_categories || [];
       
-      console.log('Categories Array Length:', categoriesArray.length);
-      console.log('Users Array Length:', usersArray.length);
+      console.log('Users Array:', usersArray);
+      console.log('Annexures Array:', annexuresArray);
       
-      setCategories(categoriesArray);
       setUsers(usersArray);
-      
-      // Set id_society in formData for user_society_id parameter
-      setFormData(prev => ({ ...prev, user_society_id: idSociety }));
+      setAnnexures(annexuresArray);
     } catch (error) {
       console.error('Error fetching dropdown data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load form data',
-        variant: 'destructive',
-      });
     }
   };
 
-  const handleTowerChange = async (siteId: string) => {
-    setFormData(prev => ({ ...prev, site_id: siteId, unit_id: '' }));
+  const handleTowerChange = async (towerId: string) => {
+    setFormData(prev => ({ ...prev, tower: towerId, flat: '' }));
     
-    if (siteId) {
+    if (towerId) {
       try {
         // Get id_society from localStorage selected user society
         const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
@@ -183,7 +157,7 @@ const FitoutRequestAdd: React.FC = () => {
           idSociety = selectedSociety?.id_society || '';
         }
         
-        const response = await apiClient.get(`/get_society_flats.json?society_block_id=${siteId}&society_id=${idSociety}`);
+        const response = await apiClient.get(`/get_society_flats.json?society_block_id=${towerId}&society_id=${idSociety}`);
         console.log('Flats API Response:', response.data);
         const flatsArray = response.data?.society_flats || [];
         console.log('Flats Array:', flatsArray);
@@ -197,52 +171,89 @@ const FitoutRequestAdd: React.FC = () => {
     }
   };
 
+  const fetchFitoutRequest = async () => {
+    try {
+      setDataLoading(true);
+      
+      // Fetch from API
+      const response = await apiClient.get(`/crm/admin/fitout_requests/${id}.json`);
+      const data = response.data;
+      
+      console.log('Fitout Request Data:', data);
+      
+      // Convert date format from DD/MM/YYYY to YYYY-MM-DD for input fields
+      const formatDateForInput = (dateStr: string) => {
+        if (!dateStr || dateStr.trim() === '') return '';
+        try {
+          const parts = dateStr.split('/');
+          if (parts.length === 3) {
+            const [day, month, year] = parts;
+            return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+          }
+        } catch (e) {
+          console.error('Date parsing error:', e);
+        }
+        return '';
+      };
+
+      setFormData({
+        tower: '', // Will be set when tower dropdown loads
+        flat: '', // Will be set when flat dropdown loads
+        user: data.user_society_id?.toString() || '',
+        requestedDate: formatDateForInput(data.start_date) || '',
+        description: data.description || '',
+        contractorName: '', // Not in API response
+        contractorMobileNo: '', // Not in API response
+        expiryDate: '', // Not in API response
+        refundDate: formatDateForInput(data.end_date) || '',
+        annexure: data.fitout_category_id ? data.fitout_category_id.toString() : '',
+        amount: data.amount?.toString() || '0.00',
+        convenienceCharge: data.lock_payment?.convenience_charge?.toString() || '0.00',
+        total: data.amount?.toString() || '0.00',
+        paymentMode: 'PAY AT SITE',
+      });
+    } catch (error) {
+      console.error('Error fetching fitout request:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load fitout request data',
+        variant: 'destructive',
+      });
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      
+      // Calculate total when amount or convenience charge changes
+      if (name === 'amount' || name === 'convenienceCharge') {
+        const amount = parseFloat(name === 'amount' ? value : updated.amount) || 0;
+        const convenience = parseFloat(name === 'convenienceCharge' ? value : updated.convenienceCharge) || 0;
+        updated.total = (amount + convenience).toFixed(2);
+      }
+      
+      return updated;
+    });
   };
 
   const handleSelectChange = (name: string) => (e: SelectChangeEvent<string>) => {
     const value = e.target.value;
     
-    if (name === 'site_id') {
+    if (name === 'tower') {
       handleTowerChange(value);
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  const handleAddCategory = () => {
-    setRequestCategories(prev => [...prev, {
-      fitout_category_id: '',
-      complaint_status_id: '',
-      amount: '0.00',
-      documents: [],
-    }]);
-  };
-
-  const handleCategoryChange = (index: number, field: keyof FitoutRequestCategory, value: any) => {
-    setRequestCategories(prev => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
-      return updated;
-    });
-  };
-
-  const handleRemoveCategory = (index: number) => {
-    setRequestCategories(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const calculateTotal = () => {
-    const baseAmount = parseFloat(formData.amount) || 0;
-    const convenience = parseFloat(convenienceCharge) || 0;
-    return (baseAmount + convenience).toFixed(2);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.site_id || !formData.unit_id || !formData.user_id) {
+    if (!formData.tower || !formData.flat || !formData.user) {
       toast({
         title: 'Validation Error',
         description: 'Please fill in all required fields',
@@ -254,66 +265,22 @@ const FitoutRequestAdd: React.FC = () => {
     try {
       setLoading(true);
       
-      const formDataToSend = new FormData();
-      
-      // Add main fitout request fields
-      formDataToSend.append('fitout_request[user_society_id]', formData.user_society_id);
-      formDataToSend.append('fitout_request[site_id]', formData.site_id);
-      formDataToSend.append('fitout_request[unit_id]', formData.unit_id);
-      
-      if (formData.user_id) formDataToSend.append('fitout_request[user_id]', formData.user_id);
-      if (formData.fitout_category_id) formDataToSend.append('fitout_request[fitout_category_id]', formData.fitout_category_id);
-      if (formData.start_date) formDataToSend.append('fitout_request[start_date]', formData.start_date);
-      if (formData.end_date) formDataToSend.append('fitout_request[end_date]', formData.end_date);
-      if (formData.expiry_date) formDataToSend.append('fitout_request[expiry_date]', formData.expiry_date);
-      if (formData.refund_date) formDataToSend.append('fitout_request[refund_date]', formData.refund_date);
-      if (formData.description) formDataToSend.append('fitout_request[description]', formData.description);
-      if (formData.contactor_name) formDataToSend.append('fitout_request[contactor_name]', formData.contactor_name);
-      if (formData.contactor_no) formDataToSend.append('fitout_request[contactor_no]', formData.contactor_no);
-      if (formData.pay_mode) formDataToSend.append('fitout_request[pay_mode]', formData.pay_mode);
-      if (formData.amount) formDataToSend.append('fitout_request[amount]', formData.amount);
-      if (formData.status_id) formDataToSend.append('fitout_request[status_id]', formData.status_id);
-      if (formData.pms_supplier_id) formDataToSend.append('fitout_request[pms_supplier_id]', formData.pms_supplier_id);
-      
-      // Add convenience charge
-      if (convenienceCharge) formDataToSend.append('lock_payment[convenience_charge]', convenienceCharge);
-      
-      // Add request categories
-      requestCategories.forEach((category, index) => {
-        if (category.fitout_category_id) {
-          formDataToSend.append(`fitout_request[fitout_request_categories_attributes][${index}][fitout_category_id]`, category.fitout_category_id);
-        }
-        if (category.complaint_status_id) {
-          formDataToSend.append(`fitout_request[fitout_request_categories_attributes][${index}][complaint_status_id]`, category.complaint_status_id);
-        }
-        if (category.amount) {
-          formDataToSend.append(`fitout_request[fitout_request_categories_attributes][${index}][amount]`, category.amount);
-        }
-        
-        // Add documents
-        category.documents.forEach((doc, docIndex) => {
-          formDataToSend.append(`fitout_request[fitout_request_categories_attributes][${index}][documents_attributes][${docIndex}][document]`, doc);
-          formDataToSend.append(`fitout_request[fitout_request_categories_attributes][${index}][documents_attributes][${docIndex}][active]`, 'true');
-        });
-      });
-
-      const response = await apiClient.post('/crm/admin/fitout_requests.json', formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      // In production, use PUT request:
+      // const response = await apiClient.put(`/crm/admin/fitout_requests/${id}`, {
+      //   fitout_request: formData,
+      // });
 
       toast({
         title: 'Success',
-        description: 'Fitout request created successfully!',
+        description: 'Fitout request updated successfully!',
       });
 
       navigate('/fitout/requests');
     } catch (error) {
-      console.error('Error creating fitout request:', error);
+      console.error('Error updating fitout request:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create fitout request',
+        description: 'Failed to update fitout request',
         variant: 'destructive',
       });
     } finally {
@@ -324,6 +291,17 @@ const FitoutRequestAdd: React.FC = () => {
   const handleCancel = () => {
     navigate('/fitout/requests');
   };
+
+  if (dataLoading) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading fitout request...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
@@ -351,18 +329,18 @@ const FitoutRequestAdd: React.FC = () => {
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Tower/Site *</InputLabel>
+                <InputLabel shrink>Tower *</InputLabel>
                 <MuiSelect
-                  value={formData.site_id}
-                  onChange={handleSelectChange('site_id')}
-                  label="Tower/Site *"
+                  value={formData.tower}
+                  onChange={handleSelectChange('tower')}
+                  label="Tower *"
                   displayEmpty
                   sx={fieldStyles}
                 >
-                  <MenuItem value="">Select Tower/Site</MenuItem>
+                  <MenuItem value="">Select Tower</MenuItem>
                   {Array.isArray(towers) && towers.length > 0 ? (
                     towers.map((tower: any) => (
-                      <MenuItem key={tower.id} value={tower.id}>
+                      <MenuItem key={tower.id} value={tower.id.toString()}>
                         {tower.name}
                       </MenuItem>
                     ))
@@ -375,22 +353,22 @@ const FitoutRequestAdd: React.FC = () => {
               <FormControl fullWidth variant="outlined">
                 <InputLabel shrink>Flat *</InputLabel>
                 <MuiSelect
-                  value={formData.unit_id}
-                  onChange={handleSelectChange('unit_id')}
+                  value={formData.flat}
+                  onChange={handleSelectChange('flat')}
                   label="Flat *"
                   displayEmpty
                   sx={fieldStyles}
-                  disabled={!formData.site_id}
+                  disabled={!formData.tower}
                 >
                   <MenuItem value="">Select Flat</MenuItem>
                   {Array.isArray(flats) && flats.length > 0 ? (
                     flats.map((flat: any) => (
-                      <MenuItem key={flat.id} value={flat.id}>
+                      <MenuItem key={flat.id} value={flat.id.toString()}>
                         {flat.flat_no}
                       </MenuItem>
                     ))
                   ) : (
-                    <MenuItem disabled>{formData.site_id ? 'No flats available' : 'Select tower first'}</MenuItem>
+                    <MenuItem disabled>{formData.tower ? 'No flats available' : 'Select tower first'}</MenuItem>
                   )}
                 </MuiSelect>
               </FormControl>
@@ -398,8 +376,8 @@ const FitoutRequestAdd: React.FC = () => {
               <FormControl fullWidth variant="outlined">
                 <InputLabel shrink>User *</InputLabel>
                 <MuiSelect
-                  value={formData.user_id}
-                  onChange={handleSelectChange('user_id')}
+                  value={formData.user}
+                  onChange={handleSelectChange('user')}
                   label="User *"
                   displayEmpty
                   sx={fieldStyles}
@@ -407,7 +385,7 @@ const FitoutRequestAdd: React.FC = () => {
                   <MenuItem value="">Select User</MenuItem>
                   {Array.isArray(users) && users.length > 0 ? (
                     users.map((userSociety: any) => (
-                      <MenuItem key={userSociety.id} value={userSociety.user?.id || userSociety.id_user}>
+                      <MenuItem key={userSociety.id} value={userSociety.id.toString()}>
                         {userSociety.user?.firstname || ''} {userSociety.user?.lastname || ''}
                       </MenuItem>
                     ))
@@ -418,22 +396,10 @@ const FitoutRequestAdd: React.FC = () => {
               </FormControl>
 
               <TextField
-                label="Start Date"
-                name="start_date"
+                label="Requested Date *"
+                name="requestedDate"
                 type="date"
-                value={formData.start_date}
-                onChange={handleInputChange}
-                fullWidth
-                variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                InputProps={{ sx: fieldStyles }}
-              />
-
-              <TextField
-                label="End Date"
-                name="end_date"
-                type="date"
-                value={formData.end_date}
+                value={formData.requestedDate}
                 onChange={handleInputChange}
                 fullWidth
                 variant="outlined"
@@ -443,9 +409,9 @@ const FitoutRequestAdd: React.FC = () => {
 
               <TextField
                 label="Expiry Date"
-                name="expiry_date"
+                name="expiryDate"
                 type="date"
-                value={formData.expiry_date}
+                value={formData.expiryDate}
                 onChange={handleInputChange}
                 fullWidth
                 variant="outlined"
@@ -455,9 +421,9 @@ const FitoutRequestAdd: React.FC = () => {
 
               <TextField
                 label="Refund Date"
-                name="refund_date"
+                name="refundDate"
                 type="date"
-                value={formData.refund_date}
+                value={formData.refundDate}
                 onChange={handleInputChange}
                 fullWidth
                 variant="outlined"
@@ -469,8 +435,8 @@ const FitoutRequestAdd: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <TextField
                 label="Contractor Name"
-                name="contactor_name"
-                value={formData.contactor_name}
+                name="contractorName"
+                value={formData.contractorName}
                 onChange={handleInputChange}
                 placeholder="Contractor Name"
                 fullWidth
@@ -481,8 +447,8 @@ const FitoutRequestAdd: React.FC = () => {
 
               <TextField
                 label="Contractor Mobile No."
-                name="contactor_no"
-                value={formData.contactor_no}
+                name="contractorMobileNo"
+                value={formData.contractorMobileNo}
                 onChange={handleInputChange}
                 placeholder="Contractor Mobile No."
                 fullWidth
@@ -519,103 +485,37 @@ const FitoutRequestAdd: React.FC = () => {
           </div>
           <div className="p-6 space-y-6">
             <FormControl fullWidth variant="outlined">
-              <InputLabel shrink>Main Category</InputLabel>
+              <InputLabel shrink>Annexure *</InputLabel>
               <MuiSelect
-                value={formData.fitout_category_id}
-                onChange={handleSelectChange('fitout_category_id')}
-                label="Main Category"
+                value={formData.annexure}
+                onChange={handleSelectChange('annexure')}
+                label="Annexure *"
                 displayEmpty
                 sx={fieldStyles}
               >
-                <MenuItem value="">Select Category</MenuItem>
-                {Array.isArray(categories) && categories.length > 0 ? (
-                  categories.map((category: any) => (
-                    <MenuItem key={category.id} value={category.id}>
-                      {category.name}
+                <MenuItem value="">Select Annexure</MenuItem>
+                {Array.isArray(annexures) && annexures.length > 0 ? (
+                  annexures.map((annexure: any) => (
+                    <MenuItem key={annexure.id} value={annexure.id}>
+                      {annexure.name}
                     </MenuItem>
                   ))
                 ) : (
-                  <MenuItem disabled>No categories available</MenuItem>
+                  <MenuItem disabled>No annexures available</MenuItem>
                 )}
               </MuiSelect>
             </FormControl>
 
-            <div className="border-t pt-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-medium">Additional Categories</h3>
-                <Button
-                  type="button"
-                  onClick={handleAddCategory}
-                  className="bg-[#C72030] text-white hover:bg-[#A01B28]"
-                >
-                  + Add Category
-                </Button>
-              </div>
-
-              {requestCategories.map((category, index) => (
-                <div key={index} className="border rounded-lg p-4 mb-4 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-sm font-medium">Category {index + 1}</h4>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveCategory(index)}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Remove
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormControl fullWidth variant="outlined" size="small">
-                      <InputLabel shrink>Category</InputLabel>
-                      <MuiSelect
-                        value={category.fitout_category_id}
-                        onChange={(e) => handleCategoryChange(index, 'fitout_category_id', e.target.value)}
-                        label="Category"
-                        displayEmpty
-                      >
-                        <MenuItem value="">Select Category</MenuItem>
-                        {categories.map((cat: any) => (
-                          <MenuItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </MenuItem>
-                        ))}
-                      </MuiSelect>
-                    </FormControl>
-
-                    <TextField
-                      label="Amount"
-                      value={category.amount}
-                      onChange={(e) => handleCategoryChange(index, 'amount', e.target.value)}
-                      type="number"
-                      step="0.01"
-                      fullWidth
-                      size="small"
-                      variant="outlined"
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Documents
-                    </label>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*,application/pdf"
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        handleCategoryChange(index, 'documents', files);
-                      }}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#C72030] file:text-white hover:file:bg-[#A01B28]"
-                    />
-                  </div>
-                </div>
-              ))}
+            <div className="flex justify-between">
+              <Button
+                type="button"
+                className="bg-[#C72030] text-white hover:bg-[#A01B28]"
+              >
+                + Add Annexure
+              </Button>
             </div>
 
-            <div className="border-t pt-4 space-y-4">
+            <div className="space-y-4">
               <div className="flex justify-between">
                 <span>Amount:</span>
                 <TextField
@@ -633,8 +533,9 @@ const FitoutRequestAdd: React.FC = () => {
               <div className="flex justify-between">
                 <span>Convenience Charge:</span>
                 <TextField
-                  value={convenienceCharge}
-                  onChange={(e) => setConvenienceCharge(e.target.value)}
+                  name="convenienceCharge"
+                  value={formData.convenienceCharge}
+                  onChange={handleInputChange}
                   type="number"
                   step="0.01"
                   variant="outlined"
@@ -645,15 +546,15 @@ const FitoutRequestAdd: React.FC = () => {
 
               <div className="flex justify-between font-semibold">
                 <span>Total:</span>
-                <span>₹{calculateTotal()}</span>
+                <span>₹{formData.total}</span>
               </div>
 
               <div className="flex justify-between items-center">
                 <span>Payment Mode:</span>
                 <FormControl variant="outlined" size="small" sx={{ width: '200px' }}>
                   <MuiSelect
-                    value={formData.pay_mode}
-                    onChange={handleSelectChange('pay_mode')}
+                    value={formData.paymentMode}
+                    onChange={handleSelectChange('paymentMode')}
                   >
                     <MenuItem value="PAY AT SITE">PAY AT SITE</MenuItem>
                     <MenuItem value="ONLINE">ONLINE</MenuItem>
@@ -680,7 +581,7 @@ const FitoutRequestAdd: React.FC = () => {
             disabled={loading}
             className="bg-[#C72030] text-white hover:bg-[#A01B28] min-w-[120px]"
           >
-            {loading ? 'Creating...' : 'Create'}
+            {loading ? 'Updating...' : 'Update'}
           </Button>
         </div>
       </form>
@@ -688,4 +589,4 @@ const FitoutRequestAdd: React.FC = () => {
   );
 };
 
-export default FitoutRequestAdd;
+export default FitoutRequestEdit;

@@ -120,8 +120,10 @@ export const EditFitoutChecklistPage = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await apiClient.get("/snag_audit_categories.json");
-      setCategories(response.data || []);
+      const response = await apiClient.get("/crm/admin/fitout_categories.json");
+      // Extract fitout_categories array from the response
+      const categoriesData = response.data?.fitout_categories || [];
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
     } catch (error) {
       console.error("Error fetching categories:", error);
       hookToast({
@@ -480,7 +482,7 @@ export const EditFitoutChecklistPage = () => {
         description: "Your checklist has been updated.",
       });
 
-      navigate("/master/fitout-checklists");
+      navigate("/fitout/checklists");
     } catch (error: any) {
       console.error("Error updating fitout checklist:", error);
 
@@ -509,28 +511,33 @@ export const EditFitoutChecklistPage = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
       {/* Header */}
-      <div className="mb-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/master/fitout-checklists")}
-          className="mb-4"
+      <div className="mb-6">
+        <button
+          onClick={() => navigate("/fitout/checklists")}
+          className="flex items-center gap-1 hover:text-gray-800 mb-4"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="w-4 h-4" />
           Back to Fitout Checklists
-        </Button>
+        </button>
         <Heading level="h1" variant="default">
           Edit Fitout Checklist
         </Heading>
       </div>
 
-      <div className="space-y-6">
+      <form className="space-y-6">
         {/* Basic Information Card */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900">
-            Basic Information
-          </h2>
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#E5E0D3] mr-3">
+                <span className="text-[#C72030] text-sm">1</span>
+              </div>
+              Basic Information
+            </h2>
+          </div>
+          <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <TextField
               label="Checklist Title *"
@@ -561,7 +568,7 @@ export const EditFitoutChecklistPage = () => {
               sx={fieldStyles}
               disabled={!category || loadingSubCategories}
             >
-              <InputLabel>Sub Category *</InputLabel>
+              <InputLabel>Sub Category </InputLabel>
               <Select
                 value={subCategory}
                 label="Sub Category *"
@@ -575,22 +582,31 @@ export const EditFitoutChecklistPage = () => {
               </Select>
             </FormControl>
           </div>
+          </div>
         </div>
 
         {/* Questions Card */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Questions</h2>
-            <Button
-              onClick={handleAddQuestion}
-              className="bg-[#C72030] hover:bg-[#A01828] text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Question
-            </Button>
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#E5E0D3] mr-3">
+                  <span className="text-[#C72030] text-sm">2</span>
+                </div>
+                Questions
+              </h2>
+              <Button
+                type="button"
+                onClick={handleAddQuestion}
+                className="bg-[#C72030] hover:bg-[#A01828] text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Question
+              </Button>
+            </div>
           </div>
-
-          <div className="space-y-6">
+          <div className="p-6">
+            <div className="space-y-6">
             {questions
               .filter((q) => !q.markedForDeletion)
               .map((question, index) => (
@@ -598,35 +614,35 @@ export const EditFitoutChecklistPage = () => {
                   key={question.id}
                   className="border border-gray-200 rounded-lg p-6 relative"
                 >
-                  {questions.filter((q) => !q.markedForDeletion).length > 1 && (
-                    <IconButton
-                      onClick={() => handleRemoveQuestion(question.id!)}
-                      className="absolute top-2 right-2"
-                      size="small"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </IconButton>
-                  )}
-
-                  <h3 className="text-md font-semibold mb-4 text-gray-800">
-                    Question {index + 1}
-                  </h3>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-md font-semibold text-gray-800">
+                      Question {index + 1}
+                    </h3>
+                    {questions.filter((q) => !q.markedForDeletion).length > 1 && (
+                      <IconButton
+                        onClick={() => handleRemoveQuestion(question.id!)}
+                        size="small"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </IconButton>
+                    )}
+                  </div>
 
                   <div className="space-y-4">
-                    <TextField
-                      label="Question Text *"
-                      variant="outlined"
-                      fullWidth
-                      multiline
-                      rows={2}
-                      value={question.text}
-                      onChange={(e) =>
-                        handleQuestionChange(question.id!, "text", e.target.value)
-                      }
-                      sx={textareaStyles}
-                    />
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <TextField
+                        label="Question Text *"
+                        variant="outlined"
+                        // fullWidth
+                        // multiline
+                        // rows={2}
+                        value={question.text}
+                        onChange={(e) =>
+                          handleQuestionChange(question.id!, "text", e.target.value)
+                        }
+                        sx={fieldStyles}
+                      />
+
                       <FormControl fullWidth sx={fieldStyles}>
                         <InputLabel>Answer Type *</InputLabel>
                         <Select
@@ -645,8 +661,9 @@ export const EditFitoutChecklistPage = () => {
                           <MenuItem value="description">Description</MenuItem>
                         </Select>
                       </FormControl>
+                    </div>
 
-                      <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4">
                         <FormControlLabel
                           control={
                             <Checkbox
@@ -668,7 +685,7 @@ export const EditFitoutChecklistPage = () => {
                           }
                           label="Mandatory"
                         />
-                        <FormControlLabel
+                        {/* <FormControlLabel
                           control={
                             <Checkbox
                               checked={question.imageMandatory}
@@ -688,9 +705,8 @@ export const EditFitoutChecklistPage = () => {
                             />
                           }
                           label="Image Mandatory"
-                        />
+                        /> */}
                       </div>
-                    </div>
 
                     {/* Answer Options for Multiple Choice */}
                     {question.answerType === "multiple" && (
@@ -700,6 +716,7 @@ export const EditFitoutChecklistPage = () => {
                             Answer Options
                           </h4>
                           <Button
+                            type="button"
                             onClick={() => handleAddAnswerOption(question.id!)}
                             variant="outline"
                             size="sm"
@@ -763,22 +780,24 @@ export const EditFitoutChecklistPage = () => {
                         ))}
                       </div>
                     )}
-                  </div>
                 </div>
-              ))}
+              </div>
+            ))}
+            </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-4">
+        <div className="flex gap-4 justify-center pt-6">
           <Button
             variant="outline"
-            onClick={() => navigate("/master/fitout-checklists")}
+            onClick={() => navigate("/fitout/checklists")}
             disabled={isSubmitting}
           >
             Cancel
           </Button>
           <Button
+            type="button"
             onClick={handleUpdateChecklist}
             disabled={isSubmitting || loading}
             className="bg-[#C72030] hover:bg-[#A01828] text-white"
@@ -793,7 +812,7 @@ export const EditFitoutChecklistPage = () => {
             )}
           </Button>
         </div>
-      </div>
+      </form>
     </div>
   );
 };

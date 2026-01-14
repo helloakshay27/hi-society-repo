@@ -1161,6 +1161,7 @@ const EventEdit = () => {
 
     const backendSharedValue = formData.shared === "all" ? 0 : 1;
     data.append("event[shared]", backendSharedValue.toString());
+    data.append("event[active]", "true");
 
     // === COVER IMAGE ===
     if (formData.cover_image && formData.cover_image instanceof File) {
