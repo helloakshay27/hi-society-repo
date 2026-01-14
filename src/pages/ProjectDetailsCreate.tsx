@@ -1930,19 +1930,19 @@ const ProjectDetailsCreate = () => {
           }
         });
       } else if (key === "connectivities" && Array.isArray(value)) {
-        value.forEach((item, index) => {
+        value.forEach((item) => {
           // Only include connectivity if all three fields are filled
           if (item.connectivity_type_id && item.place_name && item.image instanceof File) {
             data.append(
-              `project[connectivities][${index}][connectivity_type_id]`,
+              `project[connectivities][][connectivity_type_id]`,
               item.connectivity_type_id
             );
             data.append(
-              `project[connectivities][${index}][place_name]`,
+              `project[connectivities][][place_name]`,
               item.place_name
             );
             data.append(
-              `project[connectivities][${index}][image]`,
+              `project[connectivities][][image]`,
               item.image
             );
           }

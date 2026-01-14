@@ -105,6 +105,7 @@ const ProjectDetails = () => {
     project_2d_image_3_by_2: [],
     project_2d_image_16_by_9: [],
     project_qrcode_image: [],
+    connectivities: [],
   });
 
   console.log("formdata", formData);
@@ -227,6 +228,16 @@ const ProjectDetails = () => {
             project_2d_image_3_by_2: project.project_2d_image_3_by_2 || [],
             project_2d_image_16_by_9: project.project_2d_image_16_by_9 || [],
             project_qrcode_image: project.project_qrcode_images || [],
+            connectivities: Array.isArray(project.connectivities) 
+              ? project.connectivities.map(c => ({
+                  id: c.id,
+                  connectivity_type_id: c.connectivity_type_id,
+                  connectivity_type: c.connectivity_type,
+                  place_name: c.place_name,
+                  image_url: c.image?.document_url || null,
+                  document_file_name: c.image?.document_file_name || null
+                }))
+              : [],
           });
         } else {
           setError("Project not found");
@@ -826,6 +837,70 @@ const ProjectDetails = () => {
                     ))
                   : "—"}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Connectivity Section */}
+        <div className="w-full bg-white rounded-lg shadow-sm border mt-4">
+          <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#E5E0D3] flex items-center justify-center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C72030" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="2" y1="12" x2="22" y2="12"></line>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+              </div>
+              <h3 className="text-[16px] font-bold text-gray-900 tracking-wide">
+                Connectivity
+              </h3>
+            </div>
+          </div>
+          <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+            <div className="space-y-6 mx-6">
+              {formData.connectivities && formData.connectivities.length > 0 ? (
+                formData.connectivities.map((connectivity, idx) => (
+                  <div key={idx} className="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
+                      <div className="flex items-start gap-6">
+                        <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+                          Type
+                        </div>
+                        <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                          {connectivity.connectivity_type || "—"}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-6">
+                        <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+                          Name
+                        </div>
+                        <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                          {connectivity.place_name || "—"}
+                        </div>
+                      </div>
+                      
+                      {connectivity.image_url && (
+                        <div className="flex items-start gap-6 md:col-span-2">
+                          <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+                            Image
+                          </div>
+                          <div className="flex-1">
+                            <img
+                              src={connectivity.image_url}
+                              alt={connectivity.place_name || 'Connectivity'}
+                              className="w-32 h-32 object-contain border rounded-lg bg-white"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-[14px] text-gray-500">No connectivity information available</p>
+              )}
             </div>
           </div>
         </div>

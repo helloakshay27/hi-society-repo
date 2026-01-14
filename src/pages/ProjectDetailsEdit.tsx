@@ -1101,8 +1101,10 @@ const ProjectDetailsEdit = () => {
                 id: c.id,
                 connectivity_type_id: c.connectivity_type_id,
                 place_name: c.place_name,
-                image: c.document_url || c.image_url || null,
-                document_url: c.document_url
+                image: c.image?.document_url || c.document_url || null,
+                document_url: c.image?.document_url || c.document_url || null,
+                image_id: c.image?.id || null,
+                document_file_name: c.image?.document_file_name || null
               }))
             : [],
           
@@ -1992,7 +1994,9 @@ const ProjectDetailsEdit = () => {
         const connectivity = formData.connectivities[i];
         const hasType = connectivity.connectivity_type_id && connectivity.connectivity_type_id !== '';
         const hasPlace = connectivity.place_name && connectivity.place_name.trim() !== '';
-        const hasImage = connectivity.image instanceof File || connectivity.id; // existing images have ID
+        const hasImage = connectivity.image instanceof File || 
+                         (typeof connectivity.image === 'string' && connectivity.image) ||
+                         connectivity.document_url; // existing images have document_url
 
         // If any field is filled, all fields must be filled
         if (hasType || hasPlace || hasImage) {
@@ -2185,33 +2189,35 @@ const ProjectDetailsEdit = () => {
         
         console.log("=== End RERA Data ===");
       } else if (key === "connectivities" && Array.isArray(value)) {
-        value.forEach((item, index) => {
+        value.forEach((item) => {
           // Check if all required fields are present
           const hasType = item.connectivity_type_id && item.connectivity_type_id !== '';
           const hasPlace = item.place_name && item.place_name.trim() !== '';
-          const hasImage = (item.image && item.image instanceof File) || item.id; // existing entries have ID
+          const hasImage = (item.image && item.image instanceof File) || 
+                          (typeof item.image === 'string' && item.image) ||
+                          item.document_url; // existing entries have document_url or image URL
           
           // Only include connectivity if all three fields are filled
           if (hasType && hasPlace && hasImage) {
             data.append(
-              `project[connectivities][${index}][connectivity_type_id]`,
+              `project[connectivities][][connectivity_type_id]`,
               item.connectivity_type_id
             );
             data.append(
-              `project[connectivities][${index}][place_name]`,
+              `project[connectivities][][place_name]`,
               item.place_name
             );
             // Only append image if it's a new File, not an existing URL
             if (item.image && item.image instanceof File) {
               data.append(
-                `project[connectivities][${index}][image]`,
+                `project[connectivities][][image]`,
                 item.image
               );
             }
             // If connectivity has an ID, append it for update
             if (item.id) {
               data.append(
-                `project[connectivities][${index}][id]`,
+                `project[connectivities][][id]`,
                 item.id
               );
             }
