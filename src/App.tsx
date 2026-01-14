@@ -820,6 +820,12 @@ import { SprintDashboard } from "./pages/SprintDashboard";
 import SprintDetailsPage from "./pages/SprintDetailsPage";
 import MilestoneDetailsPage from "./pages/MilestoneDetailsPage";
 import ProjectTaskDetails from "./pages/ProjectTaskDetails";
+
+// Import Fitout pages (newer ones)
+import FitoutChecklists from "./pages/FitoutChecklists";
+import FitoutRequests from "./pages/FitoutRequests";
+import FitoutRequestAdd from "./pages/FitoutRequestAdd";
+
 import { setupMemberRoutes } from "./routes/setupMemberRoutes";
 import { ViewUserPage } from "./pages/ViewUserPage";
 // import RouteLogger from "./components/RouteLogger";
@@ -2137,6 +2143,20 @@ function App() {
                   <Route
                     path="/master/template/corrective-action/edit/:id"
                     element={<EditCorrectiveActionPage />}
+                  />
+
+                  {/* Master Fitout Routes */}
+                  <Route
+                    path="/master/fitout-checklists"
+                    element={<FitoutChecklists />}
+                  />
+                  <Route
+                    path="/master/fitout-requests"
+                    element={<FitoutRequests />}
+                  />
+                  <Route
+                    path="/master/fitout-requests/add"
+                    element={<FitoutRequestAdd />}
                   />
 
                   <Route

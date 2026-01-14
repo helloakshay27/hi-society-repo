@@ -15,7 +15,7 @@ import {
   TextField,
   FormControl,
   InputLabel,
-  Select as MuiSelect,
+  Select as MUISelect,
   MenuItem,
   Avatar,
   Switch,
@@ -251,6 +251,7 @@ const ProjectDetailsCreate = () => {
     is_sold: false,
     plans: [],
     show_on_home: false,
+    connectivities: [],
   });
 
   const [projectsType, setprojectsType] = useState([]);
@@ -316,6 +317,7 @@ const ProjectDetailsCreate = () => {
   const [showTooltipEmailer, setShowTooltipEmailer] = useState(false);
   const [showTooltipKYA, setShowTooltipKYA] = useState(false);
   const [showTooltipVideos, setShowTooltipVideos] = useState(false);
+  const [connectivityTypes, setConnectivityTypes] = useState([]);
   const [visibility, setVisibility] = useState({
     showOnHomePage: false,
     showOnProjectDetailPage: false,
@@ -802,9 +804,27 @@ const ProjectDetailsCreate = () => {
     }
   };
 
+  const fetchConnectivityTypes = async () => {
+    try {
+      const response = await axios.get(getFullUrl('/connectivity_types.json'));
+      if (response.data && Array.isArray(response.data)) {
+        // Filter only active connectivity types
+        const activeTypes = response.data.filter(type => type.active);
+        setConnectivityTypes(activeTypes);
+      } else {
+        setConnectivityTypes([]);
+      }
+    } catch (error) {
+      console.error('Error fetching connectivity types:', error);
+      toast.error('Failed to fetch connectivity types');
+      setConnectivityTypes([]);
+    }
+  };
+
   useEffect(() => {
     fetchBuildingTypes();
     fetchImageConfigurations();
+    fetchConnectivityTypes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1628,6 +1648,51 @@ const ProjectDetailsCreate = () => {
     );
   };
 
+  // Connectivity handlers
+  const handleAddConnectivity = () => {
+    setFormData((prev) => ({
+      ...prev,
+      connectivities: [
+        ...prev.connectivities,
+        { connectivity_type_id: '', place_name: '', image: null }
+      ]
+    }));
+  };
+
+  const handleConnectivityChange = (index, field, value) => {
+    setFormData((prev) => {
+      const updated = [...prev.connectivities];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, connectivities: updated };
+    });
+  };
+
+  const handleConnectivityImageChange = (index, file) => {
+    if (!file) return;
+    
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Only JPG, PNG, WEBP, and GIF are allowed.');
+      return;
+    }
+    
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 5MB limit.');
+      return;
+    }
+    
+    handleConnectivityChange(index, 'image', file);
+  };
+
+  const handleRemoveConnectivity = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      connectivities: prev.connectivities.filter((_, i) => i !== index)
+    }));
+    toast.success('Connectivity removed');
+  };
+
   const validateForm = (formData) => {
     // Clear previous toasts
     toast.dismiss();
@@ -1648,6 +1713,32 @@ const ProjectDetailsCreate = () => {
     if (!formData.project_address) {
       toast.error("Location is required.");
       return false;
+    }
+
+    // Validate connectivity data - all fields must be filled if any data is entered
+    if (formData.connectivities && formData.connectivities.length > 0) {
+      for (let i = 0; i < formData.connectivities.length; i++) {
+        const connectivity = formData.connectivities[i];
+        const hasType = connectivity.connectivity_type_id && connectivity.connectivity_type_id !== '';
+        const hasPlace = connectivity.place_name && connectivity.place_name.trim() !== '';
+        const hasImage = connectivity.image instanceof File;
+
+        // If any field is filled, all fields must be filled
+        if (hasType || hasPlace || hasImage) {
+          if (!hasType) {
+            toast.error(`Connectivity #${i + 1}: Type is required`);
+            return false;
+          }
+          if (!hasPlace) {
+            toast.error(`Connectivity #${i + 1}: Place Name is required`);
+            return false;
+          }
+          if (!hasImage) {
+            toast.error(`Connectivity #${i + 1}: Image is required`);
+            return false;
+          }
+        }
+      }
     }
 
     return true;
@@ -1838,6 +1929,24 @@ const ProjectDetailsCreate = () => {
             }
           }
         });
+      } else if (key === "connectivities" && Array.isArray(value)) {
+        value.forEach((item, index) => {
+          // Only include connectivity if all three fields are filled
+          if (item.connectivity_type_id && item.place_name && item.image instanceof File) {
+            data.append(
+              `project[connectivities][${index}][connectivity_type_id]`,
+              item.connectivity_type_id
+            );
+            data.append(
+              `project[connectivities][${index}][place_name]`,
+              item.place_name
+            );
+            data.append(
+              `project[connectivities][${index}][image]`,
+              item.image
+            );
+          }
+        });
       } else if (key === "Specifications" && Array.isArray(value) && value.length > 0) {
         // Only append specifications if array has items
         value.forEach((spec) => {
@@ -2021,7 +2130,7 @@ const ProjectDetailsCreate = () => {
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               >
                 <InputLabel shrink>Property Type</InputLabel>
-                <MuiSelect
+                <MUISelect
                   value={formData.Property_type_id}
                   onChange={(e) => {
                     const selectedOption = propertyTypeOptions.find(
@@ -2041,7 +2150,7 @@ const ProjectDetailsCreate = () => {
                       {option.label}
                     </MenuItem>
                   ))}
-                </MuiSelect>
+                </MUISelect>
               </FormControl>
 
               <FormControl
@@ -2050,7 +2159,7 @@ const ProjectDetailsCreate = () => {
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               >
                 <InputLabel shrink>Building Type</InputLabel>
-                <MuiSelect
+                <MUISelect
                   value={formData.building_type}
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -2069,7 +2178,7 @@ const ProjectDetailsCreate = () => {
                       {option.label}
                     </MenuItem>
                   ))}
-                </MuiSelect>
+                </MUISelect>
               </FormControl>
 
               <FormControl
@@ -2079,7 +2188,7 @@ const ProjectDetailsCreate = () => {
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               >
                 <InputLabel shrink>Construction Status</InputLabel>
-                <MuiSelect
+                <MUISelect
                   value={formData.Construction_Status_id}
                   onChange={(e) => {
                     const selectedOption = statusOptions.find(
@@ -2101,7 +2210,7 @@ const ProjectDetailsCreate = () => {
                       {option.label}
                     </MenuItem>
                   ))}
-                </MuiSelect>
+                </MUISelect>
               </FormControl>
 
               <FormControl
@@ -2110,7 +2219,7 @@ const ProjectDetailsCreate = () => {
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               >
                 <InputLabel shrink>Configuration Type</InputLabel>
-                <MuiSelect
+                <MUISelect
                   value={formData.Configuration_Type}
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -2130,7 +2239,7 @@ const ProjectDetailsCreate = () => {
                       {config.name}
                     </MenuItem>
                   ))}
-                </MuiSelect>
+                </MUISelect>
               </FormControl>
 
                 <TextField
@@ -2208,7 +2317,7 @@ const ProjectDetailsCreate = () => {
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               >
                 <InputLabel shrink>Project Tag</InputLabel>
-                <MuiSelect
+                <MUISelect
                   value={formData.project_tag}
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -2223,7 +2332,7 @@ const ProjectDetailsCreate = () => {
                   <MenuItem value="">Select Tag</MenuItem>
                   <MenuItem value="Featured">Featured</MenuItem>
                   <MenuItem value="Upcoming">Upcoming</MenuItem>
-                </MuiSelect>
+                </MUISelect>
               </FormControl>
                 <TextField
                   label="Project Description"
@@ -2532,7 +2641,7 @@ const ProjectDetailsCreate = () => {
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               >
                 <InputLabel shrink>Land UOM</InputLabel>
-                <MuiSelect
+                <MUISelect
                   value={formData.land_uom}
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -2556,7 +2665,7 @@ const ProjectDetailsCreate = () => {
                   <MenuItem value="Marla">Marla</MenuItem>
                   <MenuItem value="Cent">Cent</MenuItem>
                   <MenuItem value="Ropani">Ropani</MenuItem>
-                </MuiSelect>
+                </MUISelect>
               </FormControl>
 
               <FormControl
@@ -2565,7 +2674,7 @@ const ProjectDetailsCreate = () => {
                 sx={{ "& .MuiInputBase-root": fieldStyles }}
               >
                 <InputLabel shrink>Sales Type</InputLabel>
-                <MuiSelect
+                <MUISelect
                   value={formData.project_sales_type}
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -2580,7 +2689,7 @@ const ProjectDetailsCreate = () => {
                   <MenuItem value="">Select Sales Type</MenuItem>
                   <MenuItem value="Sales">Sales</MenuItem>
                   <MenuItem value="Lease">Lease</MenuItem>
-                </MuiSelect>
+                </MUISelect>
               </FormControl>
                 <TextField
                 label="Order Number"
@@ -3141,6 +3250,340 @@ const ProjectDetailsCreate = () => {
             </div>
           </div>
         </div>
+
+        {/* Connectivity Section */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <span
+                className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
+                style={{ backgroundColor: "#E5E0D3" }}
+              >
+                <Building2 size={16} color="#C72030" />
+              </span>
+              Connectivity
+            </h2>
+          </div>
+          <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
+            {formData.connectivities.length === 0 ? (
+              <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                      Type
+                    </InputLabel>
+                    <MUISelect
+                      value={formData.connectivities[0]?.connectivity_type_id || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData((prev) => {
+                          const updated = [...prev.connectivities];
+                          if (updated.length === 0) {
+                            updated.push({ connectivity_type_id: value, place_name: '', image: null });
+                          } else {
+                            updated[0] = { ...updated[0], connectivity_type_id: value };
+                          }
+                          return { ...prev, connectivities: updated };
+                        });
+                      }}
+                      displayEmpty
+                      sx={{
+                        height: '45px',
+                        backgroundColor: '#fff',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#ddd',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#C72030',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#C72030',
+                        },
+                      }}
+                    >
+                      <MenuItem value="" disabled>
+                        <span style={{ color: '#999' }}>Select Type</span>
+                      </MenuItem>
+                      {connectivityTypes.map((type) => (
+                        <MenuItem key={type.id} value={type.id}>
+                          {type.name}
+                        </MenuItem>
+                      ))}
+                    </MUISelect>
+                  </FormControl>
+
+                  <TextField
+                    label="Place Name"
+                    placeholder="Enter Place Name"
+                    value={formData.connectivities[0]?.place_name || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData((prev) => {
+                        const updated = [...prev.connectivities];
+                        if (updated.length === 0) {
+                          updated.push({ connectivity_type_id: '', place_name: value, image: null });
+                        } else {
+                          updated[0] = { ...updated[0], place_name: value };
+                        }
+                        return { ...prev, connectivities: updated };
+                      });
+                    }}
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
+                    InputProps={{
+                      sx: fieldStyles,
+                    }}
+                  />
+                </div>
+
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Image
+                  </label>
+                  
+                  <div className="border border-gray-300 rounded-md p-4 min-h-[150px]">
+                    <input
+                      type="file"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setFormData((prev) => {
+                            const updated = [...prev.connectivities];
+                            if (updated.length === 0) {
+                              updated.push({ connectivity_type_id: '', place_name: '', image: file });
+                            } else {
+                              updated[0] = { ...updated[0], image: file };
+                            }
+                            return { ...prev, connectivities: updated };
+                          });
+                        }
+                      }}
+                      className="hidden"
+                      id="connectivity-file-upload-0"
+                      accept="image/*"
+                    />
+
+                    {formData.connectivities[0]?.image && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div className="relative border rounded-lg p-3 bg-gray-50">
+                          <img
+                            src={URL.createObjectURL(formData.connectivities[0].image)}
+                            alt="Connectivity"
+                            className="w-full h-24 object-contain mb-2 rounded"
+                          />
+                          <p className="text-xs text-gray-600 text-center mt-1 truncate">
+                            {formData.connectivities[0].image.name}
+                          </p>
+                          <button
+                            type="button"
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                            onClick={() => {
+                              setFormData((prev) => {
+                                const updated = [...prev.connectivities];
+                                updated[0] = { ...updated[0], image: null };
+                                return { ...prev, connectivities: updated };
+                              });
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex">
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById('connectivity-file-upload-0')?.click()}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
+                        style={{ backgroundColor: '#c4b89d59' }}
+                      >
+                        <span className="font-medium text-sm text-gray-700">Upload Files</span>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#C72030"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="17 8 12 3 7 8" />
+                          <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                {formData.connectivities.map((connectivity, index) => (
+                  <div key={index} className="p-4 border border-gray-300 rounded-md relative mb-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-medium text-gray-900">
+                        Section {index + 1}
+                      </h3>
+                      <button
+                        type="button"
+                        className="text-red-600 hover:text-red-800 p-1"
+                        onClick={() => handleRemoveConnectivity(index)}
+                        title="Delete Section"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormControl fullWidth variant="outlined">
+                          <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                            Type
+                          </InputLabel>
+                          <MUISelect
+                            value={connectivity.connectivity_type_id || ''}
+                            onChange={(e) => handleConnectivityChange(index, 'connectivity_type_id', e.target.value)}
+                            displayEmpty
+                            sx={{
+                              height: '45px',
+                              backgroundColor: '#fff',
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#ddd',
+                              },
+                              '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#C72030',
+                              },
+                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#C72030',
+                              },
+                            }}
+                          >
+                            <MenuItem value="" disabled>
+                              <span style={{ color: '#999' }}>Select Type</span>
+                            </MenuItem>
+                            {connectivityTypes.map((type) => (
+                              <MenuItem key={type.id} value={type.id}>
+                                {type.name}
+                              </MenuItem>
+                            ))}
+                          </MUISelect>
+                        </FormControl>
+
+                        <TextField
+                          label="Place Name"
+                          placeholder="Enter Place Name"
+                          value={connectivity.place_name || ''}
+                          onChange={(e) => handleConnectivityChange(index, 'place_name', e.target.value)}
+                          fullWidth
+                          variant="outlined"
+                          slotProps={{
+                            inputLabel: {
+                              shrink: true,
+                            },
+                          }}
+                          InputProps={{
+                            sx: fieldStyles,
+                          }}
+                        />
+                      </div>
+
+                      <div className="mt-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Image
+                        </label>
+                        
+                        <div className="border border-gray-300 rounded-md p-4 min-h-[150px]">
+                          <input
+                            type="file"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleConnectivityImageChange(index, file);
+                            }}
+                            className="hidden"
+                            id={`connectivity-file-upload-${index}`}
+                            accept="image/*"
+                          />
+
+                          {connectivity.image && (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                              <div className="relative border rounded-lg p-3 bg-gray-50">
+                                <img
+                                  src={URL.createObjectURL(connectivity.image)}
+                                  alt="Connectivity"
+                                  className="w-full h-24 object-contain mb-2 rounded"
+                                />
+                                <p className="text-xs text-gray-600 text-center mt-1 truncate">
+                                  {connectivity.image.name}
+                                </p>
+                                <button
+                                  type="button"
+                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                  onClick={() => handleConnectivityChange(index, 'image', null)}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex">
+                            <button
+                              type="button"
+                              onClick={() => document.getElementById(`connectivity-file-upload-${index}`)?.click()}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
+                              style={{ backgroundColor: '#c4b89d59' }}
+                            >
+                              <span className="font-medium text-sm text-gray-700">Upload Files</span>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#C72030"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            <div className="flex justify-end mt-4">
+              <button
+                type="button"
+                onClick={handleAddConnectivity}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md"
+                style={{
+                  backgroundColor: '#EDEAE3',
+                  border: '1px solid #C72030',
+                  color: '#C72030',
+                }}
+              >
+                <span>Add</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Address Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>

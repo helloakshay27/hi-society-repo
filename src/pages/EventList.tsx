@@ -181,13 +181,33 @@ const Eventlist = () => {
     });
   }
 
+  function formatDateOnly(datetime: string) {
+    if (!datetime) return "-";
+    const date = new Date(datetime);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
+
+  function formatTimeOnly(datetime: string) {
+    if (!datetime) return "-";
+    const date = new Date(datetime);
+    return date.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
+
   const columns = [
     { key: 'actions', label: 'Action', sortable: false },
     { key: 'id', label: 'Sr No', sortable: true },
     { key: 'event_name', label: 'Event Name', sortable: true },
     { key: 'event_at', label: 'Event At', sortable: true },
-    { key: 'from_time', label: 'Event From', sortable: false },
-    { key: 'to_time', label: 'Event To', sortable: false },
+    { key: 'from_time', label: 'Event Date', sortable: false },
+    { key: 'to_time', label: 'Event Time', sortable: false },
     { key: 'active', label: 'Status', sortable: false },
   ];
 
@@ -214,9 +234,9 @@ const Eventlist = () => {
       case 'event_at':
         return item.event_at || "-";
       case 'from_time':
-        return formatDateTimeManual(item.from_time);
+        return formatDateOnly(item.from_time);
       case 'to_time':
-        return formatDateTimeManual(item.to_time);
+        return formatTimeOnly(item.from_time);
       case 'active':
         return eventPermissions.destroy === "true" ? (
           <button
@@ -254,7 +274,8 @@ const Eventlist = () => {
               </svg>
             )}
           </button>
-        ) : (
+        ) : 
+        (
           <span className="text-sm text-gray-500">{item.active ? "Active" : "Inactive"}</span>
         );
       default:

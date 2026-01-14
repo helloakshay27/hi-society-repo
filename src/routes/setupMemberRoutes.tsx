@@ -15,6 +15,9 @@ const ProjectBuildingTypeList = lazy(() => import("@/pages/ProjectBuildingTypeLi
 const PlusServicesList = lazy(() => import("@/pages/PlusServiceList"));
 const PlusServicesCreate = lazy(() => import("@/pages/PlusServiceCreate"));
 const EditAmenities = lazy(() => import("@/pages/EditAmenities"));
+const ConnectivityTypeList = lazy(() => import("@/pages/ConnectivityTypeList"));
+const ConnectivityTypeCreate = lazy(() => import("@/pages/ConnectivityTypeCreate"));
+const ConnectivityTypeEdit = lazy(() => import("@/pages/ConnectivityTypeEdit"));
 
 // Lazy load all setup member pages
 const AddMISPage = lazy(() => import("@/pages/AddMISPage"));
@@ -215,6 +218,7 @@ const AccountingDownloadReport = lazy(() => import("@/pages/AccountingDownloadRe
 
 // Fitout Pages
 const FitoutRequests = lazy(() => import("@/pages/FitoutRequests"));
+const FitoutRequestAdd = lazy(() => import("@/pages/FitoutRequestAdd"));
 const FitoutSetup = lazy(() => import("@/pages/FitoutSetup"));
 const FitoutChecklists = lazy(() => import("@/pages/FitoutChecklists"));
 const AddFitoutChecklistPage = lazy(() => import("@/pages/AddFitoutChecklistPage"));
@@ -270,6 +274,12 @@ export const setupMemberRoutes = (
     <Route path="/settings/amenities" Component={withSuspense(Amenities)} />
     <Route path="/settings/amenities-list" Component={withSuspense(AmenitiesList)} />
     <Route path="/settings/amenities-edit/:id" Component={withSuspense(EditAmenities)} />
+    
+    {/* Connectivity Type Routes */}
+    <Route path="/settings/connectivity-type-list" Component={withSuspense(ConnectivityTypeList)} />
+    <Route path="/settings/connectivity-type-create" Component={withSuspense(ConnectivityTypeCreate)} />
+    <Route path="/settings/connectivity-type-edit/:id" Component={withSuspense(ConnectivityTypeEdit)} />
+    
     <Route path="/settings/add-user" Component={withSuspense(AddUserPage)} />
   <Route
                     path="/quarantine-tracker/add"
@@ -572,6 +582,8 @@ export const setupMemberRoutes = (
     <Route path="/master/fitout-checklists/add" Component={withSuspense(AddFitoutChecklistPage)} />
     <Route path="/master/fitout-checklists/edit/:id" Component={withSuspense(EditFitoutChecklistPage)} />
     <Route path="/master/fitout-checklists/details/:id" Component={withSuspense(FitoutChecklistDetailsPage)} />
+    <Route path="/master/fitout-requests" Component={withSuspense(FitoutRequests)} />
+    <Route path="/master/fitout-requests/add" Component={withSuspense(FitoutRequestAdd)} />
     <Route path="/fitout/deviations" Component={withSuspense(FitoutDeviations)} />
     <Route path="/fitout/report" Component={withSuspense(FitoutReport)} />
 

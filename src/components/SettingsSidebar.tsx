@@ -135,6 +135,12 @@ export const SettingsSidebar: React.FC = () => {
       icon: Gift,
       path: "/settings/amenities-list",
     },
+  {
+      id: "connectivity-type-list",
+      label: "Connectivity Type",
+      icon: Calendar,
+      path: "/settings/connectivity-type-list",
+  },
     // {
     //   id: "department-list",
     //   label: "Department",
