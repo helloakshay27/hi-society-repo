@@ -52,7 +52,6 @@ const RedButton = styled(MuiButton)(({ theme }) => ({
   boxShadow: "0 2px 4px rgba(199, 32, 48, 0.2)",
   "&:hover": {
     backgroundColor: "#C4B89D59",
-   
   },
 }));
 
@@ -81,6 +80,8 @@ const fieldStyles = {
   "& .MuiOutlinedInput-root": {
     fontSize: "14px",
     backgroundColor: "#fff",
+    alignItems: "flex-start",
+    padding: 0,
     "& fieldset": {
       borderColor: "#ddd",
     },
@@ -91,6 +92,15 @@ const fieldStyles = {
       borderColor: "#C72030",
     },
   },
+
+  /* ✅ THIS IS THE REAL TARGET */
+  "& .MuiInputBase-inputMultiline": {
+    padding: "10px 14px",
+    lineHeight: "1.5",
+    overflow: "hidden", // ✅ KILLS SCROLL ARROWS
+    resize: "none",
+  },
+
   "& .MuiInputLabel-root": {
     fontSize: "14px",
     "&.Mui-focused": {
@@ -142,7 +152,10 @@ const AddMISPage: React.FC = () => {
   };
 
   const handleAddSection = () => {
-    setSections((prev) => [...prev, { section: "", items: [{ ...defaultItem }] }]);
+    setSections((prev) => [
+      ...prev,
+      { section: "", items: [{ ...defaultItem }] },
+    ]);
   };
 
   // Item handlers
@@ -258,8 +271,10 @@ const AddMISPage: React.FC = () => {
               <TextField
                 label="Section Name"
                 value={section.section}
-                onChange={(e) => handleSectionChange(sectionIdx, e.target.value)}
-                sx={{ ...fieldStyles, mb: 2, maxWidth: 400 }}
+                onChange={(e) =>
+                  handleSectionChange(sectionIdx, e.target.value)
+                }
+                sx={{ ...fieldStyles, mb: 2 }}
                 size="small"
                 fullWidth
               />
@@ -272,13 +287,34 @@ const AddMISPage: React.FC = () => {
                     gap: "16px",
                     mb: 2,
                     alignItems: "flex-start",
+                    position: "relative",
                   }}
                 >
+                  {section.items.length > 1 && (
+                    <RemoveButton
+                      sx={{
+                        position: "absolute",
+                        top: -10,
+                        right: -10,
+                        zIndex: 1,
+                        background: "#fff",
+                        "&:hover": { background: "#fbeaec" },
+                      }}
+                      onClick={() => handleRemoveItem(sectionIdx, itemIdx)}
+                    >
+                      <X size={20} />
+                    </RemoveButton>
+                  )}
                   <TextField
                     label="Item"
                     value={item.item}
                     onChange={(e) =>
-                      handleItemChange(sectionIdx, itemIdx, "item", e.target.value)
+                      handleItemChange(
+                        sectionIdx,
+                        itemIdx,
+                        "item",
+                        e.target.value
+                      )
                     }
                     sx={fieldStyles}
                     size="small"
@@ -288,7 +324,12 @@ const AddMISPage: React.FC = () => {
                     label="Snagging Status"
                     value={item.snaggingStatus}
                     onChange={(e) =>
-                      handleItemChange(sectionIdx, itemIdx, "snaggingStatus", e.target.value)
+                      handleItemChange(
+                        sectionIdx,
+                        itemIdx,
+                        "snaggingStatus",
+                        e.target.value
+                      )
                     }
                     sx={fieldStyles}
                     size="small"
@@ -298,7 +339,12 @@ const AddMISPage: React.FC = () => {
                     label="Desnagging Status"
                     value={item.desnaggingStatus}
                     onChange={(e) =>
-                      handleItemChange(sectionIdx, itemIdx, "desnaggingStatus", e.target.value)
+                      handleItemChange(
+                        sectionIdx,
+                        itemIdx,
+                        "desnaggingStatus",
+                        e.target.value
+                      )
                     }
                     sx={fieldStyles}
                     size="small"
@@ -309,7 +355,12 @@ const AddMISPage: React.FC = () => {
                     type="date"
                     value={item.completionDate}
                     onChange={(e) =>
-                      handleItemChange(sectionIdx, itemIdx, "completionDate", e.target.value)
+                      handleItemChange(
+                        sectionIdx,
+                        itemIdx,
+                        "completionDate",
+                        e.target.value
+                      )
                     }
                     InputLabelProps={{ shrink: true }}
                     sx={fieldStyles}
@@ -320,7 +371,12 @@ const AddMISPage: React.FC = () => {
                     label="Handing Over To"
                     value={item.handingOverTo}
                     onChange={(e) =>
-                      handleItemChange(sectionIdx, itemIdx, "handingOverTo", e.target.value)
+                      handleItemChange(
+                        sectionIdx,
+                        itemIdx,
+                        "handingOverTo",
+                        e.target.value
+                      )
                     }
                     sx={fieldStyles}
                     size="small"
@@ -330,42 +386,62 @@ const AddMISPage: React.FC = () => {
                     label="Completion Remarks"
                     value={item.completionRemarks}
                     onChange={(e) =>
-                      handleItemChange(sectionIdx, itemIdx, "completionRemarks", e.target.value)
+                      handleItemChange(
+                        sectionIdx,
+                        itemIdx,
+                        "completionRemarks",
+                        e.target.value
+                      )
                     }
-                    sx={fieldStyles}
+                    sx={{
+                      ...fieldStyles,
+                      gridColumn: "1 / -1",
+                    }}
                     size="small"
                     fullWidth
                     multiline
+                    minRows={4}
+                    InputProps={{
+                      sx: {
+                        alignItems: "flex-start",
+                        "& textarea": {
+                          overflowY: "hidden",
+                          resize: "none",
+                          padding: "10px 14px",
+                          lineHeight: "1.5",
+                        },
+                      },
+                    }}
                   />
-                  {section.items.length > 1 && (
-                    <RemoveButton
-                      sx={{ alignSelf: "center" }}
-                      onClick={() => handleRemoveItem(sectionIdx, itemIdx)}
-                    >
-                      <X size={20} />
-                    </RemoveButton>
-                  )}
                 </Box>
               ))}
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-                <TextField
-                  label="Remarks"
-                  value={section.items[0]?.remarks || ""}
-                  onChange={(e) =>
-                    handleItemChange(sectionIdx, 0, "remarks", e.target.value)
-                  }
-                  sx={{ ...fieldStyles, flex: 1, background: "#fff" }}
-                  size="small"
-                  multiline
-                  fullWidth
-                />
-                <RemoveButton
-                  onClick={() => handleItemChange(sectionIdx, 0, "remarks", "")}
-                  sx={{ alignSelf: "flex-start" }}
-                >
-                  <X size={20} />
-                </RemoveButton>
-              </Box>
+              <TextField
+                label="Remarks"
+                value={section.items[0]?.remarks || ""}
+                onChange={(e) =>
+                  handleItemChange(sectionIdx, 0, "remarks", e.target.value)
+                }
+                sx={{
+                  ...fieldStyles,
+                  mb: 2,
+                  background: "#fff",
+                }}
+                size="small"
+                multiline
+                minRows={4}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    alignItems: "flex-start",
+                    "& textarea": {
+                      overflowY: "hidden",
+                      resize: "none",
+                      padding: "10px 14px",
+                      lineHeight: "1.5",
+                    },
+                  },
+                }}
+              />
               <RedButton
                 variant="contained"
                 sx={{ mt: 1 }}
