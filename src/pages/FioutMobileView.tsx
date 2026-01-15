@@ -78,13 +78,22 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
     );
   };
 
-  useEffect(() => {
+    const [submitting, setSubmitting] = useState(false);
+    const [thankYou, setThankYou] = useState(false);
+    const [fetchError, setFetchError] = useState<number | null>(null);
+    const [fetchAttempt, setFetchAttempt] = useState(0);
 
+    useEffect(() => {
+    setFetchError(null);
     const baseUrl = localStorage.getItem('baseUrl') || '';
     const url = 'https://'+baseUrl+'/crm/admin/fitout_requests/B6EBB5FCE533E099649AC2A37F0C12F9/fitout_mappings.json';
     let cancelled = false;
     fetch(url)
       .then((r) => {
+        if (r.status === 500) {
+          if (!cancelled) setFetchError(500);
+          throw new Error('Server error 500');
+        }
         if (!r.ok) throw new Error('Network response not ok');
         return r.json();
       })
@@ -94,15 +103,18 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
         const adapted = adaptFromFitout(payload as FitoutItem[]);
         setCategories(adapted || []);
       })
-      .catch(() => { if (!cancelled) setCategories([]); });
+      .catch(() => {
+        if (!cancelled) {
+          setCategories([]);
+        }
+      });
     return () => { cancelled = true; };
-  }, [adaptFromFitout]);
+  }, [adaptFromFitout, fetchAttempt]);
 
   const selectOption = (qid: string | number, value: string | number) => setAnswers((s) => ({ ...s, [String(qid)]: String(value) }));
   const setOpenAnswer = (qid: string | number, value: string) => setAnswers((s) => ({ ...s, [String(qid)]: value }));
 
-  const [submitting, setSubmitting] = useState(false);
-  const [thankYou, setThankYou] = useState(false);
+  
 
   // Toggle the required flag for a question in local component state
   const toggleRequired = (qid: string | number) => {
@@ -143,8 +155,13 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
           const val = answers[String(q.id)];
           if (q.qtype === 'multiple') {
             // single option selected (radio)
-            if (val) form.append(`${qKeyBase}[snag_quest_option_id]`, String(val));
-            form.append(`${qKeyBase}[ans_descr]`, '');
+            if (val) {
+              form.append(`${qKeyBase}[snag_quest_option_id]`, String(val));
+              const label = q.options?.find((o) => String(o.id) === String(val))?.label || '';
+              form.append(`${qKeyBase}[ans_descr]`, label);
+            } else {
+              form.append(`${qKeyBase}[ans_descr]`, '');
+            }
           } else if (q.qtype === 'checkbox') {
             // val is stored as JSON array string
             try {
@@ -208,6 +225,26 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
             <h2 className="text-2xl font-semibold mb-2">Thank you</h2>
             <p className="text-sm text-gray-700 mb-4">Your responses have been submitted successfully.</p>
             <button type="button" onClick={() => setThankYou(false)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Close</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchError === 500) {
+    return (
+      <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
+        <div className="w-full max-w-md px-4 pt-24">
+          <div className="relative">
+            <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
+          </div>
+        </div>
+
+        <div className="w-full max-w-md px-4 mt-24">
+          <div className="bg-white/90 rounded-md p-6 text-center shadow-md">
+            <h2 className="text-2xl font-semibold mb-2">Server error</h2>
+            <p className="text-sm text-gray-700 mb-4">We received a 500 error from the server while loading the survey.</p>
+            <button type="button" onClick={() => { setFetchError(null); setFetchAttempt((s) => s + 1); }} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Retry</button>
           </div>
         </div>
       </div>
