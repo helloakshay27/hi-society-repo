@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pencil, Trash2 } from 'lucide-react';
-import axios from 'axios';
 import { toast } from 'sonner';
 import {
   Select,
@@ -12,13 +11,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { EnhancedTable } from '../enhanced-table/EnhancedTable';
+import { apiClient } from '@/utils/apiClient';
 
 interface Status {
   id: number;
-  order: number;
-  status: string;
+  society_id: number;
+  name: string;
+  color_code: string;
   fixed_state: string;
-  color: string;
+  active: number;
+  created_at: string;
+  updated_at: string;
+  position: number;
+  of_phase: string;
+  of_atype: string;
+  email: boolean;
 }
 
 const FIXED_STATES = ['Pending', 'In Progress', 'Completed', 'On Hold', 'Rejected'];
@@ -48,8 +55,9 @@ export const StatusTab: React.FC = () => {
   const fetchStatuses = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/fitout/statuses');
-      setStatuses(Array.isArray(response.data) ? response.data : []);
+      const response = await apiClient.get('/crm/admin/fitout_requests/fitout_statuses.json');
+      const statusesData = response.data?.data || [];
+      setStatuses(Array.isArray(statusesData) ? statusesData : []);
     } catch (error) {
       console.error('Error fetching statuses:', error);
       toast.error('Failed to load statuses');
@@ -60,21 +68,27 @@ export const StatusTab: React.FC = () => {
   };
 
   const handleAdd = async () => {
-    if (!statusName.trim() || !statusOrder || !fixedState) {
+    if (!statusName.trim() || !statusOrder) {
       toast.error('Please fill all required fields');
       return;
     }
 
     try {
-      const response = await axios.post('/api/fitout/statuses', {
-        status: statusName,
-        order: parseInt(statusOrder),
-        fixed_state: fixedState,
-        color: selectedColor
+      const response = await apiClient.post('/crm/admin/fitout_categories/create_fitout_statuses.json', {
+        complaint_status: {
+          name: statusName,
+          color_code: selectedColor,
+          position: parseInt(statusOrder),
+          fixed_state: fixedState || '',
+          of_phase: 'fitout_category',
+          of_atype: 'fitout_category'
+        }
       });
-      toast.success('Status added successfully');
-      const newStatus = response.data;
-      setStatuses(Array.isArray(statuses) ? [...statuses, newStatus] : [newStatus]);
+      toast.success(response.data?.message || 'Status created successfully');
+      const newStatus = response.data?.complaint_status;
+      if (newStatus) {
+        setStatuses(Array.isArray(statuses) ? [...statuses, newStatus] : [newStatus]);
+      }
       resetForm();
     } catch (error) {
       console.error('Error adding status:', error);
@@ -82,28 +96,32 @@ export const StatusTab: React.FC = () => {
     }
   };
 
-  const handleEdit = (status: Status) => {
+  const handleEdit = useCallback((status: Status) => {
     setEditingId(status.id);
-    setStatusName(status.status);
-    setStatusOrder(status.order.toString());
-    setFixedState(status.fixed_state);
-    setSelectedColor(status.color);
-  };
+    setStatusName(status.name);
+    setStatusOrder(status.position.toString());
+    setFixedState(status.fixed_state || '');
+    setSelectedColor(status.color_code);
+  }, []);
 
   const handleUpdate = async () => {
-    if (!statusName.trim() || !statusOrder || !fixedState || !editingId) return;
+    if (!statusName.trim() || !statusOrder || !editingId) return;
 
     try {
-      await axios.put(`/api/fitout/statuses/${editingId}`, {
-        status: statusName,
-        order: parseInt(statusOrder),
-        fixed_state: fixedState,
-        color: selectedColor
+      const response = await apiClient.put(`/crm/admin/fitout_categories/update_fitout_statuses/${editingId}.json`, {
+        complaint_status: {
+          name: statusName,
+          color_code: selectedColor,
+          position: parseInt(statusOrder),
+          fixed_state: fixedState || '',
+          of_phase: 'fitout_category',
+          of_atype: 'fitout_category'
+        }
       });
-      toast.success('Status updated successfully');
+      toast.success(response.data?.message || 'Status updated successfully');
       setStatuses(Array.isArray(statuses) ? statuses.map(stat => 
         stat.id === editingId 
-          ? { ...stat, status: statusName, order: parseInt(statusOrder), fixed_state: fixedState, color: selectedColor }
+          ? { ...stat, name: statusName, position: parseInt(statusOrder), fixed_state: fixedState || '', color_code: selectedColor }
           : stat
       ) : []);
       resetForm();
@@ -113,18 +131,18 @@ export const StatusTab: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
     if (!confirm('Are you sure you want to delete this status?')) return;
 
     try {
-      await axios.delete(`/api/fitout/statuses/${id}`);
-      toast.success('Status deleted successfully');
+      const response = await apiClient.delete(`/crm/admin/fitout_categories/delete_fitout_statuses/${id}.json`);
+      toast.success(response.data?.message || 'Status deleted successfully');
       setStatuses(Array.isArray(statuses) ? statuses.filter(stat => stat.id !== id) : []);
     } catch (error) {
       console.error('Error deleting status:', error);
       toast.error('Failed to delete status');
     }
-  };
+  }, [statuses]);
 
   const resetForm = () => {
     setStatusName('');
@@ -144,15 +162,15 @@ export const StatusTab: React.FC = () => {
         defaultVisible: true,
       },
       {
-        key: 'order',
-        label: 'Order',
+        key: 'position',
+        label: 'Position',
         sortable: true,
         draggable: true,
         defaultVisible: true,
       },
       {
-        key: 'status',
-        label: 'Status',
+        key: 'name',
+        label: 'Status Name',
         sortable: true,
         draggable: true,
         defaultVisible: true,
@@ -165,7 +183,7 @@ export const StatusTab: React.FC = () => {
         defaultVisible: true,
       },
       {
-        key: 'color',
+        key: 'color_code',
         label: 'Color',
         sortable: false,
         draggable: true,
@@ -194,46 +212,47 @@ export const StatusTab: React.FC = () => {
             </button>
           </div>
         );
-      case 'order':
-        return <span>{item.order}</span>;
-      case 'status':
-        return <span>{item.status}</span>;
+      case 'position':
+        return <span className="font-medium">{item.position}</span>;
+      case 'name':
+        return <span>{item.name}</span>;
       case 'fixed_state':
         return (
-          <Select value={item.fixed_state} disabled>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-          </Select>
+          <span className="text-sm text-gray-600">
+            {item.fixed_state || '—'}
+          </span>
         );
-      case 'color':
+      case 'color_code':
         return (
-          <div
-            className="w-10 h-6 rounded border border-gray-300"
-            style={{ backgroundColor: item.color }}
-          />
+          <div className="flex items-center gap-2">
+            <div
+              className="w-10 h-6 rounded border border-gray-300"
+              style={{ backgroundColor: item.color_code }}
+            />
+            <span className="text-xs text-gray-500">{item.color_code}</span>
+          </div>
         );
       default:
         return <span>{String(item[columnKey as keyof Status] || '-')}</span>;
     }
-  }, []);
+  }, [handleDelete, handleEdit]);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="mb-6 flex gap-4 items-end">
         <div className="flex-1">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Enter status
+            Status Name <span className="text-red-500">*</span>
           </label>
           <Input
-            placeholder="Enter status"
+            placeholder="Enter status name"
             value={statusName}
             onChange={(e) => setStatusName(e.target.value)}
           />
         </div>
         <div className="flex-1">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select Fixed State
+            Fixed State <span className="text-gray-400 text-xs">(Optional)</span>
           </label>
           <Select value={fixedState} onValueChange={setFixedState}>
             <SelectTrigger>
@@ -248,37 +267,49 @@ export const StatusTab: React.FC = () => {
             </SelectContent>
           </Select>
         </div>
-        <div className="w-16">
+        <div className="w-20">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Color
           </label>
           <div
-            className="w-12 h-10 rounded border-2 border-gray-300 cursor-pointer"
+            className="w-12 h-10 rounded border-2 border-gray-300 cursor-pointer hover:border-gray-400 transition-colors"
             style={{ backgroundColor: selectedColor }}
             onClick={() => {
               const colorIndex = COLORS.findIndex(c => c.value === selectedColor);
               const nextIndex = (colorIndex + 1) % COLORS.length;
               setSelectedColor(COLORS[nextIndex].value);
             }}
+            title="Click to change color"
           />
         </div>
         <div className="w-32">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Enter status order
+            Position <span className="text-red-500">*</span>
           </label>
           <Input
             type="number"
-            placeholder="Order"
+            placeholder="Position"
             value={statusOrder}
             onChange={(e) => setStatusOrder(e.target.value)}
+            min="1"
           />
         </div>
         <Button
           onClick={editingId ? handleUpdate : handleAdd}
           className="bg-[#2C3F87] hover:bg-[#1e2a5e] text-white"
+          disabled={loading}
         >
           {editingId ? 'Update' : '+ Add'}
         </Button>
+        {editingId && (
+          <Button
+            onClick={resetForm}
+            variant="outline"
+            className="border-gray-300"
+          >
+            Cancel
+          </Button>
+        )}
       </div>
 
       <EnhancedTable

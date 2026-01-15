@@ -289,7 +289,7 @@ const FaqSubCategory = () => {
             type="button"
             onClick={() => navigate("/settings/faq-subcategory-list")}
             disabled={loading}
-            className="border-[#bf213e] text-[#bf213e] hover:bg-gray-50 px-8 py-2 border-[1px]"
+            className="bg-[#f2eee9] hover:bg-[#f2eee9] text-[#B8252F] px-8 py-2 border-[1px]"
           >
             Cancel
           </button>

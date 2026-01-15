@@ -257,8 +257,8 @@ export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record 
           </Button>
           <Button
             onClick={handleClose}
-            variant="outline"
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8"
+            // variant="outline"
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8"
             disabled={loading}
           >
             Cancel

@@ -333,9 +333,9 @@ const Amenities = () => {
           </Button>
           <Button
             type="button"
-            variant="outline"
+            // variant="outline"
             onClick={handleGoBack}
-            className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+            className="bg-[#C72030] hover:bg-[#B8252F] text-white px-8 py-2"
             disabled={loading}
           >
             Cancel
