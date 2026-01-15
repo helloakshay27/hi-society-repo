@@ -79,7 +79,9 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   };
 
   useEffect(() => {
-    const url = 'https://uat-hi-society.lockated.com/crm/admin/fitout_requests/B6EBB5FCE533E099649AC2A37F0C12F9/fitout_mappings.json';
+
+    const baseUrl = localStorage.getItem('baseUrl') || '';
+    const url = 'https://'+baseUrl+'/crm/admin/fitout_requests/B6EBB5FCE533E099649AC2A37F0C12F9/fitout_mappings.json';
     let cancelled = false;
     fetch(url)
       .then((r) => {
@@ -99,6 +101,9 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   const selectOption = (qid: string | number, value: string | number) => setAnswers((s) => ({ ...s, [String(qid)]: String(value) }));
   const setOpenAnswer = (qid: string | number, value: string) => setAnswers((s) => ({ ...s, [String(qid)]: value }));
 
+  const [submitting, setSubmitting] = useState(false);
+  const [thankYou, setThankYou] = useState(false);
+
   // Toggle the required flag for a question in local component state
   const toggleRequired = (qid: string | number) => {
     setCategories((prev) => prev.map((cat) => ({
@@ -115,12 +120,99 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
     });
   };
 
-  const handleSubmit = () => { if (!allRequiredAnswered()) return; onSubmit?.(answers, comments); };
+  const handleSubmit = async () => {
+    if (!allRequiredAnswered()) return;
+    setSubmitting(true);
+    try {
+      // Build form data similar to the provided curl payload
+      const baseUrl = localStorage.getItem('baseUrl') || 'uat-hi-society.lockated.com';
+      const host = baseUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const postUrl = `https://${host}/fitout_requests/create_feedback`;
+
+      const form = new FormData();
+
+      // For each question create an entry under snag_answers[<mapId>][...]
+      categories.forEach((cat) => {
+        cat.questions.forEach((q) => {
+          const mapId = String(q.id);
+          const qKeyBase = `snag_answers[${mapId}]`;
+          // include map id and question id
+          form.append(`${qKeyBase}[snag_quest_map_id]`, mapId);
+          form.append(`${qKeyBase}[snag_question_id]`, String(q.id));
+
+          const val = answers[String(q.id)];
+          if (q.qtype === 'multiple') {
+            // single option selected (radio)
+            if (val) form.append(`${qKeyBase}[snag_quest_option_id]`, String(val));
+            form.append(`${qKeyBase}[ans_descr]`, '');
+          } else if (q.qtype === 'checkbox') {
+            // val is stored as JSON array string
+            try {
+              const arr = val ? JSON.parse(val) : [];
+              // send selected ids as comma separated in ans_descr
+              form.append(`${qKeyBase}[ans_descr]`, Array.isArray(arr) ? arr.join(',') : String(val || ''));
+            } catch (e) {
+              form.append(`${qKeyBase}[ans_descr]`, String(val || ''));
+            }
+          } else {
+            // text, date, description, date_range, time etc
+            form.append(`${qKeyBase}[ans_descr]`, String(val || ''));
+          }
+        });
+      });
+
+  const token = sessionStorage.getItem('app_token') || sessionStorage.getItem('token') || localStorage.getItem('app_token') || localStorage.getItem('token') || localStorage.getItem('access_token') || '';
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const resp = await fetch(postUrl, { method: 'POST', body: form, headers });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+      // Optionally call external handler
+      onSubmit?.(answers, comments);
+
+  // Reset fields and show thank you card
+  setAnswers({});
+  setComments('');
+  setThankYou(true);
+    } catch (err) {
+      // keep subtle failure behavior for now; could add toast
+      // console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const backgroundUrl = backgroundSrc || defaultBackground;
-  const containerStyle: React.CSSProperties = { backgroundImage: `url(${backgroundUrl})`, backgroundSize: 'cover', backgroundPosition: 'center 30%', backgroundRepeat: 'no-repeat', filter: 'brightness(0.85)', minHeight: '100dvh' };
+  const containerStyle: React.CSSProperties = {
+    backgroundImage: `url(${backgroundUrl})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center center',
+    backgroundRepeat: 'no-repeat',
+    filter: 'brightness(0.85)',
+    minHeight: '100dvh',
+  };
 
   const displayedCategory = (categories && categories[0] && categories[0].name) || 'Fitout setup';
+  if (thankYou) {
+    return (
+      <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
+        <div className="w-full max-w-md px-4 pt-24">
+          <div className="relative">
+            <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
+          </div>
+        </div>
+
+        <div className="w-full max-w-md px-4 mt-24">
+          <div className="bg-white/90 rounded-md p-6 text-center shadow-md">
+            <h2 className="text-2xl font-semibold mb-2">Thank you</h2>
+            <p className="text-sm text-gray-700 mb-4">Your responses have been submitted successfully.</p>
+            <button type="button" onClick={() => setThankYou(false)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Close</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
@@ -136,7 +228,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
         </div>
       </div>
 
-      <div className="w-full max-w-md px-4 mt-4 flex-1 pb-40">
+      <div className="w-full max-w-md px-4 mt-4 flex-1 pb-32">
         <div className="bg-white/90 border border-gray-200 rounded-md shadow-md p-4 space-y-6">
           {categories.map((cat, cidx) => (
             <div key={cidx}>
@@ -254,7 +346,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
         <div className="max-w-md mx-auto">
           <div className="bg-white/90 border border-gray-200 rounded-md p-3">
             <button onClick={handleSubmit} disabled={!allRequiredAnswered()} className={`w-full py-4 rounded font-semibold text-white ${allRequiredAnswered() ? 'bg-[#1E56D6]' : 'bg-gray-300 cursor-not-allowed'}`}>
-              Submit Survey
+              Submit Fitout
             </button>
           </div>
         </div>
