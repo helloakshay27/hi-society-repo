@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Eye } from "lucide-react";
+import { Plus, Edit, Eye, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import { useToast } from "@/hooks/use-toast";
@@ -142,13 +142,13 @@ const FitoutRequests: React.FC = () => {
         draggable: true,
         defaultVisible: true,
       },
-      {
-        key: "category_name",
-        label: "Category",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
+      // {
+      //   key: "category_name",
+      //   label: "Category",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      // },
       {
         key: "description",
         label: "Description",
@@ -327,6 +327,13 @@ const FitoutRequests: React.FC = () => {
                 <Plus className="w-4 h-4" />
                 Add
               </Button>
+              {/* <Button
+                onClick={() => navigate('/fitout/categories-subcategories')}
+                className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80"
+              >
+                <Settings className="w-4 h-4" />
+                Add Categories & Subcategories
+              </Button> */}
             </div>
           }
           handleExport={handleExportRequests}

@@ -112,18 +112,31 @@ export const EditFitoutChecklistPage = () => {
   const [destroyOptionIds, setDestroyOptionIds] = useState<number[]>([]);
 
   useEffect(() => {
-    fetchCategories();
-    if (id) {
-      fetchChecklistData();
-    }
+    const loadData = async () => {
+      await fetchCategories();
+      if (id) {
+        await fetchChecklistData();
+      }
+    };
+    loadData();
   }, [id]);
 
   const fetchCategories = async () => {
     try {
-      const response = await apiClient.get("/crm/admin/fitout_categories.json");
-      // Extract fitout_categories array from the response
-      const categoriesData = response.data?.fitout_categories || [];
+      const response = await apiClient.get("/snag_audit_categories.json?q[resource_type_eq]=FitoutCategory");
+      console.log('Categories API Response:', response.data);
+      
+      // Handle if response is array directly or wrapped in object
+      let categoriesData = [];
+      if (Array.isArray(response.data)) {
+        categoriesData = response.data;
+      } else if (response.data?.snag_audit_categories) {
+        categoriesData = response.data.snag_audit_categories;
+      }
+      
+      console.log('Categories Data:', categoriesData);
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      return categoriesData;
     } catch (error) {
       console.error("Error fetching categories:", error);
       hookToast({
@@ -131,6 +144,7 @@ export const EditFitoutChecklistPage = () => {
         description: "Failed to fetch categories",
         variant: "destructive",
       });
+      return [];
     }
   };
 
@@ -138,7 +152,7 @@ export const EditFitoutChecklistPage = () => {
     setLoadingSubCategories(true);
     try {
       const response = await apiClient.get(
-        `/snag_audit_sub_categories.json?snag_audit_category_id=${categoryId}`
+        `/snag_audit_categories/${categoryId}/snagsubcategories.json`
       );
       setSubCategories(response.data || []);
       return response.data || [];
@@ -166,13 +180,24 @@ export const EditFitoutChecklistPage = () => {
       );
       const checklistData = response.data;
 
+      console.log('Checklist Data:', checklistData);
+      console.log('Category ID from checklist:', checklistData.snag_audit_category_id);
+      console.log('SubCategory ID from checklist:', checklistData.snag_audit_sub_category_id);
+
       setTitle(checklistData.name);
-      setCategory(checklistData.snag_audit_category_id?.toString() || "");
-      setSubCategory(checklistData.snag_audit_sub_category_id?.toString() || "");
+      
+      // Set category
+      const categoryId = checklistData.snag_audit_category_id?.toString() || "";
+      setCategory(categoryId);
+      
+      // Set subcategory
+      const subCategoryId = checklistData.snag_audit_sub_category_id?.toString() || "";
+      setSubCategory(subCategoryId);
 
       // Load subcategories if category exists
       if (checklistData.snag_audit_category_id) {
-        await loadSubCategories(checklistData.snag_audit_category_id);
+        const loadedSubCategories = await loadSubCategories(checklistData.snag_audit_category_id);
+        console.log('Loaded subcategories:', loadedSubCategories);
       }
 
       // Map questions from API response
@@ -659,6 +684,7 @@ export const EditFitoutChecklistPage = () => {
                           <MenuItem value="multiple">Multiple Choice</MenuItem>
                           <MenuItem value="text">Text</MenuItem>
                           <MenuItem value="description">Description</MenuItem>
+                          <MenuItem value="date">Date</MenuItem>
                         </Select>
                       </FormControl>
                     </div>

@@ -16,11 +16,24 @@ interface FitoutRequestFormData {
   contractorMobileNo: string;
   expiryDate: string;
   refundDate: string;
-  annexure: string;
   amount: string;
   convenienceCharge: string;
   total: string;
   paymentMode: string;
+  statusId: string;
+}
+
+interface FitoutRequestCategory {
+  id?: string;
+  fitout_category_id: string;
+  complaint_status_id: string;
+  amount: string;
+  documents: File[];
+  existing_documents: Array<{
+    id: number;
+    document_url: string;
+    active: number | null;
+  }>;
 }
 
 const FitoutRequestEdit: React.FC = () => {
@@ -33,6 +46,8 @@ const FitoutRequestEdit: React.FC = () => {
   const [flats, setFlats] = useState([]);
   const [users, setUsers] = useState([]);
   const [annexures, setAnnexures] = useState([]);
+  const [statuses, setStatuses] = useState([]);
+  const [requestCategories, setRequestCategories] = useState<FitoutRequestCategory[]>([]);
 
   const [formData, setFormData] = useState<FitoutRequestFormData>({
     tower: '',
@@ -44,11 +59,11 @@ const FitoutRequestEdit: React.FC = () => {
     contractorMobileNo: '',
     expiryDate: '',
     refundDate: '',
-    annexure: '',
     amount: '0.00',
     convenienceCharge: '0.00',
     total: '0.00',
     paymentMode: 'PAY AT SITE',
+    statusId: '',
   });
 
   const fieldStyles = {
@@ -102,10 +117,10 @@ const FitoutRequestEdit: React.FC = () => {
       // Fetch towers/blocks, users, annexures/categories
       console.log('Fetching dropdown data with id_society:', idSociety);
       
-      const [blocksResponse, usersResponse, categoriesResponse] = await Promise.all([
+      const [blocksResponse, categoriesResponse, statusesResponse] = await Promise.all([
         apiClient.get(`/get_society_blocks.json?society_id=${idSociety}`),
-        apiClient.get(`/get_user_society.json?id_society=${idSociety}`),
         apiClient.get('/crm/admin/fitout_categories.json'),
+        apiClient.get('/crm/admin/fitout_requests/fitout_statuses.json'),
       ]);
 
       console.log('Full Blocks Response:', blocksResponse);
@@ -126,23 +141,26 @@ const FitoutRequestEdit: React.FC = () => {
       console.log('Blocks Array Length:', blocksArray.length);
       setTowers(blocksArray);
       
-      // Extract user_societies array from the response
-      const usersArray = usersResponse.data?.user_societies || [];
       // Extract fitout_categories array from the response
       const annexuresArray = categoriesResponse.data?.fitout_categories || [];
       
-      console.log('Users Array:', usersArray);
       console.log('Annexures Array:', annexuresArray);
       
-      setUsers(usersArray);
       setAnnexures(annexuresArray);
+      
+      // Extract statuses from API response
+      const statusesArray = statusesResponse.data?.data || [];
+      console.log('Statuses Array:', statusesArray);
+      setStatuses(statusesArray);
     } catch (error) {
       console.error('Error fetching dropdown data:', error);
     }
   };
 
   const handleTowerChange = async (towerId: string) => {
-    setFormData(prev => ({ ...prev, tower: towerId, flat: '' }));
+    setFormData(prev => ({ ...prev, tower: towerId, flat: '', user: '' }));
+    setFlats([]);
+    setUsers([]);
     
     if (towerId) {
       try {
@@ -171,6 +189,26 @@ const FitoutRequestEdit: React.FC = () => {
     }
   };
 
+  const handleFlatChange = async (flatId: string) => {
+    setFormData(prev => ({ ...prev, flat: flatId, user: '' }));
+    setUsers([]);
+    
+    if (flatId && formData.tower) {
+      try {
+        const response = await apiClient.get(`/get_user_society.json?society_block_id=${formData.tower}&society_flat_id=${flatId}`);
+        console.log('Users API Response:', response.data);
+        const usersArray = response.data?.user_societies || [];
+        console.log('Users Array:', usersArray);
+        setUsers(usersArray);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setUsers([]);
+      }
+    } else {
+      setUsers([]);
+    }
+  };
+
   const fetchFitoutRequest = async () => {
     try {
       setDataLoading(true);
@@ -180,11 +218,27 @@ const FitoutRequestEdit: React.FC = () => {
       const data = response.data;
       
       console.log('Fitout Request Data:', data);
+      console.log('Tower ID (site_id):', data.site_id);
+      console.log('Flat ID (unit_id):', data.unit_id);
+      console.log('User ID (user_id):', data.user_id);
+      console.log('Fitout Request Categories:', data.fitout_request_categories);
       
-      // Convert date format from DD/MM/YYYY to YYYY-MM-DD for input fields
+      // Convert date format from DD/MM/YYYY or ISO format to YYYY-MM-DD for input fields
       const formatDateForInput = (dateStr: string) => {
         if (!dateStr || dateStr.trim() === '') return '';
         try {
+          // Check if it's ISO 8601 format (e.g., "2026-01-16T00:00:00.000+05:30")
+          if (dateStr.includes('T')) {
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) {
+              const year = date.getFullYear();
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const day = String(date.getDate()).padStart(2, '0');
+              return `${year}-${month}-${day}`;
+            }
+          }
+          
+          // Check if it's DD/MM/YYYY format
           const parts = dateStr.split('/');
           if (parts.length === 3) {
             const [day, month, year] = parts;
@@ -196,22 +250,96 @@ const FitoutRequestEdit: React.FC = () => {
         return '';
       };
 
+      // Set tower first, then trigger flat loading
+      const towerId = data.site_id?.toString() || '';
+      const flatId = data.unit_id?.toString() || '';
+      const userId = data.user_id?.toString() || '';
+      
+      // Load request categories from API
+      const loadedCategories = data.fitout_request_categories?.map((cat: any) => ({
+        id: cat.id?.toString(),
+        fitout_category_id: cat.fitout_category_id?.toString() || '',
+        complaint_status_id: cat.complaint_status_id?.toString() || '',
+        amount: cat.amount?.toString() || '0.00',
+        documents: [],
+        existing_documents: cat.documents?.map((doc: any) => ({
+          id: doc.id,
+          document_url: doc.document_url,
+          active: doc.active,
+        })) || [],
+      })) || [];
+      
+      setRequestCategories(loadedCategories);
+      console.log('Loaded Categories:', loadedCategories);
+      
+      // Calculate total amount from fitout_request_categories
+      const totalAmount = data.fitout_request_categories?.reduce(
+        (sum: number, cat: any) => sum + (parseFloat(cat.amount) || 0),
+        0
+      ) || 0;
+      
+      // Set initial form data
       setFormData({
-        tower: '', // Will be set when tower dropdown loads
-        flat: '', // Will be set when flat dropdown loads
-        user: data.user_society_id?.toString() || '',
+        tower: towerId,
+        flat: flatId,
+        user: userId,
         requestedDate: formatDateForInput(data.start_date) || '',
         description: data.description || '',
-        contractorName: '', // Not in API response
-        contractorMobileNo: '', // Not in API response
-        expiryDate: '', // Not in API response
-        refundDate: formatDateForInput(data.end_date) || '',
-        annexure: data.fitout_category_id ? data.fitout_category_id.toString() : '',
-        amount: data.amount?.toString() || '0.00',
+        contractorName: data.contactor_name || '',
+        contractorMobileNo: data.contactor_no || '',
+        expiryDate: formatDateForInput(data.expiry_date) || '',
+        refundDate: formatDateForInput(data.refund_date) || '',
+        amount: totalAmount.toFixed(2),
         convenienceCharge: data.lock_payment?.convenience_charge?.toString() || '0.00',
-        total: data.amount?.toString() || '0.00',
+        total: (totalAmount + (parseFloat(data.lock_payment?.convenience_charge) || 0)).toFixed(2),
         paymentMode: 'PAY AT SITE',
+        statusId: data.status_id?.toString() || '',
       });
+
+      // Load flats for the selected tower
+      if (towerId) {
+        try {
+          const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
+          let idSociety = '';
+          
+          if (selectedUserSocietyId) {
+            const selectedSocietyResponse = await apiClient.get(`/crm/admin/user_societies.json`);
+            const userSocieties = selectedSocietyResponse.data || [];
+            const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
+            idSociety = selectedSociety?.id_society || '';
+          }
+          
+          const flatsResponse = await apiClient.get(`/get_society_flats.json?society_block_id=${towerId}&society_id=${idSociety}`);
+          const flatsArray = flatsResponse.data?.society_flats || [];
+          setFlats(flatsArray);
+          console.log('Loaded flats for tower:', flatsArray);
+        } catch (error) {
+          console.error('Error loading flats:', error);
+        }
+      }
+
+      // Load users for the selected flat
+      if (flatId && towerId) {
+        try {
+          const usersResponse = await apiClient.get(`/get_user_society.json?society_block_id=${towerId}&society_flat_id=${flatId}`);
+          const usersArray = usersResponse.data?.user_societies || [];
+          setUsers(usersArray);
+          console.log('Loaded users for flat:', usersArray);
+          
+          // Find the correct user_society.id that matches the user_id
+          const matchingUserSociety = usersArray.find((us: any) => us.user?.id === data.user_id);
+          if (matchingUserSociety) {
+            console.log('Found matching user_society:', matchingUserSociety);
+            // Update form data with the correct user_society.id
+            setFormData(prev => ({
+              ...prev,
+              user: matchingUserSociety.id.toString()
+            }));
+          }
+        } catch (error) {
+          console.error('Error loading users:', error);
+        }
+      }
     } catch (error) {
       console.error('Error fetching fitout request:', error);
       toast({
@@ -245,9 +373,46 @@ const FitoutRequestEdit: React.FC = () => {
     
     if (name === 'tower') {
       handleTowerChange(value);
+    } else if (name === 'flat') {
+      handleFlatChange(value);
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleAddCategory = () => {
+    setRequestCategories(prev => [...prev, {
+      fitout_category_id: '',
+      complaint_status_id: '',
+      amount: '0.00',
+      documents: [],
+      existing_documents: [],
+    }]);
+  };
+
+  const handleCategorySelect = (index: number, categoryId: string) => {
+    const selectedCategory = annexures.find((cat: any) => cat.id.toString() === categoryId);
+    setRequestCategories(prev => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        fitout_category_id: categoryId,
+        amount: selectedCategory?.amount?.toString() || '0.00',
+      };
+      return updated;
+    });
+  };
+
+  const handleCategoryChange = (index: number, field: keyof FitoutRequestCategory, value: any) => {
+    setRequestCategories(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const handleRemoveCategory = (index: number) => {
+    setRequestCategories(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -265,10 +430,50 @@ const FitoutRequestEdit: React.FC = () => {
     try {
       setLoading(true);
       
-      // In production, use PUT request:
-      // const response = await apiClient.put(`/crm/admin/fitout_requests/${id}`, {
-      //   fitout_request: formData,
-      // });
+      // Prepare form data for submission
+      const submitData = new FormData();
+      
+      // Add basic fields
+      submitData.append('fitout_request[site_id]', formData.tower);
+      submitData.append('fitout_request[unit_id]', formData.flat);
+      submitData.append('fitout_request[user_id]', formData.user);
+      submitData.append('fitout_request[start_date]', formData.requestedDate);
+      submitData.append('fitout_request[description]', formData.description);
+      submitData.append('fitout_request[contactor_name]', formData.contractorName);
+      submitData.append('fitout_request[contactor_no]', formData.contractorMobileNo);
+      submitData.append('fitout_request[expiry_date]', formData.expiryDate);
+      submitData.append('fitout_request[refund_date]', formData.refundDate);
+      
+      if (formData.statusId) {
+        submitData.append('fitout_request[status_id]', formData.statusId);
+      }
+      
+      // Add fitout request categories
+      requestCategories.forEach((category, index) => {
+        if (category.id) {
+          submitData.append(`fitout_request[fitout_request_categories_attributes][${index}][id]`, category.id);
+        }
+        submitData.append(`fitout_request[fitout_request_categories_attributes][${index}][fitout_category_id]`, category.fitout_category_id);
+        submitData.append(`fitout_request[fitout_request_categories_attributes][${index}][amount]`, category.amount);
+        
+        if (category.complaint_status_id) {
+          submitData.append(`fitout_request[fitout_request_categories_attributes][${index}][complaint_status_id]`, category.complaint_status_id);
+        }
+        
+        // Add new documents if any files are selected
+        if (category.documents && category.documents.length > 0) {
+          category.documents.forEach((file, docIndex) => {
+            submitData.append(`fitout_request[fitout_request_categories_attributes][${index}][documents_attributes][${docIndex}][document]`, file);
+          });
+        }
+      });
+      
+      // Use PUT request to update
+      const response = await apiClient.put(`/crm/admin/fitout_requests/${id}.json`, submitData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
       toast({
         title: 'Success',
@@ -286,7 +491,7 @@ const FitoutRequestEdit: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleCancel = () => {
     navigate('/fitout/requests');
@@ -381,6 +586,7 @@ const FitoutRequestEdit: React.FC = () => {
                   label="User *"
                   displayEmpty
                   sx={fieldStyles}
+                  disabled={!formData.flat}
                 >
                   <MenuItem value="">Select User</MenuItem>
                   {Array.isArray(users) && users.length > 0 ? (
@@ -390,13 +596,13 @@ const FitoutRequestEdit: React.FC = () => {
                       </MenuItem>
                     ))
                   ) : (
-                    <MenuItem disabled>No users available</MenuItem>
+                    <MenuItem disabled>{formData.flat ? 'No users available' : 'Select flat first'}</MenuItem>
                   )}
                 </MuiSelect>
               </FormControl>
 
               <TextField
-                label="Requested Date *"
+                label="Requested Date"
                 name="requestedDate"
                 type="date"
                 value={formData.requestedDate}
@@ -430,6 +636,24 @@ const FitoutRequestEdit: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
               />
+
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Status</InputLabel>
+                <MuiSelect
+                  value={formData.statusId}
+                  onChange={handleSelectChange('statusId')}
+                  label="Status"
+                  displayEmpty
+                  sx={fieldStyles}
+                >
+                  <MenuItem value="">Select Status</MenuItem>
+                  {statuses.map((status: any) => (
+                    <MenuItem key={status.id} value={status.id.toString()}>
+                      {status.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -484,73 +708,190 @@ const FitoutRequestEdit: React.FC = () => {
             </h2>
           </div>
           <div className="p-6 space-y-6">
-            <FormControl fullWidth variant="outlined">
-              <InputLabel shrink>Annexure *</InputLabel>
-              <MuiSelect
-                value={formData.annexure}
-                onChange={handleSelectChange('annexure')}
-                label="Annexure *"
-                displayEmpty
-                sx={fieldStyles}
-              >
-                <MenuItem value="">Select Annexure</MenuItem>
-                {Array.isArray(annexures) && annexures.length > 0 ? (
-                  annexures.map((annexure: any) => (
-                    <MenuItem key={annexure.id} value={annexure.id}>
-                      {annexure.name}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled>No annexures available</MenuItem>
-                )}
-              </MuiSelect>
-            </FormControl>
-
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-base font-medium">Annexure</h3>
               <Button
                 type="button"
+                onClick={handleAddCategory}
                 className="bg-[#C72030] text-white hover:bg-[#A01B28]"
               >
                 + Add Annexure
               </Button>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span>Amount:</span>
-                <TextField
-                  name="amount"
-                  value={formData.amount}
-                  onChange={handleInputChange}
-                  type="number"
-                  step="0.01"
-                  variant="outlined"
-                  size="small"
-                  sx={{ width: '120px' }}
-                />
+            {requestCategories.length === 0 && (
+              <p className="text-sm text-gray-500">No annexures added yet. Click "+ Add Annexure" to add one.</p>
+            )}
+
+            {requestCategories.map((category, index) => (
+              <div key={index} className="border rounded-lg p-4 space-y-4" style={{ backgroundColor: '#FAFAFA' }}>
+                <div className="flex justify-between items-center">
+                  <h4 className="text-sm font-medium" style={{ color: '#C72030' }}>Annexure {index + 1}</h4>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveCategory(index)}
+                    className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel shrink>Annexure *</InputLabel>
+                    <MuiSelect
+                      value={category.fitout_category_id}
+                      onChange={(e) => handleCategorySelect(index, e.target.value)}
+                      label="Annexure *"
+                      displayEmpty
+                      sx={fieldStyles}
+                    >
+                      <MenuItem value="">Select Annexure</MenuItem>
+                      {annexures.map((cat: any) => (
+                        <MenuItem key={cat.id} value={cat.id.toString()}>
+                          {cat.name}
+                        </MenuItem>
+                      ))}
+                    </MuiSelect>
+                  </FormControl>
+
+                  {category.id && (
+                    <FormControl fullWidth variant="outlined">
+                      <InputLabel shrink>Status</InputLabel>
+                      <MuiSelect
+                        value={category.complaint_status_id}
+                        onChange={(e) => handleCategoryChange(index, 'complaint_status_id', e.target.value)}
+                        label="Status"
+                        displayEmpty
+                        sx={fieldStyles}
+                      >
+                        <MenuItem value="">Select Status</MenuItem>
+                        {statuses.map((status: any) => (
+                          <MenuItem key={status.id} value={status.id.toString()}>
+                            {status.name}
+                          </MenuItem>
+                        ))}
+                      </MuiSelect>
+                    </FormControl>
+                  )}
+                </div>
+
+                {category.fitout_category_id && (
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Amount:</span>
+                      <span className="text-base font-semibold">₹{parseFloat(category.amount || '0').toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Upload Images
+                  </label>
+                  
+                  {/* Existing Images Gallery */}
+                  {category.existing_documents && category.existing_documents.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-600 mb-2 font-medium">Current Images ({category.existing_documents.length}):</p>
+                      <div className="flex flex-wrap gap-2">
+                        {category.existing_documents.map((doc, docIndex) => (
+                          <div key={doc.id} className="relative inline-block">
+                            <img 
+                              src={decodeURIComponent(doc.document_url)} 
+                              alt={`Existing document ${docIndex + 1}`} 
+                              className="w-24 h-24 object-cover rounded border border-gray-300"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs px-1 py-0.5 rounded-b text-center">
+                              Image {docIndex + 1}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* New Images Preview */}
+                  {category.documents && category.documents.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs text-green-600 mb-2 font-medium">New files selected ({category.documents.length}):</p>
+                      <div className="flex flex-wrap gap-2">
+                        {category.documents.map((file, fileIndex) => {
+                          const imageUrl = URL.createObjectURL(file);
+                          return (
+                            <div key={fileIndex} className="relative inline-block group">
+                              <img 
+                                src={imageUrl} 
+                                alt={`Preview ${fileIndex + 1}`} 
+                                className="w-24 h-24 object-cover rounded border-2 border-green-500"
+                                onLoad={() => URL.revokeObjectURL(imageUrl)}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updatedFiles = category.documents.filter((_, i) => i !== fileIndex);
+                                  handleCategoryChange(index, 'documents', updatedFiles);
+                                }}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 shadow-md"
+                              >
+                                ✕
+                              </button>
+                              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs px-1 py-0.5 rounded-b text-center">
+                                New {fileIndex + 1}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* File Input */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 0) {
+                          const updatedFiles = [...category.documents, ...files];
+                          handleCategoryChange(index, 'documents', updatedFiles);
+                        }
+                        // Reset input to allow selecting the same file again
+                        e.target.value = '';
+                      }}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#4A90E2] file:text-white hover:file:bg-[#357ABD]"
+                      id={`file-upload-${index}`}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">You can select multiple images at once</p>
+                </div>
+              </div>
+            ))}
+
+            <div className="border-t pt-4 space-y-3 mt-6">
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm">Amount :</span>
+                <span className="text-base font-medium">{requestCategories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between">
-                <span>Convenience Charge:</span>
-                <TextField
-                  name="convenienceCharge"
-                  value={formData.convenienceCharge}
-                  onChange={handleInputChange}
-                  type="number"
-                  step="0.01"
-                  variant="outlined"
-                  size="small"
-                  sx={{ width: '120px' }}
-                />
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm">Convenience Charge :</span>
+                <span className="text-base font-medium">{parseFloat(formData.convenienceCharge).toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between font-semibold">
-                <span>Total:</span>
-                <span>₹{formData.total}</span>
+              <div className="flex justify-between items-center py-2 border-t pt-3">
+                <span className="text-base font-semibold">Total :</span>
+                <span className="text-lg font-bold">₹{(requestCategories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0) + parseFloat(formData.convenienceCharge)).toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between items-center">
-                <span>Payment Mode:</span>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm">Payment Mode :</span>
                 <FormControl variant="outlined" size="small" sx={{ width: '200px' }}>
                   <MuiSelect
                     value={formData.paymentMode}

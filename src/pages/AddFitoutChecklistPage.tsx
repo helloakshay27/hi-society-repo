@@ -9,6 +9,7 @@ import {
   Checkbox,
   FormControlLabel,
   IconButton,
+  Menu,
 } from "@mui/material";
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
@@ -112,9 +113,18 @@ export const AddFitoutChecklistPage = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get("/crm/admin/fitout_categories.json");
-      // Extract fitout_categories array from the response
-      const categoriesData = response.data?.fitout_categories || [];
+      const response = await apiClient.get("/snag_audit_categories.json?q[resource_type_eq]=FitoutCategory");
+      console.log('Categories API Response:', response.data);
+      
+      // Handle if response is array directly or wrapped in object
+      let categoriesData = [];
+      if (Array.isArray(response.data)) {
+        categoriesData = response.data;
+      } else if (response.data?.snag_audit_categories) {
+        categoriesData = response.data.snag_audit_categories;
+      }
+      
+      console.log('Categories Data:', categoriesData);
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -128,7 +138,7 @@ export const AddFitoutChecklistPage = () => {
     setLoadingSubCategories(true);
     try {
       const response = await apiClient.get(
-        `/snag_audit_sub_categories.json?snag_audit_category_id=${categoryId}`
+        `/snag_audit_categories/${categoryId}/snagsubcategories.json`
       );
       setSubCategories(response.data || []);
     } catch (error) {
@@ -519,6 +529,7 @@ export const AddFitoutChecklistPage = () => {
                         <MenuItem value="multiple">Multiple Choice</MenuItem>
                         <MenuItem value="text">Text</MenuItem>
                         <MenuItem value="description">Description</MenuItem>
+                        <MenuItem value="date">Date</MenuItem>
                       </Select>
                     </FormControl>
                   </div>

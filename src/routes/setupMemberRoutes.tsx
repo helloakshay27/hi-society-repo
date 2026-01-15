@@ -226,6 +226,7 @@ const FitoutChecklists = lazy(() => import("@/pages/FitoutChecklists"));
 const AddFitoutChecklistPage = lazy(() => import("@/pages/AddFitoutChecklistPage"));
 const EditFitoutChecklistPage = lazy(() => import("@/pages/EditFitoutChecklistPage"));
 const FitoutChecklistDetailsPage = lazy(() => import("@/pages/FitoutChecklistDetailsPage"));
+const CategorySubcategoryPage = lazy(() => import("@/components/fitout-requests/CategorySubcategoryDialog"));
 const FitoutDeviations = lazy(() => import("@/pages/FitoutDeviations"));
 const FitoutDeviationDetails = lazy(() => import("@/pages/FitoutDeviationDetails"));
 const ViolationDetail = lazy(() => import("@/pages/ViolationDetail"));
@@ -588,6 +589,7 @@ export const setupMemberRoutes = (
     <Route path="/fitout/checklists/add" Component={withSuspense(AddFitoutChecklistPage)} />
     <Route path="/fitout/checklists/edit/:id" Component={withSuspense(EditFitoutChecklistPage)} />
     <Route path="/fitout/checklists/details/:id" Component={withSuspense(FitoutChecklistDetailsPage)} />
+    <Route path="/fitout/categories-subcategories" Component={withSuspense(CategorySubcategoryPage)} />
     <Route path="/fitout/deviations" Component={withSuspense(FitoutDeviations)} />
     <Route path="/maintenance/fitout-deviations" Component={withSuspense(FitoutDeviations)} />
     <Route path="/maintenance/fitout-deviation-details/:flat_id" Component={withSuspense(FitoutDeviationDetails)} />

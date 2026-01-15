@@ -12,8 +12,7 @@ interface FitoutRequestFormData {
   unit_id: string;
   user_id: string;
   fitout_category_id: string;
-  start_date: string;
-  end_date: string;
+  requested_date: string;
   expiry_date: string;
   refund_date: string;
   description: string;
@@ -49,8 +48,7 @@ const FitoutRequestAdd: React.FC = () => {
     unit_id: '',
     user_id: '',
     fitout_category_id: '',
-    start_date: '',
-    end_date: '',
+    requested_date: '',
     expiry_date: '',
     refund_date: '',
     description: '',
@@ -117,10 +115,9 @@ const FitoutRequestAdd: React.FC = () => {
       // Fetch categories, towers/blocks, users
       console.log('Fetching dropdown data with id_society:', idSociety);
       
-      const [categoriesResponse, blocksResponse, usersResponse] = await Promise.all([
+      const [categoriesResponse, blocksResponse] = await Promise.all([
         apiClient.get('/crm/admin/fitout_categories.json'),
         apiClient.get(`/get_society_blocks.json?society_id=${idSociety}`),
-        apiClient.get(`/get_user_society.json?id_society=${idSociety}`),
       ]);
 
       console.log('Full Blocks Response:', blocksResponse);
@@ -141,19 +138,14 @@ const FitoutRequestAdd: React.FC = () => {
       console.log('Blocks Array Length:', blocksArray.length);
       setTowers(blocksArray);
       
-      console.log('Users Response:', usersResponse.data);
       console.log('Categories Response:', categoriesResponse.data);
       
       // Extract fitout_categories array from the response
       const categoriesArray = categoriesResponse.data?.fitout_categories || [];
-      // Extract user_societies array from the response
-      const usersArray = usersResponse.data?.user_societies || [];
       
       console.log('Categories Array Length:', categoriesArray.length);
-      console.log('Users Array Length:', usersArray.length);
       
       setCategories(categoriesArray);
-      setUsers(usersArray);
       
       // Set id_society in formData for user_society_id parameter
       setFormData(prev => ({ ...prev, user_society_id: idSociety }));
@@ -168,7 +160,9 @@ const FitoutRequestAdd: React.FC = () => {
   };
 
   const handleTowerChange = async (siteId: string) => {
-    setFormData(prev => ({ ...prev, site_id: siteId, unit_id: '' }));
+    setFormData(prev => ({ ...prev, site_id: siteId, unit_id: '', user_id: '' }));
+    setFlats([]);
+    setUsers([]);
     
     if (siteId) {
       try {
@@ -197,6 +191,26 @@ const FitoutRequestAdd: React.FC = () => {
     }
   };
 
+  const handleFlatChange = async (flatId: string) => {
+    setFormData(prev => ({ ...prev, unit_id: flatId, user_id: '' }));
+    setUsers([]);
+    
+    if (flatId && formData.site_id) {
+      try {
+        const response = await apiClient.get(`/get_user_society.json?society_block_id=${formData.site_id}&society_flat_id=${flatId}`);
+        console.log('Users API Response:', response.data);
+        const usersArray = response.data?.user_societies || [];
+        console.log('Users Array:', usersArray);
+        setUsers(usersArray);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setUsers([]);
+      }
+    } else {
+      setUsers([]);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -207,6 +221,8 @@ const FitoutRequestAdd: React.FC = () => {
     
     if (name === 'site_id') {
       handleTowerChange(value);
+    } else if (name === 'unit_id') {
+      handleFlatChange(value);
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -219,6 +235,19 @@ const FitoutRequestAdd: React.FC = () => {
       amount: '0.00',
       documents: [],
     }]);
+  };
+
+  const handleCategorySelect = (index: number, categoryId: string) => {
+    const selectedCategory = categories.find((cat: any) => cat.id.toString() === categoryId);
+    setRequestCategories(prev => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        fitout_category_id: categoryId,
+        amount: selectedCategory?.amount?.toString() || '0.00',
+      };
+      return updated;
+    });
   };
 
   const handleCategoryChange = (index: number, field: keyof FitoutRequestCategory, value: any) => {
@@ -263,8 +292,7 @@ const FitoutRequestAdd: React.FC = () => {
       
       if (formData.user_id) formDataToSend.append('fitout_request[user_id]', formData.user_id);
       if (formData.fitout_category_id) formDataToSend.append('fitout_request[fitout_category_id]', formData.fitout_category_id);
-      if (formData.start_date) formDataToSend.append('fitout_request[start_date]', formData.start_date);
-      if (formData.end_date) formDataToSend.append('fitout_request[end_date]', formData.end_date);
+      if (formData.requested_date) formDataToSend.append('fitout_request[start_date]', formData.requested_date);
       if (formData.expiry_date) formDataToSend.append('fitout_request[expiry_date]', formData.expiry_date);
       if (formData.refund_date) formDataToSend.append('fitout_request[refund_date]', formData.refund_date);
       if (formData.description) formDataToSend.append('fitout_request[description]', formData.description);
@@ -291,10 +319,12 @@ const FitoutRequestAdd: React.FC = () => {
         }
         
         // Add documents
-        category.documents.forEach((doc, docIndex) => {
-          formDataToSend.append(`fitout_request[fitout_request_categories_attributes][${index}][documents_attributes][${docIndex}][document]`, doc);
-          formDataToSend.append(`fitout_request[fitout_request_categories_attributes][${index}][documents_attributes][${docIndex}][active]`, 'true');
-        });
+        if (category.documents && category.documents.length > 0) {
+          category.documents.forEach((file, docIndex) => {
+            formDataToSend.append(`fitout_request[fitout_request_categories_attributes][${index}][documents_attributes][${docIndex}][document]`, file);
+            formDataToSend.append(`fitout_request[fitout_request_categories_attributes][${index}][documents_attributes][${docIndex}][active]`, 'true');
+          });
+        }
       });
 
       const response = await apiClient.post('/crm/admin/fitout_requests.json', formDataToSend, {
@@ -403,6 +433,7 @@ const FitoutRequestAdd: React.FC = () => {
                   label="User *"
                   displayEmpty
                   sx={fieldStyles}
+                  disabled={!formData.unit_id}
                 >
                   <MenuItem value="">Select User</MenuItem>
                   {Array.isArray(users) && users.length > 0 ? (
@@ -412,28 +443,16 @@ const FitoutRequestAdd: React.FC = () => {
                       </MenuItem>
                     ))
                   ) : (
-                    <MenuItem disabled>No users available</MenuItem>
+                    <MenuItem disabled>{formData.unit_id ? 'No users available' : 'Select flat first'}</MenuItem>
                   )}
                 </MuiSelect>
               </FormControl>
 
               <TextField
-                label="Start Date"
-                name="start_date"
+                label="Requested Date"
+                name="requested_date"
                 type="date"
-                value={formData.start_date}
-                onChange={handleInputChange}
-                fullWidth
-                variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                InputProps={{ sx: fieldStyles }}
-              />
-
-              <TextField
-                label="End Date"
-                name="end_date"
-                type="date"
-                value={formData.end_date}
+                value={formData.requested_date}
                 onChange={handleInputChange}
                 fullWidth
                 variant="outlined"
@@ -518,138 +537,142 @@ const FitoutRequestAdd: React.FC = () => {
             </h2>
           </div>
           <div className="p-6 space-y-6">
-            <FormControl fullWidth variant="outlined">
-              <InputLabel shrink>Main Category</InputLabel>
-              <MuiSelect
-                value={formData.fitout_category_id}
-                onChange={handleSelectChange('fitout_category_id')}
-                label="Main Category"
-                displayEmpty
-                sx={fieldStyles}
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-base font-medium">Annexure</h3>
+              <Button
+                type="button"
+                onClick={handleAddCategory}
+                className="bg-[#C72030] text-white hover:bg-[#A01B28]"
               >
-                <MenuItem value="">Select Category</MenuItem>
-                {Array.isArray(categories) && categories.length > 0 ? (
-                  categories.map((category: any) => (
-                    <MenuItem key={category.id} value={category.id}>
-                      {category.name}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled>No categories available</MenuItem>
-                )}
-              </MuiSelect>
-            </FormControl>
-
-            <div className="border-t pt-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-medium">Additional Categories</h3>
-                <Button
-                  type="button"
-                  onClick={handleAddCategory}
-                  className="bg-[#C72030] text-white hover:bg-[#A01B28]"
-                >
-                  + Add Category
-                </Button>
-              </div>
-
-              {requestCategories.map((category, index) => (
-                <div key={index} className="border rounded-lg p-4 mb-4 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-sm font-medium">Category {index + 1}</h4>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveCategory(index)}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Remove
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormControl fullWidth variant="outlined" size="small">
-                      <InputLabel shrink>Category</InputLabel>
-                      <MuiSelect
-                        value={category.fitout_category_id}
-                        onChange={(e) => handleCategoryChange(index, 'fitout_category_id', e.target.value)}
-                        label="Category"
-                        displayEmpty
-                      >
-                        <MenuItem value="">Select Category</MenuItem>
-                        {categories.map((cat: any) => (
-                          <MenuItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </MenuItem>
-                        ))}
-                      </MuiSelect>
-                    </FormControl>
-
-                    <TextField
-                      label="Amount"
-                      value={category.amount}
-                      onChange={(e) => handleCategoryChange(index, 'amount', e.target.value)}
-                      type="number"
-                      step="0.01"
-                      fullWidth
-                      size="small"
-                      variant="outlined"
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Documents
-                    </label>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*,application/pdf"
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        handleCategoryChange(index, 'documents', files);
-                      }}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#C72030] file:text-white hover:file:bg-[#A01B28]"
-                    />
-                  </div>
-                </div>
-              ))}
+                + Add Annexure
+              </Button>
             </div>
 
-            <div className="border-t pt-4 space-y-4">
-              <div className="flex justify-between">
-                <span>Amount:</span>
-                <TextField
-                  name="amount"
-                  value={formData.amount}
-                  onChange={handleInputChange}
-                  type="number"
-                  step="0.01"
-                  variant="outlined"
-                  size="small"
-                  sx={{ width: '120px' }}
-                />
+            {requestCategories.length === 0 && (
+              <p className="text-sm text-gray-500">No annexures added yet. Click "+ Add Annexure" to add one.</p>
+            )}
+
+            {requestCategories.map((category, index) => (
+              <div key={index} className="border rounded-lg p-4 space-y-4" style={{ backgroundColor: '#FAFAFA' }}>
+                <div className="flex justify-between items-center">
+                  <h4 className="text-sm font-medium" style={{ color: '#C72030' }}>Annexure {index + 1}</h4>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveCategory(index)}
+                    className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink>Annexure *</InputLabel>
+                  <MuiSelect
+                    value={category.fitout_category_id}
+                    onChange={(e) => handleCategorySelect(index, e.target.value)}
+                    label="Annexure *"
+                    displayEmpty
+                    sx={fieldStyles}
+                  >
+                    <MenuItem value="">Select Annexure</MenuItem>
+                    {categories.map((cat: any) => (
+                      <MenuItem key={cat.id} value={cat.id.toString()}>
+                        {cat.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+
+                {category.fitout_category_id && (
+                  <div className="bg-white p-3 rounded border">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Amount:</span>
+                      <span className="text-base font-semibold">₹{parseFloat(category.amount || '0').toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Upload Images
+                  </label>
+                  
+                  {/* Image Previews */}
+                  {category.documents && category.documents.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-600 mb-2 font-medium">Selected files ({category.documents.length}):</p>
+                      <div className="flex flex-wrap gap-2">
+                        {category.documents.map((file, fileIndex) => {
+                          const imageUrl = URL.createObjectURL(file);
+                          return (
+                            <div key={fileIndex} className="relative inline-block group">
+                              <img 
+                                src={imageUrl} 
+                                alt={`Preview ${fileIndex + 1}`} 
+                                className="w-24 h-24 object-cover rounded border-2 border-green-500"
+                                onLoad={() => URL.revokeObjectURL(imageUrl)}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updatedFiles = category.documents.filter((_, i) => i !== fileIndex);
+                                  handleCategoryChange(index, 'documents', updatedFiles);
+                                }}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 shadow-md"
+                              >
+                                ✕
+                              </button>
+                              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs px-1 py-0.5 rounded-b text-center">
+                                {fileIndex + 1}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* File Input */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 0) {
+                          const updatedFiles = [...category.documents, ...files];
+                          handleCategoryChange(index, 'documents', updatedFiles);
+                        }
+                        e.target.value = '';
+                      }}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#4A90E2] file:text-white hover:file:bg-[#357ABD]"
+                      id={`file-upload-${index}`}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">You can select multiple images at once</p>
+                </div>
+              </div>
+            ))}
+
+            <div className="border-t pt-4 space-y-3 mt-6">
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm">Amount :</span>
+                <span className="text-base font-medium">{requestCategories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between">
-                <span>Convenience Charge:</span>
-                <TextField
-                  value={convenienceCharge}
-                  onChange={(e) => setConvenienceCharge(e.target.value)}
-                  type="number"
-                  step="0.01"
-                  variant="outlined"
-                  size="small"
-                  sx={{ width: '120px' }}
-                />
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm">Convenience Charge :</span>
+                <span className="text-base font-medium">{parseFloat(convenienceCharge).toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between font-semibold">
-                <span>Total:</span>
-                <span>₹{calculateTotal()}</span>
+              <div className="flex justify-between items-center py-2 border-t pt-3">
+                <span className="text-base font-semibold">Total :</span>
+                <span className="text-lg font-bold">₹{(requestCategories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0) + parseFloat(convenienceCharge)).toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between items-center">
-                <span>Payment Mode:</span>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm">Payment Mode :</span>
                 <FormControl variant="outlined" size="small" sx={{ width: '200px' }}>
                   <MuiSelect
                     value={formData.pay_mode}
