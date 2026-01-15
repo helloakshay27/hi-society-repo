@@ -998,8 +998,8 @@ function App() {
                 <Route path="/dailypdf" element={<DailyReport />} />
                 <Route path="/weeklypdf" element={<WeeklyReport />} />
                 <Route
-                  path="/fiout_form"
-                  element={<FioutMobileView  />}
+                  path="/fiout_form/:mappingId"
+                  element={<FioutMobileView />}
                 />
 
                 <Route

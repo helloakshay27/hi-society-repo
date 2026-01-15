@@ -86,7 +86,23 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
     useEffect(() => {
     setFetchError(null);
     const baseUrl = localStorage.getItem('baseUrl') || '';
-    const url = 'https://'+baseUrl+'/crm/admin/fitout_requests/B6EBB5FCE533E099649AC2A37F0C12F9/fitout_mappings.json';
+    // mappingId can be provided as ?mappingId=... or as the last segment of the path
+    const mappingId = (() => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const fromQuery = params.get('mappingId');
+        if (fromQuery) return fromQuery;
+        const parts = window.location.pathname.split('/').filter(Boolean);
+        const last = parts[parts.length - 1] || '';
+        // basic sanity: mapping ids are long hex-like strings, fallback to default
+        if (/^[A-Fa-f0-9]{8,}$/.test(last)) return last;
+      } catch (e) {
+        // ignore
+      }
+      return '';
+    })();
+
+    const url = `https://${baseUrl}/crm/admin/fitout_requests/${mappingId}/fitout_mappings.json`;
     let cancelled = false;
     fetch(url)
       .then((r) => {
