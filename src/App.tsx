@@ -513,7 +513,6 @@ import { KRCCFormDetail } from "./pages/KRCCFormDetail";
 import { EditRosterTemplatePage } from "./pages/setup/EditRosterTemplatePage";
 
 // Import Accounting Dashboard
-import { AccountingDashboard } from "./pages/AccountingDashboard";
 
 // Import Loyalty Rule Engine Dashboard
 import { LoyaltyRuleEngineDashboard } from "./pages/LoyaltyRuleEngineDashboard";
@@ -828,6 +827,7 @@ import FitoutRequestAdd from "./pages/FitoutRequestAdd";
 
 import { setupMemberRoutes } from "./routes/setupMemberRoutes";
 import { ViewUserPage } from "./pages/ViewUserPage";
+import FioutMobileView from "./pages/FioutMobileView";
 // import RouteLogger from "./components/RouteLogger";
 
 const queryClient = new QueryClient();
@@ -997,6 +997,10 @@ function App() {
                 <Route path="/thepdf" element={<AllContent />} />
                 <Route path="/dailypdf" element={<DailyReport />} />
                 <Route path="/weeklypdf" element={<WeeklyReport />} />
+                <Route
+                  path="/fiout/form"
+                  element={<FioutMobileView  />}
+                />
 
                 <Route
                   path="/login"
