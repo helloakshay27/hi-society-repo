@@ -1411,6 +1411,18 @@ const EventCreate = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
+      {/* Back Button */}
+      <div className="mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="text-sm font-medium">Back To Event List</span>
+        </button>
+      </div>
+
       {/* Stepper Component - Hide in preview mode */}
       {!isPreviewMode && <StepperComponent />}
 

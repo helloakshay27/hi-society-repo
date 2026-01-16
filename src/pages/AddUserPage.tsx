@@ -52,18 +52,14 @@ const RedIcon = styled(Box)(({ theme }) => ({
 }));
 
 const RedButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: '#C72030', // matches SVG color
-  color: 'white',
+  backgroundColor: '#E7E3D9',
+  color: '#C72030',
   borderRadius: 0,
   textTransform: 'none',
   padding: '8px 16px',
   fontFamily: 'Work Sans, sans-serif',
   fontWeight: 500,
-  boxShadow: '0 2px 4px rgba(199, 32, 48, 0.2)',
-  '&:hover': {
-    backgroundColor: '#B8252F',
-    boxShadow: '0 4px 8px rgba(199, 32, 48, 0.3)',
-  },
+  boxShadow: 'none',
 }));
 
 const DraftButton = styled(MuiButton)(({ theme }) => ({
