@@ -130,17 +130,15 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
             return (e.snag_answers as unknown[]).length > 0;
           });
         });
-  // If answeredExists is true, the server already has answers for this mapping.
-  // Previously we treated this as an early-exit and cleared categories so the
-  // 'Form already submitted' screen would show. To force the form to display
-  // even when answers exist on the server, we no longer clear categories or
-  // return early. Instead adapt the payload and show the form UI so users can
-  // still submit/update answers from this client.
-  // if (answeredExists) {
-  //   setServerSubmitted(true);
-  //   setCategories([]);
-  //   return;
-  // }
+        // If answeredExists is true, the server already has answers for this mapping.
+        // Previously we treated this as an early-exit and cleared categories so the
+        // 'Form already submitted' screen would show. By enabling the early-exit
+        // we prevent edits from this client when the server already has answers.
+        if (answeredExists) {
+          setServerSubmitted(true);
+          setCategories([]);
+          return;
+        }
 
   const adapted = adaptFromFitout(payload as FitoutItem[]);
   setCategories(adapted || []);
@@ -293,26 +291,25 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
     );
   }
 
-  // Temporarily disable the 'Form already submitted' early-return UI.
-  // if (serverSubmitted) {
-  //   return (
-  //     <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
-  //       <div className="w-full max-w-md px-4 pt-24">
-  //         <div className="relative">
-  //           <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
-  //         </div>
-  //       </div>
-  //
-  //       <div className="w-full max-w-md px-4 mt-24">
-  //         <div className="bg-white/90 rounded-md p-6 text-center shadow-md">
-  //           <h2 className="text-2xl font-semibold mb-2">Form already submitted</h2>
-  //           <p className="text-sm text-gray-700 mb-4">We found previous answers for this fitout mapping. The form cannot be edited.</p>
-  //           <button type="button" onClick={() => setFetchAttempt((s) => s + 1)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Reload</button>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (serverSubmitted) {
+    return (
+      <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
+        <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
+          <div className="relative">
+            <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
+          </div>
+        </div>
+
+        <div className="w-full max-w-md md:max-w-4xl px-4 mt-24">
+          <div className="bg-white/90 rounded-md p-6 md:p-8 text-center shadow-md">
+            <h2 className="text-2xl font-semibold mb-2">Form already submitted</h2>
+            <p className="text-sm text-gray-700 mb-4">We found previous answers for this fitout mapping. The form cannot be edited.</p>
+            <button type="button" onClick={() => setFetchAttempt((s) => s + 1)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Reload</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
