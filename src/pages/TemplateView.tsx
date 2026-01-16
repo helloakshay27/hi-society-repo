@@ -219,11 +219,11 @@ export default function TemplateView() {
               </div>
             </div>
 
-            <div className="flex items-start">
+            <div className="flex items-start col-span-3">
               <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
                 Policy Description
               </div>
-              <div className="text-[14px] font-semibold text-gray-900 flex-1 whitespace-pre-wrap">
+              <div className="text-[14px] font-semibold text-gray-900 flex-1 whitespace-pre-wrap break-words">
                 {template.description || '-'}
               </div>
             </div>

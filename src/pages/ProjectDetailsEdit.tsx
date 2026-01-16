@@ -250,6 +250,23 @@ const ProjectDetailsEdit = () => {
     plans: [],
     show_on_home: false,
     connectivities: [],
+    // Add dynamic image ratio keys for banner, cover, gallery, and floor plan images
+    image_1_by_1: [],
+    image_16_by_9: [],
+    image_9_by_16: [],
+    image_3_by_2: [],
+    cover_images_1_by_1: [],
+    cover_images_16_by_9: [],
+    cover_images_9_by_16: [],
+    cover_images_3_by_2: [],
+    gallery_image_16_by_9: [],
+    gallery_image_1_by_1: [],
+    gallery_image_9_by_16: [],
+    gallery_image_3_by_2: [],
+    project_2d_image_16_by_9: [],
+    project_2d_image_1_by_1: [],
+    project_2d_image_3_by_2: [],
+    project_2d_image_9_by_16: [],
   });
 
   const [projectsType, setprojectsType] = useState([]);
@@ -442,7 +459,7 @@ const ProjectDetailsEdit = () => {
           virtual_tour_url: virtualTourUrl,
         },
       ],
-    }));
+    }));    
 
     setVirtualTourName("");
     setVirtualTourUrl("");
@@ -582,7 +599,7 @@ const ProjectDetailsEdit = () => {
       try {
         await axios.delete(
           getFullUrl(`/projects/${projectId}/connectivities/${connectivity.id}.json`),
-          { headers: getAuthHeader() }
+          { headers: { Authorization: getAuthHeader() } }
         );
         toast.success('Connectivity deleted successfully');
       } catch (error) {
@@ -2158,12 +2175,31 @@ const ProjectDetailsEdit = () => {
           }
         });
       } else if (key === "virtual_tour_url_multiple" && Array.isArray(value) && value.length > 0) {
+        console.log("=== Virtual Tour Data Being Submitted ===");
+        console.log("Total Virtual Tour entries:", value.length);
+        console.log("Virtual Tour Array:", JSON.stringify(value, null, 2));
+        
         value.forEach((item, index) => {
-          if (item.virtual_tour_url && item.virtual_tour_name) {
-            data.append(`project[virtual_tour_url_multiple][${index}][virtual_tour_url]`, item.virtual_tour_url);
-            data.append(`project[virtual_tour_url_multiple][${index}][virtual_tour_name]`, item.virtual_tour_name);
-          }
+          const tourName = item.virtual_tour_name || "test";
+          const tourUrl = item.virtual_tour_url || "test";
+          
+          console.log(`Virtual Tour Entry ${index}:`, {
+            virtual_tour_name: tourName,
+            virtual_tour_url: tourUrl
+          });
+          
+          // Send all entries, even with empty fields (backend will handle validation)
+          data.append(
+            `project[virtual_tour_url_multiple][${index}][virtual_tour_name]`,
+            tourName
+          );
+          data.append(
+            `project[virtual_tour_url_multiple][${index}][virtual_tour_url]`,
+            tourUrl
+          );
         });
+        
+        console.log("=== End Virtual Tour Data ===");
       } else if (key === "Rera_Number_multiple" && Array.isArray(value) && value.length > 0) {
         console.log("=== RERA Data Being Submitted ===");
         console.log("Total RERA entries:", value.length);
@@ -2429,7 +2465,7 @@ const ProjectDetailsEdit = () => {
               >
                 <Building2 size={16} color="#C72030" />
               </span>
-              Basic Information
+              Basic Information njjnijn
             </h2>
           </div>
          <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>

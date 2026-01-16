@@ -1907,19 +1907,32 @@ const ProjectDetailsCreate = () => {
             );
           }
         });
-      } else if (key === "virtual_tour_url_multiple" && Array.isArray(value)) {
+      } else if (key === "virtual_tour_url_multiple" && Array.isArray(value) && value.length > 0) {
+        console.log("=== Virtual Tour Data Being Submitted ===");
+        console.log("Total Virtual Tour entries:", value.length);
+        console.log("Virtual Tour Array:", JSON.stringify(value, null, 2));
+        
         value.forEach((item, index) => {
-          if (item.virtual_tour_url && item.virtual_tour_name) {
-            data.append(
-              `project[virtual_tour_url_multiple][${index}][virtual_tour_url]`,
-              item.virtual_tour_url
-            );
-            data.append(
-              `project[virtual_tour_url_multiple][${index}][virtual_tour_name]`,
-              item.virtual_tour_name
-            );
-          }
+          const tourName = item.virtual_tour_name || "";
+          const tourUrl = item.virtual_tour_url || "";
+          
+          console.log(`Virtual Tour Entry ${index}:`, {
+            virtual_tour_name: tourName,
+            virtual_tour_url: tourUrl
+          });
+          
+          // Send all entries, even with empty fields (backend will handle validation)
+          data.append(
+            `project[virtual_tour_url_multiple][${index}][virtual_tour_name]`,
+            tourName
+          );
+          data.append(
+            `project[virtual_tour_url_multiple][${index}][virtual_tour_url]`,
+            tourUrl
+          );
         });
+        
+        console.log("=== End Virtual Tour Data ===");
       } else if (key === "Rera_Number_multiple" && Array.isArray(value)) {
         value.forEach((item, index) => {
           if (item.tower_name && item.rera_number) {
