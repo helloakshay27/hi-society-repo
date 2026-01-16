@@ -84,11 +84,10 @@ const EventDetails = () => {
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   const formatTime = (dateString) => {
@@ -98,6 +97,24 @@ const EventDetails = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const formatDateTime = (isoString) => {
+    if (!isoString) return "—";
+    try {
+      const date = new Date(isoString);
+      if (isNaN(date.getTime())) return "—";
+      return date.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch (error) {
+      return "—";
+    }
   };
 
   // QR Code handlers
@@ -226,7 +243,7 @@ const EventDetails = () => {
 
                   <div className="flex items-start gap-2">
                     <p className="text-sm text-gray-500 min-w-[140px]">Event Description</p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-base font-medium text-gray-900 flex-1 break-words">
                       {eventData?.description || "-"}
                     </p>
                   </div>
@@ -540,7 +557,7 @@ const EventDetails = () => {
                               <TableRow key={`cover-${index}`} className="hover:bg-gray-50">
                                 <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
                                 <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                                <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
+                                <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
                                 <TableCell className="py-3 px-4">
                                   <img
                                     src={file.document_url}
@@ -595,7 +612,7 @@ const EventDetails = () => {
                               <TableRow key={`event-${index}`} className="hover:bg-gray-50">
                                 <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
                                 <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                                <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
+                                <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
                                 <TableCell className="py-3 px-4">
                                   <img
                                     src={file.document_url}

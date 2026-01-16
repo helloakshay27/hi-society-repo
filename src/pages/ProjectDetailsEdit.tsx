@@ -4656,12 +4656,12 @@ const ProjectDetailsEdit = () => {
                         >
                           Ratio
                         </th>
-                        <th
+                        {/* <th
                           className="font-semibold text-gray-900 py-3 px-4 border-r text-left" 
                           style={{ borderColor: "#fff" }}
                         >
                           Order No.
-                        </th>
+                        </th> */}
                         <th className="font-semibold text-gray-900 py-3 px-4 text-left">
                           Action
                         </th>
@@ -4739,7 +4739,7 @@ const ProjectDetailsEdit = () => {
                                 {file.ratio || label}
                               </td>
 
-                              <td className="py-3 px-4">
+                              {/* <td className="py-3 px-4">
                                 <input
                                   type="number"
                                   className="w-20 border border-gray-300 rounded px-2 py-1 text-sm"
@@ -4754,7 +4754,7 @@ const ProjectDetailsEdit = () => {
                                   }
                                   placeholder="Order"
                                 />
-                              </td>
+                              </td> */}
 
                               <td className="py-3 px-4">
                                 <button

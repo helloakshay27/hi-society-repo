@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader, getFullUrl } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
+import { Switch } from "@mui/material";
 
 
 const ImageConfig = () => {
@@ -124,12 +125,51 @@ const ImageConfig = () => {
     }
   };
 
+  const handleToggleActive = async (id, currentValue) => {
+    try {
+      setImageConfigs(prevConfigs =>
+        prevConfigs.map(config =>
+          config.id === id
+            ? { ...config, active: !currentValue }
+            : config
+        )
+      );
+
+      const response = await axios.patch(`${baseURL}/system_constants/${id}.json`, 
+        { system_constant: { active: !currentValue } },
+        {
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.status !== 200) {
+        throw new Error('Failed to update active status');
+      }
+
+      toast.success(`Image configuration ${!currentValue ? 'activated' : 'deactivated'} successfully`);
+    } catch (error) {
+      console.error('Error updating active status:', error);
+      toast.error('Failed to update configuration status');
+      setImageConfigs(prevConfigs =>
+        prevConfigs.map(config =>
+          config.id === id
+            ? { ...config, active: currentValue }
+            : config
+        )
+      );
+    }
+  };
+
   const columns = [
     { key: "actions", label: "Actions", sortable: false },
     { key: "id", label: "Sr No", sortable: true },
     { key: "name", label: "Name", sortable: true },
     { key: "value", label: "Value", sortable: true },
     { key: "description", label: "Description", sortable: false },
+    { key: "active", label: "Active/Inactive", sortable: false },
   ];
 
   const renderCell = (item, columnKey) => {
@@ -166,6 +206,21 @@ const ImageConfig = () => {
         return <span>{item.value || "-"}</span>;
       case "description":
         return <span>{item.description || "-"}</span>;
+      case "active":
+        return (
+          <Switch
+            checked={item.active || false}
+            onChange={() => handleToggleActive(item.id, item.active)}
+            sx={{
+              '& .MuiSwitch-switchBase.Mui-checked': {
+                color: '#C72030',
+              },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: '#C72030',
+              },
+            }}
+          />
+        );
       default:
         return null;
     }

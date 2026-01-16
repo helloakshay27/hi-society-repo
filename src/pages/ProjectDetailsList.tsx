@@ -153,6 +153,46 @@ const ProjectDetailsList = () => {
     }
   };
 
+  const handleTogglePublished = async (projectId: number, currentValue: boolean) => {
+    try {
+      // Update the local state immediately for better UX
+      setProjects(prevProjects => 
+        prevProjects.map(project => 
+          project.id === projectId 
+            ? { ...project, published: !currentValue }
+            : project
+        )
+      );
+
+      // API call to update the server
+      const response = await fetch(getFullUrl(`/projects/${projectId}.json`), {
+        method: 'PATCH',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ project: { published: !currentValue } }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update published status');
+      }
+
+      toast.success(`Project ${!currentValue ? 'activated' : 'deactivated'} successfully`);
+    } catch (error) {
+      console.error('Error updating published status:', error);
+      toast.error('Failed to update project status');
+      // Revert the change on error
+      setProjects(prevProjects => 
+        prevProjects.map(project => 
+          project.id === projectId 
+            ? { ...project, published: currentValue }
+            : project
+        )
+      );
+    }
+  };
+
   const columns = [
    
     { key: 'actions', label: 'Action', sortable: false },
@@ -164,6 +204,7 @@ const ProjectDetailsList = () => {
     { key: 'status', label: 'Project Construction Status', sortable: true },
     { key: 'configurations', label: 'Configuration Type', sortable: true },
     { key: 'project_tag', label: 'Project Tag', sortable: true },
+    { key: 'published', label: 'Status', sortable: false },
     { key: 'show_on_home', label: 'Show on Home', sortable: false },
   ];
 
@@ -186,6 +227,21 @@ const ProjectDetailsList = () => {
           <span className="text-sm text-gray-700">
             {((currentPage - 1) * 10) + (index || 0) + 1}
           </span>
+        );
+      case 'published':
+        return (
+          <Switch
+            checked={item.published || false}
+            onChange={() => handleTogglePublished(item.id, item.published)}
+            sx={{
+              '& .MuiSwitch-switchBase.Mui-checked': {
+                color: '#C72030',
+              },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: '#C72030',
+              },
+            }}
+          />
         );
       case 'show_on_home':
         return (

@@ -4784,6 +4784,7 @@ const ProjectDetailsCreate = () => {
                         </h5>
 
                         <button
+                          type="button"
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_creatives").click()}
                         >
@@ -4859,6 +4860,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
+                          type="button"
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_creative_generics").click()}
                         >
@@ -4932,6 +4934,7 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
+                          type="button"
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_creative_offers").click()}
                         >

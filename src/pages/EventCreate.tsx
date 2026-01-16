@@ -589,9 +589,91 @@ const EventCreate = () => {
 
     if (!formData.event_name) {
       errors.push("Event Name is required.");
-      return errors; // Return the first error immediately
     }
+    if (!formData.event_type) {
+      errors.push("Event Type is required.");
+    }
+    if (!formData.event_date) {
+      errors.push("Event Date is required.");
+    }
+    if (!formData.event_time) {
+      errors.push("Event Time is required.");
+    }
+    if (!formData.rsvp_action) {
+      errors.push("RSVP Action is required.");
+    }
+    if (!formData.shared) {
+      errors.push("Share With is required.");
+    }
+    
+    // Validate shared with individual - require at least one user
+    if (formData.shared === "individual" && (!formData.user_id || formData.user_id.length === 0)) {
+      errors.push("Please select at least one user when sharing with individuals.");
+    }
+    
+    // Validate shared with group - require at least one group
+    if (formData.shared === "group" && (!formData.group_id || formData.group_id.length === 0)) {
+      errors.push("Please select at least one group when sharing with groups.");
+    }
+
     return errors;
+  };
+
+  // Validate Step 0 (Event Details)
+  const validateStep0 = () => {
+    toast.dismiss();
+    const errors = [];
+
+    if (!formData.event_name || !formData.event_name.trim()) {
+      errors.push("Event Name is required.");
+    }
+    if (!formData.event_type) {
+      errors.push("Event Type is required.");
+    }
+    if (!formData.event_date) {
+      errors.push("Event Date is required.");
+    }
+    if (!formData.event_time) {
+      errors.push("Event Time is required.");
+    }
+    if (!formData.rsvp_action) {
+      errors.push("RSVP Action is required.");
+    }
+    if (!formData.shared) {
+      errors.push("Share With is required.");
+    }
+    
+    // Validate shared with individual - require at least one user
+    if (formData.shared === "individual" && (!formData.user_id || formData.user_id.length === 0)) {
+      errors.push("Please select at least one user when sharing with individuals.");
+    }
+    
+    // Validate shared with group - require at least one group
+    if (formData.shared === "group" && (!formData.group_id || formData.group_id.length === 0)) {
+      errors.push("Please select at least one group when sharing with groups.");
+    }
+
+    if (errors.length > 0) {
+      errors.forEach(error => toast.error(error));
+      return false;
+    }
+    return true;
+  };
+
+  // Validate Step 1 (Event Images)
+  const validateStep1 = () => {
+    toast.dismiss();
+    // Event images are optional, so no validation needed
+    // You can add validation here if event images become mandatory
+    return true;
+  };
+
+  // Validate Step 2 (Invite CPs) - only if RSVP is Yes
+  const validateStep2 = () => {
+    toast.dismiss();
+    // Channel partner invitation is optional
+    // You can add validation here if CP invitation becomes mandatory
+    return true;
   };
 
   const handleSubmit = async (e) => {
@@ -1107,6 +1189,28 @@ const EventCreate = () => {
   };
 
   const handleProceedToSave = () => {
+    // Validate current step before proceeding
+    let isValid = false;
+    
+    switch (currentStep) {
+      case 0:
+        isValid = validateStep0();
+        break;
+      case 1:
+        isValid = validateStep1();
+        break;
+      case 2:
+        isValid = validateStep2();
+        break;
+      default:
+        isValid = true;
+    }
+
+    // If validation fails, don't proceed
+    if (!isValid) {
+      return;
+    }
+
     if (!completedSteps.includes(currentStep)) {
       setCompletedSteps(prev => [...prev, currentStep]);
     }
@@ -1157,6 +1261,28 @@ const EventCreate = () => {
   };
 
   const handleSaveToDraft = () => {
+    // Validate current step before saving to draft
+    let isValid = false;
+    
+    switch (currentStep) {
+      case 0:
+        isValid = validateStep0();
+        break;
+      case 1:
+        isValid = validateStep1();
+        break;
+      case 2:
+        isValid = validateStep2();
+        break;
+      default:
+        isValid = true;
+    }
+
+    // If validation fails, don't save to draft
+    if (!isValid) {
+      return;
+    }
+
     if (!completedSteps.includes(currentStep)) {
       setCompletedSteps(prev => [...prev, currentStep]);
     }

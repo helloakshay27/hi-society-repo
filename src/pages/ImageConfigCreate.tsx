@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ const CreateImageConfiguration = () => {
   const [loading, setLoading] = useState(false);
   const [selectedName, setSelectedName] = useState("");
   const [selectedValue, setSelectedValue] = useState("");
+  const [existingConfigs, setExistingConfigs] = useState([]);
 
   // Define the name options (static)
   const nameOptions = [
@@ -116,6 +117,26 @@ const CreateImageConfiguration = () => {
     ]
   };
 
+  // Fetch existing configurations on mount
+  const fetchExistingConfigs = async () => {
+    try {
+      const response = await axios.get(`${baseURL}/system_constants.json?q[description_eq]=ImagesConfiguration`, {
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+      setExistingConfigs(response.data || []);
+    } catch (error) {
+      console.error("Error fetching existing configurations:", error);
+    }
+  };
+
+  // Load existing configs on component mount
+  useEffect(() => {
+    fetchExistingConfigs();
+  }, []);
+
   // Handle name change
   const handleNameChange = (value) => {
     setSelectedName(value);
@@ -138,6 +159,16 @@ const CreateImageConfiguration = () => {
 
     if (!selectedValue) {
       toast.error("Please select a value");
+      return;
+    }
+
+    // Check for duplicate configuration
+    const isDuplicate = existingConfigs.some(
+      config => config.name === selectedName && config.value === selectedValue
+    );
+
+    if (isDuplicate) {
+      toast.error(`Image configuration with Name "${selectedName}" and Value "${selectedValue}" already exists. Please select different options.`);
       return;
     }
 

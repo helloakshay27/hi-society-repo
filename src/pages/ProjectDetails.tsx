@@ -9,6 +9,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar } from "@mui/material";
 import { Settings as SettingsOutlinedIcon, ArrowLeft } from "lucide-react";
 
+// Helper function to format ISO timestamp to readable format
+const formatDateTime = (isoString) => {
+  if (!isoString) return "—";
+  try {
+    const date = new Date(isoString);
+    return date.toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  } catch (error) {
+    return isoString;
+  }
+};
 
 const ProjectDetails = () => {
   const { id } = useParams();
@@ -1040,7 +1057,7 @@ const ProjectDetails = () => {
                                 <td>{plan.name}</td>
                                 <td>{img.document_file_name}</td>
                                 <td>{img.document_content_type}</td>
-                                <td>{img.document_updated_at}</td>
+                                <td>{formatDateTime(img.document_updated_at)}</td>
                                 <td>
                                   <img
                                     src={img.document_url}
@@ -1135,7 +1152,7 @@ const ProjectDetails = () => {
                               <td>{file.gallery_type || "N/A"}</td>
                               <td>{attachment.document_file_name || "N/A"}</td>
                               <td>{attachment.document_content_type}</td>
-                              <td>{attachment.document_updated_at}</td>
+                              <td>{formatDateTime(attachment.document_updated_at)}</td>
                               <td>
                                 <a href={`${attachment.document_url}`}>
                                   {" "}
@@ -1191,7 +1208,7 @@ const ProjectDetails = () => {
                             <TableRow key={`event-${index}`} className="hover:bg-gray-50">
                               <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
                               <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                              <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
+                              <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
                               <TableCell className="py-3 px-4">
                                 <img
                                   src={file.document_url}
@@ -1250,7 +1267,7 @@ const ProjectDetails = () => {
                             <TableRow key={`cover-${index}`} className="hover:bg-gray-50">
                               <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
                               <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                              <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
+                              <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
                               <TableCell className="py-3 px-4">
                                 <img
                                   src={file.document_url}
@@ -1305,7 +1322,7 @@ const ProjectDetails = () => {
                             <TableRow key={`gallery-${index}`} className="hover:bg-gray-50">
                               <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
                               <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                              <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
+                              <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
                               <TableCell className="py-3 px-4">
                                 <img
                                   src={file.document_url}
@@ -1360,7 +1377,7 @@ const ProjectDetails = () => {
                             <TableRow key={`floor-plan-${index}`} className="hover:bg-gray-50">
                               <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
                               <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                              <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
+                              <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
                               <TableCell className="py-3 px-4">
                                 <img
                                   src={file.document_url}
@@ -1399,7 +1416,7 @@ const ProjectDetails = () => {
                         <TableRow className="hover:bg-gray-50">
                           <TableCell className="text-gray-900 py-3 px-4">{formData.brochure?.document_file_name}</TableCell>
                           <TableCell className="text-gray-900 py-3 px-4">{formData.brochure?.document_content_type}</TableCell>
-                          <TableCell className="text-gray-900 py-3 px-4">{formData.brochure?.document_updated_at}</TableCell>
+                          <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(formData.brochure?.document_updated_at)}</TableCell>
                           <TableCell className="py-3 px-4">
                             <a href={formData.brochure?.document_url} className="text-black-600 hover:underline">Download</a>
                           </TableCell>
@@ -1504,7 +1521,7 @@ const ProjectDetails = () => {
                           <TableRow key={`offers-${index}`} className="hover:bg-gray-50">
                             <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
                             <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
+                            <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
                             <TableCell className="py-3 px-4">
                               <img src={file.document_url} alt={`Offer ${index}`} className="w-20 h-20 object-cover rounded" />
                             </TableCell>
@@ -1539,7 +1556,7 @@ const ProjectDetails = () => {
                           <TableRow key={`video-${index}`} className="hover:bg-gray-50">
                             <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
                             <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
-                            <TableCell className="text-gray-900 py-3 px-4">{file.document_updated_at}</TableCell>
+                            <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
                             <TableCell className="py-3 px-4">
                               <img src={file.document_url} alt={`Video ${index}`} className="w-20 h-20 object-cover rounded" />
                             </TableCell>
