@@ -70,7 +70,7 @@ const CustomMultiValue = (props) => (
       style={{
         position: "absolute",
         right: "-10px",
-        top: "3px",
+        top: "-5px",
         transform: "translateY(-50%), translateX(-50%)",
         background: "transparent",
         border: "1px solid #ccc",
@@ -81,12 +81,23 @@ const CustomMultiValue = (props) => (
         alignItems: "start",
         justifyContent: "center",
         color: "#666",
-        fontSize: "16px",
+        fontSize: "12px",
         lineHeight: "1",
-        width: "20px",
-        height: "20px",
+        width: "16px",
+        height: "16px",
+        transition: "background 0.2s, color 0.2s, border-color 0.2s",
       }}
       type="button"
+      onMouseOver={e => {
+        (e.currentTarget as HTMLButtonElement).style.background = "#f6f4ee";
+        (e.currentTarget as HTMLButtonElement).style.color = "#C72030";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "#C72030";
+      }}
+      onMouseOut={e => {
+        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+        (e.currentTarget as HTMLButtonElement).style.color = "#666";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "#ccc";
+      }}
     >
       ×
     </button>
@@ -2448,6 +2459,7 @@ const ProjectDetailsCreate = () => {
                   },
                   htmlInput: {
                     min: 0,
+                    step: "0.01",
                   },
                 }}
                 InputProps={{
@@ -2474,6 +2486,7 @@ const ProjectDetailsCreate = () => {
                   },
                   htmlInput: {
                     min: 0,
+                    step: "0.01",
                   },
                 }}
                 InputProps={{
@@ -2499,6 +2512,7 @@ const ProjectDetailsCreate = () => {
                   },
                   htmlInput: {
                     min: 0,
+                    step: "0.01",
                   },
                 }}
                 InputProps={{
@@ -2525,6 +2539,7 @@ const ProjectDetailsCreate = () => {
                   },
                   htmlInput: {
                     min: 0,
+                    step: "0.01",
                   },
                 }}
                 InputProps={{
@@ -2610,30 +2625,32 @@ const ProjectDetailsCreate = () => {
               />
 
               <TextField
-                label="Land Area"
-                placeholder="Enter Land Area"
-                type="number"
-                value={formData.Land_Area}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    Land_Area: e.target.value,
-                  }))
-                }
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                  htmlInput: {
-                    min: 0,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
+  label="Land Area"
+  placeholder="Enter Land Area"
+  type="number"
+  value={formData.Land_Area}
+  onChange={(e) =>
+    setFormData((prev) => ({
+      ...prev,
+      Land_Area: e.target.value,
+    }))
+  }
+  fullWidth
+  variant="outlined"
+  slotProps={{
+    inputLabel: {
+      shrink: true,
+    },
+    htmlInput: {
+      min: 0,
+      step: "0.01", //  allows 2 decimal places
+    },
+  }}
+  InputProps={{
+    sx: fieldStyles,
+  }}
+/>
+
 
               <FormControl
                 fullWidth

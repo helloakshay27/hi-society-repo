@@ -63,6 +63,10 @@ export const FMGroupDashboard = () => {
     }
   };
 
+  const handleViewGroup = (groupId: number) => {
+    navigate(`/crm/groups/details/${groupId}`);
+  };
+
   const handleEditGroup = async (groupId: number) => {
     try {
       const response = await axios.get(`${baseURL}/crm/usergroups/${groupId}.json`, {
@@ -147,7 +151,11 @@ export const FMGroupDashboard = () => {
                   <TableRow key={group.id} className="hover:bg-gray-50">
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleViewGroup(group.id)}
+                        >
                           <Eye className="w-4 h-4" />
                         </Button>
                         <Button 
