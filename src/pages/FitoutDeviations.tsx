@@ -149,7 +149,7 @@ const FitoutDeviations: React.FC = () => {
   };
 
   const handleViewDeviation = (id: number) => {
-    navigate(`/maintenance/fitout-deviation-details/${id}`);
+    navigate(`/fitout/deviation-details/${id}`);
   };
 
   const handleEditDeviation = (id: number) => {

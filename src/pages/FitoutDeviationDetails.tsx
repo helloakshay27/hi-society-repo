@@ -1,49 +1,63 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, ArrowLeft } from 'lucide-react';
+import { Eye, ArrowLeft, Send, Upload, X, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
 import axios from 'axios';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Deviation {
   id: number;
+  resource_id: number;
+  resource_type: string;
+  user_id: number;
+  active: boolean;
+  description: string;
+  complaint_status_id: number | null;
   created_at: string;
   updated_at: string;
-  status: string;
-  user: {
-    id: number;
-    email: string;
-  };
-  fitout_request: {
-    id: number;
-  };
-  attachments: any[];
-  comments: any[];
+  snag_checklist_id: number | null;
+  user_society_id: number | null;
+  comment: string | null;
 }
 
-interface DeviationDetail {
-  flat_id: number | null;
-  society_flat?: {
-    id: number;
-    flat_no: string;
-    block_no: string | null;
-  };
+interface ApiResponse {
+  success: boolean;
+  society_flat_id: number;
   deviations: Deviation[];
+  complaint_statuses: unknown[];
 }
 
 interface TableDeviation {
   id: number;
-  fitout_request_id: number;
+  resource_id: number;
   description: string;
   status: string;
   created_on: string;
-  created_by: string;
-  comments: string;
-  attachments: number;
-  send_violation: string;
+  updated_on: string;
+  comment: string;
+  user_id: number;
+  snag_checklist_id: number | null;
 }
 
 const FitoutDeviationDetails: React.FC = () => {
@@ -52,84 +66,69 @@ const FitoutDeviationDetails: React.FC = () => {
   const baseURL = API_CONFIG.BASE_URL;
   
   const [deviations, setDeviations] = useState<TableDeviation[]>([]);
-  const [flatDetails, setFlatDetails] = useState<{ tower: string; flat: string }>({ tower: '', flat: '' });
+  const [flatDetails, setFlatDetails] = useState<{ societyFlatId: number | null }>({ societyFlatId: null });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  
+  // Edit Status Dialog State
+  const [isEditStatusOpen, setIsEditStatusOpen] = useState(false);
+  const [selectedEditDeviationId, setSelectedEditDeviationId] = useState<number | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [statusComment, setStatusComment] = useState('');
+  const [isSubmittingStatus, setIsSubmittingStatus] = useState(false);
+  
+  // Send Violation Dialog State
+  const [isSendViolationOpen, setIsSendViolationOpen] = useState(false);
+  const [selectedDeviationId, setSelectedDeviationId] = useState<number | null>(null);
+  const [violationMessage, setViolationMessage] = useState('');
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [isSubmittingViolation, setIsSubmittingViolation] = useState(false);
 
   const fetchDeviationDetails = useCallback(async (search: string) => {
     setLoading(true);
     setIsSearching(!!search);
     try {
-      const response = await axios.get(`${baseURL}/crm/admin/deviation_details.json`, {
-        headers: {
-          'Authorization': getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const deviationDetails: DeviationDetail[] = response.data.deviation_details || [];
-      
-      // Find the specific flat's deviations
-      const flatDetail = deviationDetails.find(
-        (detail) => detail.flat_id?.toString() === flat_id
+      const response = await axios.get<ApiResponse>(
+        `${baseURL}/crm/admin/deviation_details/flat_deviations.json`,
+        {
+          params: {
+            society_flat_id: flat_id,
+          },
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+        }
       );
 
-      if (!flatDetail) {
-        toast.error('Fitout deviation details not found');
-        navigate('/maintenance/fitout-deviations');
+      if (!response.data.success) {
+        toast.error('Failed to fetch deviation details');
+        navigate('/fitout/deviations');
         return;
       }
 
       // Set flat details
       setFlatDetails({
-        tower: flatDetail.society_flat?.block_no || '-',
-        flat: flatDetail.society_flat?.flat_no || '-',
+        societyFlatId: response.data.society_flat_id,
       });
 
-      // Get unique fitout requests with their deviations
-      const fitoutRequestMap = new Map<number, Deviation[]>();
-      
-      flatDetail.deviations.forEach((deviation) => {
-        const requestId = deviation.fitout_request.id;
-        if (!fitoutRequestMap.has(requestId)) {
-          fitoutRequestMap.set(requestId, []);
-        }
-        fitoutRequestMap.get(requestId)?.push(deviation);
-      });
-
-      // Transform to table format - one row per fitout request
-      const transformedData: TableDeviation[] = Array.from(fitoutRequestMap.entries()).map(
-        ([requestId, deviationList]) => {
-          // Get the first deviation for main info
-          const firstDeviation = deviationList[0];
-          
-          // Get most recent status
-          const sortedByDate = [...deviationList].sort((a, b) => {
-            const dateA = new Date(a.updated_at || a.created_at).getTime();
-            const dateB = new Date(b.updated_at || b.created_at).getTime();
-            return dateB - dateA;
-          });
-          
-          const mostRecentStatus = sortedByDate[0].status;
-          
-          // Count total attachments and comments
-          const totalAttachments = deviationList.reduce((sum, d) => sum + d.attachments.length, 0);
-          const totalComments = deviationList.reduce((sum, d) => sum + d.comments.length, 0);
-
-          return {
-            id: firstDeviation.id,
-            fitout_request_id: requestId,
-            description: `Fitout Request #${requestId}`,
-            status: mostRecentStatus,
-            created_on: firstDeviation.created_at,
-            created_by: firstDeviation.user.email,
-            comments: totalComments > 0 ? `${totalComments} comment(s)` : 'Not Available',
-            attachments: totalAttachments,
-            send_violation: 'Send Violation',
-          };
-        }
-      );
+      // Transform the deviations data
+      const transformedData: TableDeviation[] = response.data.deviations.map((deviation) => ({
+        id: deviation.id,
+        resource_id: deviation.resource_id,
+        description: deviation.description,
+        status: deviation.complaint_status_id 
+          ? 'Resolved' 
+          : deviation.active 
+          ? 'Active' 
+          : 'Inactive',
+        created_on: deviation.created_at,
+        updated_on: deviation.updated_at,
+        comment: deviation.comment || 'No comment',
+        user_id: deviation.user_id,
+        snag_checklist_id: deviation.snag_checklist_id,
+      }));
 
       // Client-side search filtering
       let filteredData = transformedData;
@@ -138,7 +137,8 @@ const FitoutDeviationDetails: React.FC = () => {
         filteredData = transformedData.filter((item) =>
           item.description?.toLowerCase().includes(searchLower) ||
           item.status?.toLowerCase().includes(searchLower) ||
-          item.created_by?.toLowerCase().includes(searchLower)
+          item.comment?.toLowerCase().includes(searchLower) ||
+          item.resource_id?.toString().includes(searchLower)
         );
       }
 
@@ -161,15 +161,122 @@ const FitoutDeviationDetails: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate('/maintenance/fitout-deviations');
+    navigate('/fitout/deviations');
   };
 
   const handleViewDeviation = (id: number) => {
-    navigate(`/maintenance/fitout-deviation-detail/${id}`);
+    navigate(`/fitout/deviation-detail/${id}`);
   };
 
-  const handleSendViolation = (id: number) => {
-    toast.info(`Send Violation for deviation #${id} - Coming soon`);
+  const handleEditStatus = (item: TableDeviation) => {
+    setSelectedEditDeviationId(item.id);
+    setSelectedStatus(item.status);
+    setStatusComment(item.comment || '');
+    setIsEditStatusOpen(true);
+  };
+
+  const handleSubmitStatusEdit = async () => {
+    if (!selectedStatus) {
+      toast.error('Please select a status');
+      return;
+    }
+
+    if (!selectedEditDeviationId) {
+      toast.error('No deviation selected');
+      return;
+    }
+
+    setIsSubmittingStatus(true);
+    try {
+      // TODO: Replace with actual API endpoint when available
+      await axios.put(
+        `${baseURL}/crm/admin/deviation_details/${selectedEditDeviationId}.json`,
+        {
+          status: selectedStatus,
+          comment: statusComment,
+        },
+        {
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
+      toast.success('Status updated successfully');
+      setIsEditStatusOpen(false);
+      setSelectedStatus('');
+      setStatusComment('');
+      setSelectedEditDeviationId(null);
+      fetchDeviationDetails(searchTerm);
+    } catch (err) {
+      toast.error('Failed to update status');
+      console.error('Error updating status:', err);
+    } finally {
+      setIsSubmittingStatus(false);
+    }
+  };
+
+  const handleSendDeviation = (id: number) => {
+    setSelectedDeviationId(id);
+    setViolationMessage('');
+    setAttachmentFiles([]);
+    setIsSendViolationOpen(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setAttachmentFiles(prev => [...prev, ...filesArray]);
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmitViolation = async () => {
+    if (!violationMessage.trim()) {
+      toast.error('Please enter a violation message');
+      return;
+    }
+
+    if (!selectedDeviationId) {
+      toast.error('No deviation selected');
+      return;
+    }
+
+    setIsSubmittingViolation(true);
+    try {
+      const formData = new FormData();
+      formData.append('comment', violationMessage);
+      
+      attachmentFiles.forEach((file) => {
+        formData.append('attachments[]', file);
+      });
+
+      await axios.put(
+        `${baseURL}/crm/admin/deviation_details/${selectedDeviationId}/send_notice.json`,
+        formData,
+        {
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      
+      toast.success('Violation sent successfully');
+      setIsSendViolationOpen(false);
+      setViolationMessage('');
+      setAttachmentFiles([]);
+      setSelectedDeviationId(null);
+    } catch (err) {
+      toast.error('Failed to send violation');
+      console.error('Error sending violation:', err);
+    } finally {
+      setIsSubmittingViolation(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -187,13 +294,14 @@ const FitoutDeviationDetails: React.FC = () => {
   const columns = [
     { key: 'actions', label: 'Actions', sortable: false },
     { key: 'id', label: 'ID', sortable: true },
-    { key: 'fitout_request_id', label: 'Fitout Request ID', sortable: true },
+    { key: 'resource_id', label: 'Resource ID', sortable: true },
     { key: 'description', label: 'Description', sortable: true },
     { key: 'status', label: 'Status', sortable: true },
     { key: 'created_on', label: 'Created On', sortable: true },
-    { key: 'created_by', label: 'Created By', sortable: true },
-    { key: 'comments', label: 'Comments', sortable: false },
-    { key: 'attachments', label: 'Attachments', sortable: false },
+    { key: 'updated_on', label: 'Updated On', sortable: true },
+    { key: 'comment', label: 'Comment', sortable: false },
+    { key: 'user_id', label: 'User ID', sortable: true },
+    { key: 'snag_checklist_id', label: 'Checklist ID', sortable: true },
     { key: 'send_violation', label: 'Send Violation', sortable: false },
   ];
 
@@ -205,23 +313,24 @@ const FitoutDeviationDetails: React.FC = () => {
             <Button variant="ghost" size="sm" onClick={() => handleViewDeviation(item.id)} title="View">
               <Eye className="w-4 h-4 text-gray-700" />
             </Button>
+            <Button variant="ghost" size="sm" onClick={() => handleEditStatus(item)} title="Edit Status">
+              <Pencil className="w-4 h-4 text-orange-600" />
+            </Button>
           </div>
         );
       case 'id':
         return item.id;
-      case 'fitout_request_id':
-        return item.fitout_request_id;
+      case 'resource_id':
+        return item.resource_id;
       case 'description':
-        return item.description;
+        return <span className="max-w-xs truncate" title={item.description}>{item.description}</span>;
       case 'status':
         return (
           <span 
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              item.status === 'Complied' 
+              item.status === 'Resolved' 
                 ? 'bg-green-100 text-green-800' 
-                : item.status === 'Pending'
-                ? 'bg-yellow-100 text-yellow-800'
-                : item.status === 'Work In Progress'
+                : item.status === 'Active'
                 ? 'bg-blue-100 text-blue-800'
                 : 'bg-gray-100 text-gray-800'
             }`}
@@ -231,16 +340,18 @@ const FitoutDeviationDetails: React.FC = () => {
         );
       case 'created_on':
         return formatDate(item.created_on);
-      case 'created_by':
-        return item.created_by;
-      case 'comments':
-        return item.comments;
-      case 'attachments':
-        return item.attachments > 0 ? item.attachments : '-';
+      case 'updated_on':
+        return formatDate(item.updated_on);
+      case 'comment':
+        return <span className="max-w-xs truncate" title={item.comment}>{item.comment}</span>;
+      case 'user_id':
+        return item.user_id;
+      case 'snag_checklist_id':
+        return item.snag_checklist_id ?? '-';
       case 'send_violation':
         return (
           <Button 
-            onClick={() => handleSendViolation(item.id)}
+            onClick={() => handleSendDeviation(item.id)}
             className="bg-[#00B8D9] text-white hover:bg-[#00B8D9]/90 h-8 px-3 text-xs font-medium"
           >
             Send Violation
@@ -278,8 +389,8 @@ const FitoutDeviationDetails: React.FC = () => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Fit Out Rounder Checklist</h1>
         <div className="mt-2 flex gap-4 text-sm text-gray-600">
-          <span><strong>Tower:</strong> {flatDetails.tower}</span>
-          <span><strong>Flat:</strong> {flatDetails.flat}</span>
+          <span><strong>Society Flat ID:</strong> {flatDetails.societyFlatId || flat_id}</span>
+          <span><strong>Total Deviations:</strong> {deviations.length}</span>
         </div>
       </div>
 
@@ -301,6 +412,161 @@ const FitoutDeviationDetails: React.FC = () => {
           loadingMessage={isSearching ? "Searching..." : "Loading deviations..."}
         />
       </div>
+
+      {/* Edit Status Dialog */}
+      <Dialog open={isEditStatusOpen} onOpenChange={setIsEditStatusOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Status</DialogTitle>
+            <DialogDescription>
+              Update the status and add comments for this deviation.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {/* Status Dropdown */}
+            <div className="grid gap-2">
+              <Label htmlFor="status">Status *</Label>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Resolved">Resolved</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Work In Progress">Work In Progress</SelectItem>
+                  <SelectItem value="Complied">Complied</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Comments */}
+            <div className="grid gap-2">
+              <Label htmlFor="comment">Comment</Label>
+              <Textarea
+                id="comment"
+                placeholder="Enter your comments here..."
+                value={statusComment}
+                onChange={(e) => setStatusComment(e.target.value)}
+                rows={4}
+                className="resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditStatusOpen(false)}
+              disabled={isSubmittingStatus}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              onClick={handleSubmitStatusEdit}
+              disabled={isSubmittingStatus}
+              className="bg-orange-500 text-white hover:bg-orange-600"
+            >
+              {isSubmittingStatus ? 'Submitting...' : 'Submit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Violation Dialog */}
+      <Dialog open={isSendViolationOpen} onOpenChange={setIsSendViolationOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Send Violation</DialogTitle>
+            <DialogDescription>
+              Send a violation notice with message and attachments.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {/* Violation Message */}
+            <div className="grid gap-2">
+              <Label htmlFor="violation-message">Violation Message *</Label>
+              <Textarea
+                id="violation-message"
+                placeholder="Enter violation details..."
+                value={violationMessage}
+                onChange={(e) => setViolationMessage(e.target.value)}
+                rows={5}
+                className="resize-none"
+              />
+            </div>
+
+            {/* Attachments */}
+            <div className="grid gap-2">
+              <Label htmlFor="attachments">Attachments</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="attachments"
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('attachments')?.click()}
+                  className="w-full"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Files
+                </Button>
+              </div>
+              
+              {/* Display selected files */}
+              {attachmentFiles.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  <p className="text-sm text-gray-600">Selected files:</p>
+                  {attachmentFiles.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md border"
+                    >
+                      <span className="text-sm text-gray-700 truncate flex-1">
+                        {file.name}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveFile(index)}
+                        className="ml-2 h-6 w-6 p-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsSendViolationOpen(false)}
+              disabled={isSubmittingViolation}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              onClick={handleSubmitViolation}
+              disabled={isSubmittingViolation}
+              className="bg-[#00B8D9] text-white hover:bg-[#00B8D9]/90"
+            >
+              {isSubmittingViolation ? 'Sending...' : 'Submit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

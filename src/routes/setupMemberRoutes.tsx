@@ -591,9 +591,9 @@ export const setupMemberRoutes = (
     <Route path="/fitout/checklists/details/:id" Component={withSuspense(FitoutChecklistDetailsPage)} />
     <Route path="/fitout/categories-subcategories" Component={withSuspense(CategorySubcategoryPage)} />
     <Route path="/fitout/deviations" Component={withSuspense(FitoutDeviations)} />
-    <Route path="/maintenance/fitout-deviations" Component={withSuspense(FitoutDeviations)} />
-    <Route path="/maintenance/fitout-deviation-details/:flat_id" Component={withSuspense(FitoutDeviationDetails)} />
-    <Route path="/maintenance/fitout-deviation-detail/:deviation_id" Component={withSuspense(ViolationDetail)} />
+    <Route path="/fitout/deviations" Component={withSuspense(FitoutDeviations)} />
+    <Route path="/fitout/deviation-details/:flat_id" Component={withSuspense(FitoutDeviationDetails)} />
+    <Route path="/fitout/deviation-detail/:deviation_id" Component={withSuspense(ViolationDetail)} />
     <Route path="/fitout/report" Component={withSuspense(FitoutReport)} />
 
     {/* SmartSecure Routes */}

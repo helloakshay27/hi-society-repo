@@ -2,12 +2,32 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Download } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Download, Upload, X, FileText, Clock, User, MessageSquare, Paperclip, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
 import axios from 'axios';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Attachment {
   id: number;
@@ -20,13 +40,13 @@ interface Comment {
   id: number;
   body: string;
   created_at: string;
-  commentor: {
+  commentor?: {
     id: number;
     email: string;
   };
 }
 
-interface Deviation {
+interface DeviationDetail {
   id: number;
   created_at: string;
   updated_at: string;
@@ -43,11 +63,13 @@ interface Deviation {
       block_no: string | null;
     };
   };
-  fitout_request: {
-    id: number;
-  };
   attachments: Attachment[];
   comments: Comment[];
+}
+
+interface ApiResponse {
+  deviation_detail: DeviationDetail;
+  complaint_statuses: unknown[];
 }
 
 interface ViolationTableRow {
@@ -62,49 +84,55 @@ const ViolationDetail: React.FC = () => {
   const { deviation_id } = useParams<{ deviation_id: string }>();
   const baseURL = API_CONFIG.BASE_URL;
   
-  const [deviation, setDeviation] = useState<Deviation | null>(null);
+  const [deviation, setDeviation] = useState<DeviationDetail | null>(null);
   const [violationDetails, setViolationDetails] = useState<ViolationTableRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [activeTab, setActiveTab] = useState("deviation-details");
+  
+  // Edit Status Dialog State
+  const [isEditStatusOpen, setIsEditStatusOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [statusComment, setStatusComment] = useState('');
+  const [isSubmittingStatus, setIsSubmittingStatus] = useState(false);
+  
+  // Send Violation Dialog State
+  const [isSendViolationOpen, setIsSendViolationOpen] = useState(false);
+  const [violationMessage, setViolationMessage] = useState('');
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [isSubmittingViolation, setIsSubmittingViolation] = useState(false);
 
   const fetchViolationDetail = useCallback(async (search: string) => {
     setLoading(true);
     setIsSearching(!!search);
     try {
-      const response = await axios.get(`${baseURL}/crm/admin/deviation_details.json`, {
-        headers: {
-          'Authorization': getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const deviationDetails = response.data.deviation_details || [];
-      
-      // Find the specific deviation
-      let foundDeviation: Deviation | null = null;
-      for (const detail of deviationDetails) {
-        const dev = detail.deviations.find((d: Deviation) => d.id.toString() === deviation_id);
-        if (dev) {
-          foundDeviation = dev;
-          break;
+      const response = await axios.get<ApiResponse>(
+        `${baseURL}/crm/admin/deviation_details/${deviation_id}.json`,
+        {
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
         }
-      }
+      );
 
-      if (!foundDeviation) {
+      const deviationDetail = response.data.deviation_detail;
+      
+      if (!deviationDetail) {
         toast.error('Violation detail not found');
         navigate(-1);
         return;
       }
 
-      setDeviation(foundDeviation);
+      setDeviation(deviationDetail);
 
       // Create violation details table - one row showing the main violation
       const violationRow: ViolationTableRow = {
-        violation: `ID Card Notice`, // You can customize this based on fitout_request or other data
-        attachments: foundDeviation.attachments.length,
-        created_at: foundDeviation.created_at,
-        created_by: foundDeviation.user.email,
+        violation: `Deviation #${deviationDetail.id}`,
+        attachments: deviationDetail.attachments.length,
+        created_at: deviationDetail.created_at,
+        created_by: deviationDetail.user.email,
       };
 
       let filteredData = [violationRow];
@@ -139,11 +167,77 @@ const ViolationDetail: React.FC = () => {
   };
 
   const handleEditStatus = () => {
-    toast.info('Edit Status - Coming soon');
+    if (deviation) {
+      setSelectedStatus(deviation.status);
+      setStatusComment('');
+    }
+    setIsEditStatusOpen(true);
   };
 
   const handleSendViolation = () => {
-    toast.info('Send Violation - Coming soon');
+    setViolationMessage('');
+    setAttachmentFiles([]);
+    setIsSendViolationOpen(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setAttachmentFiles(prev => [...prev, ...filesArray]);
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmitStatusEdit = async () => {
+    if (!selectedStatus) {
+      toast.error('Please select a status');
+      return;
+    }
+
+    setIsSubmittingStatus(true);
+    try {
+      // TODO: Replace with actual API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success('Status updated successfully');
+      setIsEditStatusOpen(false);
+      fetchViolationDetail(searchTerm);
+    } catch (err) {
+      toast.error('Failed to update status');
+      console.error('Error updating status:', err);
+    } finally {
+      setIsSubmittingStatus(false);
+    }
+  };
+
+  const handleSubmitViolation = async () => {
+    if (!violationMessage.trim()) {
+      toast.error('Please enter a violation message');
+      return;
+    }
+
+    setIsSubmittingViolation(true);
+    try {
+      // TODO: Replace with actual API call
+      // const formData = new FormData();
+      // formData.append('message', violationMessage);
+      // attachmentFiles.forEach(file => {
+      //   formData.append('attachments[]', file);
+      // });
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success('Violation sent successfully');
+      setIsSendViolationOpen(false);
+    } catch (err) {
+      toast.error('Failed to send violation');
+      console.error('Error sending violation:', err);
+    } finally {
+      setIsSubmittingViolation(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -197,182 +291,470 @@ const ViolationDetail: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="p-4 sm:p-6 min-h-screen bg-gray-50">
       <Toaster position="top-right" richColors closeButton />
       
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <Button
-          variant="ghost"
+      <div className="mb-6">
+        <button
           onClick={handleBack}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
+          className="flex items-center gap-1 hover:text-gray-800 mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
-        </Button>
-        <div className="flex gap-2">
-          <Button 
-            onClick={handleEditStatus}
-            className="bg-orange-500 text-white hover:bg-orange-600 h-9 px-4 text-sm font-medium"
-          >
-            Edit Status
-          </Button>
-          <Button 
-            onClick={handleSendViolation}
-            className="bg-[#00B8D9] text-white hover:bg-[#00B8D9]/90 h-9 px-4 text-sm font-medium"
-          >
-            Send Violation
-          </Button>
+        </button>
+
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">
+              Deviation #{deviation.id}
+            </h1>
+            <Badge
+              variant={deviation.status ? "default" : "secondary"}
+              className="text-xs"
+              style={deviation.status ? { backgroundColor: '#C72030' } : {}}
+            >
+              {deviation.status || 'Pending'}
+            </Badge>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              onClick={handleEditStatus}
+              variant="outline"
+              size="sm"
+              className="border-orange-500 text-orange-500 hover:bg-orange-50"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Status
+            </Button>
+            <Button
+              onClick={handleSendViolation}
+              size="sm"
+              style={{ backgroundColor: "#00B8D9", color: "white" }}
+              className="hover:opacity-90"
+            >
+              Send Violation
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Main Violation Detail Card */}
-      <Card className="border border-gray-200 bg-white shadow-sm">
-        <CardHeader className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold text-gray-900">
-              Violation Detail
-            </CardTitle>
+      {/* Main Content */}
+      <div className="space-y-6">
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">Deviation ID</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  #{deviation.id}
+                </p>
+              </div>
+            </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-6">
-          {/* Violation Basic Information */}
-          <div className="mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Status */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <div className="bg-gray-50 px-3 py-2 rounded-md border">
-                  <span 
-                    className={`inline-flex items-center px-3 py-1 rounded text-sm font-medium ${
-                      deviation.status === 'Complied' 
-                        ? 'bg-green-500 text-white' 
-                        : deviation.status === 'Pending'
-                        ? 'bg-yellow-500 text-white'
-                        : deviation.status === 'Work In Progress'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-500 text-white'
-                    }`}
-                  >
-                    {deviation.status}
-                  </span>
-                </div>
-              </div>
 
-              {/* ID */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ID
-                </label>
-                <div className="text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border">
-                  {deviation.id}
-                </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                <Paperclip className="w-5 h-5 text-purple-600" />
               </div>
-
-              {/* Tower */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tower
-                </label>
-                <div className="text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border">
-                  {deviation.user_society?.society_flat?.block_no || 'A'}
-                </div>
+                <p className="text-xs text-gray-600">Attachments</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {deviation.attachments.length}
+                </p>
               </div>
+            </div>
+          </div>
 
-              {/* Flat */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Flat
-                </label>
-                <div className="text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border">
-                  {deviation.user_society?.society_flat?.flat_no || '101'}
-                </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <MessageSquare className="w-5 h-5 text-green-600" />
               </div>
-
-              {/* Created on */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Created on
-                </label>
-                <div className="text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border">
+                <p className="text-xs text-gray-600">Comments</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {deviation.comments.length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">Created</p>
+                <p className="text-sm font-semibold text-gray-900">
                   {formatDate(deviation.created_at)}
-                </div>
-              </div>
-
-              {/* Created by */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Created by
-                </label>
-                <div className="text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border">
-                  {deviation.user.email}
-                </div>
-              </div>
-
-              {/* Comments */}
-              <div className="md:col-span-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Comments
-                </label>
-                <div className="text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border min-h-[42px]">
-                  {deviation.comments.length > 0 
-                    ? deviation.comments.map(c => c.body).join(', ')
-                    : 'Not Available'
-                  }
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="md:col-span-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <div className="text-base font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-md border">
-                  ID Cards
-                </div>
+                </p>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Violation Details Section */}
-          <div>
-            <div className="mb-4 pb-2 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Violation Details
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                Detailed information about this violation
-              </p>
+        {/* Tabs */}
+        <Card className="w-full bg-white shadow-sm border border-gray-200">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full flex flex-wrap bg-gray-50 rounded-t-lg h-auto p-0 text-sm border-b border-gray-200">
+              {[
+                { label: "Deviation Details", value: "deviation-details" },
+                { label: "Attachments", value: "attachments" },
+                { label: "Comments", value: "comments" },
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] px-3 py-2 border-r border-gray-200 last:border-r-0 text-sm"
+                >
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {/* Deviation Details Tab */}
+            <TabsContent value="deviation-details" className="p-4 sm:p-6">
+              <Card className="mb-6 border-none bg-transparent shadow-none">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div
+                    className="px-6 py-3 border-b border-gray-200"
+                    style={{ backgroundColor: "#F6F4EE" }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
+                        <FileText className="w-4 h-4" style={{ color: '#C72030' }} />
+                      </div>
+                      <h3 className="text-base font-semibold text-gray-900">Deviation Information</h3>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                      <div className="flex flex-col">
+                        <span className="text-gray-600 text-xs mb-1">Deviation ID</span>
+                        <span className="font-medium text-gray-900">#{deviation.id}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-gray-600 text-xs mb-1">Status</span>
+                        <span className="font-medium text-gray-900">{deviation.status || 'Pending'}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-gray-600 text-xs mb-1">Tower</span>
+                        <span className="font-medium text-gray-900">{deviation.user_society?.society_flat?.block_no || '—'}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-gray-600 text-xs mb-1">Flat</span>
+                        <span className="font-medium text-gray-900">{deviation.user_society?.society_flat?.flat_no || '—'}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-gray-600 text-xs mb-1">User Society ID</span>
+                        <span className="font-medium text-gray-900">{deviation.user_society?.id || '—'}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-gray-600 text-xs mb-1">Created By</span>
+                        <span className="font-medium text-gray-900">{deviation.user.email}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-gray-600 text-xs mb-1">Created At</span>
+                        <span className="font-medium text-gray-900">{formatDate(deviation.created_at)}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-gray-600 text-xs mb-1">Updated At</span>
+                        <span className="font-medium text-gray-900">{formatDate(deviation.updated_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </TabsContent>
+
+            {/* Attachments Tab */}
+            <TabsContent value="attachments" className="p-4 sm:p-6">
+              <Card className="mb-6 border-none bg-transparent shadow-none">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div
+                    className="px-6 py-3 border-b border-gray-200"
+                    style={{ backgroundColor: "#F6F4EE" }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
+                        <Paperclip className="w-4 h-4" style={{ color: '#C72030' }} />
+                      </div>
+                      <h3 className="text-base font-semibold text-gray-900">
+                        Attachments ({deviation.attachments.length})
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    {deviation.attachments.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        {deviation.attachments.map((attachment, index) => (
+                          <div
+                            key={attachment.id}
+                            className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all duration-200 hover:border-gray-300"
+                          >
+                            <div className="flex flex-col items-center text-center">
+                              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-2">
+                                <FileText className="w-6 h-6 text-blue-600" />
+                              </div>
+                              <p className="text-xs font-medium text-gray-900 truncate w-full mb-1">
+                                {attachment.document_file_name}
+                              </p>
+                              <p className="text-xs text-gray-500 mb-2">
+                                {(attachment.document_file_size / 1024).toFixed(2)} KB
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full text-xs h-7"
+                                onClick={() => window.open(attachment.document_file_name, '_blank')}
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                Download
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
+                        <Paperclip className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          No Attachments
+                        </h3>
+                        <p className="text-gray-500">
+                          No attachments have been added to this deviation.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </TabsContent>
+
+            {/* Comments Tab */}
+            <TabsContent value="comments" className="p-4 sm:p-6">
+              <Card className="mb-6 border-none bg-transparent shadow-none">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div
+                    className="px-6 py-3 border-b border-gray-200"
+                    style={{ backgroundColor: "#F6F4EE" }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
+                        <MessageSquare className="w-4 h-4" style={{ color: '#C72030' }} />
+                      </div>
+                      <h3 className="text-base font-semibold text-gray-900">
+                        Comments ({deviation.comments.length})
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    {deviation.comments.length > 0 ? (
+                      <div className="space-y-4">
+                        {deviation.comments.map((comment) => (
+                          <div
+                            key={comment.id}
+                            className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-all duration-200"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                                <User className="w-5 h-5 text-gray-600" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <p className="text-sm font-semibold text-gray-900">
+                                    {comment.commentor?.email || 'User'}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {formatDate(comment.created_at)}
+                                  </p>
+                                </div>
+                                <p className="text-sm text-gray-700">{comment.body}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
+                        <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          No Comments
+                        </h3>
+                        <p className="text-gray-500">
+                          No comments have been added to this deviation yet.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </Card>
+      </div>
+
+      {/* Edit Status Dialog */}
+      <Dialog open={isEditStatusOpen} onOpenChange={setIsEditStatusOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Status</DialogTitle>
+            <DialogDescription>
+              Update the status and add comments for this violation.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {/* Status Dropdown */}
+            <div className="grid gap-2">
+              <Label htmlFor="status">Status *</Label>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Work In Progress">Work In Progress</SelectItem>
+                  <SelectItem value="Complied">Complied</SelectItem>
+                  <SelectItem value="Resolved">Resolved</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            
-            <Card className="border border-gray-200 bg-white shadow-sm">
-              <CardHeader className="px-6 py-4 border-b border-gray-200">
-                <CardTitle className="text-base font-semibold text-gray-900">
-                  VIOLATION DETAILS
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <EnhancedTable
-                  data={violationDetails}
-                  columns={columns}
-                  renderCell={renderCell}
-                  pagination={false}
-                  enableExport={false}
-                  storageKey="violation-details-table"
-                  enableGlobalSearch={true}
-                  onGlobalSearch={handleGlobalSearch}
-                  searchPlaceholder="Search..."
-                  leftActions={<div />}
-                  loading={isSearching || loading}
-                  loadingMessage={isSearching ? "Searching..." : "Loading..."}
+
+            {/* Comments */}
+            <div className="grid gap-2">
+              <Label htmlFor="comment">Comment</Label>
+              <Textarea
+                id="comment"
+                placeholder="Enter your comments here..."
+                value={statusComment}
+                onChange={(e) => setStatusComment(e.target.value)}
+                rows={4}
+                className="resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditStatusOpen(false)}
+              disabled={isSubmittingStatus}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              onClick={handleSubmitStatusEdit}
+              disabled={isSubmittingStatus}
+              className="bg-orange-500 text-white hover:bg-orange-600"
+            >
+              {isSubmittingStatus ? 'Submitting...' : 'Submit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Violation Dialog */}
+      <Dialog open={isSendViolationOpen} onOpenChange={setIsSendViolationOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Send Violation</DialogTitle>
+            <DialogDescription>
+              Send a violation notice with message and attachments.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {/* Violation Message */}
+            <div className="grid gap-2">
+              <Label htmlFor="violation-message">Violation Message *</Label>
+              <Textarea
+                id="violation-message"
+                placeholder="Enter violation details..."
+                value={violationMessage}
+                onChange={(e) => setViolationMessage(e.target.value)}
+                rows={5}
+                className="resize-none"
+              />
+            </div>
+
+            {/* Attachments */}
+            <div className="grid gap-2">
+              <Label htmlFor="attachments">Attachments</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="attachments"
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
                 />
-              </CardContent>
-            </Card>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('attachments')?.click()}
+                  className="w-full"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Files
+                </Button>
+              </div>
+              
+              {/* Display selected files */}
+              {attachmentFiles.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  <p className="text-sm text-gray-600">Selected files:</p>
+                  {attachmentFiles.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md border"
+                    >
+                      <span className="text-sm text-gray-700 truncate flex-1">
+                        {file.name}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveFile(index)}
+                        className="ml-2 h-6 w-6 p-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsSendViolationOpen(false)}
+              disabled={isSubmittingViolation}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              onClick={handleSubmitViolation}
+              disabled={isSubmittingViolation}
+              className="bg-[#00B8D9] text-white hover:bg-[#00B8D9]/90"
+            >
+              {isSubmittingViolation ? 'Sending...' : 'Submit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
