@@ -78,10 +78,12 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
     );
   };
 
-    const [submitting, setSubmitting] = useState(false);
-    const [thankYou, setThankYou] = useState(false);
-    const [fetchError, setFetchError] = useState<number | null>(null);
-    const [fetchAttempt, setFetchAttempt] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [thankYou, setThankYou] = useState(false);
+  const [fetchError, setFetchError] = useState<number | null>(null);
+  const [fetchAttempt, setFetchAttempt] = useState(0);
+  // if server already has any answers for this mapping, show "Form already submitted"
+  const [serverSubmitted, setServerSubmitted] = useState(false);
 
     useEffect(() => {
     setFetchError(null);
@@ -116,6 +118,24 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
       .then((data) => {
         if (cancelled) return;
         const payload = Array.isArray(data) ? data : (data || []);
+        // If any snag_answers exist in the payload, treat the form as already submitted
+        const answeredExists = (payload || []).some((item: unknown) => {
+          if (!item || typeof item !== 'object') return false;
+          const it = item as { snag_questions?: unknown };
+          if (!Array.isArray(it.snag_questions)) return false;
+          return (it.snag_questions as unknown[]).some((entry: unknown) => {
+            if (!entry || typeof entry !== 'object') return false;
+            const e = entry as { snag_answers?: unknown };
+            if (!Array.isArray(e.snag_answers)) return false;
+            return (e.snag_answers as unknown[]).length > 0;
+          });
+        });
+        if (answeredExists) {
+          setServerSubmitted(true);
+          setCategories([]);
+          return;
+        }
+
         const adapted = adaptFromFitout(payload as FitoutItem[]);
         setCategories(adapted || []);
       })
@@ -261,6 +281,26 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
             <h2 className="text-2xl font-semibold mb-2">Server error</h2>
             <p className="text-sm text-gray-700 mb-4">We received a 500 error from the server while loading the survey.</p>
             <button type="button" onClick={() => { setFetchError(null); setFetchAttempt((s) => s + 1); }} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Retry</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (serverSubmitted) {
+    return (
+      <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
+        <div className="w-full max-w-md px-4 pt-24">
+          <div className="relative">
+            <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
+          </div>
+        </div>
+
+        <div className="w-full max-w-md px-4 mt-24">
+          <div className="bg-white/90 rounded-md p-6 text-center shadow-md">
+            <h2 className="text-2xl font-semibold mb-2">Form already submitted</h2>
+            <p className="text-sm text-gray-700 mb-4">We found previous answers for this fitout mapping. The form cannot be edited.</p>
+            <button type="button" onClick={() => setFetchAttempt((s) => s + 1)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Reload</button>
           </div>
         </div>
       </div>
