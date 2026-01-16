@@ -130,14 +130,20 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
             return (e.snag_answers as unknown[]).length > 0;
           });
         });
-        if (answeredExists) {
-          setServerSubmitted(true);
-          setCategories([]);
-          return;
-        }
+  // If answeredExists is true, the server already has answers for this mapping.
+  // Previously we treated this as an early-exit and cleared categories so the
+  // 'Form already submitted' screen would show. To force the form to display
+  // even when answers exist on the server, we no longer clear categories or
+  // return early. Instead adapt the payload and show the form UI so users can
+  // still submit/update answers from this client.
+  // if (answeredExists) {
+  //   setServerSubmitted(true);
+  //   setCategories([]);
+  //   return;
+  // }
 
-        const adapted = adaptFromFitout(payload as FitoutItem[]);
-        setCategories(adapted || []);
+  const adapted = adaptFromFitout(payload as FitoutItem[]);
+  setCategories(adapted || []);
       })
       .catch(() => {
         if (!cancelled) {
@@ -250,14 +256,14 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   if (thankYou) {
     return (
       <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
-        <div className="w-full max-w-md px-4 pt-24">
+        <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
           <div className="relative">
             <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
           </div>
         </div>
 
-        <div className="w-full max-w-md px-4 mt-24">
-          <div className="bg-white/90 rounded-md p-6 text-center shadow-md">
+        <div className="w-full max-w-md md:max-w-4xl px-4 mt-24">
+          <div className="bg-white/90 rounded-md p-6 md:p-8 text-center shadow-md">
             <h2 className="text-2xl font-semibold mb-2">Thank you</h2>
             <p className="text-sm text-gray-700 mb-4">Your responses have been submitted successfully.</p>
             <button type="button" onClick={() => setThankYou(false)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Close</button>
@@ -270,14 +276,14 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   if (fetchError === 500) {
     return (
       <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
-        <div className="w-full max-w-md px-4 pt-24">
+        <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
           <div className="relative">
             <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
           </div>
         </div>
 
-        <div className="w-full max-w-md px-4 mt-24">
-          <div className="bg-white/90 rounded-md p-6 text-center shadow-md">
+        <div className="w-full max-w-md md:max-w-4xl px-4 mt-24">
+          <div className="bg-white/90 rounded-md p-6 md:p-8 text-center shadow-md">
             <h2 className="text-2xl font-semibold mb-2">Server error</h2>
             <p className="text-sm text-gray-700 mb-4">We received a 500 error from the server while loading the survey.</p>
             <button type="button" onClick={() => { setFetchError(null); setFetchAttempt((s) => s + 1); }} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Retry</button>
@@ -287,53 +293,54 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
     );
   }
 
-  if (serverSubmitted) {
-    return (
-      <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
-        <div className="w-full max-w-md px-4 pt-24">
-          <div className="relative">
-            <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
-          </div>
-        </div>
-
-        <div className="w-full max-w-md px-4 mt-24">
-          <div className="bg-white/90 rounded-md p-6 text-center shadow-md">
-            <h2 className="text-2xl font-semibold mb-2">Form already submitted</h2>
-            <p className="text-sm text-gray-700 mb-4">We found previous answers for this fitout mapping. The form cannot be edited.</p>
-            <button type="button" onClick={() => setFetchAttempt((s) => s + 1)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Reload</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Temporarily disable the 'Form already submitted' early-return UI.
+  // if (serverSubmitted) {
+  //   return (
+  //     <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
+  //       <div className="w-full max-w-md px-4 pt-24">
+  //         <div className="relative">
+  //           <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
+  //         </div>
+  //       </div>
+  //
+  //       <div className="w-full max-w-md px-4 mt-24">
+  //         <div className="bg-white/90 rounded-md p-6 text-center shadow-md">
+  //           <h2 className="text-2xl font-semibold mb-2">Form already submitted</h2>
+  //           <p className="text-sm text-gray-700 mb-4">We found previous answers for this fitout mapping. The form cannot be edited.</p>
+  //           <button type="button" onClick={() => setFetchAttempt((s) => s + 1)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Reload</button>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
-      <div className="w-full max-w-md px-4 pt-24">
+      <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
         <div className="relative">
           <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
         </div>
       </div>
 
-      <div className="w-full max-w-md px-4 mt-14">
+      <div className="w-full max-w-md md:max-w-4xl px-4 mt-14">
         <div className="text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-black tracking-tight">{}</h1>
         </div>
       </div>
 
-      <div className="w-full max-w-md px-4 mt-4 flex-1 pb-32">
-        <div className="bg-white/90 border border-gray-200 rounded-md shadow-md p-4 space-y-6">
+      <div className="w-full max-w-md md:max-w-4xl px-4 mt-4 flex-1 pb-32">
+        <div className="bg-white/90 border border-gray-200 rounded-md shadow-md p-4 md:p-8 space-y-6 md:space-y-8">
           {categories.map((cat, cidx) => (
-            <div key={cidx}>
-              {categories.length > 1 && <div className="text-xl font-semibold text-gray-700 mb-2">{cat.name}</div>}
+            <div key={cidx} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {categories.length > 1 && <div className="text-xl font-semibold text-gray-700 mb-2 md:col-span-2">{cat.name}</div>}
               {cat.questions.map((q, idx) => (
                 <div key={q.id}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start mb-2">
-                    <div className="md:col-span-1">
-                      <div className="text-[16px] md:text-base font-medium">{`${idx + 1}. ${q.title}`}{q.required && <span className="text-[#C72030] ml-1">*</span>}</div>
+                  <div className="grid grid-cols-1 gap-4 items-start mb-2">
+                    <div>
+                      <div className="text-[16px] md:text-lg font-medium mb-2">{`${idx + 1}. ${q.title}`}{q.required && <span className="text-[#C72030] ml-1">*</span>}</div>
                     </div>
 
-                    <div className="md:col-span-2">
+                    <div>
                       <div className="space-y-3">
                         {q.qtype === 'inputbox' && !/time/i.test(String(q.title)) && (
                           <input type="text" value={answers[String(q.id)] || ''} onChange={(e) => setOpenAnswer(q.id, e.target.value)} placeholder="Enter your answer" className="w-full border rounded px-3 py-3 bg-white" />
@@ -436,8 +443,8 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-transparent p-4">
-        <div className="max-w-md mx-auto">
-          <div className="bg-white/90 border border-gray-200 rounded-md p-3">
+        <div className="max-w-md md:max-w-4xl mx-auto">
+          <div className="bg-white/90 border border-gray-200 rounded-md p-3 md:p-4">
             <button onClick={handleSubmit} disabled={!allRequiredAnswered()} className={`w-full py-4 rounded font-semibold text-white ${allRequiredAnswered() ? 'bg-[#1E56D6]' : 'bg-gray-300 cursor-not-allowed'}`}>
               Submit Fitout
             </button>
