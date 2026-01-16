@@ -512,6 +512,11 @@ export function EnhancedTaskTable<T extends Record<string, any>>({
               <TableHeader>
                 <TableRow>
                   <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+                    <TableHead className="bg-[#f6f4ee] text-center hover:bg-[#f0ede2] transition-colors duration-200">
+                      <div className="flex justify-center items-center">
+                        Sr. No.
+                      </div>
+                    </TableHead>
                     {renderActions && (
                       <TableHead className="bg-[#f6f4ee] text-center hover:bg-[#f0ede2] transition-colors duration-200" data-actions>
                         <div className="flex justify-center items-center">
@@ -554,7 +559,8 @@ export function EnhancedTaskTable<T extends Record<string, any>>({
                       colSpan={
                         visibleColumns.length +
                         (renderActions ? 1 : 0) +
-                        (selectable ? 1 : 0)
+                        (selectable ? 1 : 0) +
+                        1 // Add 1 for the serial number column
                       }
                       className="h-24 text-center"
                     >
@@ -571,7 +577,8 @@ export function EnhancedTaskTable<T extends Record<string, any>>({
                       colSpan={
                         visibleColumns.length +
                         (renderActions ? 1 : 0) +
-                        (selectable ? 1 : 0)
+                        (selectable ? 1 : 0) +
+                        1 // Add 1 for the serial number column
                       }
                       className="text-center py-8 text-gray-500"
                     >
@@ -580,6 +587,7 @@ export function EnhancedTaskTable<T extends Record<string, any>>({
                   </TableRow>
                 )}
                 {!loading && sortedData.map((item, index) => {
+                  const serialNumber = pagination ? (currentPage - 1) * pageSize + index + 1 : index + 1;
                   const itemId = getItemId(item);
                   const isSelected = selectedItems.includes(itemId);
 
@@ -593,6 +601,9 @@ export function EnhancedTaskTable<T extends Record<string, any>>({
                       )}
                       onClick={(e) => handleRowClick(item, e)}
                     >
+                      <TableCell className="p-4 text-center hover:bg-blue-25 transition-colors duration-150">
+                        {serialNumber}
+                      </TableCell>
                       {renderActions && (
                         <TableCell className="p-4 text-center hover:bg-blue-25 transition-colors duration-150" data-actions>
                           <div className="flex justify-center items-center gap-2">

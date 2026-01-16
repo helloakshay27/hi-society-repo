@@ -762,11 +762,7 @@
 //   );
 // }
 
-
-
-
-
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import {
   DndContext,
   closestCenter,
@@ -775,17 +771,24 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   horizontalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+} from "@dnd-kit/sortable";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Pagination,
   PaginationContent,
@@ -794,50 +797,64 @@ import {
   PaginationNext,
   PaginationPrevious,
   PaginationEllipsis,
-} from '@/components/ui/pagination';
-import { SortableColumnHeader } from './SortableColumnHeader';
-import { ColumnVisibilityMenu } from './ColumnVisibilityMenu';
-import { useEnhancedTable, ColumnConfig } from '@/hooks/useEnhancedTable';
-import { useDebounce } from '@/hooks/useDebounce';
-import { Search, Download, Loader2, Grid3x3, Plus, X, Filter, Check, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { getAuthHeader, API_CONFIG } from '@/config/apiConfig';
-import { TextField } from '@mui/material';
+} from "@/components/ui/pagination";
+import { SortableColumnHeader } from "./SortableColumnHeader";
+import { ColumnVisibilityMenu } from "./ColumnVisibilityMenu";
+import { useEnhancedTable, ColumnConfig } from "@/hooks/useEnhancedTable";
+import { useDebounce } from "@/hooks/useDebounce";
+import {
+  Search,
+  Download,
+  Loader2,
+  Grid3x3,
+  Plus,
+  X,
+  Filter,
+  Check,
+  Trash2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getAuthHeader, API_CONFIG } from "@/config/apiConfig";
+import { TextField } from "@mui/material";
 
 // Excel export utility function
 const exportToExcel = <T extends Record<string, any>>(
   data: T[],
   columns: ColumnConfig[],
-  fileName: string = 'table-export'
+  fileName: string = "table-export"
 ) => {
   if (data.length === 0) {
-    alert('No data to export');
+    alert("No data to export");
     return;
   }
 
   // Create CSV content
-  const headers = columns.map(col => col.label).join(',');
+  const headers = columns.map((col) => col.label).join(",");
   const csvContent = [
     headers,
-    ...data.map(row =>
-      columns.map(col => {
-        const value = row[col.key];
-        // Handle values that might contain commas or quotes
-        const stringValue = String(value || '').replace(/"/g, '""');
-        return stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')
-          ? `"${stringValue}"`
-          : stringValue;
-      }).join(',')
-    )
-  ].join('\n');
+    ...data.map((row) =>
+      columns
+        .map((col) => {
+          const value = row[col.key];
+          // Handle values that might contain commas or quotes
+          const stringValue = String(value || "").replace(/"/g, '""');
+          return stringValue.includes(",") ||
+            stringValue.includes('"') ||
+            stringValue.includes("\n")
+            ? `"${stringValue}"`
+            : stringValue;
+        })
+        .join(",")
+    ),
+  ].join("\n");
 
   // Create and trigger download
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
   const url = URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  link.setAttribute('download', `${fileName}.csv`);
-  link.style.visibility = 'hidden';
+  link.setAttribute("href", url);
+  link.setAttribute("download", `${fileName}.csv`);
+  link.style.visibility = "hidden";
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -848,13 +865,19 @@ interface BulkAction<T> {
   label: string;
   icon?: React.ComponentType<any>;
   onClick: (selectedItems: T[]) => void;
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
 }
 
 interface EnhancedTableProps<T> {
   data: T[];
   columns: ColumnConfig[];
-  renderCell?: (item: T, columnKey: string) => React.ReactNode;
+  renderCell?: (item: T, columnKey: string, index: number) => React.ReactNode;
   renderRow?: (item: T) => Record<string, any>;
   renderActions?: (item: T) => React.ReactNode;
   onRowClick?: (item: T) => void;
@@ -888,7 +911,11 @@ interface EnhancedTableProps<T> {
   onFilterClick?: () => void;
   canAddRow?: boolean;
   onAddRow?: (newRowData: Partial<T>) => void;
-  renderEditableCell?: (columnKey: string, value: any, onChange: (value: any) => void) => React.ReactNode;
+  renderEditableCell?: (
+    columnKey: string,
+    value: any,
+    onChange: (value: any) => void
+  ) => React.ReactNode;
   newRowPlaceholder?: string;
   readonlyColumns?: string[];
   handleExport?: (columnVisibility?: Record<string, boolean>) => void;
@@ -922,9 +949,9 @@ export function EnhancedTable<T extends Record<string, any>>({
   selectAllLabel = "Select all",
   searchTerm: externalSearchTerm,
   onSearchChange,
-  searchPlaceholder = 'Search...',
+  searchPlaceholder = "Search...",
   enableExport = false,
-  exportFileName = 'table-export',
+  exportFileName = "table-export",
   onExport,
   bulkActions = [],
   showBulkActions = false,
@@ -954,13 +981,14 @@ export function EnhancedTable<T extends Record<string, any>>({
   rowClassName,
   isRowDisabled,
 }: EnhancedTableProps<T>) {
-  const [internalSearchTerm, setInternalSearchTerm] = useState('');
-  const [searchInput, setSearchInput] = useState('');
+  const [internalSearchTerm, setInternalSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [apiSearchResults, setApiSearchResults] = useState<T[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [searchAbortController, setSearchAbortController] = useState<AbortController | null>(null);
-  const [lastProcessedSearch, setLastProcessedSearch] = useState('');
+  const [searchAbortController, setSearchAbortController] =
+    useState<AbortController | null>(null);
+  const [lastProcessedSearch, setLastProcessedSearch] = useState("");
 
   // Add row functionality state
   const [isAddingRow, setIsAddingRow] = useState(false);
@@ -994,20 +1022,29 @@ export function EnhancedTable<T extends Record<string, any>>({
         } else {
           // Clear search results when search is empty
           setIsSearching(false);
-          setLastProcessedSearch('');
+          setLastProcessedSearch("");
           setSearchAbortController(null);
-          onGlobalSearch('');
+          onGlobalSearch("");
         }
       } else {
         // For local search, set internal search term
         setInternalSearchTerm(debouncedSearchInput);
       }
     }
-  }, [debouncedSearchInput, externalSearchTerm, enableGlobalSearch, onGlobalSearch, lastProcessedSearch]);
+  }, [
+    debouncedSearchInput,
+    externalSearchTerm,
+    enableGlobalSearch,
+    onGlobalSearch,
+    lastProcessedSearch,
+  ]);
 
   // Synchronize external search term with internal search input
   useEffect(() => {
-    if (externalSearchTerm !== undefined && searchInput !== externalSearchTerm) {
+    if (
+      externalSearchTerm !== undefined &&
+      searchInput !== externalSearchTerm
+    ) {
       setSearchInput(externalSearchTerm);
     }
   }, [externalSearchTerm, searchInput]);
@@ -1039,14 +1076,19 @@ export function EnhancedTable<T extends Record<string, any>>({
   // Handle click outside to save new row
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isAddingRow && addRowRef.current && !addRowRef.current.contains(event.target as Node)) {
+      if (
+        isAddingRow &&
+        addRowRef.current &&
+        !addRowRef.current.contains(event.target as Node)
+      ) {
         handleSaveNewRow();
       }
     };
 
     if (isAddingRow) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isAddingRow, newRowData]);
 
@@ -1058,7 +1100,7 @@ export function EnhancedTable<T extends Record<string, any>>({
         try {
           return JSON.parse(savedVisibility);
         } catch (e) {
-          console.error('Error parsing saved column visibility:', e);
+          console.error("Error parsing saved column visibility:", e);
         }
       }
     }
@@ -1073,12 +1115,12 @@ export function EnhancedTable<T extends Record<string, any>>({
     handleSort,
     toggleColumnVisibility,
     reorderColumns,
-    resetToDefaults
+    resetToDefaults,
   } = useEnhancedTable({
     data,
     columns,
     storageKey,
-    initialColumnVisibility: getSavedColumnVisibility()
+    initialColumnVisibility: getSavedColumnVisibility(),
   });
 
   // Wrap resetToDefaults to handle localStorage
@@ -1090,15 +1132,24 @@ export function EnhancedTable<T extends Record<string, any>>({
       localStorage.removeItem(`${storageKey}-column-order`);
 
       // Set default column visibility state
-      const defaultVisibility = columns.reduce((acc, column) => ({
-        ...acc,
-        [column.key]: column.defaultVisible !== false
-      }), {});
-      localStorage.setItem(`${storageKey}-columns`, JSON.stringify(defaultVisibility));
+      const defaultVisibility = columns.reduce(
+        (acc, column) => ({
+          ...acc,
+          [column.key]: column.defaultVisible !== false,
+        }),
+        {}
+      );
+      localStorage.setItem(
+        `${storageKey}-columns`,
+        JSON.stringify(defaultVisibility)
+      );
 
       // Set default column order
-      const defaultOrder = columns.map(column => column.key);
-      localStorage.setItem(`${storageKey}-column-order`, JSON.stringify(defaultOrder));
+      const defaultOrder = columns.map((column) => column.key);
+      localStorage.setItem(
+        `${storageKey}-column-order`,
+        JSON.stringify(defaultOrder)
+      );
     }
   };
 
@@ -1108,15 +1159,20 @@ export function EnhancedTable<T extends Record<string, any>>({
     if (storageKey) {
       const updatedVisibility = {
         ...columnVisibility,
-        [columnKey]: !columnVisibility[columnKey]
+        [columnKey]: !columnVisibility[columnKey],
       };
-      localStorage.setItem(`${storageKey}-columns`, JSON.stringify(updatedVisibility));
+      localStorage.setItem(
+        `${storageKey}-columns`,
+        JSON.stringify(updatedVisibility)
+      );
     }
   };
 
   // Use external search value if provided (for custom search input)
-  const effectiveSearchValue = searchValue !== undefined ? searchValue : searchInput;
-  const effectiveSearchTerm = externalSearchTerm !== undefined ? externalSearchTerm : internalSearchTerm;
+  const effectiveSearchValue =
+    searchValue !== undefined ? searchValue : searchInput;
+  const effectiveSearchTerm =
+    externalSearchTerm !== undefined ? externalSearchTerm : internalSearchTerm;
 
   // Use API search results or filter data based on search term
   const filteredData = useMemo(() => {
@@ -1132,12 +1188,17 @@ export function EnhancedTable<T extends Record<string, any>>({
 
     if (!effectiveSearchTerm) return baseSortedData;
 
-    return baseSortedData.filter(item =>
-      Object.values(item).some(value =>
+    return baseSortedData.filter((item) =>
+      Object.values(item).some((value) =>
         String(value).toLowerCase().includes(effectiveSearchTerm.toLowerCase())
       )
     );
-  }, [baseSortedData, effectiveSearchTerm, apiSearchResults, disableClientSearch]);
+  }, [
+    baseSortedData,
+    effectiveSearchTerm,
+    apiSearchResults,
+    disableClientSearch,
+  ]);
 
   // Paginate data if pagination is enabled
   const paginatedData = useMemo(() => {
@@ -1164,29 +1225,37 @@ export function EnhancedTable<T extends Record<string, any>>({
       reorderColumns(String(active.id), String(over.id));
       // Save the new column order to localStorage
       if (storageKey) {
-        const newOrder = columnIds.filter(id => id !== active.id);
+        const newOrder = columnIds.filter((id) => id !== active.id);
         const overIndex = newOrder.indexOf(String(over.id));
         newOrder.splice(overIndex, 0, String(active.id));
-        localStorage.setItem(`${storageKey}-column-order`, JSON.stringify(newOrder));
+        localStorage.setItem(
+          `${storageKey}-column-order`,
+          JSON.stringify(newOrder)
+        );
       }
     }
   };
 
   // Create column IDs for drag and drop, excluding checkbox and actions columns
-  const columnIds = visibleColumns.map(col => col.key).filter(key => key !== '__checkbox__');
+  const columnIds = visibleColumns
+    .map((col) => col.key)
+    .filter((key) => key !== "__checkbox__");
 
   // Check if all visible items are selected
   const selectableRows = selectable
-    ? sortedData.filter((item) => !(isRowDisabled?.(item)))
+    ? sortedData.filter((item) => !isRowDisabled?.(item))
     : sortedData;
 
   const hasSelectableRows = selectableRows.length > 0;
 
-  const isAllSelected = selectable && hasSelectableRows &&
-    selectableRows.every(item => selectedItems.includes(getItemId(item)));
+  const isAllSelected =
+    selectable &&
+    hasSelectableRows &&
+    selectableRows.every((item) => selectedItems.includes(getItemId(item)));
 
   // Check if some (but not all) items are selected
-  const isIndeterminate = selectable && selectedItems.length > 0 && !isAllSelected;
+  const isIndeterminate =
+    selectable && selectedItems.length > 0 && !isAllSelected;
 
   const handleSelectAllChange = (checked: boolean) => {
     if (onSelectAll) {
@@ -1203,7 +1272,7 @@ export function EnhancedTable<T extends Record<string, any>>({
   const handleRowClick = (item: T, event: React.MouseEvent) => {
     // Don't trigger row click if clicking on checkbox or actions
     const target = event.target as HTMLElement;
-    if (target.closest('[data-checkbox]') || target.closest('[data-actions]')) {
+    if (target.closest("[data-checkbox]") || target.closest("[data-actions]")) {
       return;
     }
     onRowClick?.(item);
@@ -1219,16 +1288,16 @@ export function EnhancedTable<T extends Record<string, any>>({
   };
 
   const handleClearSearch = () => {
-    setSearchInput('');
-    setInternalSearchTerm('');
+    setSearchInput("");
+    setInternalSearchTerm("");
     setApiSearchResults(null);
     setCurrentPage(1);
-    setLastProcessedSearch('');
+    setLastProcessedSearch("");
     if (onSearchChange) {
-      onSearchChange('');
+      onSearchChange("");
     }
     if (enableGlobalSearch && onGlobalSearch) {
-      onGlobalSearch('');
+      onGlobalSearch("");
     }
   };
 
@@ -1248,7 +1317,9 @@ export function EnhancedTable<T extends Record<string, any>>({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
         )}
         <Input
-          placeholder={enableGlobalSearch ? `${searchPlaceholder}` : searchPlaceholder}
+          placeholder={
+            enableGlobalSearch ? `${searchPlaceholder}` : searchPlaceholder
+          }
           value={effectiveSearchValue}
           onChange={(e) => handleSearchInputChange(e.target.value)}
           className="pl-10 pr-10"
@@ -1268,7 +1339,9 @@ export function EnhancedTable<T extends Record<string, any>>({
   };
 
   const selectedItemObjects = useMemo(() => {
-    return filteredData.filter(item => selectedItems.includes(getItemId(item)));
+    return filteredData.filter((item) =>
+      selectedItems.includes(getItemId(item))
+    );
   }, [filteredData, selectedItems, getItemId]);
 
   // Add row functionality
@@ -1291,13 +1364,17 @@ export function EnhancedTable<T extends Record<string, any>>({
   };
 
   const handleNewRowDataChange = (columnKey: string, value: any) => {
-    setNewRowData(prev => ({
+    setNewRowData((prev) => ({
       ...prev,
-      [columnKey]: value
+      [columnKey]: value,
     }));
   };
 
-  const renderDefaultEditableCell = (columnKey: string, value: any, onChange: (value: any) => void) => {
+  const renderDefaultEditableCell = (
+    columnKey: string,
+    value: any,
+    onChange: (value: any) => void
+  ) => {
     // Check if column is readonly - if so, show nothing
     if (readonlyColumns.includes(columnKey)) {
       return null;
@@ -1333,7 +1410,7 @@ export function EnhancedTable<T extends Record<string, any>>({
 
       if (startPage > 1) {
         pages.push(1);
-        if (startPage > 2) pages.push('ellipsis-start');
+        if (startPage > 2) pages.push("ellipsis-start");
       }
 
       for (let i = startPage; i <= endPage; i++) {
@@ -1341,7 +1418,7 @@ export function EnhancedTable<T extends Record<string, any>>({
       }
 
       if (endPage < totalPages) {
-        if (endPage < totalPages - 1) pages.push('ellipsis-end');
+        if (endPage < totalPages - 1) pages.push("ellipsis-end");
         pages.push(totalPages);
       }
     }
@@ -1370,15 +1447,15 @@ export function EnhancedTable<T extends Record<string, any>>({
           {leftActions}
 
           {showBulkActions && selectedItems.length > 0 && (
-            <div className="flex items-center gap-2">
-            </div>
+            <div className="flex items-center gap-2"></div>
           )}
         </div>
 
         <div className="flex items-center gap-2">
           {rightActions}
-          {!hideTableSearch && (onSearchChange || !externalSearchTerm || enableGlobalSearch) && (
-            customSearchInput ? (
+          {!hideTableSearch &&
+            (onSearchChange || !externalSearchTerm || enableGlobalSearch) &&
+            (customSearchInput ? (
               <div className="relative max-w-sm">
                 {isSearching && (
                   <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 animate-spin" />
@@ -1405,8 +1482,7 @@ export function EnhancedTable<T extends Record<string, any>>({
               </div>
             ) : (
               renderCustomSearchInput()
-            )
-          )}
+            ))}
 
           {onFilterClick && (
             <Button
@@ -1414,7 +1490,7 @@ export function EnhancedTable<T extends Record<string, any>>({
               size="sm"
               className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10 flex items-center gap-2"
               onClick={onFilterClick}
-              title='Filter'
+              title="Filter"
             >
               <Filter className="w-4 h-4" />
             </Button>
@@ -1435,7 +1511,7 @@ export function EnhancedTable<T extends Record<string, any>>({
               size="sm"
               onClick={handleExportClick}
               className="flex items-center gap-2"
-              title='Export'
+              title="Export"
             >
               <Download className="w-4 h-4" />
             </Button>
@@ -1453,23 +1529,34 @@ export function EnhancedTable<T extends Record<string, any>>({
             <Table className={cn(className, "w-full min-w-max enhancedTable")}>
               <TableHeader className="sticky-header">
                 <TableRow>
-                  <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+                  <SortableContext
+                    items={columnIds}
+                    strategy={horizontalListSortingStrategy}
+                  >
                     {renderActions && (
-                      <TableHead className="bg-[#f6f4ee] text-center w-16 min-w-16 sticky top-0" data-actions>
+                      <TableHead
+                        className="bg-[#f6f4ee] text-center w-16 min-w-16 sticky top-0"
+                        data-actions
+                      >
                         <div className="flex justify-center items-center text-center">
                           Actions
                         </div>
                       </TableHead>
                     )}
                     {selectable && (
-                      <TableHead className="bg-[#f6f4ee] w-12 min-w-12 text-center sticky top-0" data-checkbox>
+                      <TableHead
+                        className="bg-[#f6f4ee] w-12 min-w-12 text-center sticky top-0"
+                        data-checkbox
+                      >
                         <div className="flex justify-center">
                           <Checkbox
                             checked={isAllSelected}
                             onCheckedChange={handleSelectAllChange}
                             aria-label={selectAllLabel}
                             disabled={!hasSelectableRows}
-                            {...(isIndeterminate && { 'data-state': 'indeterminate' })}
+                            {...(isIndeterminate && {
+                              "data-state": "indeterminate",
+                            })}
                           />
                         </div>
                       </TableHead>
@@ -1480,8 +1567,14 @@ export function EnhancedTable<T extends Record<string, any>>({
                         id={column.key}
                         sortable={column.sortable !== false}
                         draggable={column.draggable}
-                        sortDirection={sortState.column === column.key ? sortState.direction : null}
-                        onSort={() => column.sortable !== false && handleSort(column.key)}
+                        sortDirection={
+                          sortState.column === column.key
+                            ? sortState.direction
+                            : null
+                        }
+                        onSort={() =>
+                          column.sortable !== false && handleSort(column.key)
+                        }
                         className="bg-[#f6f4ee] text-left text-black min-w-32 sticky top-0"
                       >
                         {column.label}
@@ -1498,7 +1591,10 @@ export function EnhancedTable<T extends Record<string, any>>({
                     className="bg-blue-50 border-2 border-blue-200"
                   >
                     {renderActions && (
-                      <TableCell className="p-4 text-center w-16 min-w-16" data-actions>
+                      <TableCell
+                        className="p-4 text-center w-16 min-w-16"
+                        data-actions
+                      >
                         <div className="flex items-center justify-center gap-1">
                           <Button
                             size="sm"
@@ -1522,7 +1618,10 @@ export function EnhancedTable<T extends Record<string, any>>({
                       </TableCell>
                     )}
                     {selectable && (
-                      <TableCell className="p-4 w-12 min-w-12 text-center" data-checkbox>
+                      <TableCell
+                        className="p-4 w-12 min-w-12 text-center"
+                        data-checkbox
+                      >
                         <div className="flex justify-center">
                           <Checkbox disabled />
                         </div>
@@ -1534,29 +1633,36 @@ export function EnhancedTable<T extends Record<string, any>>({
                       // For readonly columns, don't call renderEditableCell at all
                       if (isReadonly) {
                         return (
-                          <TableCell key={column.key} className="p-4 text-center min-w-32">
+                          <TableCell
+                            key={column.key}
+                            className="p-4 text-center min-w-32"
+                          >
                             {/* Empty cell for readonly columns */}
                           </TableCell>
                         );
                       }
 
-                      const customCell = renderEditableCell ?
-                        renderEditableCell(
-                          column.key,
-                          newRowData[column.key],
-                          (value) => handleNewRowDataChange(column.key, value)
-                        ) : null;
+                      const customCell = renderEditableCell
+                        ? renderEditableCell(
+                            column.key,
+                            newRowData[column.key],
+                            (value) => handleNewRowDataChange(column.key, value)
+                          )
+                        : null;
 
                       return (
-                        <TableCell key={column.key} className="p-4 text-center min-w-32">
-                          {customCell !== null ?
-                            customCell :
-                            renderDefaultEditableCell(
-                              column.key,
-                              newRowData[column.key],
-                              (value) => handleNewRowDataChange(column.key, value)
-                            )
-                          }
+                        <TableCell
+                          key={column.key}
+                          className="p-4 text-center min-w-32"
+                        >
+                          {customCell !== null
+                            ? customCell
+                            : renderDefaultEditableCell(
+                                column.key,
+                                newRowData[column.key],
+                                (value) =>
+                                  handleNewRowDataChange(column.key, value)
+                              )}
                         </TableCell>
                       );
                     })}
@@ -1609,83 +1715,100 @@ export function EnhancedTable<T extends Record<string, any>>({
                     </TableCell>
                   </TableRow>
                 )}
-                {!loading && sortedData.map((item, index) => {
-                  const itemId = getItemId(item);
-                  const isSelected = selectedItems.includes(itemId);
-                  const rowDisabled = !!isRowDisabled?.(item);
+                {!loading &&
+                  sortedData.map((item, index) => {
+                    const itemId = getItemId(item);
+                    const isSelected = selectedItems.includes(itemId);
+                    const rowDisabled = !!isRowDisabled?.(item);
 
-                  return (
-                    <TableRow
-                      key={index}
-                      className={cn(
-                        onRowClick && "cursor-pointer",
-                        "hover:bg-gray-50",
-                        !rowDisabled && isSelected && "bg-blue-50",
-                        rowClassName?.(item)
-                      )}
-                      onClick={(e) => {
-                        if (rowDisabled) return;
-                        handleRowClick(item, e);
-                      }}
-                      aria-disabled={rowDisabled}
-                    >
-                      {renderActions && (
-                        <TableCell className="p-4 text-center w-16 min-w-16 align-middle" data-actions>
-                          <div className="flex justify-center items-center gap-2">
-                            {renderActions(item)}
-                          </div>
-                        </TableCell>
-                      )}
-                      {selectable && (
-                        <TableCell className="p-4 w-12 min-w-12 text-center" data-checkbox>
-                          <div className="flex justify-center">
-                            <Checkbox
-                              checked={!rowDisabled && isSelected}
-                              disabled={rowDisabled}
-                              onCheckedChange={(checked) => {
-                                if (rowDisabled) return;
-                                handleSelectItemChange(itemId, !!checked);
-                              }}
-                              aria-label={`Select row ${index + 1}`}
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                        </TableCell>
-                      )}
-                      {visibleColumns.map((column) => {
-                        const renderedRow = renderRow ? renderRow(item) : item;
-                        const cellContent = renderRow ? renderedRow[column.key] : renderCell?.(item, column.key);
-                        return (
-                          <TableCell key={column.key} className="p-4 text-left min-w-32">
-                            {cellContent}
+                    return (
+                      <TableRow
+                        key={index}
+                        className={cn(
+                          onRowClick && "cursor-pointer",
+                          "hover:bg-gray-50",
+                          !rowDisabled && isSelected && "bg-blue-50",
+                          rowClassName?.(item)
+                        )}
+                        onClick={(e) => {
+                          if (rowDisabled) return;
+                          handleRowClick(item, e);
+                        }}
+                        aria-disabled={rowDisabled}
+                      >
+                        {renderActions && (
+                          <TableCell
+                            className="p-4 text-center w-16 min-w-16 align-middle"
+                            data-actions
+                          >
+                            <div className="flex justify-center items-center gap-2">
+                              {renderActions(item)}
+                            </div>
                           </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  );
-                })}
+                        )}
+                        {selectable && (
+                          <TableCell
+                            className="p-4 w-12 min-w-12 text-center"
+                            data-checkbox
+                          >
+                            <div className="flex justify-center">
+                              <Checkbox
+                                checked={!rowDisabled && isSelected}
+                                disabled={rowDisabled}
+                                onCheckedChange={(checked) => {
+                                  if (rowDisabled) return;
+                                  handleSelectItemChange(itemId, !!checked);
+                                }}
+                                aria-label={`Select row ${index + 1}`}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </TableCell>
+                        )}
+                        {visibleColumns.map((column) => {
+                          const renderedRow = renderRow
+                            ? renderRow(item)
+                            : item;
+                          const cellContent = renderRow
+                            ? renderedRow[column.key]
+                            : renderCell?.(item, column.key, index);
+                          return (
+                            <TableCell
+                              key={column.key}
+                              className="p-4 text-left min-w-32"
+                            >
+                              {cellContent}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    );
+                  })}
 
                 {/* Add Row Placeholder at the bottom when canAddRow is true but not currently adding */}
-                {canAddRow && !isAddingRow && !loading && sortedData.length > 0 && (
-                  <TableRow
-                    className="cursor-pointer hover:bg-gray-50 border-2 border-dashed border-gray-200"
-                    onClick={handleAddRowClick}
-                  >
-                    <TableCell
-                      colSpan={
-                        visibleColumns.length +
-                        (renderActions ? 1 : 0) +
-                        (selectable ? 1 : 0)
-                      }
-                      className="text-center py-4 text-gray-500 hover:text-gray-700"
+                {canAddRow &&
+                  !isAddingRow &&
+                  !loading &&
+                  sortedData.length > 0 && (
+                    <TableRow
+                      className="cursor-pointer hover:bg-gray-50 border-2 border-dashed border-gray-200"
+                      onClick={handleAddRowClick}
                     >
-                      <div className="flex items-center justify-start gap-2">
-                        <Plus className="w-4 h-4" />
-                        {newRowPlaceholder}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
+                      <TableCell
+                        colSpan={
+                          visibleColumns.length +
+                          (renderActions ? 1 : 0) +
+                          (selectable ? 1 : 0)
+                        }
+                        className="text-center py-4 text-gray-500 hover:text-gray-700"
+                      >
+                        <div className="flex items-center justify-start gap-2">
+                          <Plus className="w-4 h-4" />
+                          {newRowPlaceholder}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
               </TableBody>
             </Table>
           </DndContext>
@@ -1698,14 +1821,18 @@ export function EnhancedTable<T extends Record<string, any>>({
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={() => setCurrentPage(prev => prev - 1)}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                onClick={() => setCurrentPage((prev) => prev - 1)}
+                className={
+                  currentPage === 1
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
               />
             </PaginationItem>
 
             {generatePageNumbers().map((page, index) => (
               <PaginationItem key={index}>
-                {page === 'ellipsis-start' || page === 'ellipsis-end' ? (
+                {page === "ellipsis-start" || page === "ellipsis-end" ? (
                   <PaginationEllipsis />
                 ) : (
                   <PaginationLink
@@ -1721,8 +1848,12 @@ export function EnhancedTable<T extends Record<string, any>>({
 
             <PaginationItem>
               <PaginationNext
-                onClick={() => setCurrentPage(prev => prev + 1)}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+                className={
+                  currentPage === totalPages
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
               />
             </PaginationItem>
           </PaginationContent>

@@ -6,12 +6,28 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Eye, Settings, Users, UserCheck, UserX, Clock, Pencil } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Eye,
+  Settings,
+  Users,
+  UserCheck,
+  UserX,
+  Clock,
+  Pencil,
+} from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationLink,
+  PaginationNext,
+} from "@/components/ui/pagination";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { Switch } from "@mui/material";
-
 
 interface Event {
   id: number;
@@ -37,23 +53,25 @@ const Eventlist = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [eventPermissions, setEventPermissions] = useState<EventPermissions>({});
-  
+  const [eventPermissions, setEventPermissions] = useState<EventPermissions>(
+    {}
+  );
+
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  
-  const [searchTerm, setSearchTerm] = useState('');
+
+  const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [showActionPanel, setShowActionPanel] = useState(false);
-  const [activeTab, setActiveTab] = useState('events');
-  
+  const [activeTab, setActiveTab] = useState("events");
+
   // Event Statistics
   const [eventStats, setEventStats] = useState({
     totalInvitedCPs: 0,
     attendedCPs: 0,
     notAttendedCPs: 0,
-    scanTimeEntries: 0
+    scanTimeEntries: 0,
   });
 
   const getEventPermissions = () => {
@@ -73,59 +91,63 @@ const Eventlist = () => {
     setEventPermissions(getEventPermissions());
   }, []);
 
-  const fetchEvents = useCallback(async (page: number, search: string) => {
-    setLoading(true);
-    setIsSearching(!!search);
-    try {
-      const response = await axios.get(`${baseURL}/crm/admin/events.json`, {
-        headers: {
-          Authorization: getAuthHeader(),
-        },
-      });
-
-      const eventsData = response.data.classifieds || [];
-
-      // Extract statistics from API response
-      if (response.data) {
-        setEventStats({
-          totalInvitedCPs: response.data.total_invited || 0,
-          attendedCPs: response.data.attended_count || 0,
-          notAttendedCPs: response.data.not_attended_count || 0,
-          scanTimeEntries: 0 // This may need to be added to the API response
+  const fetchEvents = useCallback(
+    async (page: number, search: string) => {
+      setLoading(true);
+      setIsSearching(!!search);
+      try {
+        const response = await axios.get(`${baseURL}/crm/admin/events.json`, {
+          headers: {
+            Authorization: getAuthHeader(),
+          },
         });
+
+        const eventsData = response.data.classifieds || [];
+
+        // Extract statistics from API response
+        if (response.data) {
+          setEventStats({
+            totalInvitedCPs: response.data.total_invited || 0,
+            attendedCPs: response.data.attended_count || 0,
+            notAttendedCPs: response.data.not_attended_count || 0,
+            scanTimeEntries: 0, // This may need to be added to the API response
+          });
+        }
+
+        // Client-side search filtering
+        let filteredEvents = eventsData;
+        if (search) {
+          const searchLower = search.toLowerCase();
+          filteredEvents = eventsData.filter(
+            (event: Event) =>
+              event.event_name?.toLowerCase().includes(searchLower) ||
+              event.event_at?.toLowerCase().includes(searchLower)
+          );
+        }
+
+        // Client-side pagination
+        const itemsPerPage = 10;
+        const startIndex = (page - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
+
+        setEvents(paginatedEvents);
+        setCurrentPage(page);
+        setTotalPages(Math.ceil(filteredEvents.length / itemsPerPage));
+        setTotalCount(filteredEvents.length);
+
+        // Cache all events
+        sessionStorage.setItem("cached_events", JSON.stringify(eventsData));
+      } catch (error) {
+        toast.error("Failed to fetch events.");
+        console.error("Error fetching events:", error);
+      } finally {
+        setLoading(false);
+        setIsSearching(false);
       }
-
-      // Client-side search filtering
-      let filteredEvents = eventsData;
-      if (search) {
-        const searchLower = search.toLowerCase();
-        filteredEvents = eventsData.filter((event: Event) =>
-          event.event_name?.toLowerCase().includes(searchLower) ||
-          event.event_at?.toLowerCase().includes(searchLower)
-        );
-      }
-
-      // Client-side pagination
-      const itemsPerPage = 10;
-      const startIndex = (page - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
-
-      setEvents(paginatedEvents);
-      setCurrentPage(page);
-      setTotalPages(Math.ceil(filteredEvents.length / itemsPerPage));
-      setTotalCount(filteredEvents.length);
-
-      // Cache all events
-      sessionStorage.setItem('cached_events', JSON.stringify(eventsData));
-    } catch (error) {
-      toast.error("Failed to fetch events.");
-      console.error("Error fetching events:", error);
-    } finally {
-      setLoading(false);
-      setIsSearching(false);
-    }
-  }, [baseURL]);
+    },
+    [baseURL]
+  );
 
   useEffect(() => {
     fetchEvents(currentPage, searchTerm);
@@ -143,9 +165,13 @@ const Eventlist = () => {
   };
 
   const handleAddEvent = () => navigate("/maintenance/event-create");
-  const handleEditEvent = (id: number) => navigate(`/maintenance/event-edit/${id}`);
-  const handleViewEvent = (id: number) => navigate(`/maintenance/event-details/${id}`);
-  const handleClearSelection = () => { setShowActionPanel(false); };
+  const handleEditEvent = (id: number) =>
+    navigate(`/maintenance/event-edit/${id}`);
+  const handleViewEvent = (id: number) =>
+    navigate(`/maintenance/event-details/${id}`);
+  const handleClearSelection = () => {
+    setShowActionPanel(false);
+  };
 
   const handleToggle = async (id: number, currentStatus: boolean) => {
     toast.dismiss();
@@ -203,71 +229,87 @@ const Eventlist = () => {
   }
 
   const columns = [
-    { key: 'actions', label: 'Action', sortable: false },
-    { key: 'id', label: 'Sr No', sortable: true },
-    { key: 'event_name', label: 'Event Name', sortable: true },
-    { key: 'event_at', label: 'Event At', sortable: true },
-    { key: 'from_time', label: 'Event Date', sortable: false },
-    { key: 'to_time', label: 'Event Time', sortable: false },
-    { key: 'active', label: 'Status', sortable: false },
+    { key: "actions", label: "Action", sortable: false },
+    { key: "id", label: "Sr No", sortable: true },
+    { key: "event_name", label: "Event Name", sortable: true },
+    { key: "event_at", label: "Event At", sortable: true },
+    { key: "from_time", label: "Event Date", sortable: false },
+    { key: "to_time", label: "Event Time", sortable: false },
+    { key: "active", label: "Status", sortable: false },
   ];
 
-  const renderCell = (item: Event, columnKey: string) => {
+  const renderCell = (item: Event, columnKey: string, index: number) => {
     switch (columnKey) {
-      case 'actions':
+      case "actions":
         return (
           <div className="flex gap-1">
-
             {/* {eventPermissions.show === "true" && ( */}
-              <Button variant="ghost" size="sm" onClick={() => handleViewEvent(item.id)} title="View">
-                <Eye className="w-4 h-4" />
-              </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleViewEvent(item.id)}
+              title="View"
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
             {/* )} */}
-                        {/* {eventPermissions.update === "true" && ( */}
-              <Button variant="ghost" size="sm" onClick={() => handleEditEvent(item.id)} title="Edit">
-                <Pencil className="w-4 h-4" />
-              </Button>
+            {/* {eventPermissions.update === "true" && ( */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEditEvent(item.id)}
+              title="Edit"
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
             {/* )} */}
           </div>
         );
-      case 'event_name':
+      case "id":
+        return (
+          <span className="text-sm text-gray-700">
+            {(currentPage - 1) * 10 + index + 1}
+          </span>
+        );
+      case "event_name":
         return item.event_name || "-";
-      case 'event_at':
+      case "event_at":
         return item.event_at || "-";
-      case 'from_time':
+      case "from_time":
         return formatDateOnly(item.from_time);
-      case 'to_time':
+      case "to_time":
         return formatTimeOnly(item.from_time);
-      case 'active':
+      case "active":
         return eventPermissions.destroy === "true" ? (
           <Switch
             checked={item.active || false}
             onChange={() => handleToggle(item.id, item.active)}
             sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#C72030',
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "#C72030",
               },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#C72030',
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                backgroundColor: "#C72030",
               },
             }}
           />
-        ) : 
-        (
-          <span className="text-sm text-gray-500">{item.active ? "Active" : "Inactive"}</span>
+        ) : (
+          <span className="text-sm text-gray-500">
+            {item.active ? "Active" : "Inactive"}
+          </span>
         );
       default:
-        return item[columnKey as keyof Event] as React.ReactNode ?? '-';
+        return (item[columnKey as keyof Event] as React.ReactNode) ?? "-";
     }
   };
 
   const renderCustomActions = () => (
     <div className="flex flex-wrap">
-      <Button 
+      <Button
         onClick={handleAddEvent}
         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
       >
-        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
+        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
         Add
       </Button>
     </div>
@@ -279,25 +321,25 @@ const Eventlist = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-3 gap-4 mb-6">
         {[
           {
-            label: 'Total Invited CPs',
+            label: "Total Invited CPs",
             value: eventStats.totalInvitedCPs,
             icon: Users,
-            type: 'total',
-            clickable: false
+            type: "total",
+            clickable: false,
           },
           {
-            label: 'Attended CPs',
+            label: "Attended CPs",
             value: eventStats.attendedCPs,
             icon: UserCheck,
-            type: 'attended',
-            clickable: false
+            type: "attended",
+            clickable: false,
           },
           {
-            label: 'Not Attended CPs',
+            label: "Not Attended CPs",
             value: eventStats.notAttendedCPs,
             icon: UserX,
-            type: 'notAttended',
-            clickable: false
+            type: "notAttended",
+            clickable: false,
           },
           // {
           //   label: 'Scan Time & Entry Log',
@@ -312,7 +354,9 @@ const Eventlist = () => {
             <div
               key={i}
               className={`bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 ${
-                item.clickable ? "cursor-pointer hover:shadow-lg transition-shadow" : ""
+                item.clickable
+                  ? "cursor-pointer hover:shadow-lg transition-shadow"
+                  : ""
               }`}
             >
               <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center rounded">
@@ -342,7 +386,7 @@ const Eventlist = () => {
           data={events}
           columns={columns}
           renderCell={renderCell}
-          pagination={false}
+          pagination={true}
           enableExport={true}
           exportFileName="events"
           storageKey="events-table"
@@ -351,7 +395,9 @@ const Eventlist = () => {
           searchPlaceholder="Search events..."
           leftActions={renderCustomActions()}
           loading={isSearching || loading}
-          loadingMessage={isSearching ? "Searching events..." : "Loading events..."}
+          loadingMessage={
+            isSearching ? "Searching events..." : "Loading events..."
+          }
         />
         {!searchTerm && totalPages > 1 && (
           <div className="mt-6 flex justify-center">
@@ -360,26 +406,43 @@ const Eventlist = () => {
                 <PaginationItem>
                   <PaginationPrevious
                     href="#"
-                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(currentPage - 1);
+                    }}
+                    className={
+                      currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                    }
                   />
                 </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <PaginationItem key={page}>
-                    <PaginationLink 
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-                      isActive={currentPage === page}
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(page);
+                        }}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
                 <PaginationItem>
                   <PaginationNext
                     href="#"
-                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(currentPage + 1);
+                    }}
+                    className={
+                      currentPage === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : ""
+                    }
                   />
                 </PaginationItem>
               </PaginationContent>
@@ -439,11 +502,17 @@ const Eventlist = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="events" className="space-y-4 sm:space-y-4 mt-4 sm:mt-6">
+          <TabsContent
+            value="events"
+            className="space-y-4 sm:space-y-4 mt-4 sm:mt-6"
+          >
             {renderListTab()}
           </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-4 sm:space-y-4 mt-4 sm:mt-6">
+          <TabsContent
+            value="analytics"
+            className="space-y-4 sm:space-y-4 mt-4 sm:mt-6"
+          >
             <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
               <div className="text-gray-500 mb-4">
                 <svg
@@ -464,8 +533,12 @@ const Eventlist = () => {
                   <path d="M8 17v-3" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Analytics Coming Soon</h3>
-              <p className="text-gray-600">Event analytics and reporting features will be available here.</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Analytics Coming Soon
+              </h3>
+              <p className="text-gray-600">
+                Event analytics and reporting features will be available here.
+              </p>
             </div>
           </TabsContent>
         </Tabs>

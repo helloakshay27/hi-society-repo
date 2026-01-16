@@ -59,10 +59,6 @@ const RedButton = styled(MuiButton)(() => ({
     fontFamily: 'Work Sans, sans-serif',
     fontWeight: 500,
     boxShadow: '0 2px 4px rgba(199, 32, 48, 0.2)',
-    '&:hover': {
-        backgroundColor: '#e7e3d9',
-        boxShadow: '0 4px 8px rgba(199, 32, 48, 0.3)',
-    },
 }));
 
 const CancelButton = styled(MuiButton)(() => ({
@@ -74,7 +70,7 @@ const CancelButton = styled(MuiButton)(() => ({
     fontFamily: 'Work Sans, sans-serif',
     fontWeight: 500,
     '&:hover': {
-        backgroundColor: '#d9d5c9',
+        backgroundColor: '#e7e3d9',
     },
 }));
 
@@ -317,9 +313,6 @@ export default function AddTemplatePage() {
 
                         "& fieldset": {
                         borderColor: "#ddd",
-                     },
-                         "&:hover fieldset": {
-                        borderColor: "#C72030",
                      },
                          "&.Mui-focused fieldset": {
                         borderColor: "#C72030",
