@@ -81,12 +81,14 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   const [submitting, setSubmitting] = useState(false);
   const [thankYou, setThankYou] = useState(false);
   const [fetchError, setFetchError] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
   const [fetchAttempt, setFetchAttempt] = useState(0);
   // if server already has any answers for this mapping, show "Form already submitted"
   const [serverSubmitted, setServerSubmitted] = useState(false);
 
     useEffect(() => {
-    setFetchError(null);
+  setFetchError(null);
+  setLoading(true);
     const baseUrl = localStorage.getItem('baseUrl') || '';
     // mappingId can be provided as ?mappingId=... or as the last segment of the path
     const mappingId = (() => {
@@ -131,17 +133,20 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
           });
         });
         if (answeredExists) {
-          setServerSubmitted(true);
-          setCategories([]);
+          if (!cancelled) setServerSubmitted(true);
+          if (!cancelled) setCategories([]);
+          if (!cancelled) setLoading(false);
           return;
         }
 
         const adapted = adaptFromFitout(payload as FitoutItem[]);
-        setCategories(adapted || []);
+        if (!cancelled) setCategories(adapted || []);
+        if (!cancelled) setLoading(false);
       })
       .catch(() => {
         if (!cancelled) {
           setCategories([]);
+          setLoading(false);
         }
       });
     return () => { cancelled = true; };
@@ -247,6 +252,16 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   };
 
   const displayedCategory = (categories && categories[0] && categories[0].name) || 'Fitout setup';
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full bg-cover bg-center flex items-center justify-center" style={containerStyle}>
+        <div className="bg-white/80 p-6 rounded-md shadow-md flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-t-blue-600 border-gray-200 rounded-full animate-spin mb-4" />
+          <div className="text-sm text-gray-700">Form Loading...</div>
+        </div>
+      </div>
+    );
+  }
   if (thankYou) {
     return (
       <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
