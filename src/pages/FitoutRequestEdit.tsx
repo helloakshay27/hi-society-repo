@@ -637,27 +637,7 @@ const FitoutRequestEdit: React.FC = () => {
                 InputProps={{ sx: fieldStyles }}
               />
 
-              <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Status</InputLabel>
-                <MuiSelect
-                  value={formData.statusId}
-                  onChange={handleSelectChange('statusId')}
-                  label="Status"
-                  displayEmpty
-                  sx={fieldStyles}
-                >
-                  <MenuItem value="">Select Status</MenuItem>
-                  {statuses.map((status: any) => (
-                    <MenuItem key={status.id} value={status.id.toString()}>
-                      {status.name}
-                    </MenuItem>
-                  ))}
-                </MuiSelect>
-              </FormControl>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <TextField
+               <TextField
                 label="Contractor Name"
                 name="contractorName"
                 value={formData.contractorName}
@@ -680,20 +660,40 @@ const FitoutRequestEdit: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
               />
-            </div>
-
-            <TextField
+               <TextField
               label="Description"
               name="description"
               value={formData.description}
               onChange={handleInputChange}
               placeholder="Description"
               fullWidth
-              multiline
-              rows={3}
+              // multiline
+              // rows={3}
               variant="outlined"
               InputLabelProps={{ shrink: true }}
             />
+
+             <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Status</InputLabel>
+                <MuiSelect
+                  value={formData.statusId}
+                  onChange={handleSelectChange('statusId')}
+                  label="Status"
+                  displayEmpty
+                  sx={fieldStyles}
+                >
+                  <MenuItem value="">Select Status</MenuItem>
+                  {statuses.map((status: any) => (
+                    <MenuItem key={status.id} value={status.id.toString()}>
+                      {status.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+            </div>
+
+
+           
           </div>
         </div>
 
@@ -865,11 +865,11 @@ const FitoutRequestEdit: React.FC = () => {
                         // Reset input to allow selecting the same file again
                         e.target.value = '';
                       }}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#4A90E2] file:text-white hover:file:bg-[#357ABD]"
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#bf213e] file:text-white hover:file:bg-[#bf213e]"
                       id={`file-upload-${index}`}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">You can select multiple images at once</p>
+                  {/* <p className="text-xs text-gray-500 mt-1">You can select multiple images at once</p> */}
                 </div>
               </div>
             ))}

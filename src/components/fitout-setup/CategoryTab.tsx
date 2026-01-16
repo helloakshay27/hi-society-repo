@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { EnhancedTable } from '../enhanced-table/EnhancedTable';
 import { apiClient } from '@/utils/apiClient';
 
@@ -28,6 +37,8 @@ export const CategoryTab: React.FC = () => {
   const [categoryName, setCategoryName] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -56,6 +67,7 @@ export const CategoryTab: React.FC = () => {
     }
 
     try {
+      setIsSubmitting(true);
       // Get society_id from localStorage
       const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
       
@@ -81,24 +93,27 @@ export const CategoryTab: React.FC = () => {
         }
       });
       toast.success('Category added successfully');
-      const newCategory = response.data;
-      setCategories(Array.isArray(categories) ? [...categories, newCategory] : [newCategory]);
+      setIsDialogOpen(false);
       setCategoryName('');
       fetchCategories(); // Refresh the list
     } catch (error) {
       console.error('Error adding category:', error);
       toast.error('Failed to add category');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleEdit = (category: Category) => {
     setEditingId(category.id);
     setCategoryName(category.name);
+    setIsDialogOpen(true);
   };
   const handleUpdate = async () => {
     if (!categoryName.trim() || !editingId) return;
 
     try {
+      setIsSubmitting(true);
       await apiClient.put(`/crm/admin/fitout_categories/${editingId}.json`, {
         fitout_category: {
           name: categoryName,
@@ -106,12 +121,15 @@ export const CategoryTab: React.FC = () => {
         }
       });
       toast.success('Category updated successfully');
+      setIsDialogOpen(false);
       setCategoryName('');
       setEditingId(null);
       fetchCategories(); // Refresh the list
     } catch (error) {
       console.error('Error updating category:', error);
       toast.error('Failed to update category');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -126,6 +144,18 @@ export const CategoryTab: React.FC = () => {
       console.error('Error deleting category:', error);
       toast.error('Failed to delete category');
     }
+  };
+
+  const handleOpenAddDialog = () => {
+    setEditingId(null);
+    setCategoryName('');
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setCategoryName('');
+    setEditingId(null);
   };
 
   const columns = useMemo(
@@ -190,13 +220,13 @@ export const CategoryTab: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={() => handleEdit(item)}
-              className="text-blue-600 hover:text-blue-800"
+              className="text-black-600 hover:text-black-800"
             >
               <Pencil className="w-4 h-4" />
             </button>
             <button
               onClick={() => handleDelete(item.id)}
-              className="text-red-600 hover:text-red-800"
+              className="text-black-600 hover:text-black-800"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -235,26 +265,6 @@ export const CategoryTab: React.FC = () => {
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <div className="mb-6 flex gap-4 items-end">
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Name
-          </label>
-          <Input
-            placeholder="Enter Category name"
-            value={categoryName}
-            onChange={(e) => setCategoryName(e.target.value)}
-            className="max-w-md"
-          />
-        </div>
-        <Button
-          onClick={editingId ? handleUpdate : handleAdd}
-          className="bg-[#2C3F87] hover:bg-[#1e2a5e] text-white"
-        >
-          {editingId ? 'Update' : '+ Add'}
-        </Button>
-      </div>
-
       <EnhancedTable
         data={categories}
         columns={columns}
@@ -269,7 +279,57 @@ export const CategoryTab: React.FC = () => {
         searchPlaceholder="Search categories..."
         pagination={true}
         pageSize={10}
+        leftActions={
+          <Button
+            onClick={handleOpenAddDialog}
+            className="bg-[#2C3F87] hover:bg-[#1e2a5e] text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add
+          </Button>
+        }
       />
+
+      {/* Add/Edit Category Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{editingId ? 'Edit Category' : 'Add Category'}</DialogTitle>
+            <DialogDescription>
+              {editingId ? 'Update the category details below.' : 'Enter the category details below.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="category-name">Category Name *</Label>
+              <Input
+                id="category-name"
+                placeholder="Enter category name"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCloseDialog}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              onClick={editingId ? handleUpdate : handleAdd}
+              disabled={isSubmitting}
+              className="bg-[#2C3F87] hover:bg-[#1e2a5e] text-white"
+            >
+              {isSubmitting ? 'Saving...' : editingId ? 'Update' : 'Add'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

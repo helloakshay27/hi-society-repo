@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit, Eye, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/utils/apiClient";
 
@@ -52,7 +53,11 @@ const FitoutChecklists: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const [checklists, setChecklists] = useState<FitoutChecklistItem[]>([]);
+  const [allChecklists, setAllChecklists] = useState<FitoutChecklistItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
   const [appliedFilters, setAppliedFilters] = useState<FilterState>({
     checklistName: "",
     categoryId: "all",
@@ -82,12 +87,8 @@ const FitoutChecklists: React.FC = () => {
         console.log("Fitout Checklist response:", response.data);
         const checklistData = response.data.data || [];
 
-        setChecklists((prevChecklists) => {
-          if (JSON.stringify(prevChecklists) === JSON.stringify(checklistData)) {
-            return prevChecklists;
-          }
-          return checklistData;
-        });
+        setAllChecklists(checklistData);
+        setTotalPages(Math.ceil(checklistData.length / itemsPerPage));
       } catch (error) {
         console.error("Error fetching Fitout Checklist data:", error);
         setChecklists([]);
@@ -102,6 +103,17 @@ const FitoutChecklists: React.FC = () => {
     },
     [toast]
   );
+
+  const handleGlobalSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   const handleAddChecklist = () => {
     navigate(`/fitout/checklists/add`);
@@ -289,19 +301,38 @@ const FitoutChecklists: React.FC = () => {
   );
 
   const filteredChecklists = useMemo(() => {
-    return checklists.filter((checklist) => {
-      const matchesSearch =
-        checklist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (checklist.category_name || "")
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        (checklist.sub_category_name || "")
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-
-      return matchesSearch;
-    });
-  }, [checklists, searchTerm]);
+    let filtered = allChecklists;
+    
+    // Apply search filter
+    if (searchTerm) {
+      filtered = allChecklists.filter((checklist) => {
+        const matchesSearch =
+          checklist.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (checklist.category_name || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (checklist.sub_category_name || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase());
+        return matchesSearch;
+      });
+    }
+    
+    // Update total pages based on filtered results
+    const pages = Math.ceil(filtered.length / itemsPerPage);
+    if (pages !== totalPages) {
+      setTotalPages(pages);
+    }
+    
+    // Apply pagination only when not searching
+    if (!searchTerm) {
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return filtered.slice(startIndex, endIndex);
+    }
+    
+    return filtered;
+  }, [allChecklists, searchTerm, currentPage, itemsPerPage, totalPages]);
 
   if (loading) {
     return (
@@ -331,11 +362,10 @@ const FitoutChecklists: React.FC = () => {
           storageKey="fitout-checklist-table-v1"
           enableExport={true}
           exportFileName="fitout-checklist-data"
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          enableGlobalSearch={true}
+          onGlobalSearch={handleGlobalSearch}
           searchPlaceholder="Search checklists..."
-          pagination={true}
-          pageSize={10}
+          pagination={false}
           leftActions={
             <div className="flex flex-wrap items-center gap-2 md:gap-4">
               <Button
@@ -355,7 +385,41 @@ const FitoutChecklists: React.FC = () => {
             </div>
           }
           handleExport={handleExportChecklists}
+          loading={loading}
         />
+        {!searchTerm && totalPages > 1 && (
+          <div className="mt-3 flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <PaginationItem key={page}>
+                    <PaginationLink 
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
+                      isActive={currentPage === page}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
     </div>
   );

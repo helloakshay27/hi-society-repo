@@ -1442,7 +1442,7 @@ export function EnhancedTable<T extends Record<string, any>>({
 
   return (
     <div className="space-y-0">
-      <div className="flex items-center justify-between gap-4 py-2 bg-[##ffffff]">
+      <div className="flex items-center justify-between gap-4 py-2 bg-[##ffffff] mb-2">
         <div className="flex items-center gap-4 flex-1">
           {leftActions}
 

@@ -193,20 +193,12 @@ export const FitoutGuideTab: React.FC = () => {
         >
           <div className="flex flex-col items-center gap-2">
             <div className="w-16 h-16 flex items-center justify-center border-2 border-gray-300 rounded">
-              <span className="text-3xl text-gray-400">+</span>
+              <Upload className="w-8 h-8 text-gray-400" />
             </div>
             <p className="text-sm text-gray-600">Click to upload PDF file</p>
             <p className="text-xs text-gray-400">Maximum file size: 10MB</p>
           </div>
         </div>
-        <Button
-          onClick={handleFileSelect}
-          disabled={uploading}
-          className="mt-4 bg-[#2C3F87] hover:bg-[#1e2a5e] text-white"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          {uploading ? 'Uploading...' : 'Upload'}
-        </Button>
       </div>
 
       <EnhancedTable
@@ -223,6 +215,16 @@ export const FitoutGuideTab: React.FC = () => {
         searchPlaceholder="Search fitout guides..."
         pagination={true}
         pageSize={10}
+        leftActions={
+          <Button
+            onClick={handleFileSelect}
+            disabled={uploading}
+            className="bg-[#2C3F87] hover:bg-[#1e2a5e] text-white"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            {uploading ? 'Uploading...' : 'Upload PDF'}
+          </Button>
+        }
       />
     </div>
   );

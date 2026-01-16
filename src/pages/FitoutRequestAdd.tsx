@@ -485,7 +485,7 @@ const FitoutRequestAdd: React.FC = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <TextField
                 label="Contractor Name"
                 name="contactor_name"
@@ -509,20 +509,21 @@ const FitoutRequestAdd: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
               />
-            </div>
-
-            <TextField
+              <TextField
               label="Description"
               name="description"
               value={formData.description}
               onChange={handleInputChange}
               placeholder="Description"
               fullWidth
-              multiline
-              rows={3}
+              // multiline
+              // rows={3}
               variant="outlined"
               InputLabelProps={{ shrink: true }}
             />
+            </div>
+
+
           </div>
         </div>
 
@@ -646,11 +647,11 @@ const FitoutRequestAdd: React.FC = () => {
                         }
                         e.target.value = '';
                       }}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#4A90E2] file:text-white hover:file:bg-[#357ABD]"
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#bf213e] file:text-white hover:file:bg-[#bf213e]"
                       id={`file-upload-${index}`}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">You can select multiple images at once</p>
+                  {/* <p className="text-xs text-gray-500 mt-1">You can select multiple images at once</p> */}
                 </div>
               </div>
             ))}

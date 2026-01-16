@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit, Eye, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
@@ -32,7 +33,11 @@ const FitoutRequests: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const [fitoutRequests, setFitoutRequests] = useState<FitoutRequestItem[]>([]);
+  const [allRequests, setAllRequests] = useState<FitoutRequestItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
 
   const fetchFitoutRequestsData = useCallback(async () => {
     try {
@@ -51,9 +56,11 @@ const FitoutRequests: React.FC = () => {
       console.log("Fitout Requests response:", response.data);
       const requestsData = response.data.fitout_requests || [];
 
-      setFitoutRequests(requestsData);
+      setAllRequests(requestsData);
+      setTotalPages(Math.ceil(requestsData.length / itemsPerPage));
     } catch (error) {
       console.error("Error fetching Fitout Requests data:", error);
+      setAllRequests([]);
       setFitoutRequests([]);
       toast({
         title: "Error",
@@ -63,11 +70,22 @@ const FitoutRequests: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, itemsPerPage]);
 
   useEffect(() => {
     fetchFitoutRequestsData();
   }, [fetchFitoutRequestsData]);
+
+  const handleGlobalSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   const handleAddRequest = () => {
     navigate(`/fitout/requests/add`);
@@ -170,13 +188,13 @@ const FitoutRequests: React.FC = () => {
         draggable: true,
         defaultVisible: true,
       },
-      {
-        key: "end_date",
-        label: "End Date",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
+      // {
+      //   key: "end_date",
+      //   label: "End Date",
+      //   sortable: true,
+      //   draggable: true,
+      //   defaultVisible: true,
+      // },
       {
         key: "amount",
         label: "Amount",
@@ -200,7 +218,7 @@ const FitoutRequests: React.FC = () => {
       switch (columnKey) {
         case "actions":
           return (
-            <div className="flex justify-center items-center gap-2">
+            <div className="flex justify-center items-center gap-2 mb-2">
               <button
                 onClick={() => handleRowAction("View", item.id)}
                 className="p-1 text-black-600 hover:text-black-800"
@@ -274,16 +292,35 @@ const FitoutRequests: React.FC = () => {
   );
 
   const filteredRequests = useMemo(() => {
-    return fitoutRequests.filter((request) => {
-      const matchesSearch =
-        request.category_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.status_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.id?.toString().includes(searchTerm);
-
-      return matchesSearch;
-    });
-  }, [fitoutRequests, searchTerm]);
+    let filtered = allRequests;
+    
+    // Apply search filter
+    if (searchTerm) {
+      filtered = allRequests.filter((request) => {
+        const matchesSearch =
+          request.category_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.status_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.id?.toString().includes(searchTerm);
+        return matchesSearch;
+      });
+    }
+    
+    // Update total pages based on filtered results
+    const pages = Math.ceil(filtered.length / itemsPerPage);
+    if (pages !== totalPages) {
+      setTotalPages(pages);
+    }
+    
+    // Apply pagination only when not searching
+    if (!searchTerm) {
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return filtered.slice(startIndex, endIndex);
+    }
+    
+    return filtered;
+  }, [allRequests, searchTerm, currentPage, itemsPerPage, totalPages]);
 
   if (loading) {
     return (
@@ -313,11 +350,10 @@ const FitoutRequests: React.FC = () => {
           storageKey="fitout-requests-table-v1"
           enableExport={true}
           exportFileName="fitout-requests-data"
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          enableGlobalSearch={true}
+          onGlobalSearch={handleGlobalSearch}
           searchPlaceholder="Search requests..."
-          pagination={true}
-          pageSize={10}
+          pagination={false}
           leftActions={
             <div className="flex flex-wrap items-center gap-2 md:gap-4">
               <Button
@@ -337,7 +373,41 @@ const FitoutRequests: React.FC = () => {
             </div>
           }
           handleExport={handleExportRequests}
+          loading={loading}
         />
+        {!searchTerm && totalPages > 1 && (
+          <div className="mt-3 flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <PaginationItem key={page}>
+                    <PaginationLink 
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
+                      isActive={currentPage === page}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
     </div>
   );

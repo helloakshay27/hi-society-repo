@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Plus, Eye, Edit, Pencil } from 'lucide-react';
@@ -47,19 +47,19 @@ const FitoutDeviations: React.FC = () => {
   const navigate = useNavigate();
   const baseURL = API_CONFIG.BASE_URL;
   const [deviations, setDeviations] = useState<FitoutDeviation[]>([]);
+  const [allDeviations, setAllDeviations] = useState<FitoutDeviation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
   
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
-  const fetchDeviations = useCallback(async (page: number, search: string) => {
+  const fetchDeviations = useCallback(async () => {
     setLoading(true);
-    setIsSearching(!!search);
     setError(null);
     try {
       const response = await axios.get(`${baseURL}/crm/admin/deviation_details.json`, {
@@ -82,27 +82,8 @@ const FitoutDeviations: React.FC = () => {
           deviationCount: detail.deviations.length,
         }));
       
-      // Client-side search filtering
-      let filteredDeviations = transformedData;
-      if (search) {
-        const searchLower = search.toLowerCase();
-        filteredDeviations = transformedData.filter((deviation: FitoutDeviation) =>
-          deviation.tower?.toLowerCase().includes(searchLower) ||
-          deviation.flat?.toLowerCase().includes(searchLower) ||
-          deviation.status?.toLowerCase().includes(searchLower)
-        );
-      }
-      
-      // Client-side pagination
-      const itemsPerPage = 10;
-      const startIndex = (page - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const paginatedDeviations = filteredDeviations.slice(startIndex, endIndex);
-      
-      setDeviations(paginatedDeviations);
-      setCurrentPage(page);
-      setTotalPages(Math.ceil(filteredDeviations.length / itemsPerPage));
-      setTotalCount(filteredDeviations.length);
+      setAllDeviations(transformedData);
+      setTotalPages(Math.ceil(transformedData.length / itemsPerPage));
       
     } catch (err) {
       setError('Failed to fetch fitout deviations.');
@@ -129,8 +110,8 @@ const FitoutDeviations: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchDeviations(currentPage, searchTerm);
-  }, [currentPage, searchTerm, fetchDeviations]);
+    fetchDeviations();
+  }, [fetchDeviations]);
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
@@ -142,6 +123,35 @@ const FitoutDeviations: React.FC = () => {
       setCurrentPage(page);
     }
   };
+
+  const filteredDeviations = useMemo(() => {
+    let filtered = allDeviations;
+    
+    // Apply search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = allDeviations.filter((deviation) =>
+        deviation.tower?.toLowerCase().includes(searchLower) ||
+        deviation.flat?.toLowerCase().includes(searchLower) ||
+        deviation.status?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Update total pages based on filtered results
+    const pages = Math.ceil(filtered.length / itemsPerPage);
+    if (pages !== totalPages) {
+      setTotalPages(pages);
+    }
+    
+    // Apply pagination only when not searching
+    if (!searchTerm) {
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return filtered.slice(startIndex, endIndex);
+    }
+    
+    return filtered;
+  }, [allDeviations, searchTerm, currentPage, itemsPerPage, totalPages]);
   
   const handleAddDeviation = () => {
     // TODO: Navigate to create page
@@ -215,7 +225,7 @@ const FitoutDeviations: React.FC = () => {
     <div className="space-y-4">
       <>
         <EnhancedTable
-          data={deviations}
+          data={filteredDeviations}
           columns={columns}
           renderCell={renderCell}
           pagination={false}
@@ -226,11 +236,10 @@ const FitoutDeviations: React.FC = () => {
           onGlobalSearch={handleGlobalSearch}
           searchPlaceholder="Search deviations (tower, flat, status)..."
           leftActions={renderCustomActions()}
-          loading={isSearching || loading}
-          loadingMessage={isSearching ? "Searching deviations..." : "Loading deviations..."}
+          loading={loading}
         />
         {!searchTerm && totalPages > 1 && (
-          <div className="mt-6 flex justify-center">
+          <div className="mt-3 flex justify-center">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>

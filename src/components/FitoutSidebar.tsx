@@ -31,12 +31,6 @@ export const FitoutSidebar: React.FC = () => {
       path: "/fitout/requests",
     },
     {
-      id: "fitout-setup",
-      label: "Fitout Setup",
-      icon: Settings,
-      path: "/fitout/setup",
-    },
-    {
       id: "fitout-checklists",
       label: "Fitout Checklists",
       icon: ClipboardCheck,
@@ -53,6 +47,12 @@ export const FitoutSidebar: React.FC = () => {
       label: "Fitout Report",
       icon: FileText,
       path: "/fitout/report",
+    },
+     {
+      id: "fitout-setup",
+      label: "Fitout Setup",
+      icon: Settings,
+      path: "/fitout/setup",
     },
   ];
 

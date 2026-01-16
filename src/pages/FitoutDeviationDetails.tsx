@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, ArrowLeft, Send, Upload, X, Pencil } from 'lucide-react';
+import { Eye, ArrowLeft, Send, Upload, X, Pencil, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
 import axios from 'axios';
 import {
@@ -65,11 +66,14 @@ const FitoutDeviationDetails: React.FC = () => {
   const { flat_id } = useParams<{ flat_id: string }>();
   const baseURL = API_CONFIG.BASE_URL;
   
-  const [deviations, setDeviations] = useState<TableDeviation[]>([]);
+  const [allDeviations, setAllDeviations] = useState<TableDeviation[]>([]);
   const [flatDetails, setFlatDetails] = useState<{ societyFlatId: number | null }>({ societyFlatId: null });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
   
   // Edit Status Dialog State
   const [isEditStatusOpen, setIsEditStatusOpen] = useState(false);
@@ -85,9 +89,8 @@ const FitoutDeviationDetails: React.FC = () => {
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
   const [isSubmittingViolation, setIsSubmittingViolation] = useState(false);
 
-  const fetchDeviationDetails = useCallback(async (search: string) => {
+  const fetchDeviationDetails = useCallback(async () => {
     setLoading(true);
-    setIsSearching(!!search);
     try {
       const response = await axios.get<ApiResponse>(
         `${baseURL}/crm/admin/deviation_details/flat_deviations.json`,
@@ -130,35 +133,60 @@ const FitoutDeviationDetails: React.FC = () => {
         snag_checklist_id: deviation.snag_checklist_id,
       }));
 
-      // Client-side search filtering
-      let filteredData = transformedData;
-      if (search) {
-        const searchLower = search.toLowerCase();
-        filteredData = transformedData.filter((item) =>
-          item.description?.toLowerCase().includes(searchLower) ||
-          item.status?.toLowerCase().includes(searchLower) ||
-          item.comment?.toLowerCase().includes(searchLower) ||
-          item.resource_id?.toString().includes(searchLower)
-        );
-      }
-
-      setDeviations(filteredData);
+      setAllDeviations(transformedData);
+      setTotalPages(Math.ceil(transformedData.length / itemsPerPage));
     } catch (err) {
       toast.error('Failed to fetch deviation details.');
       console.error('Error fetching deviation details:', err);
     } finally {
       setLoading(false);
-      setIsSearching(false);
     }
-  }, [baseURL, flat_id, navigate]);
+  }, [baseURL, flat_id, navigate, itemsPerPage]);
 
   useEffect(() => {
-    fetchDeviationDetails(searchTerm);
-  }, [searchTerm, fetchDeviationDetails]);
+    fetchDeviationDetails();
+  }, [fetchDeviationDetails]);
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
+    setCurrentPage(1);
   };
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const filteredDeviations = useMemo(() => {
+    let filtered = allDeviations;
+    
+    // Apply search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = allDeviations.filter((item) =>
+        item.description?.toLowerCase().includes(searchLower) ||
+        item.status?.toLowerCase().includes(searchLower) ||
+        item.comment?.toLowerCase().includes(searchLower) ||
+        item.resource_id?.toString().includes(searchLower)
+      );
+    }
+    
+    // Update total pages based on filtered results
+    const pages = Math.ceil(filtered.length / itemsPerPage);
+    if (pages !== totalPages) {
+      setTotalPages(pages);
+    }
+    
+    // Apply pagination only when not searching
+    if (!searchTerm) {
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return filtered.slice(startIndex, endIndex);
+    }
+    
+    return filtered;
+  }, [allDeviations, searchTerm, currentPage, itemsPerPage, totalPages]);
 
   const handleBack = () => {
     navigate('/fitout/deviations');
@@ -208,7 +236,7 @@ const FitoutDeviationDetails: React.FC = () => {
       setSelectedStatus('');
       setStatusComment('');
       setSelectedEditDeviationId(null);
-      fetchDeviationDetails(searchTerm);
+      fetchDeviationDetails();
     } catch (err) {
       toast.error('Failed to update status');
       console.error('Error updating status:', err);
@@ -362,42 +390,32 @@ const FitoutDeviationDetails: React.FC = () => {
     }
   };
 
-  const renderCustomActions = () => (
-    <div className="flex flex-wrap gap-2">
-      <Button 
-        onClick={handleBack}
-        variant="outline"
-        className="h-9 px-4 text-sm font-medium"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back
-      </Button>
-      <Button 
-        onClick={() => {}}
-        className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-      >
-        Export
-      </Button>
-    </div>
-  );
-
   return (
-    <div className="p-2 sm:p-4 lg:p-6">
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <Toaster position="top-right" richColors closeButton />
       
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Fit Out Rounder Checklist</h1>
-        <div className="mt-2 flex gap-4 text-sm text-gray-600">
-          <span><strong>Society Flat ID:</strong> {flatDetails.societyFlatId || flat_id}</span>
-          <span><strong>Total Deviations:</strong> {deviations.length}</span>
+      {/* Header with Back Button */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          onClick={handleBack}
+          variant="ghost"
+          className="h-8 w-8 p-0"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold text-gray-900">Fit Out Rounder Checklist</h1>
+          <div className="mt-1 flex gap-4 text-sm text-gray-600">
+            <span><strong>Society Flat ID:</strong> {flatDetails.societyFlatId || flat_id}</span>
+            <span><strong>Total Deviations:</strong> {allDeviations.length}</span>
+          </div>
         </div>
       </div>
 
       {/* Table */}
       <div className="space-y-4">
         <EnhancedTable
-          data={deviations}
+          data={filteredDeviations}
           columns={columns}
           renderCell={renderCell}
           pagination={false}
@@ -407,10 +425,95 @@ const FitoutDeviationDetails: React.FC = () => {
           enableGlobalSearch={true}
           onGlobalSearch={handleGlobalSearch}
           searchPlaceholder="Search deviations..."
-          leftActions={renderCustomActions()}
-          loading={isSearching || loading}
-          loadingMessage={isSearching ? "Searching..." : "Loading deviations..."}
+          loading={loading}
         />
+        {!searchTerm && totalPages > 1 && (
+          <div className="mt-3 flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                
+                {/* Page 1 */}
+                <PaginationItem>
+                  <PaginationLink 
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handlePageChange(1); }}
+                    isActive={currentPage === 1}
+                  >
+                    1
+                  </PaginationLink>
+                </PaginationItem>
+                
+                {/* Page 2 */}
+                {totalPages >= 2 && (
+                  <PaginationItem>
+                    <PaginationLink 
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(2); }}
+                      isActive={currentPage === 2}
+                    >
+                      2
+                    </PaginationLink>
+                  </PaginationItem>
+                )}
+                
+                {/* Ellipsis before current page range */}
+                {currentPage > 3 && (
+                  <PaginationItem>
+                    <span className="px-3 py-2">...</span>
+                  </PaginationItem>
+                )}
+                
+                {/* Current page if > 2 and not last page */}
+                {currentPage > 2 && currentPage < totalPages && (
+                  <PaginationItem>
+                    <PaginationLink 
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(currentPage); }}
+                      isActive={true}
+                    >
+                      {currentPage}
+                    </PaginationLink>
+                  </PaginationItem>
+                )}
+                
+                {/* Ellipsis after current page */}
+                {currentPage < totalPages - 1 && totalPages > 3 && (
+                  <PaginationItem>
+                    <span className="px-3 py-2">...</span>
+                  </PaginationItem>
+                )}
+                
+                {/* Last page */}
+                {totalPages > 2 && (
+                  <PaginationItem>
+                    <PaginationLink 
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(totalPages); }}
+                      isActive={currentPage === totalPages}
+                    >
+                      {totalPages}
+                    </PaginationLink>
+                  </PaginationItem>
+                )}
+                
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
 
       {/* Edit Status Dialog */}
