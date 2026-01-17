@@ -140,7 +140,7 @@ export const FMGroupDashboard = () => {
                 <TableRow className="bg-gray-50" style={{ backgroundColor: "#F6F4EE" }}>
                   <TableHead>Actions</TableHead>
                   <TableHead>ID</TableHead>
-                  <TableHead>Profile</TableHead>
+                  {/* <TableHead>Profile</TableHead> */}
                   <TableHead>Group Name</TableHead>
                   <TableHead>Members</TableHead>
                   <TableHead>Status</TableHead>
@@ -168,11 +168,11 @@ export const FMGroupDashboard = () => {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{group.id}</TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <div className="w-10 h-10 rounded-full bg-orange-200 flex items-center justify-center">
                         <div className="w-6 h-6 rounded-full bg-orange-400"></div>
                       </div>
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell>{group.name}</TableCell>
                     <TableCell>{group.members_count}</TableCell>
                     <TableCell>
