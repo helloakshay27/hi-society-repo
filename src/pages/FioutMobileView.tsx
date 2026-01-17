@@ -22,12 +22,12 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
 
   type FitoutSnagOption = { id: number | string; qname?: string };
   type FitoutSnagQuestion = { id: number | string; qtype: string; descr: string; quest_mandatory?: boolean; snag_quest_options?: FitoutSnagOption[] };
-  type FitoutItem = { id?: number | string; name?: string; snag_questions: Array<{ snag_question: FitoutSnagQuestion }> };
+  type FitoutItem = { id?: number | string; name?: string; snag_quest_maps: Array<{ snag_question: FitoutSnagQuestion }> };
 
   const adaptFromFitout = useCallback((payload: FitoutItem[]) => {
     return (payload || []).map((item) => ({
       name: item.name || 'Category',
-      questions: (item.snag_questions || []).map((entry) => {
+      questions: (item.snag_quest_maps || []).map((entry) => {
         const s = entry.snag_question;
         let qtype = s.qtype;
         if (qtype === 'text') qtype = 'inputbox';
@@ -123,9 +123,9 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
         // If any snag_answers exist in the payload, treat the form as already submitted
         const answeredExists = (payload || []).some((item: unknown) => {
           if (!item || typeof item !== 'object') return false;
-          const it = item as { snag_questions?: unknown };
-          if (!Array.isArray(it.snag_questions)) return false;
-          return (it.snag_questions as unknown[]).some((entry: unknown) => {
+          const it = item as { snag_quest_maps?: unknown };
+          if (!Array.isArray(it.snag_quest_maps)) return false;
+          return (it.snag_quest_maps as unknown[]).some((entry: unknown) => {
             if (!entry || typeof entry !== 'object') return false;
             const e = entry as { snag_answers?: unknown };
             if (!Array.isArray(e.snag_answers)) return false;
