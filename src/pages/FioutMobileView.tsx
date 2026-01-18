@@ -2,7 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 export type SurveyOption = { id: string | number; label: string };
 
-export type SurveyQuestion = { id: string | number; title: string; required?: boolean; qtype?: string; options?: SurveyOption[] };
+export type SurveyQuestion = {
+  id: string | number;
+  // Optional mapping id from snag_quest_maps.id used for POST payload
+  snag_quest_map_id?: string | number;
+  title: string;
+  required?: boolean;
+  qtype?: string;
+  options?: SurveyOption[];
+};
 
 interface FioutMobileViewProps {
   logoSrc?: string;
@@ -22,7 +30,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
 
   type FitoutSnagOption = { id: number | string; qname?: string };
   type FitoutSnagQuestion = { id: number | string; qtype: string; descr: string; quest_mandatory?: boolean; snag_quest_options?: FitoutSnagOption[] };
-  type FitoutItem = { id?: number | string; name?: string; snag_quest_maps: Array<{ snag_question: FitoutSnagQuestion }> };
+  type FitoutItem = { id?: number | string; name?: string; snag_quest_maps: Array<{ id?: number | string; snag_question: FitoutSnagQuestion }> };
 
   const adaptFromFitout = useCallback((payload: FitoutItem[]) => {
     return (payload || []).map((item) => ({
@@ -33,6 +41,8 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
         if (qtype === 'text') qtype = 'inputbox';
         return {
           id: s.id,
+          // keep a reference to snag_quest_map_id so POST can use it
+          snag_quest_map_id: entry.id,
           title: s.descr,
           required: !!s.quest_mandatory,
           qtype,
@@ -187,7 +197,8 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
       // For each question create an entry under snag_answers[<mapId>][...]
       categories.forEach((cat) => {
         cat.questions.forEach((q) => {
-          const mapId = String(q.id);
+          // Use snag_quest_map_id from GET payload when available, fallback to question id
+          const mapId = String(q.snag_quest_map_id || q.id);
           const qKeyBase = `snag_answers[${mapId}]`;
           // include map id and question id
           form.append(`${qKeyBase}[snag_quest_map_id]`, mapId);
@@ -265,14 +276,14 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   if (thankYou) {
     return (
       <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
-        <div className="w-full max-w-md px-4 pt-24">
+        <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
           <div className="relative">
             <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
           </div>
         </div>
 
-        <div className="w-full max-w-md px-4 mt-24">
-          <div className="bg-white/90 rounded-md p-6 text-center shadow-md">
+        <div className="w-full max-w-md md:max-w-4xl px-4 mt-24">
+          <div className="bg-white/90 rounded-md p-6 md:p-8 text-center shadow-md">
             <h2 className="text-2xl font-semibold mb-2">Thank you</h2>
             <p className="text-sm text-gray-700 mb-4">Your responses have been submitted successfully.</p>
             <button type="button" onClick={() => setThankYou(false)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Close</button>
@@ -285,14 +296,14 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   if (fetchError === 500) {
     return (
       <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
-        <div className="w-full max-w-md px-4 pt-24">
+        <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
           <div className="relative">
             <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
           </div>
         </div>
 
-        <div className="w-full max-w-md px-4 mt-24">
-          <div className="bg-white/90 rounded-md p-6 text-center shadow-md">
+        <div className="w-full max-w-md md:max-w-4xl px-4 mt-24">
+          <div className="bg-white/90 rounded-md p-6 md:p-8 text-center shadow-md">
             <h2 className="text-2xl font-semibold mb-2">Server error</h2>
             <p className="text-sm text-gray-700 mb-4">We received a 500 error from the server while loading the survey.</p>
             <button type="button" onClick={() => { setFetchError(null); setFetchAttempt((s) => s + 1); }} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Retry</button>
@@ -305,17 +316,17 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   if (serverSubmitted) {
     return (
       <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
-        <div className="w-full max-w-md px-4 pt-24">
+        <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
           <div className="relative">
             <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
           </div>
         </div>
 
-        <div className="w-full max-w-md px-4 mt-24">
-          <div className="bg-white/90 rounded-md p-6 text-center shadow-md">
+        <div className="w-full max-w-md md:max-w-4xl px-4 mt-24">
+          <div className="bg-white/90 rounded-md p-6 md:p-8 text-center shadow-md">
             <h2 className="text-2xl font-semibold mb-2">Form already submitted</h2>
             <p className="text-sm text-gray-700 mb-4">We found previous answers for this fitout mapping. The form cannot be edited.</p>
-            <button type="button" onClick={() => setFetchAttempt((s) => s + 1)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Reload</button>
+            {/* <button type="button" onClick={() => setFetchAttempt((s) => s + 1)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Reload</button> */}
           </div>
         </div>
       </div>
@@ -324,20 +335,20 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
 
   return (
     <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
-      <div className="w-full max-w-md px-4 pt-24">
+  <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
         <div className="relative">
           <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
         </div>
       </div>
 
-      <div className="w-full max-w-md px-4 mt-14">
+  <div className="w-full max-w-md md:max-w-4xl px-4 mt-14">
         <div className="text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-black tracking-tight">{}</h1>
         </div>
       </div>
 
-      <div className="w-full max-w-md px-4 mt-4 flex-1 pb-32">
-        <div className="bg-white/90 border border-gray-200 rounded-md shadow-md p-4 space-y-6">
+  <div className="w-full max-w-md md:max-w-4xl px-4 mt-4 pb-4">
+        <div className="bg-white/90 border border-gray-200 rounded-md shadow-md p-4 md:p-8 space-y-6 md:space-y-8">
           {categories.map((cat, cidx) => (
             <div key={cidx}>
               {categories.length > 1 && <div className="text-xl font-semibold text-gray-700 mb-2">{cat.name}</div>}
@@ -450,15 +461,20 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-transparent p-4">
-        <div className="max-w-md mx-auto">
-          <div className="bg-white/90 border border-gray-200 rounded-md p-3">
-            <button onClick={handleSubmit} disabled={!allRequiredAnswered()} className={`w-full py-4 rounded font-semibold text-white ${allRequiredAnswered() ? 'bg-[#1E56D6]' : 'bg-gray-300 cursor-not-allowed'}`}>
-              Submit Fitout
-            </button>
-          </div>
-        </div>
-      </div>
+    {/* Footer button under the form, not fixed */}
+<div className="w-full max-w-md md:max-w-4xl px-4 mt-6 mb-6">
+  <div className="bg-white/90 border border-gray-200 rounded-md p-3 md:p-4">
+    <button
+      onClick={handleSubmit}
+      disabled={!allRequiredAnswered()}
+      className={`w-full py-4 rounded font-semibold text-white ${
+        allRequiredAnswered() ? 'bg-[#1E56D6]' : 'bg-gray-300 cursor-not-allowed'
+      }`}
+    >
+      Submit Fitout
+    </button>
+  </div>
+</div>
     </div>
   );
 };
