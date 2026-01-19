@@ -335,13 +335,13 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
 
   return (
     <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
-  <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
+  <div className="w-full max-w-md md:max-w-4xl px-4 pt-6">
         <div className="relative">
           {/* <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" /> */}
         </div>
       </div>
 
-  <div className="w-full max-w-md md:max-w-4xl px-4 mt-14">
+  <div className="w-full max-w-md md:max-w-4xl px-4 mt-4">
         <div className="text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-black tracking-tight">{}</h1>
         </div>
@@ -354,12 +354,12 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
               {categories.length > 1 && <div className="text-xl font-semibold text-gray-700 mb-2">{cat.name}</div>}
               {cat.questions.map((q, idx) => (
                 <div key={q.id}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start mb-2">
-                    <div className="md:col-span-1">
-                      <div className="text-[16px] md:text-base font-medium">{`${idx + 1}. ${q.title}`}{q.required && <span className="text-[#C72030] ml-1">*</span>}</div>
+                  <div className="grid grid-cols-1 gap-4 items-start mb-2">
+                    <div>
+                      <div className="text-[16px] md:text-base font-medium">{`${idx + 1}. ${q.title}`}</div>
                     </div>
 
-                    <div className="md:col-span-2">
+                    <div>
                       <div className="space-y-3">
                         {q.qtype === 'inputbox' && !/time/i.test(String(q.title)) && (
                           <input type="text" value={answers[String(q.id)] || ''} onChange={(e) => setOpenAnswer(q.id, e.target.value)} placeholder="Enter your answer" className="w-full border rounded px-3 py-3 bg-white" />
@@ -397,17 +397,32 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
                           </div>
                         )}
 
-                        {q.qtype === 'multiple' && q.options && q.options.map((opt) => {
-                          const selected = answers[String(q.id)] === String(opt.id);
-                          return (
-                            <label key={opt.id} className={`w-full block border ${selected ? 'border-[#1E56D6] bg-[#E8F0FF]' : 'border-gray-200 bg-white'} rounded p-3 mb-2 cursor-pointer`}>
-                              <div className="flex items-center justify-between">
-                                <div className={`text-sm font-medium ${selected ? 'text-blue-700' : 'text-gray-900'}`}>{opt.label}</div>
-                                <input type="radio" name={`q_${q.id}`} checked={selected} onChange={() => selectOption(q.id, opt.id)} />
-                              </div>
-                            </label>
-                          );
-                        })}
+                        {q.qtype === 'multiple' && q.options && (
+                          <div className={`${
+                            q.options.length === 4
+                              ? 'grid grid-cols-2 md:grid-cols-4 gap-3'
+                              : q.options.length === 3
+                              ? 'grid grid-cols-2 md:grid-cols-3 gap-3'
+                              : q.options.length === 2
+                              ? 'grid grid-cols-2 gap-3'
+                              : 'space-y-3'
+                          }`}>
+                            {q.options.map((opt) => {
+                              const selected = answers[String(q.id)] === String(opt.id);
+                              return (
+                                <label
+                                  key={opt.id}
+                                  className={`w-full block border ${selected ? 'border-[#1E56D6] bg-[#E8F0FF]' : 'border-gray-200 bg-white'} rounded p-3 cursor-pointer`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className={`text-sm font-medium ${selected ? 'text-blue-700' : 'text-gray-900'}`}>{opt.label}</div>
+                                    <input type="radio" name={`q_${q.id}`} checked={selected} onChange={() => selectOption(q.id, opt.id)} />
+                                  </div>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
 
                         {q.qtype === 'checkbox' && q.options && q.options.map((opt) => {
                           const current = answers[String(q.id)] ? JSON.parse(answers[String(q.id)]) : [];
@@ -442,15 +457,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
                           <textarea value={answers[String(q.id)] || ''} onChange={(e) => setOpenAnswer(q.id, e.target.value)} placeholder="Write your answer..." className="w-full min-h-[100px] resize-none bg-white border border-gray-300 rounded p-3 text-sm focus:outline-none focus:ring-1" style={{ boxShadow: 'inset 0 0 0 1px rgba(30,86,214,0.08)' }} />
                         )}
 
-                        {/* Mandatory row: left text, right readonly checkbox */}
-                        <div className="grid grid-cols-2 items-center mt-2">
-                          <div className="text-sm text-gray-700">Mandatory</div>
-                          <div className="flex justify-end">
-                            <label className="flex items-center space-x-2 text-sm text-gray-600">
-                              <input type="checkbox" checked={!!q.required} onChange={() => toggleRequired(q.id)} className="w-4 h-4" />
-                            </label>
-                          </div>
-                        </div>
+                        {/* Mandatory UI removed */}
                       </div>
                     </div>
                   </div>
