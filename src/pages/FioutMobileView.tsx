@@ -99,11 +99,10 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
     useEffect(() => {
   setFetchError(null);
   setLoading(true);
-  // Prefer configured API base over window host to avoid hitting SPA index; add a safe default
+  // Prefer configured API base; pin UAT as safe default. Do NOT use window.host to avoid SPA index in incognito.
   const rawBaseUrl = localStorage.getItem('baseUrl') || localStorage.getItem('apiBaseUrl') || '';
   const safeDefaultHost = 'uat-hi-society.lockated.com';
-  const hostFallback = typeof window !== 'undefined' ? window.location.host : '';
-  const baseHost = (rawBaseUrl || hostFallback || safeDefaultHost).replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const baseHost = (rawBaseUrl || safeDefaultHost).replace(/^https?:\/\//, '').replace(/\/$/, '');
     // mappingId can be provided as ?mappingId=... or as the last segment of the path
     const mappingId = (() => {
       try {
@@ -198,7 +197,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
     setSubmitting(true);
     try {
       // Build form data similar to the provided curl payload
-      const baseUrl = localStorage.getItem('baseUrl') || 'uat-hi-society.lockated.com';
+  const baseUrl = localStorage.getItem('baseUrl') || localStorage.getItem('apiBaseUrl') || 'uat-hi-society.lockated.com';
       const host = baseUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
       const postUrl = `https://${host}/fitout_requests/create_feedback`;
 
