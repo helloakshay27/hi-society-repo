@@ -278,6 +278,34 @@ const FitoutRequestDetails: React.FC = () => {
     responses.forEach((categoryResponse) => {
       // Check if snag_quest_maps exists and is an array
       if (!categoryResponse?.snag_quest_maps || !Array.isArray(categoryResponse.snag_quest_maps)) {
+        // Even if no questions, show the annexure name
+        tabularData.push({
+          id: `${categoryResponse.id}-empty`,
+          annexure_name: categoryResponse.name || 'Unknown',
+          question_number: 0,
+          question: '-',
+          question_type: '—',
+          answer: '—',
+          answered_at: '—',
+          is_mandatory: 'No',
+          has_attachments: 'No',
+        });
+        return;
+      }
+      
+      // If snag_quest_maps is empty array, still show the annexure
+      if (categoryResponse.snag_quest_maps.length === 0) {
+        tabularData.push({
+          id: `${categoryResponse.id}-empty`,
+          annexure_name: categoryResponse.name || 'Unknown',
+          question_number: 0,
+          question: '-',
+          question_type: '—',
+          answer: '—',
+          answered_at: '—',
+          is_mandatory: 'No',
+          has_attachments: 'No',
+        });
         return;
       }
       

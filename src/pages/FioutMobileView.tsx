@@ -19,7 +19,7 @@ interface FioutMobileViewProps {
 }
 
 const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSrc, onSubmit }) => {
-  const defaultLogo = 'https://www.persistent.com/wp-content/themes/persistent/dist/images/Persistent-Header-Logo-Black_460dd8e4.svg';
+  // const defaultLogo = 'https://www.persistent.com/wp-content/themes/persistent/dist/images/Persistent-Header-Logo-Black_460dd8e4.svg';
   const defaultBackground = 'https://lockated-public.s3.ap-south-1.amazonaws.com/attachfiles/documents/8412446/original/4.YOO_Villas_Villa_2_Vintage_Living_3.png';
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -278,7 +278,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
       <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
         <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
           <div className="relative">
-            <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
+            {/* <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" /> */}
           </div>
         </div>
 
@@ -298,7 +298,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
       <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
         <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
           <div className="relative">
-            <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
+            {/* <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" /> */}
           </div>
         </div>
 
@@ -318,7 +318,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
       <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
         <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
           <div className="relative">
-            <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
+            {/* <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" /> */}
           </div>
         </div>
 
@@ -337,7 +337,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
     <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
   <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
         <div className="relative">
-          <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" />
+          {/* <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" /> */}
         </div>
       </div>
 
