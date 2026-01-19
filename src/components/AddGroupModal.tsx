@@ -112,10 +112,17 @@ export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record 
     if (isEditing) {
       setLoading(true)
       try {
+        const activeValue =
+          record && (record.active === 1 || record.active === true || record.active === '1')
+            ? 1
+            : record && (record.active === 0 || record.active === false || record.active === '0')
+            ? 0
+            : 1;
         const payload = {
           usergroup: {
             name: groupName,
-            swusersoc: selectedMembers
+            swusersoc: selectedMembers,
+            active: activeValue
           }
         }
 
@@ -141,7 +148,8 @@ export const AddGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, record 
         const payload = {
           usergroup: {
             name: groupName,
-            swusersoc: selectedMembers
+            swusersoc: selectedMembers,
+            active: 1
           }
         }
 

@@ -40,18 +40,19 @@ export const FMGroupDashboard = () => {
     fetchGroups();
   }, []);
 
-  const handleToggleStatus = async (groupId: number, currentStatus: boolean) => {
+  const handleToggleStatus = async (groupId: number, currentStatus: boolean | number) => {
     try {
+      const nextActive = currentStatus ? 0 : 1;
       await axios.put(
         `${baseURL}/crm/usergroups/${groupId}.json`,
         {
           usergroup: {
-            active: !currentStatus
+            active: nextActive
           }
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: getAuthHeader(),
           },
         }
       );
@@ -78,7 +79,8 @@ export const FMGroupDashboard = () => {
       const groupData = {
         id: response.data.id,
         groupName: response.data.name,
-        membersList: response.data.groupmembers || []
+        membersList: response.data.groupmembers || [],
+        active: response.data.active
       };
       
       setSelectedGroup(groupData);
