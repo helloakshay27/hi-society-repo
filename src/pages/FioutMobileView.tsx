@@ -99,10 +99,11 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
     useEffect(() => {
   setFetchError(null);
   setLoading(true);
-  // In incognito/localStorage-empty, derive baseUrl from current host as fallback
-  const rawBaseUrl = localStorage.getItem('baseUrl') || '';
+  // Prefer configured API base over window host to avoid hitting SPA index; add a safe default
+  const rawBaseUrl = localStorage.getItem('baseUrl') || localStorage.getItem('apiBaseUrl') || '';
+  const safeDefaultHost = 'uat-hi-society.lockated.com';
   const hostFallback = typeof window !== 'undefined' ? window.location.host : '';
-  const baseHost = (rawBaseUrl || hostFallback || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const baseHost = (rawBaseUrl || hostFallback || safeDefaultHost).replace(/^https?:\/\//, '').replace(/\/$/, '');
     // mappingId can be provided as ?mappingId=... or as the last segment of the path
     const mappingId = (() => {
       try {
@@ -127,7 +128,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
     }
     const url = `https://${baseHost}/crm/admin/fitout_requests/${mappingId}/fitout_mappings.json`;
     let cancelled = false;
-    fetch(url)
+  fetch(url, { cache: 'no-cache', headers: { Accept: 'application/json' } })
       .then((r) => {
         if (r.status === 500) {
           if (!cancelled) setFetchError(500);
