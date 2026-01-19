@@ -365,7 +365,10 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
                 <div key={q.id}>
                   <div className="grid grid-cols-1 gap-4 items-start mb-2">
                     <div>
-                      <div className="text-[16px] md:text-base font-medium">{`${idx + 1}. ${q.title}`}</div>
+                      <div className="text-[16px] md:text-base font-medium">
+                        {`${idx + 1}. ${q.title}`}
+                        {q.required ? <span className="text-red-600 ml-1">*</span> : null}
+                      </div>
                     </div>
 
                     <div>
