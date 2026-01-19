@@ -347,8 +347,8 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
         </div>
       </div>
 
-  <div className="w-full max-w-md md:max-w-4xl px-4 mt-4 pb-4">
-        <div className="bg-white/90 border border-gray-200 rounded-md shadow-md p-4 md:p-8 space-y-6 md:space-y-8">
+  <div className="w-full max-w-md md:max-w-5xl px-4 mt-4 pb-4 md:mx-auto">
+        <div className="bg-white/90 md:bg-white md:border md:border-gray-200 md:rounded-1xl md:shadow-xl rounded-md shadow-md p-4 md:p-10 space-y-6 md:space-y-8">
           {categories.map((cat, cidx) => (
             <div key={cidx}>
               {categories.length > 1 && <div className="text-xl font-semibold text-gray-700 mb-2">{cat.name}</div>}
@@ -469,8 +469,8 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
       </div>
 
     {/* Footer button under the form, not fixed */}
-<div className="w-full max-w-md md:max-w-4xl px-4 mt-6 mb-6">
-  <div className="bg-white/90 border border-gray-200 rounded-md p-3 md:p-4">
+<div className="w-full max-w-md md:max-w-5xl px-4 mt-6 mb-6 md:mx-auto">
+  <div className="bg-white/90 md:bg-white md:border md:border-gray-200 md:rounded-1xl md:shadow-xl rounded-md p-3 md:p-6">
     <button
       onClick={handleSubmit}
       disabled={!allRequiredAnswered()}
