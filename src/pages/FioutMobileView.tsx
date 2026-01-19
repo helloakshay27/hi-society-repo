@@ -295,7 +295,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
           <div className="bg-white/90 rounded-md p-6 md:p-8 text-center shadow-md">
             <h2 className="text-2xl font-semibold mb-2">Thank you</h2>
             <p className="text-sm text-gray-700 mb-4">Your responses have been submitted successfully.</p>
-            <button type="button" onClick={() => setThankYou(false)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Close</button>
+            {/* <button type="button" onClick={() => setThankYou(false)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Close</button> */}
           </div>
         </div>
       </div>
