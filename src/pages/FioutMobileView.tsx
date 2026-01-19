@@ -99,7 +99,10 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
     useEffect(() => {
   setFetchError(null);
   setLoading(true);
-    const baseUrl = localStorage.getItem('baseUrl') || '';
+  // In incognito/localStorage-empty, derive baseUrl from current host as fallback
+  const rawBaseUrl = localStorage.getItem('baseUrl') || '';
+  const hostFallback = typeof window !== 'undefined' ? window.location.host : '';
+  const baseHost = (rawBaseUrl || hostFallback || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
     // mappingId can be provided as ?mappingId=... or as the last segment of the path
     const mappingId = (() => {
       try {
@@ -116,7 +119,13 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
       return '';
     })();
 
-    const url = `https://${baseUrl}/crm/admin/fitout_requests/${mappingId}/fitout_mappings.json`;
+    // If mappingId or baseHost missing, stop early
+    if (!baseHost || !mappingId) {
+      setCategories([]);
+      setLoading(false);
+      return;
+    }
+    const url = `https://${baseHost}/crm/admin/fitout_requests/${mappingId}/fitout_mappings.json`;
     let cancelled = false;
     fetch(url)
       .then((r) => {
