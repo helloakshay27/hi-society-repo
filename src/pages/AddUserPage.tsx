@@ -543,16 +543,19 @@ const AddUserPage = () => {
                 </FormControl>
 
                 {/* Alternate Address */}
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Alternate Address"
-                  multiline
-                  rows={3}
-                  value={formData.alternateAddress}
-                  onChange={(e) => handleInputChange("alternateAddress", e.target.value)}
-                  sx={{ ...fieldStyles, gridColumn: { md: 'span 3' } }}
-                />
+                <div className="mb-8 mt-8 relative" style={{ gridColumn: 'span 3' }}>
+                  <label className="absolute -top-3 left-3 bg-white px-2 text-sm text-[rgba(0, 0, 0, 0.6)]">
+                    Alternate Address
+                  </label>
+                  <textarea
+                    id="alternate-address"
+                    value={formData.alternateAddress}
+                    onChange={(e) => handleInputChange('alternateAddress', e.target.value)}
+                    className="w-full px-4 py-3 border border-[#D5DbDB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:border-transparent resize-vertical"
+                    placeholder="Enter alternate address"
+                    rows={3}
+                  />
+                </div>
 
                 {/* Resident Type */}
                 <FormControl component="fieldset" sx={{ gridColumn: { md: 'span 1' } }}>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Plus, Upload, Download, X, Edit2, Check, Filter, ChevronDown } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -23,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
@@ -231,7 +233,11 @@ interface FlatType {
 
 export const ManageFlatsPage = () => {
   const navigate = useNavigate();
+  const baseURL = API_CONFIG.BASE_URL;
   const [flats, setFlats] = useState(sampleFlats);
+  const [loading, setLoading] = useState(false);
+  // Get society_id from localStorage or use default
+  const societyId = localStorage.getItem('current_society_id') || '3876';
   const [selectedFlats, setSelectedFlats] = useState<string[]>([]);
   const [showActionPanel, setShowActionPanel] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -306,51 +312,91 @@ export const ManageFlatsPage = () => {
     setAddFlatFormData(prev => ({ ...prev, [field]: value }));
   };
   
-  const handleSubmitAddFlat = () => {
+  const handleSubmitAddFlat = async () => {
     // Validate required fields
     if (!addFlatFormData.tower || !addFlatFormData.flat) {
       toast.error("Please fill in required fields");
       return;
     }
     
-    // Add the new flat
-    const newFlat = {
-      id: (flats.length + 1).toString(),
-      tower: addFlatFormData.tower,
-      flat: addFlatFormData.flat,
-      flatType: addFlatFormData.flatType,
-      builtUpArea: addFlatFormData.builtUpArea,
-      carpetArea: addFlatFormData.carpetArea,
-      nameOnBill: addFlatFormData.nameOnBill,
-      possession: addFlatFormData.possession ? "Yes" : "No",
-      occupancy: addFlatFormData.occupied ? "Yes" : "No",
-      occupiedBy: "",
-      ownerTenant: "",
-      siteVisits: "0",
-      sold: addFlatFormData.sold ? "Yes" : "No",
-      status: addFlatFormData.status ? "active" : "inactive",
-    };
-    
-    setFlats([...flats, newFlat]);
-    setShowAddFlatDialog(false);
-    
-    // Reset form
-    setAddFlatFormData({
-      status: true,
-      possession: true,
-      sold: false,
-      tower: "",
-      flat: "",
-      carpetArea: "",
-      builtUpArea: "",
-      flatType: "",
-      occupied: "",
-      nameOnBill: "",
-      dateOfPossession: "",
-      rmUser: "",
-    });
-    
-    toast.success("Flat added successfully!");
+    setLoading(true);
+    try {
+      // Prepare API payload mapping form data to API schema
+      const payload = {
+        society_flat: {
+          flat_no: addFlatFormData.flat,
+          is_enable: addFlatFormData.status ? 1 : 0,
+          rm_user_id: addFlatFormData.rmUser ? parseInt(addFlatFormData.rmUser) : null,
+          sold: addFlatFormData.sold ? 1 : 0,
+          approve: 1,
+          society_flat_type_id: addFlatFormData.flatType ? parseInt(addFlatFormData.flatType) : null,
+          society_block_id: parseInt(addFlatFormData.tower),
+          occupancy: addFlatFormData.occupied === "Yes" ? "Occupied" : "Vacant",
+          bill_to_party: addFlatFormData.nameOnBill || "Owner",
+          build_up_area: addFlatFormData.builtUpArea ? parseInt(addFlatFormData.builtUpArea) : null,
+          super_area: addFlatFormData.carpetArea ? parseInt(addFlatFormData.carpetArea) : null,
+          date_of_possession: addFlatFormData.dateOfPossession || null,
+          possession: addFlatFormData.possession ? 1 : 0,
+        },
+        society_id: parseInt(societyId),
+      };
+
+      // Make API call to add flat
+      const response = await axios.post(
+        `${baseURL}/crm/admin/society_flats.json`,
+        payload,
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Update local state with the newly added flat
+      const newFlat = {
+        id: response.data.society_flat?.id?.toString() || (flats.length + 1).toString(),
+        tower: addFlatFormData.tower,
+        flat: addFlatFormData.flat,
+        flatType: addFlatFormData.flatType,
+        builtUpArea: addFlatFormData.builtUpArea,
+        carpetArea: addFlatFormData.carpetArea,
+        nameOnBill: addFlatFormData.nameOnBill,
+        possession: addFlatFormData.possession ? "Yes" : "No",
+        occupancy: addFlatFormData.occupied ? "Yes" : "No",
+        occupiedBy: "",
+        ownerTenant: "",
+        siteVisits: "0",
+        sold: addFlatFormData.sold ? "Yes" : "No",
+        status: addFlatFormData.status ? "active" : "inactive",
+      };
+      
+      setFlats([...flats, newFlat]);
+      setShowAddFlatDialog(false);
+      
+      // Reset form
+      setAddFlatFormData({
+        status: true,
+        possession: true,
+        sold: false,
+        tower: "",
+        flat: "",
+        carpetArea: "",
+        builtUpArea: "",
+        flatType: "",
+        occupied: "",
+        nameOnBill: "",
+        dateOfPossession: "",
+        rmUser: "",
+      });
+      
+      toast.success("Flat added successfully!");
+    } catch (error: any) {
+      console.error("Error adding flat:", error);
+      toast.error(error.response?.data?.message || "Failed to add flat");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddUnit = () => {
@@ -772,7 +818,7 @@ export const ManageFlatsPage = () => {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-lg shadow-sm">
+        <div className="">
           <EnhancedTable
             columns={columns}
             data={flats}
@@ -1009,9 +1055,10 @@ export const ManageFlatsPage = () => {
               <div className="flex justify-center pt-4">
                 <Button
                   onClick={handleSubmitAddFlat}
+                  disabled={loading}
                   className="bg-[#0EA5E9] hover:bg-[#0284C7] text-white px-8"
                 >
-                  Submit
+                  {loading ? "Submitting..." : "Submit"}
                 </Button>
               </div>
 

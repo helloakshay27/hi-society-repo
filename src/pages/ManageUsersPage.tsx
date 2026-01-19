@@ -735,7 +735,7 @@ export const ManageUsersPage = () => {
         </Dialog>
 
         {/* Table */}
-        <div className="bg-white rounded-lg shadow-sm">
+        <div className="">
           <EnhancedTable
             columns={columns}
             data={users}

@@ -162,13 +162,9 @@ const CreateImageConfiguration = () => {
       return;
     }
 
-    // Check for duplicate configuration
-    const isDuplicate = existingConfigs.some(
-      config => config.name === selectedName && config.value === selectedValue
-    );
-
-    if (isDuplicate) {
-      toast.error(`Image configuration with Name "${selectedName}" and Value "${selectedValue}" already exists. Please select different options.`);
+    const nameExists = existingConfigs.some(config => config.name === selectedName);
+    if (nameExists) {
+      toast.error(`An image configuration with the name "${selectedName}" already exists. Please select a different name.`);
       return;
     }
 
