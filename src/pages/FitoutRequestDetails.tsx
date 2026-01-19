@@ -85,7 +85,7 @@ interface SnagQuestionMap {
 interface FitoutResponse {
   id: number;
   name: string;
-  snag_questions: SnagQuestionMap[];
+  snag_quest_maps: SnagQuestionMap[];
 }
 
 interface TabularResponseData {
@@ -270,8 +270,23 @@ const FitoutRequestDetails: React.FC = () => {
   const getTabularResponseData = (): TabularResponseData[] => {
     const tabularData: TabularResponseData[] = [];
     
+    // Add null/undefined checks
+    if (!responses || !Array.isArray(responses)) {
+      return tabularData;
+    }
+    
     responses.forEach((categoryResponse) => {
-      categoryResponse.snag_questions.forEach((questionMap) => {
+      // Check if snag_quest_maps exists and is an array
+      if (!categoryResponse?.snag_quest_maps || !Array.isArray(categoryResponse.snag_quest_maps)) {
+        return;
+      }
+      
+      categoryResponse.snag_quest_maps.forEach((questionMap) => {
+        // Check if snag_question exists
+        if (!questionMap?.snag_question) {
+          return;
+        }
+        
         const question = questionMap.snag_question;
         
         // Determine question type display
@@ -280,7 +295,7 @@ const FitoutRequestDetails: React.FC = () => {
           question.qtype === 'text' ? 'Text' :
           question.qtype === 'description' ? 'Description' :
           question.qtype === 'date' ? 'Date' :
-          question.qtype;
+          question.qtype || 'Unknown';
         
         // Get answer text
         let answerText = '—';
@@ -291,7 +306,7 @@ const FitoutRequestDetails: React.FC = () => {
           answeredAt = formatDateTime(firstAnswer.created_at);
           
           if (question.qtype === 'multiple' && firstAnswer.quest_option_id) {
-            const selectedOption = question.snag_quest_options.find(
+            const selectedOption = question.snag_quest_options?.find(
               opt => opt.id === firstAnswer.quest_option_id
             );
             answerText = selectedOption?.qname || 'Selected';
@@ -302,14 +317,14 @@ const FitoutRequestDetails: React.FC = () => {
         
         tabularData.push({
           id: `${categoryResponse.id}-${questionMap.id}`,
-          annexure_name: categoryResponse.name,
-          question_number: question.qnumber,
-          question: question.descr,
+          annexure_name: categoryResponse.name || 'Unknown',
+          question_number: question.qnumber || 0,
+          question: question.descr || 'No question text',
           question_type: questionTypeDisplay,
           answer: answerText,
           answered_at: answeredAt,
           is_mandatory: question.quest_mandatory ? 'Yes' : 'No',
-          has_attachments: questionMap.snag_answers.some(ans => ans.docs && ans.docs.length > 0) ? 'Yes' : 'No',
+          has_attachments: questionMap.snag_answers?.some(ans => ans.docs && ans.docs.length > 0) ? 'Yes' : 'No',
         });
       });
     });
