@@ -508,6 +508,7 @@ const FitoutRequestAdd: React.FC = () => {
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
+                inputProps={{ maxLength: 10 }}             
               />
               <TextField
               label="Description"

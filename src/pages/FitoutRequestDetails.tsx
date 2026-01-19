@@ -22,12 +22,31 @@ import {
   Home,
   DollarSign,
   Paperclip,
-  Download
+  Download,
+  X,
+  Plus
 } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { apiClient } from "@/utils/apiClient";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // Type definitions matching the API response
 interface FitoutDocument {
@@ -148,6 +167,22 @@ interface FitoutRequestDetail {
   created_by?: string;
 }
 
+interface ChecklistQuestion {
+  id: number;
+  question: string;
+  response: 'yes' | 'no' | null;
+  comments: string;
+  attachment: File | null;
+}
+
+interface PaymentFormData {
+  amount: string;
+  payment_mode: string;
+  cheque_transaction_number: string;
+  notes: string;
+  image: File | null;
+}
+
 const FitoutRequestDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -156,6 +191,23 @@ const FitoutRequestDetails: React.FC = () => {
   const [activeTab, setActiveTab] = useState("request-information");
   const [responses, setResponses] = useState<FitoutResponse[]>([]);
   const [responsesLoading, setResponsesLoading] = useState(false);
+  
+  // Payment Modal State
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentFormData, setPaymentFormData] = useState<PaymentFormData>({
+    amount: '',
+    payment_mode: '',
+    cheque_transaction_number: '',
+    notes: '',
+    image: null,
+  });
+  const [paymentImagePreview, setPaymentImagePreview] = useState<string | null>(null);
+  
+  // Checklist Modal State
+  const [checklistModalOpen, setChecklistModalOpen] = useState(false);
+  const [checklistQuestions, setChecklistQuestions] = useState<ChecklistQuestion[]>([]);
+  const [checklistRemarks, setChecklistRemarks] = useState('');
+  const [checklistLoading, setChecklistLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -245,6 +297,153 @@ const FitoutRequestDetails: React.FC = () => {
 
   const handleDelete = () => {
     toast.info("Delete functionality - Coming soon");
+  };
+
+  const handleCapturePayment = () => {
+    setPaymentFormData({
+      amount: requestData?.amount?.toString() || '',
+      payment_mode: '',
+      cheque_transaction_number: '',
+      notes: '',
+      image: null,
+    });
+    setPaymentImagePreview(null);
+    setPaymentModalOpen(true);
+  };
+
+  const handlePaymentImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size must be less than 5MB');
+        return;
+      }
+      setPaymentFormData(prev => ({ ...prev, image: file }));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPaymentImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePaymentSubmit = async () => {
+    if (!paymentFormData.payment_mode) {
+      toast.error('Please select a payment mode');
+      return;
+    }
+    
+    try {
+      const formData = new FormData();
+      formData.append('amount', paymentFormData.amount);
+      formData.append('payment_mode', paymentFormData.payment_mode);
+      formData.append('cheque_transaction_number', paymentFormData.cheque_transaction_number);
+      formData.append('notes', paymentFormData.notes);
+      if (paymentFormData.image) {
+        formData.append('image', paymentFormData.image);
+      }
+
+      await apiClient.post(`/crm/admin/fitout_requests/${id}/receive_payment.json`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      toast.success('Payment captured successfully');
+      setPaymentModalOpen(false);
+      fetchFitoutRequestDetails(parseInt(id!));
+    } catch (error: any) {
+      console.error('Error capturing payment:', error);
+      toast.error(`Failed to capture payment: ${error.message || 'Unknown error'}`);
+    }
+  };
+
+  const handleChecklistOpen = async () => {
+    setChecklistModalOpen(true);
+    setChecklistLoading(true);
+    
+    try {
+      const response = await apiClient.get(`/crm/admin/fitout_requests/${id}/fitout_responses.json`);
+      const responseData = response.data || [];
+      
+      // Extract all questions from all annexures
+      const allQuestions: ChecklistQuestion[] = [];
+      
+      responseData.forEach((annexure: any) => {
+        if (annexure.snag_quest_maps && Array.isArray(annexure.snag_quest_maps)) {
+          annexure.snag_quest_maps.forEach((questMap: any) => {
+            if (questMap.snag_question) {
+              const question = questMap.snag_question;
+              const answer = questMap.snag_answers && questMap.snag_answers.length > 0 
+                ? questMap.snag_answers[0] 
+                : null;
+              
+              allQuestions.push({
+                id: questMap.id,
+                question: `${annexure.name} - ${question.descr}`,
+                response: null,
+                comments: answer?.ans_descr || '',
+                attachment: null,
+              });
+            }
+          });
+        }
+      });
+      
+      setChecklistQuestions(allQuestions);
+    } catch (error: any) {
+      console.error('Error fetching checklist:', error);
+      toast.error('Failed to load checklist questions');
+      setChecklistQuestions([]);
+    } finally {
+      setChecklistLoading(false);
+    }
+  };
+
+  const handleChecklistQuestionChange = (index: number, field: keyof ChecklistQuestion, value: any) => {
+    setChecklistQuestions(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const handleAddQuestion = () => {
+    const newQuestion: ChecklistQuestion = {
+      id: Date.now(),
+      question: '',
+      response: null,
+      comments: '',
+      attachment: null,
+    };
+    setChecklistQuestions(prev => [...prev, newQuestion]);
+  };
+
+  const handleChecklistSubmit = async () => {
+    try {
+      const formData = new FormData();
+      
+      checklistQuestions.forEach((question, index) => {
+        formData.append(`questions[${index}][id]`, question.id.toString());
+        formData.append(`questions[${index}][question]`, question.question);
+        formData.append(`questions[${index}][response]`, question.response || '');
+        formData.append(`questions[${index}][comments]`, question.comments);
+        if (question.attachment) {
+          formData.append(`questions[${index}][attachment]`, question.attachment);
+        }
+      });
+      
+      formData.append('remarks', checklistRemarks);
+
+      await apiClient.post(`/crm/admin/fitout_requests/${id}/submit_checklist.json`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      toast.success('Checklist submitted successfully');
+      setChecklistModalOpen(false);
+      setChecklistRemarks('');
+    } catch (error: any) {
+      console.error('Error submitting checklist:', error);
+      toast.error(`Failed to submit checklist: ${error.message || 'Unknown error'}`);
+    }
   };
 
   const downloadDocument = async (docUrl: string, fileName: string) => {
@@ -499,15 +698,44 @@ const FitoutRequestDetails: React.FC = () => {
 
           <div className="flex gap-2">
             <Button
+              onClick={handleCapturePayment}
+              size="sm"
+              style={{ backgroundColor: '#C72030', color: 'white' }}
+              className="hover:opacity-90"
+            >
+              <DollarSign className="w-4 h-4 mr-2" />
+              Capture Payment
+            </Button>
+           
+            <Button
               onClick={handleEdit}
-              variant="outline"
+              // variant="outline"
               size="sm"
               className="border-gray-300 text-gray-700 hover:bg-gray-50"
             >
               <Edit className="w-4 h-4 mr-2" />
               Edit
             </Button>
-            <Button
+              <Button
+              // onClick={handleEdit}
+              // variant="outline"
+              size="sm"
+              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Logs
+            </Button>
+             <Button
+              onClick={handleChecklistOpen}
+              size="sm"
+              style={{ backgroundColor: '#C72030', color: 'white' }}
+              className="hover:opacity-90"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Checklist
+            </Button>
+
+            {/* <Button
               onClick={handleDelete}
               variant="outline"
               size="sm"
@@ -516,7 +744,7 @@ const FitoutRequestDetails: React.FC = () => {
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>
@@ -901,6 +1129,297 @@ const FitoutRequestDetails: React.FC = () => {
           </Tabs>
         </Card>
       </div>
+
+      {/* Capture Payment Modal */}
+      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-white">
+          <DialogHeader className="border-b pb-4" style={{ backgroundColor: '#F6F4EE' }}>
+            <div className="flex items-center justify-between px-6 py-3">
+              <DialogTitle className="text-lg font-semibold text-gray-900">
+                Receive Payment
+              </DialogTitle>
+              <button
+                onClick={() => setPaymentModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </DialogHeader>
+          
+          <div className="p-6 space-y-4">
+            {/* Amount */}
+            <div className="space-y-2">
+              <Label htmlFor="payment-amount" className="text-sm font-medium text-gray-700">
+                Amount
+              </Label>
+              <Input
+                id="payment-amount"
+                type="number"
+                value={paymentFormData.amount}
+                onChange={(e) => setPaymentFormData(prev => ({ ...prev, amount: e.target.value }))}
+                className="w-full"
+                style={{ backgroundColor: '#F6F4EE' }}
+              />
+            </div>
+
+            {/* Payment Mode */}
+            <div className="space-y-2">
+              <Label htmlFor="payment-mode" className="text-sm font-medium text-gray-700">
+                Payment Mode
+              </Label>
+              <Select
+                value={paymentFormData.payment_mode}
+                onValueChange={(value) => setPaymentFormData(prev => ({ ...prev, payment_mode: value }))}
+              >
+                <SelectTrigger className="w-full" style={{ backgroundColor: '#F6F4EE' }}>
+                  <SelectValue placeholder="Select Mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="online">Online Transfer</SelectItem>
+                  <SelectItem value="upi">UPI</SelectItem>
+                  <SelectItem value="card">Card</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Cheque/Transaction Number */}
+            <div className="space-y-2">
+              <Label htmlFor="transaction-number" className="text-sm font-medium text-gray-700">
+                Cheque/Transaction Number
+              </Label>
+              <Input
+                id="transaction-number"
+                type="text"
+                value={paymentFormData.cheque_transaction_number}
+                onChange={(e) => setPaymentFormData(prev => ({ ...prev, cheque_transaction_number: e.target.value }))}
+                className="w-full"
+                style={{ backgroundColor: '#F6F4EE' }}
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="payment-notes" className="text-sm font-medium text-gray-700">
+                Notes
+              </Label>
+              <Textarea
+                id="payment-notes"
+                value={paymentFormData.notes}
+                onChange={(e) => setPaymentFormData(prev => ({ ...prev, notes: e.target.value }))}
+                className="w-full min-h-[80px]"
+                style={{ backgroundColor: '#F6F4EE' }}
+              />
+            </div>
+
+            {/* Image Upload */}
+            <div className="space-y-2">
+              <Label htmlFor="payment-image" className="text-sm font-medium text-gray-700">
+                Image
+              </Label>
+              <div className="flex items-center gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('payment-image-input')?.click()}
+                  className="border-gray-300"
+                >
+                  Choose file
+                </Button>
+                <span className="text-sm text-gray-500">
+                  {paymentFormData.image ? paymentFormData.image.name : 'No file chosen'}
+                </span>
+                <input
+                  id="payment-image-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePaymentImageChange}
+                  className="hidden"
+                />
+              </div>
+              {paymentImagePreview && (
+                <div className="mt-2">
+                  <img
+                    src={paymentImagePreview}
+                    alt="Payment preview"
+                    className="w-32 h-32 object-cover rounded border border-gray-200"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex justify-center pt-4">
+              <Button
+                onClick={handlePaymentSubmit}
+                style={{ backgroundColor: '#C72030', color: 'white' }}
+                className="px-8 hover:opacity-90"
+              >
+                Submit
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Checklist Modal */}
+      <Dialog open={checklistModalOpen} onOpenChange={setChecklistModalOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-white">
+          <DialogHeader className="border-b pb-4" style={{ backgroundColor: '#F6F4EE' }}>
+            <div className="flex items-center justify-between px-6 py-3">
+              <DialogTitle className="text-lg font-semibold text-gray-900">
+                Checklist
+              </DialogTitle>
+              <button
+                onClick={() => setChecklistModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </DialogHeader>
+          
+          <div className="p-6 space-y-6">
+            {checklistLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
+                <span className="ml-2 text-gray-600">Loading checklist...</span>
+              </div>
+            ) : (
+              <>
+                {/* Questions */}
+                <div className="space-y-6">
+                  {checklistQuestions.map((question, index) => (
+                    <div key={question.id} className="border border-gray-200 rounded-lg p-4" style={{ backgroundColor: '#FAFAFA' }}>
+                      {/* Question Number and Text */}
+                      <div className="mb-3">
+                        <Label className="text-sm font-semibold text-gray-900">
+                          {index + 1}) {question.question || 'Question'}
+                        </Label>
+                      </div>
+
+                      {/* Response Radio Buttons */}
+                      <div className="mb-3">
+                        <Label className="text-xs font-medium text-gray-700 mb-2 block">
+                          Response:
+                        </Label>
+                        <RadioGroup
+                          value={question.response || ''}
+                          onValueChange={(value) => handleChecklistQuestionChange(index, 'response', value as 'yes' | 'no')}
+                          className="flex gap-6"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id={`yes-${question.id}`} />
+                            <Label htmlFor={`yes-${question.id}`} className="text-sm font-normal cursor-pointer">
+                              Yes
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id={`no-${question.id}`} />
+                            <Label htmlFor={`no-${question.id}`} className="text-sm font-normal cursor-pointer">
+                              No
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+
+                      {/* Comments */}
+                      <div className="mb-3">
+                        <Label htmlFor={`comments-${question.id}`} className="text-xs font-medium text-gray-700 mb-1 block">
+                          Comments
+                        </Label>
+                        <Textarea
+                          id={`comments-${question.id}`}
+                          value={question.comments}
+                          onChange={(e) => handleChecklistQuestionChange(index, 'comments', e.target.value)}
+                          className="w-full min-h-[60px] text-sm"
+                          style={{ backgroundColor: '#F6F4EE' }}
+                          placeholder="Add your comments..."
+                        />
+                      </div>
+
+                      {/* Attachment */}
+                      <div>
+                        <Label className="text-xs font-medium text-gray-700 mb-2 block">
+                          Attachment
+                        </Label>
+                        <div className="flex items-center gap-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById(`attachment-${question.id}`)?.click()}
+                            className="border-gray-300 text-sm"
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Add
+                          </Button>
+                          <span className="text-xs text-gray-500">
+                            {question.attachment ? question.attachment.name : 'No file chosen'}
+                          </span>
+                          <input
+                            id={`attachment-${question.id}`}
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleChecklistQuestionChange(index, 'attachment', file);
+                              }
+                            }}
+                            className="hidden"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add New Question Button */}
+                <div className="flex justify-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleAddQuestion}
+                    className="border-[#C72030] text-[#C72030] hover:bg-red-50"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add New Question
+                  </Button>
+                </div>
+
+                {/* Remarks */}
+                <div className="space-y-2">
+                  <Label htmlFor="checklist-remarks" className="text-sm font-medium text-gray-700">
+                    Remarks
+                  </Label>
+                  <Textarea
+                    id="checklist-remarks"
+                    value={checklistRemarks}
+                    onChange={(e) => setChecklistRemarks(e.target.value)}
+                    className="w-full min-h-[80px]"
+                    style={{ backgroundColor: '#F6F4EE' }}
+                    placeholder="Add overall remarks..."
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex justify-center pt-4">
+                  <Button
+                    onClick={handleChecklistSubmit}
+                    style={{ backgroundColor: '#C72030', color: 'white' }}
+                    className="px-8 hover:opacity-90"
+                  >
+                    Submit
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
