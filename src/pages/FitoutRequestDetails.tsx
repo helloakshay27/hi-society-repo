@@ -24,7 +24,8 @@ import {
   Paperclip,
   Download,
   X,
-  Plus
+  Plus,
+  Logs
 } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -47,6 +48,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Feed } from "@mui/icons-material";
 
 // Type definitions matching the API response
 interface FitoutDocument {
@@ -127,6 +129,7 @@ interface FitoutRequestCategory {
   category_name: string;
   status_name: string | null;
   documents: FitoutDocument[];
+  snag_quest_maps?: SnagQuestionMap[];
 }
 
 interface LockPayment {
@@ -170,9 +173,16 @@ interface FitoutRequestDetail {
 interface ChecklistQuestion {
   id: number;
   question: string;
-  response: 'yes' | 'no' | null;
+  qtype: string;
+  quest_mandatory: boolean;
+  response: string | null;
   comments: string;
   attachment: File | null;
+  options?: Array<{
+    id: number;
+    qname: string;
+    option_type: string;
+  }>;
 }
 
 interface PaymentFormData {
@@ -208,10 +218,22 @@ const FitoutRequestDetails: React.FC = () => {
   const [checklistQuestions, setChecklistQuestions] = useState<ChecklistQuestion[]>([]);
   const [checklistRemarks, setChecklistRemarks] = useState('');
   const [checklistLoading, setChecklistLoading] = useState(false);
+  const [selectedChecklistId, setSelectedChecklistId] = useState<number | null>(null);
+  
+  // Annexure responses state
+  const [annexureResponses, setAnnexureResponses] = useState<FitoutResponse[]>([]);
+  const [categoryStatuses, setCategoryStatuses] = useState<{ [key: number]: number | null }>({});
+  const [statuses, setStatuses] = useState<any[]>([]);
+  
+  // Logs Modal State
+  const [logsModalOpen, setLogsModalOpen] = useState(false);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchFitoutRequestDetails(parseInt(id));
+      fetchStatuses();
     }
   }, [id]);
 
@@ -221,12 +243,56 @@ const FitoutRequestDetails: React.FC = () => {
     }
   }, [id, activeTab]);
 
+  const fetchStatuses = async () => {
+    try {
+      const statusesResponse = await apiClient.get('/crm/admin/fitout_requests/fitout_statuses.json');
+      const statusesArray = statusesResponse.data?.data || [];
+      console.log('Statuses Array:', statusesArray);
+      setStatuses(statusesArray);
+    } catch (error) {
+      console.error('Error fetching statuses:', error);
+    }
+  };
+
+  const fetchLogs = async () => {
+    if (!id) return;
+    
+    setLogsLoading(true);
+    try {
+      const response = await apiClient.get(`/crm/admin/fitout_requests/${id}/feeds.json`);
+      console.log('Logs Response:', response.data);
+      setLogs(response.data || []);
+    } catch (error: any) {
+      console.error('Error fetching logs:', error);
+      toast.error(`Failed to load logs: ${error.message || 'Unknown error'}`);
+      setLogs([]);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  const handleLogsOpen = () => {
+    setLogsModalOpen(true);
+    fetchLogs();
+  };
+
   const fetchFitoutRequestDetails = async (requestId: number) => {
     setLoading(true);
     try {
       const response = await apiClient.get(`/crm/admin/fitout_requests/${requestId}.json`);
       console.log("Fitout Request Details:", response.data);
       setRequestData(response.data);
+      
+      // Fetch responses for annexures tab
+      const responsesResponse = await apiClient.get(`/crm/admin/fitout_requests/${requestId}/fitout_responses.json`);
+      setAnnexureResponses(responsesResponse.data || []);
+      
+      // Initialize category statuses
+      const statuses: { [key: number]: number | null } = {};
+      response.data.fitout_request_categories?.forEach((cat: FitoutRequestCategory) => {
+        statuses[cat.id] = cat.complaint_status_id;
+      });
+      setCategoryStatuses(statuses);
     } catch (error: any) {
       console.error("Error fetching fitout request details:", error);
       toast.error(`Failed to load fitout request details: ${error.message || 'Unknown error'}`, {
@@ -300,8 +366,10 @@ const FitoutRequestDetails: React.FC = () => {
   };
 
   const handleCapturePayment = () => {
+    const totalAmount = requestData?.fitout_request_categories.reduce((sum, cat) => sum + cat.amount, 0) || 0;
+    
     setPaymentFormData({
-      amount: requestData?.amount?.toString() || '',
+      amount: totalAmount.toString(),
       payment_mode: '',
       cheque_transaction_number: '',
       notes: '',
@@ -333,17 +401,26 @@ const FitoutRequestDetails: React.FC = () => {
       return;
     }
     
+    if (!paymentFormData.amount) {
+      toast.error('Please enter amount');
+      return;
+    }
+    
     try {
       const formData = new FormData();
-      formData.append('amount', paymentFormData.amount);
-      formData.append('payment_mode', paymentFormData.payment_mode);
-      formData.append('cheque_transaction_number', paymentFormData.cheque_transaction_number);
-      formData.append('notes', paymentFormData.notes);
+      
+      formData.append('lock_payment[payment_status]', 'full');
+      formData.append('lock_payment[total_amount]', paymentFormData.amount);
+      formData.append('lock_payment[paid_amount]', paymentFormData.amount);
+      formData.append('lock_payment[payment_method]', paymentFormData.payment_mode);
+      formData.append('lock_payment[pg_transaction_id]', paymentFormData.cheque_transaction_number);
+      formData.append('lock_payment[notes]', paymentFormData.notes);
+      
       if (paymentFormData.image) {
         formData.append('image', paymentFormData.image);
       }
 
-      await apiClient.post(`/crm/admin/fitout_requests/${id}/receive_payment.json`, formData, {
+      await apiClient.post(`/crm/admin/fitout_requests/${id}/payment.json`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
@@ -361,34 +438,37 @@ const FitoutRequestDetails: React.FC = () => {
     setChecklistLoading(true);
     
     try {
-      const response = await apiClient.get(`/crm/admin/fitout_requests/${id}/fitout_responses.json`);
-      const responseData = response.data || [];
+      const response = await apiClient.get('/crm/admin/snag_checklists.json?q[check_type_eq]=Fitout');
+      const checklistsData = response.data?.data || [];
       
-      // Extract all questions from all annexures
-      const allQuestions: ChecklistQuestion[] = [];
-      
-      responseData.forEach((annexure: any) => {
-        if (annexure.snag_quest_maps && Array.isArray(annexure.snag_quest_maps)) {
-          annexure.snag_quest_maps.forEach((questMap: any) => {
-            if (questMap.snag_question) {
-              const question = questMap.snag_question;
-              const answer = questMap.snag_answers && questMap.snag_answers.length > 0 
-                ? questMap.snag_answers[0] 
-                : null;
-              
-              allQuestions.push({
-                id: questMap.id,
-                question: `${annexure.name} - ${question.descr}`,
-                response: null,
-                comments: answer?.ans_descr || '',
-                attachment: null,
-              });
-            }
+      // Use the first checklist if available
+      if (checklistsData.length > 0) {
+        const firstChecklist = checklistsData[0];
+        setSelectedChecklistId(firstChecklist.id);
+        
+        // Extract questions from the first checklist
+        const allQuestions: ChecklistQuestion[] = [];
+        
+        if (firstChecklist.questions && Array.isArray(firstChecklist.questions)) {
+          firstChecklist.questions.forEach((question: any) => {
+            allQuestions.push({
+              id: question.id,
+              question: `${firstChecklist.name} - ${question.descr}`,
+              qtype: question.qtype,
+              quest_mandatory: question.quest_mandatory,
+              response: null,
+              comments: '',
+              attachment: null,
+              options: question.options || [],
+            });
           });
         }
-      });
-      
-      setChecklistQuestions(allQuestions);
+        
+        setChecklistQuestions(allQuestions);
+      } else {
+        toast.error('No Fitout checklists available');
+        setChecklistQuestions([]);
+      }
     } catch (error: any) {
       console.error('Error fetching checklist:', error);
       toast.error('Failed to load checklist questions');
@@ -418,31 +498,60 @@ const FitoutRequestDetails: React.FC = () => {
   };
 
   const handleChecklistSubmit = async () => {
+    // Validate mandatory fields
+    for (let i = 0; i < checklistQuestions.length; i++) {
+      const question = checklistQuestions[i];
+      if (question.quest_mandatory && !question.response) {
+        toast.error(`Please answer question ${i + 1} (mandatory)`);
+        return;
+      }
+      if (!question.comments) {
+        toast.error(`Please add comments for question ${i + 1}`);
+        return;
+      }
+      if (!question.attachment) {
+        toast.error(`Please upload attachment for question ${i + 1}`);
+        return;
+      }
+    }
+
+    if (!selectedChecklistId) {
+      toast.error('No checklist selected');
+      return;
+    }
+
     try {
       const formData = new FormData();
       
+      // Add required top-level parameters
+      formData.append('id', id || '');
+      formData.append('snag_checklist_id', selectedChecklistId.toString());
+      formData.append('comment', checklistRemarks);
+      
+      // Add questions with dynamic structure: question[index][field]
       checklistQuestions.forEach((question, index) => {
-        formData.append(`questions[${index}][id]`, question.id.toString());
-        formData.append(`questions[${index}][question]`, question.question);
-        formData.append(`questions[${index}][response]`, question.response || '');
-        formData.append(`questions[${index}][comments]`, question.comments);
+        formData.append(`question[${index}][name]`, question.question);
+        formData.append(`question[${index}][answer]`, question.response || '');
+        formData.append(`question[${index}][comment]`, question.comments);
+        
+        // Add attachment(s) - API expects attachments[] array
         if (question.attachment) {
-          formData.append(`questions[${index}][attachment]`, question.attachment);
+          formData.append(`question[${index}][attachments][]`, question.attachment);
         }
       });
-      
-      formData.append('remarks', checklistRemarks);
 
-      await apiClient.post(`/crm/admin/fitout_requests/${id}/submit_checklist.json`, formData, {
+      await apiClient.post('/fitout_checklist_submission.json', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
       toast.success('Checklist submitted successfully');
       setChecklistModalOpen(false);
       setChecklistRemarks('');
+      setChecklistQuestions([]);
+      setSelectedChecklistId(null);
     } catch (error: any) {
       console.error('Error submitting checklist:', error);
-      toast.error(`Failed to submit checklist: ${error.message || 'Unknown error'}`);
+      toast.error(`Failed to submit checklist: ${error.response?.data?.message || error.message || 'Unknown error'}`);
     }
   };
 
@@ -697,15 +806,17 @@ const FitoutRequestDetails: React.FC = () => {
           </div>
 
           <div className="flex gap-2">
-            <Button
-              onClick={handleCapturePayment}
-              size="sm"
-              style={{ backgroundColor: '#C72030', color: 'white' }}
-              className="hover:opacity-90"
-            >
-              <DollarSign className="w-4 h-4 mr-2" />
-              Capture Payment
-            </Button>
+            {!requestData.lock_payment && (
+              <Button
+                onClick={handleCapturePayment}
+                size="sm"
+                style={{ backgroundColor: '#C72030', color: 'white' }}
+                className="hover:opacity-90"
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                Capture Payment
+              </Button>
+            )}
            
             <Button
               onClick={handleEdit}
@@ -717,12 +828,11 @@ const FitoutRequestDetails: React.FC = () => {
               Edit
             </Button>
               <Button
-              // onClick={handleEdit}
-              // variant="outline"
+              onClick={handleLogsOpen}
               size="sm"
               className="border-gray-300 text-gray-700 hover:bg-gray-50"
             >
-              <Edit className="w-4 h-4 mr-2" />
+              <Logs className="w-4 h-4 mr-2" />
               Logs
             </Button>
              <Button
@@ -759,7 +869,7 @@ const FitoutRequestDetails: React.FC = () => {
                 { label: "Request Information", value: "request-information" },
                 { label: "Annexures", value: "annexures" },
                 // { label: "Transactions", value: "transactions" },
-                { label: "Responses", value: "responses" },
+                { label: "Captured Payment", value: "responses" },
               ].map((tab) => (
                 <TabsTrigger
                   key={tab.value}
@@ -961,76 +1071,179 @@ const FitoutRequestDetails: React.FC = () => {
                   <div className="p-6">
                     {requestData.fitout_request_categories.length > 0 ? (
                       <div className="space-y-6">
-                        {requestData.fitout_request_categories.map((category, index) => (
-                          <div
-                            key={category.id}
-                            className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-300"
-                          >
-                            <div className="flex items-start justify-between mb-4">
-                              <div>
-                                <h4 className="text-base font-semibold text-gray-900 mb-1">
-                                  {index + 1}. {category.category_name}
-                                </h4>
-                                {category.status_name && (
-                                  <Badge
-                                    variant="outline"
-                                    className="text-xs"
-                                    style={{ borderColor: '#C72030', color: '#C72030' }}
-                                  >
-                                    {category.status_name}
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="text-right">
-                                <p className="text-xs text-gray-600">Amount</p>
-                                <p className="text-lg font-bold text-gray-900">
-                                  ₹{category.amount.toFixed(2)}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Documents Section */}
-                            {category.documents.length > 0 && (
-                              <div className="mt-4 pt-4 border-t border-gray-200">
-                                <p className="text-sm font-medium text-gray-700 mb-3">
-                                  Documents ({category.documents.length})
-                                </p>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                                  {category.documents.map((doc, docIndex) => (
-                                    <div
-                                      key={doc.id}
-                                      className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
-                                    >
-                                      <img
-                                        src={decodeURIComponent(doc.document_url)}
-                                        alt={`Document ${docIndex + 1}`}
-                                        className="w-full h-32 object-cover"
-                                        onError={(e) => {
-                                          const target = e.target as HTMLImageElement;
-                                          target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+                        {requestData.fitout_request_categories.map((category, index) => {
+                          // Find matching response data for this category
+                          const categoryResponse = annexureResponses.find(
+                            (resp) => resp.name === category.category_name
+                          );
+                          
+                          return (
+                            <div
+                              key={category.id}
+                              className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-300"
+                            >
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex-1">
+                                  <h4 className="text-base font-semibold text-gray-900 mb-2">
+                                    {index + 1}. {category.category_name}
+                                  </h4>
+                                  <div className="flex items-center gap-3">
+                                    {category.status_name && (
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                        style={{ borderColor: '#C72030', color: '#C72030' }}
+                                      >
+                                        {category.status_name}
+                                      </Badge>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                      <Label className="text-xs text-gray-600">Status:</Label>
+                                      <Select
+                                        value={categoryStatuses[category.id]?.toString() || ''}
+                                        onValueChange={async (value) => {
+                                          const newStatusId = parseInt(value);
+                                          setCategoryStatuses(prev => ({ ...prev, [category.id]: newStatusId }));
+                                          try {
+                                            await apiClient.put(`/crm/admin/fitout_request_categories/${category.id}.json`, {
+                                              fitout_request_category: {
+                                                complaint_status_id: newStatusId
+                                              }
+                                            });
+                                            toast.success('Status updated successfully');
+                                            fetchFitoutRequestDetails(parseInt(id!));
+                                          } catch (error: any) {
+                                            console.error('Error updating status:', error);
+                                            toast.error('Failed to update status');
+                                          }
                                         }}
-                                      />
-                                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
-                                        <Button
-                                          size="sm"
-                                          variant="secondary"
-                                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                          onClick={() => downloadDocument(doc.document_url, `document-${doc.id}.png`)}
-                                        >
-                                          <Download className="w-4 h-4 mr-1" />
-                                          Download
-                                        </Button>
-                                      </div>
-                                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs px-2 py-1 text-center">
-                                        Doc {docIndex + 1}
-                                      </div>
+                                      >
+                                        <SelectTrigger className="w-[180px] h-8 text-xs">
+                                          <SelectValue placeholder="Select status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {statuses.map((status: any) => (
+                                            <SelectItem key={status.id} value={status.id.toString()}>
+                                              {status.name}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
                                     </div>
-                                  ))}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs text-gray-600">Amount</p>
+                                  <p className="text-lg font-bold text-gray-900">
+                                    ₹{category.amount.toFixed(2)}
+                                  </p>
                                 </div>
                               </div>
-                            )}
-                          </div>
-                        ))}
+
+                              {/* Questions and Responses Section */}
+                              {categoryResponse?.snag_quest_maps && categoryResponse.snag_quest_maps.length > 0 && (
+                                <div className="mt-4 pt-4 border-t border-gray-200">
+                                  <p className="text-sm font-medium text-gray-700 mb-3">
+                                    Questions & Responses ({categoryResponse.snag_quest_maps.length})
+                                  </p>
+                                  <div className="space-y-3">
+                                    {categoryResponse.snag_quest_maps.map((questMap, qIndex) => {
+                                      const question = questMap.snag_question;
+                                      const answer = questMap.snag_answers?.[0];
+                                      
+                                      let answerDisplay = '—';
+                                      if (answer) {
+                                        if (question.qtype === 'multiple' && answer.quest_option_id) {
+                                          const selectedOption = question.snag_quest_options?.find(
+                                            opt => opt.id === answer.quest_option_id
+                                          );
+                                          answerDisplay = selectedOption?.qname || 'Selected';
+                                        } else {
+                                          answerDisplay = answer.ans_descr || '—';
+                                        }
+                                      }
+                                      
+                                      return (
+                                        <div
+                                          key={questMap.id}
+                                          className="bg-gray-50 rounded-lg p-3 border border-gray-200"
+                                        >
+                                          <div className="flex items-start gap-3">
+                                            <div className="w-6 h-6 rounded-full bg-[#C72030] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                                              {question.qnumber}
+                                            </div>
+                                            <div className="flex-1">
+                                              <p className="text-sm font-medium text-gray-900 mb-1">
+                                                {question.descr}
+                                              </p>
+                                              <div className="flex items-center gap-2 flex-wrap">
+                                                {/* <Badge variant="outline" className="text-xs">
+                                                  {question.qtype === 'multiple' ? 'Multiple Choice' :
+                                                   question.qtype === 'text' ? 'Text' :
+                                                   question.qtype === 'date' ? 'Date' : question.qtype}
+                                                </Badge> */}
+                                                {/* {question.quest_mandatory && (
+                                                  <Badge variant="outline" className="text-xs text-red-600 border-red-300">
+                                                    Required
+                                                  </Badge>
+                                                )} */}
+                                                <span className="text-xs text-gray-600">•</span>
+                                                <span className="text-xs font-semibold text-gray-700">
+                                                  Response: <span className="text-[#C72030]">{answerDisplay}</span>
+                                                </span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Documents Section */}
+                              {category.documents.length > 0 && (
+                                <div className="mt-4 pt-4 border-t border-gray-200">
+                                  <p className="text-sm font-medium text-gray-700 mb-3">
+                                    Documents ({category.documents.length})
+                                  </p>
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                    {category.documents.map((doc, docIndex) => (
+                                      <div
+                                        key={doc.id}
+                                        className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
+                                      >
+                                        <img
+                                          src={decodeURIComponent(doc.document_url)}
+                                          alt={`Document ${docIndex + 1}`}
+                                          className="w-full h-32 object-cover"
+                                          onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+                                          }}
+                                        />
+                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
+                                          <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={() => downloadDocument(doc.document_url, `document-${doc.id}.png`)}
+                                          >
+                                            <Download className="w-4 h-4 mr-1" />
+                                            Download
+                                          </Button>
+                                        </div>
+                                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs px-2 py-1 text-center">
+                                          Doc {docIndex + 1}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
@@ -1087,40 +1300,131 @@ const FitoutRequestDetails: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
-                      <FileText className="w-4 h-4" style={{ color: '#C72030' }} />
+                      <DollarSign className="w-4 h-4" style={{ color: '#C72030' }} />
                     </div>
-                    <h3 className="text-base font-semibold text-gray-900">Responses</h3>
+                    <h3 className="text-base font-semibold text-gray-900">Captured Payment</h3>
                   </div>
                 </div>
                 <div className="p-6">
-                  {responsesLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
-                      <span className="ml-2 text-gray-600">Loading responses...</span>
+                  {requestData.lock_payment ? (
+                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow style={{ backgroundColor: '#F6F4EE' }}>
+                            <TableHead className="font-semibold text-gray-900">Field</TableHead>
+                            <TableHead className="font-semibold text-gray-900">Value</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell className="font-medium text-gray-700">Payment ID</TableCell>
+                            <TableCell className="text-gray-900">#{requestData.lock_payment.id}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium text-gray-700">Payment Status</TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant="default" 
+                                style={{ backgroundColor: requestData.lock_payment.payment_status === 'full' ? '#10b981' : '#f59e0b' }}
+                              >
+                                {requestData.lock_payment.payment_status === 'full' ? 'Fully Paid' : 
+                                 requestData.lock_payment.payment_status === 'partial' ? 'Partially Paid' : 
+                                 requestData.lock_payment.payment_status || 'Pending'}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium text-gray-700">Total Amount</TableCell>
+                            <TableCell className="text-gray-900 font-semibold">₹{parseFloat(requestData.lock_payment.total_amount || '0').toFixed(2)}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium text-gray-700">Payment Method</TableCell>
+                            <TableCell className="text-gray-900 capitalize">{requestData.lock_payment.payment_method || '—'}</TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium text-gray-700">Transaction ID</TableCell>
+                            <TableCell className="text-gray-900">{requestData.lock_payment.pg_transaction_id || '—'}</TableCell>
+                          </TableRow>
+                          {requestData.lock_payment.order_number && (
+                            <TableRow>
+                              <TableCell className="font-medium text-gray-700">Order Number</TableCell>
+                              <TableCell className="text-gray-900">{requestData.lock_payment.order_number}</TableCell>
+                            </TableRow>
+                          )}
+                          {requestData.lock_payment.payment_mode && (
+                            <TableRow>
+                              <TableCell className="font-medium text-gray-700">Payment Mode</TableCell>
+                              <TableCell className="text-gray-900">{requestData.lock_payment.payment_mode}</TableCell>
+                            </TableRow>
+                          )}
+                          {requestData.lock_payment.sub_total && (
+                            <TableRow>
+                              <TableCell className="font-medium text-gray-700">Sub Total</TableCell>
+                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.sub_total).toFixed(2)}</TableCell>
+                            </TableRow>
+                          )}
+                          {requestData.lock_payment.gst && (
+                            <TableRow>
+                              <TableCell className="font-medium text-gray-700">GST</TableCell>
+                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.gst).toFixed(2)}</TableCell>
+                            </TableRow>
+                          )}
+                          {requestData.lock_payment.discount && (
+                            <TableRow>
+                              <TableCell className="font-medium text-gray-700">Discount</TableCell>
+                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.discount).toFixed(2)}</TableCell>
+                            </TableRow>
+                          )}
+                          {requestData.lock_payment.convenience_charge && (
+                            <TableRow>
+                              <TableCell className="font-medium text-gray-700">Convenience Charge</TableCell>
+                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.convenience_charge).toFixed(2)}</TableCell>
+                            </TableRow>
+                          )}
+                          {requestData.lock_payment.payment_gateway && (
+                            <TableRow>
+                              <TableCell className="font-medium text-gray-700">Payment Gateway</TableCell>
+                              <TableCell className="text-gray-900">{requestData.lock_payment.payment_gateway}</TableCell>
+                            </TableRow>
+                          )}
+                          {requestData.lock_payment.bank_name && (
+                            <TableRow>
+                              <TableCell className="font-medium text-gray-700">Bank Name</TableCell>
+                              <TableCell className="text-gray-900">{requestData.lock_payment.bank_name}</TableCell>
+                            </TableRow>
+                          )}
+                          {requestData.lock_payment.pg_response_code && (
+                            <TableRow>
+                              <TableCell className="font-medium text-gray-700">Response Code</TableCell>
+                              <TableCell className="text-gray-900">{requestData.lock_payment.pg_response_code}</TableCell>
+                            </TableRow>
+                          )}
+                          {requestData.lock_payment.pg_response_msg && (
+                            <TableRow>
+                              <TableCell className="font-medium text-gray-700">Response Message</TableCell>
+                              <TableCell className="text-gray-900">{requestData.lock_payment.pg_response_msg}</TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
                     </div>
-                  ) : responses.length > 0 ? (
-                    <EnhancedTable
-                      data={getTabularResponseData()}
-                      columns={getResponseColumns()}
-                      renderCell={renderResponseCell}
-                      storageKey="fitout-responses-table"
-                      exportFileName="fitout-responses"
-                      enableSearch={true}
-                      searchPlaceholder="Search responses..."
-                      emptyMessage="No response data available"
-                      pagination={true}
-                      pageSize={10}
-                      className="border border-gray-200 rounded-lg"
-                    />
                   ) : (
                     <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
-                      <Info className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <DollarSign className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        No Responses Found
+                        No Payment Captured
                       </h3>
-                      <p className="text-gray-500">
-                        No responses have been submitted for this fitout request yet.
+                      <p className="text-gray-500 mb-4">
+                        No payment has been captured for this fitout request yet.
                       </p>
+                      <Button
+                        onClick={handleCapturePayment}
+                        style={{ backgroundColor: '#C72030', color: 'white' }}
+                        className="hover:opacity-90"
+                      >
+                        <DollarSign className="w-4 h-4 mr-2" />
+                        Capture Payment
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -1151,7 +1455,7 @@ const FitoutRequestDetails: React.FC = () => {
             {/* Amount */}
             <div className="space-y-2">
               <Label htmlFor="payment-amount" className="text-sm font-medium text-gray-700">
-                Amount
+                Amount *
               </Label>
               <Input
                 id="payment-amount"
@@ -1160,13 +1464,14 @@ const FitoutRequestDetails: React.FC = () => {
                 onChange={(e) => setPaymentFormData(prev => ({ ...prev, amount: e.target.value }))}
                 className="w-full"
                 style={{ backgroundColor: '#F6F4EE' }}
+                placeholder="Enter amount"
               />
             </div>
 
             {/* Payment Mode */}
             <div className="space-y-2">
               <Label htmlFor="payment-mode" className="text-sm font-medium text-gray-700">
-                Payment Mode
+                Payment Mode *
               </Label>
               <Select
                 value={paymentFormData.payment_mode}
@@ -1178,9 +1483,9 @@ const FitoutRequestDetails: React.FC = () => {
                 <SelectContent>
                   <SelectItem value="cash">Cash</SelectItem>
                   <SelectItem value="cheque">Cheque</SelectItem>
-                  <SelectItem value="online">Online Transfer</SelectItem>
-                  <SelectItem value="upi">UPI</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
+                  {/* <SelectItem value="online">Online Transfer</SelectItem> */}
+                  {/* <SelectItem value="upi">UPI</SelectItem> */}
+                  {/* <SelectItem value="card">Card</SelectItem> */}
                 </SelectContent>
               </Select>
             </div>
@@ -1197,6 +1502,7 @@ const FitoutRequestDetails: React.FC = () => {
                 onChange={(e) => setPaymentFormData(prev => ({ ...prev, cheque_transaction_number: e.target.value }))}
                 className="w-full"
                 style={{ backgroundColor: '#F6F4EE' }}
+                placeholder="Enter transaction number"
               />
             </div>
 
@@ -1211,6 +1517,7 @@ const FitoutRequestDetails: React.FC = () => {
                 onChange={(e) => setPaymentFormData(prev => ({ ...prev, notes: e.target.value }))}
                 className="w-full min-h-[80px]"
                 style={{ backgroundColor: '#F6F4EE' }}
+                placeholder="Add payment notes..."
               />
             </div>
 
@@ -1297,38 +1604,74 @@ const FitoutRequestDetails: React.FC = () => {
                       <div className="mb-3">
                         <Label className="text-sm font-semibold text-gray-900">
                           {index + 1}) {question.question || 'Question'}
+                          {question.quest_mandatory && (
+                            <span className="text-red-600 ml-1">*</span>
+                          )}
                         </Label>
+                        <span className="text-xs text-gray-500 ml-2">
+                          ({question.qtype === 'multiple' ? 'Multiple Choice' : 
+                            question.qtype === 'text' ? 'Text' : 
+                            question.qtype === 'file' ? 'File Upload' : 
+                            question.qtype === 'date' ? 'Date' : 
+                            question.qtype})
+                        </span>
                       </div>
 
-                      {/* Response Radio Buttons */}
-                      <div className="mb-3">
-                        <Label className="text-xs font-medium text-gray-700 mb-2 block">
-                          Response:
-                        </Label>
-                        <RadioGroup
-                          value={question.response || ''}
-                          onValueChange={(value) => handleChecklistQuestionChange(index, 'response', value as 'yes' | 'no')}
-                          className="flex gap-6"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" id={`yes-${question.id}`} />
-                            <Label htmlFor={`yes-${question.id}`} className="text-sm font-normal cursor-pointer">
-                              Yes
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" id={`no-${question.id}`} />
-                            <Label htmlFor={`no-${question.id}`} className="text-sm font-normal cursor-pointer">
-                              No
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
+                      {/* Response based on question type - Hide for file type */}
+                      {question.qtype !== 'file' && (
+                        <div className="mb-3">
+                          <Label className="text-xs font-medium text-gray-700 mb-2 block">
+                            Response{question.quest_mandatory ? ' *' : ''}:
+                          </Label>
+                          
+                          {question.qtype === 'multiple' && question.options && question.options.length > 0 ? (
+                            <RadioGroup
+                              value={question.response || ''}
+                              onValueChange={(value) => handleChecklistQuestionChange(index, 'response', value)}
+                              className="flex flex-col gap-2"
+                            >
+                              {question.options.map((option) => (
+                                <div key={option.id} className="flex items-center space-x-2">
+                                  <RadioGroupItem value={option.id.toString()} id={`option-${question.id}-${option.id}`} />
+                                  <Label htmlFor={`option-${question.id}-${option.id}`} className="text-sm font-normal cursor-pointer">
+                                    {option.qname}
+                                  </Label>
+                                </div>
+                              ))}
+                            </RadioGroup>
+                          ) : question.qtype === 'text' || question.qtype === 'description' ? (
+                            <Textarea
+                              value={question.response || ''}
+                              onChange={(e) => handleChecklistQuestionChange(index, 'response', e.target.value)}
+                              className="w-full min-h-[60px] text-sm"
+                              style={{ backgroundColor: '#F6F4EE' }}
+                              placeholder="Enter your response..."
+                            />
+                          ) : question.qtype === 'date' ? (
+                            <Input
+                              type="date"
+                              value={question.response || ''}
+                              onChange={(e) => handleChecklistQuestionChange(index, 'response', e.target.value)}
+                              className="w-full"
+                              style={{ backgroundColor: '#F6F4EE' }}
+                            />
+                          ) : (
+                            <Input
+                              type="text"
+                              value={question.response || ''}
+                              onChange={(e) => handleChecklistQuestionChange(index, 'response', e.target.value)}
+                              className="w-full"
+                              style={{ backgroundColor: '#F6F4EE' }}
+                              placeholder="Enter your response..."
+                            />
+                          )}
+                        </div>
+                      )}
 
-                      {/* Comments */}
+                      {/* Comments - Always Mandatory */}
                       <div className="mb-3">
                         <Label htmlFor={`comments-${question.id}`} className="text-xs font-medium text-gray-700 mb-1 block">
-                          Comments
+                          Comments <span className="text-red-600">*</span>
                         </Label>
                         <Textarea
                           id={`comments-${question.id}`}
@@ -1337,32 +1680,33 @@ const FitoutRequestDetails: React.FC = () => {
                           className="w-full min-h-[60px] text-sm"
                           style={{ backgroundColor: '#F6F4EE' }}
                           placeholder="Add your comments..."
+                          required
                         />
                       </div>
 
-                      {/* Attachment */}
-                      <div>
+                      {/* File Upload - Always Mandatory */}
+                      <div className="mb-3">
                         <Label className="text-xs font-medium text-gray-700 mb-2 block">
-                          Attachment
+                          Attachment <span className="text-red-600">*</span>
                         </Label>
                         <div className="flex items-center gap-3">
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => document.getElementById(`attachment-${question.id}`)?.click()}
+                            onClick={() => document.getElementById(`attachment-file-${question.id}`)?.click()}
                             className="border-gray-300 text-sm"
                           >
                             <Plus className="w-4 h-4 mr-1" />
-                            Add
+                            Choose File
                           </Button>
                           <span className="text-xs text-gray-500">
                             {question.attachment ? question.attachment.name : 'No file chosen'}
                           </span>
                           <input
-                            id={`attachment-${question.id}`}
+                            id={`attachment-file-${question.id}`}
                             type="file"
-                            accept="image/*,.pdf"
+                            accept="*/*"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (file) {
@@ -1378,12 +1722,25 @@ const FitoutRequestDetails: React.FC = () => {
                 </div>
 
                 {/* Add New Question Button */}
-                <div className="flex justify-center">
+                <div className="flex justify-center pt-2 pb-4 border-t border-gray-200">
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={handleAddQuestion}
-                    className="border-[#C72030] text-[#C72030] hover:bg-red-50"
+                    size="sm"
+                    onClick={() => {
+                      const newQuestion = {
+                        id: Date.now(),
+                        question: '',
+                        qtype: 'text',
+                        quest_mandatory: false,
+                        response: null,
+                        comments: '',
+                        attachment: null,
+                        options: []
+                      };
+                      setChecklistQuestions([...checklistQuestions, newQuestion]);
+                    }}
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add New Question
@@ -1416,6 +1773,109 @@ const FitoutRequestDetails: React.FC = () => {
                   </Button>
                 </div>
               </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Logs Modal */}
+      <Dialog open={logsModalOpen} onOpenChange={setLogsModalOpen}>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto bg-white">
+          <DialogHeader className="border-b pb-4" style={{ backgroundColor: '#F6F4EE' }}>
+            <div className="flex items-center justify-between px-6 py-3">
+              <DialogTitle className="text-lg font-semibold text-gray-900">
+                LOGS
+              </DialogTitle>
+              <button
+                onClick={() => setLogsModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </DialogHeader>
+          
+          <div className="p-6">
+            {logsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
+                <span className="ml-2 text-gray-600">Loading logs...</span>
+              </div>
+            ) : logs.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No logs available
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Date Header */}
+                {logs.map((logEntry, index) => {
+                  const showDateHeader = index === 0 || 
+                    (index > 0 && new Date(logEntry.created_at).toDateString() !== new Date(logs[index - 1].created_at).toDateString());
+                  
+                  return (
+                    <React.Fragment key={logEntry.id || index}>
+                      {showDateHeader && (
+                        <div className="text-center py-2">
+                          <span className="text-sm font-medium text-gray-600">
+                            {new Date(logEntry.created_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: '2-digit',
+                              year: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0">
+                        {/* Icon */}
+                        <div className="flex-shrink-0 mt-1">
+                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                            <FileText className="w-4 h-4 text-gray-600" />
+                          </div>
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          {/* Time */}
+                          <div className="text-xs text-gray-500 mb-1">
+                            {new Date(logEntry.created_at).toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </div>
+                          
+                          {/* User and Action */}
+                          <div className="text-sm">
+                            <span className="font-semibold text-gray-900">
+                              {logEntry.user_name || 'System'}
+                            </span>
+                            <span className="text-gray-700 ml-1">
+                              {logEntry.action || logEntry.description || 'made changes'}
+                            </span>
+                          </div>
+                          
+                          {/* Category/Details */}
+                          {logEntry.category && (
+                            <div className="text-sm text-gray-600 mt-1">
+                              {logEntry.category}
+                            </div>
+                          )}
+                          
+                          {/* Status */}
+                          {logEntry.status && (
+                            <div className="mt-2">
+                              <span className="text-xs font-medium text-gray-700">
+                                Status - {logEntry.status}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
             )}
           </div>
         </DialogContent>

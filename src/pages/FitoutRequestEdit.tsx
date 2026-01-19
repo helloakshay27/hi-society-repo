@@ -47,6 +47,8 @@ const FitoutRequestEdit: React.FC = () => {
   const [users, setUsers] = useState([]);
   const [annexures, setAnnexures] = useState([]);
   const [statuses, setStatuses] = useState([]);
+  const [allCategories, setAllCategories] = useState<any[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
   const [requestCategories, setRequestCategories] = useState<FitoutRequestCategory[]>([]);
 
   const [formData, setFormData] = useState<FitoutRequestFormData>({
@@ -93,6 +95,29 @@ const FitoutRequestEdit: React.FC = () => {
     fetchDropdownData();
     fetchFitoutRequest();
   }, [id]);
+
+  // Initialize selectedCategories when allCategories and requestCategories are loaded
+  useEffect(() => {
+    if (allCategories.length > 0 && requestCategories.length >= 0 && selectedCategories.length === 0) {
+      // Initialize with ALL categories
+      const selectedCats = allCategories.map((cat: any) => {
+        // Check if this category exists in loaded data
+        const existingCat = requestCategories.find(
+          (rc: any) => rc.fitout_category_id === cat.id.toString()
+        );
+        
+        return {
+          fitout_category_id: cat.id.toString(),
+          amount: existingCat ? existingCat.amount : cat.amount?.toString() || '0.00',
+          documents: []
+        };
+      });
+      
+      setSelectedCategories(selectedCats);
+      console.log('All categories initialized:', selectedCats);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allCategories, requestCategories]);
 
   const fetchDropdownData = async () => {
     try {
@@ -147,6 +172,7 @@ const FitoutRequestEdit: React.FC = () => {
       console.log('Annexures Array:', annexuresArray);
       
       setAnnexures(annexuresArray);
+      setAllCategories(annexuresArray);
       
       // Extract statuses from API response
       const statusesArray = statusesResponse.data?.data || [];
@@ -381,18 +407,16 @@ const FitoutRequestEdit: React.FC = () => {
   };
 
   const handleAddCategory = () => {
-    setRequestCategories(prev => [...prev, {
+    setSelectedCategories(prev => [...prev, {
       fitout_category_id: '',
-      complaint_status_id: '',
       amount: '0.00',
       documents: [],
-      existing_documents: [],
     }]);
   };
 
   const handleCategorySelect = (index: number, categoryId: string) => {
-    const selectedCategory = annexures.find((cat: any) => cat.id.toString() === categoryId);
-    setRequestCategories(prev => {
+    const selectedCategory = allCategories.find((cat: any) => cat.id.toString() === categoryId);
+    setSelectedCategories(prev => {
       const updated = [...prev];
       updated[index] = {
         ...updated[index],
@@ -403,8 +427,8 @@ const FitoutRequestEdit: React.FC = () => {
     });
   };
 
-  const handleCategoryChange = (index: number, field: keyof FitoutRequestCategory, value: any) => {
-    setRequestCategories(prev => {
+  const handleCategoryChange = (index: number, field: string, value: any) => {
+    setSelectedCategories(prev => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
       return updated;
@@ -412,7 +436,7 @@ const FitoutRequestEdit: React.FC = () => {
   };
 
   const handleRemoveCategory = (index: number) => {
-    setRequestCategories(prev => prev.filter((_, i) => i !== index));
+    setSelectedCategories(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -448,21 +472,26 @@ const FitoutRequestEdit: React.FC = () => {
         submitData.append('fitout_request[status_id]', formData.statusId);
       }
       
-      // Add fitout request categories
-      requestCategories.forEach((category, index) => {
-        if (category.id) {
-          submitData.append(`fitout_request[fitout_request_categories_attributes][${index}][id]`, category.id);
+      // Add fitout request categories from selectedCategories
+      selectedCategories.forEach((category, index) => {
+        // Find matching requestCategory to get id if exists
+        const existingCategory = requestCategories.find(
+          rc => rc.fitout_category_id === category.fitout_category_id
+        );
+        
+        if (existingCategory?.id) {
+          submitData.append(`fitout_request[fitout_request_categories_attributes][${index}][id]`, existingCategory.id);
         }
         submitData.append(`fitout_request[fitout_request_categories_attributes][${index}][fitout_category_id]`, category.fitout_category_id);
         submitData.append(`fitout_request[fitout_request_categories_attributes][${index}][amount]`, category.amount);
         
-        if (category.complaint_status_id) {
-          submitData.append(`fitout_request[fitout_request_categories_attributes][${index}][complaint_status_id]`, category.complaint_status_id);
+        if (existingCategory?.complaint_status_id) {
+          submitData.append(`fitout_request[fitout_request_categories_attributes][${index}][complaint_status_id]`, existingCategory.complaint_status_id);
         }
         
         // Add new documents if any files are selected
         if (category.documents && category.documents.length > 0) {
-          category.documents.forEach((file, docIndex) => {
+          category.documents.forEach((file: File, docIndex: number) => {
             submitData.append(`fitout_request[fitout_request_categories_attributes][${index}][documents_attributes][${docIndex}][document]`, file);
           });
         }
@@ -711,33 +740,39 @@ const FitoutRequestEdit: React.FC = () => {
           <div className="p-6 space-y-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-base font-medium">Annexure</h3>
-              <Button
+              {/* <Button
                 type="button"
                 onClick={handleAddCategory}
                 className="bg-[#C72030] text-white hover:bg-[#A01B28]"
               >
                 + Add Annexure
-              </Button>
+              </Button> */}
             </div>
 
-            {requestCategories.length === 0 && (
+            {selectedCategories.length === 0 && (
               <p className="text-sm text-gray-500">No annexures added yet. Click "+ Add Annexure" to add one.</p>
             )}
 
-            {requestCategories.map((category, index) => (
-              <div key={index} className="border rounded-lg p-4 space-y-4" style={{ backgroundColor: '#FAFAFA' }}>
-                <div className="flex justify-between items-center">
-                  <h4 className="text-sm font-medium" style={{ color: '#C72030' }}>Annexure {index + 1}</h4>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveCategory(index)}
-                    className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
-                  >
-                    ✕
-                  </button>
-                </div>
+            {selectedCategories.map((category, index) => {
+              const selectedCat = allCategories.find(c => c.id.toString() === category.fitout_category_id);
+              const existingCategory = requestCategories.find(rc => rc.fitout_category_id === category.fitout_category_id);
+              const isExistingCategory = existingCategory && existingCategory.id; // Has ID means it was previously saved
+              
+              return (
+                <div key={index} className="border rounded-lg p-4 space-y-4" style={{ backgroundColor: '#FAFAFA' }}>
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-sm font-medium" style={{ color: '#C72030' }}>Annexure {index + 1}</h4>
+                    {!isExistingCategory && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCategory(index)}
+                        className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormControl fullWidth variant="outlined">
                     <InputLabel shrink>Annexure *</InputLabel>
                     <MuiSelect
@@ -748,7 +783,7 @@ const FitoutRequestEdit: React.FC = () => {
                       sx={fieldStyles}
                     >
                       <MenuItem value="">Select Annexure</MenuItem>
-                      {annexures.map((cat: any) => (
+                      {allCategories.map((cat: any) => (
                         <MenuItem key={cat.id} value={cat.id.toString()}>
                           {cat.name}
                         </MenuItem>
@@ -756,139 +791,175 @@ const FitoutRequestEdit: React.FC = () => {
                     </MuiSelect>
                   </FormControl>
 
-                  {category.id && (
-                    <FormControl fullWidth variant="outlined">
-                      <InputLabel shrink>Status</InputLabel>
-                      <MuiSelect
-                        value={category.complaint_status_id}
-                        onChange={(e) => handleCategoryChange(index, 'complaint_status_id', e.target.value)}
-                        label="Status"
-                        displayEmpty
-                        sx={fieldStyles}
-                      >
-                        <MenuItem value="">Select Status</MenuItem>
-                        {statuses.map((status: any) => (
-                          <MenuItem key={status.id} value={status.id.toString()}>
-                            {status.name}
-                          </MenuItem>
-                        ))}
-                      </MuiSelect>
-                    </FormControl>
-                  )}
-                </div>
-
-                {category.fitout_category_id && (
-                  <div className="bg-white p-3 rounded border">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Amount:</span>
-                      <span className="text-base font-semibold">₹{parseFloat(category.amount || '0').toFixed(2)}</span>
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Upload Images
-                  </label>
-                  
-                  {/* Existing Images Gallery */}
-                  {category.existing_documents && category.existing_documents.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-xs text-gray-600 mb-2 font-medium">Current Images ({category.existing_documents.length}):</p>
-                      <div className="flex flex-wrap gap-2">
-                        {category.existing_documents.map((doc, docIndex) => (
-                          <div key={doc.id} className="relative inline-block">
-                            <img 
-                              src={decodeURIComponent(doc.document_url)} 
-                              alt={`Existing document ${docIndex + 1}`} 
-                              className="w-24 h-24 object-cover rounded border border-gray-300"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                              }}
-                            />
-                            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs px-1 py-0.5 rounded-b text-center">
-                              Image {docIndex + 1}
-                            </div>
+                  {category.fitout_category_id && selectedCat && (
+                    <div className="space-y-2">
+                      {selectedCat.category_type && (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          selectedCat.category_type === 'Move In' 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : selectedCat.category_type === 'Fitout'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {selectedCat.category_type}
+                        </span>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                        <div className="bg-white p-3 rounded border">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Security Deposit:</span>
+                            <span className="text-base font-semibold">₹{(parseFloat(selectedCat.amount) || 0).toFixed(2)}</span>
                           </div>
-                        ))}
+                        </div>
+                        {/* <div className="bg-white p-3 rounded border">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Convenience Charge:</span>
+                            <span className="text-base font-semibold">₹{(parseFloat(selectedCat.convenience_charge) || 0).toFixed(2)}</span>
+                          </div>
+                        </div> */}
                       </div>
                     </div>
                   )}
-                  
-                  {/* New Images Preview */}
-                  {category.documents && category.documents.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-xs text-green-600 mb-2 font-medium">New files selected ({category.documents.length}):</p>
-                      <div className="flex flex-wrap gap-2">
-                        {category.documents.map((file, fileIndex) => {
-                          const imageUrl = URL.createObjectURL(file);
-                          return (
-                            <div key={fileIndex} className="relative inline-block group">
+
+                  {existingCategory && existingCategory.id && (
+                    <div className="mt-2">
+                      <FormControl fullWidth variant="outlined">
+                        <InputLabel shrink>Status</InputLabel>
+                        <MuiSelect
+                          value={existingCategory.complaint_status_id}
+                          onChange={(e) => {
+                            const idx = requestCategories.findIndex(rc => rc.fitout_category_id === category.fitout_category_id);
+                            if (idx !== -1) {
+                              setRequestCategories(prev => {
+                                const updated = [...prev];
+                                updated[idx] = { ...updated[idx], complaint_status_id: e.target.value };
+                                return updated;
+                              });
+                            }
+                          }}
+                          label="Status"
+                          displayEmpty
+                          sx={fieldStyles}
+                        >
+                          <MenuItem value="">Select Status</MenuItem>
+                          {statuses.map((status: any) => (
+                            <MenuItem key={status.id} value={status.id.toString()}>
+                              {status.name}
+                            </MenuItem>
+                          ))}
+                        </MuiSelect>
+                      </FormControl>
+                    </div>
+                  )}
+
+                  {/* <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Upload Images
+                    </label>
+                    
+                    {existingCategory?.existing_documents && existingCategory.existing_documents.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-xs text-gray-600 mb-2 font-medium">Current Images ({existingCategory.existing_documents.length}):</p>
+                        <div className="flex flex-wrap gap-2">
+                          {existingCategory.existing_documents.map((doc, docIndex) => (
+                            <div key={doc.id} className="relative inline-block">
                               <img 
-                                src={imageUrl} 
-                                alt={`Preview ${fileIndex + 1}`} 
-                                className="w-24 h-24 object-cover rounded border-2 border-green-500"
-                                onLoad={() => URL.revokeObjectURL(imageUrl)}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const updatedFiles = category.documents.filter((_, i) => i !== fileIndex);
-                                  handleCategoryChange(index, 'documents', updatedFiles);
+                                src={decodeURIComponent(doc.document_url)} 
+                                alt={`Existing document ${docIndex + 1}`} 
+                                className="w-24 h-24 object-cover rounded border border-gray-300"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
                                 }}
-                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 shadow-md"
-                              >
-                                ✕
-                              </button>
+                              />
                               <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs px-1 py-0.5 rounded-b text-center">
-                                New {fileIndex + 1}
+                                Image {docIndex + 1}
                               </div>
                             </div>
-                          );
-                        })}
+                          ))}
+                        </div>
                       </div>
+                    )}
+                    
+                    {category.documents && category.documents.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-xs text-green-600 mb-2 font-medium">New files selected ({category.documents.length}):</p>
+                        <div className="flex flex-wrap gap-2">
+                          {category.documents.map((file: File, fileIndex: number) => {
+                            const imageUrl = URL.createObjectURL(file);
+                            return (
+                              <div key={fileIndex} className="relative inline-block group">
+                                <img 
+                                  src={imageUrl} 
+                                  alt={`Preview ${fileIndex + 1}`} 
+                                  className="w-24 h-24 object-cover rounded border-2 border-green-500"
+                                  onLoad={() => URL.revokeObjectURL(imageUrl)}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updatedFiles = category.documents.filter((_: File, i: number) => i !== fileIndex);
+                                    handleCategoryChange(index, 'documents', updatedFiles);
+                                  }}
+                                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 shadow-md"
+                                >
+                                  ✕
+                                </button>
+                                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs px-1 py-0.5 rounded-b text-center">
+                                  {fileIndex + 1}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          if (files.length > 0) {
+                            const updatedFiles = [...(category.documents || []), ...files];
+                            handleCategoryChange(index, 'documents', updatedFiles);
+                          }
+                          e.target.value = '';
+                        }}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#bf213e] file:text-white hover:file:bg-[#bf213e]"
+                        id={`file-upload-${index}`}
+                      />
                     </div>
-                  )}
-                  
-                  {/* File Input */}
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        if (files.length > 0) {
-                          const updatedFiles = [...category.documents, ...files];
-                          handleCategoryChange(index, 'documents', updatedFiles);
-                        }
-                        // Reset input to allow selecting the same file again
-                        e.target.value = '';
-                      }}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#bf213e] file:text-white hover:file:bg-[#bf213e]"
-                      id={`file-upload-${index}`}
-                    />
-                  </div>
-                  {/* <p className="text-xs text-gray-500 mt-1">You can select multiple images at once</p> */}
+                  </div> */}
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <div className="border-t pt-4 space-y-3 mt-6">
               <div className="flex justify-between items-center py-2">
                 <span className="text-sm">Amount :</span>
-                <span className="text-base font-medium">{requestCategories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}</span>
+                <span className="text-base font-medium">₹{selectedCategories.reduce((sum, cat) => {
+                  const fullCat = allCategories.find(c => c.id.toString() === cat.fitout_category_id);
+                  return sum + (parseFloat(fullCat?.amount) || 0);
+                }, 0).toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between items-center py-2">
                 <span className="text-sm">Convenience Charge :</span>
-                <span className="text-base font-medium">{parseFloat(formData.convenienceCharge).toFixed(2)}</span>
+                <span className="text-base font-medium">₹{selectedCategories.reduce((sum, cat) => {
+                  const fullCat = allCategories.find(c => c.id.toString() === cat.fitout_category_id);
+                  return sum + (parseFloat(fullCat?.convenience_charge) || 0);
+                }, 0).toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between items-center py-2 border-t pt-3">
                 <span className="text-base font-semibold">Total :</span>
-                <span className="text-lg font-bold">₹{(requestCategories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0) + parseFloat(formData.convenienceCharge)).toFixed(2)}</span>
+                <span className="text-lg font-bold">₹{selectedCategories.reduce((sum, cat) => {
+                  const fullCat = allCategories.find(c => c.id.toString() === cat.fitout_category_id);
+                  return sum + (parseFloat(fullCat?.amount) || 0) + (parseFloat(fullCat?.convenience_charge) || 0);
+                }, 0).toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between items-center py-2">

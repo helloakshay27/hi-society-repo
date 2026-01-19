@@ -259,7 +259,12 @@ const FitoutChecklists: React.FC = () => {
         case "name":
           return <span>{item.name}</span>;
         case "check_type":
-          return <span className="capitalize">{item.check_type || "-"}</span>;
+          const checkTypeDisplay = item.check_type === "Fitout" 
+            ? "Deviation" 
+            : item.check_type === "FitoutRequest" 
+            ? "Request Form" 
+            : item.check_type || "-";
+          return <span>{checkTypeDisplay}</span>;
         case "category_name":
           return <span>{item.category_name || "-"}</span>;
         case "sub_category_name":

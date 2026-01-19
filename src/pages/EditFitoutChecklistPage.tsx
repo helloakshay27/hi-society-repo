@@ -9,6 +9,7 @@ import {
   Checkbox,
   FormControlLabel,
   IconButton,
+  Menu,
 } from "@mui/material";
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
@@ -101,6 +102,7 @@ export const EditFitoutChecklistPage = () => {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
+  const [checkType, setCheckType] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [loadingSubCategories, setLoadingSubCategories] = useState(false);
@@ -193,6 +195,9 @@ export const EditFitoutChecklistPage = () => {
       // Set subcategory
       const subCategoryId = checklistData.snag_audit_sub_category_id?.toString() || "";
       setSubCategory(subCategoryId);
+      
+      // Set check type
+      setCheckType(checklistData.check_type || "");
 
       // Load subcategories if category exists
       if (checklistData.snag_audit_category_id) {
@@ -399,6 +404,10 @@ export const EditFitoutChecklistPage = () => {
       toast.error("Please select a category");
       return;
     }
+    if (!checkType) {
+      toast.error("Please select a check type");
+      return;
+    }
     // if (!subCategory) {
     //   toast.error("Please select a sub-category");
     //   return;
@@ -451,7 +460,7 @@ export const EditFitoutChecklistPage = () => {
           name: title,
           snag_audit_category_id: parseInt(category),
           snag_audit_sub_category_id: parseInt(subCategory),
-          check_type: "Fitout",
+          check_type: checkType,
           questions: activeQuestions.map((question) => {
             const questionData: any = {
               descr: question.text,
@@ -606,6 +615,18 @@ export const EditFitoutChecklistPage = () => {
                 ))}
               </Select>
             </FormControl>
+
+            <FormControl fullWidth sx={fieldStyles}>
+              <InputLabel>Checklist Type *</InputLabel>
+              <Select
+                value={checkType}
+                label="Check Type *"
+                onChange={(e) => setCheckType(e.target.value)}
+              >
+                <MenuItem value="FitoutRequest">Request Form</MenuItem>
+                <MenuItem value="Fitout">Deviation</MenuItem>
+              </Select>
+            </FormControl>
           </div>
           </div>
         </div>
@@ -685,6 +706,7 @@ export const EditFitoutChecklistPage = () => {
                           <MenuItem value="text">Text</MenuItem>
                           <MenuItem value="description">Description</MenuItem>
                           <MenuItem value="date">Date</MenuItem>
+                          <MenuItem value="file">File</MenuItem>
                         </Select>
                       </FormControl>
                     </div>

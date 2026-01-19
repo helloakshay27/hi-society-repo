@@ -12,6 +12,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { EnhancedTable } from '../enhanced-table/EnhancedTable';
 import { apiClient } from '@/utils/apiClient';
 
@@ -21,9 +28,10 @@ interface Category {
   active: boolean;
   society_id: string | number;
   amount: number | null;
-  conv_charge: number;
+  convenience_charge: number;
   created_at: string;
   updated_at: string;
+  category_type?: string;
   bhk_1_count?: number;
   bhk_2_count?: number;
   bhk_3_count?: number;
@@ -35,6 +43,9 @@ interface Category {
 export const CategoryTab: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryName, setCategoryName] = useState('');
+  const [categoryType, setCategoryType] = useState('');
+  const [securityDeposit, setSecurityDeposit] = useState('');
+  const [convenienceCharges, setConvenienceCharges] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -66,6 +77,11 @@ export const CategoryTab: React.FC = () => {
       return;
     }
 
+    if (!categoryType) {
+      toast.error('Please select category type');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       // Get society_id from localStorage
@@ -88,6 +104,9 @@ export const CategoryTab: React.FC = () => {
       const response = await apiClient.post('/crm/admin/fitout_categories.json', {
         fitout_category: {
           name: categoryName,
+          category_type: categoryType,
+          amount: securityDeposit ? parseFloat(securityDeposit) : 0,
+          convenience_charge: convenienceCharges ? parseFloat(convenienceCharges) : 0,
           active: true,
           society_id: idSociety,
         }
@@ -95,6 +114,9 @@ export const CategoryTab: React.FC = () => {
       toast.success('Category added successfully');
       setIsDialogOpen(false);
       setCategoryName('');
+      setCategoryType('');
+      setSecurityDeposit('');
+      setConvenienceCharges('');
       fetchCategories(); // Refresh the list
     } catch (error) {
       console.error('Error adding category:', error);
@@ -107,22 +129,36 @@ export const CategoryTab: React.FC = () => {
   const handleEdit = (category: Category) => {
     setEditingId(category.id);
     setCategoryName(category.name);
+    setCategoryType(category.category_type || '');
+    setSecurityDeposit(category.amount !== null ? category.amount.toString() : '');
+    setConvenienceCharges(category.convenience_charge ? category.convenience_charge.toString() : '');
     setIsDialogOpen(true);
   };
   const handleUpdate = async () => {
     if (!categoryName.trim() || !editingId) return;
+
+    if (!categoryType) {
+      toast.error('Please select category type');
+      return;
+    }
 
     try {
       setIsSubmitting(true);
       await apiClient.put(`/crm/admin/fitout_categories/${editingId}.json`, {
         fitout_category: {
           name: categoryName,
+          category_type: categoryType,
+          amount: securityDeposit ? parseFloat(securityDeposit) : 0,
+          convenience_charge: convenienceCharges ? parseFloat(convenienceCharges) : 0,
           active: true,
         }
       });
       toast.success('Category updated successfully');
       setIsDialogOpen(false);
       setCategoryName('');
+      setCategoryType('');
+      setSecurityDeposit('');
+      setConvenienceCharges('');
       setEditingId(null);
       fetchCategories(); // Refresh the list
     } catch (error) {
@@ -149,12 +185,18 @@ export const CategoryTab: React.FC = () => {
   const handleOpenAddDialog = () => {
     setEditingId(null);
     setCategoryName('');
+    setCategoryType('');
+    setSecurityDeposit('');
+    setConvenienceCharges('');
     setIsDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setCategoryName('');
+    setCategoryType('');
+    setSecurityDeposit('');
+    setConvenienceCharges('');
     setEditingId(null);
   };
 
@@ -182,6 +224,13 @@ export const CategoryTab: React.FC = () => {
         defaultVisible: true,
       },
       {
+        key: 'category_type',
+        label: 'Type',
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
         key: 'active',
         label: 'Status',
         sortable: true,
@@ -190,13 +239,13 @@ export const CategoryTab: React.FC = () => {
       },
       {
         key: 'amount',
-        label: 'Amount',
+        label: 'Security Deposit',
         sortable: true,
         draggable: true,
         defaultVisible: true,
       },
       {
-        key: 'conv_charge',
+        key: 'convenience_charge',
         label: 'Convenience Charge',
         sortable: true,
         draggable: true,
@@ -236,6 +285,18 @@ export const CategoryTab: React.FC = () => {
         return <span>{item.name}</span>;
       case 'id':
         return <span>{item.id}</span>;
+      case 'category_type':
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            item.category_type === 'Move In' 
+              ? 'bg-blue-100 text-blue-800' 
+              : item.category_type === 'Fitout'
+              ? 'bg-purple-100 text-purple-800'
+              : 'bg-gray-100 text-gray-800'
+          }`}>
+            {item.category_type || '-'}
+          </span>
+        );
       case 'active':
         return (
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -307,6 +368,38 @@ export const CategoryTab: React.FC = () => {
                 placeholder="Enter category name"
                 value={categoryName}
                 onChange={(e) => setCategoryName(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="category-type">Type </Label>
+              <Select value={categoryType} onValueChange={setCategoryType}>
+                <SelectTrigger id="category-type">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Move In">Move In</SelectItem>
+                  <SelectItem value="Fitout">Fitout</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+             <div className="grid gap-2">
+              <Label htmlFor="security-deposit">Security deposit </Label>
+              <Input
+                id="security-deposit"
+                type="number"
+                placeholder="Enter security deposit"
+                value={securityDeposit}
+                onChange={(e) => setSecurityDeposit(e.target.value)}
+              />
+            </div>
+             <div className="grid gap-2">
+              <Label htmlFor="convenience-charges">Convenience charges </Label>
+              <Input
+                id="convenience-charges"
+                type="number"
+                placeholder="Enter convenience charges"
+                value={convenienceCharges}
+                onChange={(e) => setConvenienceCharges(e.target.value)}
               />
             </div>
           </div>
