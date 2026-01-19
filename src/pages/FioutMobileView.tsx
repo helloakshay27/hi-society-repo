@@ -25,6 +25,8 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [comments, setComments] = useState('');
   const [categories, setCategories] = useState<{ name: string; questions: SurveyQuestion[] }[]>([]);
+  // Track selected files per question id
+  const [filesByQid, setFilesByQid] = useState<Record<string, File[]>>({});
 
   const isMobile = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
 
@@ -95,6 +97,15 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   const [fetchAttempt, setFetchAttempt] = useState(0);
   // if server already has any answers for this mapping, show "Form already submitted"
   const [serverSubmitted, setServerSubmitted] = useState(false);
+  // Toast notifications
+  const [toast, setToast] = useState<{ show: boolean; message: string; kind?: 'error' | 'info' | 'success' }>(
+    { show: false, message: '', kind: 'error' }
+  );
+  const showToast = (message: string, kind: 'error' | 'info' | 'success' = 'error') => {
+    setToast({ show: true, message, kind });
+    // auto hide after 4s
+    setTimeout(() => setToast((t) => ({ ...t, show: false })), 4000);
+  };
 
     useEffect(() => {
   setFetchError(null);
@@ -131,9 +142,13 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
       .then((r) => {
         if (r.status === 500) {
           if (!cancelled) setFetchError(500);
+          if (!cancelled) showToast('Server error while loading form (500).', 'error');
           throw new Error('Server error 500');
         }
-        if (!r.ok) throw new Error('Network response not ok');
+        if (!r.ok) {
+          if (!cancelled) showToast(`Failed to load form (HTTP ${r.status}).`, 'error');
+          throw new Error('Network response not ok');
+        }
         return r.json();
       })
       .then((data) => {
@@ -166,6 +181,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
         if (!cancelled) {
           setCategories([]);
           setLoading(false);
+          showToast('Unable to load form. Please check your connection.', 'error');
         }
       });
     return () => { cancelled = true; };
@@ -173,8 +189,11 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
 
   const selectOption = (qid: string | number, value: string | number) => setAnswers((s) => ({ ...s, [String(qid)]: String(value) }));
   const setOpenAnswer = (qid: string | number, value: string) => setAnswers((s) => ({ ...s, [String(qid)]: value }));
-
-  
+  // Capture chosen files for a question
+  const setFilesForQuestion = (qid: string | number, files: FileList | null) => {
+    const arr = files ? Array.from(files) : [];
+    setFilesByQid((prev) => ({ ...prev, [String(qid)]: arr }));
+  };
 
   // Toggle the required flag for a question in local component state
   const toggleRequired = (qid: string | number) => {
@@ -206,7 +225,6 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
       // For each question create an entry under snag_answers[<mapId>][...]
       categories.forEach((cat) => {
         cat.questions.forEach((q) => {
-          // Use snag_quest_map_id from GET payload when available, fallback to question id
           const mapId = String(q.snag_quest_map_id || q.id);
           const qKeyBase = `snag_answers[${mapId}]`;
           // include map id and question id
@@ -232,6 +250,14 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
             } catch (e) {
               form.append(`${qKeyBase}[ans_descr]`, String(val || ''));
             }
+          } else if (q.qtype === 'file') {
+            // Even for file uploads, include option_id and ans_descr (can be blank)
+            form.append(`${qKeyBase}[snag_quest_option_id]`, '');
+            form.append(`${qKeyBase}[ans_descr]`, '');
+            const files = filesByQid[String(q.id)] || [];
+            files.forEach((f) => {
+              form.append(`${qKeyBase}[docs][]`, f);
+            });
           } else {
             // text, date, description, date_range, time etc
             form.append(`${qKeyBase}[ans_descr]`, String(val || ''));
@@ -244,7 +270,10 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const resp = await fetch(postUrl, { method: 'POST', body: form, headers });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      if (!resp.ok) {
+        showToast(`Submission failed (HTTP ${resp.status}).`, 'error');
+        throw new Error(`HTTP ${resp.status}`);
+      }
 
       // Optionally call external handler
       onSubmit?.(answers, comments);
@@ -255,7 +284,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   setThankYou(true);
     } catch (err) {
       // keep subtle failure behavior for now; could add toast
-      // console.error(err);
+      showToast('Something went wrong. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -344,6 +373,16 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
 
   return (
     <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
+      {/* Toast */}
+      {toast.show && (
+        <div
+          className={`fixed z-50 ${isMobile ? 'bottom-4 left-4 right-4' : 'top-4 right-4'} px-4 py-3 rounded shadow-lg text-sm ${
+            toast.kind === 'error' ? 'bg-red-600 text-white' : toast.kind === 'success' ? 'bg-green-600 text-white' : 'bg-gray-900 text-white'
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
   <div className="w-full max-w-md md:max-w-4xl px-4 pt-6">
         <div className="relative">
           {/* <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" /> */}
@@ -467,6 +506,16 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
 
                         {!q.qtype && !q.options && (
                           <textarea value={answers[String(q.id)] || ''} onChange={(e) => setOpenAnswer(q.id, e.target.value)} placeholder="Write your answer..." className="w-full min-h-[100px] resize-none bg-white border border-gray-300 rounded p-3 text-sm focus:outline-none focus:ring-1" style={{ boxShadow: 'inset 0 0 0 1px rgba(30,86,214,0.08)' }} />
+                        )}
+
+                        {/* Render file input for qtype='file' */}
+                        {q.qtype === 'file' && (
+                          <div>
+                            <input type="file" multiple onChange={(e) => setFilesForQuestion(q.id, e.target.files)} className="w-full border rounded px-3 py-2 bg-white" />
+                            {filesByQid[String(q.id)] && filesByQid[String(q.id)].length > 0 && (
+                              <div className="text-xs text-gray-600 mt-2">{filesByQid[String(q.id)].length} file(s) selected</div>
+                            )}
+                          </div>
                         )}
 
                         {/* Mandatory UI removed */}
