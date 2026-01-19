@@ -624,9 +624,9 @@ const EventCreate = () => {
     if (!formData.event_name || !formData.event_name.trim()) {
       errors.push("Event Name is required.");
     }
-    if (!formData.event_type) {
-      errors.push("Event Type is required.");
-    }
+    // if (!formData.event_type) {
+    //   errors.push("Event Type is required.");
+    // }
     if (!formData.event_date) {
       errors.push("Event Date is required.");
     }

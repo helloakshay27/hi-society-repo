@@ -1036,7 +1036,7 @@ const ProjectDetailsCreate = () => {
         "image/gif",
         "image/webp",
       ],
-      two_d_images: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+      two_d_images: ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"],
       gallery_image: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       videos: ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"],
       plans: ["image/jpeg", "image/png", "image/gif", "image/webp"],
@@ -1048,7 +1048,6 @@ const ProjectDetailsCreate = () => {
       ],
       brochure: [
         "application/pdf",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       ],
       project_ppt: [
         "application/vnd.ms-powerpoint",
@@ -1071,21 +1070,16 @@ const ProjectDetailsCreate = () => {
         "image/webp",
       ],
       project_creative_offers: [
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "image/webp",
+        "application/pdf",
       ],
       project_interiors: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_exteriors: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_layout: [
         "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.ms-powerpoint",
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "application/vnd.ms-excel",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
       ],
     };
 
@@ -1230,12 +1224,12 @@ const ProjectDetailsCreate = () => {
 
       newFiles.forEach((file) => {
         if (!allowedTypes.project_creative_offers.includes(file.type)) {
-          toast.error("Only JPG, PNG, GIF, and WebP images are allowed.");
+          toast.error("Only PDF files are allowed for project offers.");
           return;
         }
 
         if (file.size > MAX_SIZES.project_creative_offers) {
-          toast.error("Image size must be less than 3MB.");
+          toast.error("PDF size must be less than 3MB.");
           return;
         }
 
@@ -1368,7 +1362,7 @@ const ProjectDetailsCreate = () => {
 
       newFiles.forEach((file) => {
         if (!allowedTypes.brochure.includes(file.type)) {
-          toast.error("Only PDF and DOCX files are allowed for brochure.");
+          toast.error("Only PDF files are allowed for brochure.");
           return;
         }
 
@@ -4978,7 +4972,7 @@ const ProjectDetailsCreate = () => {
                           className="form-control"
                           type="file"
                           name="project_creative_offers"
-                          accept="image/*"
+                          accept="application/pdf"
                           onChange={(e) => handleFileUpload("project_creative_offers", e.target.files)}
                           multiple
                           style={{ display: "none" }}

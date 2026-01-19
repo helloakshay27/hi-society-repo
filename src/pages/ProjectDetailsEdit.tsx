@@ -1517,29 +1517,27 @@ const ProjectDetailsEdit = () => {
     const allowedTypes = {
       image: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       video_preview_image_url: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-      two_d_images: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+      two_d_images: ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"],
       gallery_image: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       videos: ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"],
       plans: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_qrcode_image: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-      brochure: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+      brochure: ["application/pdf"],
       project_ppt: ["application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation"],
       project_emailer_templetes: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
       KnwYrApt_Technical: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
       project_creatives: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       cover_images: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_creative_generics: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-      project_creative_offers: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+      project_creative_offers: ["application/pdf"],
       project_interiors: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_exteriors: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_layout: [
         "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.ms-powerpoint",
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "application/vnd.ms-excel",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
       ],
     };
 
@@ -1662,11 +1660,11 @@ const ProjectDetailsEdit = () => {
 
       newFiles.forEach((file) => {
         if (!allowedTypes.project_creative_offers.includes(file.type)) {
-          toast.error("Only JPG, PNG, GIF, and WebP images are allowed.");
+          toast.error("Only PDF files are allowed for project offers.");
           return;
         }
         if (file.size > MAX_SIZES.project_creative_offers) {
-          toast.error("Image size must be less than 3MB.");
+          toast.error("PDF size must be less than 3MB.");
           return;
         }
         validFiles.push(file);
@@ -1782,7 +1780,7 @@ const ProjectDetailsEdit = () => {
 
       newFiles.forEach((file) => {
         if (!allowedTypes.brochure.includes(file.type)) {
-          toast.error("Only PDF and DOCX files are allowed for brochure.");
+          toast.error("Only PDF files are allowed for brochure.");
           return;
         }
         if (!validateFile(file, MAX_SIZES[name])) return;
@@ -5534,7 +5532,7 @@ const ProjectDetailsEdit = () => {
                           className="form-control"
                           type="file"
                           name="project_creative_offers"
-                          accept="image/*"
+                          accept="application/pdf"
                           onChange={(e) =>
                             handleFileUpload(
                               "project_creative_offers",
