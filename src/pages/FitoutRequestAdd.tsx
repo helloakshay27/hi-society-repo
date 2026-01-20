@@ -22,6 +22,7 @@ interface FitoutRequestFormData {
   amount: string;
   status_id: string;
   pms_supplier_id: string;
+  fitout_type: string;
 }
 
 interface FitoutRequestCategory {
@@ -58,6 +59,7 @@ const FitoutRequestAdd: React.FC = () => {
     amount: '0.00',
     status_id: '',
     pms_supplier_id: '',
+    fitout_type: '',
   });
 
   const fieldStyles = {
@@ -86,6 +88,24 @@ const FitoutRequestAdd: React.FC = () => {
   useEffect(() => {
     fetchDropdownData();
   }, []);
+
+  useEffect(() => {
+    // Refetch categories when fitout_type changes
+    if (formData.fitout_type) {
+      fetchCategoriesByType(formData.fitout_type);
+    }
+  }, [formData.fitout_type]);
+
+  const fetchCategoriesByType = async (fitoutType: string) => {
+    try {
+      const response = await apiClient.get(`/crm/admin/fitout_categories.json?fitout_type=${fitoutType}`);
+      const categoriesArray = response.data?.fitout_categories || [];
+      console.log('Categories filtered by type:', categoriesArray);
+      setCategories(categoriesArray);
+    } catch (error) {
+      console.error('Error fetching categories by type:', error);
+    }
+  };
 
   const fetchDropdownData = async () => {
     try {
@@ -302,6 +322,7 @@ const FitoutRequestAdd: React.FC = () => {
       if (formData.amount) formDataToSend.append('fitout_request[amount]', formData.amount);
       if (formData.status_id) formDataToSend.append('fitout_request[status_id]', formData.status_id);
       if (formData.pms_supplier_id) formDataToSend.append('fitout_request[pms_supplier_id]', formData.pms_supplier_id);
+      if (formData.fitout_type) formDataToSend.append('fitout_request[fitout_type]', formData.fitout_type);
       
       // Add convenience charge
       if (convenienceCharge) formDataToSend.append('lock_payment[convenience_charge]', convenienceCharge);
@@ -522,6 +543,23 @@ const FitoutRequestAdd: React.FC = () => {
               variant="outlined"
               InputLabelProps={{ shrink: true }}
             />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Fitout Type</InputLabel>
+                <MuiSelect
+                  value={formData.fitout_type}
+                  onChange={handleSelectChange('fitout_type')}
+                  label="Type"
+                  displayEmpty
+                  sx={fieldStyles}
+                >
+                  <MenuItem value="">Select Type</MenuItem>
+                  <MenuItem value="Move In">Move In</MenuItem>
+                  <MenuItem value="Fitout">Fitout</MenuItem>
+                </MuiSelect>
+              </FormControl>
             </div>
 
 

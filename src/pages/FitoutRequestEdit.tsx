@@ -21,6 +21,7 @@ interface FitoutRequestFormData {
   total: string;
   paymentMode: string;
   statusId: string;
+  fitoutType: string;
 }
 
 interface FitoutRequestCategory {
@@ -66,6 +67,7 @@ const FitoutRequestEdit: React.FC = () => {
     total: '0.00',
     paymentMode: 'PAY AT SITE',
     statusId: '',
+    fitoutType: '',
   });
 
   const fieldStyles = {
@@ -95,6 +97,25 @@ const FitoutRequestEdit: React.FC = () => {
     fetchDropdownData();
     fetchFitoutRequest();
   }, [id]);
+
+  useEffect(() => {
+    // Refetch categories when fitout_type changes
+    if (formData.fitoutType) {
+      fetchCategoriesByType(formData.fitoutType);
+    }
+  }, [formData.fitoutType]);
+
+  const fetchCategoriesByType = async (fitoutType: string) => {
+    try {
+      const response = await apiClient.get(`/crm/admin/fitout_categories.json?fitout_type=${fitoutType}`);
+      const categoriesArray = response.data?.fitout_categories || [];
+      console.log('Categories filtered by type:', categoriesArray);
+      setAllCategories(categoriesArray);
+      setAnnexures(categoriesArray);
+    } catch (error) {
+      console.error('Error fetching categories by type:', error);
+    }
+  };
 
   // Initialize selectedCategories when allCategories and requestCategories are loaded
   useEffect(() => {
@@ -320,6 +341,7 @@ const FitoutRequestEdit: React.FC = () => {
         total: (totalAmount + (parseFloat(data.lock_payment?.convenience_charge) || 0)).toFixed(2),
         paymentMode: 'PAY AT SITE',
         statusId: data.status_id?.toString() || '',
+        fitoutType: data.fitout_type || '',
       });
 
       // Load flats for the selected tower
@@ -467,6 +489,10 @@ const FitoutRequestEdit: React.FC = () => {
       submitData.append('fitout_request[contactor_no]', formData.contractorMobileNo);
       submitData.append('fitout_request[expiry_date]', formData.expiryDate);
       submitData.append('fitout_request[refund_date]', formData.refundDate);
+      
+      if (formData.fitoutType) {
+        submitData.append('fitout_request[fitout_type]', formData.fitoutType);
+      }
       
       if (formData.statusId) {
         submitData.append('fitout_request[status_id]', formData.statusId);
@@ -702,6 +728,21 @@ const FitoutRequestEdit: React.FC = () => {
               variant="outlined"
               InputLabelProps={{ shrink: true }}
             />
+
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Fitout Type</InputLabel>
+                <MuiSelect
+                  value={formData.fitoutType}
+                  onChange={handleSelectChange('fitoutType')}
+                  label="Type"
+                  displayEmpty
+                  sx={fieldStyles}
+                >
+                  <MenuItem value="">Select Type</MenuItem>
+                  <MenuItem value="Move In">Move In</MenuItem>
+                  <MenuItem value="Fitout">Fitout</MenuItem>
+                </MuiSelect>
+              </FormControl>
 
              <FormControl fullWidth variant="outlined">
                 <InputLabel shrink>Status</InputLabel>
