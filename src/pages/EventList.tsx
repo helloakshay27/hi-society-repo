@@ -87,6 +87,16 @@ const Eventlist = () => {
     }
   };
 
+  // Cleanup body overflow styles when component mounts (fixes scroll-lock from modals)
+  useEffect(() => {
+    document.body.style.overflow = 'unset';
+    document.body.style.paddingRight = '0px';
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = '0px';
+    };
+  }, []);
+
   useEffect(() => {
     setEventPermissions(getEventPermissions());
   }, []);

@@ -653,6 +653,16 @@ const ProjectDetailsCreate = () => {
   const errorToastRef = useRef(null);
   const Navigate = useNavigate();
 
+  // Cleanup body overflow styles when component mounts (fixes scroll-lock from modals)
+  useEffect(() => {
+    document.body.style.overflow = 'unset';
+    document.body.style.paddingRight = '0px';
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = '0px';
+    };
+  }, []);
+
   const [reraList, setReraList] = useState([{ tower: "", reraNumber: "" }]);
 
   const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB

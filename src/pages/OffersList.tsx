@@ -113,6 +113,16 @@ export default function OffersList() {
   const [expiredOffers, setExpiredOffers] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
 
+  // Cleanup body overflow styles when component mounts (fixes scroll-lock from modals)
+  useEffect(() => {
+    document.body.style.overflow = 'unset';
+    document.body.style.paddingRight = '0px';
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = '0px';
+    };
+  }, []);
+
   // Mock data - Replace with actual API calls
   useEffect(() => {
     fetchOffers();

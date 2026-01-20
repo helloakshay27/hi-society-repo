@@ -92,6 +92,16 @@ const ProjectDetailsList = () => {
     }
   }, []);
 
+  // Cleanup body overflow styles when component mounts (fixes scroll-lock from modals)
+  useEffect(() => {
+    document.body.style.overflow = 'unset';
+    document.body.style.paddingRight = '0px';
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = '0px';
+    };
+  }, []);
+
   useEffect(() => {
     fetchProjects(currentPage, searchTerm);
   }, [currentPage, searchTerm, fetchProjects]);
