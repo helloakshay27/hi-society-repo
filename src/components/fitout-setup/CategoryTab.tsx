@@ -44,8 +44,6 @@ export const CategoryTab: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryName, setCategoryName] = useState('');
   const [categoryType, setCategoryType] = useState('');
-  const [securityDeposit, setSecurityDeposit] = useState('');
-  const [convenienceCharges, setConvenienceCharges] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -77,11 +75,6 @@ export const CategoryTab: React.FC = () => {
       return;
     }
 
-    if (!categoryType) {
-      toast.error('Please select category type');
-      return;
-    }
-
     try {
       setIsSubmitting(true);
       // Get society_id from localStorage
@@ -105,8 +98,6 @@ export const CategoryTab: React.FC = () => {
         fitout_category: {
           name: categoryName,
           category_type: categoryType,
-          amount: securityDeposit ? parseFloat(securityDeposit) : 0,
-          convenience_charge: convenienceCharges ? parseFloat(convenienceCharges) : 0,
           active: true,
           society_id: idSociety,
         }
@@ -115,8 +106,6 @@ export const CategoryTab: React.FC = () => {
       setIsDialogOpen(false);
       setCategoryName('');
       setCategoryType('');
-      setSecurityDeposit('');
-      setConvenienceCharges('');
       fetchCategories(); // Refresh the list
     } catch (error) {
       console.error('Error adding category:', error);
@@ -130,17 +119,10 @@ export const CategoryTab: React.FC = () => {
     setEditingId(category.id);
     setCategoryName(category.name);
     setCategoryType(category.category_type || '');
-    setSecurityDeposit(category.amount !== null ? category.amount.toString() : '');
-    setConvenienceCharges(category.convenience_charge ? category.convenience_charge.toString() : '');
     setIsDialogOpen(true);
   };
   const handleUpdate = async () => {
     if (!categoryName.trim() || !editingId) return;
-
-    if (!categoryType) {
-      toast.error('Please select category type');
-      return;
-    }
 
     try {
       setIsSubmitting(true);
@@ -148,8 +130,6 @@ export const CategoryTab: React.FC = () => {
         fitout_category: {
           name: categoryName,
           category_type: categoryType,
-          amount: securityDeposit ? parseFloat(securityDeposit) : 0,
-          convenience_charge: convenienceCharges ? parseFloat(convenienceCharges) : 0,
           active: true,
         }
       });
@@ -157,8 +137,6 @@ export const CategoryTab: React.FC = () => {
       setIsDialogOpen(false);
       setCategoryName('');
       setCategoryType('');
-      setSecurityDeposit('');
-      setConvenienceCharges('');
       setEditingId(null);
       fetchCategories(); // Refresh the list
     } catch (error) {
@@ -186,8 +164,6 @@ export const CategoryTab: React.FC = () => {
     setEditingId(null);
     setCategoryName('');
     setCategoryType('');
-    setSecurityDeposit('');
-    setConvenienceCharges('');
     setIsDialogOpen(true);
   };
 
@@ -195,8 +171,6 @@ export const CategoryTab: React.FC = () => {
     setIsDialogOpen(false);
     setCategoryName('');
     setCategoryType('');
-    setSecurityDeposit('');
-    setConvenienceCharges('');
     setEditingId(null);
   };
 
@@ -233,20 +207,6 @@ export const CategoryTab: React.FC = () => {
       {
         key: 'active',
         label: 'Status',
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
-      {
-        key: 'amount',
-        label: 'Security Deposit',
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
-      {
-        key: 'convenience_charge',
-        label: 'Convenience Charge',
         sortable: true,
         draggable: true,
         defaultVisible: true,
@@ -307,10 +267,6 @@ export const CategoryTab: React.FC = () => {
             {item.active ? 'Active' : 'Inactive'}
           </span>
         );
-      case 'amount':
-        return <span>{item.amount !== null ? `₹${item.amount}` : '-'}</span>;
-      case 'conv_charge':
-        return <span>₹{item.conv_charge || 0}</span>;
       case 'created_at':
         return <span>{new Date(item.created_at).toLocaleDateString('en-IN', {
           day: '2-digit',
@@ -371,7 +327,7 @@ export const CategoryTab: React.FC = () => {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="category-type">Type </Label>
+              <Label htmlFor="category-type">Type</Label>
               <Select value={categoryType} onValueChange={setCategoryType}>
                 <SelectTrigger id="category-type">
                   <SelectValue placeholder="Select type" />
@@ -381,26 +337,6 @@ export const CategoryTab: React.FC = () => {
                   <SelectItem value="Fitout">Fitout</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-             <div className="grid gap-2">
-              <Label htmlFor="security-deposit">Security deposit </Label>
-              <Input
-                id="security-deposit"
-                type="number"
-                placeholder="Enter security deposit"
-                value={securityDeposit}
-                onChange={(e) => setSecurityDeposit(e.target.value)}
-              />
-            </div>
-             <div className="grid gap-2">
-              <Label htmlFor="convenience-charges">Convenience charges </Label>
-              <Input
-                id="convenience-charges"
-                type="number"
-                placeholder="Enter convenience charges"
-                value={convenienceCharges}
-                onChange={(e) => setConvenienceCharges(e.target.value)}
-              />
             </div>
           </div>
           <DialogFooter>

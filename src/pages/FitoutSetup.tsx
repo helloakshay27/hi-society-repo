@@ -4,6 +4,7 @@ import { CategoryTab } from '@/components/fitout-setup/CategoryTab';
 import { StatusTab } from '@/components/fitout-setup/StatusTab';
 import { FitoutGuideTab } from '@/components/fitout-setup/FitoutGuideTab';
 import { DeviationStatusTab } from '@/components/fitout-setup/DeviationStatusTab';
+import { FitoutCategoryRateTab } from '@/components/fitout-setup/FitoutCategoryRateTab';
 
 const FitoutSetup: React.FC = () => {
   const [activeTab, setActiveTab] = useState('category');
@@ -15,7 +16,7 @@ const FitoutSetup: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-white border border-gray-200">
+        <TabsList className="grid w-full grid-cols-5 bg-white border border-gray-200">
           <TabsTrigger
             value="category"
             className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
@@ -24,11 +25,19 @@ const FitoutSetup: React.FC = () => {
           </TabsTrigger>
 
           <TabsTrigger
+            value="category-rate"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Category Rate
+          </TabsTrigger>
+
+          <TabsTrigger
             value="status"
             className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
           >
             Status
           </TabsTrigger>
+          
 
           <TabsTrigger
             value="fitout-guide"
@@ -47,6 +56,10 @@ const FitoutSetup: React.FC = () => {
 
         <TabsContent value="category" className="mt-6">
           <CategoryTab />
+        </TabsContent>
+
+        <TabsContent value="category-rate" className="mt-6">
+          <FitoutCategoryRateTab />
         </TabsContent>
 
         <TabsContent value="status" className="mt-6">
