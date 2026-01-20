@@ -97,6 +97,8 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   const [fetchAttempt, setFetchAttempt] = useState(0);
   // if server already has any answers for this mapping, show "Form already submitted"
   const [serverSubmitted, setServerSubmitted] = useState(false);
+  // when true, allow editing even if server had answers; we will prefill
+  const [allowEdit, setAllowEdit] = useState(false);
   // Toast notifications
   const [toast, setToast] = useState<{ show: boolean; message: string; kind?: 'error' | 'info' | 'success' }>(
     { show: false, message: '', kind: 'error' }
@@ -136,7 +138,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
       setLoading(false);
       return;
     }
-    const url = `https://${baseHost}/crm/admin/fitout_requests/${mappingId}/fitout_mappings.json`;
+  const url = `https://${baseHost}/crm/admin/fitout_requests/${mappingId}/fitout_mappings.json`;
     let cancelled = false;
   fetch(url, { cache: 'no-cache', headers: { Accept: 'application/json' } })
       .then((r) => {
@@ -166,7 +168,59 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
             return (e.snag_answers as unknown[]).length > 0;
           });
         });
-        if (answeredExists) {
+        // Helper to prefill answers from API payload, using qtypes from adapted questions
+        const prefillFromPayload = (items: unknown[], qtypeByQid: Map<string, string>): Record<string, string> => {
+          const agg: Record<string, string[] | string> = {};
+          (items || []).forEach((item) => {
+            if (!item || typeof item !== 'object') return;
+            const it = item as { snag_quest_maps?: unknown[] };
+            (it.snag_quest_maps || []).forEach((entry: unknown) => {
+              if (!entry || typeof entry !== 'object') return;
+              const e = entry as { snag_answers?: unknown[] };
+              (e.snag_answers || []).forEach((ans: unknown) => {
+                if (!ans || typeof ans !== 'object') return;
+                const a = ans as {
+                  snag_question_id?: string | number;
+                  question_id?: string | number;
+                  ans_descr?: unknown;
+                  snag_quest_option_id?: unknown;
+                  quest_option_id?: unknown;
+                };
+                const qidRaw = a.snag_question_id ?? a.question_id;
+                if (qidRaw === undefined || qidRaw === null) return;
+                const qid = String(qidRaw);
+                const qtype = (qtypeByQid.get(qid) || '').toLowerCase();
+                const descr = typeof a.ans_descr === 'string' ? a.ans_descr : '';
+                const optIdRaw = a.snag_quest_option_id ?? a.quest_option_id;
+
+                if (qtype === 'checkbox') {
+                  // collect multiple values
+                  if (!Array.isArray(agg[qid])) agg[qid] = [] as string[];
+                  const arr = agg[qid] as string[];
+                  if (optIdRaw != null && String(optIdRaw).length > 0) arr.push(String(optIdRaw));
+                  else if (descr) descr.split(',').map((s) => s.trim()).filter(Boolean).forEach((v) => arr.push(v));
+                } else if (qtype === 'multiple') {
+                  // radio/single-choice: prefer option id
+                  if (optIdRaw != null) agg[qid] = String(optIdRaw);
+                  else if (descr) agg[qid] = descr;
+                } else {
+                  // text/date/time/description etc
+                  agg[qid] = descr;
+                }
+              });
+            });
+          });
+
+          // finalize: stringify checkbox arrays
+          const result: Record<string, string> = {};
+          Object.keys(agg).forEach((qid) => {
+            const val = agg[qid];
+            if (Array.isArray(val)) result[qid] = JSON.stringify(val);
+            else result[qid] = val;
+          });
+          return result;
+        };
+        if (answeredExists && !allowEdit) {
           if (!cancelled) setServerSubmitted(true);
           if (!cancelled) setCategories([]);
           if (!cancelled) setLoading(false);
@@ -175,6 +229,13 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
 
         const adapted = adaptFromFitout(payload as FitoutItem[]);
         if (!cancelled) setCategories(adapted || []);
+        // If editing previously submitted form, prefill answers
+        if (!cancelled && answeredExists && allowEdit) {
+          const qtypeByQid = new Map<string, string>();
+          (adapted || []).forEach((cat) => cat.questions.forEach((q) => qtypeByQid.set(String(q.id), q.qtype || '')));
+          const prefilled = prefillFromPayload(payload as unknown[], qtypeByQid);
+          setAnswers(prefilled);
+        }
         if (!cancelled) setLoading(false);
       })
       .catch(() => {
@@ -185,7 +246,7 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
         }
       });
     return () => { cancelled = true; };
-  }, [adaptFromFitout, fetchAttempt]);
+  }, [adaptFromFitout, fetchAttempt, allowEdit]);
 
   const selectOption = (qid: string | number, value: string | number) => setAnswers((s) => ({ ...s, [String(qid)]: String(value) }));
   const setOpenAnswer = (qid: string | number, value: string) => setAnswers((s) => ({ ...s, [String(qid)]: value }));
@@ -364,7 +425,13 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
           <div className="bg-white/90 rounded-md p-6 md:p-8 text-center shadow-md">
             <h2 className="text-2xl font-semibold mb-2">Form already submitted</h2>
             <p className="text-sm text-gray-700 mb-4">We found previous answers for this fitout mapping. The form cannot be edited.</p>
-            {/* <button type="button" onClick={() => setFetchAttempt((s) => s + 1)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Reload</button> */}
+            <button
+              type="button"
+              onClick={() => { setAllowEdit(true); setServerSubmitted(false); setFetchAttempt((s) => s + 1); }}
+              className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold"
+            >
+              Edit form 
+            </button>
           </div>
         </div>
       </div>
