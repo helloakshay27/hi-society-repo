@@ -69,7 +69,7 @@ const CustomMultiValue = (props) => (
       }}
       style={{
         position: "absolute",
-        right: "-10px",
+        right: "-5px",
         top: "-5px",
         transform: "translateY(-50%), translateX(-50%)",
         background: "transparent",
@@ -78,13 +78,12 @@ const CustomMultiValue = (props) => (
         cursor: "pointer",
         padding: "0",
         display: "flex",
-        alignItems: "start",
+        alignItems: "center",
         justifyContent: "center",
         color: "#666",
-        fontSize: "12px",
-        lineHeight: "1",
-        width: "16px",
-        height: "16px",
+        fontSize: "11px",
+        width: "12px",
+        height: "12px",
         transition: "background 0.2s, color 0.2s, border-color 0.2s",
       }}
       type="button"
@@ -4701,8 +4700,13 @@ const ProjectDetailsCreate = () => {
                   </h5>
 
                   <button
+                    type="button"
                     className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-                    onClick={() => document.getElementById("brochure").click()}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      document.getElementById("brochure")?.click();
+                    }}
                   >
                     {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                       <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
