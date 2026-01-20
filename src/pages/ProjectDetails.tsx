@@ -449,21 +449,8 @@ const ProjectDetails = () => {
                   </div>
                   <div className="text-[14px] font-semibold text-gray-900 flex-1">
                     {formData.project_description ? (
-                      <span
-                        style={{
-                          display: "-webkit-box",
-                          WebkitLineClamp: isExpanded ? "unset" : 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => setIsExpanded(!isExpanded)}
-                      >
+                      <span style={{ wordWrap: "break-word", whiteSpace: "normal" }}>
                         {formData.project_description}
-                        {!isExpanded && formData.project_description.length > 100 && (
-                          <span className="text-gray-600"> ...</span>
-                        )}
                       </span>
                     ) : "-"}
                   </div>

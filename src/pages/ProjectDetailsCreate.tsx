@@ -679,6 +679,26 @@ const ProjectDetailsCreate = () => {
     return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
   };
 
+  // Validate and format number input - prevent negative values and limit to 2 decimal places
+  const handleNumberInput = (value) => {
+    if (value === '' || value === null || value === undefined) return '';
+    
+    // Convert to string and remove any non-numeric characters except decimal point
+    let numStr = String(value).replace(/[^0-9.]/g, '');
+    
+    // Prevent negative values
+    if (parseFloat(numStr) < 0) return '';
+    
+    // Handle decimal places
+    if (numStr.includes('.')) {
+      const parts = numStr.split('.');
+      // Keep only first decimal point and limit to 2 decimal places
+      numStr = parts[0] + '.' + (parts[1] || '').substring(0, 2);
+    }
+    
+    return numStr;
+  };
+
   // Function to check file size
   const isFileSizeValid = (file, maxSize) => {
     if (file.size > maxSize) {
@@ -2413,7 +2433,7 @@ const ProjectDetailsCreate = () => {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    Project_Size_Sq_Mtr: e.target.value,
+                    Project_Size_Sq_Mtr: handleNumberInput(e.target.value),
                   }))
                 }
                 fullWidth
@@ -2424,10 +2444,14 @@ const ProjectDetailsCreate = () => {
                   },
                   htmlInput: {
                     min: 0,
+                    step: "0.01",
                   },
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
                 }}
               />
 
@@ -2439,7 +2463,7 @@ const ProjectDetailsCreate = () => {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    Project_Size_Sq_Ft: e.target.value,
+                    Project_Size_Sq_Ft: handleNumberInput(e.target.value),
                   }))
                 }
                 fullWidth
@@ -2450,10 +2474,14 @@ const ProjectDetailsCreate = () => {
                   },
                   htmlInput: {
                     min: 0,
+                    step: "0.01",
                   },
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
                 }}
               />
 
@@ -2465,7 +2493,7 @@ const ProjectDetailsCreate = () => {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    development_area_sqmt: e.target.value,
+                    development_area_sqmt: handleNumberInput(e.target.value),
                   }))
                 }
                 fullWidth
@@ -2481,6 +2509,9 @@ const ProjectDetailsCreate = () => {
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
                 }}
               />
 
@@ -2492,7 +2523,7 @@ const ProjectDetailsCreate = () => {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    development_area_sqft: e.target.value,
+                    development_area_sqft: handleNumberInput(e.target.value),
                   }))
                 }
                 fullWidth
@@ -2508,6 +2539,9 @@ const ProjectDetailsCreate = () => {
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
                 }}
               />
                <TextField
@@ -2518,7 +2552,7 @@ const ProjectDetailsCreate = () => {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    Rera_Carpet_Area_Sq_M: e.target.value,
+                    Rera_Carpet_Area_Sq_M: handleNumberInput(e.target.value),
                   }))
                 }
                 fullWidth
@@ -2534,6 +2568,9 @@ const ProjectDetailsCreate = () => {
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
                 }}
               />
 
@@ -2545,7 +2582,7 @@ const ProjectDetailsCreate = () => {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    Rera_Carpet_Area_sqft: e.target.value,
+                    Rera_Carpet_Area_sqft: handleNumberInput(e.target.value),
                   }))
                 }
                 fullWidth
@@ -2562,6 +2599,9 @@ const ProjectDetailsCreate = () => {
                 InputProps={{
                   sx: fieldStyles,
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
+                }}
               />
 
               <TextField
@@ -2569,12 +2609,15 @@ const ProjectDetailsCreate = () => {
                 placeholder="Enter Number of Towers"
                 type="number"
                 value={formData.Number_Of_Towers}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // For integer fields, remove decimal points
+                  const intValue = value.split('.')[0];
                   setFormData((prev) => ({
                     ...prev,
-                    Number_Of_Towers: e.target.value,
-                  }))
-                }
+                    Number_Of_Towers: intValue && parseInt(intValue) >= 0 ? intValue : '',
+                  }));
+                }}
                 fullWidth
                 variant="outlined"
                 slotProps={{
@@ -2587,6 +2630,15 @@ const ProjectDetailsCreate = () => {
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '.') e.preventDefault();
+                }}
+                onPaste={(e) => {
+                  const pastedText = e.clipboardData.getData('text');
+                  if (pastedText.includes('-') || pastedText.includes('.') || pastedText.includes('e') || pastedText.includes('E')) {
+                    e.preventDefault();
+                  }
                 }}
               />
 
@@ -2595,12 +2647,15 @@ const ProjectDetailsCreate = () => {
                 placeholder="Enter Number of Floors"
                 type="number"
                 value={formData.no_of_floors}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // For integer fields, remove decimal points
+                  const intValue = value.split('.')[0];
                   setFormData((prev) => ({
                     ...prev,
-                    no_of_floors: e.target.value,
-                  }))
-                }
+                    no_of_floors: intValue && parseInt(intValue) >= 0 ? intValue : '',
+                  }));
+                }}
                 fullWidth
                 variant="outlined"
                 slotProps={{
@@ -2613,6 +2668,15 @@ const ProjectDetailsCreate = () => {
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '.') e.preventDefault();
+                }}
+                onPaste={(e) => {
+                  const pastedText = e.clipboardData.getData('text');
+                  if (pastedText.includes('-') || pastedText.includes('.') || pastedText.includes('e') || pastedText.includes('E')) {
+                    e.preventDefault();
+                  }
                 }}
               />
               <TextField
@@ -2620,12 +2684,15 @@ const ProjectDetailsCreate = () => {
                 placeholder="Enter Number of Units"
                 type="number"
                 value={formData.Number_Of_Units}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // For integer fields, remove decimal points
+                  const intValue = value.split('.')[0];
                   setFormData((prev) => ({
                     ...prev,
-                    Number_Of_Units: e.target.value,
-                  }))
-                }
+                    Number_Of_Units: intValue && parseInt(intValue) >= 0 ? intValue : '',
+                  }));
+                }}
                 fullWidth
                 variant="outlined"
                 slotProps={{
@@ -2638,6 +2705,15 @@ const ProjectDetailsCreate = () => {
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '.') e.preventDefault();
+                }}
+                onPaste={(e) => {
+                  const pastedText = e.clipboardData.getData('text');
+                  if (pastedText.includes('-') || pastedText.includes('.') || pastedText.includes('e') || pastedText.includes('E')) {
+                    e.preventDefault();
+                  }
                 }}
               />
 
@@ -2649,7 +2725,7 @@ const ProjectDetailsCreate = () => {
   onChange={(e) =>
     setFormData((prev) => ({
       ...prev,
-      Land_Area: e.target.value,
+      Land_Area: handleNumberInput(e.target.value),
     }))
   }
   fullWidth
@@ -2660,11 +2736,14 @@ const ProjectDetailsCreate = () => {
     },
     htmlInput: {
       min: 0,
-      step: "0.01", //  allows 2 decimal places
+      step: "0.01",
     },
   }}
   InputProps={{
     sx: fieldStyles,
+  }}
+  onKeyDown={(e) => {
+    if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
   }}
 />
 
@@ -2730,9 +2809,12 @@ const ProjectDetailsCreate = () => {
                 placeholder="Enter Order Number"
                 type="number"
                 value={formData.order_no}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, order_no: e.target.value }))
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // For integer fields, remove decimal points
+                  const intValue = value.split('.')[0];
+                  setFormData((prev) => ({ ...prev, order_no: intValue && parseInt(intValue) >= 0 ? intValue : '' }));
+                }}
                 fullWidth
                 variant="outlined"
                 slotProps={{
@@ -2745,6 +2827,15 @@ const ProjectDetailsCreate = () => {
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '.') e.preventDefault();
+                }}
+                onPaste={(e) => {
+                  const pastedText = e.clipboardData.getData('text');
+                  if (pastedText.includes('-') || pastedText.includes('.') || pastedText.includes('e') || pastedText.includes('E')) {
+                    e.preventDefault();
+                  }
                 }}
               />
 
@@ -4422,15 +4513,21 @@ const ProjectDetailsCreate = () => {
                                   type="number"
                                   className="w-20 border border-gray-300 rounded px-2 py-1 text-sm"
                                   value={file.order_no || ""}
-                                  onChange={(e) =>
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    const intValue = value.split('.')[0];
                                     handleGalleryImageNameChange(
                                       key,
                                       index,
-                                      e.target.value,
+                                      intValue && parseInt(intValue) >= 0 ? intValue : '',
                                       "order_no"
-                                    )
-                                  }
+                                    );
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '.') e.preventDefault();
+                                  }}
                                   placeholder="Order"
+                                  min="0"
                                 />
                               </td>
 
@@ -4970,7 +5067,11 @@ const ProjectDetailsCreate = () => {
                         <button
                           type="button"
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-                          onClick={() => document.getElementById("project_creative_offers").click()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            document.getElementById("project_creative_offers").click();
+                          }}
                         >
                           {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
@@ -5318,8 +5419,13 @@ const ProjectDetailsCreate = () => {
                           </span>
                         </h5>
                         <button
+                          type="button"
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-                          onClick={() => document.getElementById("videos").click()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            document.getElementById("videos").click();
+                          }}
                         >
                           {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
@@ -5416,7 +5522,11 @@ const ProjectDetailsCreate = () => {
             <button
               type="button"
               className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-              onClick={handleAddVirtualTour}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAddVirtualTour();
+              }}
             >
               {/* <svg
                 xmlns="http://www.w3.org/2000/svg"
