@@ -366,7 +366,7 @@ const FitoutRequestDetails: React.FC = () => {
   };
 
   const handleCapturePayment = () => {
-    const totalAmount = requestData?.fitout_request_categories.reduce((sum, cat) => sum + cat.amount, 0) || 0;
+    const totalAmount = requestData?.fitout_request_categories.reduce((sum, cat) => sum + (cat.amount || 0), 0) || 0;
     
     setPaymentFormData({
       amount: totalAmount.toString(),
@@ -774,7 +774,7 @@ const FitoutRequestDetails: React.FC = () => {
     );
   }
 
-  const totalAmount = requestData.fitout_request_categories.reduce((sum, cat) => sum + cat.amount, 0);
+  const totalAmount = requestData.fitout_request_categories.reduce((sum, cat) => sum + (cat.amount || 0), 0);
   const totalDocuments = requestData.fitout_request_categories.reduce((sum, cat) => sum + cat.documents.length, 0);
 
   return (

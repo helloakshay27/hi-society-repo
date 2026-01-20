@@ -28,7 +28,7 @@ const FitoutSetup: React.FC = () => {
             value="category-rate"
             className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
           >
-            Category Rate
+            Fitout Rate
           </TabsTrigger>
 
           <TabsTrigger
