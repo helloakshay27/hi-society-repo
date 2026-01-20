@@ -94,10 +94,10 @@ export const FitoutCategoryRateTab: React.FC = () => {
   };
 
   const handleAdd = async () => {
-    if (!fitoutCategoryId) {
-      toast.error('Please select fitout category');
-      return;
-    }
+    // if (!fitoutCategoryId) {
+    //   toast.error('Please select fitout category');
+    //   return;
+    // }
 
     if (!amount) {
       toast.error('Please enter amount');
@@ -214,8 +214,8 @@ export const FitoutCategoryRateTab: React.FC = () => {
         defaultVisible: true,
       },
       {
-        key: 'fitout_category_name',
-        label: 'Fitout Category',
+        key: 'fitout_type',
+        label: 'Type',
         sortable: true,
         draggable: true,
         defaultVisible: true,
@@ -348,7 +348,7 @@ export const FitoutCategoryRateTab: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
+            {/* <div className="grid gap-2">
               <Label htmlFor="fitout-category">Fitout Category *</Label>
               <Select value={fitoutCategoryId} onValueChange={setFitoutCategoryId}>
                 <SelectTrigger id="fitout-category">
@@ -362,7 +362,7 @@ export const FitoutCategoryRateTab: React.FC = () => {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             <div className="grid gap-2">
               <Label htmlFor="category-type">Type</Label>

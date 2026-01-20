@@ -40,7 +40,9 @@ const FitoutRequestAdd: React.FC = () => {
   const [flats, setFlats] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [fitoutFlatRates, setFitoutFlatRates] = useState<any[]>([]);
   const [convenienceCharge, setConvenienceCharge] = useState('0.00');
+  const [deposit, setDeposit] = useState('0.00');
   const [requestCategories, setRequestCategories] = useState<FitoutRequestCategory[]>([]);
 
   const [formData, setFormData] = useState<FitoutRequestFormData>({
@@ -90,20 +92,75 @@ const FitoutRequestAdd: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Refetch categories when fitout_type changes
+    // Fetch flat rates when fitout_type is selected
     if (formData.fitout_type) {
-      fetchCategoriesByType(formData.fitout_type);
+      fetchFitoutFlatRates(formData.fitout_type);
+    } else {
+      // Clear rates when fitout type is deselected
+      setRequestCategories([]);
+      setConvenienceCharge('0.00');
+      setDeposit('0.00');
     }
   }, [formData.fitout_type]);
 
-  const fetchCategoriesByType = async (fitoutType: string) => {
+  const fetchFitoutFlatRates = async (fitoutType: string) => {
     try {
-      const response = await apiClient.get(`/crm/admin/fitout_categories.json?fitout_type=${fitoutType}`);
-      const categoriesArray = response.data?.fitout_categories || [];
-      console.log('Categories filtered by type:', categoriesArray);
-      setCategories(categoriesArray);
+      // Fetch fitout flat rates based on fitout_type
+      const response = await apiClient.get(`/crm/admin/fitout_flat_rates.json?q[fitout_type_eq]=${fitoutType}`);
+      const rates = response.data?.fitout_flat_rates || [];
+      console.log('=== Fitout Flat Rates Debug ===');
+      console.log('Selected Type:', fitoutType);
+      console.log('Total Rates Found:', rates.length);
+      console.log('All Rates:', rates);
+      setFitoutFlatRates(rates);
+
+      // Filter rates that match the fitout_type (rates with non-null fitout_type)
+      const matchingRates = rates.filter((rate: any) => rate.fitout_type === fitoutType);
+      
+      console.log('Matching rates for fitout type:', matchingRates);
+      console.log('Matching rates count:', matchingRates.length);
+      
+      // Auto-populate categories with amounts
+      if (matchingRates.length > 0) {
+        const autoCategories = matchingRates.map((rate: any) => ({
+          fitout_category_id: rate.fitout_category_id?.toString() || '',
+          complaint_status_id: '',
+          amount: rate.amount?.toString() || '0.00',
+          documents: [],
+        }));
+        
+        console.log('Auto Categories:', autoCategories);
+        setRequestCategories(autoCategories);
+        
+        // Set convenience charge and deposit from first matching rate
+        const firstRate = matchingRates[0];
+        setConvenienceCharge(firstRate.convenience_charge?.toString() || '0.00');
+        setDeposit(firstRate.deposit?.toString() || '0.00');
+        
+        toast({
+          title: 'Success',
+          description: `Loaded ${matchingRates.length} annexure(s) with amounts for ${fitoutType}`,
+        });
+      } else {
+        // No matching rates found for this fitout type
+        console.warn('No matching rates found for fitout type:', fitoutType);
+        setRequestCategories([]);
+        setConvenienceCharge('0.00');
+        setDeposit('0.00');
+        
+        toast({
+          title: 'No Rates Found',
+          description: `No fitout rates configured for ${fitoutType} type`,
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
-      console.error('Error fetching categories by type:', error);
+      console.error('Error fetching fitout flat rates:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch fitout rates',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -319,13 +376,16 @@ const FitoutRequestAdd: React.FC = () => {
       if (formData.contactor_name) formDataToSend.append('fitout_request[contactor_name]', formData.contactor_name);
       if (formData.contactor_no) formDataToSend.append('fitout_request[contactor_no]', formData.contactor_no);
       if (formData.pay_mode) formDataToSend.append('fitout_request[pay_mode]', formData.pay_mode);
-      if (formData.amount) formDataToSend.append('fitout_request[amount]', formData.amount);
+      // if (formData.amount) formDataToSend.append('fitout_request[amount]', formData.amount);
       if (formData.status_id) formDataToSend.append('fitout_request[status_id]', formData.status_id);
       if (formData.pms_supplier_id) formDataToSend.append('fitout_request[pms_supplier_id]', formData.pms_supplier_id);
       if (formData.fitout_type) formDataToSend.append('fitout_request[fitout_type]', formData.fitout_type);
       
       // Add convenience charge
-      if (convenienceCharge) formDataToSend.append('lock_payment[convenience_charge]', convenienceCharge);
+      if (convenienceCharge) formDataToSend.append('fitout_request[convenience_charge]', convenienceCharge);
+      
+      // Add deposit
+      if (deposit) formDataToSend.append('fitout_request[deposit]', deposit);
       
       // Add request categories
       requestCategories.forEach((category, index) => {
@@ -336,7 +396,7 @@ const FitoutRequestAdd: React.FC = () => {
           formDataToSend.append(`fitout_request[fitout_request_categories_attributes][${index}][complaint_status_id]`, category.complaint_status_id);
         }
         if (category.amount) {
-          formDataToSend.append(`fitout_request[fitout_request_categories_attributes][${index}][amount]`, category.amount);
+          formDataToSend.append(`fitout_request[amount]`, category.amount);
         }
         
         // Add documents
@@ -579,23 +639,21 @@ const FitoutRequestAdd: React.FC = () => {
           <div className="p-6 space-y-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-base font-medium">Annexure</h3>
-              <Button
-                type="button"
-                onClick={handleAddCategory}
-                className="bg-[#C72030] text-white hover:bg-[#A01B28]"
-              >
-                + Add Annexure
-              </Button>
             </div>
 
             {requestCategories.length === 0 && (
-              <p className="text-sm text-gray-500">No annexures added yet. Click "+ Add Annexure" to add one.</p>
+              <p className="text-sm text-gray-500">Please select Fitout Type and Flat to auto-populate annexures with amounts.</p>
             )}
 
-            {requestCategories.map((category, index) => (
-              <div key={index} className="border rounded-lg p-4 space-y-4" style={{ backgroundColor: '#FAFAFA' }}>
-                <div className="flex justify-between items-center">
-                  <h4 className="text-sm font-medium" style={{ color: '#C72030' }}>Annexure {index + 1}</h4>
+            {requestCategories.map((category, index) => {
+              const categoryDetails = categories.find(c => c.id.toString() === category.fitout_category_id);
+              
+              return (
+              <div key={index} className="" style={{ backgroundColor: '#FAFAFA' }}>
+                {/* <div className="flex justify-between items-center">
+                  <h4 className="text-sm font-medium" style={{ color: '#C72030' }}>
+                    {categoryDetails?.name || `Annexure ${index + 1}`}
+                  </h4>
                   <button
                     type="button"
                     onClick={() => handleRemoveCategory(index)}
@@ -603,41 +661,21 @@ const FitoutRequestAdd: React.FC = () => {
                   >
                     ✕
                   </button>
-                </div>
+                </div> */}
 
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel shrink>Annexure *</InputLabel>
-                  <MuiSelect
-                    value={category.fitout_category_id}
-                    onChange={(e) => handleCategorySelect(index, e.target.value)}
-                    label="Annexure *"
-                    displayEmpty
-                    sx={fieldStyles}
-                  >
-                    <MenuItem value="">Select Annexure</MenuItem>
-                    {categories.map((cat: any) => (
-                      <MenuItem key={cat.id} value={cat.id.toString()}>
-                        {cat.name}
-                      </MenuItem>
-                    ))}
-                  </MuiSelect>
-                </FormControl>
-
-                {category.fitout_category_id && (
-                  <div className="bg-white p-3 rounded border">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Amount:</span>
-                      <span className="text-base font-semibold">₹{parseFloat(category.amount || '0').toFixed(2)}</span>
-                    </div>
+                {/* <div className="bg-white p-3 rounded border">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Amount:</span>
+                    <span className="text-base font-semibold">₹{parseFloat(category.amount || '0').toFixed(2)}</span>
                   </div>
-                )}
+                </div> */}
 
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Upload Images
                   </label>
                   
-                  {/* Image Previews */}
+                
                   {category.documents && category.documents.length > 0 && (
                     <div className="mb-3">
                       <p className="text-xs text-gray-600 mb-2 font-medium">Selected files ({category.documents.length}):</p>
@@ -672,7 +710,7 @@ const FitoutRequestAdd: React.FC = () => {
                     </div>
                   )}
                   
-                  {/* File Input */}
+                 
                   <div className="flex items-center gap-2">
                     <input
                       type="file"
@@ -690,25 +728,30 @@ const FitoutRequestAdd: React.FC = () => {
                       id={`file-upload-${index}`}
                     />
                   </div>
-                  {/* <p className="text-xs text-gray-500 mt-1">You can select multiple images at once</p> */}
-                </div>
+                </div> */}
               </div>
-            ))}
+            );
+            })}
 
             <div className="border-t pt-4 space-y-3 mt-6">
               <div className="flex justify-between items-center py-2">
                 <span className="text-sm">Amount :</span>
-                <span className="text-base font-medium">{requestCategories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}</span>
+                <span className="text-base font-medium">₹{requestCategories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0).toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between items-center py-2">
                 <span className="text-sm">Convenience Charge :</span>
-                <span className="text-base font-medium">{parseFloat(convenienceCharge).toFixed(2)}</span>
+                <span className="text-base font-medium">₹{parseFloat(convenienceCharge).toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm">Deposit :</span>
+                <span className="text-base font-medium">₹{parseFloat(deposit).toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between items-center py-2 border-t pt-3">
                 <span className="text-base font-semibold">Total :</span>
-                <span className="text-lg font-bold">₹{(requestCategories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0) + parseFloat(convenienceCharge)).toFixed(2)}</span>
+                <span className="text-lg font-bold">₹{(requestCategories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0) + parseFloat(convenienceCharge) + parseFloat(deposit)).toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between items-center py-2">

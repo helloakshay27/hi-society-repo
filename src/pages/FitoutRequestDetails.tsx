@@ -893,7 +893,7 @@ const FitoutRequestDetails: React.FC = () => {
                     <div>
                       <p className="text-xs text-gray-600">Total Amount</p>
                       <p className="text-lg font-semibold text-gray-900">
-                        ₹{totalAmount.toFixed(2)}
+                        ₹{(totalAmount || 0).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -966,6 +966,10 @@ const FitoutRequestDetails: React.FC = () => {
                         <span className="text-gray-600 text-xs mb-1">Status</span>
                         <span className="font-medium text-gray-900">{requestData.status_name || 'Pending'}</span>
                       </div>
+                       <div className="flex flex-col">
+                        <span className="text-gray-600 text-xs mb-1">Fitout Type</span>
+                        <span className="font-medium text-gray-900">{requestData.fitout_type || 'Pending'}</span>
+                      </div>
                       <div className="flex flex-col">
                         <span className="text-gray-600 text-xs mb-1">Tower</span>
                         <span className="font-medium text-gray-900">{requestData.tower || '—'}</span>
@@ -977,6 +981,10 @@ const FitoutRequestDetails: React.FC = () => {
                       <div className="flex flex-col">
                         <span className="text-gray-600 text-xs mb-1">User Name</span>
                         <span className="font-medium text-gray-900">{requestData.user_name || '—'}</span>
+                      </div>
+                       <div className="flex flex-col">
+                        <span className="text-gray-600 text-xs mb-1">Description</span>
+                        <span className="font-medium text-gray-900">{requestData.description || '—'}</span>
                       </div>
                       <div className="flex flex-col">
                         <span className="text-gray-600 text-xs mb-1">Start Date</span>
@@ -998,10 +1006,20 @@ const FitoutRequestDetails: React.FC = () => {
                         <span className="text-gray-600 text-xs mb-1">Contractor Mobile</span>
                         <span className="font-medium text-gray-900">{requestData.contactor_no || '—'}</span>
                       </div>
-                      <div className="flex flex-col md:col-span-2">
-                        <span className="text-gray-600 text-xs mb-1">Description</span>
-                        <span className="font-medium text-gray-900">{requestData.description || '—'}</span>
+                        <div className="flex flex-col">
+                        <span className="text-gray-600 text-xs mb-1">Amount</span>
+                        <span className="font-medium text-gray-900">{requestData.amount || '—'}</span>
                       </div>
+                       <div className="flex flex-col">
+                        <span className="text-gray-600 text-xs mb-1">Convenience Charge</span>
+                        <span className="font-medium text-gray-900">{requestData.convenience_charge || '—'}</span>
+                      </div>
+                        <div className="flex flex-col">
+                      <span className="text-gray-600 text-xs mb-1">Deposit</span>
+                        <span className="font-medium text-gray-900">{requestData.deposit || '—'}</span>
+                      </div>
+                     
+                     
                       <div className="flex flex-col">
                         <span className="text-gray-600 text-xs mb-1">Created At</span>
                         <span className="font-medium text-gray-900">{formatDateTime(requestData.created_at)}</span>
@@ -1010,6 +1028,8 @@ const FitoutRequestDetails: React.FC = () => {
                         <span className="text-gray-600 text-xs mb-1">Updated At</span>
                         <span className="font-medium text-gray-900">{formatDateTime(requestData.updated_at)}</span>
                       </div>
+                      
+
                     </div>
                   </div>
                 </div>
@@ -1041,7 +1061,7 @@ const FitoutRequestDetails: React.FC = () => {
                         <div className="flex flex-col">
                           <span className="text-gray-600 text-xs mb-1">Total Amount (with charges)</span>
                           <span className="font-medium text-gray-900">
-                            ₹{(totalAmount + (requestData.lock_payment.convenience_charge || 0)).toFixed(2)}
+                            ₹{((totalAmount || 0) + (requestData.lock_payment.convenience_charge || 0)).toFixed(2)}
                           </span>
                         </div>
                       </div>
@@ -1135,7 +1155,7 @@ const FitoutRequestDetails: React.FC = () => {
                                 <div className="text-right">
                                   <p className="text-xs text-gray-600">Amount</p>
                                   <p className="text-lg font-bold text-gray-900">
-                                    ₹{category.amount.toFixed(2)}
+                                    ₹{(category.amount || 0).toFixed(2)}
                                   </p>
                                 </div>
                               </div>
@@ -1362,25 +1382,25 @@ const FitoutRequestDetails: React.FC = () => {
                           {requestData.lock_payment.sub_total && (
                             <TableRow>
                               <TableCell className="font-medium text-gray-700">Sub Total</TableCell>
-                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.sub_total).toFixed(2)}</TableCell>
+                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.sub_total || '0').toFixed(2)}</TableCell>
                             </TableRow>
                           )}
                           {requestData.lock_payment.gst && (
                             <TableRow>
                               <TableCell className="font-medium text-gray-700">GST</TableCell>
-                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.gst).toFixed(2)}</TableCell>
+                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.gst || '0').toFixed(2)}</TableCell>
                             </TableRow>
                           )}
                           {requestData.lock_payment.discount && (
                             <TableRow>
                               <TableCell className="font-medium text-gray-700">Discount</TableCell>
-                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.discount).toFixed(2)}</TableCell>
+                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.discount || '0').toFixed(2)}</TableCell>
                             </TableRow>
                           )}
                           {requestData.lock_payment.convenience_charge && (
                             <TableRow>
                               <TableCell className="font-medium text-gray-700">Convenience Charge</TableCell>
-                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.convenience_charge).toFixed(2)}</TableCell>
+                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.convenience_charge || '0').toFixed(2)}</TableCell>
                             </TableRow>
                           )}
                           {requestData.lock_payment.payment_gateway && (
