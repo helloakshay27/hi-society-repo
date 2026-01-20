@@ -1143,15 +1143,23 @@ const FitoutRequestDetails: React.FC = () => {
                               {/* Questions and Responses Section */}
                               {categoryResponse?.snag_quest_maps && categoryResponse.snag_quest_maps.length > 0 && (
                                 <div className="mt-4 pt-4 border-t border-gray-200">
-                                  <p className="text-sm font-medium text-gray-700 mb-3">
-                                    Questions & Responses ({categoryResponse.snag_quest_maps.length})
-                                  </p>
+                                  <div className="flex items-center gap-2 mb-4">
+                                    <div className="w-8 h-8 rounded-full bg-[#C72030] bg-opacity-10 flex items-center justify-center">
+                                      <FileText className="w-4 h-4 text-[#C72030]" />
+                                    </div>
+                                    <p className="text-sm font-semibold text-gray-900">
+                                      Questions & Responses
+                                    </p>
+                                    <Badge variant="outline" className="text-xs bg-gray-50">
+                                      {categoryResponse.snag_quest_maps.length} Questions
+                                    </Badge>
+                                  </div>
                                   <div className="space-y-3">
                                     {categoryResponse.snag_quest_maps.map((questMap, qIndex) => {
                                       const question = questMap.snag_question;
                                       const answer = questMap.snag_answers?.[0];
                                       
-                                      let answerDisplay = '—';
+                                      let answerDisplay = 'No response';
                                       if (answer) {
                                         if (question.qtype === 'multiple' && answer.quest_option_id) {
                                           const selectedOption = question.snag_quest_options?.find(
@@ -1159,39 +1167,33 @@ const FitoutRequestDetails: React.FC = () => {
                                           );
                                           answerDisplay = selectedOption?.qname || 'Selected';
                                         } else {
-                                          answerDisplay = answer.ans_descr || '—';
+                                          answerDisplay = answer.ans_descr || 'No response';
                                         }
                                       }
                                       
                                       return (
                                         <div
                                           key={questMap.id}
-                                          className="bg-gray-50 rounded-lg p-3 border border-gray-200"
+                                          className="bg-white rounded-lg p-4 border border-gray-200"
                                         >
-                                          <div className="flex items-start gap-3">
-                                            <div className="w-6 h-6 rounded-full bg-[#C72030] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                                              {question.qnumber}
-                                            </div>
-                                            <div className="flex-1">
-                                              <p className="text-sm font-medium text-gray-900 mb-1">
-                                                {question.descr}
-                                              </p>
-                                              <div className="flex items-center gap-2 flex-wrap">
-                                                {/* <Badge variant="outline" className="text-xs">
-                                                  {question.qtype === 'multiple' ? 'Multiple Choice' :
-                                                   question.qtype === 'text' ? 'Text' :
-                                                   question.qtype === 'date' ? 'Date' : question.qtype}
-                                                </Badge> */}
-                                                {/* {question.quest_mandatory && (
-                                                  <Badge variant="outline" className="text-xs text-red-600 border-red-300">
-                                                    Required
-                                                  </Badge>
-                                                )} */}
-                                                <span className="text-xs text-gray-600">•</span>
-                                                <span className="text-xs font-semibold text-gray-700">
-                                                  Response: <span className="text-[#C72030]">{answerDisplay}</span>
-                                                </span>
+                                          <div className="space-y-3">
+                                            {/* Question */}
+                                            <div className="flex items-start gap-3">
+                                              <div className="w-6 h-6 rounded-full bg-[#C72030] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                                {question.qnumber}
                                               </div>
+                                              <div className="flex-1">
+                                                <p className="text-sm font-medium text-gray-900">
+                                                  {question.descr}
+                                                </p>
+                                              </div>
+                                            </div>
+                                            
+                                            {/* Answer */}
+                                            <div className="ml-9 bg-gray-50 rounded-md p-3 border border-gray-100">
+                                              <p className={`text-sm ${answer ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+                                                {answerDisplay}
+                                              </p>
                                             </div>
                                           </div>
                                         </div>
