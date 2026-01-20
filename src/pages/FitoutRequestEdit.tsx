@@ -852,7 +852,7 @@ const FitoutRequestEdit: React.FC = () => {
                     </div>
                   )}
 
-                  {/* <div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Upload Images
                     </label>
@@ -932,7 +932,7 @@ const FitoutRequestEdit: React.FC = () => {
                         id={`file-upload-${index}`}
                       />
                     </div>
-                  </div> */}
+                  </div>
                 </div>
               );
             })}
