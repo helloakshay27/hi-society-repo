@@ -3,12 +3,12 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ArrowLeft, FileText, Calendar, Users, X, Plus, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info } from "lucide-react";
-import MultiSelectBox from "../components/ui/multi-selector";
+import MultiSelectBox from "../../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
-import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
+import ProjectBannerUpload from "../../components/reusable/ProjectBannerUpload";
+import ProjectImageVideoUpload from "../../components/reusable/ProjectImageVideoUpload";
 import {
   TextField,
   FormControl,
@@ -21,7 +21,7 @@ import {
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 
-const EventCreate = () => {
+const EventCommunicationCreate = () => {
   const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -881,7 +881,7 @@ const EventCreate = () => {
       });
       setSelectedChannelPartners([]);
 
-      navigate("/maintenance/event-list");
+      navigate("/communication/events");
     } catch (error) {
       console.error("Error submitting the form:", error);
       if (error.response && error.response.data) {
@@ -4154,4 +4154,4 @@ const EventCreate = () => {
   );
 };
 
-export default EventCreate;
+export default EventCommunicationCreate;

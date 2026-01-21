@@ -147,15 +147,15 @@ export const DeviationStatusTab: React.FC = () => {
     try {
       setIsSubmitting(true);
       await axios.put(
-        `${API_CONFIG.BASE_URL}/fitout_categories/modify_complaint_status/${editingId}.json`,
+        `${API_CONFIG.BASE_URL}/fitout_categories/modify_complaint_status.json`,
         {
-          complaint_status: {
+            id: editingId,
             name: statusName,
             color_code: selectedColor,
             position: parseInt(statusPosition),
             fixed_state: fixedState === 'true',
             of_atype: 'deviation_details'
-          }
+         
         },
         {
           headers: {

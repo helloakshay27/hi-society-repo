@@ -3,11 +3,11 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
-import MultiSelectBox from "../components/ui/multi-selector";
-import { ImageUploadingButton } from "../components/reusable/ImageUploadingButton";
-import { ImageCropper } from "../components/reusable/ImageCropper";
-import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
-import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
+import MultiSelectBox from "../../components/ui/multi-selector";
+import { ImageUploadingButton } from "../../components/reusable/ImageUploadingButton";
+import { ImageCropper } from "../../components/reusable/ImageCropper";
+import ProjectBannerUpload from "../../components/reusable/ProjectBannerUpload";
+import ProjectImageVideoUpload from "../../components/reusable/ProjectImageVideoUpload";
 import { ArrowLeft, FileText, Calendar, Users, Plus, X, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info } from "lucide-react";
 import {
   TextField,
@@ -27,10 +27,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../components/ui/table";
+} from "../../components/ui/table";
 import SelectBox from "@/components/ui/select-box";
 
-const EventEdit = () => {
+const EventCommunicationEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [formErrors, setFormErrors] = useState({});
@@ -1356,7 +1356,7 @@ const EventEdit = () => {
       });
 
       toast.success("Event updated successfully!");
-      navigate("/maintenance/event-list");
+      navigate("/communication/events");
     } catch (error) {
       console.error("Submit error:", error);
       const errorMessage = error.response?.data?.message || "Failed to update event.";
@@ -3875,4 +3875,4 @@ const EventEdit = () => {
     );
   };
 
-  export default EventEdit;
+  export default EventCommunicationEdit;

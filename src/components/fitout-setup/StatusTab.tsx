@@ -112,9 +112,9 @@ export const StatusTab: React.FC = () => {
   const handleEdit = useCallback((status: Status) => {
     setEditingId(status.id);
     setStatusName(status.name);
-    setStatusOrder(status.position.toString());
+    setStatusOrder(status.position ? status.position.toString() : '');
     setFixedState(status.fixed_state || '');
-    setSelectedColor(status.color_code);
+    setSelectedColor(status.color_code || '#FF0000');
     setIsDialogOpen(true);
   }, []);
 
@@ -123,15 +123,18 @@ export const StatusTab: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      const response = await apiClient.put(`/crm/admin/fitout_categories/update_fitout_statuses/${editingId}.json`, {
-        complaint_status: {
+      const response = await apiClient.post(`/crm/admin/fitout_categories/modify_complaint_status.json?`, 
+        {
+       
+          id: editingId,
           name: statusName,
           color_code: selectedColor,
           position: parseInt(statusOrder),
           fixed_state: fixedState || '',
           of_phase: 'fitout_category',
-          of_atype: 'fitout_category'
-        }
+          of_atype: 'fitout_category',
+          active: 1
+       
       });
       toast.success(response.data?.message || 'Status updated successfully');
       setIsDialogOpen(false);
