@@ -168,6 +168,7 @@ interface FitoutRequestDetail {
   flat?: string;
   user_name?: string;
   created_by?: string;
+  deviation_details?: DeviationDetail[];
 }
 
 interface ChecklistQuestion {
@@ -191,6 +192,50 @@ interface PaymentFormData {
   cheque_transaction_number: string;
   notes: string;
   image: File | null;
+}
+
+interface DeviationAttachment {
+  id: number;
+  document_file_name: string;
+  document_content_type: string;
+  document_file_size: number;
+  created_at: string;
+  document_url: string;
+}
+
+interface DeviationDetail {
+  id: number;
+  complaint_status_id: number | null;
+  description: string;
+  snag_checklist_id: number;
+  user_society_id: number;
+  comments: any[];
+  user_id: number;
+  created_at: string;
+  status: string;
+  user: {
+    id: number;
+    full_name: string;
+    email: string;
+    mobile: string | null;
+  };
+  complaint_status_name: string | null;
+  attachments: DeviationAttachment[];
+}
+
+interface DeviationStatus {
+  id: number;
+  society_id: number;
+  name: string;
+  color_code: string;
+  fixed_state: string;
+  active: number;
+  created_at: string;
+  updated_at: string;
+  position: number;
+  of_phase: string | null;
+  of_atype: string;
+  email: boolean;
 }
 
 const FitoutRequestDetails: React.FC = () => {
@@ -229,6 +274,14 @@ const FitoutRequestDetails: React.FC = () => {
   const [logsModalOpen, setLogsModalOpen] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
+  
+  // Deviation Modal State
+  const [deviationModalOpen, setDeviationModalOpen] = useState(false);
+  const [selectedDeviation, setSelectedDeviation] = useState<DeviationDetail | null>(null);
+  const [deviationStatuses, setDeviationStatuses] = useState<DeviationStatus[]>([]);
+  const [deviationStatusId, setDeviationStatusId] = useState<string>('');
+  const [deviationComment, setDeviationComment] = useState('');
+  const [deviationLoading, setDeviationLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -254,6 +307,17 @@ const FitoutRequestDetails: React.FC = () => {
     }
   };
 
+  const fetchDeviationStatuses = async () => {
+    try {
+      const response = await apiClient.get('/fitout_categories/get_complaint_statuses.json?q[of_atype_eq]=deviation_details');
+      const statusesArray = response.data?.complaint_statuses || [];
+      console.log('Deviation Statuses:', statusesArray);
+      setDeviationStatuses(statusesArray);
+    } catch (error) {
+      console.error('Error fetching deviation statuses:', error);
+    }
+  };
+
   const fetchLogs = async () => {
     if (!id) return;
     
@@ -274,6 +338,56 @@ const FitoutRequestDetails: React.FC = () => {
   const handleLogsOpen = () => {
     setLogsModalOpen(true);
     fetchLogs();
+  };
+
+  const handleDeviationEdit = async (deviation: DeviationDetail) => {
+    setSelectedDeviation(deviation);
+    setDeviationStatusId(deviation.complaint_status_id?.toString() || '');
+    setDeviationComment('');
+    setDeviationModalOpen(true);
+    if (deviationStatuses.length === 0) {
+      await fetchDeviationStatuses();
+    }
+  };
+
+  const handleDeviationUpdate = async () => {
+    if (!selectedDeviation) return;
+    
+    // if (!deviationStatusId) {
+    //   toast.error('Please select a status');
+    //   return;
+    // }
+
+    try {
+      setDeviationLoading(true);
+      
+      const formData = new FormData();
+      formData.append('complaint_status_id', deviationStatusId);
+      if (deviationComment) {
+        formData.append('comment', deviationComment);
+      }
+
+      await apiClient.put(
+        `/crm/fitout_requests/update_deviation_status?id=${selectedDeviation.id}`,
+        formData
+      );
+      
+      toast.success('Deviation updated successfully');
+      setDeviationModalOpen(false);
+      setSelectedDeviation(null);
+      setDeviationStatusId('');
+      setDeviationComment('');
+      
+      // Refresh the data
+      if (id) {
+        fetchFitoutRequestDetails(parseInt(id));
+      }
+    } catch (error: any) {
+      console.error('Error updating deviation:', error);
+      toast.error(`Failed to update deviation: ${error.message || 'Unknown error'}`);
+    } finally {
+      setDeviationLoading(false);
+    }
   };
 
   const fetchFitoutRequestDetails = async (requestId: number) => {
@@ -505,14 +619,14 @@ const FitoutRequestDetails: React.FC = () => {
         toast.error(`Please answer question ${i + 1} (mandatory)`);
         return;
       }
-      if (!question.comments) {
-        toast.error(`Please add comments for question ${i + 1}`);
-        return;
-      }
-      if (!question.attachment) {
-        toast.error(`Please upload attachment for question ${i + 1}`);
-        return;
-      }
+      // if (!question.comments) {
+      //   toast.error(`Please add comments for question ${i + 1}`);
+      //   return;
+      // }
+      // if (!question.attachment) {
+      //   toast.error(`Please upload attachment for question ${i + 1}`);
+      //   return;
+      // }
     }
 
     if (!selectedChecklistId) {
@@ -531,7 +645,15 @@ const FitoutRequestDetails: React.FC = () => {
       // Add questions with dynamic structure: question[index][field]
       checklistQuestions.forEach((question, index) => {
         formData.append(`question[${index}][name]`, question.question);
-        formData.append(`question[${index}][answer]`, question.response || '');
+        
+        // For multiple choice questions, get the option text instead of ID
+        let answerText = question.response || '';
+        if (question.qtype === 'multiple' && question.response && question.options) {
+          const selectedOption = question.options.find(opt => opt.id.toString() === question.response);
+          answerText = selectedOption?.qname || question.response;
+        }
+        
+        formData.append(`question[${index}][answer]`, answerText);
         formData.append(`question[${index}][comment]`, question.comments);
         
         // Add attachment(s) - API expects attachments[] array
@@ -868,6 +990,7 @@ const FitoutRequestDetails: React.FC = () => {
               {[
                 { label: "Request Information", value: "request-information" },
                 { label: "Annexures", value: "annexures" },
+                { label: "Deviations", value: "deviations" },
                 // { label: "Transactions", value: "transactions" },
                 { label: "Captured Payment", value: "responses" },
               ].map((tab) => (
@@ -1275,6 +1398,119 @@ const FitoutRequestDetails: React.FC = () => {
                         </h3>
                         <p className="text-gray-500">
                           No annexure categories have been added to this request yet.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </TabsContent>
+
+            {/* Deviations */}
+            <TabsContent value="deviations" className="p-4 sm:p-6">
+              <Card className="mb-6 border-none bg-transparent shadow-none">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div
+                    className="px-6 py-3 border-b border-gray-200"
+                    style={{ backgroundColor: "#F6F4EE" }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
+                        <FileText className="w-4 h-4" style={{ color: '#C72030' }} />
+                      </div>
+                      <h3 className="text-base font-semibold text-gray-900">
+                        Deviations ({requestData.deviation_details?.length || 0})
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    {requestData.deviation_details && requestData.deviation_details.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead style={{ backgroundColor: '#F6F4EE' }}>
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                Actions
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                Description
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                Status
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                Created At
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                Comments
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {requestData.deviation_details.map((deviation) => (
+                              <tr key={deviation.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <Button
+                                    onClick={() => handleDeviationEdit(deviation)}
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-gray-300"
+                                  >
+                                    <Edit className="w-4 h-4 mr-1" />
+                                    Edit
+                                  </Button>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="max-w-md">
+                                    <p className="text-sm text-gray-900">{deviation.description}</p>
+                                    {deviation.attachments && deviation.attachments.length > 0 && (
+                                      <div className="flex items-center gap-1 mt-1">
+                                        {/* <Paperclip className="w-3 h-3 text-gray-400" /> */}
+                                        {/* <span className="text-xs text-gray-500">
+                                          {deviation.attachments.length} attachment(s)
+                                        </span> */}
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  {deviation.complaint_status_name ? (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                      style={{ borderColor: '#C72030', color: '#C72030' }}
+                                    >
+                                      {deviation.complaint_status_name}
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="secondary" className="text-xs">
+                                      {deviation.status}
+                                    </Badge>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <p className="text-sm text-gray-900">{formatDateTime(deviation.created_at)}</p>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <p className="text-sm text-gray-900">
+                                    {deviation.comments && deviation.comments.length > 0
+                                      ? `${deviation.comments.length} comment(s)`
+                                      : 'No comments'}
+                                  </p>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
+                        <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          No Deviations Found
+                        </h3>
+                        <p className="text-gray-500">
+                          No deviation details have been recorded for this fitout request yet.
                         </p>
                       </div>
                     )}
@@ -1693,7 +1929,8 @@ const FitoutRequestDetails: React.FC = () => {
                       {/* Comments - Always Mandatory */}
                       <div className="mb-3">
                         <Label htmlFor={`comments-${question.id}`} className="text-xs font-medium text-gray-700 mb-1 block">
-                          Comments <span className="text-red-600">*</span>
+                          Comments 
+                          {/* <span className="text-red-600">*</span> */}
                         </Label>
                         <Textarea
                           id={`comments-${question.id}`}
@@ -1709,7 +1946,8 @@ const FitoutRequestDetails: React.FC = () => {
                       {/* File Upload - Always Mandatory */}
                       <div className="mb-3">
                         <Label className="text-xs font-medium text-gray-700 mb-2 block">
-                          Attachment <span className="text-red-600">*</span>
+                          Attachment 
+                          {/* <span className="text-red-600">*</span> */}
                         </Label>
                         <div className="flex items-center gap-3">
                           <Button
@@ -1898,6 +2136,128 @@ const FitoutRequestDetails: React.FC = () => {
                   );
                 })}
               </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Deviation Edit Modal */}
+      <Dialog open={deviationModalOpen} onOpenChange={setDeviationModalOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-white">
+          <DialogHeader className="border-b pb-4" style={{ backgroundColor: '#F6F4EE' }}>
+            <div className="flex items-center justify-between px-6 py-3">
+              <DialogTitle className="text-lg font-semibold text-gray-900">
+                Edit Deviation
+              </DialogTitle>
+              <button
+                onClick={() => setDeviationModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </DialogHeader>
+          
+          <div className="p-6 space-y-4">
+            {selectedDeviation && (
+              <>
+                {/* Description (Read-only) */}
+                {/* <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">
+                    Description
+                  </Label>
+                  <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                    <p className="text-sm text-gray-900">{selectedDeviation.description}</p>
+                  </div>
+                </div> */}
+
+                {/* Status Dropdown */}
+                <div className="space-y-2">
+                  <Label htmlFor="deviation-status" className="text-sm font-medium text-gray-700">
+                    Status 
+                  </Label>
+                  <Select
+                    value={deviationStatusId}
+                    onValueChange={setDeviationStatusId}
+                  >
+                    <SelectTrigger className="w-full" style={{ backgroundColor: '#F6F4EE' }}>
+                      <SelectValue placeholder="Select Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {deviationStatuses.map((status) => (
+                        <SelectItem key={status.id} value={status.id.toString()}>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: status.color_code }}
+                            />
+                            {status.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Comment */}
+                {/* <div className="space-y-2">
+                  <Label htmlFor="deviation-comment" className="text-sm font-medium text-gray-700">
+                    Comment
+                  </Label>
+                  <Textarea
+                    id="deviation-comment"
+                    value={deviationComment}
+                    onChange={(e) => setDeviationComment(e.target.value)}
+                    className="w-full min-h-[100px]"
+                    style={{ backgroundColor: '#F6F4EE' }}
+                    placeholder="Add your comment..."
+                  />
+                </div> */}
+
+                {/* Attachments (Read-only) */}
+                {selectedDeviation.attachments && selectedDeviation.attachments.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Attachments
+                    </Label>
+                    <div className="space-y-2">
+                      {selectedDeviation.attachments.map((attachment) => (
+                        <div
+                          key={attachment.id}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Paperclip className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm text-gray-900">
+                              {attachment.document_file_name}
+                            </span>
+                          </div>
+                          <Button
+                            onClick={() => window.open(attachment.document_url, '_blank')}
+                            size="sm"
+                            variant="ghost"
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <div className="flex justify-center pt-4">
+                  <Button
+                    onClick={handleDeviationUpdate}
+                    disabled={deviationLoading}
+                    style={{ backgroundColor: '#C72030', color: 'white' }}
+                    className="px-8 hover:opacity-90"
+                  >
+                    {deviationLoading ? 'Updating...' : 'Update'}
+                  </Button>
+                </div>
+              </>
             )}
           </div>
         </DialogContent>

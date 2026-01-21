@@ -51,6 +51,8 @@ const FitoutRequestEdit: React.FC = () => {
   const [allCategories, setAllCategories] = useState<any[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
   const [requestCategories, setRequestCategories] = useState<FitoutRequestCategory[]>([]);
+  const [fitoutFlatRates, setFitoutFlatRates] = useState<any[]>([]);
+  const [deposit, setDeposit] = useState('0.00');
 
   const [formData, setFormData] = useState<FitoutRequestFormData>({
     tower: '',
@@ -99,46 +101,78 @@ const FitoutRequestEdit: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    // Refetch categories when fitout_type changes
+    // Fetch flat rates when fitout_type is selected
     if (formData.fitoutType) {
-      fetchCategoriesByType(formData.fitoutType);
+      fetchFitoutFlatRates(formData.fitoutType);
+    } else {
+      // Clear rates when fitout type is deselected
+      setSelectedCategories([]);
+      setFormData(prev => ({ ...prev, convenienceCharge: '0.00' }));
+      setDeposit('0.00');
     }
   }, [formData.fitoutType]);
 
-  const fetchCategoriesByType = async (fitoutType: string) => {
+  const fetchFitoutFlatRates = async (fitoutType: string) => {
     try {
-      const response = await apiClient.get(`/crm/admin/fitout_categories.json?fitout_type=${fitoutType}`);
-      const categoriesArray = response.data?.fitout_categories || [];
-      console.log('Categories filtered by type:', categoriesArray);
-      setAllCategories(categoriesArray);
-      setAnnexures(categoriesArray);
+      // Fetch fitout flat rates based on fitout_type
+      const response = await apiClient.get(`/crm/admin/fitout_flat_rates.json?q[fitout_type_eq]=${fitoutType}`);
+      const rates = response.data?.fitout_flat_rates || [];
+      console.log('=== Fitout Flat Rates Debug (Edit) ===');
+      console.log('Selected Type:', fitoutType);
+      console.log('Total Rates Found:', rates.length);
+      console.log('All Rates:', rates);
+      setFitoutFlatRates(rates);
+
+      // Filter rates that match the fitout_type (rates with non-null fitout_type)
+      const matchingRates = rates.filter((rate: any) => rate.fitout_type === fitoutType);
+      
+      console.log('Matching rates for fitout type:', matchingRates);
+      console.log('Matching rates count:', matchingRates.length);
+      
+      // Auto-populate categories with amounts
+      if (matchingRates.length > 0) {
+        const autoCategories = matchingRates.map((rate: any) => ({
+          fitout_category_id: rate.fitout_category_id?.toString() || '',
+          complaint_status_id: '',
+          amount: rate.amount?.toString() || '0.00',
+          documents: [],
+        }));
+        
+        console.log('Auto Categories:', autoCategories);
+        setSelectedCategories(autoCategories);
+        
+        // Set convenience charge and deposit from first matching rate
+        const firstRate = matchingRates[0];
+        setFormData(prev => ({
+          ...prev,
+          convenienceCharge: firstRate.convenience_charge?.toString() || '0.00',
+        }));
+        setDeposit(firstRate.deposit?.toString() || '0.00');
+        
+        toast({
+          title: 'Success',
+          description: `Loaded ${matchingRates.length} annexure(s) with amounts for ${fitoutType}`,
+        });
+      } else if (matchingRates.length === 0) {
+        console.warn('No matching rates found for fitout type:', fitoutType);
+        toast({
+          title: 'No Rates Found',
+          description: `No fitout rates configured for ${fitoutType} type`,
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
-      console.error('Error fetching categories by type:', error);
+      console.error('Error fetching fitout flat rates:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch fitout rates',
+        variant: 'destructive',
+      });
     }
   };
 
-  // Initialize selectedCategories when allCategories and requestCategories are loaded
-  useEffect(() => {
-    if (allCategories.length > 0 && requestCategories.length >= 0 && selectedCategories.length === 0) {
-      // Initialize with ALL categories
-      const selectedCats = allCategories.map((cat: any) => {
-        // Check if this category exists in loaded data
-        const existingCat = requestCategories.find(
-          (rc: any) => rc.fitout_category_id === cat.id.toString()
-        );
-        
-        return {
-          fitout_category_id: cat.id.toString(),
-          amount: existingCat ? existingCat.amount : cat.amount?.toString() || '0.00',
-          documents: []
-        };
-      });
-      
-      setSelectedCategories(selectedCats);
-      console.log('All categories initialized:', selectedCats);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allCategories, requestCategories]);
+  // Note: Categories will be auto-populated by fetchFitoutFlatRates when fitout_type is set
+  // This matches the Add page behavior where categories come from API rates
 
   const fetchDropdownData = async () => {
     try {
@@ -781,27 +815,18 @@ const FitoutRequestEdit: React.FC = () => {
           <div className="p-6 space-y-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-base font-medium">Annexure</h3>
-              {/* <Button
-                type="button"
-                onClick={handleAddCategory}
-                className="bg-[#C72030] text-white hover:bg-[#A01B28]"
-              >
-                + Add Annexure
-              </Button> */}
             </div>
 
             {selectedCategories.length === 0 && (
-              <p className="text-sm text-gray-500">No annexures added yet. Click "+ Add Annexure" to add one.</p>
+              <p className="text-sm text-gray-500">Please select Fitout Type to auto-populate annexures with amounts.</p>
             )}
 
             {selectedCategories.map((category, index) => {
-              const selectedCat = allCategories.find(c => c.id.toString() === category.fitout_category_id);
-              const existingCategory = requestCategories.find(rc => rc.fitout_category_id === category.fitout_category_id);
-              const isExistingCategory = existingCategory && existingCategory.id; // Has ID means it was previously saved
+              const categoryDetails = allCategories.find(c => c.id.toString() === category.fitout_category_id);
               
               return (
-                <div key={index} className="border rounded-lg p-4 space-y-4" style={{ backgroundColor: '#FAFAFA' }}>
-                  <div className="flex justify-between items-center">
+                <div key={index} className="" style={{ backgroundColor: '#FAFAFA' }}>
+                  {/* <div className="flex justify-between items-center">
                     <h4 className="text-sm font-medium" style={{ color: '#C72030' }}>Annexure {index + 1}</h4>
                     {!isExistingCategory && (
                       <button
@@ -812,9 +837,9 @@ const FitoutRequestEdit: React.FC = () => {
                         ✕
                       </button>
                     )}
-                  </div>
+                  </div> */}
 
-                  <FormControl fullWidth variant="outlined">
+                  {/* <FormControl fullWidth variant="outlined">
                     <InputLabel shrink>Annexure *</InputLabel>
                     <MuiSelect
                       value={category.fitout_category_id}
@@ -830,28 +855,28 @@ const FitoutRequestEdit: React.FC = () => {
                         </MenuItem>
                       ))}
                     </MuiSelect>
-                  </FormControl>
+                  </FormControl> */}
 
-                  {category.fitout_category_id && selectedCat && (
+                  {category.fitout_category_id && categoryDetails && (
                     <div className="space-y-2">
-                      {selectedCat.category_type && (
+                      {/* {categoryDetails.category_type && (
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          selectedCat.category_type === 'Move In' 
+                          categoryDetails.category_type === 'Move In' 
                             ? 'bg-blue-100 text-blue-800' 
-                            : selectedCat.category_type === 'Fitout'
+                            : categoryDetails.category_type === 'Fitout'
                             ? 'bg-purple-100 text-purple-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}>
-                          {selectedCat.category_type}
+                          {categoryDetails.category_type}
                         </span>
-                      )}
+                      )} */}
                       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                        <div className="bg-white p-3 rounded border">
+                        {/* <div className="bg-white p-3 rounded border">
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-600">Security Deposit:</span>
-                            <span className="text-base font-semibold">₹{(parseFloat(selectedCat.amount) || 0).toFixed(2)}</span>
+                            <span className="text-base font-semibold">₹{(parseFloat(categoryDetails.amount) || 0).toFixed(2)}</span>
                           </div>
-                        </div>
+                        </div> */}
                         {/* <div className="bg-white p-3 rounded border">
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-600">Convenience Charge:</span>
@@ -861,119 +886,6 @@ const FitoutRequestEdit: React.FC = () => {
                       </div>
                     </div>
                   )}
-
-                  {existingCategory && existingCategory.id && (
-                    <div className="mt-2">
-                      <FormControl fullWidth variant="outlined">
-                        <InputLabel shrink>Status</InputLabel>
-                        <MuiSelect
-                          value={existingCategory.complaint_status_id}
-                          onChange={(e) => {
-                            const idx = requestCategories.findIndex(rc => rc.fitout_category_id === category.fitout_category_id);
-                            if (idx !== -1) {
-                              setRequestCategories(prev => {
-                                const updated = [...prev];
-                                updated[idx] = { ...updated[idx], complaint_status_id: e.target.value };
-                                return updated;
-                              });
-                            }
-                          }}
-                          label="Status"
-                          displayEmpty
-                          sx={fieldStyles}
-                        >
-                          <MenuItem value="">Select Status</MenuItem>
-                          {statuses.map((status: any) => (
-                            <MenuItem key={status.id} value={status.id.toString()}>
-                              {status.name}
-                            </MenuItem>
-                          ))}
-                        </MuiSelect>
-                      </FormControl>
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Images
-                    </label>
-                    
-                    {existingCategory?.existing_documents && existingCategory.existing_documents.length > 0 && (
-                      <div className="mb-3">
-                        <p className="text-xs text-gray-600 mb-2 font-medium">Current Images ({existingCategory.existing_documents.length}):</p>
-                        <div className="flex flex-wrap gap-2">
-                          {existingCategory.existing_documents.map((doc, docIndex) => (
-                            <div key={doc.id} className="relative inline-block">
-                              <img 
-                                src={decodeURIComponent(doc.document_url)} 
-                                alt={`Existing document ${docIndex + 1}`} 
-                                className="w-24 h-24 object-cover rounded border border-gray-300"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                }}
-                              />
-                              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs px-1 py-0.5 rounded-b text-center">
-                                Image {docIndex + 1}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {category.documents && category.documents.length > 0 && (
-                      <div className="mb-3">
-                        <p className="text-xs text-green-600 mb-2 font-medium">New files selected ({category.documents.length}):</p>
-                        <div className="flex flex-wrap gap-2">
-                          {category.documents.map((file: File, fileIndex: number) => {
-                            const imageUrl = URL.createObjectURL(file);
-                            return (
-                              <div key={fileIndex} className="relative inline-block group">
-                                <img 
-                                  src={imageUrl} 
-                                  alt={`Preview ${fileIndex + 1}`} 
-                                  className="w-24 h-24 object-cover rounded border-2 border-green-500"
-                                  onLoad={() => URL.revokeObjectURL(imageUrl)}
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const updatedFiles = category.documents.filter((_: File, i: number) => i !== fileIndex);
-                                    handleCategoryChange(index, 'documents', updatedFiles);
-                                  }}
-                                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 shadow-md"
-                                >
-                                  ✕
-                                </button>
-                                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs px-1 py-0.5 rounded-b text-center">
-                                  {fileIndex + 1}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={(e) => {
-                          const files = Array.from(e.target.files || []);
-                          if (files.length > 0) {
-                            const updatedFiles = [...(category.documents || []), ...files];
-                            handleCategoryChange(index, 'documents', updatedFiles);
-                          }
-                          e.target.value = '';
-                        }}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#bf213e] file:text-white hover:file:bg-[#bf213e]"
-                        id={`file-upload-${index}`}
-                      />
-                    </div>
-                  </div>
                 </div>
               );
             })}
@@ -982,25 +894,25 @@ const FitoutRequestEdit: React.FC = () => {
               <div className="flex justify-between items-center py-2">
                 <span className="text-sm">Amount :</span>
                 <span className="text-base font-medium">₹{selectedCategories.reduce((sum, cat) => {
-                  const fullCat = allCategories.find(c => c.id.toString() === cat.fitout_category_id);
-                  return sum + (parseFloat(fullCat?.amount) || 0);
+                  return sum + (parseFloat(cat.amount) || 0);
                 }, 0).toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between items-center py-2">
                 <span className="text-sm">Convenience Charge :</span>
-                <span className="text-base font-medium">₹{selectedCategories.reduce((sum, cat) => {
-                  const fullCat = allCategories.find(c => c.id.toString() === cat.fitout_category_id);
-                  return sum + (parseFloat(fullCat?.convenience_charge) || 0);
-                }, 0).toFixed(2)}</span>
+                <span className="text-base font-medium">₹{parseFloat(formData.convenienceCharge).toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm">Deposit :</span>
+                <span className="text-base font-medium">₹{parseFloat(deposit).toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between items-center py-2 border-t pt-3">
                 <span className="text-base font-semibold">Total :</span>
-                <span className="text-lg font-bold">₹{selectedCategories.reduce((sum, cat) => {
-                  const fullCat = allCategories.find(c => c.id.toString() === cat.fitout_category_id);
-                  return sum + (parseFloat(fullCat?.amount) || 0) + (parseFloat(fullCat?.convenience_charge) || 0);
-                }, 0).toFixed(2)}</span>
+                <span className="text-lg font-bold">₹{(selectedCategories.reduce((sum, cat) => {
+                  return sum + (parseFloat(cat.amount) || 0);
+                }, 0) + parseFloat(formData.convenienceCharge) + parseFloat(deposit)).toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between items-center py-2">

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, Download, Trash2 } from 'lucide-react';
-import axios from 'axios';
 import { toast } from 'sonner';
 import { EnhancedTable } from '../enhanced-table/EnhancedTable';
+import { apiClient } from '@/utils/apiClient';
 
 interface FitoutGuide {
   id: number;
@@ -26,7 +26,7 @@ export const FitoutGuideTab: React.FC = () => {
   const fetchGuides = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/fitout/guides');
+      const response = await apiClient.get('/fitout_guide/documents.json');
       setGuides(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching guides:', error);
@@ -60,17 +60,16 @@ export const FitoutGuideTab: React.FC = () => {
     try {
       setUploading(true);
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('attachfile[documents][]', file);
 
-      const response = await axios.post('/api/fitout/guides/upload', formData, {
+      const response = await apiClient.post('/fitout_guide/documents.json', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
       toast.success('Fitout guide uploaded successfully');
-      const newGuide = response.data;
-      setGuides(Array.isArray(guides) ? [...guides, newGuide] : [newGuide]);
+      fetchGuides(); // Refresh the list
       
       // Reset file input
       if (fileInputRef.current) {
@@ -86,7 +85,7 @@ export const FitoutGuideTab: React.FC = () => {
 
   const handleDownload = async (guide: FitoutGuide) => {
     try {
-      const response = await axios.get(guide.file_url, {
+      const response = await apiClient.get(guide.file_url, {
         responseType: 'blob',
       });
       
@@ -110,7 +109,7 @@ export const FitoutGuideTab: React.FC = () => {
     if (!confirm('Are you sure you want to delete this fitout guide?')) return;
 
     try {
-      await axios.delete(`/api/fitout/guides/${id}`);
+      await apiClient.delete(`/fitout_guide/documents/${id}.json`);
       toast.success('Fitout guide deleted successfully');
       setGuides(Array.isArray(guides) ? guides.filter(guide => guide.id !== id) : []);
     } catch (error) {
