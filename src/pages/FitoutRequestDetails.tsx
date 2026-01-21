@@ -49,6 +49,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Feed } from "@mui/icons-material";
+import { getAuthHeader } from "@/config/apiConfig";
 
 // Type definitions matching the API response
 interface FitoutDocument {
@@ -368,7 +369,7 @@ const FitoutRequestDetails: React.FC = () => {
       }
 
       await apiClient.put(
-        `/crm/fitout_requests/update_deviation_status?id=${selectedDeviation.id}`,
+        `/crm/fitout_requests/update_deviation_status.json?id=${selectedDeviation.id}`,
         formData
       );
       
@@ -662,8 +663,11 @@ const FitoutRequestDetails: React.FC = () => {
         }
       });
 
-      await apiClient.post('/fitout_checklist_submission.json', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      await apiClient.post(`/fitout_requests/${id}/checklist_submission.json`, formData, {
+                  // headers: {
+                  //   'Authorization': getAuthHeader(),
+                  //   'Content-Type': 'application/json',
+                  // },
       });
       
       toast.success('Checklist submitted successfully');
@@ -2200,7 +2204,7 @@ const FitoutRequestDetails: React.FC = () => {
                 </div>
 
                 {/* Comment */}
-                {/* <div className="space-y-2">
+                <div className="space-y-2">
                   <Label htmlFor="deviation-comment" className="text-sm font-medium text-gray-700">
                     Comment
                   </Label>
@@ -2212,7 +2216,7 @@ const FitoutRequestDetails: React.FC = () => {
                     style={{ backgroundColor: '#F6F4EE' }}
                     placeholder="Add your comment..."
                   />
-                </div> */}
+                </div>
 
                 {/* Attachments (Read-only) */}
                 {selectedDeviation.attachments && selectedDeviation.attachments.length > 0 && (

@@ -99,7 +99,7 @@ export const FitoutGuideTab: React.FC = () => {
     if (!confirm('Are you sure you want to delete this fitout guide?')) return;
 
     try {
-      await apiClient.delete(`/admin/attachfiles/${id}.json`);
+      await apiClient.delete(`/attachfiles/${id}.json`);
       toast.success('Fitout guide deleted successfully');
       setGuides(Array.isArray(guides) ? guides.filter(guide => guide.id !== id) : []);
     } catch (error) {
