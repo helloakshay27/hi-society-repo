@@ -48,6 +48,9 @@ const getApiConfig = () => {
 };
 
 export const API_CONFIG = {
+  get baseURL() {
+    return getApiConfig().BASE_URL;
+  },
   get BASE_URL() {
     return getApiConfig().BASE_URL;
   },

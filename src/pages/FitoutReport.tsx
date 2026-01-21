@@ -25,14 +25,32 @@ const FitoutReport: React.FC = () => {
 
   // All available fields
   const allFields: ReportField[] = [
-    { id: "id", label: "Id" },
-    { id: "tower", label: "Tower" },
-    { id: "flat", label: "Flat" },
-    { id: "flat_type", label: "Flat Type" },
-    { id: "description", label: "Description" },
-    { id: "request_date", label: "Request Date" },
-    { id: "fitout_status", label: "Fitout Status" },
-    { id: "service_amount", label: "Service Amount" },
+    { id: "Id", label: "Id" },
+    { id: "Tower", label: "Tower" },
+    { id: "Flat", label: "Flat" },
+    { id: "Flat Type", label: "Flat Type" },
+    { id: "Category", label: "Category" },
+    { id: "Description", label: "Description" },
+    { id: "Request Date", label: "Request Date" },
+    { id: "Fitout Status", label: "Fitout Status" },
+    { id: "Service Amount", label: "Service Amount" },
+    { id: "Created On", label: "Created On" },
+    { id: "Created Time", label: "Created Time" },
+    { id: "Created By", label: "Created By" },
+    { id: "Updated On", label: "Updated On" },
+    { id: "Updated Time", label: "Updated Time" },
+    { id: "Updated By", label: "Updated By" },
+    { id: "Payment Method", label: "Payment Method" },
+    { id: "Payment Mode", label: "Payment Mode" },
+    { id: "Payment Status", label: "Payment Status" },
+    { id: "Amount Paid", label: "Amount Paid" },
+    { id: "Payment Reference Number", label: "Payment Reference Number" },
+    { id: "Paid On Date", label: "Paid On Date" },
+    { id: "Paid On Time", label: "Paid On Time" },
+    { id: "Payment Notes", label: "Payment Notes" },
+    { id: "Payment Updated By", label: "Payment Updated By" },
+    { id: "Documents Status", label: "Documents Status" },
+    { id: "Documents Uploaded On", label: "Documents Uploaded On" },
   ];
 
   // Selected fields (right side)
@@ -77,12 +95,63 @@ const FitoutReport: React.FC = () => {
     }
 
     try {
-      toast.success("Exporting report...");
-      // TODO: Implement actual export API call
-      console.log("Exporting with:", {
-        fields: selectedFields.map((f) => f.id),
-        dateRange,
+      // Format dates as DD/MM/YYYY
+      const formatDate = (date: Date) => {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      };
+
+      const fromDate = formatDate(dateRange.from);
+      const toDate = formatDate(dateRange.to);
+      const dateRangeParam = `${fromDate} - ${toDate}`;
+
+      // Build query parameters
+      const params = new URLSearchParams();
+      params.append('commit', 'export');
+      params.append('q[date_range]', dateRangeParam);
+
+      // Add selected fields as q[to][] parameters
+      selectedFields.forEach((field) => {
+        params.append('q[to][]', field.id);
       });
+
+      // Get dynamic base URL
+      const baseURL = API_CONFIG.baseURL || localStorage.getItem('apiBaseURL') || '';
+
+      // Make API call to download the file
+      const response = await axios.post(`${baseURL}/ft_reports`, {
+        params: params,
+        headers: getAuthHeader(),
+        responseType: 'blob', // Important for file download
+      });
+
+      // Create a blob URL and trigger download
+      const blob = new Blob([response.data], {
+        type: response.headers['content-type'] || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extract filename from content-disposition header or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'fitout_report.xlsx';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Report exported successfully!");
     } catch (error) {
       toast.error("Failed to export report");
       console.error("Export error:", error);
