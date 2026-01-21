@@ -150,8 +150,11 @@ const isViSite =
   hostname.includes("lockated.gophygital.work");
 
 const isFmSite =
-  hostname.includes("fm-uat.gophygital.work") ||
-  hostname.includes("fm.gophygital.work");
+  hostname === "fm-uat.gophygital.work" || hostname === "fm.gophygital.work";
+
+const isDevSite = hostname === "dev-fm-matrix.lockated.com";
+
+const isPulseSite = hostname.includes("pulse.lockated.com");
 
 export const getOrganizationsByEmail = async (
   email: string
@@ -181,7 +184,33 @@ export const getOrganizationsByEmail = async (
     return data.organizations || [];
   }
 
-  // Default fallback for other sites
+  if (isDevSite) {
+    const response = await fetch(
+      `https://dev-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch organizations");
+    }
+
+    const data = await response.json();
+    return data.organizations || [];
+  }
+
+  if (isPulseSite) {
+    const response = await fetch(
+      `https://pulse-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch organizations");
+    }
+
+    const data = await response.json();
+    return data.organizations || [];
+  }
+
+  // Default fallback for other sitess
   const response = await fetch(
     `https://uat.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
   );
@@ -495,15 +524,19 @@ export const getOrganizationsByEmailAndAutoSelect = async (
     hostname.includes("fm-uat.gophygital.work") ||
     hostname.includes("fm.gophygital.work");
 
+  const isDevSite = hostname === "dev-fm-matrix.lockated.com";
+
   let apiUrl = "";
 
   if (isOmanSite || isFmSite) {
     apiUrl = `https://uat.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
   } else if (isViSite) {
     apiUrl = `https://live-api.gophygital.work/api/users/get_organizations_by_email.json?email=${email}`;
+  } else if (isDevSite) {
+    apiUrl = `https://dev-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
   } else {
     // Default fallback
-    apiUrl = `https://uat.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
+    apiUrl = `https://uat-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
   }
 
   const response = await fetch(apiUrl);

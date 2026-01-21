@@ -22,7 +22,7 @@ import { ResponseTATCard } from '@/components/ResponseTATCard';
 import { ResolutionTATCard } from '@/components/ResolutionTATCard';
 import { useToast } from '@/hooks/use-toast';
 
-// Sortable Chart Item Component
+// Sortable Chart Item Components
 const SortableChartItem = ({
   id,
   children
@@ -1485,4 +1485,8 @@ export const TicketDashboard = () => {
       />
     </div>
   );
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> 7deaad032963a0b010da3d1cdf1e1672d80d0026

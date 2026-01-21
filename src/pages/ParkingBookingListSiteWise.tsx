@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Car, CheckCircle, AlertTriangle, MapPin, Bike, Plus, Download, Upload, Search, Eye, Filter, X, XCircle } from 'lucide-react';
+import { Car, CheckCircle, AlertTriangle, MapPin, Bike, Plus, Download, Upload, Search, Eye, Filter, X, XCircle, Calendar } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -18,6 +18,13 @@ import {
 } from "@/components/ui/pagination";
 import { BulkUploadModal } from "@/components/BulkUploadModal";
 import { ColumnVisibilityDropdown } from "@/components/ColumnVisibilityDropdown";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ParkingStatisticsCard } from "@/components/parking-analytics/ParkingStatisticsCard";
+import { ParkingFloorLayout } from "@/components/parking-analytics/ParkingFloorLayout";
+import { ParkingOccupancyChart } from "@/components/parking-analytics/ParkingOccupancyChart";
+import { FloorWiseOccupancyChart } from "@/components/parking-analytics/FloorWiseOccupancyChart";
+import { ParkingAnalyticsSelector } from "@/components/ParkingAnalyticsSelector";
+import { ParkingAnalyticsCard } from "@/components/ParkingAnalyticsCard";
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { useNavigate } from "react-router-dom";
 import { useLayout } from '@/contexts/LayoutContext';
@@ -256,6 +263,7 @@ const ParkingBookingListSiteWise = () => {
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<number | null>(null);
+  const [isAnalyticsFilterOpen, setIsAnalyticsFilterOpen] = useState(false);
   const navigate = useNavigate();
   const { isSidebarCollapsed } = useLayout();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -417,7 +425,7 @@ const ParkingBookingListSiteWise = () => {
   // Column visibility state
   const [columns, setColumns] = useState([
     { key: 'sr_no', label: 'Sr No.', visible: true },
-    // { key: 'id', label: 'ID', visible: true },
+  { key: 'id', label: 'Parking ID', visible: true },
     { key: 'employee_name', label: 'Employee Name', visible: true },
     { key: 'employee_email', label: 'Employee Email ID', visible: true },
     { key: 'schedule_date', label: 'Schedule Date', visible: true },
@@ -435,6 +443,84 @@ const ParkingBookingListSiteWise = () => {
     { key: 'created_on', label: 'Created On', visible: true },
     { key: 'cancel', label: 'Cancel', visible: true }
   ]);
+
+  // Analytics state
+  const [selectedAnalytics, setSelectedAnalytics] = useState<string[]>([
+    'peak_hour_trends',
+    'booking_patterns',
+    'occupancy_rate',
+    'average_duration',
+    'parking_statistics',
+    'two_four_occupancy',
+    'floor_wise_occupancy'
+  ]);
+
+  // Helper function to generate a label based on date range (day-wise)
+  const generateDateRangeLabel = (startDate: string, endDate: string): string => {
+    if (!startDate || !endDate) return '';
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const fmt = (d: Date) => {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = d.toLocaleDateString('en-US', { month: 'short' });
+      const year = d.getFullYear();
+      return `${day} ${month} ${year}`;
+    };
+
+    // If same day show single date, otherwise show range
+    if (start.toDateString() === end.toDateString()) return fmt(start);
+    return `${fmt(start)} - ${fmt(end)}`;
+  };
+
+  // Analytics date range state - default to last 7 days (Range A) and previous 7-day window (Range B)
+  const getDefaultAnalyticsDateRange = () => {
+    const today = new Date();
+
+    // Range A: single day = today
+    const rangeAStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const rangeAEnd = new Date(rangeAStart);
+
+    // Range B: previous single day = yesterday
+    const rangeBEnd = new Date(rangeAStart);
+    rangeBEnd.setDate(rangeAStart.getDate() - 1);
+    const rangeBStart = new Date(rangeBEnd);
+
+    const formatDate = (date: Date) => {
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${year}-${month}-${day}`;
+    };
+
+    const rangeAStartStr = formatDate(rangeAStart);
+    const rangeAEndStr = formatDate(rangeAEnd);
+    const rangeBStartStr = formatDate(rangeBStart);
+    const rangeBEndStr = formatDate(rangeBEnd);
+
+    return {
+      rangeA: {
+        startDate: rangeAStartStr,
+        endDate: rangeAEndStr,
+        label: generateDateRangeLabel(rangeAStartStr, rangeAEndStr)
+      },
+      rangeB: {
+        startDate: rangeBStartStr,
+        endDate: rangeBEndStr,
+        label: generateDateRangeLabel(rangeBStartStr, rangeBEndStr)
+      }
+    };
+  };
+
+  const [analyticsDateRange, setAnalyticsDateRange] = useState<{
+    rangeA: { startDate: string; endDate: string; label: string };
+    rangeB: { startDate: string; endDate: string; label: string };
+  }>(getDefaultAnalyticsDateRange());
+
+  // Draft state used inside the Analytics filter modal so changes don't trigger API calls
+  // until the user explicitly clicks Apply
+  const [analyticsDraftRange, setAnalyticsDraftRange] = useState(getDefaultAnalyticsDateRange());
 
   // Debounce search term to avoid excessive API calls
   useEffect(() => {
@@ -462,13 +548,41 @@ const ParkingBookingListSiteWise = () => {
       const params = new URLSearchParams();
       params.append('page', page.toString());
       
-      // Add search query
+      // Add search query - intelligently route to email, first name, or last name
       if (searchQuery.trim()) {
         console.log('🔍 Search Query Debug:');
         console.log('Search query value:', searchQuery);
         console.log('Search query trimmed:', searchQuery.trim());
         console.log('Search query type:', typeof searchQuery);
-        params.append('q[user_full_name_or_user_email_or_user_designation_cont]', searchQuery.trim());
+        const trimmedQuery = searchQuery.trim();
+        
+        // Check if it's an email (contains @)
+        if (trimmedQuery.includes('@')) {
+          console.log('🔍 Detected email search');
+          params.append('q[user_email_eq]', trimmedQuery);
+        }
+        // Check if it contains a space (first name and last name)
+        else if (trimmedQuery.includes(' ')) {
+          const nameParts = trimmedQuery.split(' ').filter(part => part.length > 0);
+          if (nameParts.length >= 2) {
+            const firstName = nameParts[0];
+            const lastName = nameParts.slice(1).join(' '); // Join remaining parts as last name
+            console.log('🔍 Detected full name search');
+            console.log('First name:', firstName);
+            console.log('Last name:', lastName);
+            params.append('q[user_firstname_eq]', firstName);
+            params.append('q[user_last_name_eq]', lastName);
+          } else {
+            // Only one part after splitting, treat as first name
+            console.log('🔍 Detected single name search (first name)');
+            params.append('q[user_firstname_eq]', nameParts[0]);
+          }
+        }
+        // Single word without @ - treat as first name
+        else {
+          console.log('🔍 Detected single name search (first name)');
+          params.append('q[user_firstname_eq]', trimmedQuery);
+        }
       }
       
       // Add filter parameters
@@ -1004,9 +1118,31 @@ const ParkingBookingListSiteWise = () => {
       params.append('end_date', exportDateRange.endDate);
       
       // Add current applied filters to export parameters
-      // Search query
+      // Search query - intelligently route to email, first name, or last name
       if (debouncedSearchTerm.trim()) {
-        params.append('q[user_full_name_or_user_email_or_user_designation_cont]', debouncedSearchTerm.trim());
+        const trimmedQuery = debouncedSearchTerm.trim();
+        
+        // Check if it's an email (contains @)
+        if (trimmedQuery.includes('@')) {
+          params.append('q[user_email_eq]', trimmedQuery);
+        }
+        // Check if it contains a space (first name and last name)
+        else if (trimmedQuery.includes(' ')) {
+          const nameParts = trimmedQuery.split(' ').filter(part => part.length > 0);
+          if (nameParts.length >= 2) {
+            const firstName = nameParts[0];
+            const lastName = nameParts.slice(1).join(' '); // Join remaining parts as last name
+            params.append('q[user_firstname_eq]', firstName);
+            params.append('q[user_last_name_eq]', lastName);
+          } else {
+            // Only one part after splitting, treat as first name
+            params.append('q[user_firstname_eq]', nameParts[0]);
+          }
+        }
+        // Single word without @ - treat as first name
+        else {
+          params.append('q[user_firstname_eq]', trimmedQuery);
+        }
       }
       
       // Category filter
@@ -1578,6 +1714,16 @@ const ParkingBookingListSiteWise = () => {
     setCurrentPage(1);
   };
 
+  // Handle analytics filter apply
+  const handleAnalyticsFilterApply = (filters: {
+    rangeA: { startDate: string; endDate: string; label: string };
+    rangeB: { startDate: string; endDate: string; label: string };
+  }) => {
+    setAnalyticsDateRange(filters);
+    // You can add additional logic here to fetch analytics data with the new date range
+    console.log('Analytics date range updated:', filters);
+  };
+
   // Get unique values for filter dropdowns
   const getUniqueValues = (key: keyof ParkingBookingSite) => {
     return Array.from(new Set(bookingData.map(item => {
@@ -1589,9 +1735,58 @@ const ParkingBookingListSiteWise = () => {
   return (
     <div className="p-6 space-y-6 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">PARKING BOOKING LIST</h1>
-      </div>
+      </div> */}
+
+      {/* Tabs */}
+      <Tabs defaultValue="parking" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
+          <TabsTrigger
+            value="parking"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              strokeWidth={2}
+              className="lucide lucide-car w-4 h-4 stroke-black group-data-[state=active]:stroke-[#C72030]"
+            >
+              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
+              <circle cx="7" cy="17" r="2" />
+              <path d="M9 17h6" />
+              <circle cx="17" cy="17" r="2" />
+            </svg>
+            Parking List
+          </TabsTrigger>
+
+          <TabsTrigger
+            value="analytics"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              strokeWidth={2}
+              className="lucide lucide-chart-column w-4 h-4 stroke-black group-data-[state=active]:stroke-[#C72030]"
+            >
+              <path d="M3 3v16a2 2 0 0 0 2 2h16" />
+              <path d="M18 17V9" />
+              <path d="M13 17V5" />
+              <path d="M8 17v-3" />
+            </svg>
+            Analytics
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Parking List Tab Content */}
+        <TabsContent value="parking" className="mt-6 space-y-6">
 
       {/* Stats Cards */}
       <SectionLoader loading={cardsLoading} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 mb-6">
@@ -1735,7 +1930,7 @@ const ParkingBookingListSiteWise = () => {
           <TableHeader>
             <TableRow className="bg-gray-50">
               {isColumnVisible('sr_no') && <TableHead className="font-semibold">Sr No.</TableHead>}
-              {/* {isColumnVisible('id') && <TableHead className="font-semibold">ID</TableHead>} */}
+              {isColumnVisible('id') && <TableHead className="font-semibold">Parking ID</TableHead>}
               {isColumnVisible('employee_name') && <TableHead className="font-semibold">Employee Name</TableHead>}
               {isColumnVisible('employee_email') && <TableHead className="font-semibold">Employee Email ID</TableHead>}
               {isColumnVisible('schedule_date') && <TableHead className="font-semibold">Schedule Date</TableHead>}
@@ -1780,7 +1975,7 @@ const ParkingBookingListSiteWise = () => {
               paginatedData.map((row, index) => (
                 <TableRow key={row.id} className="hover:bg-gray-50">
                   {isColumnVisible('sr_no') && <TableCell className="font-medium">{(currentApiPage - 1) * apiPagination.per_page + index + 1}</TableCell>}
-                  {/* {isColumnVisible('id') && <TableCell className="font-medium">{row.id}</TableCell>} */}
+                  {isColumnVisible('id') && <TableCell className="font-medium">{row.id}</TableCell>}
                   {isColumnVisible('employee_name') && (
                     <TableCell>{row.employee_name}</TableCell>
                   )}
@@ -2436,7 +2631,460 @@ const ParkingBookingListSiteWise = () => {
             </div>
           </div>
         );
-      })()}
+        })()}
+        </TabsContent>
+
+        {/* Analytics Tab Content */}
+        <TabsContent value="analytics" className="mt-6 space-y-6">
+          {/* Header with Filter and Analytics Selector */}
+          <div className="flex justify-end items-center gap-2">
+            <Button
+              variant="outline"
+                  onClick={() => {
+                    // Initialize draft from the committed range and open the dialog
+                    setAnalyticsDraftRange(analyticsDateRange);
+                    setIsAnalyticsFilterOpen(true);
+                  }}
+              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border-gray-300"
+            >
+              <Calendar className="w-4 h-4 text-gray-600" />
+              <span className="text-sm font-medium text-gray-700">
+                {analyticsDateRange.rangeA.label} vs {analyticsDateRange.rangeB.label}
+              </span>
+              <Filter className="w-4 h-4 text-gray-600" />
+            </Button>
+
+            <ParkingAnalyticsSelector
+              onSelectionChange={(selected) => setSelectedAnalytics(selected)}
+            />
+          </div>
+
+          {/* Statistics Overview */}
+          {selectedAnalytics.includes('parking_statistics') && (
+            <ParkingStatisticsCard
+              data={{
+                total_slots: cards?.total_slots || 0,
+                occupied: (cards?.two_booked || 0) + (cards?.four_booked || 0),
+                vacant: (cards?.two_available || 0) + (cards?.four_available || 0),
+                checked_in: bookingData.filter(b => b.checked_in_at !== null).length,
+                checked_out: bookingData.filter(b => b.checked_out_at !== null).length,
+                utilization: cards?.total_slots 
+                  ? Math.round((((cards?.two_booked || 0) + (cards?.four_booked || 0)) / cards.total_slots) * 100)
+                  : 0,
+                two_wheeler: {
+                  total: cards?.two_total || 0,
+                  occupied: cards?.two_booked || 0,
+                  vacant: cards?.two_available || 0,
+                },
+                four_wheeler: {
+                  total: cards?.four_total || 0,
+                  occupied: cards?.four_booked || 0,
+                  vacant: cards?.four_available || 0,
+                },
+              }}
+              startDate={analyticsDateRange.rangeA.startDate}
+              endDate={analyticsDateRange.rangeA.endDate}
+            />
+          )}
+
+          {/* Analytics Cards Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {selectedAnalytics.includes('peak_hour_trends') && (
+              <ParkingAnalyticsCard
+                title="Peak Hour Trends"
+                data={{}}
+                type="peakHourTrends"
+                startDate={analyticsDateRange.rangeA.startDate}
+                endDate={analyticsDateRange.rangeA.endDate}
+              />
+            )}
+            {selectedAnalytics.includes('booking_patterns') && (
+              <ParkingAnalyticsCard
+                title="2-Year Parking Comparison"
+                data={{}}
+                type="bookingPatterns"
+                startDate={analyticsDateRange.rangeA.startDate}
+                endDate={analyticsDateRange.rangeA.endDate}
+              />
+            )}
+            
+            {selectedAnalytics.includes('two_four_occupancy') && (
+              <ParkingOccupancyChart
+                data={[
+                  {
+                    category: '2W',
+                    lastYearOccupied: Math.round((cards?.two_booked || 0) * 0.9),
+                    lastYearVacant: Math.round((cards?.two_available || 0) * 1.2),
+                    thisYearOccupied: cards?.two_booked || 0,
+                    thisYearVacant: cards?.two_available || 0
+                  },
+                  {
+                    category: '4W',
+                    lastYearOccupied: Math.round((cards?.four_booked || 0) * 0.95),
+                    lastYearVacant: Math.round((cards?.four_available || 0) * 1.1),
+                    thisYearOccupied: cards?.four_booked || 0,
+                    thisYearVacant: cards?.four_available || 0
+                  }
+                ]}
+                startDate={analyticsDateRange.rangeA.startDate}
+                endDate={analyticsDateRange.rangeA.endDate}
+                onDownload={async () => {
+                  console.log('Downloading occupancy data...');
+                  // Implement download logic here
+                }}
+              />
+            )}
+            {selectedAnalytics.includes('floor_wise_occupancy') && (
+              <FloorWiseOccupancyChart
+                data={[
+                  { floor: 'B2', twoWheeler: 12, fourWheeler: 8, percentage: 11.1 },
+                  { floor: 'B1', twoWheeler: 10, fourWheeler: 13, percentage: 10.0 },
+                  { floor: 'G', twoWheeler: 8, fourWheeler: 17, percentage: 14.3 },
+                  { floor: '1', twoWheeler: 6, fourWheeler: 10, percentage: 14.3 },
+                  { floor: '2', twoWheeler: 4, fourWheeler: 9, percentage: 7.7 },
+                ]}
+                startDate={analyticsDateRange.rangeA.startDate}
+                endDate={analyticsDateRange.rangeA.endDate}
+                onDownload={async () => {
+                  console.log('Downloading floor-wise occupancy data...');
+                  // Implement download logic here
+                }}
+              />
+            )}
+            {selectedAnalytics.includes('occupancy_rate') && (
+              <ParkingAnalyticsCard
+                title="Cancelled (Daily)"
+                data={{}}
+                type="occupancyRate"
+                startDate={analyticsDateRange.rangeA.startDate}
+                endDate={analyticsDateRange.rangeA.endDate}
+              />
+            )}
+            {/* {selectedAnalytics.includes('average_duration') && (
+              <ParkingAnalyticsCard
+                title="Auto-Releases by Department"
+                data={{}}
+                type="averageDuration"
+              />
+            )} */}
+          </div>
+
+          {/* Floor Layout */}
+          {/* <ParkingFloorLayout
+            floor="G (Live)"
+            building="Main Building"
+            slots={bookingData.slice(0, 36).map((booking, index) => ({
+              id: `S-${index + 1}`,
+              number: `S-${index + 1}`,
+              status: booking.status === 'confirmed' ? 'occupied' : 'vacant',
+              type: booking.category.toLowerCase().includes('two') || booking.category.toLowerCase().includes('bike') ? 'bike' : 'car',
+              bookingId: booking.id,
+              userName: booking.employee_name,
+              scheduledDate: booking.schedule_date,
+            }))}
+            onSlotClick={(slot) => {
+              console.log('Slot clicked:', slot);
+              // You can add navigation to booking details or show a modal here
+            }}
+          /> */}
+        </TabsContent>
+      </Tabs>
+
+      {/* Analytics Filter Dialog */}
+  <Dialog open={isAnalyticsFilterOpen} onOpenChange={(open) => { if (open) setIsAnalyticsFilterOpen(true); /* ignore close from overlay/escape - close only via Cancel */ }}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Filter Parking Analytics</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            {/* Range A (This Year) */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-gray-700">Range A</label>
+                <Input
+                  type="text"
+                  value={analyticsDraftRange.rangeA.label}
+                  onChange={(e) => {
+                    setAnalyticsDraftRange(prev => ({
+                      ...prev,
+                      rangeA: { ...prev.rangeA, label: e.target.value }
+                    }));
+                  }}
+                  className="h-8 w-32 text-xs"
+                  placeholder="Label"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-600">Start Date</label>
+                  <Input
+                    type="date"
+                    value={analyticsDraftRange.rangeA.startDate}
+                    onChange={(e) => {
+                      const newStartDate = e.target.value;
+                      setAnalyticsDraftRange(prev => {
+                        // If endDate exists and new start is after end, reject and notify
+                        if (prev.rangeA.endDate) {
+                          const end = new Date(prev.rangeA.endDate);
+                          const start = new Date(newStartDate);
+                          if (start.getTime() > end.getTime()) {
+                            toast.info('Start date cannot be after end date');
+                            return prev; // ignore invalid change
+                          }
+                        }
+
+                        // Calculate the duration of Range A
+                        const rangeAEnd = prev.rangeA.endDate ? new Date(prev.rangeA.endDate) : new Date();
+                        const rangeAStart = new Date(newStartDate);
+                        // Inclusive duration (count both start and end day)
+                        const durationInDays = Math.ceil((rangeAEnd.getTime() - rangeAStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+                        // Calculate Range B: previous period of same duration
+                        const rangeBEnd = new Date(rangeAStart);
+                        rangeBEnd.setDate(rangeBEnd.getDate() - 1); // Day before Range A starts
+
+                        const rangeBStart = new Date(rangeBEnd);
+                        rangeBStart.setDate(rangeBStart.getDate() - durationInDays + 1);
+
+                        const formatDate = (date: Date) => {
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          return `${year}-${month}-${day}`;
+                        };
+
+                        const rangeBStartStr = formatDate(rangeBStart);
+                        const rangeBEndStr = formatDate(rangeBEnd);
+
+                        return {
+                          rangeA: {
+                            ...prev.rangeA,
+                            startDate: newStartDate,
+                            label: generateDateRangeLabel(newStartDate, prev.rangeA.endDate)
+                          },
+                          rangeB: {
+                            ...prev.rangeB,
+                            startDate: rangeBStartStr,
+                            endDate: rangeBEndStr,
+                            label: generateDateRangeLabel(rangeBStartStr, rangeBEndStr)
+                          }
+                        };
+                      });
+                    }}
+                    className="h-10"
+                  />
+                  <p className="text-xs text-gray-500">
+                    {analyticsDraftRange.rangeA.startDate && new Date(analyticsDraftRange.rangeA.startDate).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-600">End Date</label>
+                  <Input
+                    type="date"
+                    value={analyticsDraftRange.rangeA.endDate}
+                    onChange={(e) => {
+                      const newEndDate = e.target.value;
+                      setAnalyticsDraftRange(prev => {
+                        // If startDate exists and new end is before start, reject and notify
+                        if (prev.rangeA.startDate) {
+                          const start = new Date(prev.rangeA.startDate);
+                          const end = new Date(newEndDate);
+                          if (end.getTime() < start.getTime()) {
+                            toast.info('End date cannot be before start date');
+                            return prev; // ignore invalid change
+                          }
+                        }
+
+                        // Calculate the duration of Range A
+                        const rangeAStart = prev.rangeA.startDate ? new Date(prev.rangeA.startDate) : new Date();
+                        const rangeAEnd = new Date(newEndDate);
+                        // Inclusive duration (count both start and end day)
+                        const durationInDays = Math.ceil((rangeAEnd.getTime() - rangeAStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+                        // Calculate Range B: previous period of same duration
+                        const rangeBEnd = new Date(rangeAStart);
+                        rangeBEnd.setDate(rangeBEnd.getDate() - 1); // Day before Range A starts
+
+                        const rangeBStart = new Date(rangeBEnd);
+                        rangeBStart.setDate(rangeBStart.getDate() - durationInDays + 1);
+
+                        const formatDate = (date: Date) => {
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          return `${year}-${month}-${day}`;
+                        };
+
+                        const rangeBStartStr = formatDate(rangeBStart);
+                        const rangeBEndStr = formatDate(rangeBEnd);
+
+                        return {
+                          rangeA: {
+                            ...prev.rangeA,
+                            endDate: newEndDate,
+                            label: generateDateRangeLabel(prev.rangeA.startDate, newEndDate)
+                          },
+                          rangeB: {
+                            ...prev.rangeB,
+                            startDate: rangeBStartStr,
+                            endDate: rangeBEndStr,
+                            label: generateDateRangeLabel(rangeBStartStr, rangeBEndStr)
+                          }
+                        };
+                      });
+                    }}
+                    className="h-10"
+                  />
+                  <p className="text-xs text-gray-500">
+                    {analyticsDraftRange.rangeA.endDate && new Date(analyticsDraftRange.rangeA.endDate).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-200"></div>
+
+            {/* Range B (Last Year) */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-gray-700">Range B</label>
+                <Input
+                  type="text"
+                  value={analyticsDraftRange.rangeB.label}
+                  onChange={(e) => {
+                    setAnalyticsDraftRange(prev => ({
+                      ...prev,
+                      rangeB: { ...prev.rangeB, label: e.target.value }
+                    }));
+                  }}
+                  className="h-8 w-32 text-xs"
+                  placeholder="Label"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-600">Start Date</label>
+                  <Input
+                    type="date"
+                    value={analyticsDraftRange.rangeB.startDate}
+                    onChange={(e) => {
+                      const newStartDate = e.target.value;
+                      setAnalyticsDraftRange(prev => {
+                        // If endDate exists and new start is after end, reject and notify
+                        if (prev.rangeB.endDate) {
+                          const end = new Date(prev.rangeB.endDate);
+                          const start = new Date(newStartDate);
+                          if (start.getTime() > end.getTime()) {
+                            toast.info('Start date cannot be after end date');
+                            return prev; // ignore invalid change
+                          }
+                        }
+
+                        return {
+                          ...prev,
+                          rangeB: {
+                            ...prev.rangeB,
+                            startDate: newStartDate,
+                            label: generateDateRangeLabel(newStartDate, prev.rangeB.endDate)
+                          }
+                        };
+                      });
+                    }}
+                    className="h-10"
+                  />
+                  <p className="text-xs text-gray-500">
+                    {analyticsDraftRange.rangeB.startDate && new Date(analyticsDraftRange.rangeB.startDate).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-600">End Date</label>
+                  <Input
+                    type="date"
+                    value={analyticsDraftRange.rangeB.endDate}
+                    onChange={(e) => {
+                      const newEndDate = e.target.value;
+                      setAnalyticsDraftRange(prev => {
+                        // If startDate exists and new end is before start, reject and notify
+                        if (prev.rangeB.startDate) {
+                          const start = new Date(prev.rangeB.startDate);
+                          const end = new Date(newEndDate);
+                          if (end.getTime() < start.getTime()) {
+                            toast.info('End date cannot be before start date');
+                            return prev; // ignore invalid change
+                          }
+                        }
+
+                        return {
+                          ...prev,
+                          rangeB: {
+                            ...prev.rangeB,
+                            endDate: newEndDate,
+                            label: generateDateRangeLabel(prev.rangeB.startDate, newEndDate)
+                          }
+                        };
+                      });
+                    }}
+                    className="h-10"
+                  />
+                  <p className="text-xs text-gray-500">
+                    {analyticsDraftRange.rangeB.endDate && new Date(analyticsDraftRange.rangeB.endDate).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+            <Button 
+              onClick={() => {
+                // Commit draft to active range and trigger analytics reload
+                setAnalyticsDateRange(analyticsDraftRange);
+                handleAnalyticsFilterApply(analyticsDraftRange);
+                setIsAnalyticsFilterOpen(false);
+              }}
+              className="flex-1 h-11 bg-[#C72030] hover:bg-[#A01020]"
+            >
+              Apply Filters
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                // Discard draft changes and just close modal
+                setAnalyticsDraftRange(analyticsDateRange);
+                setIsAnalyticsFilterOpen(false);
+              }}
+              className="flex-1 h-11"
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setAnalyticsDraftRange(getDefaultAnalyticsDateRange());
+              }}
+              className="flex-1 h-11"
+            >
+              Reset
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

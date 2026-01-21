@@ -21,24 +21,44 @@ export const baseClient = axios.create({
 baseClient.interceptors.request.use(
   async (config) => {
     try {
-      // First preference: use base URL saved via auth utilities (e.g., Mobile pages)
-      try {
-        const storedBaseUrl = getBaseUrl();
-        if (storedBaseUrl) {
-          config.baseURL = storedBaseUrl;
-          console.log("✅ Base URL set from stored baseUrl:", storedBaseUrl);
-          return config;
-        }
-      } catch (storageError) {
-        console.warn("⚠️ Unable to read stored baseUrl:", storageError);
-      }
-
-      // Extract URL parameters
+      // Extract URL parameters first to check for org_id
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get("token");
       const email = urlParams.get("email");
       const organizationId = urlParams.get("organization_id");
       const orgId = urlParams.get("org_id");
+
+      // If org_id is present in URL, this takes priority over logged-in state
+      // This allows public survey access even when user is logged in
+      const hasOrgIdParam = !!(organizationId || orgId);
+
+      // First preference: use base URL saved via auth utilities (e.g., Mobile pages)
+      // BUT skip this if org_id parameter is present (for public survey access)
+      if (!hasOrgIdParam) {
+        try {
+          const storedBaseUrl = getBaseUrl();
+          if (storedBaseUrl) {
+            config.baseURL = storedBaseUrl;
+            console.log("✅ Base URL set from stored baseUrl:", storedBaseUrl);
+            return config;
+          }
+        } catch (storageError) {
+          console.warn("⚠️ Unable to read stored baseUrl:", storageError);
+        }
+
+        // Check if user is already logged in (has baseUrl in localStorage)
+        // Skip this if org_id parameter is present
+        const loggedInBaseUrl = localStorage.getItem("baseUrl");
+        if (loggedInBaseUrl) {
+          config.baseURL = loggedInBaseUrl;
+          console.log("✅ Base URL set from logged-in user:", loggedInBaseUrl);
+          return config;
+        }
+      } else {
+        console.log(
+          "🔓 org_id parameter detected - using public survey access mode"
+        );
+      }
 
       // Store token in session storage if available
       if (token) {
@@ -51,11 +71,14 @@ baseClient.interceptors.request.use(
       const isOmanSite = hostname.includes("oig.gophygital.work");
       const isViSite =
         hostname.includes("vi-web.gophygital.work") ||
-        hostname.includes("web.gophygital.work");
+        hostname.includes("web.gophygital.work") ||
+        hostname.includes("lockated.gophygital.work");
       const isFmSite =
-        hostname.includes("fm-uat.gophygital.work") ||
-        hostname.includes("fm.gophygital.work") ||
-        hostname.includes("fm-matrix.lockated.com");
+        hostname === "fm-uat.gophygital.work" ||
+        hostname === "fm.gophygital.work" ||
+        hostname === "fm-matrix.lockated.com";
+
+      const isDevSite = hostname === "dev-fm-matrix.lockated.com";
 
       // Build API URL based on site type and available parameters
       let apiUrl = "";
@@ -91,19 +114,30 @@ baseClient.interceptors.request.use(
         } else {
           throw new Error("Either org_id or email is required for VI sites");
         }
+      } else if (isDevSite) {
+        // Dev sites: use email
+
+        if (organizationId) {
+          apiUrl = `https://dev-api.lockated.com/api/users/get_organizations_by_email.json?org_id=${organizationId}`;
+          console.log("🔍 Using org_id for Dev site:", orgId);
+        } else if (orgId) {
+          apiUrl = `https://dev-api.lockated.com/api/users/get_organizations_by_email.json?org_id=${orgId}`;
+          console.log("🔍 Using org_id for Dev site:", orgId);
+        } else if (email) {
+          apiUrl = `https://dev-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
+          console.log("🔍 Using email for Dev site:", email);
+        }
       } else {
         // Default fallback: prefer org_id, fallback to email
-        if (orgId) {
-          apiUrl = `https://fm-uat-api.lockated.com/api/users/get_organizations_by_email.json?org_id=${orgId}`;
-          console.log("🔍 Using org_id for default fallback:", orgId);
-        } else if (organizationId) {
+        if (organizationId) {
           apiUrl = `https://fm-uat-api.lockated.com/api/users/get_organizations_by_email.json?org_id=${organizationId}`;
-          console.log("🔍 Using org_id for default fallback:", orgId);
+          console.log("🔍 Using org_id for Dev site:", orgId);
+        } else if (orgId) {
+          apiUrl = `https://live-api.gophygital.work/api/users/get_organizations_by_email.json?org_id=${orgId}`;
+          console.log("🔍 Using org_id for Dev site:", orgId);
         } else if (email) {
           apiUrl = `https://fm-uat-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
-          console.log("🔍 Using email for default fallback:", email);
-        } else {
-          throw new Error("Either org_id or email is required");
+          console.log("🔍 Using email for Dev site:", email);
         }
       }
 
@@ -162,12 +196,12 @@ baseClient.interceptors.request.use(
       }
 
       // Priority 4: Fallback URL
-      config.baseURL = "https://fm-uat-api.lockated.com/";
+      config.baseURL = "https://pulse-api.lockated.com/";
       console.warn("⚠️ Using fallback URL:", config.baseURL);
     } catch (error) {
       console.error("❌ Error in request interceptor:", error);
       // Always set a fallback URL on error
-      config.baseURL = "https://fm-uat-api.lockated.com/";
+      config.baseURL = "https://pulse-api.lockated.com/";
       console.warn("⚠️ Using fallback URL due to error:", config.baseURL);
     }
 

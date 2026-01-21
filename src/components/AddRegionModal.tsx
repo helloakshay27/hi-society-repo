@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { Switch } from '@/components/ui/switch';
@@ -65,6 +64,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
   const { getFullUrl, getAuthHeader } = useApiConfig();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+
   const [formData, setFormData] = useState<RegionFormData>({
     name: '',
     code: '',
@@ -74,19 +74,53 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
     active: true
   });
 
+  // Local state for headquarters/countries
+  const [headquartersDropdown, setHeadquartersDropdown] = useState<Array<{ id: number; name: string }>>(countriesDropdown || []);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = async (field: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-    
+
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
         [field]: ''
       }));
+    }
+
+    // If company_id changes, fetch headquarters
+    if (field === 'company_id' && value) {
+      try {
+        const apiUrl = getFullUrl(`/headquarters.json?q[company_setup_id_eq]=${value}`);
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': getAuthHeader()
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          // Expecting headquarters array with id and name
+          if (Array.isArray(data.headquarters)) {
+            setHeadquartersDropdown(data.headquarters.map((hq: any) => ({ id: hq.id, name: hq.headquarter_name })));
+          } else if (Array.isArray(data)) {
+            setHeadquartersDropdown(data.map((hq: any) => ({ id: hq.id, name: hq.headquarter_name })));
+          } else {
+            setHeadquartersDropdown([]);
+          }
+        } else {
+          setHeadquartersDropdown([]);
+        }
+        // Reset country_id when company changes
+        setFormData(prev => ({ ...prev, country_id: '' }));
+      } catch (error) {
+        setHeadquartersDropdown([]);
+      }
     }
   };
 
@@ -211,7 +245,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
                 onChange={(e) => handleChange('name', e.target.value)}
                 fullWidth
                 variant="outlined"
-                InputLabelProps={{ shrink: true }}
+                InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#C72030' } } }}
                 InputProps={{ sx: fieldStyles }}
                 required
                 disabled={isSubmitting}
@@ -233,8 +267,8 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
             </div>
             
             <div className="grid grid-cols-2 gap-6 mt-6">
-              <FormControl fullWidth variant="outlined" error={!!errors.company_id}>
-                <InputLabel shrink>Company</InputLabel>
+              <FormControl fullWidth variant="outlined" error={!!errors.company_id} required>
+                <InputLabel shrink sx={{ '& .MuiFormLabel-asterisk': { color: '#C72030' } }}>Company</InputLabel>
                 <MuiSelect
                   value={formData.company_id}
                   onChange={(e) => handleChange('company_id', e.target.value)}
@@ -258,8 +292,8 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
                 )}
               </FormControl>
 
-              <FormControl fullWidth variant="outlined" error={!!errors.country_id}>
-                <InputLabel shrink>Country</InputLabel>
+              <FormControl fullWidth variant="outlined" error={!!errors.country_id} required>
+                <InputLabel shrink sx={{ '& .MuiFormLabel-asterisk': { color: '#C72030' } }}>Country</InputLabel>
                 <MuiSelect
                   value={formData.country_id}
                   onChange={(e) => handleChange('country_id', e.target.value)}
@@ -267,14 +301,14 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
                   displayEmpty
                   MenuProps={selectMenuProps}
                   sx={fieldStyles}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !formData.company_id}
                 >
                   <MenuItem value="">
                     <em>Select Country</em>
                   </MenuItem>
-                  {countriesDropdown.map((country) => (
-                    <MenuItem key={country.id} value={country.id.toString()}>
-                      {country.name}
+                  {headquartersDropdown.map((hq) => (
+                    <MenuItem key={hq.id} value={hq.id.toString()}>
+                      {hq.name}
                     </MenuItem>
                   ))}
                 </MuiSelect>
@@ -296,9 +330,22 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
                 multiline
                 rows={3}
                 disabled={isSubmitting}
-                sx={{
-                  '& .MuiInputBase-root': {
-                    minHeight: '80px',
+                 sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: "auto !important",
+                    padding: "2px !important",
+                    display: "flex",
+                  },
+                  "& .MuiInputBase-input[aria-hidden='true']": {
+                    flex: 0,
+                    width: 0,
+                    height: 0,
+                    padding: "0 !important",
+                    margin: 0,
+                    display: "none",
+                  },
+                  "& .MuiInputBase-input": {
+                    resize: "none !important",
                   },
                 }}
               />
@@ -321,7 +368,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+  <div className="flex items-center justify-center gap-3 pt-4 border-t border-gray-200">
           <Button 
             variant="outline" 
             onClick={handleClose} 
