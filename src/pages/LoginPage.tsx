@@ -71,6 +71,8 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   // Check if it's VI site
   const isViSite = hostname.includes("vi-web.gophygital.work");
   const isWebSite = hostname.includes("web.gophygital.work");
+  // Check if it's Hi-Society site
+  const isHiSocietySite = hostname.includes("web.hisociety.lockated.com");
 
   // Check URL for email and orgId parameters on component mount
   React.useEffect(() => {
@@ -129,6 +131,33 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
 
   const validateEmail = (email: string) => {
     return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+  };
+
+  // Fetch Hi-Society specific data after login
+  const fetchHiSocietyData = async (token: string) => {
+    try {
+      // Fetch account data
+      const accountResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`);
+      if (accountResponse.ok) {
+        const accountData = await accountResponse.json();
+        localStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
+        localStorage.setItem("selectedUserSociety", accountData.selected_user_society?.toString() || "");
+        sessionStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
+        sessionStorage.setItem("selectedUserSociety", accountData.selected_user_society?.toString() || "");
+      }
+      
+      // Fetch user approved societies
+      const societiesResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
+      if (societiesResponse.ok) {
+        const societiesData = await societiesResponse.json();
+        const societies = societiesData.user_societies || [];
+        localStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(societies));
+        sessionStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(societies));
+      }
+    } catch (error) {
+      console.error("Failed to fetch Hi-Society data:", error);
+      // Don't block login if this fails
+    }
   };
 
   const validatePassword = (password: string) => {
@@ -231,8 +260,14 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
 
     setLoginLoading(true);
     try {
-      // Use Hi-Society base URL for authentication (remove https:// as loginUser adds it)
-      const baseUrl = HI_SOCIETY_CONFIG.BASE_URL.replace(/^https?:\/\//, '');
+      // Determine base URL based on hostname
+      let baseUrl: string;
+      if (isHiSocietySite) {
+        baseUrl = 'hi-society.lockated.com';
+      } else {
+        // Use HI_SOCIETY_CONFIG for other environments
+        baseUrl = HI_SOCIETY_CONFIG.BASE_URL.replace(/^https?:\/\//, '');
+      }
       const response = await loginUser(email, password, baseUrl);
 
       if (!response || !response.access_token) {

@@ -63,6 +63,7 @@ export const HiSocietyHeader = () => {
   // Hi-Society specific state
   const [hiSocietySocieties, setHiSocietySocieties] = useState<HiSocietySociety[]>([]);
   const [selectedSociety, setSelectedSociety] = useState<HiSocietySociety | null>(null);
+  const [selectedFlat, setSelectedFlat] = useState<HiSocietySociety | null>(null);
   const [hiSocietyLoading, setHiSocietyLoading] = useState(false);
 
   const currentPath = window.location.pathname;
@@ -190,12 +191,13 @@ export const HiSocietyHeader = () => {
         // Update state immediately
         setHiSocietySocieties(societies);
         
-        // Set selected society
+        // Set selected society and flat
         const selectedUserSociety = accountData?.selected_user_society?.toString();
         if (selectedUserSociety) {
           const selected = societies.find((s: HiSocietySociety) => s.id.toString() === selectedUserSociety);
           if (selected) {
             setSelectedSociety(selected);
+            setSelectedFlat(selected);
           }
         }
       }
@@ -216,11 +218,12 @@ export const HiSocietyHeader = () => {
         const societies: HiSocietySociety[] = JSON.parse(societiesData);
         setHiSocietySocieties(societies);
         
-        // Find and set selected society
+        // Find and set selected society and flat
         if (selectedUserSociety) {
           const selected = societies.find(s => s.id.toString() === selectedUserSociety);
           if (selected) {
             setSelectedSociety(selected);
+            setSelectedFlat(selected);
           }
         }
       }
@@ -237,6 +240,22 @@ export const HiSocietyHeader = () => {
 
   const handleSearch = (searchTerm: string) => {
     console.log("Search term:", searchTerm);
+  };
+
+  // Get available flats for selected society
+  const availableFlats = selectedSociety
+    ? hiSocietySocieties.filter(s => s.id_society === selectedSociety.id_society && s.user_flat && Object.keys(s.user_flat).length > 0)
+    : [];
+
+  // Handle flat change
+  const handleFlatChange = (flatUserSocietyId: number) => {
+    const selected = hiSocietySocieties.find(s => s.id === flatUserSocietyId);
+    if (selected) {
+      setSelectedFlat(selected);
+      // Optionally store in localStorage if you want persistence
+      localStorage.setItem("selectedFlat", flatUserSocietyId.toString());
+      sessionStorage.setItem("selectedFlat", flatUserSocietyId.toString());
+    }
   };
 
   // Handle Hi-Society society change
@@ -259,10 +278,11 @@ export const HiSocietyHeader = () => {
 
       const data = await response.json();
       
-      // Update selected society
+      // Update selected society and flat
       const selected = hiSocietySocieties.find(s => s.id === societyId);
       if (selected) {
         setSelectedSociety(selected);
+        setSelectedFlat(selected);
         localStorage.setItem("selectedUserSociety", societyId.toString());
         sessionStorage.setItem("selectedUserSociety", societyId.toString());
       }
@@ -500,16 +520,36 @@ export const HiSocietyHeader = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Flat Display */}
-          {/* {selectedSociety?.user_flat && (
-            <div className="flex items-center gap-2 text-[#1a1a1a]">
-              <Home className="w-4 h-4" />
-              <span className="text-sm font-medium">
-                {selectedSociety.user_flat.block && `${selectedSociety.user_flat.block} - `}
-                {selectedSociety.user_flat.flat}
-              </span>
-            </div>
-          )} */}
+          {/* Flats Dropdown */}
+          {availableFlats.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
+                <Home className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  {selectedFlat?.user_flat
+                    ? `${selectedFlat.user_flat.block ? selectedFlat.user_flat.block + ' - ' : ''}${selectedFlat.user_flat.flat}`
+                    : "Select Flat"}
+                </span>
+                <ChevronDown className="w-3 h-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
+                {availableFlats.map((flat) => (
+                  <DropdownMenuItem
+                    key={flat.id}
+                    onClick={() => handleFlatChange(flat.id)}
+                    className={
+                      selectedFlat?.id === flat.id
+                        ? "bg-[#f6f4ee] text-[#C72030]"
+                        : ""
+                    }
+                  >
+                    {flat.user_flat?.block && `${flat.user_flat.block} - `}
+                    {flat.user_flat?.flat}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           <div className="relative">
             <button className="p-2 hover:bg-[#f6f4ee] rounded-lg transition-colors">
