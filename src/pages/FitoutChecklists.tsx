@@ -7,6 +7,7 @@ import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/utils/apiClient";
+import { Switch } from "@mui/material";
 
 interface Question {
   id: number;
@@ -158,6 +159,29 @@ const FitoutChecklists: React.FC = () => {
     }
   }, [appliedFilters, toast]);
 
+  const handleToggle = async (id: number, currentStatus: number) => {
+    try {
+      const newStatus = currentStatus === 1 ? 0 : 1;
+      await apiClient.put(`/crm/admin/snag_checklists/${id}.json`, {
+        snag_checklist: {
+          active: newStatus,
+        }
+      });
+      toast({
+        title: "Success",
+        description: `Checklist ${newStatus === 1 ? 'activated' : 'deactivated'} successfully`,
+      });
+      fetchChecklistData(appliedFilters);
+    } catch (error) {
+      console.error('Error toggling checklist status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update checklist status",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleRowAction = (action: string, checklistId: number) => {
     console.log(`${action} action for Checklist ${checklistId}`);
     if (action === "Edit") {
@@ -285,13 +309,18 @@ const FitoutChecklists: React.FC = () => {
           );
         case "active":
           return (
-            <span
-              className={`font-medium ${
-                item.active === 1 ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {item.active === 1 ? "Active" : "Inactive"}
-            </span>
+            <Switch
+              checked={item.active === 1}
+              onChange={() => handleToggle(item.id, item.active)}
+              sx={{
+                "& .MuiSwitch-switchBase.Mui-checked": {
+                  color: "#C72030",
+                },
+                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                  backgroundColor: "#C72030",
+                },
+              }}
+            />
           );
         default:
           const value = item[columnKey as keyof FitoutChecklistItem];
