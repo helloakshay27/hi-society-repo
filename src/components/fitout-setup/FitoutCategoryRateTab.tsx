@@ -61,6 +61,7 @@ export const FitoutCategoryRateTab: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchRates();
@@ -131,22 +132,24 @@ export const FitoutCategoryRateTab: React.FC = () => {
 
   const handleEdit = (rate: FitoutFlatRate) => {
     setEditingId(rate.id);
-    setFitoutCategoryId(rate.fitout_category_id.toString());
+    setFitoutCategoryId(rate.fitout_category_id?.toString() || '');
     setCategoryType(rate.fitout_type || '');
-    setAmount(rate.amount.toString());
-    setConvenienceCharge(rate.convenience_charge.toString());
-    setDeposit(rate.deposit.toString());
+    setAmount(rate.amount?.toString() || '');
+    setConvenienceCharge(rate.convenience_charge?.toString() || '');
+    setDeposit(rate.deposit?.toString() || '');
     setIsDialogOpen(true);
   };
 
   const handleUpdate = async () => {
-    if (!fitoutCategoryId || !amount || !editingId) return;
+    if (!amount || !editingId) {
+      toast.error('Please enter amount');
+      return;
+    }
 
     try {
       setIsSubmitting(true);
       await apiClient.put(`/crm/admin/fitout_flat_rates/${editingId}.json`, {
         fitout_flat_rate: {
-          fitout_category_id: parseInt(fitoutCategoryId),
           fitout_type: categoryType,
           amount: parseFloat(amount),
           convenience_charge: convenienceCharge ? parseFloat(convenienceCharge) : 0,
@@ -343,8 +346,8 @@ export const FitoutCategoryRateTab: React.FC = () => {
         storageKey="fitout-category-rate-table"
         enableExport={true}
         exportFileName="fitout-category-rates"
-        searchTerm=""
-        onSearchChange={() => {}}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
         searchPlaceholder="Search rates..."
         pagination={true}
         pageSize={10}

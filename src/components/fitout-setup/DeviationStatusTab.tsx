@@ -109,7 +109,7 @@ export const DeviationStatusTab: React.FC = () => {
             name: statusName,
             color_code: selectedColor,
             position: parseInt(statusPosition),
-            fixed_state: fixedState === 'true',
+            fixed_state: fixedState,
             of_atype: 'deviation_details'
           }
         },
@@ -136,7 +136,7 @@ export const DeviationStatusTab: React.FC = () => {
     setEditingId(status.id);
     setStatusName(status.name);
     setStatusPosition(status.position.toString());
-    setFixedState(status.fixed_state === '1' || status.fixed_state === 'true' ? 'true' : 'false');
+    setFixedState(status.fixed_state);
     setSelectedColor(status.color_code);
     setIsDialogOpen(true);
   };
@@ -153,7 +153,7 @@ export const DeviationStatusTab: React.FC = () => {
             name: statusName,
             color_code: selectedColor,
             position: parseInt(statusPosition),
-            fixed_state: fixedState === 'true',
+            fixed_state: fixedState,
             of_atype: 'deviation_details'
          
         },
@@ -286,16 +286,26 @@ export const DeviationStatusTab: React.FC = () => {
         return <span className="font-medium">{item.position}</span>;
       case 'name':
         return <span className="font-medium">{item.name}</span>;
+      // case 'fixed_state':
+      //   return <span className="font-medium uppercase">{item.fixed_state}</span>;
       case 'fixed_state':
-        return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            item.fixed_state === '1' || item.fixed_state === 'true'
-              ? 'bg-green-100 text-green-800'
-              : 'bg-gray-100 text-gray-800'
-          }`}>
-            {item.fixed_state === '1' || item.fixed_state === 'true' ? 'True' : 'False'}
-          </span>
-        );
+  return (
+    <span className="font-medium">
+      {item.fixed_state
+        ? item.fixed_state.charAt(0).toUpperCase() + item.fixed_state.slice(1)
+        : ''}
+    </span>
+  );
+
+        // (
+        //   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+        //     item.fixed_state === '1' || item.fixed_state === 'true'
+        //       ? 'bg-green-100 text-green-800'
+        //       : 'bg-gray-100 text-gray-800'
+        //   }`}>
+        //     {item.fixed_state === '1' || item.fixed_state === 'true' ? 'True' : 'False'}
+        //   </span>
+        // );
       case 'color_code':
         return (
           <div className="flex items-center gap-2">

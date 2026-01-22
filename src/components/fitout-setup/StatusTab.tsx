@@ -59,6 +59,7 @@ export const StatusTab: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchStatuses();
@@ -67,8 +68,8 @@ export const StatusTab: React.FC = () => {
   const fetchStatuses = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/crm/admin/fitout_requests/fitout_statuses.json');
-      const statusesData = response.data?.data || [];
+      const response = await apiClient.get('/fitout_categories/get_complaint_statuses.json?q[of_atype_eq]=fitout_category');
+      const statusesData = response.data?.complaint_statuses || [];
       setStatuses(Array.isArray(statusesData) ? statusesData : []);
     } catch (error) {
       console.error('Error fetching statuses:', error);
@@ -275,8 +276,8 @@ export const StatusTab: React.FC = () => {
         storageKey="fitout-statuses-table"
         enableExport={true}
         exportFileName="fitout-statuses"
-        searchTerm=""
-        onSearchChange={() => {}}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
         searchPlaceholder="Search statuses..."
         pagination={true}
         pageSize={10}
