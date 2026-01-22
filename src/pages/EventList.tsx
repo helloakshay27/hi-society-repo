@@ -188,7 +188,7 @@ const Eventlist = () => {
     toast.dismiss();
     try {
       await axios.put(
-        `${baseURL}/events/${id}.json`,
+        `${baseURL}/crm/admin/events/${id}.json`,
         { event: { active: !currentStatus } },
         {
          headers: {
