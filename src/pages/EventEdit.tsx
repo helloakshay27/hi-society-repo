@@ -58,6 +58,7 @@ const EventEdit = () => {
     previewImage: [],
     is_important: "false",
     email_trigger_enabled: "false",
+    show_on_home: false,
     set_reminders_attributes: [],
     existingImages: [], // for previously uploaded images
     newImages: [], // for newly selected images
@@ -772,6 +773,7 @@ const EventEdit = () => {
           user_id: userIds,
           group_id: groupIds,
           shared: shared,
+          show_on_home: data.show_on_home === true || data.show_on_home === 1,
           attachfile: attachfileData,
           newImages: [],
           existingImages: existingImages,
@@ -1287,6 +1289,9 @@ const EventEdit = () => {
       data.append("event[rsvp_number]", formData.rsvp_number || "");
     }
 
+    // === SHOW ON HOME ===
+    data.append("event[show_on_home]", formData.show_on_home === true ? "1" : "0");
+
     // === REMOVED EXISTING IMAGES ===
     const originalIds = formData.existingImages?.map((img) => img.id) || [];
     const currentIds =
@@ -1336,6 +1341,7 @@ const EventEdit = () => {
           "to_time", // Skip to_time as we handle it above
           "event_date", // Skip event_date as it's combined into from_time
           "event_time", // Skip event_time as it's combined into from_time
+          "show_on_home", // Skip show_on_home as we handle it above
         ].includes(key)
       ) {
         return; // Skip handled keys
@@ -2048,8 +2054,8 @@ const EventEdit = () => {
                   <p className="text-sm text-gray-500">Display this event on the home page</p>
                 </div>
                 <Switch
-                  checked={visibility.showOnHomePage}
-                  onChange={(e) => setVisibility(prev => ({ ...prev, showOnHomePage: e.target.checked }))}
+                  checked={formData.show_on_home}
+                  onChange={(e) => setFormData(prev => ({ ...prev, show_on_home: e.target.checked }))}
                   sx={{
                     '& .MuiSwitch-switchBase.Mui-checked': {
                       color: '#C72030',

@@ -36,6 +36,7 @@ interface Event {
   from_time: string;
   to_time: string;
   active: boolean;
+  show_on_home: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -187,12 +188,11 @@ const Eventlist = () => {
     toast.dismiss();
     try {
       await axios.put(
-        `${baseURL}events/${id}.json`,
+        `${baseURL}/events/${id}.json`,
         { event: { active: !currentStatus } },
         {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+         headers: {
+            Authorization: getAuthHeader(),
           },
         }
       );
@@ -202,6 +202,44 @@ const Eventlist = () => {
     } catch (error) {
       console.error("Error toggling event status:", error);
       toast.error("Failed to update status.");
+    }
+  };
+
+  const handleToggleShowOnHome = async (id: number, currentStatus: boolean) => {
+    toast.dismiss();
+    try {
+      // Update local state immediately for better UX
+      setEvents(prevEvents => 
+        prevEvents.map(event => 
+          event.id === id 
+            ? { ...event, show_on_home: !currentStatus }
+            : event
+        )
+      );
+
+      await axios.put(
+        `${baseURL}/crm/admin/events/${id}.json`,
+        { event: { show_on_home: !currentStatus } },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: getAuthHeader(),
+          },
+        }
+      );
+
+      toast.success("Show on Home updated successfully!");
+    } catch (error) {
+      console.error("Error toggling show on home:", error);
+      toast.error("Failed to update Show on Home.");
+      // Revert the change on error
+      setEvents(prevEvents => 
+        prevEvents.map(event => 
+          event.id === id 
+            ? { ...event, show_on_home: currentStatus }
+            : event
+        )
+      );
     }
   };
 
@@ -245,6 +283,7 @@ const Eventlist = () => {
     { key: "event_at", label: "Event At", sortable: true },
     { key: "from_time", label: "Event Date", sortable: false },
     { key: "to_time", label: "Event Time", sortable: false },
+    { key: "show_on_home", label: "Show on Home", sortable: false },
     { key: "active", label: "Status", sortable: false },
   ];
 
@@ -289,8 +328,23 @@ const Eventlist = () => {
         return formatDateOnly(item.from_time);
       case "to_time":
         return formatTimeOnly(item.from_time);
+      case "show_on_home":
+        return (
+          <Switch
+            checked={item.show_on_home || false}
+            onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
+            sx={{
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "#C72030",
+              },
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                backgroundColor: "#C72030",
+              },
+            }}
+          />
+        );
       case "active":
-        return eventPermissions.destroy === "true" ? (
+        return (
           <Switch
             checked={item.active || false}
             onChange={() => handleToggle(item.id, item.active)}
@@ -303,10 +357,6 @@ const Eventlist = () => {
               },
             }}
           />
-        ) : (
-          <span className="text-sm text-gray-500">
-            {item.active ? "Active" : "Inactive"}
-          </span>
         );
       default:
         return (item[columnKey as keyof Event] as React.ReactNode) ?? "-";

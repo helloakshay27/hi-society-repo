@@ -52,6 +52,7 @@ const EventCreate = () => {
     event_images_9_by_16: [],
     event_images_3_by_2: [],
     event_images_16_by_9: [],
+    show_on_home: false,
   });
 
   console.log("formData", formData);
@@ -730,6 +731,7 @@ const EventCreate = () => {
     formDataToSend.append("event[shared]", formData.shared === "all" ? "0" : "1");
     formDataToSend.append("event[is_important]", formData.is_important === true ? "1" : "0");
     formDataToSend.append("event[email_trigger_enabled]", formData.email_trigger_enabled === true ? "1" : "0");
+    formDataToSend.append("event[show_on_home]", formData.show_on_home === true ? "1" : "0");
     formDataToSend.append("event[active]", "true");
 
     // Add swusers (individual users) if shared with individuals
@@ -878,6 +880,7 @@ const EventCreate = () => {
         event_images_9_by_16: [],
         event_images_3_by_2: [],
         event_images_16_by_9: [],
+        show_on_home: false,
       });
       setSelectedChannelPartners([]);
 
@@ -1874,8 +1877,8 @@ const EventCreate = () => {
                   <p className="text-sm text-gray-500">Display this event on the home page</p>
                 </div>
                 <Switch
-                  checked={visibility.showOnHomePage}
-                  onChange={(e) => setVisibility(prev => ({ ...prev, showOnHomePage: e.target.checked }))}
+                  checked={formData.show_on_home}
+                  onChange={(e) => setFormData(prev => ({ ...prev, show_on_home: e.target.checked }))}
                   sx={{
                     '& .MuiSwitch-switchBase.Mui-checked': {
                       color: '#C72030',
