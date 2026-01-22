@@ -966,6 +966,8 @@ const ProjectDetailsEdit = () => {
 
         const project = response.data;
 
+        console.log('Project configurations from API:', project.configurations);
+
         // Fetch dropdown options first to match property_type and construction_status text to IDs
         const [propertyTypesRes, statusRes] = await Promise.all([
           axios.get(getFullUrl('/property_types.json')),
@@ -1032,9 +1034,14 @@ const ProjectDetailsEdit = () => {
           SFDC_Project_Id: project.SFDC_Project_Id || "",
           Project_Construction_Status: project.Project_Construction_Status || project.project_construction_status || "",
           Construction_Status_id: matchedStatus?.id || project.construction_status_id || "",
-          Configuration_Type: Array.isArray(project.configuration_type) 
-            ? project.configuration_type 
-            : (project.configurations?.map(c => c.name) || []),
+          Configuration_Type: Array.isArray(project.configurations) 
+            ? project.configurations.map(c => ({
+                id: c.id,
+                name: c.name
+              })) 
+            : (Array.isArray(project.configuration_type) 
+              ? project.configuration_type 
+              : []),
           Project_Name: project.project_name || "",
           project_address: project.project_address || "",
           Project_Description: project.project_description || "",
@@ -1149,6 +1156,10 @@ const ProjectDetailsEdit = () => {
           project_2d_image_3_by_2: normalizeImageData(project.project_2d_image_3_by_2),
           project_2d_image_9_by_16: normalizeImageData(project.project_2d_image_9_by_16),
         });
+
+        console.log('Configuration_Type set to formData:', Array.isArray(project.configurations) 
+          ? project.configurations.map(c => ({ id: c.id, name: c.name })) 
+          : []);
 
         setPlans(project.plans || []);
         
@@ -1359,7 +1370,9 @@ const ProjectDetailsEdit = () => {
     axios
       .get(getFullUrl('/configuration_setups.json'))
       .then((response) => {
-        setConfigurations(response.data.filter((config) => config.active === true));
+        const activeConfigs = response.data.filter((config) => config.active === true);
+        console.log('Configurations loaded:', activeConfigs);
+        setConfigurations(activeConfigs);
       })
       .catch((error) => {
         console.error("Error fetching configurations:", error);
@@ -2273,8 +2286,14 @@ const ProjectDetailsEdit = () => {
           data.append("project[Amenities]", amenityNames);
         }
       } else if (key === "Configuration_Type" && Array.isArray(value) && value.length > 0) {
-        // Convert array to comma-separated string for backend
-        data.append("project[Configuration_Type]", value.join(", "));
+        // Convert configuration objects array to comma-separated string of names
+        const configNames = value
+          .map(c => c.name || c)
+          .filter((name) => name !== null && name !== undefined)
+          .join(",");
+        if (configNames) {
+          data.append("project[Configuration_Type]", configNames);
+        }
       } else if (key === "Specifications" && Array.isArray(value) && value.length > 0) {
         value.forEach((spec) => {
           if (spec) {
@@ -2558,41 +2577,64 @@ const ProjectDetailsEdit = () => {
                 </MUISelect>
               </FormControl>
 
-              <FormControl
-                fullWidth
-                variant="outlined"
-                sx={{ "& .MuiInputBase-root": fieldStyles }}
-              >
-                <InputLabel shrink>Configuration Type</InputLabel>
-                <MUISelect
-                  multiple
-                  value={formData.Configuration_Type}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      Configuration_Type: e.target.value as string[],
-                    }))
-                  }
-                  label="Configuration Type"
-                  notched
-                  displayEmpty
-                  renderValue={(selected) => {
-                    if ((selected as string[]).length === 0) {
-                      return "Select Configuration";
-                    }
-                    return (selected as string[]).join(", ");
-                  }}
-                >
-                  <MenuItem value="" disabled>
-                    Select Configuration
-                  </MenuItem>
-                  {configurations.map((config) => (
-                    <MenuItem key={config.id} value={config.name}>
-                      {config.name}
-                    </MenuItem>
-                  ))}
-                </MUISelect>
-              </FormControl>
+              <div className="w-full">
+                <div className="relative">
+                  <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
+                    Configuration Type
+                  </label>
+                  <Select
+                    isMulti
+                    value={Array.isArray(formData.Configuration_Type)
+                      ? formData.Configuration_Type.map((c) => ({
+                          value: typeof c?.id === 'string' ? parseInt(c.id, 10) : c?.id,
+                          label: c?.name || '',
+                        })).filter((opt) => opt.value && opt.label)
+                      : []}
+                    onChange={(selected, actionMeta) => {
+                      // Handle adding new configurations
+                      if (actionMeta.action === 'select-option') {
+                        const newConfig = actionMeta.option;
+                        const config = configurations.find((c) => c.id === newConfig.value);
+                        if (config) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            Configuration_Type: [...prev.Configuration_Type, { id: config.id, name: config.name }],
+                          }));
+                        }
+                        return;
+                      }
+                      
+                      // Handle removal
+                      if (actionMeta.action === 'remove-value' || actionMeta.action === 'pop-value') {
+                        setFormData((prev) => ({
+                          ...prev,
+                          Configuration_Type: prev.Configuration_Type.filter(
+                            (c) => c.id !== actionMeta.removedValue.value
+                          ),
+                        }));
+                        return;
+                      }
+
+                      // Handle clear all
+                      if (actionMeta.action === 'clear') {
+                        setFormData((prev) => ({
+                          ...prev,
+                          Configuration_Type: [],
+                        }));
+                      }
+                    }}
+                    options={configurations.map((c) => ({ value: c.id, label: c.name }))}
+                    styles={customStyles}
+                    components={{
+                      MultiValue: CustomMultiValue,
+                    }}
+                    closeMenuOnSelect={false}
+                    placeholder="Select Configuration..."
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                  />
+                </div>
+              </div>
                <TextField
                 label="Project Name"
                 placeholder="Enter Project Name"
@@ -2741,19 +2783,22 @@ const ProjectDetailsEdit = () => {
                 placeholder="Enter Size in Sq. Mtr."
                 type="number"
                 value={formData.Project_Size_Sq_Mtr}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    Project_Size_Sq_Mtr: e.target.value,
-                  }))
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || parseFloat(value) >= 0) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      Project_Size_Sq_Mtr: value,
+                    }));
+                  }
+                }}
                 fullWidth
                 variant="outlined"
                 slotProps={{
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0 }
+                  htmlInput: { min: 0, step: "any" }
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -2765,19 +2810,22 @@ const ProjectDetailsEdit = () => {
                 placeholder="Enter Size in Sq. Ft."
                 type="number"
                 value={formData.Project_Size_Sq_Ft}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    Project_Size_Sq_Ft: e.target.value,
-                  }))
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || parseFloat(value) >= 0) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      Project_Size_Sq_Ft: value,
+                    }));
+                  }
+                }}
                 fullWidth
                 variant="outlined"
                 slotProps={{
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0 }
+                  htmlInput: { min: 0, step: "any" }
                 }}
                 InputProps={{
                   sx: fieldStyles,
