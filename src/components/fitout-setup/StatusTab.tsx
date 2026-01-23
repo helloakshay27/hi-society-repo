@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/select';
 import { EnhancedTable } from '../enhanced-table/EnhancedTable';
 import { apiClient } from '@/utils/apiClient';
+import { Switch } from '@mui/material';
+import { fetchCategories } from '@/services/wasteGenerationAPI';
 
 interface Status {
   id: number;
@@ -109,6 +111,21 @@ export const StatusTab: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+   const handleToggle = async (id: number, currentStatus: boolean) => {
+      try {
+        await apiClient.put(`/crm/admin/fitout_categories/modify_complaint_status.json`, {
+          complaint_statuses: {
+            active: !currentStatus,
+          }
+        });
+        toast.success(`Category ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+        fetchCategories(); // Refresh the list
+      } catch (error) {
+        console.error('Error toggling category status:', error);
+        toast.error('Failed to update category status');
+      }
+    };
 
   const handleEdit = useCallback((status: Status) => {
     setEditingId(status.id);
@@ -217,6 +234,13 @@ export const StatusTab: React.FC = () => {
         draggable: true,
         defaultVisible: true,
       },
+      {
+        key: 'active',
+        label: 'Status',
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      }
     ],
     []
   );
@@ -262,6 +286,21 @@ export const StatusTab: React.FC = () => {
         );
       default:
         return <span>{String(item[columnKey as keyof Status] || '-')}</span>;
+        case 'active':
+        return (
+          <Switch
+            checked={item.active || false}
+            onChange={() => handleToggle(item.id, item.active)}
+            sx={{
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "#C72030",
+              },
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                backgroundColor: "#C72030",
+              },
+            }}
+          />
+        );
     }
   }, [handleDelete, handleEdit]);
 

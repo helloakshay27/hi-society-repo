@@ -540,6 +540,18 @@ const FitoutRequestAdd: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
               />
+                <TextField
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Description"
+              fullWidth
+              // multiline
+              // rows={3}
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+            />
 
               <TextField
                 label="Expiry Date"
@@ -564,10 +576,7 @@ const FitoutRequestAdd: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <TextField
+                <TextField
                 label="Contractor Name"
                 name="contactor_name"
                 value={formData.contactor_name}
@@ -591,19 +600,8 @@ const FitoutRequestAdd: React.FC = () => {
                 InputProps={{ sx: fieldStyles }}
                 inputProps={{ maxLength: 10 }}             
               />
-              <TextField
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Description"
-              fullWidth
-              // multiline
-              // rows={3}
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-            />
             </div>
+
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormControl fullWidth variant="outlined">
