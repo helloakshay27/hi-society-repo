@@ -1535,14 +1535,34 @@ const ProjectDetailsEdit = () => {
       videos: ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"],
       plans: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_qrcode_image: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-      brochure: ["application/pdf"],
+      brochure: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      ],
       project_ppt: ["application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation"],
       project_emailer_templetes: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
       KnwYrApt_Technical: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
       project_creatives: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       cover_images: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_creative_generics: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-      project_creative_offers: ["application/pdf"],
+      project_creative_offers: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      ],
       project_interiors: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_exteriors: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_layout: [
@@ -1673,11 +1693,11 @@ const ProjectDetailsEdit = () => {
 
       newFiles.forEach((file) => {
         if (!allowedTypes.project_creative_offers.includes(file.type)) {
-          toast.error("Only PDF files are allowed for project offers.");
+          toast.error("Only images, PDFs, DOCs, and PPTs are allowed for project offers.");
           return;
         }
         if (file.size > MAX_SIZES.project_creative_offers) {
-          toast.error("PDF size must be less than 3MB.");
+          toast.error("File size must be less than 3MB.");
           return;
         }
         validFiles.push(file);
@@ -1793,7 +1813,7 @@ const ProjectDetailsEdit = () => {
 
       newFiles.forEach((file) => {
         if (!allowedTypes.brochure.includes(file.type)) {
-          toast.error("Only PDF files are allowed for brochure.");
+          toast.error("Only images, PDFs, DOCs, and PPTs are allowed for brochure.");
           return;
         }
         if (!validateFile(file, MAX_SIZES[name])) return;
@@ -2081,14 +2101,14 @@ const ProjectDetailsEdit = () => {
       totalValidGalleryImages += images.length;
     }
 
-    if (totalValidGalleryImages > 0 && totalValidGalleryImages % 3 !== 0) {
-      const remainder = totalValidGalleryImages % 3;
-      const imagesNeeded = 3 - remainder;
-      toast.error(`Upload ${imagesNeeded} more images to make multiple of 3.`);
-      setLoading(false);
-      setIsSubmitting(false);
-      return;
-    }
+    // if (totalValidGalleryImages > 0 && totalValidGalleryImages % 3 !== 0) {
+    //   const remainder = totalValidGalleryImages % 3;
+    //   const imagesNeeded = 3 - remainder;
+    //   toast.error(`Upload ${imagesNeeded} more images to make multiple of 3.`);
+    //   setLoading(false);
+    //   setIsSubmitting(false);
+    //   return;
+    // }
 
     const data = new FormData();
     data.append("project[id]", projectId || "");
@@ -2482,7 +2502,7 @@ const ProjectDetailsEdit = () => {
               >
                 <Building2 size={16} color="#C72030" />
               </span>
-              Basic Information njjnijn
+              Basic Information
             </h2>
           </div>
          <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
@@ -4857,11 +4877,11 @@ const ProjectDetailsEdit = () => {
               </div>
 
               {/* {baseURL !== "https://dev-panchshil-super-app.lockated.com/" && baseURL !== "https://rustomjee-live.lockated.com/" && ( */}
-              <div className="mb-6">
-                {/* Header */}
+              {/* <div className="mb-6">
+            
                 <div className="flex justify-between items-center mb-4">
                     <h5 className="section-heading inline-flex items-center gap-1">
-                    Layouts & Floor Plans{" "}
+                    Floor Plans{" "}
                     <span
                       className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowTooltipFloor(true)}
@@ -4882,20 +4902,12 @@ const ProjectDetailsEdit = () => {
                     type="button"
                     onClick={() => setShowFloorPlanModal(true)}
                   >
-                    {/* <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width={20}
-                      height={20}
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                    </svg> */}
+                   
                     <span>Add</span>
                   </button>
                 </div>
 
-                {/* Upload Modal */}
+             
                 {showFloorPlanModal && (
                   <ProjectBannerUpload
                     onClose={() => setShowFloorPlanModal(false)}
@@ -4909,7 +4921,7 @@ const ProjectDetailsEdit = () => {
                   />
                 )}
 
-                {/* Table */}
+           
                 <div className="rounded-lg border border-gray-200 overflow-hidden">
                   <table className="w-full border-separate">
                     <thead>
@@ -4989,7 +5001,7 @@ const ProjectDetailsEdit = () => {
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </div> */}
               {/* )} */}
               <div className="mb-6">
                 {/* Header */}
@@ -5031,7 +5043,7 @@ const ProjectDetailsEdit = () => {
                     className="form-control"
                     type="file"
                     name="brochure"
-                    accept=".pdf,.docx"
+                    accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
                     onChange={(e) =>
                       handleFileUpload("brochure", e.target.files)
                     }
@@ -5177,11 +5189,11 @@ const ProjectDetailsEdit = () => {
                         </table>
                       </div>
                     </div> */}
-                    {/* <div className="mb-6">
+                    <div className="mb-6">
                      
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
-                          Project Layout{" "}
+                          Layouts & Floor Plans{" "}
                           <span
                             className="relative inline-block cursor-pointer"
                             onMouseEnter={() => setShowTooltipLayout(true)}
@@ -5212,7 +5224,7 @@ const ProjectDetailsEdit = () => {
                         className="form-control"
                         type="file"
                         name="project_layout"
-                        accept="image/*"
+                         accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
                         onChange={(e) =>
                           handleFileUpload("project_layout", e.target.files)
                         }
@@ -5291,7 +5303,7 @@ const ProjectDetailsEdit = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div> */}
+                    </div>
                     {/* <div className="mb-6">
                       
                       <div className="flex justify-between items-center mb-4">
@@ -5580,7 +5592,7 @@ const ProjectDetailsEdit = () => {
                           className="form-control"
                           type="file"
                           name="project_creative_offers"
-                          accept="application/pdf"
+                          accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
                           onChange={(e) =>
                             handleFileUpload(
                               "project_creative_offers",
@@ -6237,7 +6249,7 @@ const ProjectDetailsEdit = () => {
                           </tbody>
                         </table>
                       </div>
-                       <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-12">
+                       {/* <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-12">
                                              <TextField
                                                label="Video Preview Image URL"
                                                placeholder="Enter Video URL"
@@ -6255,7 +6267,7 @@ const ProjectDetailsEdit = () => {
                                                  sx: fieldStyles,
                                                }}
                                              />
-                                           </div>
+                                           </div> */}
                     </div>
                   </>
                 {/* // )} */}
