@@ -33,6 +33,8 @@ const EventCreate = () => {
     from_time: "",
     to_time: "",
     rsvp_action: "",
+    rsvp_name: "",
+    rsvp_number: "",
     description: "",
     publish: "",
     user_id: [],
@@ -730,9 +732,18 @@ const EventCreate = () => {
     formDataToSend.append("event[to_time]", formData.to_time || "");
     formDataToSend.append("event[shared]", formData.shared === "all" ? "0" : "1");
     formDataToSend.append("event[is_important]", formData.is_important === true ? "1" : "0");
-    formDataToSend.append("event[email_trigger_enabled]", formData.email_trigger_enabled === true ? "1" : "0");
+    formDataToSend.append("event[email_trigger_enabled]", formData.email_trigger_enabled === "true" ? "1" : "0");
     formDataToSend.append("event[show_on_home]", formData.show_on_home === true ? "1" : "0");
     formDataToSend.append("event[active]", "true");
+
+    // === RSVP FIELDS ===
+    if (formData.rsvp_action === "1") {
+      formDataToSend.append("event[rsvp_action]", "1");
+      formDataToSend.append("event[rsvp_name]", formData.rsvp_name || "");
+      formDataToSend.append("event[rsvp_number]", formData.rsvp_number || "");
+    } else {
+      formDataToSend.append("event[rsvp_action]", "0");
+    }
 
     // Add swusers (individual users) if shared with individuals
     if (formData.shared === "individual" && Array.isArray(formData.user_id)) {
@@ -861,6 +872,8 @@ const EventCreate = () => {
         from_time: "",
         to_time: "",
         rsvp_action: "",
+        rsvp_name: "",
+        rsvp_number: "",
         description: "",
         publish: "",
         user_id: [],

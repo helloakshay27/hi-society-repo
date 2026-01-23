@@ -1285,8 +1285,11 @@ const EventEdit = () => {
 
     // === RSVP FIELDS ===
     if (formData.rsvp_action === "1") {
+      data.append("event[rsvp_action]", "1");
       data.append("event[rsvp_name]", formData.rsvp_name || "");
       data.append("event[rsvp_number]", formData.rsvp_number || "");
+    } else {
+      data.append("event[rsvp_action]", "0");
     }
 
     // === SHOW ON HOME ===
