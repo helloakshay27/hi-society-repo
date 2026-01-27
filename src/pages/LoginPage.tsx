@@ -392,9 +392,13 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       
       toast.success(`Welcome back, ${response.firstname}! Login successful.`);
 
-      // Navigate directly to Hi Society dashboard
+      // Navigate based on domain
+      const redirectPath = isHiSocietySite 
+        ? "/fitout/requests" 
+        : "/maintenance/project-details-list";
+      
       setTimeout(() => {
-        navigate("/maintenance/project-details-list", { replace: true });
+        navigate(redirectPath, { replace: true });
       }, 500);
     } catch (error: any) {
       console.error("Login error:", error);
