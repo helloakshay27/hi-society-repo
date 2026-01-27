@@ -75,7 +75,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                 console.log("✅ Fitout request loaded:", response.data);
             } catch (err) {
                 console.error("❌ Error fetching fitout request:", err);
-                setError("Failed to load fitout request details");
+                setError(err.response?.data?.error || "Failed to load fitout request details");
             } finally {
                 setLoading(false);
             }
