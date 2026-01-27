@@ -845,6 +845,7 @@ import FitoutRequestAdd from "./pages/FitoutRequestAdd";
 import { setupMemberRoutes } from "./routes/setupMemberRoutes";
 import { ViewUserPage } from "./pages/ViewUserPage";
 import FioutMobileView from "./pages/FioutMobileView";
+import FitoutRequestDetailsPageMobile from "./pages/FitoutRequestDetailsPageMobile";
 // import RouteLogger from "./components/RouteLogger";
 
 const queryClient = new QueryClient();
@@ -1484,16 +1485,16 @@ function App() {
                     path="/master/user/occupant-users/edit/:id"
                     element={<EditOccupantUserPage />}
                   />
-                  
+
                   {/* Setup - Manage Users Route */}
                   <Route
                     path="/settings/manage-users"
                     element={<ManageUsersPage />}
                   />
 
-                  <Route 
-                  path="/settings/manage-users/view-user/:id"
-                  element={<ViewUserPage />}
+                  <Route
+                    path="/settings/manage-users/view-user/:id"
+                    element={<ViewUserPage />}
                   />
                   {/* <Route
                     path="/settings/manage-users/add"
@@ -1534,7 +1535,7 @@ function App() {
                     element={<CommunicationSetupDashboard />}
                   />
 
-                 
+
 
                   {/* <Route
                     path="/communication/events"
@@ -2618,11 +2619,15 @@ function App() {
                   path="/mo/:assetId"
                   element={<MobileOwnerCostAssetPage />}
                 />
+                <Route
+                  path="/fitout-details-mobile/:id"
+                  element={<FitoutRequestDetailsPageMobile />}
+                />
                 {/* QR Test Route */}
                 <Route path="/qr-test" element={<QRTestPage />} />
 
                 {/* Mail Inbound Routes */}
-                
+
               </Routes>
               <Toaster />
               <SonnerToaster
