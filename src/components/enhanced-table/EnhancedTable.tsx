@@ -1535,7 +1535,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                   >
                     {renderActions && (
                       <TableHead
-                        className="bg-[#f6f4ee] text-center w-16 min-w-16 sticky top-0"
+                        className="bg-[#f6f4ee] text-center w-16 min-w-16 sticky top-0 text-xs font-medium"
                         data-actions
                       >
                         <div className="flex justify-center items-center text-center">
@@ -1545,7 +1545,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                     )}
                     {selectable && (
                       <TableHead
-                        className="bg-[#f6f4ee] w-12 min-w-12 text-center sticky top-0"
+                        className="bg-[#f6f4ee] w-12 min-w-12 text-center sticky top-0 text-xs font-medium"
                         data-checkbox
                       >
                         <div className="flex justify-center">
@@ -1575,7 +1575,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                         onSort={() =>
                           column.sortable !== false && handleSort(column.key)
                         }
-                        className="bg-[#f6f4ee] text-left text-black min-w-32 sticky top-0"
+                        className="bg-[#f6f4ee] text-left text-black min-w-32 sticky top-0 text-xs font-medium"
                       >
                         {column.label}
                       </SortableColumnHeader>
@@ -1738,7 +1738,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                       >
                         {renderActions && (
                           <TableCell
-                            className="p-4 text-center w-16 min-w-16 align-middle"
+                            className="p-4 text-center w-16 min-w-16 align-middle text-[10px]"
                             data-actions
                           >
                             <div className="flex justify-center items-center gap-2">
@@ -1748,7 +1748,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                         )}
                         {selectable && (
                           <TableCell
-                            className="p-4 w-12 min-w-12 text-center"
+                            className="p-4 w-12 min-w-12 text-center text-[10px]"
                             data-checkbox
                           >
                             <div className="flex justify-center">
@@ -1775,7 +1775,7 @@ export function EnhancedTable<T extends Record<string, any>>({
                           return (
                             <TableCell
                               key={column.key}
-                              className="p-4 text-left min-w-32"
+                              className="p-4 text-left min-w-32 text-[10px]"
                             >
                               {cellContent}
                             </TableCell>

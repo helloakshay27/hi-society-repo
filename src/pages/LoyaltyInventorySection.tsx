@@ -176,6 +176,9 @@ export const LoyaltyInventorySection = () => {
                             />
                         </svg>
                     }
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    iconRounded={true}
+                    valueColor="text-[#C72030]"
                 />
                 <StatsCard
                     title="In Stock"
@@ -195,6 +198,9 @@ export const LoyaltyInventorySection = () => {
                             />
                         </svg>
                     }
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    iconRounded={true}
+                    valueColor="text-[#C72030]"
                 />
                 <StatsCard
                     title="Out of Stock"
@@ -214,6 +220,9 @@ export const LoyaltyInventorySection = () => {
                             />
                         </svg>
                     }
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    iconRounded={true}
+                    valueColor="text-[#C72030]"
                 />
             </div>
 

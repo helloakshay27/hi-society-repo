@@ -178,6 +178,9 @@ export const WalletManagement = () => {
                                     />
                                 </svg>
                             }
+                            className="cursor-pointer hover:shadow-md transition-shadow"
+                            iconRounded={true}
+                            valueColor="text-[#C72030]"
                         />
                         <StatsCard
                             title="Total Recharges"
@@ -197,6 +200,9 @@ export const WalletManagement = () => {
                                     />
                                 </svg>
                             }
+                            className="cursor-pointer hover:shadow-md transition-shadow"
+                            iconRounded={true}
+                            valueColor="text-[#C72030]"
                         />
                         <StatsCard
                             title="EMails"
@@ -216,6 +222,9 @@ export const WalletManagement = () => {
                                     />
                                 </svg>
                             }
+                            className="cursor-pointer hover:shadow-md transition-shadow"
+                            iconRounded={true}
+                            valueColor="text-[#C72030]"
                         />
                         <StatsCard
                             title="Closing Balance"
@@ -235,6 +244,9 @@ export const WalletManagement = () => {
                                     />
                                 </svg>
                             }
+                            className="cursor-pointer hover:shadow-md transition-shadow"
+                            iconRounded={true}
+                            valueColor="text-[#C72030]"
                         />
                     </div>
 
@@ -342,10 +354,78 @@ export const WalletManagement = () => {
                                         <SelectValue placeholder="Select payment method" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="bank-1234">Bank Account *****1234</SelectItem>
-                                        <SelectItem value="bank-5678">Bank Account *****5678</SelectItem>
-                                        <SelectItem value="upi">UPI</SelectItem>
-                                        <SelectItem value="card">Credit/Debit Card</SelectItem>
+                                        <SelectItem value="bank-1234">
+                                            <span className="flex items-center gap-2">
+                                                <svg
+                                                    className="w-4 h-4 "
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                                                    />
+                                                </svg>
+                                                Bank Account *****1234
+                                            </span>
+                                        </SelectItem>
+                                        <SelectItem value="bank-5678">
+                                            <span className="flex items-center gap-2">
+                                                <svg
+                                                    className="w-4 h-4 "
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                                                    />
+                                                </svg>
+                                                Bank Account *****5678
+                                            </span>
+                                        </SelectItem>
+                                        <SelectItem value="upi">
+                                            <span className="flex items-center gap-2">
+                                                <svg
+                                                    className="w-4 h-4 "
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                                                    />
+                                                </svg>
+                                                UPI
+                                            </span>
+                                        </SelectItem>
+                                        <SelectItem value="card">
+                                            <span className="flex items-center gap-2">
+                                                <svg
+                                                    className="w-4 h-4 "
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                                                    />
+                                                </svg>
+                                                Credit/Debit Card
+                                            </span>
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -427,17 +507,13 @@ export const WalletManagement = () => {
                             <div className="space-y-2 bg-[#eae6dd] p-4">
                                 <div className="flex items-start gap-3">
                                     <Bell className="w-5 h-5 text-[#c72030] mt-0.5" />
-                                    <p className="text-sm font-medium text-[#c72030]">
-                                        Alert Recipients
-                                    </p>
                                     <div>
-                                        <Input
-                                            type="text"
-                                            value={alertRecipients}
-                                            onChange={(e) => setAlertRecipients(e.target.value)}
-                                            className="bg-transparent border-none p-0 h-auto text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
-                                            placeholder="Enter email addresses separated by commas"
-                                        />
+                                        <p className="text-sm font-medium text-[#c72030] mb-1">
+                                            Alert Recipients
+                                        </p>
+                                        <p className="text-sm text-[#1A1A1A]">
+                                            {alertRecipients}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
