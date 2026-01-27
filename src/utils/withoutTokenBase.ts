@@ -65,8 +65,8 @@ baseClient.interceptors.request.use(
 
       // Hi-Society specific hosts and their API base URLs (strict equality check)
       const isHiSocietyWebHost = hostname === "web.hisociety.lockated.com";
-      const isHiSocietyUIHost = hostname === "ui-hisociety.lockated.com" ;
-      const isHiSocietyUATHost = hostname === "uat-hi-society.lockated.com"|| hostname === "localhost";
+      const isHiSocietyUIHost = hostname === "ui-hisociety.lockated.com";
+      const isHiSocietyUATHost = hostname === "uat-hi-society.lockated.com" || hostname === "localhost";
       const isHiSocietySite = isHiSocietyWebHost || isHiSocietyUIHost || isHiSocietyUATHost;
 
       // Map hi-society host -> backend/base API URL
@@ -83,7 +83,7 @@ baseClient.interceptors.request.use(
         if (organizationId) {
           apiUrl = `${hiSocietyApiBase}/api/users/get_organizations_by_email.json?org_id=${organizationId}`;
           console.log("🔍 Hi-Society using organizationId:", organizationId);
-        } else if (orgId) {
+        } else if (orgId || 10) {
           apiUrl = `${hiSocietyApiBase}/api/users/get_organizations_by_email.json?org_id=${orgId}`;
           console.log("🔍 Hi-Society using orgId:", orgId);
         } else if (email) {
