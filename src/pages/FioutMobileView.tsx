@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
+import { baseClient } from "@/utils/withoutTokenBase";
 
 export type SurveyOption = { id: string | number; label: string };
 
@@ -18,29 +19,178 @@ interface FioutMobileViewProps {
   onSubmit?: (answers: Record<string, string>, comments: string) => void;
 }
 
-const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSrc, onSubmit }) => {
+const FioutMobileView: React.FC<FioutMobileViewProps> = ({
+  logoSrc,
+  backgroundSrc,
+  onSubmit,
+}) => {
   // const defaultLogo = 'https://www.persistent.com/wp-content/themes/persistent/dist/images/Persistent-Header-Logo-Black_460dd8e4.svg';
-  const defaultBackground = 'https://lockated-public.s3.ap-south-1.amazonaws.com/attachfiles/documents/8412446/original/4.YOO_Villas_Villa_2_Vintage_Living_3.png';
+  const defaultBackground =
+    "https://lockated-public.s3.ap-south-1.amazonaws.com/attachfiles/documents/8412446/original/4.YOO_Villas_Villa_2_Vintage_Living_3.png";
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [comments, setComments] = useState('');
-  const [categories, setCategories] = useState<{ name: string; questions: SurveyQuestion[] }[]>([]);
+  const [comments, setComments] = useState("");
+  const [categories, setCategories] = useState<
+    { name: string; questions: SurveyQuestion[] }[]
+  >([]);
   // Track selected files per question id
   const [filesByQid, setFilesByQid] = useState<Record<string, File[]>>({});
+  // Track signatures per question id (as data URLs)
+  const [signaturesByQid, setSignaturesByQid] = useState<
+    Record<string, string>
+  >({});
 
-  const isMobile = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+  const isMobile =
+    typeof navigator !== "undefined" &&
+    /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+
+  // Signature Canvas Component
+  const SignatureCanvas: React.FC<{
+    qid: string | number;
+    value?: string;
+    onChange: (dataUrl: string) => void;
+  }> = ({ qid, value, onChange }) => {
+    const canvasRef = React.useRef<HTMLCanvasElement>(null);
+    const [isDrawing, setIsDrawing] = React.useState(false);
+
+    React.useEffect(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      // Set canvas size
+      canvas.width = canvas.offsetWidth;
+      canvas.height = 200;
+
+      // Load existing signature if available
+      if (value) {
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0);
+        img.src = value;
+      } else {
+        // Clear canvas with white background
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }, [value]);
+
+    const startDrawing = (
+      e:
+        | React.MouseEvent<HTMLCanvasElement>
+        | React.TouchEvent<HTMLCanvasElement>
+    ) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      setIsDrawing(true);
+      const rect = canvas.getBoundingClientRect();
+      const x =
+        "touches" in e
+          ? e.touches[0].clientX - rect.left
+          : e.clientX - rect.left;
+      const y =
+        "touches" in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    };
+
+    const draw = (
+      e:
+        | React.MouseEvent<HTMLCanvasElement>
+        | React.TouchEvent<HTMLCanvasElement>
+    ) => {
+      if (!isDrawing) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x =
+        "touches" in e
+          ? e.touches[0].clientX - rect.left
+          : e.clientX - rect.left;
+      const y =
+        "touches" in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.stroke();
+    };
+
+    const stopDrawing = () => {
+      if (!isDrawing) return;
+      setIsDrawing(false);
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      onChange(canvas.toDataURL("image/png"));
+    };
+
+    const clearSignature = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      onChange("");
+    };
+
+    return (
+      <div>
+        <canvas
+          ref={canvasRef}
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={stopDrawing}
+          className="w-full border-2 border-gray-300 rounded cursor-crosshair bg-white"
+          style={{ touchAction: "none" }}
+        />
+        <button
+          type="button"
+          onClick={clearSignature}
+          className="mt-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
+        >
+          Clear Signature
+        </button>
+      </div>
+    );
+  };
 
   type FitoutSnagOption = { id: number | string; qname?: string };
-  type FitoutSnagQuestion = { id: number | string; qtype: string; descr: string; quest_mandatory?: boolean; snag_quest_options?: FitoutSnagOption[] };
-  type FitoutItem = { id?: number | string; name?: string; snag_quest_maps: Array<{ id?: number | string; snag_question: FitoutSnagQuestion }> };
+  type FitoutSnagQuestion = {
+    id: number | string;
+    qtype: string;
+    descr: string;
+    quest_mandatory?: boolean;
+    snag_quest_options?: FitoutSnagOption[];
+  };
+  type FitoutItem = {
+    id?: number | string;
+    name?: string;
+    snag_quest_maps: Array<{
+      id?: number | string;
+      snag_question: FitoutSnagQuestion;
+    }>;
+  };
 
   const adaptFromFitout = useCallback((payload: FitoutItem[]) => {
     return (payload || []).map((item) => ({
-      name: item.name || 'Category',
+      name: item.name || "Category",
       questions: (item.snag_quest_maps || []).map((entry) => {
         const s = entry.snag_question;
         let qtype = s.qtype;
-        if (qtype === 'text') qtype = 'inputbox';
+        if (qtype === "text") qtype = "inputbox";
         return {
           id: s.id,
           // keep a reference to snag_quest_map_id so POST can use it
@@ -48,42 +198,75 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
           title: s.descr,
           required: !!s.quest_mandatory,
           qtype,
-          options: (s.snag_quest_options || []).map((o) => ({ id: o.id, label: o.qname || String(o.id) })),
+          options: (s.snag_quest_options || []).map((o) => ({
+            id: o.id,
+            label: o.qname || String(o.id),
+          })),
         } as SurveyQuestion;
       }),
     }));
   }, []);
 
-  const MobileDatePicker: React.FC<{ value: string; onChange: (v: string) => void }> = ({ value, onChange }) => {
-    const split = (value || '').split('-');
-    const [y, m, d] = split.length === 3 ? [split[0], split[1], split[2]] : ['', '', ''];
+  const MobileDatePicker: React.FC<{
+    value: string;
+    onChange: (v: string) => void;
+  }> = ({ value, onChange }) => {
+    const split = (value || "").split("-");
+    const [y, m, d] =
+      split.length === 3 ? [split[0], split[1], split[2]] : ["", "", ""];
     const now = new Date();
     const curYear = now.getFullYear();
     const years = Array.from({ length: 11 }, (_, i) => String(curYear - 5 + i));
-    const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
-    const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
+    const months = Array.from({ length: 12 }, (_, i) =>
+      String(i + 1).padStart(2, "0")
+    );
+    const days = Array.from({ length: 31 }, (_, i) =>
+      String(i + 1).padStart(2, "0")
+    );
     const emit = (yy: string, mm: string, dd: string) => {
-      if (!yy || !mm || !dd) return onChange('');
+      if (!yy || !mm || !dd) return onChange("");
       onChange(`${yy}-${mm}-${dd}`);
     };
     return (
       <div className="grid grid-cols-3 gap-2">
-        <select value={d} onChange={(e) => emit(y || String(curYear), m || '01', e.target.value)} className="border rounded px-2 py-2 w-full">
+        <select
+          value={d}
+          onChange={(e) =>
+            emit(y || String(curYear), m || "01", e.target.value)
+          }
+          className="border rounded px-2 py-2 w-full"
+        >
           <option value="">Day</option>
           {days.map((dd) => (
-            <option key={dd} value={dd}>{dd}</option>
+            <option key={dd} value={dd}>
+              {dd}
+            </option>
           ))}
         </select>
-        <select value={m} onChange={(e) => emit(y || String(curYear), e.target.value, d || '01')} className="border rounded px-2 py-2 w-full">
+        <select
+          value={m}
+          onChange={(e) =>
+            emit(y || String(curYear), e.target.value, d || "01")
+          }
+          className="border rounded px-2 py-2 w-full"
+        >
           <option value="">Month</option>
           {months.map((mm) => (
-            <option key={mm} value={mm}>{mm}</option>
+            <option key={mm} value={mm}>
+              {mm}
+            </option>
           ))}
         </select>
-        <select value={y} onChange={(e) => emit(e.target.value, m || '01', d || '01')} className="border rounded px-2 py-2 w-full">
+        <select
+          value={y}
+          onChange={(e) => emit(e.target.value, m || "01", d || "01")}
+          className="border rounded px-2 py-2 w-full"
+        >
           <option value="">Year</option>
           {years.map((yy) => (
-            <option key={yy} value={yy}>{yy}</option>
+            <option key={yy} value={yy}>
+              {yy}
+            </option>
           ))}
         </select>
       </div>
@@ -100,85 +283,79 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   // when true, allow editing even if server had answers; we will prefill
   const [allowEdit, setAllowEdit] = useState(false);
   // Toast notifications
-  const [toast, setToast] = useState<{ show: boolean; message: string; kind?: 'error' | 'info' | 'success' }>(
-    { show: false, message: '', kind: 'error' }
-  );
-  const showToast = (message: string, kind: 'error' | 'info' | 'success' = 'error') => {
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    kind?: "error" | "info" | "success";
+  }>({ show: false, message: "", kind: "error" });
+  const showToast = (
+    message: string,
+    kind: "error" | "info" | "success" = "error"
+  ) => {
     setToast({ show: true, message, kind });
     // auto hide after 4s
     setTimeout(() => setToast((t) => ({ ...t, show: false })), 4000);
   };
 
-    useEffect(() => {
-  setFetchError(null);
-  setLoading(true);
-  // Prefer configured API base; pin UAT as safe default. Do NOT use window.host to avoid SPA index in incognito.
-  const rawBaseUrl = localStorage.getItem('baseUrl') || localStorage.getItem('apiBaseUrl') || '';
-  const safeDefaultHost = 'uat-hi-society.lockated.com';
-  const baseHost = (rawBaseUrl || safeDefaultHost).replace(/^https?:\/\//, '').replace(/\/$/, '');
+  useEffect(() => {
+    setFetchError(null);
+    setLoading(true);
     // mappingId can be provided as ?mappingId=... or as the last segment of the path
     const mappingId = (() => {
       try {
         const params = new URLSearchParams(window.location.search);
-        const fromQuery = params.get('mappingId');
+        const fromQuery = params.get("mappingId");
         if (fromQuery) return fromQuery;
-        const parts = window.location.pathname.split('/').filter(Boolean);
-        const last = parts[parts.length - 1] || '';
+        const parts = window.location.pathname.split("/").filter(Boolean);
+        const last = parts[parts.length - 1] || "";
         // basic sanity: mapping ids are long hex-like strings, fallback to default
         if (/^[A-Fa-f0-9]{8,}$/.test(last)) return last;
       } catch (e) {
         // ignore
       }
-      return '';
+      return "";
     })();
 
-    // If mappingId or baseHost missing, stop early
-    if (!baseHost || !mappingId) {
+    // If mappingId missing, stop early
+    if (!mappingId) {
       setCategories([]);
       setLoading(false);
       return;
     }
-  const url = `https://${baseHost}/crm/admin/fitout_requests/${mappingId}/fitout_mappings.json`;
+    const url = `/crm/admin/fitout_requests/${mappingId}/fitout_mappings.json`;
     let cancelled = false;
-  fetch(url, { cache: 'no-cache', headers: { Accept: 'application/json' } })
-      .then((r) => {
-        if (r.status === 500) {
-          if (!cancelled) setFetchError(500);
-          if (!cancelled) showToast('Server error while loading form (500).', 'error');
-          throw new Error('Server error 500');
-        }
-        if (!r.ok) {
-          if (!cancelled) showToast(`Failed to load form (HTTP ${r.status}).`, 'error');
-          throw new Error('Network response not ok');
-        }
-        return r.json();
-      })
-      .then((data) => {
+    baseClient
+      .get(url, { headers: { Accept: "application/json" } })
+      .then((response) => {
         if (cancelled) return;
-        const payload = Array.isArray(data) ? data : (data || []);
+        const data = response.data;
+        const payload = Array.isArray(data) ? data : data || [];
         // If any snag_answers exist in the payload, treat the form as already submitted
         const answeredExists = (payload || []).some((item: unknown) => {
-          if (!item || typeof item !== 'object') return false;
+          if (!item || typeof item !== "object") return false;
           const it = item as { snag_quest_maps?: unknown };
           if (!Array.isArray(it.snag_quest_maps)) return false;
           return (it.snag_quest_maps as unknown[]).some((entry: unknown) => {
-            if (!entry || typeof entry !== 'object') return false;
+            if (!entry || typeof entry !== "object") return false;
             const e = entry as { snag_answers?: unknown };
             if (!Array.isArray(e.snag_answers)) return false;
             return (e.snag_answers as unknown[]).length > 0;
           });
         });
         // Helper to prefill answers from API payload, using qtypes from adapted questions
-        const prefillFromPayload = (items: unknown[], qtypeByQid: Map<string, string>): Record<string, string> => {
+        const prefillFromPayload = (
+          items: unknown[],
+          qtypeByQid: Map<string, string>
+        ): Record<string, string> => {
           const agg: Record<string, string[] | string> = {};
           (items || []).forEach((item) => {
-            if (!item || typeof item !== 'object') return;
+            if (!item || typeof item !== "object") return;
             const it = item as { snag_quest_maps?: unknown[] };
             (it.snag_quest_maps || []).forEach((entry: unknown) => {
-              if (!entry || typeof entry !== 'object') return;
+              if (!entry || typeof entry !== "object") return;
               const e = entry as { snag_answers?: unknown[] };
               (e.snag_answers || []).forEach((ans: unknown) => {
-                if (!ans || typeof ans !== 'object') return;
+                if (!ans || typeof ans !== "object") return;
                 const a = ans as {
                   snag_question_id?: string | number;
                   question_id?: string | number;
@@ -189,17 +366,24 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
                 const qidRaw = a.snag_question_id ?? a.question_id;
                 if (qidRaw === undefined || qidRaw === null) return;
                 const qid = String(qidRaw);
-                const qtype = (qtypeByQid.get(qid) || '').toLowerCase();
-                const descr = typeof a.ans_descr === 'string' ? a.ans_descr : '';
+                const qtype = (qtypeByQid.get(qid) || "").toLowerCase();
+                const descr =
+                  typeof a.ans_descr === "string" ? a.ans_descr : "";
                 const optIdRaw = a.snag_quest_option_id ?? a.quest_option_id;
 
-                if (qtype === 'checkbox') {
+                if (qtype === "checkbox") {
                   // collect multiple values
                   if (!Array.isArray(agg[qid])) agg[qid] = [] as string[];
                   const arr = agg[qid] as string[];
-                  if (optIdRaw != null && String(optIdRaw).length > 0) arr.push(String(optIdRaw));
-                  else if (descr) descr.split(',').map((s) => s.trim()).filter(Boolean).forEach((v) => arr.push(v));
-                } else if (qtype === 'multiple') {
+                  if (optIdRaw != null && String(optIdRaw).length > 0)
+                    arr.push(String(optIdRaw));
+                  else if (descr)
+                    descr
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean)
+                      .forEach((v) => arr.push(v));
+                } else if (qtype === "multiple") {
                   // radio/single-choice: prefer option id
                   if (optIdRaw != null) agg[qid] = String(optIdRaw);
                   else if (descr) agg[qid] = descr;
@@ -232,43 +416,75 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
         // If editing previously submitted form, prefill answers
         if (!cancelled && answeredExists && allowEdit) {
           const qtypeByQid = new Map<string, string>();
-          (adapted || []).forEach((cat) => cat.questions.forEach((q) => qtypeByQid.set(String(q.id), q.qtype || '')));
-          const prefilled = prefillFromPayload(payload as unknown[], qtypeByQid);
+          (adapted || []).forEach((cat) =>
+            cat.questions.forEach((q) =>
+              qtypeByQid.set(String(q.id), q.qtype || "")
+            )
+          );
+          const prefilled = prefillFromPayload(
+            payload as unknown[],
+            qtypeByQid
+          );
           setAnswers(prefilled);
         }
         if (!cancelled) setLoading(false);
       })
-      .catch(() => {
+      .catch((error) => {
         if (!cancelled) {
+          if (error.response?.status === 500) {
+            setFetchError(500);
+            showToast("Server error while loading form (500).", "error");
+          } else {
+            showToast(
+              `Failed to load form. ${error.message || "Please check your connection."}`,
+              "error"
+            );
+          }
           setCategories([]);
           setLoading(false);
-          showToast('Unable to load form. Please check your connection.', 'error');
         }
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [adaptFromFitout, fetchAttempt, allowEdit]);
 
-  const selectOption = (qid: string | number, value: string | number) => setAnswers((s) => ({ ...s, [String(qid)]: String(value) }));
-  const setOpenAnswer = (qid: string | number, value: string) => setAnswers((s) => ({ ...s, [String(qid)]: value }));
+  const selectOption = (qid: string | number, value: string | number) =>
+    setAnswers((s) => ({ ...s, [String(qid)]: String(value) }));
+  const setOpenAnswer = (qid: string | number, value: string) =>
+    setAnswers((s) => ({ ...s, [String(qid)]: value }));
   // Capture chosen files for a question
-  const setFilesForQuestion = (qid: string | number, files: FileList | null) => {
+  const setFilesForQuestion = (
+    qid: string | number,
+    files: FileList | null
+  ) => {
     const arr = files ? Array.from(files) : [];
     setFilesByQid((prev) => ({ ...prev, [String(qid)]: arr }));
+  };
+  // Capture signature data URL
+  const setSignatureForQuestion = (qid: string | number, dataUrl: string) => {
+    setSignaturesByQid((prev) => ({ ...prev, [String(qid)]: dataUrl }));
   };
 
   // Toggle the required flag for a question in local component state
   const toggleRequired = (qid: string | number) => {
-    setCategories((prev) => prev.map((cat) => ({
-      ...cat,
-      questions: cat.questions.map((qq) => (qq.id === qid ? { ...qq, required: !qq.required } : qq)),
-    })));
+    setCategories((prev) =>
+      prev.map((cat) => ({
+        ...cat,
+        questions: cat.questions.map((qq) =>
+          qq.id === qid ? { ...qq, required: !qq.required } : qq
+        ),
+      }))
+    );
   };
 
   const allRequiredAnswered = () => {
-    const reqs = categories.flatMap((c) => c.questions.filter((q) => q.required));
+    const reqs = categories.flatMap((c) =>
+      c.questions.filter((q) => q.required)
+    );
     return reqs.every((q) => {
       const val = answers[String(q.id)];
-      return typeof val === 'string' && val.trim().length > 0;
+      return typeof val === "string" && val.trim().length > 0;
     });
   };
 
@@ -276,12 +492,21 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
     if (!allRequiredAnswered()) return;
     setSubmitting(true);
     try {
-      // Build form data similar to the provided curl payload
-  const baseUrl = localStorage.getItem('baseUrl') || localStorage.getItem('apiBaseUrl') || 'uat-hi-society.lockated.com';
-      const host = baseUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
-      const postUrl = `https://${host}/fitout_requests/create_feedback`;
-
       const form = new FormData();
+
+      // Convert all signatures to files first (async operation)
+      const signatureFiles: Record<string, File> = {};
+      for (const qid of Object.keys(signaturesByQid)) {
+        const signatureDataUrl = signaturesByQid[qid];
+        if (signatureDataUrl) {
+          const blob = await fetch(signatureDataUrl).then((r) => r.blob());
+          signatureFiles[qid] = new File(
+            [blob],
+            `signature_${qid}_${Date.now()}.png`,
+            { type: "image/png" }
+          );
+        }
+      }
 
       // For each question create an entry under snag_answers[<mapId>][...]
       categories.forEach((cat) => {
@@ -293,59 +518,89 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
           form.append(`${qKeyBase}[snag_question_id]`, String(q.id));
 
           const val = answers[String(q.id)];
-          if (q.qtype === 'multiple') {
+          if (q.qtype === "multiple") {
             // single option selected (radio)
             if (val) {
               form.append(`${qKeyBase}[snag_quest_option_id]`, String(val));
-              const label = q.options?.find((o) => String(o.id) === String(val))?.label || '';
+              const label =
+                q.options?.find((o) => String(o.id) === String(val))?.label ||
+                "";
               form.append(`${qKeyBase}[ans_descr]`, label);
             } else {
-              form.append(`${qKeyBase}[ans_descr]`, '');
+              form.append(`${qKeyBase}[ans_descr]`, "");
             }
-          } else if (q.qtype === 'checkbox') {
+          } else if (q.qtype === "checkbox") {
             // val is stored as JSON array string
             try {
               const arr = val ? JSON.parse(val) : [];
               // send selected ids as comma separated in ans_descr
-              form.append(`${qKeyBase}[ans_descr]`, Array.isArray(arr) ? arr.join(',') : String(val || ''));
+              form.append(
+                `${qKeyBase}[ans_descr]`,
+                Array.isArray(arr) ? arr.join(",") : String(val || "")
+              );
             } catch (e) {
-              form.append(`${qKeyBase}[ans_descr]`, String(val || ''));
+              form.append(`${qKeyBase}[ans_descr]`, String(val || ""));
             }
-          } else if (q.qtype === 'file') {
+          } else if (q.qtype === "file") {
             // Even for file uploads, include option_id and ans_descr (can be blank)
-            form.append(`${qKeyBase}[snag_quest_option_id]`, '');
-            form.append(`${qKeyBase}[ans_descr]`, '');
+            form.append(`${qKeyBase}[snag_quest_option_id]`, "");
+            form.append(`${qKeyBase}[ans_descr]`, "");
             const files = filesByQid[String(q.id)] || [];
             files.forEach((f) => {
               form.append(`${qKeyBase}[docs][]`, f);
             });
+          } else if (q.qtype === "signature") {
+            // Handle signature upload
+            form.append(`${qKeyBase}[snag_quest_option_id]`, "");
+            form.append(`${qKeyBase}[ans_descr]`, "");
+            const signatureFile = signatureFiles[String(q.id)];
+            if (signatureFile) {
+              form.append(`${qKeyBase}[docs][]`, signatureFile);
+            }
           } else {
             // text, date, description, date_range, time etc
-            form.append(`${qKeyBase}[ans_descr]`, String(val || ''));
+            form.append(`${qKeyBase}[ans_descr]`, String(val || ""));
           }
         });
       });
 
-  const token = sessionStorage.getItem('app_token') || sessionStorage.getItem('token') || localStorage.getItem('app_token') || localStorage.getItem('token') || localStorage.getItem('access_token') || '';
-  const headers: Record<string, string> = { Accept: 'application/json' };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+      const token =
+        sessionStorage.getItem("app_token") ||
+        sessionStorage.getItem("token") ||
+        localStorage.getItem("app_token") ||
+        localStorage.getItem("token") ||
+        localStorage.getItem("access_token") ||
+        "";
+      
+      // For FormData, explicitly delete Content-Type to let browser set multipart/form-data with boundary
+      const config: any = {
+        headers: {
+          'Content-Type': undefined, // This forces axios to let browser set the correct Content-Type
+        }
+      };
+      if (token) config.headers['Authorization'] = `Bearer ${token}`;
 
-  const resp = await fetch(postUrl, { method: 'POST', body: form, headers });
-      if (!resp.ok) {
-        showToast(`Submission failed (HTTP ${resp.status}).`, 'error');
-        throw new Error(`HTTP ${resp.status}`);
-      }
+      console.log('Submitting form with', form.entries ? Array.from(form.entries()).length : 0, 'entries');
+
+      const resp = await baseClient.post(
+        "/fitout_requests/create_feedback.json",
+        form,
+        config
+      );
 
       // Optionally call external handler
       onSubmit?.(answers, comments);
 
-  // Reset fields and show thank you card
-  setAnswers({});
-  setComments('');
-  setThankYou(true);
-    } catch (err) {
+      // Reset fields and show thank you card
+      setAnswers({});
+      setComments("");
+      setThankYou(true);
+    } catch (err: any) {
       // keep subtle failure behavior for now; could add toast
-      showToast('Something went wrong. Please try again.', 'error');
+      const errorMsg = err.response?.status
+        ? `Submission failed (HTTP ${err.response.status}).`
+        : "Something went wrong. Please try again.";
+      showToast(errorMsg, "error");
     } finally {
       setSubmitting(false);
     }
@@ -354,17 +609,21 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   const backgroundUrl = backgroundSrc || defaultBackground;
   const containerStyle: React.CSSProperties = {
     backgroundImage: `url(${backgroundUrl})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center center',
-    backgroundRepeat: 'no-repeat',
-    filter: 'brightness(0.85)',
-    minHeight: '100dvh',
+    backgroundSize: "cover",
+    backgroundPosition: "center center",
+    backgroundRepeat: "no-repeat",
+    filter: "brightness(0.85)",
+    minHeight: "100dvh",
   };
 
-  const displayedCategory = (categories && categories[0] && categories[0].name) || 'Fitout setup';
+  const displayedCategory =
+    (categories && categories[0] && categories[0].name) || "Fitout setup";
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-cover bg-center flex items-center justify-center" style={containerStyle}>
+      <div
+        className="min-h-screen w-full bg-cover bg-center flex items-center justify-center"
+        style={containerStyle}
+      >
         <div className="bg-white/80 p-6 rounded-md shadow-md flex flex-col items-center">
           <div className="w-12 h-12 border-4 border-t-blue-600 border-gray-200 rounded-full animate-spin mb-4" />
           <div className="text-sm text-gray-700">Form Loading...</div>
@@ -374,7 +633,10 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   }
   if (thankYou) {
     return (
-      <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
+      <div
+        className="min-h-screen w-full bg-cover bg-center flex flex-col items-center"
+        style={containerStyle}
+      >
         <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
           <div className="relative">
             {/* <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" /> */}
@@ -384,7 +646,9 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
         <div className="w-full max-w-md md:max-w-4xl px-4 mt-24">
           <div className="bg-white/90 rounded-md p-6 md:p-8 text-center shadow-md">
             <h2 className="text-2xl font-semibold mb-2">Thank you</h2>
-            <p className="text-sm text-gray-700 mb-4">Your responses have been submitted successfully.</p>
+            <p className="text-sm text-gray-700 mb-4">
+              Your responses have been submitted successfully.
+            </p>
             {/* <button type="button" onClick={() => setThankYou(false)} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Close</button> */}
           </div>
         </div>
@@ -394,7 +658,10 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
 
   if (fetchError === 500) {
     return (
-      <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
+      <div
+        className="min-h-screen w-full bg-cover bg-center flex flex-col items-center"
+        style={containerStyle}
+      >
         <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
           <div className="relative">
             {/* <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" /> */}
@@ -404,8 +671,19 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
         <div className="w-full max-w-md md:max-w-4xl px-4 mt-24">
           <div className="bg-white/90 rounded-md p-6 md:p-8 text-center shadow-md">
             <h2 className="text-2xl font-semibold mb-2">Server error</h2>
-            <p className="text-sm text-gray-700 mb-4">We received a 500 error from the server while loading the survey.</p>
-            <button type="button" onClick={() => { setFetchError(null); setFetchAttempt((s) => s + 1); }} className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold">Retry</button>
+            <p className="text-sm text-gray-700 mb-4">
+              We received a 500 error from the server while loading the survey.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setFetchError(null);
+                setFetchAttempt((s) => s + 1);
+              }}
+              className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold"
+            >
+              Retry
+            </button>
           </div>
         </div>
       </div>
@@ -414,7 +692,10 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
 
   if (serverSubmitted) {
     return (
-      <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
+      <div
+        className="min-h-screen w-full bg-cover bg-center flex flex-col items-center"
+        style={containerStyle}
+      >
         <div className="w-full max-w-md md:max-w-4xl px-4 pt-24">
           <div className="relative">
             {/* <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" /> */}
@@ -423,14 +704,23 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
 
         <div className="w-full max-w-md md:max-w-4xl px-4 mt-24">
           <div className="bg-white/90 rounded-md p-6 md:p-8 text-center shadow-md">
-            <h2 className="text-2xl font-semibold mb-2">Form already submitted</h2>
-            <p className="text-sm text-gray-700 mb-4">We found previous answers for this fitout mapping. The form cannot be edited.</p>
+            <h2 className="text-2xl font-semibold mb-2">
+              Form already submitted
+            </h2>
+            <p className="text-sm text-gray-700 mb-4">
+              We found previous answers for this fitout mapping. The form cannot
+              be edited.
+            </p>
             <button
               type="button"
-              onClick={() => { setAllowEdit(true); setServerSubmitted(false); setFetchAttempt((s) => s + 1); }}
+              onClick={() => {
+                setAllowEdit(true);
+                setServerSubmitted(false);
+                setFetchAttempt((s) => s + 1);
+              }}
               className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold"
             >
-              Edit form 
+              Edit form
             </button>
           </div>
         </div>
@@ -439,102 +729,186 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
   }
 
   return (
-    <div className="min-h-screen w-full bg-cover bg-center flex flex-col items-center" style={containerStyle}>
+    <div
+      className="min-h-screen w-full bg-cover bg-center flex flex-col items-center"
+      style={containerStyle}
+    >
       {/* Toast */}
       {toast.show && (
         <div
-          className={`fixed z-50 ${isMobile ? 'bottom-4 left-4 right-4' : 'top-4 right-4'} px-4 py-3 rounded shadow-lg text-sm ${
-            toast.kind === 'error' ? 'bg-red-600 text-white' : toast.kind === 'success' ? 'bg-green-600 text-white' : 'bg-gray-900 text-white'
+          className={`fixed z-50 ${isMobile ? "bottom-4 left-4 right-4" : "top-4 right-4"} px-4 py-3 rounded shadow-lg text-sm ${
+            toast.kind === "error"
+              ? "bg-red-600 text-white"
+              : toast.kind === "success"
+                ? "bg-green-600 text-white"
+                : "bg-gray-900 text-white"
           }`}
         >
           {toast.message}
         </div>
       )}
-  <div className="w-full max-w-md md:max-w-4xl px-4 pt-6">
+      <div className="w-full max-w-md md:max-w-4xl px-4 pt-6">
         <div className="relative">
           {/* <img src={logoSrc || defaultLogo} alt="logo" className="absolute right-0 top-0 h-10 opacity-90" /> */}
         </div>
       </div>
 
-  <div className="w-full max-w-md md:max-w-4xl px-4 mt-4">
+      <div className="w-full max-w-md md:max-w-4xl px-4 mt-4">
         <div className="text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-black tracking-tight">{}</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-black tracking-tight">
+            {}
+          </h1>
         </div>
       </div>
 
-  <div className="w-full max-w-md md:max-w-5xl px-4 mt-4 pb-2 md:mx-auto">
+      <div className="w-full max-w-md md:max-w-5xl px-4 mt-4 pb-2 md:mx-auto">
         <div className="bg-white/90 md:bg-white md:border md:border-gray-200 md:rounded-1xl md:shadow-xl rounded-md shadow-md p-4 md:p-10 space-y-6 md:space-y-8">
           {categories.map((cat, cidx) => (
             <div key={cidx}>
-              {categories.length > 1 && <div className="text-xl font-semibold text-gray-700 mb-2">{cat.name}</div>}
+              {categories.length > 1 && (
+                <div className="text-xl font-semibold text-gray-700 mb-2">
+                  {cat.name}
+                </div>
+              )}
               {cat.questions.map((q, idx) => (
                 <div key={q.id}>
                   <div className="grid grid-cols-1 gap-4 items-start mb-2">
                     <div>
                       <div className="text-[16px] md:text-base font-medium">
                         {`${idx + 1}. ${q.title}`}
-                        {q.required ? <span className="text-red-600 ml-1">*</span> : null}
+                        {q.required ? (
+                          <span className="text-red-600 ml-1">*</span>
+                        ) : null}
                       </div>
                     </div>
 
                     <div>
                       <div className="space-y-3">
-                        {q.qtype === 'inputbox' && !/time/i.test(String(q.title)) && (
-                          <input type="text" value={answers[String(q.id)] || ''} onChange={(e) => setOpenAnswer(q.id, e.target.value)} placeholder="Enter your answer" className="w-full border rounded px-3 py-3 bg-white" />
+                        {q.qtype === "inputbox" &&
+                          !/time/i.test(String(q.title)) && (
+                            <input
+                              type="text"
+                              value={answers[String(q.id)] || ""}
+                              onChange={(e) =>
+                                setOpenAnswer(q.id, e.target.value)
+                              }
+                              placeholder="Enter your answer"
+                              className="w-full border rounded px-3 py-3 bg-white"
+                            />
+                          )}
+
+                        {(q.qtype === "time" ||
+                          (q.qtype === "inputbox" &&
+                            /time/i.test(String(q.title)))) && (
+                          <input
+                            type="time"
+                            className="border rounded px-2 py-2"
+                            value={answers[String(q.id)] || ""}
+                            onChange={(e) =>
+                              setOpenAnswer(q.id, e.target.value)
+                            }
+                          />
                         )}
 
-                        {(q.qtype === 'time' || (q.qtype === 'inputbox' && /time/i.test(String(q.title)))) && (
-                          <input type="time" className="border rounded px-2 py-2" value={answers[String(q.id)] || ''} onChange={(e) => setOpenAnswer(q.id, e.target.value)} />
+                        {q.qtype === "description" && (
+                          <textarea
+                            value={answers[String(q.id)] || ""}
+                            onChange={(e) =>
+                              setOpenAnswer(q.id, e.target.value)
+                            }
+                            placeholder="Write your answer..."
+                            className="w-full min-h-[100px] resize-none bg-white border border-gray-300 rounded p-3 text-sm"
+                          />
                         )}
 
-                        {q.qtype === 'description' && (
-                          <textarea value={answers[String(q.id)] || ''} onChange={(e) => setOpenAnswer(q.id, e.target.value)} placeholder="Write your answer..." className="w-full min-h-[100px] resize-none bg-white border border-gray-300 rounded p-3 text-sm" />
-                        )}
-
-                        {q.qtype === 'date_range' && (
+                        {q.qtype === "date_range" && (
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <div className="text-xs text-gray-500 mb-1">Start Date</div>
-                              <input type="date" className="border rounded px-2 py-2 w-full" value={answers[String(q.id) + '_start'] || ''} onChange={(e) => setOpenAnswer(`${q.id}_start`, e.target.value)} />
+                              <div className="text-xs text-gray-500 mb-1">
+                                Start Date
+                              </div>
+                              <input
+                                type="date"
+                                className="border rounded px-2 py-2 w-full"
+                                value={answers[String(q.id) + "_start"] || ""}
+                                onChange={(e) =>
+                                  setOpenAnswer(`${q.id}_start`, e.target.value)
+                                }
+                              />
                             </div>
                             <div>
-                              <div className="text-xs text-gray-500 mb-1">End Date</div>
-                              <input type="date" className="border rounded px-2 py-2 w-full" value={answers[String(q.id) + '_end'] || ''} onChange={(e) => setOpenAnswer(`${q.id}_end`, e.target.value)} />
+                              <div className="text-xs text-gray-500 mb-1">
+                                End Date
+                              </div>
+                              <input
+                                type="date"
+                                className="border rounded px-2 py-2 w-full"
+                                value={answers[String(q.id) + "_end"] || ""}
+                                onChange={(e) =>
+                                  setOpenAnswer(`${q.id}_end`, e.target.value)
+                                }
+                              />
                             </div>
                           </div>
                         )}
 
-                        {q.qtype === 'date' && (
+                        {q.qtype === "date" && (
                           <div>
-                            <div className="text-xs text-gray-500 mb-1">Select Date</div>
+                            <div className="text-xs text-gray-500 mb-1">
+                              Select Date
+                            </div>
                             {isMobile ? (
-                              <MobileDatePicker value={answers[String(q.id)] || ''} onChange={(v) => setOpenAnswer(q.id, v)} />
+                              <MobileDatePicker
+                                value={answers[String(q.id)] || ""}
+                                onChange={(v) => setOpenAnswer(q.id, v)}
+                              />
                             ) : (
-                              <input type="date" className="border rounded px-2 py-2 w-full" value={answers[String(q.id)] || ''} onChange={(e) => setOpenAnswer(q.id, e.target.value)} />
+                              <input
+                                type="date"
+                                className="border rounded px-2 py-2 w-full"
+                                value={answers[String(q.id)] || ""}
+                                onChange={(e) =>
+                                  setOpenAnswer(q.id, e.target.value)
+                                }
+                              />
                             )}
                           </div>
                         )}
 
-                        {q.qtype === 'multiple' && q.options && (
-                          <div className={`${
-                            q.options.length === 4
-                              ? 'grid grid-cols-2 md:grid-cols-4 gap-3'
-                              : q.options.length === 3
-                              ? 'grid grid-cols-2 md:grid-cols-3 gap-3'
-                              : q.options.length === 2
-                              ? 'grid grid-cols-2 gap-3'
-                              : 'space-y-3'
-                          }`}>
+                        {q.qtype === "multiple" && q.options && (
+                          <div
+                            className={`${
+                              q.options.length === 4
+                                ? "grid grid-cols-2 md:grid-cols-4 gap-3"
+                                : q.options.length === 3
+                                  ? "grid grid-cols-2 md:grid-cols-3 gap-3"
+                                  : q.options.length === 2
+                                    ? "grid grid-cols-2 gap-3"
+                                    : "space-y-3"
+                            }`}
+                          >
                             {q.options.map((opt) => {
-                              const selected = answers[String(q.id)] === String(opt.id);
+                              const selected =
+                                answers[String(q.id)] === String(opt.id);
                               return (
                                 <label
                                   key={opt.id}
-                                  className={`w-full block border ${selected ? 'border-[#1E56D6] bg-[#E8F0FF]' : 'border-gray-200 bg-white'} rounded p-3 cursor-pointer`}
+                                  className={`w-full block border ${selected ? "border-[#1E56D6] bg-[#E8F0FF]" : "border-gray-200 bg-white"} rounded p-3 cursor-pointer`}
                                 >
                                   <div className="flex items-center justify-between">
-                                    <div className={`text-sm font-medium ${selected ? 'text-blue-700' : 'text-gray-900'}`}>{opt.label}</div>
-                                    <input type="radio" name={`q_${q.id}`} checked={selected} onChange={() => selectOption(q.id, opt.id)} />
+                                    <div
+                                      className={`text-sm font-medium ${selected ? "text-blue-700" : "text-gray-900"}`}
+                                    >
+                                      {opt.label}
+                                    </div>
+                                    <input
+                                      type="radio"
+                                      name={`q_${q.id}`}
+                                      checked={selected}
+                                      onChange={() =>
+                                        selectOption(q.id, opt.id)
+                                      }
+                                    />
                                   </div>
                                 </label>
                               );
@@ -542,46 +916,134 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
                           </div>
                         )}
 
-                        {q.qtype === 'checkbox' && q.options && q.options.map((opt) => {
-                          const current = answers[String(q.id)] ? JSON.parse(answers[String(q.id)]) : [];
-                          const checked = current.includes(String(opt.id));
-                          const onToggle = () => {
-                            const next = checked ? current.filter((c: string) => c !== String(opt.id)) : [...current, String(opt.id)];
-                            setAnswers((s) => ({ ...s, [String(q.id)]: JSON.stringify(next) }));
-                          };
-                          return (
-                            <label key={opt.id} className="w-full block border border-gray-200 bg-white rounded p-3 mb-2 cursor-pointer">
-                              <div className="flex items-center justify-between">
-                                <div className="text-sm font-medium text-gray-900">{opt.label}</div>
-                                <input type="checkbox" checked={checked} onChange={onToggle} />
-                              </div>
-                            </label>
-                          );
-                        })}
+                        {q.qtype === "checkbox" &&
+                          q.options &&
+                          q.options.map((opt) => {
+                            const current = answers[String(q.id)]
+                              ? JSON.parse(answers[String(q.id)])
+                              : [];
+                            const checked = current.includes(String(opt.id));
+                            const onToggle = () => {
+                              const next = checked
+                                ? current.filter(
+                                    (c: string) => c !== String(opt.id)
+                                  )
+                                : [...current, String(opt.id)];
+                              setAnswers((s) => ({
+                                ...s,
+                                [String(q.id)]: JSON.stringify(next),
+                              }));
+                            };
+                            return (
+                              <label
+                                key={opt.id}
+                                className="w-full block border border-gray-200 bg-white rounded p-3 mb-2 cursor-pointer"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {opt.label}
+                                  </div>
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={onToggle}
+                                  />
+                                </div>
+                              </label>
+                            );
+                          })}
 
-                        {!q.qtype && q.options && q.options.map((opt) => {
-                          const selected = answers[String(q.id)] === String(opt.id);
-                          return (
-                            <button key={opt.id} type="button" onClick={() => selectOption(q.id, opt.id)} className={`w-full text-left px-4 py-4 rounded border ${selected ? 'border-[#1E56D6] bg-[#E8F0FF]' : 'border-gray-200 bg-white'} flex items-center justify-between`}>
-                              <div className={`text-sm font-medium ${selected ? 'text-blue-700' : 'text-gray-900'}`}>{opt.label}</div>
-                              <div className="flex-shrink-0">{selected ? (
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#1E56D6" /><path d="M7.5 12.5L10.5 15.5L16.5 9.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                              ) : null}</div>
-                            </button>
-                          );
-                        })}
+                        {!q.qtype &&
+                          q.options &&
+                          q.options.map((opt) => {
+                            const selected =
+                              answers[String(q.id)] === String(opt.id);
+                            return (
+                              <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => selectOption(q.id, opt.id)}
+                                className={`w-full text-left px-4 py-4 rounded border ${selected ? "border-[#1E56D6] bg-[#E8F0FF]" : "border-gray-200 bg-white"} flex items-center justify-between`}
+                              >
+                                <div
+                                  className={`text-sm font-medium ${selected ? "text-blue-700" : "text-gray-900"}`}
+                                >
+                                  {opt.label}
+                                </div>
+                                <div className="flex-shrink-0">
+                                  {selected ? (
+                                    <svg
+                                      width="20"
+                                      height="20"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                      <circle
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        fill="#1E56D6"
+                                      />
+                                      <path
+                                        d="M7.5 12.5L10.5 15.5L16.5 9.5"
+                                        stroke="white"
+                                        strokeWidth="1.8"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                  ) : null}
+                                </div>
+                              </button>
+                            );
+                          })}
 
                         {!q.qtype && !q.options && (
-                          <textarea value={answers[String(q.id)] || ''} onChange={(e) => setOpenAnswer(q.id, e.target.value)} placeholder="Write your answer..." className="w-full min-h-[100px] resize-none bg-white border border-gray-300 rounded p-3 text-sm focus:outline-none focus:ring-1" style={{ boxShadow: 'inset 0 0 0 1px rgba(30,86,214,0.08)' }} />
+                          <textarea
+                            value={answers[String(q.id)] || ""}
+                            onChange={(e) =>
+                              setOpenAnswer(q.id, e.target.value)
+                            }
+                            placeholder="Write your answer..."
+                            className="w-full min-h-[100px] resize-none bg-white border border-gray-300 rounded p-3 text-sm focus:outline-none focus:ring-1"
+                            style={{
+                              boxShadow: "inset 0 0 0 1px rgba(30,86,214,0.08)",
+                            }}
+                          />
                         )}
 
                         {/* Render file input for qtype='file' */}
-                        {q.qtype === 'file' && (
+                        {q.qtype === "file" && (
                           <div>
-                            <input type="file" multiple onChange={(e) => setFilesForQuestion(q.id, e.target.files)} className="w-full border rounded px-3 py-2 bg-white" />
-                            {filesByQid[String(q.id)] && filesByQid[String(q.id)].length > 0 && (
-                              <div className="text-xs text-gray-600 mt-2">{filesByQid[String(q.id)].length} file(s) selected</div>
-                            )}
+                            <input
+                              type="file"
+                              multiple
+                              onChange={(e) =>
+                                setFilesForQuestion(q.id, e.target.files)
+                              }
+                              className="w-full border rounded px-3 py-2 bg-white"
+                            />
+                            {filesByQid[String(q.id)] &&
+                              filesByQid[String(q.id)].length > 0 && (
+                                <div className="text-xs text-gray-600 mt-2">
+                                  {filesByQid[String(q.id)].length} file(s)
+                                  selected
+                                </div>
+                              )}
+                          </div>
+                        )}
+
+                        {/* Render signature canvas for qtype='signature' */}
+                        {q.qtype === "signature" && (
+                          <div>
+                            <SignatureCanvas
+                              qid={q.id}
+                              value={signaturesByQid[String(q.id)]}
+                              onChange={(dataUrl) =>
+                                setSignatureForQuestion(q.id, dataUrl)
+                              }
+                            />
                           </div>
                         )}
 
@@ -596,23 +1058,24 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({ logoSrc, backgroundSr
         </div>
       </div>
 
-    {/* Footer button under the form, not fixed */}
-<div className="w-full max-w-md md:max-w-5xl px-4 mt-2 mb-6 md:mx-auto">
-  <div className="bg-white/90 md:bg-white md:border md:border-gray-200 md:rounded-1xl md:shadow-xl rounded-md p-3 md:p-6">
-    <button
-      onClick={handleSubmit}
-      disabled={!allRequiredAnswered()}
-      className={`w-full py-4 rounded font-semibold text-white ${
-        allRequiredAnswered() ? 'bg-[#1E56D6]' : 'bg-gray-300 cursor-not-allowed'
-      }`}
-    >
-      Submit Fitout
-    </button>
-  </div>
-</div>
+      {/* Footer button under the form, not fixed */}
+      <div className="w-full max-w-md md:max-w-5xl px-4 mt-2 mb-6 md:mx-auto">
+        <div className="bg-white/90 md:bg-white md:border md:border-gray-200 md:rounded-1xl md:shadow-xl rounded-md p-3 md:p-6">
+          <button
+            onClick={handleSubmit}
+            disabled={!allRequiredAnswered()}
+            className={`w-full py-4 rounded font-semibold text-white ${
+              allRequiredAnswered()
+                ? "bg-[#1E56D6]"
+                : "bg-gray-300 cursor-not-allowed"
+            }`}
+          >
+            Submit Fitout
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default FioutMobileView;
-

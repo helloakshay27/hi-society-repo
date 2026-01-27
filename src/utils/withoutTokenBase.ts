@@ -12,20 +12,26 @@ interface Organization {
 }
 
 // Create configured axios instance
-export const baseClient = axios.create({
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+// Don't set default Content-Type to allow FormData to set its own headers
+export const baseClient = axios.create({});
 
 baseClient.interceptors.request.use(
   async (config) => {
     try {
+      // Check session cache first to avoid re-fetching
+      const cachedBaseUrl = sessionStorage.getItem('apiBaseUrl');
+      if (cachedBaseUrl) {
+        config.baseURL = cachedBaseUrl;
+        console.log("✅ Base URL set from session cache:", cachedBaseUrl);
+        return config;
+      }
+
       // First preference: use base URL saved via auth utilities (e.g., Mobile pages)
       try {
         const storedBaseUrl = getBaseUrl();
         if (storedBaseUrl) {
           config.baseURL = storedBaseUrl;
+          sessionStorage.setItem('apiBaseUrl', storedBaseUrl);
           console.log("✅ Base URL set from stored baseUrl:", storedBaseUrl);
           return config;
         }
@@ -59,8 +65,8 @@ baseClient.interceptors.request.use(
 
       // Hi-Society specific hosts and their API base URLs (strict equality check)
       const isHiSocietyWebHost = hostname === "web.hisociety.lockated.com";
-      const isHiSocietyUIHost = hostname === "ui-hisociety.lockated.com";
-      const isHiSocietyUATHost = hostname === "uat-hi-society.lockated.com";
+      const isHiSocietyUIHost = hostname === "ui-hisociety.lockated.com" ;
+      const isHiSocietyUATHost = hostname === "uat-hi-society.lockated.com"|| hostname === "localhost";
       const isHiSocietySite = isHiSocietyWebHost || isHiSocietyUIHost || isHiSocietyUATHost;
 
       // Map hi-society host -> backend/base API URL
@@ -141,6 +147,7 @@ baseClient.interceptors.request.use(
       // Priority 1: Use backend_url from API response (highest priority)
       if (backend_url) {
         config.baseURL = backend_url;
+        sessionStorage.setItem('apiBaseUrl', backend_url);
         console.log(
           "✅ Base URL set from API response backend_url:",
           backend_url
@@ -157,6 +164,7 @@ baseClient.interceptors.request.use(
 
           if (selectedOrg && selectedOrg.backend_domain) {
             config.baseURL = selectedOrg.backend_domain;
+            sessionStorage.setItem('apiBaseUrl', selectedOrg.backend_domain);
             console.log(
               "✅ Base URL set from organization backend_domain:",
               selectedOrg.backend_domain
@@ -179,6 +187,7 @@ baseClient.interceptors.request.use(
         const firstOrg = organizations[0];
         if (firstOrg.backend_domain) {
           config.baseURL = firstOrg.backend_domain;
+          sessionStorage.setItem('apiBaseUrl', firstOrg.backend_domain);
           console.log(
             "✅ Base URL set from first organization backend_domain:",
             firstOrg.backend_domain
@@ -192,7 +201,7 @@ baseClient.interceptors.request.use(
         config.baseURL = `${hiSocietyApiBase}/`;
         console.warn("⚠️ Using Hi-Society fallback URL:", config.baseURL);
       } else {
-        config.baseURL = "https://fm-uat-api.lockated.com/";
+        config.baseURL = "https://uat-hi-society.lockated.com/";
         console.warn("⚠️ Using fallback URL:", config.baseURL);
       }
     } catch (error) {
