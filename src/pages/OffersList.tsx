@@ -158,10 +158,10 @@ export default function OffersList() {
     setLoading(true);
     try {
       const response = await axios.get<ApiResponse>(
-        'https://uat-hi-society.lockated.com/crm/offers.json',
+        `${HI_SOCIETY_CONFIG.BASE_URL}/crm/offers.json`,
         {
           params: {
-            token: 'bfa5004e7b0175622be8f7e69b37d01290b737f82e078414'
+            token: HI_SOCIETY_CONFIG.TOKEN
           }
         }
       );

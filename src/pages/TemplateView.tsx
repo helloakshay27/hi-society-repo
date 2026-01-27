@@ -7,6 +7,7 @@ import { styled } from '@mui/material/styles';
 import { Settings } from '@mui/icons-material';
 import axios from 'axios';
 import { toast, Toaster } from 'sonner';
+import { HI_SOCIETY_CONFIG } from '@/config/apiConfig';
 
 // Styled Components
 const SectionCard = styled(Paper)(({ theme }) => ({
@@ -104,10 +105,10 @@ export default function TemplateView() {
     setLoading(true);
     try {
       const response = await axios.get<Template[]>(
-        'https://uat-hi-society.lockated.com/offer_templates.json',
+        `${HI_SOCIETY_CONFIG.BASE_URL}/offer_templates.json`,
         {
           params: {
-            token: 'bfa5004e7b0175622be8f7e69b37d01290b737f82e078414'
+            token: HI_SOCIETY_CONFIG.TOKEN
           }
         }
       );

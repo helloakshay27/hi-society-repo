@@ -876,7 +876,23 @@ const ProjectDetailsCreate = () => {
       );
       
       if (response.data && Array.isArray(response.data)) {
-        const configs = {};
+        const configs: {
+          ProjectImage: string[];
+          ProjectCoverImage: string[];
+          ProjectGallery: string[];
+          Project2DImage: string[];
+          BannerAttachment: string[];
+          EventImage: string[];
+          EventCoverImage: string[];
+        } = {
+          ProjectImage: [],
+          ProjectCoverImage: [],
+          ProjectGallery: [],
+          Project2DImage: [],
+          BannerAttachment: [],
+          EventImage: [],
+          EventCoverImage: [],
+        };
         
         response.data.forEach((config) => {
           const { name, value } = config;
@@ -886,11 +902,7 @@ const ProjectDetailsCreate = () => {
           if (ratioMatch) {
             const ratio = `${ratioMatch[1]}:${ratioMatch[2]}`;
             
-            if (!configs[name]) {
-              configs[name] = [];
-            }
-            
-            if (!configs[name].includes(ratio)) {
+            if (configs[name] && !configs[name].includes(ratio)) {
               configs[name].push(ratio);
             }
           }
@@ -1771,10 +1783,10 @@ const ProjectDetailsCreate = () => {
         const connectivity = formData.connectivities[i];
         const hasType = connectivity.connectivity_type_id && connectivity.connectivity_type_id !== '';
         const hasPlace = connectivity.place_name && connectivity.place_name.trim() !== '';
-        const hasImage = connectivity.image instanceof File;
+        // const hasImage = connectivity.image instanceof File;
 
         // If any field is filled, all fields must be filled
-        if (hasType || hasPlace || hasImage) {
+        if (hasType || hasPlace /* || hasImage */) {
           if (!hasType) {
             toast.error(`Connectivity #${i + 1}: Type is required`);
             return false;
@@ -1783,10 +1795,10 @@ const ProjectDetailsCreate = () => {
             toast.error(`Connectivity #${i + 1}: Place Name is required`);
             return false;
           }
-          if (!hasImage) {
-            toast.error(`Connectivity #${i + 1}: Image is required`);
-            return false;
-          }
+          // if (!hasImage) {
+          //   toast.error(`Connectivity #${i + 1}: Image is required`);
+          //   return false;
+          // }
         }
       }
     }
@@ -1997,8 +2009,8 @@ const ProjectDetailsCreate = () => {
         });
       } else if (key === "connectivities" && Array.isArray(value)) {
         value.forEach((item) => {
-          // Only include connectivity if all three fields are filled
-          if (item.connectivity_type_id && item.place_name && item.image instanceof File) {
+          // Only include connectivity if all required fields are filled
+          if (item.connectivity_type_id && item.place_name /* && item.image instanceof File */) {
             data.append(
               `project[connectivities][][connectivity_type_id]`,
               item.connectivity_type_id
@@ -2007,10 +2019,10 @@ const ProjectDetailsCreate = () => {
               `project[connectivities][][place_name]`,
               item.place_name
             );
-            data.append(
-              `project[connectivities][][image]`,
-              item.image
-            );
+            // data.append(
+            //   `project[connectivities][][image]`,
+            //   item.image
+            // );
           }
         });
       } else if (key === "Specifications" && Array.isArray(value) && value.length > 0) {
@@ -3562,7 +3574,7 @@ const ProjectDetailsCreate = () => {
                   />
                 </div>
 
-                <div className="mt-6">
+                {/* <div className="mt-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Image
                   </label>
@@ -3643,7 +3655,7 @@ const ProjectDetailsCreate = () => {
                       </button>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             ) : (
               <>
@@ -3716,7 +3728,7 @@ const ProjectDetailsCreate = () => {
                         />
                       </div>
 
-                      <div className="mt-6">
+                      {/* <div className="mt-6">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Image
                         </label>
@@ -3781,7 +3793,7 @@ const ProjectDetailsCreate = () => {
                             </button>
                           </div>
                         </div>
-                      </div>
+                      </div> */
                     </div>
                   </div>
                 ))}

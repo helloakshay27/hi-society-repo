@@ -5,7 +5,7 @@ import { Plus, Edit, Eye, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
@@ -15,6 +15,9 @@ interface FitoutRequestItem {
   description: string;
   society_id: number;
   user_society_id: number;
+  user_id: number;
+  site_id: number;
+  unit_id: number;
   active: boolean | null;
   status_id: number;
   amount: number;
@@ -33,12 +36,14 @@ interface FitoutRequestItem {
   convenience_charge: string;
   osr_logs: any[];
   lock_payment: any | null;
+  user_name?: string;
+  tower?: string;
+  flat_no?: string;
 }
 
 const FitoutRequests: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const { toast } = useToast();
   const [fitoutRequests, setFitoutRequests] = useState<FitoutRequestItem[]>([]);
   const [allRequests, setAllRequests] = useState<FitoutRequestItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,16 +68,121 @@ const FitoutRequests: React.FC = () => {
       console.log("Fitout Requests response:", response.data);
       const requestsData = response.data.fitout_requests || [];
 
-      setAllRequests(requestsData);
-      setTotalPages(Math.ceil(requestsData.length / itemsPerPage));
+      // Get society ID for fetching blocks and flats
+      const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
+      let idSociety = '';
+      
+      if (selectedUserSocietyId) {
+        try {
+          const userSocietiesResponse = await axios.get(
+            getFullUrl("/crm/admin/user_societies.json"),
+            {
+              headers: {
+                Authorization: getAuthHeader(),
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          const userSocieties = userSocietiesResponse.data || [];
+          const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
+          idSociety = selectedSociety?.id_society || '';
+        } catch (error) {
+          console.error('Error fetching user societies:', error);
+        }
+      }
+
+      // Fetch all blocks, flats, and users in parallel
+      let blocks: any[] = [];
+      let users: any[] = [];
+      
+      try {
+        const [blocksResponse, usersResponse] = await Promise.all([
+          idSociety ? axios.get(
+            getFullUrl(`/get_society_blocks.json?society_id=${idSociety}`),
+            {
+              headers: {
+                Authorization: getAuthHeader(),
+              },
+            }
+          ) : Promise.resolve({ data: { society_blocks: [] } }),
+          axios.get(
+            getFullUrl("/crm/admin/users.json"),
+            {
+              headers: {
+                Authorization: getAuthHeader(),
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        ]);
+        
+        blocks = blocksResponse.data?.society_blocks || [];
+        users = usersResponse.data || [];
+      } catch (error) {
+        console.error('Error fetching blocks or users:', error);
+      }
+
+      // Enrich requests with tower, flat, and user information
+      const enrichedRequests = await Promise.all(
+        requestsData.map(async (request: any) => {
+          let towerName = '';
+          let flatNumber = '';
+          let userName = '';
+          
+          // Get tower name
+          if (request.site_id) {
+            const tower = blocks.find((b: any) => b.id === request.site_id);
+            towerName = tower?.name || '';
+          }
+          
+          // Get flat number
+          if (request.unit_id && request.site_id && idSociety) {
+            try {
+              const flatsResponse = await axios.get(
+                getFullUrl(`/get_society_flats.json?society_block_id=${request.site_id}&society_id=${idSociety}`),
+                {
+                  headers: {
+                    Authorization: getAuthHeader(),
+                  },
+                }
+              );
+              const flats = flatsResponse.data?.society_flats || [];
+              const flat = flats.find((f: any) => f.id === request.unit_id);
+              flatNumber = flat?.flat_no || '';
+            } catch (error) {
+              console.error('Error fetching flats:', error);
+            }
+          }
+          
+          // Get user name
+          if (request.user_id) {
+            const user = users.find((u: any) => u.id === request.user_id);
+            userName = user ? `${user.firstname || ''} ${user.lastname || ''}`.trim() : '';
+          }
+          
+          return {
+            ...request,
+            tower: towerName,
+            flat_no: flatNumber,
+            user_name: userName,
+          };
+        })
+      );
+
+      setAllRequests(enrichedRequests);
+      setTotalPages(Math.ceil(enrichedRequests.length / itemsPerPage));
     } catch (error) {
       console.error("Error fetching Fitout Requests data:", error);
       setAllRequests([]);
       setFitoutRequests([]);
-      toast({
-        title: "Error",
-        description: "Failed to fetch Fitout Requests data",
-        variant: "destructive",
+      toast.error("Failed to fetch Fitout Requests data", {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     } finally {
       setLoading(false);
@@ -100,42 +210,77 @@ const FitoutRequests: React.FC = () => {
 
   const handleExportRequests = useCallback(async () => {
     try {
-      const response = await axios.get(
-        getFullUrl("/crm/admin/fitout_requests.xlsx?export=true"),
-        {
-          headers: {
-            Authorization: getAuthHeader(),
-          },
-          responseType: "blob",
-        }
-      );
+      // Import xlsx library dynamically
+      const XLSX = await import('xlsx');
       
-      const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
+      // Prepare data for export
+      const exportData = allRequests.map((request) => ({
+        'ID': request.id,
+        'Description': request.description || '-',
+        'Fitout Type': request.fitout_type || '-',
+        'Contractor Name': request.contactor_name || '-',
+        'Contractor Mobile': request.contactor_no || '-',
+        'User Name': request.user_name || '-',
+        'Tower': request.tower || '-',
+        'Flat No': request.flat_no || '-',
+        'Status': request.status_name || '-',
+        'Requested Date': request.start_date || '-',
+        'Expiry Date': request.expiry_date 
+          ? new Date(request.expiry_date).toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : '-',
+        'Refund Date': request.refund_date
+          ? new Date(request.refund_date).toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : '-',
+        'Amount': request.amount ? `₹${request.amount.toLocaleString("en-IN")}` : '₹0',
+        'Deposit': request.deposit ? `₹${parseFloat(request.deposit).toLocaleString("en-IN")}` : '₹0',
+        'Convenience Charge': request.convenience_charge ? `₹${parseFloat(request.convenience_charge).toLocaleString("en-IN")}` : '₹0',
+        'Request Date': request.created_at
+          ? new Date(request.created_at).toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : '-',
+      }));
 
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = "fitout-requests-data.xlsx";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
+      // Create worksheet and workbook
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Fitout Requests');
 
-      toast({
-        title: "Export Successful",
-        description: "Fitout Requests data has been exported successfully",
+      // Generate Excel file and trigger download
+      XLSX.writeFile(workbook, 'fitout-requests-data.xlsx');
+
+      toast.success("Fitout Requests data has been exported successfully", {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     } catch (error) {
       console.error("Error exporting requests:", error);
-      toast({
-        title: "Export Failed",
-        description: "Failed to export requests data",
-        variant: "destructive",
+      toast.error("Failed to export requests data. Please try again.", {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     }
-  }, [toast]);
+  }, [allRequests, toast]);
 
   const handleRowAction = (action: string, requestId: number) => {
     console.log(`${action} action for Request ${requestId}`);
@@ -144,9 +289,14 @@ const FitoutRequests: React.FC = () => {
     } else if (action === "View") {
       navigate(`/fitout/requests/details/${requestId}`);
     } else {
-      toast({
-        title: `${action} Action`,
-        description: `${action} action performed for Request ${requestId}`,
+      toast.info(`${action} action performed for Request ${requestId}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     }
   };
@@ -314,6 +464,12 @@ const FitoutRequests: React.FC = () => {
           return <span>{item.contactor_name || "-"}</span>;
         case "contactor_no":
           return <span>{item.contactor_no || "-"}</span>;
+        case "user_name":
+          return <span>{item.user_name || "-"}</span>;
+        case "tower":
+          return <span>{item.tower || "-"}</span>;
+        case "flat_no":
+          return <span>{item.flat_no || "-"}</span>;
         case "start_date":
           return <span>{item.start_date || "-"}</span>;
         case "expiry_date":
@@ -387,6 +543,9 @@ const FitoutRequests: React.FC = () => {
           request.fitout_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           request.contactor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           request.contactor_no?.includes(searchTerm) ||
+          request.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.tower?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.flat_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           request.id?.toString().includes(searchTerm);
         return matchesSearch;
       });

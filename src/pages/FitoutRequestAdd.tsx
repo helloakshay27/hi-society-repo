@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, SelectChangeEvent } from '@mui/material';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { apiClient } from '@/utils/apiClient';
 
 interface FitoutRequestFormData {
@@ -34,13 +34,13 @@ interface FitoutRequestCategory {
 
 const FitoutRequestAdd: React.FC = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [towers, setTowers] = useState<any[]>([]);
   const [flats, setFlats] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [fitoutFlatRates, setFitoutFlatRates] = useState<any[]>([]);
+  const [fitoutTypes, setFitoutTypes] = useState<string[]>([]);
   const [convenienceCharge, setConvenienceCharge] = useState('0.00');
   const [deposit, setDeposit] = useState('0.00');
   const [requestCategories, setRequestCategories] = useState<FitoutRequestCategory[]>([]);
@@ -137,9 +137,14 @@ const FitoutRequestAdd: React.FC = () => {
         setConvenienceCharge(firstRate.convenience_charge?.toString() || '0.00');
         setDeposit(firstRate.deposit?.toString() || '0.00');
         
-        toast({
-          title: 'Success',
-          description: `Loaded ${matchingRates.length} annexure(s) with amounts for ${fitoutType}`,
+        toast.success(`Loaded ${matchingRates.length} annexure(s) with amounts for ${fitoutType}`, {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
         });
       } else {
         // No matching rates found for this fitout type
@@ -148,18 +153,26 @@ const FitoutRequestAdd: React.FC = () => {
         setConvenienceCharge('0.00');
         setDeposit('0.00');
         
-        toast({
-          title: 'No Rates Found',
-          description: `No fitout rates configured for ${fitoutType} type`,
-          variant: 'destructive',
+        toast.error(`No fitout rates configured for ${fitoutType} type`, {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
         });
       }
     } catch (error) {
       console.error('Error fetching fitout flat rates:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch fitout rates',
-        variant: 'destructive',
+      toast.error('Failed to fetch fitout rates', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     }
   };
@@ -181,10 +194,14 @@ const FitoutRequestAdd: React.FC = () => {
       
       if (!idSociety) {
         console.error('No id_society found. Please ensure selectedUserSociety is set in localStorage.');
-        toast({
-          title: 'Error',
-          description: 'Society information not found. Please select a society.',
-          variant: 'destructive',
+        toast.error('Society information not found. Please select a society.', {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
         });
         return;
       }
@@ -224,14 +241,38 @@ const FitoutRequestAdd: React.FC = () => {
       
       setCategories(categoriesArray);
       
+      // Fetch active fitout types from fitout_flat_rates
+      try {
+        const fitoutTypesResponse = await apiClient.get('/crm/admin/fitout_flat_rates.json');
+        const allRates = fitoutTypesResponse.data?.fitout_flat_rates || [];
+        
+        // Get unique active fitout types
+        const activeFitoutTypes = [...new Set(
+          allRates
+            .filter((rate: any) => rate.fitout_type && rate.active !== false)
+            .map((rate: any) => rate.fitout_type)
+        )] as string[];
+        
+        console.log('Active Fitout Types:', activeFitoutTypes);
+        setFitoutTypes(activeFitoutTypes);
+      } catch (error) {
+        console.error('Error fetching fitout types:', error);
+        // Fallback to default types if API fails
+        setFitoutTypes(['Move In', 'Fitout']);
+      }
+      
       // Set user_society.id in formData for user_society_id parameter
       setFormData(prev => ({ ...prev, user_society_id: selectedUserSocietyId }));
     } catch (error) {
       console.error('Error fetching dropdown data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load form data',
-        variant: 'destructive',
+      toast.error('Failed to load form data', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     }
   };
@@ -348,11 +389,15 @@ const FitoutRequestAdd: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.site_id || !formData.unit_id || !formData.user_id) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill in all required fields',
-        variant: 'destructive',
+    if (!formData.site_id || !formData.unit_id || !formData.user_id || !formData.fitout_type) {
+      toast.error('Please fill in all required fields (Tower/Site, Flat, User, and Fitout Type)', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
       return;
     }
@@ -414,18 +459,27 @@ const FitoutRequestAdd: React.FC = () => {
         },
       });
 
-      toast({
-        title: 'Success',
-        description: 'Fitout request created successfully!',
+      toast.success('Fitout request created successfully!', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
 
       navigate('/fitout/requests');
     } catch (error) {
       console.error('Error creating fitout request:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create fitout request',
-        variant: 'destructive',
+      toast.error('Failed to create fitout request', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     } finally {
       setLoading(false);
@@ -605,17 +659,24 @@ const FitoutRequestAdd: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Fitout Type</InputLabel>
+                <InputLabel shrink>Fitout Type *</InputLabel>
                 <MuiSelect
                   value={formData.fitout_type}
                   onChange={handleSelectChange('fitout_type')}
-                  label="Type"
+                  label="Fitout Type *"
                   displayEmpty
                   sx={fieldStyles}
                 >
                   <MenuItem value="">Select Type</MenuItem>
-                  <MenuItem value="Move In">Move In</MenuItem>
-                  <MenuItem value="Fitout">Fitout</MenuItem>
+                  {fitoutTypes.length > 0 ? (
+                    fitoutTypes.map((type) => (
+                      <MenuItem key={type} value={type}>
+                        {type}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>No active fitout types available</MenuItem>
+                  )}
                 </MuiSelect>
               </FormControl>
             </div>

@@ -342,7 +342,15 @@ const FitoutRequestDetails: React.FC = () => {
       setLogs(response.data || []);
     } catch (error: any) {
       console.error('Error fetching logs:', error);
-      toast.error(`Failed to load logs: ${error.message || 'Unknown error'}`);
+      toast.error(`Failed to load logs: ${error.message || 'Unknown error'}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
       setLogs([]);
     } finally {
       setLogsLoading(false);
@@ -393,7 +401,15 @@ const FitoutRequestDetails: React.FC = () => {
     if (!selectedCategoryForUpload) return;
     
     if (uploadFiles.length === 0) {
-      toast.error('Please select at least one file');
+      toast.error('Please select at least one file', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
       return;
     }
 
@@ -411,7 +427,15 @@ const FitoutRequestDetails: React.FC = () => {
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
       
-      toast.success('Files uploaded successfully');
+      toast.success('Files uploaded successfully', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
       setFileUploadModalOpen(false);
       setSelectedCategoryForUpload(null);
       setUploadFiles([]);
@@ -422,7 +446,15 @@ const FitoutRequestDetails: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error uploading files:', error);
-      toast.error(`Failed to upload files: ${error.message || 'Unknown error'}`);
+      toast.error(`Failed to upload files: ${error.message || 'Unknown error'}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
     } finally {
       setUploadLoading(false);
     }
@@ -432,7 +464,15 @@ const FitoutRequestDetails: React.FC = () => {
     if (!selectedCategory) return;
     
     if (!selectedStatusId) {
-      toast.error('Please select a status');
+      toast.error('Please select a status', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
       return;
     }
 
@@ -459,7 +499,15 @@ const FitoutRequestDetails: React.FC = () => {
       
       await apiClient.put(`/fitout_request_categories/${selectedCategory.id}/change_status.json`, requestBody);
       
-      toast.success('Status updated successfully');
+      toast.success('Status updated successfully', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
       setStatusChangeModalOpen(false);
       setSelectedCategory(null);
       setSelectedStatusId('');
@@ -471,7 +519,15 @@ const FitoutRequestDetails: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error updating status:', error);
-      toast.error(`Failed to update status: ${error.message || 'Unknown error'}`);
+      toast.error(`Failed to update status: ${error.message || 'Unknown error'}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
       // Revert to previous status on error
       if (selectedCategory) {
         setCategoryStatuses(prev => ({ ...prev, [selectedCategory.id]: categoryStatuses[selectedCategory.id] }));
@@ -502,8 +558,16 @@ const FitoutRequestDetails: React.FC = () => {
         `/crm/fitout_requests/update_deviation_status.json?id=${selectedDeviation.id}`,
         formData
       );
-      
-      toast.success('Deviation updated successfully');
+
+      toast.success('Deviation updated successfully', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
       setDeviationModalOpen(false);
       setSelectedDeviation(null);
       setDeviationStatusId('');
@@ -515,7 +579,15 @@ const FitoutRequestDetails: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error updating deviation:', error);
-      toast.error(`Failed to update deviation: ${error.message || 'Unknown error'}`);
+      toast.error(`Failed to update deviation: ${error.message || 'Unknown error'}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
     } finally {
       setDeviationLoading(false);
     }
@@ -541,7 +613,13 @@ const FitoutRequestDetails: React.FC = () => {
     } catch (error: any) {
       console.error("Error fetching fitout request details:", error);
       toast.error(`Failed to load fitout request details: ${error.message || 'Unknown error'}`, {
-        duration: 5000,
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     } finally {
       setLoading(false);
@@ -557,7 +635,13 @@ const FitoutRequestDetails: React.FC = () => {
     } catch (error: any) {
       console.error("Error fetching fitout responses:", error);
       toast.error(`Failed to load responses: ${error.message || 'Unknown error'}`, {
-        duration: 5000,
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
       setResponses([]);
     } finally {
@@ -607,7 +691,15 @@ const FitoutRequestDetails: React.FC = () => {
   };
 
   const handleDelete = () => {
-    toast.info("Delete functionality - Coming soon");
+    toast.info("Delete functionality - Coming soon", {
+      position: 'top-right',
+      duration: 3000,
+      style: {
+        background: '#fff',
+        color: 'black',
+        border: 'none',
+      },
+    });
   };
 
   const handleCapturePayment = () => {
@@ -628,7 +720,15 @@ const FitoutRequestDetails: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size must be less than 5MB');
+        toast.error('Image size must be less than 5MB', {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
+        });
         return;
       }
       setPaymentFormData(prev => ({ ...prev, image: file }));
@@ -642,12 +742,28 @@ const FitoutRequestDetails: React.FC = () => {
 
   const handlePaymentSubmit = async () => {
     if (!paymentFormData.payment_mode) {
-      toast.error('Please select a payment mode');
+      toast.error('Please select a payment mode', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
       return;
     }
     
     if (!paymentFormData.amount) {
-      toast.error('Please enter amount');
+      toast.error('Please enter amount', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
       return;
     }
     
@@ -669,12 +785,28 @@ const FitoutRequestDetails: React.FC = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      toast.success('Payment captured successfully');
+      toast.success('Payment captured successfully', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
       setPaymentModalOpen(false);
       fetchFitoutRequestDetails(parseInt(id!));
     } catch (error: any) {
       console.error('Error capturing payment:', error);
-      toast.error(`Failed to capture payment: ${error.message || 'Unknown error'}`);
+      toast.error(`Failed to capture payment: ${error.message || 'Unknown error'}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
     }
   };
 
@@ -711,12 +843,28 @@ const FitoutRequestDetails: React.FC = () => {
         
         setChecklistQuestions(allQuestions);
       } else {
-        toast.error('No Fitout checklists available');
+        toast.error('No Fitout checklists available', {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
+        });
         setChecklistQuestions([]);
       }
     } catch (error: any) {
       console.error('Error fetching checklist:', error);
-      toast.error('Failed to load checklist questions');
+      toast.error('Failed to load checklist questions', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
       setChecklistQuestions([]);
     } finally {
       setChecklistLoading(false);
@@ -747,7 +895,15 @@ const FitoutRequestDetails: React.FC = () => {
     for (let i = 0; i < checklistQuestions.length; i++) {
       const question = checklistQuestions[i];
       if (question.quest_mandatory && !question.response) {
-        toast.error(`Please answer question ${i + 1} (mandatory)`);
+        toast.error(`Please answer question ${i + 1} (mandatory)`, {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
+        });
         return;
       }
       // if (!question.comments) {
@@ -761,7 +917,15 @@ const FitoutRequestDetails: React.FC = () => {
     }
 
     if (!selectedChecklistId) {
-      toast.error('No checklist selected');
+      toast.error('No checklist selected', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
       return;
     }
 
@@ -800,14 +964,30 @@ const FitoutRequestDetails: React.FC = () => {
                   // },
       });
       
-      toast.success('Checklist submitted successfully');
+      toast.success('Checklist submitted successfully', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
       setChecklistModalOpen(false);
       setChecklistRemarks('');
       setChecklistQuestions([]);
       setSelectedChecklistId(null);
     } catch (error: any) {
       console.error('Error submitting checklist:', error);
-      toast.error(`Failed to submit checklist: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+      toast.error(`Failed to submit checklist: ${error.response?.data?.message || error.message || 'Unknown error'}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
     }
   };
 
@@ -823,10 +1003,26 @@ const FitoutRequestDetails: React.FC = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success('Document downloaded successfully');
+      toast.success('Document downloaded successfully', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
     } catch (error) {
       console.error('Error downloading document:', error);
-      toast.error('Failed to download document');
+      toast.error('Failed to download document', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
     }
   };
 

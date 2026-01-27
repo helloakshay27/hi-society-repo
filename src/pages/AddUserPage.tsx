@@ -20,6 +20,7 @@ import {
   Avatar,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 
 // Styled Components
 const SectionCard = styled(Paper)(({ theme }) => ({
@@ -119,9 +120,8 @@ const CameraButton = styled(IconButton)(({ theme }) => ({
   },
 }));
 
-const API_TOKEN = "bfa5004e7b0175622be8f7e69b37d01290b737f82e078414";
-const CREATE_API = `https://uat-hi-society.lockated.com/crm/admin/user_societies.json?token=${API_TOKEN}`;
-const EDIT_API = (id: string) => `https://uat-hi-society.lockated.com/crm/admin/user_societies/${id}.json?token=${API_TOKEN}`;
+const CREATE_API = `${HI_SOCIETY_CONFIG.BASE_URL}/crm/admin/user_societies.json?token=${HI_SOCIETY_CONFIG.TOKEN}`;
+const EDIT_API = (id: string) => `${HI_SOCIETY_CONFIG.BASE_URL}/crm/admin/user_societies/${id}.json?token=${HI_SOCIETY_CONFIG.TOKEN}`;
 
 const mapFormDataToApiPayload = (formData: any) => ({
   email: formData.email,

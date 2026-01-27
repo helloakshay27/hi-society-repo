@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, SelectChangeEvent } from '@mui/material';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { apiClient } from '@/utils/apiClient';
 
 interface FitoutRequestFormData {
@@ -40,7 +40,6 @@ interface FitoutRequestCategory {
 const FitoutRequestEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [towers, setTowers] = useState([]);
@@ -149,24 +148,37 @@ const FitoutRequestEdit: React.FC = () => {
         }));
         setDeposit(firstRate.deposit?.toString() || '0.00');
         
-        toast({
-          title: 'Success',
-          description: `Loaded ${matchingRates.length} annexure(s) with amounts for ${fitoutType}`,
+        toast.success(`Loaded ${matchingRates.length} annexure(s) with amounts for ${fitoutType}`, {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
         });
       } else if (matchingRates.length === 0) {
         console.warn('No matching rates found for fitout type:', fitoutType);
-        toast({
-          title: 'No Rates Found',
-          description: `No fitout rates configured for ${fitoutType} type`,
-          variant: 'destructive',
+        toast.error(`No fitout rates configured for ${fitoutType} type`, {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
         });
       }
     } catch (error) {
       console.error('Error fetching fitout flat rates:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch fitout rates',
-        variant: 'destructive',
+      toast.error('Failed to fetch fitout rates', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     }
   };
@@ -424,10 +436,14 @@ const FitoutRequestEdit: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching fitout request:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load fitout request data',
-        variant: 'destructive',
+      toast.error('Failed to load fitout request data', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     } finally {
       setDataLoading(false);
@@ -499,10 +515,14 @@ const FitoutRequestEdit: React.FC = () => {
     e.preventDefault();
     
     if (!formData.tower || !formData.flat || !formData.user) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill in all required fields',
-        variant: 'destructive',
+      toast.error('Please fill in all required fields', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
       return;
     }
@@ -564,18 +584,27 @@ const FitoutRequestEdit: React.FC = () => {
         },
       });
 
-      toast({
-        title: 'Success',
-        description: 'Fitout request updated successfully!',
+      toast.success('Fitout request updated successfully!', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
 
       navigate('/fitout/requests');
     } catch (error) {
       console.error('Error updating fitout request:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update fitout request',
-        variant: 'destructive',
+      toast.error('Failed to update fitout request', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     } finally {
       setLoading(false);

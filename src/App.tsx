@@ -516,6 +516,11 @@ import { EditRosterTemplatePage } from "./pages/setup/EditRosterTemplatePage";
 
 // Import Loyalty Rule Engine Dashboard
 import { LoyaltyRuleEngineDashboard } from "./pages/LoyaltyRuleEngineDashboard";
+import { LoyaltyDashboard } from "./pages/LoyaltyDashboard";
+import { WalletManagement } from "./pages/WalletManagement";
+import { LoyaltyCustomers } from "./pages/LoyaltyCustomers";
+import { LoyaltyCustomerDetails } from "./pages/LoyaltyCustomerDetails";
+import { LoyaltyInventorySection } from "./pages/LoyaltyInventorySection";
 
 // Import OSR pages
 import { OSRDashboard } from "./pages/OSRDashboard";
@@ -1241,6 +1246,26 @@ function App() {
                   <Route
                     path="/rule-engine/rule-list"
                     element={<RuleListPage />}
+                  />
+                  <Route
+                    path="/loyalty/dashboard"
+                    element={<LoyaltyDashboard />}
+                  />
+                  <Route
+                    path="/loyalty/wallet-management"
+                    element={<WalletManagement />}
+                  />
+                  <Route
+                    path="/loyalty/customers"
+                    element={<LoyaltyCustomers />}
+                  />
+                  <Route
+                    path="/loyalty/customers/:id"
+                    element={<LoyaltyCustomerDetails />}
+                  />
+                  <Route
+                    path="/loyalty/inventory-section"
+                    element={<LoyaltyInventorySection />}
                   />
                   <Route
                     path="/loyalty-rule-engine"
