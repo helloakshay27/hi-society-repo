@@ -57,10 +57,10 @@ baseClient.interceptors.request.use(
         hostname.includes("fm.gophygital.work") ||
         hostname.includes("fm-matrix.lockated.com");
 
-      // Hi-Society specific hosts and their API base URLs
-      const isHiSocietyWebHost = hostname.includes("web.hisociety.lockated.com");
-      const isHiSocietyUIHost = hostname.includes("ui-hisociety.lockated.com");
-      const isHiSocietyUATHost = hostname.includes("uat-hi-society.lockated.com");
+      // Hi-Society specific hosts and their API base URLs (strict equality check)
+      const isHiSocietyWebHost = hostname === "web.hisociety.lockated.com";
+      const isHiSocietyUIHost = hostname === "ui-hisociety.lockated.com";
+      const isHiSocietyUATHost = hostname === "uat-hi-society.lockated.com";
       const isHiSocietySite = isHiSocietyWebHost || isHiSocietyUIHost || isHiSocietyUATHost;
 
       // Map hi-society host -> backend/base API URL

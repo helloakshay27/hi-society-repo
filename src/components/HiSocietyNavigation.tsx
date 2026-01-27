@@ -95,7 +95,7 @@ export const HiSocietyNavigation: React.FC = () => {
   const isCMSDomain = window.location.hostname === 'ui-cms.lockated.com';
   
   // Check if current domain is Fitout domain
-  const isFitoutDomain = window.location.hostname.includes('web.hisociety.lockated.com') || window.location.hostname.includes('localhost');
+  const isFitoutDomain = window.location.hostname === 'web.hisociety.lockated.com' || window.location.hostname.includes('localhost');
 
   // Filter navigation items based on domain
   const filteredNavigationItems = isCMSDomain
