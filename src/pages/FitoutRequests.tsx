@@ -196,6 +196,27 @@ const FitoutRequests: React.FC = () => {
         defaultVisible: true,
       },
       {
+        key: "user_name",
+        label: "User Name",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
+        key: "tower",
+        label: "Tower",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
+        key: "flat_no",
+        label: "Flat No",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
         key: "status_name",
         label: "Status",
         sortable: true,
