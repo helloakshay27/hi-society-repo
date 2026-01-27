@@ -25,7 +25,11 @@ import {
   Download,
   X,
   Plus,
-  Logs
+  Logs,
+  MessageSquare,
+  Upload,
+  FileQuestion,
+  Eye
 } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -107,6 +111,18 @@ interface SnagQuestionMap {
 interface FitoutResponse {
   id: number;
   name: string;
+  complaint_status_id?: number | null;
+  complaint_status_name?: string;
+  status?: string;
+  status_color?: string;
+  comments?: Array<{
+    id: number;
+    body: string;
+    commentor_id: number;
+    commentor_name: string;
+    created_at: string;
+    updated_at: string;
+  }>;
   snag_quest_maps: SnagQuestionMap[];
 }
 
@@ -131,6 +147,14 @@ interface FitoutRequestCategory {
   status_name: string | null;
   documents: FitoutDocument[];
   snag_quest_maps?: SnagQuestionMap[];
+  comments?: Array<{
+    id: number;
+    body: string;
+    commentor_id: number;
+    commentor_name: string;
+    created_at: string;
+    updated_at: string;
+  }>;
 }
 
 interface LockPayment {
@@ -270,6 +294,13 @@ const FitoutRequestDetails: React.FC = () => {
   const [annexureResponses, setAnnexureResponses] = useState<FitoutResponse[]>([]);
   const [categoryStatuses, setCategoryStatuses] = useState<{ [key: number]: number | null }>({});
   const [statuses, setStatuses] = useState<any[]>([]);
+
+  const [annexureResponsesEditMode, setAnnexureResponsesEditMode] = useState(false);
+  const [editedAnnexureAnswers, setEditedAnnexureAnswers] = useState<
+    Record<number, { ans_descr?: string; quest_option_id?: number | null }>
+  >({});
+
+  const [annexureSaveLoading, setAnnexureSaveLoading] = useState(false);
   
   // Logs Modal State
   const [logsModalOpen, setLogsModalOpen] = useState(false);
@@ -312,8 +343,8 @@ const FitoutRequestDetails: React.FC = () => {
 
   const fetchStatuses = async () => {
     try {
-      const statusesResponse = await apiClient.get('/crm/admin/fitout_requests/fitout_statuses.json');
-      const statusesArray = statusesResponse.data?.data || [];
+      const statusesResponse = await apiClient.get('/fitout_categories/get_complaint_statuses.json?q[of_atype_eq]=fitout_category');
+      const statusesArray = statusesResponse.data?.complaint_statuses || [];
       console.log('Statuses Array:', statusesArray);
       setStatuses(statusesArray);
     } catch (error) {
@@ -360,6 +391,102 @@ const FitoutRequestDetails: React.FC = () => {
   const handleLogsOpen = () => {
     setLogsModalOpen(true);
     fetchLogs();
+  };
+
+  const handleAnnexureResponsesEditButtonClick = async () => {
+    if (!annexureResponsesEditMode) {
+      setEditedAnnexureAnswers({});
+      setAnnexureResponsesEditMode(true);
+      return;
+    }
+
+    try {
+      setAnnexureSaveLoading(true);
+
+      const questMapById = new Map<number, SnagQuestionMap>();
+      annexureResponses.forEach((categoryResponse) => {
+        (categoryResponse.snag_quest_maps || []).forEach((questMap) => {
+          questMapById.set(questMap.id, questMap);
+        });
+      });
+
+      const snag_answers: Record<string, any> = {};
+
+      Object.entries(editedAnnexureAnswers).forEach(([mapIdStr, edited]) => {
+        const mapIdNum = Number(mapIdStr);
+        const questMap = questMapById.get(mapIdNum);
+        if (!questMap) return;
+
+        const question = questMap.snag_question;
+        // Skip file type answers here; file upload is handled via Upload button
+        if (question.qtype === 'file') return;
+
+        const mapId = String(questMap.id);
+        const questionId = String(question.id);
+
+        const payload: any = {
+          snag_quest_map_id: mapId,
+          snag_question_id: questionId,
+          ans_descr: (edited.ans_descr ?? '').toString(),
+        };
+
+        // Include option_id ONLY if the user actually edited it (so we can also clear it)
+        if (Object.prototype.hasOwnProperty.call(edited, 'quest_option_id')) {
+          payload.snag_quest_option_id = edited.quest_option_id ? String(edited.quest_option_id) : '';
+        }
+
+        snag_answers[mapId] = payload;
+      });
+
+      if (Object.keys(snag_answers).length === 0) {
+        toast.error('No changes to save', {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
+        });
+        setAnnexureResponsesEditMode(false);
+        setEditedAnnexureAnswers({});
+        return;
+      }
+
+      await apiClient.post('/fitout_requests/create_feedback', {
+        snag_answers,
+      });
+
+      toast.success('Responses updated successfully', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
+
+      setAnnexureResponsesEditMode(false);
+      setEditedAnnexureAnswers({});
+
+      if (id) {
+        fetchFitoutRequestDetails(parseInt(id));
+      }
+    } catch (error: any) {
+      console.error('Error updating responses:', error);
+      toast.error(`Failed to update responses: ${error.message || 'Unknown error'}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
+    } finally {
+      setAnnexureSaveLoading(false);
+    }
   };
 
   const handleDeviationEdit = async (deviation: DeviationDetail) => {
@@ -598,6 +725,12 @@ const FitoutRequestDetails: React.FC = () => {
     try {
       const response = await apiClient.get(`/crm/admin/fitout_requests/${requestId}.json`);
       console.log("Fitout Request Details:", response.data);
+      console.log("Categories with comments:", response.data.fitout_request_categories?.map((cat: any) => ({
+        id: cat.id,
+        name: cat.category_name,
+        commentsCount: cat.comments?.length || 0,
+        comments: cat.comments
+      })));
       setRequestData(response.data);
       
       // Fetch responses for annexures tab
@@ -1251,7 +1384,10 @@ const FitoutRequestDetails: React.FC = () => {
             <Badge
               variant={requestData.status_name ? "default" : "secondary"}
               className="text-xs"
-              style={requestData.status_name ? { backgroundColor: '#C72030' } : {}}
+              style={{
+                backgroundColor: statuses.find(s => s.id === requestData.status_id)?.color_code || '#C72030',
+                color: 'white'
+              }}
             >
               {requestData.status_name || 'Pending'}
             </Badge>
@@ -1532,76 +1668,139 @@ const FitoutRequestDetails: React.FC = () => {
                     className="px-6 py-3 border-b border-gray-200"
                     style={{ backgroundColor: "#F6F4EE" }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
-                        <FileText className="w-4 h-4" style={{ color: '#C72030' }} />
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
+                          <FileText className="w-4 h-4" style={{ color: '#C72030' }} />
+                        </div>
+                        <h3 className="text-base font-semibold text-gray-900">
+                          Annexures ({requestData.fitout_request_categories.length})
+                        </h3>
                       </div>
-                      <h3 className="text-base font-semibold text-gray-900">
-                        Annexures ({requestData.fitout_request_categories.length})
-                      </h3>
+
+                      <Button
+                        onClick={handleAnnexureResponsesEditButtonClick}
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs border-gray-300 hover:bg-gray-50"
+                        disabled={annexureSaveLoading}
+                      >
+                        {annexureSaveLoading ? (
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        ) : (
+                          <Edit className="w-3 h-3 mr-1" />
+                        )}
+                        {annexureResponsesEditMode ? 'Done' : 'Edit Responses'}
+                      </Button>
                     </div>
                   </div>
                   <div className="p-6">
                     {requestData.fitout_request_categories.length > 0 ? (
                       <div className="space-y-6">
-                        {requestData.fitout_request_categories.map((category, index) => {
-                          // Find matching response data for this category
-                          const categoryResponse = annexureResponses.find(
-                            (resp) => resp.name === category.category_name
+                        {annexureResponses.map((categoryResponse, index) => {
+                          // Find matching category from requestData
+                          const category = requestData.fitout_request_categories.find(
+                            (cat) => cat.category_name === categoryResponse.name
+                          );
+
+                          // Get comments and check if has file-type questions
+                          const comments = categoryResponse.comments || [];
+                          const hasFileQuestions = categoryResponse.snag_quest_maps?.some(
+                            (qm) => qm.snag_question.qtype === 'file'
                           );
                           
                           return (
                             <div
-                              key={category.id}
-                              className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-300"
+                              key={categoryResponse.id}
+                              className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-300"
                             >
-                              <div className="flex items-start justify-between mb-4">
-                                <div className="flex-1">
-                                  <h4 className="text-base font-semibold text-gray-900 mb-2">
-                                    {index + 1}. {category.category_name}
-                                  </h4>
-                                  <div className="flex items-center gap-3">
-                                    {category.status_name && (
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs"
-                                        style={{ borderColor: '#C72030', color: '#C72030' }}
-                                      >
-                                        {category.status_name}
-                                      </Badge>
-                                    )}
-                                    <Button
-                                      onClick={() => handleStatusChangeOpen(category)}
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-8 text-xs border-gray-300 hover:bg-gray-50"
-                                    >
-                                      <Edit className="w-3 h-3 mr-1" />
-                                      Change Status
-                                    </Button>
-                                    {/* <Button
-                                      onClick={() => handleFileUploadOpen(category)}
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-8 text-xs border-gray-300 hover:bg-gray-50"
-                                    >
-                                      <Paperclip className="w-3 h-3 mr-1" />
-                                      Upload Files
-                                    </Button> */}
+                              {/* Category Header */}
+                              <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                                <div className="flex items-center justify-between gap-4">
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <div className="w-8 h-8 rounded-full bg-[#C72030] text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                                      {index + 1}
+                                    </div>
+                                    <h4 className="text-base font-semibold text-gray-900">
+                                      {categoryResponse.name}
+                                    </h4>
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <p className="text-lg font-bold text-gray-900 mr-2">
+                                      ₹{(category?.amount || 0).toLocaleString()}
+                                    </p>
                                   </div>
                                 </div>
-                                <div className="text-right">
-                                  <p className="text-xs text-gray-600">Amount</p>
-                                  <p className="text-lg font-bold text-gray-900">
-                                    ₹{(category.amount || 0).toFixed(2)}
-                                  </p>
+                                <div className="flex items-center gap-2 mt-3 ml-11">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs"
+                                    style={{
+                                      backgroundColor: categoryResponse.status_color || '#C72030',
+                                      color: 'white',
+                                      borderColor: categoryResponse.status_color || '#C72030'
+                                    }}
+                                  >
+                                    {categoryResponse.status || categoryResponse.complaint_status_name || 'Pending'}
+                                  </Badge>
+                                  <Button
+                                    onClick={() => category && handleStatusChangeOpen(category)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs border-gray-300 hover:bg-gray-50"
+                                  >
+                                    <Edit className="w-3 h-3 mr-1" />
+                                    Change Status
+                                  </Button>
+                                  {hasFileQuestions && (
+                                    <Button
+                                      onClick={() => category && handleFileUploadOpen(category)}
+                                      size="sm"
+                                      style={{ backgroundColor: '#C72030', color: 'white' }}
+                                      className="h-7 text-xs hover:opacity-90"
+                                    >
+                                      <Upload className="w-3 h-3 mr-1" />
+                                      Upload
+                                    </Button>
+                                  )}
                                 </div>
+                              </div>
+
+                              {/* Category Content */}
+                              <div className=" space-y-4">
+                                {/* Comments Section */}
+                                {comments && Array.isArray(comments) && comments.length > 0 && (
+                                  <div className="bg-[#f6f4ee] rounded-lg p-4">
+                                    <div className="flex items-start gap-2 mb-3">
+                                      <MessageSquare className="w-4 h-4 text-[#C72030] mt-0.5 flex-shrink-0" />
+                                      <h5 className="font-semibold text-gray-900 text-sm">Comments ({comments.length})</h5>
+                                    </div>
+                                    <div className="space-y-3">
+                                      {comments.map((comment: any) => (
+                                        <div key={comment.id} className="bg-white rounded-lg p-3 border border-blue-100">
+                                          <div className="flex items-start gap-2">
+                                            <div className="w-7 h-7 rounded-full bg-[#C72030] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                                              {comment.commentor_name?.charAt(0) || 'U'}
+                                            </div>
+                                            <div className="flex-1">
+                                              <div className="flex items-start justify-between gap-2 mb-1">
+                                                <p className="text-sm font-medium text-gray-900">{comment.commentor_name}</p>
+                                                <p className="text-xs text-gray-500 whitespace-nowrap">{formatDateTime(comment.created_at)}</p>
+                                              </div>
+                                              <p className="text-sm text-gray-700">{comment.body}</p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
 
                               {/* Questions and Responses Section */}
                               {categoryResponse?.snag_quest_maps && categoryResponse.snag_quest_maps.length > 0 && (
-                                <div className="mt-4 pt-4 border-t border-gray-200">
-                                  <div className="flex items-center gap-2 mb-4">
+                                <div className="pt-4 border-t border-gray-200">
+                                  <div className="flex items-center gap-2 mb-4 ml-4">
                                     <div className="w-8 h-8 rounded-full bg-[#C72030] bg-opacity-10 flex items-center justify-center">
                                       <FileText className="w-4 h-4 text-[#C72030]" />
                                     </div>
@@ -1615,17 +1814,33 @@ const FitoutRequestDetails: React.FC = () => {
                                   <div className="space-y-3">
                                     {categoryResponse.snag_quest_maps.map((questMap, qIndex) => {
                                       const question = questMap.snag_question;
-                                      const answer = questMap.snag_answers?.[0];
+                                      const allAnswers = Array.isArray(questMap.snag_answers)
+                                        ? [...questMap.snag_answers]
+                                        : [];
+                                      const sortedAnswers = allAnswers.sort(
+                                        (a, b) =>
+                                          new Date(a.created_at).getTime() -
+                                          new Date(b.created_at).getTime()
+                                      );
+                                      const latestAnswer =
+                                        sortedAnswers.length > 0
+                                          ? sortedAnswers[sortedAnswers.length - 1]
+                                          : undefined;
+
+                                      const edited = editedAnnexureAnswers[questMap.id];
+                                      const currentAnsDescr = edited?.ans_descr ?? latestAnswer?.ans_descr ?? '';
+                                      const currentOptionId =
+                                        edited?.quest_option_id ?? latestAnswer?.quest_option_id ?? null;
                                       
                                       let answerDisplay = 'No response';
-                                      if (answer) {
-                                        if (question.qtype === 'multiple' && answer.quest_option_id) {
+                                      if (latestAnswer) {
+                                        if (question.qtype === 'multiple' && latestAnswer.quest_option_id) {
                                           const selectedOption = question.snag_quest_options?.find(
-                                            opt => opt.id === answer.quest_option_id
+                                            opt => opt.id === latestAnswer.quest_option_id
                                           );
                                           answerDisplay = selectedOption?.qname || 'Selected';
                                         } else {
-                                          answerDisplay = answer.ans_descr || 'No response';
+                                          answerDisplay = latestAnswer.ans_descr || 'No response';
                                         }
                                       }
                                       
@@ -1650,19 +1865,98 @@ const FitoutRequestDetails: React.FC = () => {
                                             {/* Answer */}
                                             <div className="ml-9 space-y-2">
                                               <div className="bg-gray-50 rounded-md p-3 border border-gray-100">
-                                                <p className={`text-sm ${answer ? 'text-gray-900' : 'text-gray-400 italic'}`}>
-                                                  {answerDisplay}
-                                                </p>
+                                                {annexureResponsesEditMode ? (
+                                                  question.qtype === 'multiple' ? (
+                                                    <Select
+                                                      value={currentOptionId ? String(currentOptionId) : ''}
+                                                      onValueChange={(val) => {
+                                                        const selectedId = val ? Number(val) : null;
+                                                        const selectedOption = question.snag_quest_options?.find(
+                                                          (opt) => opt.id === selectedId
+                                                        );
+                                                        setEditedAnnexureAnswers((prev) => ({
+                                                          ...prev,
+                                                          [questMap.id]: {
+                                                            quest_option_id: selectedId,
+                                                            ans_descr: selectedOption?.qname || '',
+                                                          },
+                                                        }));
+                                                      }}
+                                                    >
+                                                      <SelectTrigger className="h-9 bg-white">
+                                                        <SelectValue placeholder="Select" />
+                                                      </SelectTrigger>
+                                                      <SelectContent>
+                                                        {(question.snag_quest_options || []).map((opt) => (
+                                                          <SelectItem key={opt.id} value={String(opt.id)}>
+                                                            {opt.qname}
+                                                          </SelectItem>
+                                                        ))}
+                                                      </SelectContent>
+                                                    </Select>
+                                                  ) : (
+                                                    <Input
+                                                      value={currentAnsDescr}
+                                                      onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setEditedAnnexureAnswers((prev) => ({
+                                                          ...prev,
+                                                          [questMap.id]: {
+                                                            ...prev[questMap.id],
+                                                            ans_descr: val,
+                                                            quest_option_id: null,
+                                                          },
+                                                        }));
+                                                      }}
+                                                      className="h-9 bg-white"
+                                                    />
+                                                  )
+                                                ) : (
+                                                  <p className={`text-sm ${latestAnswer ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+                                                    {answerDisplay}
+                                                  </p>
+                                                )}
                                               </div>
-                                              
-                                              {/* Answer Documents */}
-                                              {answer?.docs && answer.docs.length > 0 && (
+
+                                              {sortedAnswers.length > 1 && (
                                                 <div className="space-y-2">
                                                   <p className="text-xs font-medium text-gray-600">
-                                                    Attachments ({answer.docs.length})
+                                                    Response History ({sortedAnswers.length})
+                                                  </p>
+                                                  <div className="space-y-2">
+                                                    {sortedAnswers
+                                                      .slice(0, -1)
+                                                      .reverse()
+                                                      .map((ans) => (
+                                                        <div
+                                                          key={ans.id}
+                                                          className="bg-white rounded-md p-3 border border-gray-200"
+                                                        >
+                                                          <div className="flex items-center justify-between gap-2 mb-1">
+                                                            <p className="text-xs text-gray-500">
+                                                              {formatDateTime(ans.created_at)}
+                                                            </p>
+                                                            {ans.id && (
+                                                              <p className="text-[10px] text-gray-400">#{ans.id}</p>
+                                                            )}
+                                                          </div>
+                                                          <p className="text-sm text-gray-700">
+                                                            {ans.ans_descr || '—'}
+                                                          </p>
+                                                        </div>
+                                                      ))}
+                                                  </div>
+                                                </div>
+                                              )}
+                                              
+                                              {/* Answer Documents */}
+                                              {latestAnswer?.docs && latestAnswer.docs.length > 0 && (
+                                                <div className="space-y-2">
+                                                  <p className="text-xs font-medium text-gray-600">
+                                                    Attachments ({latestAnswer.docs.length})
                                                   </p>
                                                   <div className="grid grid-cols-2 gap-2">
-                                                    {answer.docs.map((doc: any, docIdx: number) => (
+                                                    {latestAnswer.docs.map((doc: any, docIdx: number) => (
                                                       <div
                                                         key={doc.id}
                                                         className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
@@ -1929,106 +2223,156 @@ const FitoutRequestDetails: React.FC = () => {
                 </div>
                 <div className="p-6">
                   {requestData.lock_payment ? (
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow style={{ backgroundColor: '#F6F4EE' }}>
-                            <TableHead className="font-semibold text-gray-900">Field</TableHead>
-                            <TableHead className="font-semibold text-gray-900">Value</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell className="font-medium text-gray-700">Payment ID</TableCell>
-                            <TableCell className="text-gray-900">#{requestData.lock_payment.id}</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-medium text-gray-700">Payment Status</TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant="default" 
-                                style={{ backgroundColor: requestData.lock_payment.payment_status === 'full' ? '#10b981' : '#f59e0b' }}
-                              >
-                                {requestData.lock_payment.payment_status === 'full' ? 'Fully Paid' : 
-                                 requestData.lock_payment.payment_status === 'partial' ? 'Partially Paid' : 
-                                 requestData.lock_payment.payment_status || 'Pending'}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-medium text-gray-700">Total Amount</TableCell>
-                            <TableCell className="text-gray-900 font-semibold">₹{parseFloat(requestData.lock_payment.total_amount || '0').toFixed(2)}</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-medium text-gray-700">Payment Method</TableCell>
-                            <TableCell className="text-gray-900 capitalize">{requestData.lock_payment.payment_method || '—'}</TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="font-medium text-gray-700">Transaction ID</TableCell>
-                            <TableCell className="text-gray-900">{requestData.lock_payment.pg_transaction_id || '—'}</TableCell>
-                          </TableRow>
-                          {requestData.lock_payment.order_number && (
-                            <TableRow>
-                              <TableCell className="font-medium text-gray-700">Order Number</TableCell>
-                              <TableCell className="text-gray-900">{requestData.lock_payment.order_number}</TableCell>
+                    <div className="space-y-6">
+                      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow style={{ backgroundColor: '#F6F4EE' }}>
+                              <TableHead className="font-semibold text-gray-900">Field</TableHead>
+                              <TableHead className="font-semibold text-gray-900">Value</TableHead>
                             </TableRow>
-                          )}
-                          {requestData.lock_payment.payment_mode && (
+                          </TableHeader>
+                          <TableBody>
                             <TableRow>
-                              <TableCell className="font-medium text-gray-700">Payment Mode</TableCell>
-                              <TableCell className="text-gray-900">{requestData.lock_payment.payment_mode}</TableCell>
+                              <TableCell className="font-medium text-gray-700">Payment ID</TableCell>
+                              <TableCell className="text-gray-900">#{requestData.lock_payment.id}</TableCell>
                             </TableRow>
-                          )}
-                          {requestData.lock_payment.sub_total && (
                             <TableRow>
-                              <TableCell className="font-medium text-gray-700">Sub Total</TableCell>
-                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.sub_total || '0').toFixed(2)}</TableCell>
+                              <TableCell className="font-medium text-gray-700">Payment Status</TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant="default" 
+                                  style={{ backgroundColor: requestData.lock_payment.payment_status === 'full' ? '#10b981' : '#f59e0b' }}
+                                >
+                                  {requestData.lock_payment.payment_status === 'full' ? 'Fully Paid' : 
+                                   requestData.lock_payment.payment_status === 'partial' ? 'Partially Paid' : 
+                                   requestData.lock_payment.payment_status || 'Pending'}
+                                </Badge>
+                              </TableCell>
                             </TableRow>
-                          )}
-                          {requestData.lock_payment.gst && (
                             <TableRow>
-                              <TableCell className="font-medium text-gray-700">GST</TableCell>
-                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.gst || '0').toFixed(2)}</TableCell>
+                              <TableCell className="font-medium text-gray-700">Total Amount</TableCell>
+                              <TableCell className="text-gray-900 font-semibold">₹{parseFloat(requestData.lock_payment.total_amount || '0').toFixed(2)}</TableCell>
                             </TableRow>
-                          )}
-                          {requestData.lock_payment.discount && (
                             <TableRow>
-                              <TableCell className="font-medium text-gray-700">Discount</TableCell>
-                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.discount || '0').toFixed(2)}</TableCell>
+                              <TableCell className="font-medium text-gray-700">Payment Method</TableCell>
+                              <TableCell className="text-gray-900 capitalize">{requestData.lock_payment.payment_method || '—'}</TableCell>
                             </TableRow>
-                          )}
-                          {requestData.lock_payment.convenience_charge && (
                             <TableRow>
-                              <TableCell className="font-medium text-gray-700">Convenience Charge</TableCell>
-                              <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.convenience_charge || '0').toFixed(2)}</TableCell>
+                              <TableCell className="font-medium text-gray-700">Transaction ID</TableCell>
+                              <TableCell className="text-gray-900">{requestData.lock_payment.pg_transaction_id || '—'}</TableCell>
                             </TableRow>
-                          )}
-                          {requestData.lock_payment.payment_gateway && (
-                            <TableRow>
-                              <TableCell className="font-medium text-gray-700">Payment Gateway</TableCell>
-                              <TableCell className="text-gray-900">{requestData.lock_payment.payment_gateway}</TableCell>
-                            </TableRow>
-                          )}
-                          {requestData.lock_payment.bank_name && (
-                            <TableRow>
-                              <TableCell className="font-medium text-gray-700">Bank Name</TableCell>
-                              <TableCell className="text-gray-900">{requestData.lock_payment.bank_name}</TableCell>
-                            </TableRow>
-                          )}
-                          {requestData.lock_payment.pg_response_code && (
-                            <TableRow>
-                              <TableCell className="font-medium text-gray-700">Response Code</TableCell>
-                              <TableCell className="text-gray-900">{requestData.lock_payment.pg_response_code}</TableCell>
-                            </TableRow>
-                          )}
-                          {requestData.lock_payment.pg_response_msg && (
-                            <TableRow>
-                              <TableCell className="font-medium text-gray-700">Response Message</TableCell>
-                              <TableCell className="text-gray-900">{requestData.lock_payment.pg_response_msg}</TableCell>
-                            </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
+                            {requestData.lock_payment.order_number && (
+                              <TableRow>
+                                <TableCell className="font-medium text-gray-700">Order Number</TableCell>
+                                <TableCell className="text-gray-900">{requestData.lock_payment.order_number}</TableCell>
+                              </TableRow>
+                            )}
+                            {requestData.lock_payment.payment_mode && (
+                              <TableRow>
+                                <TableCell className="font-medium text-gray-700">Payment Mode</TableCell>
+                                <TableCell className="text-gray-900">{requestData.lock_payment.payment_mode}</TableCell>
+                              </TableRow>
+                            )}
+                            {requestData.lock_payment.sub_total && (
+                              <TableRow>
+                                <TableCell className="font-medium text-gray-700">Sub Total</TableCell>
+                                <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.sub_total || '0').toFixed(2)}</TableCell>
+                              </TableRow>
+                            )}
+                            {requestData.lock_payment.gst && (
+                              <TableRow>
+                                <TableCell className="font-medium text-gray-700">GST</TableCell>
+                                <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.gst || '0').toFixed(2)}</TableCell>
+                              </TableRow>
+                            )}
+                            {requestData.lock_payment.discount && (
+                              <TableRow>
+                                <TableCell className="font-medium text-gray-700">Discount</TableCell>
+                                <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.discount || '0').toFixed(2)}</TableCell>
+                              </TableRow>
+                            )}
+                            {requestData.lock_payment.convenience_charge && (
+                              <TableRow>
+                                <TableCell className="font-medium text-gray-700">Convenience Charge</TableCell>
+                                <TableCell className="text-gray-900">₹{parseFloat(requestData.lock_payment.convenience_charge || '0').toFixed(2)}</TableCell>
+                              </TableRow>
+                            )}
+                            {requestData.lock_payment.payment_gateway && (
+                              <TableRow>
+                                <TableCell className="font-medium text-gray-700">Payment Gateway</TableCell>
+                                <TableCell className="text-gray-900">{requestData.lock_payment.payment_gateway}</TableCell>
+                              </TableRow>
+                            )}
+                            {requestData.lock_payment.bank_name && (
+                              <TableRow>
+                                <TableCell className="font-medium text-gray-700">Bank Name</TableCell>
+                                <TableCell className="text-gray-900">{requestData.lock_payment.bank_name}</TableCell>
+                              </TableRow>
+                            )}
+                            {requestData.lock_payment.pg_response_code && (
+                              <TableRow>
+                                <TableCell className="font-medium text-gray-700">Response Code</TableCell>
+                                <TableCell className="text-gray-900">{requestData.lock_payment.pg_response_code}</TableCell>
+                              </TableRow>
+                            )}
+                            {requestData.lock_payment.pg_response_msg && (
+                              <TableRow>
+                                <TableCell className="font-medium text-gray-700">Response Message</TableCell>
+                                <TableCell className="text-gray-900">{requestData.lock_payment.pg_response_msg}</TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+
+                      {/* Payment Receipt/Attachment */}
+                      {requestData.lock_payment.receipt_pdf && (
+                        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                          <div
+                            className="px-4 py-3 border-b border-gray-200"
+                            style={{ backgroundColor: "#F6F4EE" }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Paperclip className="w-4 h-4" style={{ color: '#C72030' }} />
+                              <h4 className="text-sm font-semibold text-gray-900">Attachment</h4>
+                            </div>
+                          </div>
+                          <div className="p-4">
+                            <div className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all">
+                              <img
+                                src={requestData.lock_payment.receipt_pdf}
+                                alt="Payment Receipt"
+                                className="w-full h-64 object-contain bg-gray-50"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EReceipt%3C/text%3E%3C/svg%3E';
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => window.open(requestData.lock_payment.receipt_pdf, '_blank')}
+                                >
+                                  <Eye className="w-4 h-4 mr-1" />
+                                  View
+                                </Button>
+                                {/* <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => downloadDocument(requestData.lock_payment.receipt_pdf, `payment-receipt-${requestData.lock_payment.id}.pdf`)}
+                                >
+                                  <Download className="w-4 h-4 mr-1" />
+                                  Download
+                                </Button> */}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">

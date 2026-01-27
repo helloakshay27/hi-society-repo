@@ -68,106 +68,14 @@ const FitoutRequests: React.FC = () => {
       console.log("Fitout Requests response:", response.data);
       const requestsData = response.data.fitout_requests || [];
 
-      // Get society ID for fetching blocks and flats
-      const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
-      let idSociety = '';
-      
-      if (selectedUserSocietyId) {
-        try {
-          const userSocietiesResponse = await axios.get(
-            getFullUrl("/crm/admin/user_societies.json"),
-            {
-              headers: {
-                Authorization: getAuthHeader(),
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          const userSocieties = userSocietiesResponse.data || [];
-          const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
-          idSociety = selectedSociety?.id_society || '';
-        } catch (error) {
-          console.error('Error fetching user societies:', error);
-        }
-      }
-
-      // Fetch all blocks, flats, and users in parallel
-      let blocks: any[] = [];
-      let users: any[] = [];
-      
-      try {
-        const [blocksResponse, usersResponse] = await Promise.all([
-          idSociety ? axios.get(
-            getFullUrl(`/get_society_blocks.json?society_id=${idSociety}`),
-            {
-              headers: {
-                Authorization: getAuthHeader(),
-              },
-            }
-          ) : Promise.resolve({ data: { society_blocks: [] } }),
-          axios.get(
-            getFullUrl("/crm/admin/users.json"),
-            {
-              headers: {
-                Authorization: getAuthHeader(),
-                "Content-Type": "application/json",
-              },
-            }
-          )
-        ]);
-        
-        blocks = blocksResponse.data?.society_blocks || [];
-        users = usersResponse.data || [];
-      } catch (error) {
-        console.error('Error fetching blocks or users:', error);
-      }
-
-      // Enrich requests with tower, flat, and user information
-      const enrichedRequests = await Promise.all(
-        requestsData.map(async (request: any) => {
-          let towerName = '';
-          let flatNumber = '';
-          let userName = '';
-          
-          // Get tower name
-          if (request.site_id) {
-            const tower = blocks.find((b: any) => b.id === request.site_id);
-            towerName = tower?.name || '';
-          }
-          
-          // Get flat number
-          if (request.unit_id && request.site_id && idSociety) {
-            try {
-              const flatsResponse = await axios.get(
-                getFullUrl(`/get_society_flats.json?society_block_id=${request.site_id}&society_id=${idSociety}`),
-                {
-                  headers: {
-                    Authorization: getAuthHeader(),
-                  },
-                }
-              );
-              const flats = flatsResponse.data?.society_flats || [];
-              const flat = flats.find((f: any) => f.id === request.unit_id);
-              flatNumber = flat?.flat_no || '';
-            } catch (error) {
-              console.error('Error fetching flats:', error);
-            }
-          }
-          
-          // Get user name
-          if (request.user_id) {
-            const user = users.find((u: any) => u.id === request.user_id);
-            userName = user ? `${user.firstname || ''} ${user.lastname || ''}`.trim() : '';
-          }
-          
-          return {
-            ...request,
-            tower: towerName,
-            flat_no: flatNumber,
-            user_name: userName,
-          };
-        })
-      );
+      // The API already returns user_name, tower, and flat fields
+      // Just map the data to ensure flat_no field is set from flat field
+      const enrichedRequests = requestsData.map((request: any) => ({
+        ...request,
+        flat_no: request.flat || request.flat_no || '',
+        tower: request.tower || '',
+        user_name: request.user_name || '',
+      }));
 
       setAllRequests(enrichedRequests);
       setTotalPages(Math.ceil(enrichedRequests.length / itemsPerPage));

@@ -265,16 +265,20 @@ export const FitoutChecklistDetailsPage = () => {
                               <Select
                                 value={
                                   question.qtype === "multiple"
-                                    ? "Multiple Choice"
+                                    ? "multiple"
                                     : question.qtype === "text"
-                                    ? "Text"
+                                    ? "text"
+                                    : question.qtype === "date"
+                                    ? "date"
+                                    : question.qtype === "file"
+                                    ? "file"
+                                    : question.qtype === "signature"
+                                    ? "signature"
                                     : question.qtype === "rating"
-                                    ? "Rating"
+                                    ? "rating"
                                     : question.qtype === "emoji"
-                                    ? "Emojis"
-                                    : question.qtype === "description"
-                                    ? "Description"
-                                    : "Unknown Type"
+                                    ? "emoji"
+                                    : "description"
                                 }
                                 disabled
                               >
@@ -282,11 +286,14 @@ export const FitoutChecklistDetailsPage = () => {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="Multiple Choice">Multiple Choice</SelectItem>
-                                  <SelectItem value="Text">Text</SelectItem>
-                                  <SelectItem value="Description">Description</SelectItem>
-                                  <SelectItem value="Rating">Rating</SelectItem>
-                                  <SelectItem value="Emojis">Emojis</SelectItem>
+                                  <SelectItem value="multiple">Multiple Choice</SelectItem>
+                                  <SelectItem value="text">Text</SelectItem>
+                                  <SelectItem value="description">Description</SelectItem>
+                                  <SelectItem value="date">Date</SelectItem>
+                                  <SelectItem value="file">File</SelectItem>
+                                  <SelectItem value="signature">Signature</SelectItem>
+                                  <SelectItem value="rating">Rating</SelectItem>
+                                  <SelectItem value="emoji">Emojis</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -360,7 +367,7 @@ export const FitoutChecklistDetailsPage = () => {
                                 Mandatory Question
                               </label>
                             </div>
-                            {question.img_mandatory !== null && (
+                            {/* {question.img_mandatory !== null && (
                               <div className="flex items-center space-x-2">
                                 <Checkbox
                                   id={`img-mandatory-${question.id}`}
@@ -375,7 +382,7 @@ export const FitoutChecklistDetailsPage = () => {
                                   Image Mandatory
                                 </label>
                               </div>
-                            )}
+                            )} */}
                           </div>
                         </CardContent>
                       </Card>

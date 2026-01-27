@@ -235,7 +235,14 @@ export const EditFitoutChecklistPage = () => {
               ? "multiple"
               : q.qtype === "text"
               ? "text"
+              : q.qtype === "date"
+              ? "date"
+              : q.qtype === "file"
+              ? "file"
+              : q.qtype === "signature"
+              ? "signature"
               : "description";
+              
 
           const mappedOptions = q.options?.map((opt: any) => ({
             id: opt.id,
