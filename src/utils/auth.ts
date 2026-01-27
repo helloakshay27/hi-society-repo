@@ -145,7 +145,7 @@ const hostname = window.location.hostname;
 
 const isOmanSite = hostname.includes("oig.gophygital.work");
 const isViSite =
-  hostname.includes("vi-web.gophygital.work") ||
+  hostname.includes("web.hisociety.lockated.com") ||
   hostname.includes("web.gophygital.work") ||
   hostname.includes("lockated.gophygital.work");
 
@@ -170,7 +170,7 @@ export const getOrganizationsByEmail = async (
 
   if (isViSite) {
     const response = await fetch(
-      `https://live-api.gophygital.work/api/users/get_organizations_by_email.json?email=${email}`
+      `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
     );
 
     if (!response.ok) {
@@ -183,7 +183,7 @@ export const getOrganizationsByEmail = async (
 
   // Default fallback for other sites
   const response = await fetch(
-    `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+    `https://uat-hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
   );
 
   if (!response.ok) {
