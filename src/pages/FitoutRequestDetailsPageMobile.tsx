@@ -136,26 +136,27 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
         return "bg-[#0257E7]";
     };
 
-    console.log(fitoutResponses)
-
     // Map fitout responses to annexure statuses
     const annexureStatuses = fitoutResponses && fitoutResponses.length > 0
         ? fitoutResponses.map((response) => ({
             label: response.name || "ANNEXURE",
             status: response.status || response.complaint_status_name || "Pending",
-            colorClass: response.status_color ? `bg-[${response.status_color}]` : getStatusColor(response.status),
+            colorClass: response.status_color ? "" : getStatusColor(response.status),
+            backgroundColor: response.status_color || undefined,
             textColor: "text-white",
         }))
         : fitoutData?.fitout_request_categories?.map((category) => ({
             label: category.category_name || "ANNEXURE",
             status: category.status_name || "Pending",
             colorClass: getStatusColor(category.status_name),
+            backgroundColor: undefined,
             textColor: "text-white",
         })) || [
             {
                 label: "ANNEXURE-2(STATEMENTOF",
                 status: "Fitout Request Received",
                 colorClass: "bg-[#FFC928]",
+                backgroundColor: undefined,
                 textColor: "text-white",
             },
         ];
@@ -316,6 +317,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                                         </p>
                                         <Badge
                                             className={`flex-shrink-0 rounded-[5px] px-3 py-1 text-[11px] font-semibold text-center shadow-sm whitespace-nowrap ${item.colorClass} ${item.textColor}`}
+                                            style={item.backgroundColor ? { backgroundColor: item.backgroundColor } : undefined}
                                         >
                                             {item.status}
                                         </Badge>
