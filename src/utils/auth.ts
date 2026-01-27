@@ -145,7 +145,7 @@ const hostname = window.location.hostname;
 
 const isOmanSite = hostname.includes("oig.gophygital.work");
 const isViSite =
-  hostname.includes("vi-web.gophygital.work") ||
+  hostname === "web.hisociety.lockated.com" ||
   hostname.includes("web.gophygital.work") ||
   hostname.includes("lockated.gophygital.work");
 
@@ -153,7 +153,7 @@ const isFmSite =
   hostname.includes("fm-uat.gophygital.work") ||
   hostname.includes("fm.gophygital.work");
 
-const isHiSocietySite = hostname.includes("web.hisociety.lockated.com");
+const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "ui-hisociety.lockated.com";
 
 export const getOrganizationsByEmail = async (
   email: string
@@ -171,8 +171,12 @@ export const getOrganizationsByEmail = async (
   }
 
   if (isHiSocietySite) {
+    // Use production API for web.hisociety.lockated.com, UAT for ui-hisociety.lockated.com
+    const hiSocietyBase = hostname === "web.hisociety.lockated.com" 
+      ? "https://hi-society.lockated.com"
+      : "https://uat-hi-society.lockated.com";
     const response = await fetch(
-      `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+      `${hiSocietyBase}/api/users/get_organizations_by_email.json?email=${email}`
     );
 
     if (!response.ok) {
@@ -509,14 +513,18 @@ export const getOrganizationsByEmailAndAutoSelect = async (
   const isFmSite =
     hostname.includes("fm-uat.gophygital.work") ||
     hostname.includes("fm.gophygital.work");
-  const isHiSocietySite = hostname.includes("web.hisociety.lockated.com");
+  const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "ui-hisociety.lockated.com";
 
   let apiUrl = "";
 
   if (isOmanSite || isFmSite) {
     apiUrl = `https://uat.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
   } else if (isHiSocietySite) {
-    apiUrl = `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
+    // Use production API for web.hisociety.lockated.com, UAT for ui-hisociety.lockated.com
+    const hiSocietyBase = hostname === "web.hisociety.lockated.com" 
+      ? "https://hi-society.lockated.com"
+      : "https://uat-hi-society.lockated.com";
+    apiUrl = `${hiSocietyBase}/api/users/get_organizations_by_email.json?email=${email}`;
   } else if (isViSite) {
     apiUrl = `https://live-api.gophygital.work/api/users/get_organizations_by_email.json?email=${email}`;
   } else {

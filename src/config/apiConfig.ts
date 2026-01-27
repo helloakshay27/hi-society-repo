@@ -3,13 +3,19 @@ import { getBaseUrl, getToken } from '@/utils/auth';
 // Hi-Society API Configuration
 export const HI_SOCIETY_CONFIG = {
   get BASE_URL() {
+      const savedBaseUrl = getBaseUrl();
+
     const hostname = window.location.hostname;
-    // Use production URL for web.hisociety.lockated.com
-    if (hostname.includes('web.hisociety.lockated.com')) {
-      return 'https://hi-society.lockated.com';
+    // Use production URL for web.hisociety.lockated.com (strict check)
+    if (hostname === 'web.hisociety.lockated.com') {
+      return savedBaseUrl || 'https://hi-society.lockated.com';
+    }
+    // Use UAT URL for ui-hisociety.lockated.com
+    if (hostname === 'ui-hisociety.lockated.com') {
+      return savedBaseUrl || 'https://uat-hi-society.lockated.com';
     }
     // Default to UAT for other environments
-    return 'https://uat-hi-society.lockated.com';
+    return savedBaseUrl || 'https://uat-hi-society.lockated.com';
   },
   get TOKEN() {
     const user = JSON.parse(localStorage.getItem('user') || '{}');

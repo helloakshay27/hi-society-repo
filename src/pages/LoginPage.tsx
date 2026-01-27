@@ -72,7 +72,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   const isViSite = hostname.includes("vi-web.gophygital.work");
   const isWebSite = hostname.includes("web.gophygital.work");
   // Check if it's Hi-Society site
-  const isHiSocietySite = hostname.includes("web.hisociety.lockated.com");
+  const isHiSocietySite = hostname === "web.hisociety.lockated.com";
 
   // Check URL for email and orgId parameters on component mount
   React.useEffect(() => {
@@ -392,9 +392,13 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       
       toast.success(`Welcome back, ${response.firstname}! Login successful.`);
 
-      // Navigate directly to Hi Society dashboard
+      // Navigate based on domain
+      const redirectPath = isHiSocietySite 
+        ? "/fitout/requests" 
+        : "/maintenance/project-details-list";
+      
       setTimeout(() => {
-        navigate("/maintenance/project-details-list", { replace: true });
+        navigate(redirectPath, { replace: true });
       }, 500);
     } catch (error: any) {
       console.error("Login error:", error);
