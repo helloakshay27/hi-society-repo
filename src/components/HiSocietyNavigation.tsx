@@ -72,6 +72,12 @@ const navigationItems: NavigationItem[] = [
     path: "/fb/restaurants",
   },
   {
+    id: "Appointmentz",
+    label: "Appointmentz",
+    icon: <Users className="w-4 h-4" />,
+    path: "/appointmentz/site-visit-requests",
+  },
+  {
     id: "osr",
     label: "OSR",
     icon: <MessageSquare className="w-4 h-4" />,
@@ -92,12 +98,14 @@ export const HiSocietyNavigation: React.FC = () => {
   const [activeNav, setActiveNav] = useState<string>("home");
 
   // Check if current domain is CMS domain
-  const isCMSDomain = window.location.hostname === 'ui-cms.lockated.com';
+  const isCMSDomain = window.location.hostname === "ui-cms.lockated.com";
 
   // Filter navigation items based on domain
   const filteredNavigationItems = isCMSDomain
-    ? navigationItems.filter(item => item.id === 'home' || item.id === 'settings')
-    : navigationItems.filter(item => item.id !== 'home');
+    ? navigationItems.filter(
+        (item) => item.id === "home" || item.id === "settings"
+      )
+    : navigationItems.filter((item) => item.id !== "home");
 
   // Detect active navigation based on current path
   useEffect(() => {
@@ -118,9 +126,18 @@ export const HiSocietyNavigation: React.FC = () => {
       setActiveNav("smartsecure");
     } else if (path.startsWith("/incidents")) {
       setActiveNav("incidents");
+    } else if (path.startsWith("/appointmentz")) {
+      setActiveNav("Appointmentz");
     } else if (path.startsWith("/settings")) {
       setActiveNav("settings");
-    } else if (path.startsWith("/bms") || path.startsWith("/maintenance") || path.startsWith("/communication") || path.startsWith("/loyalty") || path.startsWith("/setup-member") || path.startsWith("/setup")) {
+    } else if (
+      path.startsWith("/bms") ||
+      path.startsWith("/maintenance") ||
+      path.startsWith("/communication") ||
+      path.startsWith("/loyalty") ||
+      path.startsWith("/setup-member") ||
+      path.startsWith("/setup")
+    ) {
       setActiveNav(isCMSDomain ? "home" : "bms");
     } else {
       setActiveNav(isCMSDomain ? "home" : "bms");

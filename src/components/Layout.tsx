@@ -32,6 +32,7 @@ import { AccountingSidebar } from "./AccountingSidebar";
 import { SmartSecureSidebar } from "./SmartSecureSidebar";
 import { IncidentsSidebar } from "./IncidentsSidebar";
 import { SettingsSidebar } from "./SettingsSidebar";
+import { AppointmentzSidebar } from "./AppointmentzSidebar";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -98,6 +99,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Render sidebar component based on configuration
   const renderSidebar = () => {
+    // Check for Appointmentz routes first
+    if (location.pathname.startsWith('/appointmentz')) {
+      return <AppointmentzSidebar />;
+    }
+
     // Check if user is employee (pms_occupant) - Employee layout takes priority
     // Use specific sidebars for different sections
     if (isEmployeeUser) {
