@@ -707,6 +707,7 @@ export const EditFitoutChecklistPage = () => {
                           <MenuItem value="description">Description</MenuItem>
                           <MenuItem value="date">Date</MenuItem>
                           <MenuItem value="file">File</MenuItem>
+                           <MenuItem value="signature">Signature</MenuItem>
                         </Select>
                       </FormControl>
                     </div>

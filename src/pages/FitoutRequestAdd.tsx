@@ -315,9 +315,13 @@ const FitoutRequestAdd: React.FC = () => {
     
     if (flatId && formData.site_id) {
       try {
-        const response = await apiClient.get(`/get_user_society.json?society_block_id=${formData.site_id}&society_flat_id=${flatId}`);
+        const response = await apiClient.get(`/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${flatId}&q[approve_eq]=true`);
         console.log('Users API Response:', response.data);
-        const usersArray = response.data?.user_societies || [];
+        // Response is an array of [name, id] tuples like [["ubaid hashmat", 110466]]
+        const usersArray = Array.isArray(response.data) ? response.data.map(([name, id]: [string, number]) => ({
+          id,
+          name
+        })) : [];
         console.log('Users Array:', usersArray);
         setUsers(usersArray);
       } catch (error) {
@@ -572,9 +576,9 @@ const FitoutRequestAdd: React.FC = () => {
                 >
                   <MenuItem value="">Select User</MenuItem>
                   {Array.isArray(users) && users.length > 0 ? (
-                    users.map((userSociety: any) => (
-                      <MenuItem key={userSociety.id} value={userSociety.user?.id || userSociety.id_user}>
-                        {userSociety.user?.firstname || ''} {userSociety.user?.lastname || ''}
+                    users.map((user: any) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        {user.name}
                       </MenuItem>
                     ))
                   ) : (

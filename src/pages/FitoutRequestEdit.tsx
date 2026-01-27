@@ -288,9 +288,13 @@ const FitoutRequestEdit: React.FC = () => {
     
     if (flatId && formData.tower) {
       try {
-        const response = await apiClient.get(`/get_user_society.json?society_block_id=${formData.tower}&society_flat_id=${flatId}`);
+        const response = await apiClient.get(`/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${flatId}&q[approve_eq]=true`);
         console.log('Users API Response:', response.data);
-        const usersArray = response.data?.user_societies || [];
+        // Response is an array of [name, id] tuples like [["ubaid hashmat", 110466]]
+        const usersArray = Array.isArray(response.data) ? response.data.map(([name, id]: [string, number]) => ({
+          id,
+          name
+        })) : [];
         console.log('Users Array:', usersArray);
         setUsers(usersArray);
       } catch (error) {
@@ -415,21 +419,20 @@ const FitoutRequestEdit: React.FC = () => {
       // Load users for the selected flat
       if (flatId && towerId) {
         try {
-          const usersResponse = await apiClient.get(`/get_user_society.json?society_block_id=${towerId}&society_flat_id=${flatId}`);
-          const usersArray = usersResponse.data?.user_societies || [];
+          const usersResponse = await apiClient.get(`/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${flatId}&q[approve_eq]=true`);
+          // Response is an array of [name, id] tuples like [["ubaid hashmat", 110466]]
+          const usersArray = Array.isArray(usersResponse.data) ? usersResponse.data.map(([name, id]: [string, number]) => ({
+            id,
+            name
+          })) : [];
           setUsers(usersArray);
           console.log('Loaded users for flat:', usersArray);
           
-          // Find the correct user_society.id that matches the user_id
-          const matchingUserSociety = usersArray.find((us: any) => us.user?.id === data.user_id);
-          if (matchingUserSociety) {
-            console.log('Found matching user_society:', matchingUserSociety);
-            // Update form data with the correct user_society.id
-            setFormData(prev => ({
-              ...prev,
-              user: matchingUserSociety.id.toString()
-            }));
-          }
+          // Set the user ID directly from the API response (data.user_id)
+          setFormData(prev => ({
+            ...prev,
+            user: data.user_id?.toString() || ''
+          }));
         } catch (error) {
           console.error('Error loading users:', error);
         }
@@ -708,9 +711,9 @@ const FitoutRequestEdit: React.FC = () => {
                 >
                   <MenuItem value="">Select User</MenuItem>
                   {Array.isArray(users) && users.length > 0 ? (
-                    users.map((userSociety: any) => (
-                      <MenuItem key={userSociety.id} value={userSociety.id.toString()}>
-                        {userSociety.user?.firstname || ''} {userSociety.user?.lastname || ''}
+                    users.map((user: any) => (
+                      <MenuItem key={user.id} value={user.id.toString()}>
+                        {user.name}
                       </MenuItem>
                     ))
                   ) : (
