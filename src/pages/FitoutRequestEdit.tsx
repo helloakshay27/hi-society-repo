@@ -52,6 +52,7 @@ const FitoutRequestEdit: React.FC = () => {
   const [requestCategories, setRequestCategories] = useState<FitoutRequestCategory[]>([]);
   const [fitoutFlatRates, setFitoutFlatRates] = useState<any[]>([]);
   const [deposit, setDeposit] = useState('0.00');
+  const fitoutTypes = ['Move In', 'Fitout'];
 
   const [formData, setFormData] = useState<FitoutRequestFormData>({
     tower: '',
@@ -431,7 +432,7 @@ const FitoutRequestEdit: React.FC = () => {
           // Set the user ID directly from the API response (data.user_id)
           setFormData(prev => ({
             ...prev,
-            user: data.user_id?.toString() || ''
+            user: data.user_society_id?.toString() || ''
           }));
         } catch (error) {
           console.error('Error loading users:', error);
@@ -539,7 +540,7 @@ const FitoutRequestEdit: React.FC = () => {
       // Add basic fields
       submitData.append('fitout_request[site_id]', formData.tower);
       submitData.append('fitout_request[unit_id]', formData.flat);
-      submitData.append('fitout_request[user_id]', formData.user);
+      submitData.append('fitout_request[user_society_id]', formData.user);
       submitData.append('fitout_request[start_date]', formData.requestedDate);
       submitData.append('fitout_request[description]', formData.description);
       submitData.append('fitout_request[contactor_name]', formData.contractorName);

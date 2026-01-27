@@ -241,25 +241,8 @@ const FitoutRequestAdd: React.FC = () => {
       
       setCategories(categoriesArray);
       
-      // Fetch active fitout types from fitout_flat_rates
-      try {
-        const fitoutTypesResponse = await apiClient.get('/crm/admin/fitout_flat_rates.json');
-        const allRates = fitoutTypesResponse.data?.fitout_flat_rates || [];
-        
-        // Get unique active fitout types
-        const activeFitoutTypes = [...new Set(
-          allRates
-            .filter((rate: any) => rate.fitout_type && rate.active !== false)
-            .map((rate: any) => rate.fitout_type)
-        )] as string[];
-        
-        console.log('Active Fitout Types:', activeFitoutTypes);
-        setFitoutTypes(activeFitoutTypes);
-      } catch (error) {
-        console.error('Error fetching fitout types:', error);
-        // Fallback to default types if API fails
-        setFitoutTypes(['Move In', 'Fitout']);
-      }
+      // Set static fitout types
+      setFitoutTypes(['Move In', 'Fitout']);
       
       // Set user_society.id in formData for user_society_id parameter
       setFormData(prev => ({ ...prev, user_society_id: selectedUserSocietyId }));
@@ -412,11 +395,10 @@ const FitoutRequestAdd: React.FC = () => {
       const formDataToSend = new FormData();
       
       // Add main fitout request fields
-      formDataToSend.append('fitout_request[user_society_id]', formData.user_society_id);
       formDataToSend.append('fitout_request[site_id]', formData.site_id);
       formDataToSend.append('fitout_request[unit_id]', formData.unit_id);
       
-      if (formData.user_id) formDataToSend.append('fitout_request[user_id]', formData.user_id);
+      if (formData.user_id) formDataToSend.append('fitout_request[user_society_id]', formData.user_id);
       if (formData.fitout_category_id) formDataToSend.append('fitout_request[fitout_category_id]', formData.fitout_category_id);
       if (formData.requested_date) formDataToSend.append('fitout_request[start_date]', formData.requested_date);
       if (formData.expiry_date) formDataToSend.append('fitout_request[expiry_date]', formData.expiry_date);
