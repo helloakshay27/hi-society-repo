@@ -268,7 +268,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                     <ArrowLeft className="w-5 h-5 text-gray-700" />
                 </Button>
                 <h1 className="flex-1 text-center text-xl font-semibold text-gray-900">
-                    Fitout Detail
+                    Fitout Request Details
                 </h1>
                 {/* spacer to balance back button */}
                 <div className="w-6" />
@@ -276,7 +276,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
 
             {loading && (
                 <div className="flex items-center justify-center min-h-[400px]">
-                    <p className="text-gray-600">Loading fitout details...</p>
+                    <p className="text-gray-600">Loading fitout request details...</p>
                 </div>
             )}
 
