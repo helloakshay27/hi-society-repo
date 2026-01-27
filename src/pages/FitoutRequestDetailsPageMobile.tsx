@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import baseClient from "@/utils/withoutTokenBase";
+import { toast } from "sonner";
 
 interface FitoutRequestCategory {
     id: number;
@@ -50,6 +51,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
     const [commentText, setCommentText] = useState("");
     const [fitoutData, setFitoutData] = useState<FitoutRequest | null>(null);
+    const [fitoutResponses, setFitoutResponses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -86,6 +88,35 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
         }
     }, [id]);
 
+    // Fetch fitout responses for annexure statuses and comments
+    useEffect(() => {
+        const fetchFitoutResponses = async () => {
+            try {
+                if (!token) {
+                    throw new Error("No authentication token found in URL");
+                }
+
+                const response = await baseClient.get(
+                    `/crm/admin/fitout_requests/${id}/fitout_responses.json`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+                setFitoutResponses(response.data);
+                console.log("✅ Fitout responses loaded:", response.data);
+            } catch (err) {
+                console.error("❌ Error fetching fitout responses:", err);
+                // Don't set error - this is secondary data
+            }
+        };
+
+        if (id && token) {
+            fetchFitoutResponses();
+        }
+    }, [id, token]);
+
     // Function to get status color based on status name
     const getStatusColor = (statusName: string | null): string => {
         if (!statusName) return "bg-[#999999]";
@@ -105,13 +136,22 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
         return "bg-[#0257E7]";
     };
 
-    // Map fitout_request_categories to annexure statuses
-    const annexureStatuses = fitoutData?.fitout_request_categories?.map((category) => ({
-        label: category.category_name || "ANNEXURE",
-        status: category.status_name || "Pending",
-        colorClass: getStatusColor(category.status_name),
-        textColor: "text-white",
-    })) || [
+    console.log(fitoutResponses)
+
+    // Map fitout responses to annexure statuses
+    const annexureStatuses = fitoutResponses && fitoutResponses.length > 0
+        ? fitoutResponses.map((response) => ({
+            label: response.name || "ANNEXURE",
+            status: response.status || response.complaint_status_name || "Pending",
+            colorClass: response.status_color ? `bg-[${response.status_color}]` : getStatusColor(response.status),
+            textColor: "text-white",
+        }))
+        : fitoutData?.fitout_request_categories?.map((category) => ({
+            label: category.category_name || "ANNEXURE",
+            status: category.status_name || "Pending",
+            colorClass: getStatusColor(category.status_name),
+            textColor: "text-white",
+        })) || [
             {
                 label: "ANNEXURE-2(STATEMENTOF",
                 status: "Fitout Request Received",
@@ -133,26 +173,84 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
         []
     ) || [];
 
-    const annexureDocumentTitles = [
-        "ANNEXURE-2(STATEMENTOFCOMPLIANCE FORM FIT-OUT)",
-        "ANNEXURE-3(RESIDENTCONTRACTORDETAILSFORM)",
-        "ANNEXURE-4(ID CARD REQUISITION FORM)",
-        "ANNEXURE-5(SECURITY WORK PERMIT FORM)",
-    ];
+    // Helper function to format comment date
+    const formatCommentDate = (dateString: string) => {
+        try {
+            const date = new Date(dateString);
+            const time = date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+            const formattedDate = date.toLocaleDateString("en-IN");
+            return `${formattedDate} ${time}`;
+        } catch {
+            return dateString;
+        }
+    };
 
-    const comments = fitoutData?.comments || [
-        {
-            id: 1,
-            author: "Godrej Living",
-            dateTime: "16/04/2023 10:57 am",
-            text: "Please refund my deposit",
-        },
-    ];
+    // Helper function to map comment fields
+    const mapCommentFields = (comment: any) => ({
+        id: comment.id,
+        author: comment.commentor_name || comment.author || "Unknown",
+        dateTime: comment.created_at ? formatCommentDate(comment.created_at) : comment.dateTime || "Unknown date",
+        text: comment.body || comment.text || "",
+    });
 
-    const handlePostComment = () => {
-        // For now, just clear the text to give basic feedback of action.
+    // Map comments grouped by annexure
+    const annexureWithComments = fitoutResponses && fitoutResponses.length > 0
+        ? fitoutResponses.map((response) => ({
+            id: response.id,
+            name: response.name || "ANNEXURE",
+            comments: (response.comments || []).map(mapCommentFields),
+        }))
+        : fitoutData?.fitout_request_categories?.map((category) => ({
+            id: category.id,
+            name: category.category_name || "ANNEXURE",
+            comments: (fitoutData?.comments || []).map(mapCommentFields),
+        })) || [];
+
+    const handlePostComment = async () => {
+        // Validate inputs
         if (!commentText.trim()) return;
-        setCommentText("");
+        if (!selectedCategory) {
+            alert("Please select a category first");
+            return;
+        }
+
+        try {
+            // Extract index from selectedCategory value (e.g., "category-0" -> 0)
+            const categoryIndex = parseInt(selectedCategory.replace("category-", ""));
+            const selectedAnnexure = annexureWithComments[categoryIndex];
+
+            if (!selectedAnnexure || !selectedAnnexure.id) {
+                alert("Invalid category selected");
+                return;
+            }
+
+            if (!token) {
+                alert("No authentication token found");
+                return;
+            }
+
+            // Make API call to post comment
+            const response = await baseClient.put(
+                `/fitout_request_categories/${selectedAnnexure.id}.json`,
+                {
+                    id: selectedAnnexure.id.toString(),
+                    comment: {
+                        body: commentText,
+                    },
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            console.log("✅ Comment posted successfully:", response.data);
+            setCommentText("");
+        } catch (err) {
+            console.error("❌ Error posting comment:", err);
+            toast.error("Failed to post comment. Please try again.");
+        }
     };
 
     return (
@@ -301,8 +399,18 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                                 <SelectValue placeholder="Select Category" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="fitout">Fitout Security Deposits</SelectItem>
-                                <SelectItem value="general">General</SelectItem>
+                                {annexureWithComments && annexureWithComments.length > 0 ? (
+                                    annexureWithComments.map((annexure, idx) => (
+                                        <SelectItem key={idx} value={`category-${idx}`}>
+                                            {annexure.name}
+                                        </SelectItem>
+                                    ))
+                                ) : (
+                                    <>
+                                        <SelectItem value="fitout">Fitout Security Deposits</SelectItem>
+                                        <SelectItem value="general">General</SelectItem>
+                                    </>
+                                )}
                             </SelectContent>
                         </Select>
 
@@ -325,45 +433,47 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                         </div>
 
                         {/* Comments heading */}
-                        <div className="space-y-1 pt-2">
-                            <h3 className="text-base font-semibold text-gray-900">
-                                Comments
-                            </h3>
-                            <p className="text-sm text-gray-700">
-                                Fitout Security Deposits
-                            </p>
-                        </div>
+                        <h3 className="text-base font-semibold text-gray-900 pt-2">
+                            Comments
+                        </h3>
 
-                        {/* Comment card */}
-                        {comments.map((comment) => (
-                            <Card
-                                key={comment.id}
-                                className="border border-[#f0f0f0] bg-white shadow-sm px-4 py-3 rounded-2xl"
-                            >
-                                <div className="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
-                                    <span className="font-semibold text-[#d49a23]">
-                                        {comment.author}
-                                    </span>
-                                    <span className="text-gray-400">•</span>
-                                    <span>{comment.dateTime}</span>
-                                </div>
-                                <p className="text-sm text-gray-900">
-                                    {comment.text}
-                                </p>
-                            </Card>
-                        ))}
-
-                        {/* Annexure titles list */}
-                        <div className="space-y-2 pt-2">
-                            {annexureDocumentTitles.map((title) => (
-                                <p
-                                    key={title}
-                                    className="text-xs font-semibold text-gray-800"
-                                >
-                                    {title}
-                                </p>
-                            ))}
-                        </div>
+                        {/* Comments grouped by annexure */}
+                        {annexureWithComments && annexureWithComments.length > 0 ? (
+                            <div className="space-y-6 pt-3">
+                                {annexureWithComments.map((annexure, idx) => (
+                                    <div key={idx} className="space-y-3">
+                                        <p className="text-sm font-semibold text-gray-800">
+                                            {annexure.name}
+                                        </p>
+                                        {annexure.comments && annexure.comments.length > 0 ? (
+                                            <div className="space-y-3">
+                                                {annexure.comments.map((comment) => (
+                                                    <Card
+                                                        key={comment.id}
+                                                        className="border border-[#f0f0f0] bg-white shadow-sm px-4 py-3 rounded-2xl"
+                                                    >
+                                                        <div className="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
+                                                            <span className="font-semibold text-[#d49a23]">
+                                                                {comment.author}
+                                                            </span>
+                                                            <span className="text-gray-400">•</span>
+                                                            <span>{comment.dateTime}</span>
+                                                        </div>
+                                                        <p className="text-sm text-gray-900">
+                                                            {comment.text}
+                                                        </p>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-gray-500">No comments yet</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-sm text-gray-500 pt-3">No comments available</p>
+                        )}
                     </Card>
                 </div>
             )}
