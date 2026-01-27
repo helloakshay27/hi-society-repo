@@ -318,8 +318,43 @@ const FitoutRequests: React.FC = () => {
         defaultVisible: true,
       },
       {
+        key: "user_name",
+        label: "User Name",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
+        key: "tower",
+        label: "Tower",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
+        key: "flat_no",
+        label: "Flat No",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+       {
+        key: "created_at",
+        label: "Request Date",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
         key: "description",
         label: "Description",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+       {
+        key: "status_name",
+        label: "Status",
         sortable: true,
         draggable: true,
         defaultVisible: true,
@@ -341,34 +376,6 @@ const FitoutRequests: React.FC = () => {
       {
         key: "contactor_no",
         label: "Contractor Mobile",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
-      {
-        key: "user_name",
-        label: "User Name",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
-      {
-        key: "tower",
-        label: "Tower",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
-      {
-        key: "flat_no",
-        label: "Flat No",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
-      {
-        key: "status_name",
-        label: "Status",
         sortable: true,
         draggable: true,
         defaultVisible: true,
@@ -397,13 +404,6 @@ const FitoutRequests: React.FC = () => {
       {
         key: "amount",
         label: "Amount",
-        sortable: true,
-        draggable: true,
-        defaultVisible: true,
-      },
-      {
-        key: "created_at",
-        label: "Request Date",
         sortable: true,
         draggable: true,
         defaultVisible: true,
@@ -439,7 +439,16 @@ const FitoutRequests: React.FC = () => {
         case "category_name":
           return <span>{item.category_name || "-"}</span>;
         case "description":
-          return <span>{item.description || "-"}</span>;
+          const description = item.description || "-";
+          const words = description.split(' ');
+          const truncatedDescription = words.length > 10 
+            ? words.slice(0, 10).join(' ') + '...' 
+            : description;
+          return (
+            <span title={description} className="cursor-pointer">
+              {truncatedDescription}
+            </span>
+          );
         case "status_name":
           return (
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
