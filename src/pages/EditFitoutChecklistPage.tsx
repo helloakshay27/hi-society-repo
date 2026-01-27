@@ -125,7 +125,29 @@ export const EditFitoutChecklistPage = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await apiClient.get("/snag_audit_categories.json?q[resource_type_eq]=FitoutCategory");
+      // Get id_society from user_approved_societies API
+      const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
+      let idSociety = '';
+      
+      if (selectedUserSocietyId) {
+        try {
+          const userSocietiesResponse = await apiClient.get('/user_approved_societies.json');
+          const userSocieties = userSocietiesResponse.data?.user_societies || [];
+          const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
+          idSociety = selectedSociety?.id_society || '';
+          console.log('Extracted id_society for categories:', idSociety);
+        } catch (error) {
+          console.error('Error fetching user societies:', error);
+        }
+      }
+      
+      // Build query params
+      let queryParams = 'q[resource_type_eq]=FitoutCategory';
+      if (idSociety) {
+        queryParams += `&q[resource_id_eq]=${idSociety}`;
+      }
+      
+      const response = await apiClient.get(`/snag_audit_categories.json?${queryParams}`);
       console.log('Categories API Response:', response.data);
       
       // Handle if response is array directly or wrapped in object
