@@ -702,6 +702,19 @@ const FitoutRequestEdit: React.FC = () => {
                 InputProps={{ sx: fieldStyles }}
               />
 
+               <TextField
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Description"
+              fullWidth
+              // multiline
+              // rows={3}
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+            />
+
               <TextField
                 label="Expiry Date"
                 name="expiryDate"
@@ -750,18 +763,7 @@ const FitoutRequestEdit: React.FC = () => {
                 InputProps={{ sx: fieldStyles }}
                 inputProps={{ maxLength: 10 }}  
               />
-               <TextField
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Description"
-              fullWidth
-              // multiline
-              // rows={3}
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-            />
+              
 
               <FormControl fullWidth variant="outlined">
                 <InputLabel shrink>Fitout Type</InputLabel>

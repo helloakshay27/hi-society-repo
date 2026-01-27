@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 
-const EventDetails = () => {
+const EventCommunicationDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [eventData, setEventData] = useState(null);
@@ -258,7 +258,7 @@ const EventDetails = () => {
                   <div className="flex items-start gap-2">
                     <p className="text-sm text-gray-500 min-w-[140px]">Send Email</p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.email_trigger_enabled === "1" || eventData?.email_trigger_enabled === 1 || eventData?.email_trigger_enabled === true ? "Yes" : "No"}
+                      {eventData?.email_trigger_enabled === "1" || eventData?.email_trigger_enabled === 1 || eventData?.email_trigger_enabled === true ? "Yes" : "Yes"}
                     </p>
                   </div>
 
@@ -281,7 +281,7 @@ const EventDetails = () => {
                   <div className="lg:col-span-3 flex items-start gap-2">
                     <p className="text-sm text-gray-500 min-w-[140px]">RSVP Action</p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.rsvp_action === "1" || eventData?.rsvp_action === 1 || eventData?.rsvp_action_int === 1 ? "Yes" : "No"}
+                      {eventData?.rsvp_action === "yes" || eventData?.rsvp_action_int === 1 ? "Yes" : "Yes"}
                     </p>
                   </div>
                 </div>
@@ -307,7 +307,7 @@ const EventDetails = () => {
                   <div className="flex items-start gap-2">
                     <p className="text-sm text-gray-500 min-w-[140px]">Show on Home Page</p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.show_on_home_page === "1" || eventData?.show_on_home === 1 || eventData?.show_on_home === true ? "Yes" : "No"}
+                      {eventData?.show_on_home_page === "1" || eventData?.show_on_home === 1 || eventData?.show_on_home === true ? "Yes" : "Yes"}
                     </p>
                   </div>
 
@@ -643,4 +643,4 @@ const EventDetails = () => {
   );
 };
 
-export default EventDetails;
+export default EventCommunicationDetails;

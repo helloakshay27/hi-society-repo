@@ -166,10 +166,10 @@ const FitoutRequestAdd: React.FC = () => {
 
   const fetchDropdownData = async () => {
     try {
-      // Get society_id from localStorage (this is the user_society.id)
+      // Get user_society.id from localStorage
       const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
       
-      // First, get the selected user society to extract id_society
+      // First, get the selected user society to extract id_society for API calls
       let idSociety = '';
       if (selectedUserSocietyId) {
         const selectedSocietyResponse = await apiClient.get(`/crm/admin/user_societies.json`);
@@ -224,8 +224,8 @@ const FitoutRequestAdd: React.FC = () => {
       
       setCategories(categoriesArray);
       
-      // Set id_society in formData for user_society_id parameter
-      setFormData(prev => ({ ...prev, user_society_id: idSociety }));
+      // Set user_society.id in formData for user_society_id parameter
+      setFormData(prev => ({ ...prev, user_society_id: selectedUserSocietyId }));
     } catch (error) {
       console.error('Error fetching dropdown data:', error);
       toast({
@@ -540,6 +540,18 @@ const FitoutRequestAdd: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
               />
+                <TextField
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Description"
+              fullWidth
+              // multiline
+              // rows={3}
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+            />
 
               <TextField
                 label="Expiry Date"
@@ -564,10 +576,7 @@ const FitoutRequestAdd: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <TextField
+                <TextField
                 label="Contractor Name"
                 name="contactor_name"
                 value={formData.contactor_name}
@@ -591,19 +600,8 @@ const FitoutRequestAdd: React.FC = () => {
                 InputProps={{ sx: fieldStyles }}
                 inputProps={{ maxLength: 10 }}             
               />
-              <TextField
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Description"
-              fullWidth
-              // multiline
-              // rows={3}
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-            />
             </div>
+
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormControl fullWidth variant="outlined">

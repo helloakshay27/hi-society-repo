@@ -24,6 +24,13 @@ interface FitoutRequestItem {
   status_name: string;
   start_date: string;
   end_date: string;
+  contactor_name: string | null;
+  contactor_no: string | null;
+  expiry_date: string | null;
+  refund_date: string | null;
+  fitout_type: string | null;
+  deposit: string;
+  convenience_charge: string;
   osr_logs: any[];
   lock_payment: any | null;
 }
@@ -160,16 +167,51 @@ const FitoutRequests: React.FC = () => {
         draggable: true,
         defaultVisible: true,
       },
-      // {
-      //   key: "category_name",
-      //   label: "Category",
-      //   sortable: true,
-      //   draggable: true,
-      //   defaultVisible: true,
-      // },
       {
         key: "description",
         label: "Description",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
+        key: "fitout_type",
+        label: "Fitout Type",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
+        key: "contactor_name",
+        label: "Contractor Name",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
+        key: "contactor_no",
+        label: "Contractor Mobile",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
+        key: "user_name",
+        label: "User Name",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
+        key: "tower",
+        label: "Tower",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
+        key: "flat_no",
+        label: "Flat No",
         sortable: true,
         draggable: true,
         defaultVisible: true,
@@ -183,18 +225,25 @@ const FitoutRequests: React.FC = () => {
       },
       {
         key: "start_date",
-        label: "Start Date",
+        label: "Requested Date",
         sortable: true,
         draggable: true,
         defaultVisible: true,
       },
-      // {
-      //   key: "end_date",
-      //   label: "End Date",
-      //   sortable: true,
-      //   draggable: true,
-      //   defaultVisible: true,
-      // },
+      {
+        key: "expiry_date",
+        label: "Expiry Date",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
+        key: "refund_date",
+        label: "Refund Date",
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
       {
         key: "amount",
         label: "Amount",
@@ -204,7 +253,7 @@ const FitoutRequests: React.FC = () => {
       },
       {
         key: "created_at",
-        label: "Created At",
+        label: "Request Date",
         sortable: true,
         draggable: true,
         defaultVisible: true,
@@ -255,8 +304,42 @@ const FitoutRequests: React.FC = () => {
               {item.status_name || "-"}
             </span>
           );
+        case "fitout_type":
+          return (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              {item.fitout_type || "-"}
+            </span>
+          );
+        case "contactor_name":
+          return <span>{item.contactor_name || "-"}</span>;
+        case "contactor_no":
+          return <span>{item.contactor_no || "-"}</span>;
         case "start_date":
           return <span>{item.start_date || "-"}</span>;
+        case "expiry_date":
+          return (
+            <span>
+              {item.expiry_date
+                ? new Date(item.expiry_date).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "-"}
+            </span>
+          );
+        case "refund_date":
+          return (
+            <span>
+              {item.refund_date
+                ? new Date(item.refund_date).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "-"}
+            </span>
+          );
         case "end_date":
           return <span>{item.end_date || "-"}</span>;
         case "amount":
@@ -301,6 +384,9 @@ const FitoutRequests: React.FC = () => {
           request.category_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           request.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           request.status_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.fitout_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.contactor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.contactor_no?.includes(searchTerm) ||
           request.id?.toString().includes(searchTerm);
         return matchesSearch;
       });

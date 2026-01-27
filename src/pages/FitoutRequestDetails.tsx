@@ -49,6 +49,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Feed } from "@mui/icons-material";
+import { getAuthHeader } from "@/config/apiConfig";
 
 // Type definitions matching the API response
 interface FitoutDocument {
@@ -283,6 +284,19 @@ const FitoutRequestDetails: React.FC = () => {
   const [deviationComment, setDeviationComment] = useState('');
   const [deviationLoading, setDeviationLoading] = useState(false);
 
+  // Annexure Status Change Modal State
+  const [statusChangeModalOpen, setStatusChangeModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<FitoutRequestCategory | null>(null);
+  const [selectedStatusId, setSelectedStatusId] = useState<string>('');
+  const [statusComment, setStatusComment] = useState('');
+  const [statusLoading, setStatusLoading] = useState(false);
+
+  // File Upload Modal State
+  const [fileUploadModalOpen, setFileUploadModalOpen] = useState(false);
+  const [selectedCategoryForUpload, setSelectedCategoryForUpload] = useState<FitoutRequestCategory | null>(null);
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
+  const [uploadLoading, setUploadLoading] = useState(false);
+
   useEffect(() => {
     if (id) {
       fetchFitoutRequestDetails(parseInt(id));
@@ -350,6 +364,123 @@ const FitoutRequestDetails: React.FC = () => {
     }
   };
 
+  const handleStatusChangeOpen = (category: FitoutRequestCategory) => {
+    setSelectedCategory(category);
+    setSelectedStatusId(category.complaint_status_id?.toString() || '');
+    setStatusComment('');
+    setStatusChangeModalOpen(true);
+  };
+
+  const handleFileUploadOpen = (category: FitoutRequestCategory) => {
+    setSelectedCategoryForUpload(category);
+    setUploadFiles([]);
+    setFileUploadModalOpen(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const fileArray = Array.from(files);
+      setUploadFiles(prev => [...prev, ...fileArray]);
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setUploadFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleFileUploadSubmit = async () => {
+    if (!selectedCategoryForUpload) return;
+    
+    if (uploadFiles.length === 0) {
+      toast.error('Please select at least one file');
+      return;
+    }
+
+    try {
+      setUploadLoading(true);
+      const formData = new FormData();
+      
+      uploadFiles.forEach((file, index) => {
+        formData.append(`documents[]`, file);
+      });
+
+      await apiClient.post(
+        `/crm/admin/fitout_requests/${id}/fitout_request_categories/${selectedCategoryForUpload.id}/upload_documents.json`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      
+      toast.success('Files uploaded successfully');
+      setFileUploadModalOpen(false);
+      setSelectedCategoryForUpload(null);
+      setUploadFiles([]);
+      
+      // Refresh the data
+      if (id) {
+        fetchFitoutRequestDetails(parseInt(id));
+      }
+    } catch (error: any) {
+      console.error('Error uploading files:', error);
+      toast.error(`Failed to upload files: ${error.message || 'Unknown error'}`);
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = async () => {
+    if (!selectedCategory) return;
+    
+    if (!selectedStatusId) {
+      toast.error('Please select a status');
+      return;
+    }
+
+    try {
+      setStatusLoading(true);
+      const newStatusId = parseInt(selectedStatusId);
+      const previousStatusId = categoryStatuses[selectedCategory.id];
+      
+      setCategoryStatuses(prev => ({ ...prev, [selectedCategory.id]: newStatusId }));
+      
+      const requestBody: any = {
+        complaint_status_id: newStatusId,
+      };
+      
+      if (statusComment.trim()) {
+        requestBody.comment = {
+          body: statusComment
+        };
+      } else {
+        requestBody.comment = {
+          body: `Status changed from ${selectedCategory.status_name || 'N/A'} to ${statuses.find(s => s.id === newStatusId)?.name || 'Unknown'}`
+        };
+      }
+      
+      await apiClient.put(`/fitout_request_categories/${selectedCategory.id}/change_status.json`, requestBody);
+      
+      toast.success('Status updated successfully');
+      setStatusChangeModalOpen(false);
+      setSelectedCategory(null);
+      setSelectedStatusId('');
+      setStatusComment('');
+      
+      // Refresh the data
+      if (id) {
+        fetchFitoutRequestDetails(parseInt(id));
+      }
+    } catch (error: any) {
+      console.error('Error updating status:', error);
+      toast.error(`Failed to update status: ${error.message || 'Unknown error'}`);
+      // Revert to previous status on error
+      if (selectedCategory) {
+        setCategoryStatuses(prev => ({ ...prev, [selectedCategory.id]: categoryStatuses[selectedCategory.id] }));
+      }
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
   const handleDeviationUpdate = async () => {
     if (!selectedDeviation) return;
     
@@ -368,7 +499,7 @@ const FitoutRequestDetails: React.FC = () => {
       }
 
       await apiClient.put(
-        `/crm/fitout_requests/update_deviation_status?id=${selectedDeviation.id}`,
+        `/crm/fitout_requests/update_deviation_status.json?id=${selectedDeviation.id}`,
         formData
       );
       
@@ -662,8 +793,11 @@ const FitoutRequestDetails: React.FC = () => {
         }
       });
 
-      await apiClient.post('/fitout_checklist_submission.json', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      await apiClient.post(`/fitout_requests/${id}/checklist_submission.json`, formData, {
+                  // headers: {
+                  //   'Authorization': getAuthHeader(),
+                  //   'Content-Type': 'application/json',
+                  // },
       });
       
       toast.success('Checklist submitted successfully');
@@ -1240,39 +1374,24 @@ const FitoutRequestDetails: React.FC = () => {
                                         {category.status_name}
                                       </Badge>
                                     )}
-                                    <div className="flex items-center gap-2">
-                                      <Label className="text-xs text-gray-600">Status:</Label>
-                                      <Select
-                                        value={categoryStatuses[category.id]?.toString() || ''}
-                                        onValueChange={async (value) => {
-                                          const newStatusId = parseInt(value);
-                                          setCategoryStatuses(prev => ({ ...prev, [category.id]: newStatusId }));
-                                          try {
-                                            await apiClient.put(`/crm/admin/fitout_request_categories/${category.id}.json`, {
-                                              fitout_request_category: {
-                                                complaint_status_id: newStatusId
-                                              }
-                                            });
-                                            toast.success('Status updated successfully');
-                                            fetchFitoutRequestDetails(parseInt(id!));
-                                          } catch (error: any) {
-                                            console.error('Error updating status:', error);
-                                            toast.error('Failed to update status');
-                                          }
-                                        }}
-                                      >
-                                        <SelectTrigger className="w-[180px] h-8 text-xs">
-                                          <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {statuses.map((status: any) => (
-                                            <SelectItem key={status.id} value={status.id.toString()}>
-                                              {status.name}
-                                            </SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
+                                    <Button
+                                      onClick={() => handleStatusChangeOpen(category)}
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 text-xs border-gray-300 hover:bg-gray-50"
+                                    >
+                                      <Edit className="w-3 h-3 mr-1" />
+                                      Change Status
+                                    </Button>
+                                    {/* <Button
+                                      onClick={() => handleFileUploadOpen(category)}
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 text-xs border-gray-300 hover:bg-gray-50"
+                                    >
+                                      <Paperclip className="w-3 h-3 mr-1" />
+                                      Upload Files
+                                    </Button> */}
                                   </div>
                                 </div>
                                 <div className="text-right">
@@ -1333,10 +1452,59 @@ const FitoutRequestDetails: React.FC = () => {
                                             </div>
                                             
                                             {/* Answer */}
-                                            <div className="ml-9 bg-gray-50 rounded-md p-3 border border-gray-100">
-                                              <p className={`text-sm ${answer ? 'text-gray-900' : 'text-gray-400 italic'}`}>
-                                                {answerDisplay}
-                                              </p>
+                                            <div className="ml-9 space-y-2">
+                                              <div className="bg-gray-50 rounded-md p-3 border border-gray-100">
+                                                <p className={`text-sm ${answer ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+                                                  {answerDisplay}
+                                                </p>
+                                              </div>
+                                              
+                                              {/* Answer Documents */}
+                                              {answer?.docs && answer.docs.length > 0 && (
+                                                <div className="space-y-2">
+                                                  <p className="text-xs font-medium text-gray-600">
+                                                    Attachments ({answer.docs.length})
+                                                  </p>
+                                                  <div className="grid grid-cols-2 gap-2">
+                                                    {answer.docs.map((doc: any, docIdx: number) => (
+                                                      <div
+                                                        key={doc.id}
+                                                        className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
+                                                      >
+                                                        {doc.document_type?.startsWith('image/') ? (
+                                                          <img
+                                                            src={doc.document}
+                                                            alt={`Attachment ${docIdx + 1}`}
+                                                            className="w-full h-24 object-cover"
+                                                            onError={(e) => {
+                                                              const target = e.target as HTMLImageElement;
+                                                              target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+                                                            }}
+                                                          />
+                                                        ) : (
+                                                          <div className="w-full h-24 bg-gray-100 flex items-center justify-center">
+                                                            <Paperclip className="w-8 h-8 text-gray-400" />
+                                                          </div>
+                                                        )}
+                                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
+                                                          <Button
+                                                            size="sm"
+                                                            variant="secondary"
+                                                            className="opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-1 h-auto"
+                                                            onClick={() => window.open(doc.document, '_blank')}
+                                                          >
+                                                            <Download className="w-3 h-3 mr-1" />
+                                                            View
+                                                          </Button>
+                                                        </div>
+                                                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs px-2 py-1 text-center truncate">
+                                                          {doc.document_type?.split('/')[1]?.toUpperCase() || 'File'}
+                                                        </div>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              )}
                                             </div>
                                           </div>
                                         </div>
@@ -2200,7 +2368,7 @@ const FitoutRequestDetails: React.FC = () => {
                 </div>
 
                 {/* Comment */}
-                {/* <div className="space-y-2">
+                <div className="space-y-2">
                   <Label htmlFor="deviation-comment" className="text-sm font-medium text-gray-700">
                     Comment
                   </Label>
@@ -2212,7 +2380,7 @@ const FitoutRequestDetails: React.FC = () => {
                     style={{ backgroundColor: '#F6F4EE' }}
                     placeholder="Add your comment..."
                   />
-                </div> */}
+                </div>
 
                 {/* Attachments (Read-only) */}
                 {selectedDeviation.attachments && selectedDeviation.attachments.length > 0 && (
@@ -2255,6 +2423,219 @@ const FitoutRequestDetails: React.FC = () => {
                     className="px-8 hover:opacity-90"
                   >
                     {deviationLoading ? 'Updating...' : 'Update'}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Status Change Modal */}
+      <Dialog open={statusChangeModalOpen} onOpenChange={setStatusChangeModalOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-white">
+          <DialogHeader className="border-b pb-4" style={{ backgroundColor: '#F6F4EE' }}>
+            <div className="flex items-center justify-between px-6 py-3">
+              <DialogTitle className="text-lg font-semibold text-gray-900">
+                Change Annexure Status
+              </DialogTitle>
+              <button
+                onClick={() => setStatusChangeModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </DialogHeader>
+          
+          <div className="p-6 space-y-4">
+            {selectedCategory && (
+              <>
+                {/* Annexure Name (Read-only) */}
+                {/* <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">
+                    Annexure
+                  </Label>
+                  <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                    <p className="text-sm text-gray-900 font-medium">{selectedCategory.category_name}</p>
+                  </div>
+                </div> */}
+
+                {/* Current Status (Read-only) */}
+                {/* <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">
+                    Current Status
+                  </Label>
+                  <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                    <Badge
+                      variant="outline"
+                      className="text-xs"
+                      style={{ borderColor: '#C72030', color: '#C72030' }}
+                    >
+                      {selectedCategory.status_name || 'No Status'}
+                    </Badge>
+                  </div>
+                </div> */}
+
+                {/* Status Dropdown */}
+                <div className="space-y-2">
+                  <Label htmlFor="status-select" className="text-sm font-medium text-gray-700">
+                    New Status *
+                  </Label>
+                  <Select
+                    value={selectedStatusId}
+                    onValueChange={setSelectedStatusId}
+                  >
+                    <SelectTrigger className="w-full" style={{ backgroundColor: '#F6F4EE' }}>
+                      <SelectValue placeholder="Select Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statuses.map((status: any) => (
+                        <SelectItem key={status.id} value={status.id.toString()}>
+                          {status.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Comment */}
+                <div className="space-y-2">
+                  <Label htmlFor="status-comment" className="text-sm font-medium text-gray-700">
+                    Comment (Optional)
+                  </Label>
+                  <Textarea
+                    id="status-comment"
+                    value={statusComment}
+                    onChange={(e) => setStatusComment(e.target.value)}
+                    className="w-full min-h-[100px]"
+                    style={{ backgroundColor: '#F6F4EE' }}
+                    placeholder="Add a comment about this status change..."
+                  />
+                  <p className="text-xs text-gray-500">
+                    If no comment is provided, a default message will be added.
+                  </p>
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex justify-center pt-4">
+                  <Button
+                    onClick={handleStatusUpdate}
+                    disabled={statusLoading}
+                    style={{ backgroundColor: '#C72030', color: 'white' }}
+                    className="px-8 hover:opacity-90"
+                  >
+                    {statusLoading ? 'Updating...' : 'Update Status'}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* File Upload Modal */}
+      <Dialog open={fileUploadModalOpen} onOpenChange={setFileUploadModalOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-white">
+          <DialogHeader className="border-b pb-4" style={{ backgroundColor: '#F6F4EE' }}>
+            <div className="flex items-center justify-between px-6 py-3">
+              <DialogTitle className="text-lg font-semibold text-gray-900">
+                Upload Files
+              </DialogTitle>
+              <button
+                onClick={() => setFileUploadModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </DialogHeader>
+          
+          <div className="p-6 space-y-4">
+            {selectedCategoryForUpload && (
+              <>
+             
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">
+                    Annexure
+                  </Label>
+                  <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                    <p className="text-sm text-gray-900 font-medium">{selectedCategoryForUpload.category_name}</p>
+                  </div>
+                </div>
+
+           
+                <div className="space-y-2">
+                  <Label htmlFor="file-upload" className="text-sm font-medium text-gray-700">
+                    Select Files *
+                  </Label>
+                  <div className="flex items-center gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('annexure-file-input')?.click()}
+                      className="border-gray-300"
+                    >
+                      <Paperclip className="w-4 h-4 mr-2" />
+                      Choose files
+                    </Button>
+                    <span className="text-sm text-gray-500">
+                      {uploadFiles.length === 0 ? 'No files chosen' : `${uploadFiles.length} file(s) selected`}
+                    </span>
+                    <input
+                      id="annexure-file-input"
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+
+              
+                {uploadFiles.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Selected Files
+                    </Label>
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                      {uploadFiles.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200"
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <Paperclip className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <span className="text-sm text-gray-900 truncate">
+                              {file.name}
+                            </span>
+                            <span className="text-xs text-gray-500 flex-shrink-0">
+                              ({(file.size / 1024).toFixed(1)} KB)
+                            </span>
+                          </div>
+                          <Button
+                            onClick={() => handleRemoveFile(index)}
+                            size="sm"
+                            variant="ghost"
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50 h-6 w-6 p-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              
+                <div className="flex justify-center pt-4">
+                  <Button
+                    onClick={handleFileUploadSubmit}
+                    disabled={uploadLoading || uploadFiles.length === 0}
+                    style={{ backgroundColor: '#C72030', color: 'white' }}
+                    className="px-8 hover:opacity-90"
+                  >
+                    {uploadLoading ? 'Uploading...' : 'Upload Files'}
                   </Button>
                 </div>
               </>

@@ -203,7 +203,7 @@ const ProjectDetailsCreate = () => {
     SFDC_Project_Id: "",
     Project_Construction_Status: "",
     Construction_Status_id: "",
-    Configuration_Type: "",
+    Configuration_Type: [],
     Project_Name: "",
     project_address: "",
     Project_Description: "",
@@ -1076,7 +1076,15 @@ const ProjectDetailsCreate = () => {
         "image/webp",
       ],
       brochure: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
         "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       ],
       project_ppt: [
         "application/vnd.ms-powerpoint",
@@ -1099,7 +1107,15 @@ const ProjectDetailsCreate = () => {
         "image/webp",
       ],
       project_creative_offers: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
         "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       ],
       project_interiors: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_exteriors: ["image/jpeg", "image/png", "image/gif", "image/webp"],
@@ -1391,7 +1407,7 @@ const ProjectDetailsCreate = () => {
 
       newFiles.forEach((file) => {
         if (!allowedTypes.brochure.includes(file.type)) {
-          toast.error("Only PDF files are allowed for brochure.");
+          toast.error("Only images, PDFs, DOCs, and PPTs are allowed for brochure.");
           return;
         }
 
@@ -1814,20 +1830,20 @@ const ProjectDetailsCreate = () => {
       totalValidGalleryImages += images.length;
     }
 
-    if (totalValidGalleryImages > 0 && totalValidGalleryImages % 3 !== 0) {
-      const remainder = totalValidGalleryImages % 3;
-      const imagesNeeded = 3 - remainder;
-      const previousValidCount = totalValidGalleryImages - remainder;
+    // if (totalValidGalleryImages > 0 && totalValidGalleryImages % 3 !== 0) {
+    //   const remainder = totalValidGalleryImages % 3;
+    //   const imagesNeeded = 3 - remainder;
+    //   const previousValidCount = totalValidGalleryImages - remainder;
 
-      const message = `Currently in Gallery ${totalValidGalleryImages} image${
-        totalValidGalleryImages !== 1 ? "s" : ""
-      } uploaded. Please upload ${imagesNeeded} more or remove ${remainder} to make it a multiple of 3.`;
+    //   const message = `Currently in Gallery ${totalValidGalleryImages} image${
+    //     totalValidGalleryImages !== 1 ? "s" : ""
+    //   } uploaded. Please upload ${imagesNeeded} more or remove ${remainder} to make it a multiple of 3.`;
 
-      toast.error(message);
-      setLoading(false);
-      setIsSubmitting(false);
-      return;
-    }
+    //   toast.error(message);
+    //   setLoading(false);
+    //   setIsSubmitting(false);
+    //   return;
+    // }
 
     const data = new FormData();
 
@@ -1842,8 +1858,11 @@ const ProjectDetailsCreate = () => {
           }
         });
       } else if (key === "Address") {
+        // Only append address fields that have values
         for (const addressKey in value) {
-          data.append(`project[Address][${addressKey}]`, value[addressKey]);
+          if (value[addressKey] && value[addressKey].trim() !== "") {
+            data.append(`project[Address][${addressKey}]`, value[addressKey]);
+          }
         }
       } else if (key === "brochure" && Array.isArray(value)) {
         value.forEach((file) => {
@@ -2009,8 +2028,17 @@ const ProjectDetailsCreate = () => {
         if (amenityIds) {
           data.append("project[Amenities]", amenityIds);
         }
-      } else if (key === "Configuration_Type" && value && value.trim() !== "") {
-        // Only append configuration type if it has a non-empty value
+      } else if (key === "Configuration_Type" && Array.isArray(value) && value.length > 0) {
+        // Convert configuration array to comma-separated string of names
+        const configNames = value
+          .map(c => typeof c === 'object' ? c.name : c)
+          .filter((name) => name !== null && name !== undefined)
+          .join(",");
+        if (configNames) {
+          data.append("project[Configuration_Type]", configNames);
+        }
+      } else if (key === "Configuration_Type" && value && typeof value === "string" && value.trim() !== "") {
+        // Handle legacy string format for backward compatibility
         data.append("project[Configuration_Type]", value);
       } else if (key === "project_ppt" && Array.isArray(value)) {
         value.forEach((file) => {
@@ -2074,16 +2102,53 @@ const ProjectDetailsCreate = () => {
       } else if (key === "show_on_home") {
         // Always send show_on_home as boolean
         data.append(`project[${key}]`, value ? "true" : "false");
+      } else if (key === "enable_enquiry") {
+        // Always send enable_enquiry as boolean
+        data.append(`project[${key}]`, value ? "true" : "false");
+      } else if (key === "is_sold") {
+        // Always send is_sold as boolean
+        data.append(`project[${key}]`, value ? "true" : "false");
       } else if (
         key !== "Specifications" && 
         key !== "Amenities" && 
         key !== "Rera_Sellable_Area" && 
         key !== "rera_url" &&
+        key !== "Configuration_Type" &&
+        key !== "plans" &&
+        key !== "Address" &&
+        key !== "brochure" &&
+        key !== "project_emailer_templetes" &&
+        key !== "KnwYrApt_Technical" &&
+        key !== "two_d_images" &&
+        key !== "project_creatives" &&
+        key !== "cover_images" &&
+        key !== "project_creative_generics" &&
+        key !== "project_creative_offers" &&
+        key !== "project_interiors" &&
+        key !== "project_exteriors" &&
+        key !== "project_layout" &&
+        key !== "videos" &&
+        key !== "gallery_image" &&
+        key !== "image" &&
+        key !== "video_preview_image_url" &&
+        key !== "project_qrcode_image" &&
+        key !== "virtual_tour_url_multiple" &&
+        key !== "Rera_Number_multiple" &&
+        key !== "connectivities" &&
+        key !== "project_ppt" &&
+        key !== "project_sales_type" &&
+        !key.startsWith("image") &&
+        !key.startsWith("cover_images_") &&
+        !key.startsWith("gallery_image_") &&
+        !key.startsWith("floor_plans_") &&
+        !key.startsWith("project_2d_image") &&
         value !== null && 
         value !== undefined && 
-        value !== ""
+        value !== "" &&
+        !(typeof value === "string" && value.trim() === "") &&
+        !(Array.isArray(value) && value.length === 0)
       ) {
-        // Skip empty strings, null, and undefined for other fields
+        // Only append fields with actual data
         data.append(`project[${key}]`, value);
       }
     });
@@ -2260,34 +2325,66 @@ const ProjectDetailsCreate = () => {
                 </MUISelect>
               </FormControl>
 
-              <FormControl
-                fullWidth
-                variant="outlined"
-                sx={{ "& .MuiInputBase-root": fieldStyles }}
-              >
-                <InputLabel shrink>Configuration Type</InputLabel>
-                <MUISelect
-                  value={formData.Configuration_Type}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      Configuration_Type: e.target.value,
-                    }))
-                  }
-                  label="Configuration Type"
-                  notched
-                  displayEmpty
-                >
-                  <MenuItem value="">
-                    Select Configuration
-                  </MenuItem>
-                  {configurations.map((config) => (
-                    <MenuItem key={config.id} value={config.name}>
-                      {config.name}
-                    </MenuItem>
-                  ))}
-                </MUISelect>
-              </FormControl>
+              <div className="w-full">
+                <div className="relative">
+                  <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
+                    Configuration Type
+                  </label>
+                  <Select
+                    isMulti
+                    value={
+                      Array.isArray(formData.Configuration_Type)
+                        ? formData.Configuration_Type.map((c) => ({
+                            value: typeof c?.id === 'string' ? parseInt(c.id, 10) : c?.id || c,
+                            label: c?.name || configurations.find(config => config.id === c)?.name || '',
+                          })).filter((opt) => opt.value && opt.label)
+                        : []
+                    }
+                    onChange={(selected, actionMeta) => {
+                      // Handle adding new configurations
+                      if (actionMeta.action === 'select-option') {
+                        const newConfig = actionMeta.option;
+                        const config = configurations.find((c) => c.id === newConfig.value);
+                        if (config) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            Configuration_Type: [...prev.Configuration_Type, { id: config.id, name: config.name }],
+                          }));
+                        }
+                        return;
+                      }
+                      
+                      // Handle removal
+                      if (actionMeta.action === 'remove-value' || actionMeta.action === 'pop-value') {
+                        setFormData((prev) => ({
+                          ...prev,
+                          Configuration_Type: prev.Configuration_Type.filter(
+                            (c) => (c.id || c) !== actionMeta.removedValue.value
+                          ),
+                        }));
+                        return;
+                      }
+
+                      // Handle clear all
+                      if (actionMeta.action === 'clear') {
+                        setFormData((prev) => ({
+                          ...prev,
+                          Configuration_Type: [],
+                        }));
+                      }
+                    }}
+                    options={configurations.map((c) => ({ value: c.id, label: c.name }))}
+                    styles={customStyles}
+                    components={{
+                      MultiValue: CustomMultiValue,
+                    }}
+                    closeMenuOnSelect={false}
+                    placeholder="Select Configuration..."
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                  />
+                </div>
+              </div>
 
                 <TextField
                 label="Project Name"
@@ -4549,8 +4646,8 @@ const ProjectDetailsCreate = () => {
               </div>
 
               {/* {baseURL !== "https://dev-panchshil-super-app.lockated.com/" && baseURL !== "https://rustomjee-live.lockated.com/" && ( */}
-              <div className="mb-6">
-                {/* Header */}
+              {/* <div className="mb-6">
+              
                 <div className="flex justify-between items-center mb-4">
                   <h5 className="section-heading inline-flex items-center gap-1">
                     Layouts & Floor Plans{" "}
@@ -4573,20 +4670,12 @@ const ProjectDetailsCreate = () => {
                     type="button"
                     onClick={() => setShowFloorPlanModal(true)}
                   >
-                    {/* <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width={20}
-                      height={20}
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                    </svg> */}
+                   
                     <span>Add</span>
                   </button>
                 </div>
 
-                {/* Upload Modal */}
+               
                 {showFloorPlanModal && (
                   <ProjectBannerUpload
                     onClose={() => setShowFloorPlanModal(false)}
@@ -4600,7 +4689,7 @@ const ProjectDetailsCreate = () => {
                   />
                 )}
 
-                {/* Table */}
+              
                 <div className="rounded-lg border border-gray-200 overflow-hidden">
                   <table className="w-full border-separate">
                     <thead>
@@ -4678,7 +4767,7 @@ const ProjectDetailsCreate = () => {
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </div> */}
               {/* )} */}
               <div className="mb-6">
                 {/* Header */}
@@ -4718,7 +4807,7 @@ const ProjectDetailsCreate = () => {
                     className="form-control"
                     type="file"
                     name="brochure"
-                    accept=".pdf,.docx"
+                    accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
                     onChange={(e) => handleFileUpload("brochure", e.target.files)}
                     multiple
                     style={{ display: "none" }}
@@ -4824,11 +4913,11 @@ const ProjectDetailsCreate = () => {
                         </table>
                       </div>
                     </div> */}
-                    {/* <div className="mb-6">
+                    <div className="mb-6">
                       
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
-                          Project Layout{" "}
+                          Layouts & Floor Plans{" "}
                           <span
                             className="relative inline-flex items-center cursor-pointer"
                             onMouseEnter={() => setShowTooltipLayout(true)}
@@ -4844,6 +4933,7 @@ const ProjectDetailsCreate = () => {
                         </h5>
 
                         <button
+                          type="button"
                           className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
                           onClick={() => document.getElementById("project_layout").click()}
                         >
@@ -4856,7 +4946,7 @@ const ProjectDetailsCreate = () => {
                         className="form-control"
                         type="file"
                         name="project_layout"
-                        accept="image/*"
+                        accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
                         onChange={(e) =>
                           handleFileUpload("project_layout", e.target.files)
                         }
@@ -4898,7 +4988,7 @@ const ProjectDetailsCreate = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div> */}
+                    </div>
                     {/* <div className="mb-6">
                      
                       <div className="flex justify-between items-center mb-4">
@@ -5087,7 +5177,7 @@ const ProjectDetailsCreate = () => {
                           className="form-control"
                           type="file"
                           name="project_creative_offers"
-                          accept="application/pdf"
+                          accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
                           onChange={(e) => handleFileUpload("project_creative_offers", e.target.files)}
                           multiple
                           style={{ display: "none" }}

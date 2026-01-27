@@ -3,11 +3,11 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
-import MultiSelectBox from "../components/ui/multi-selector";
-import { ImageUploadingButton } from "../components/reusable/ImageUploadingButton";
-import { ImageCropper } from "../components/reusable/ImageCropper";
-import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
-import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
+import MultiSelectBox from "../../components/ui/multi-selector";
+import { ImageUploadingButton } from "../../components/reusable/ImageUploadingButton";
+import { ImageCropper } from "../../components/reusable/ImageCropper";
+import ProjectBannerUpload from "../../components/reusable/ProjectBannerUpload";
+import ProjectImageVideoUpload from "../../components/reusable/ProjectImageVideoUpload";
 import { ArrowLeft, FileText, Calendar, Users, Plus, X, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info } from "lucide-react";
 import {
   TextField,
@@ -27,10 +27,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../components/ui/table";
+} from "../../components/ui/table";
 import SelectBox from "@/components/ui/select-box";
 
-const EventEdit = () => {
+const EventCommunicationEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [formErrors, setFormErrors] = useState({});
@@ -58,7 +58,6 @@ const EventEdit = () => {
     previewImage: [],
     is_important: "false",
     email_trigger_enabled: "false",
-    show_on_home: false,
     set_reminders_attributes: [],
     existingImages: [], // for previously uploaded images
     newImages: [], // for newly selected images
@@ -773,7 +772,6 @@ const EventEdit = () => {
           user_id: userIds,
           group_id: groupIds,
           shared: shared,
-          show_on_home: data.show_on_home === true || data.show_on_home === 1,
           attachfile: attachfileData,
           newImages: [],
           existingImages: existingImages,
@@ -1285,15 +1283,9 @@ const EventEdit = () => {
 
     // === RSVP FIELDS ===
     if (formData.rsvp_action === "1") {
-      data.append("event[rsvp_action]", "1");
       data.append("event[rsvp_name]", formData.rsvp_name || "");
       data.append("event[rsvp_number]", formData.rsvp_number || "");
-    } else {
-      data.append("event[rsvp_action]", "0");
     }
-
-    // === SHOW ON HOME ===
-    data.append("event[show_on_home]", formData.show_on_home === true ? "1" : "0");
 
     // === REMOVED EXISTING IMAGES ===
     const originalIds = formData.existingImages?.map((img) => img.id) || [];
@@ -1344,7 +1336,6 @@ const EventEdit = () => {
           "to_time", // Skip to_time as we handle it above
           "event_date", // Skip event_date as it's combined into from_time
           "event_time", // Skip event_time as it's combined into from_time
-          "show_on_home", // Skip show_on_home as we handle it above
         ].includes(key)
       ) {
         return; // Skip handled keys
@@ -1365,7 +1356,7 @@ const EventEdit = () => {
       });
 
       toast.success("Event updated successfully!");
-      navigate("/maintenance/event-list");
+      navigate("/communication/events");
     } catch (error) {
       console.error("Submit error:", error);
       const errorMessage = error.response?.data?.message || "Failed to update event.";
@@ -2057,8 +2048,8 @@ const EventEdit = () => {
                   <p className="text-sm text-gray-500">Display this event on the home page</p>
                 </div>
                 <Switch
-                  checked={formData.show_on_home}
-                  onChange={(e) => setFormData(prev => ({ ...prev, show_on_home: e.target.checked }))}
+                  checked={visibility.showOnHomePage}
+                  onChange={(e) => setVisibility(prev => ({ ...prev, showOnHomePage: e.target.checked }))}
                   sx={{
                     '& .MuiSwitch-switchBase.Mui-checked': {
                       color: '#C72030',
@@ -3884,4 +3875,4 @@ const EventEdit = () => {
     );
   };
 
-  export default EventEdit;
+  export default EventCommunicationEdit;

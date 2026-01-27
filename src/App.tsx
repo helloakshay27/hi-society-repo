@@ -549,6 +549,18 @@ import { BroadcastDashboard } from "./pages/BroadcastDashboard";
 import { AddBroadcastPage } from "./pages/AddBroadcastPage";
 import { BroadcastDetailsPage } from "./pages/BroadcastDetailsPage";
 
+// Import Notice pages
+import NoticePageList from "./pages/communication/NoticePageList";
+import NoticePageCreate from "./pages/communication/NoticePageCreate";
+import NoticePageEdit from "./pages/communication/NoticePageEdit";
+import NoticePageDetails from "./pages/communication/NoticePageDetails";
+
+// Import Communication Event pages
+import EventCommunicationList from "./pages/communication/EventCommunicationList";
+import EventCommunicationCreate from "./pages/communication/EventCommunicationCreate";
+import EventCommunicationEdit from "./pages/communication/EventCommunicationEdit";
+import EventCommunicationDetails from "./pages/communication/EventCommunicationDetails";
+
 // Import Redemption Marketplace page
 import { RedemptionMarketplacePage } from "./pages/RedemptionMarketplacePage";
 import { HotelRewardsPage } from "./pages/HotelRewardsPage";
@@ -1497,20 +1509,9 @@ function App() {
                     element={<CommunicationSetupDashboard />}
                   />
 
-                  {/* Communication Routes */}
-                  <Route
-                    path="/communication/notice"
-                    element={<NoticePage />}
-                  />
-                  <Route
-                    path="/communication/notice/add"
-                    element={<AddNoticePage />}
-                  />
-                  <Route
-                    path="/communication/notice/view/:id"
-                    element={<NoticeDetailPage />}
-                  />
-                  <Route
+                 
+
+                  {/* <Route
                     path="/communication/events"
                     element={<EventsPage />}
                   />
@@ -1521,7 +1522,7 @@ function App() {
                   <Route
                     path="/communication/events/view/:id"
                     element={<EventDetailPage />}
-                  />
+                  /> */}
                   <Route
                     path="/communication/polls"
                     element={<PollsPage />}
@@ -1584,6 +1585,38 @@ function App() {
                   <Route
                     path="/crm/broadcast/details/:id"
                     element={<BroadcastDetailsPage />}
+                  />
+                  <Route
+                    path="/communication/notice"
+                    element={<NoticePageList />}
+                  />
+                  <Route
+                    path="/communication/notice/create"
+                    element={<NoticePageCreate />}
+                  />
+                  <Route
+                    path="/communication/notice/edit/:id"
+                    element={<NoticePageEdit />}
+                  />
+                  <Route
+                    path="/communication/notice/details/:id"
+                    element={<NoticePageDetails />}
+                  />
+                  <Route
+                    path="/communication/events"
+                    element={<EventCommunicationList />}
+                  />
+                  <Route
+                    path="/communication/events/create"
+                    element={<EventCommunicationCreate />}
+                  />
+                  <Route
+                    path="/communication/events/edit/:id"
+                    element={<EventCommunicationEdit />}
+                  />
+                  <Route
+                    path="/communication/events/details/:id"
+                    element={<EventCommunicationDetails />}
                   />
                   <Route path="/crm/polls" element={<CRMPollsPage />} />
                   <Route path="/crm/polls/add" element={<AddPollPage />} />

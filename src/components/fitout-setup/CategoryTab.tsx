@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { Switch } from '@mui/material';
 import {
   Dialog,
   DialogContent,
@@ -160,6 +161,21 @@ export const CategoryTab: React.FC = () => {
     }
   };
 
+  const handleToggle = async (id: number, currentStatus: boolean) => {
+    try {
+      await apiClient.put(`/crm/admin/fitout_categories/${id}.json`, {
+        fitout_category: {
+          active: !currentStatus,
+        }
+      });
+      toast.success(`Category ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+      fetchCategories(); // Refresh the list
+    } catch (error) {
+      console.error('Error toggling category status:', error);
+      toast.error('Failed to update category status');
+    }
+  };
+
   const handleOpenAddDialog = () => {
     setEditingId(null);
     setCategoryName('');
@@ -259,13 +275,18 @@ export const CategoryTab: React.FC = () => {
         );
       case 'active':
         return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            item.active 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-red-100 text-red-800'
-          }`}>
-            {item.active ? 'Active' : 'Inactive'}
-          </span>
+          <Switch
+            checked={item.active || false}
+            onChange={() => handleToggle(item.id, item.active)}
+            sx={{
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "#C72030",
+              },
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                backgroundColor: "#C72030",
+              },
+            }}
+          />
         );
       case 'created_at':
         return <span>{new Date(item.created_at).toLocaleDateString('en-IN', {
