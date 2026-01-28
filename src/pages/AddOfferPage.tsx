@@ -615,7 +615,7 @@ export default function AddOfferPage() {
         setLoadingTemplates(true);
         try {
             const response = await axios.get<OfferTemplate[]>(
-                `${HI_SOCIETY_CONFIG.BASE_URL}/offer_templates.json`,
+                getFullUrl('/offer_templates.json'),
                 {
                     params: {
                         token: HI_SOCIETY_CONFIG.TOKEN
@@ -635,7 +635,7 @@ export default function AddOfferPage() {
         setLoadingProjects(true);
         try {
             const response = await axios.get(
-                `${HI_SOCIETY_CONFIG.BASE_URL}/projects_for_dropdown.json`,
+                getFullUrl('/projects_for_dropdown.json'),
                 {
                     params: {
                         token: HI_SOCIETY_CONFIG.TOKEN,
@@ -655,7 +655,7 @@ export default function AddOfferPage() {
     const fetchOfferDetails = async (id: string) => {
         try {
             const response = await axios.get(
-                `${HI_SOCIETY_CONFIG.BASE_URL}/crm/offers/${id}.json`,
+                getFullUrl(`/crm/offers/${id}.json`),
                 {
                     params: {
                         token: HI_SOCIETY_CONFIG.TOKEN
@@ -950,11 +950,11 @@ export default function AddOfferPage() {
                 formDataPayload.append('offer[offer_pdf]', newPdfFiles[0].file);
             }
 
-            let apiUrl = `${HI_SOCIETY_CONFIG.BASE_URL}/crm/offers.json`;
+            let apiUrl = getFullUrl('/crm/offers.json');
             let method: 'post' | 'put' = 'post';
 
             if (isEditMode && offerId) {
-                apiUrl = `${HI_SOCIETY_CONFIG.BASE_URL}/crm/offers/${offerId}.json`;
+                apiUrl = getFullUrl(`/crm/offers/${offerId}.json`);
                 method = 'put';
             }
 
