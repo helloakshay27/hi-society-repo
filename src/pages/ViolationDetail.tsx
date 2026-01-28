@@ -51,6 +51,7 @@ interface DeviationDetail {
   created_at: string;
   updated_at: string;
   status: string;
+  comment?: string;
   user: {
     id: number;
     email: string;
@@ -90,28 +91,30 @@ const ViolationDetail: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [activeTab, setActiveTab] = useState("deviation-details");
+  const [logs, setLogs] = useState<any[]>([]);
   
   // Edit Status Dialog State
   const [isEditStatusOpen, setIsEditStatusOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState(''); // will store status id as string
+  const [selectedStatus, setSelectedStatus] = useState('');
   const [statusComment, setStatusComment] = useState('');
   const [isSubmittingStatus, setIsSubmittingStatus] = useState(false);
   const [statusOptions, setStatusOptions] = useState<{ id: number; name: string; color_code?: string }[]>([]);
-    // Fetch complaint statuses for dropdown
-    useEffect(() => {
-      const fetchStatuses = async () => {
-        try {
-          const res = await axios.get(`${baseURL}/fitout_categories/get_complaint_statuses.json?q[of_atype_eq]=fitout_category`, {
-            headers: { 'Authorization': getAuthHeader() }
-          });
-          const statuses = res.data.complaint_statuses || [];
-          setStatusOptions(statuses);
-        } catch (err) {
-          toast.error('Failed to fetch status options');
-        }
-      };
-      fetchStatuses();
-    }, [baseURL]);
+  
+  // Fetch complaint statuses for dropdown
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      try {
+        const res = await axios.get(`${baseURL}/fitout_categories/get_complaint_statuses.json?q[of_atype_eq]=fitout_category`, {
+          headers: { 'Authorization': getAuthHeader() }
+        });
+        const statuses = res.data.complaint_statuses || [];
+        setStatusOptions(statuses);
+      } catch (err) {
+        toast.error('Failed to fetch status options');
+      }
+    };
+    fetchStatuses();
+  }, [baseURL]);
   
   // Send Violation Dialog State
   const [isSendViolationOpen, setIsSendViolationOpen] = useState(false);
@@ -123,7 +126,7 @@ const ViolationDetail: React.FC = () => {
     setLoading(true);
     setIsSearching(!!search);
     try {
-      const response = await axios.get<ApiResponse>(
+      const response = await axios.get<any>(
         `${baseURL}/crm/admin/deviation_details/${deviation_id}.json`,
         {
           headers: {
@@ -134,14 +137,13 @@ const ViolationDetail: React.FC = () => {
       );
 
       const deviationDetail = response.data.deviation_detail;
-      
       if (!deviationDetail) {
         toast.error('Violation detail not found');
         navigate(-1);
         return;
       }
-
       setDeviation(deviationDetail);
+      setLogs(deviationDetail.logs || []);
 
       // Create violation details table - one row showing the main violation
       const violationRow: ViolationTableRow = {
@@ -436,6 +438,7 @@ const ViolationDetail: React.FC = () => {
                 { label: "Deviation Details", value: "deviation-details" },
                 { label: "Attachments", value: "attachments" },
                 { label: "Comments", value: "comments" },
+                { label: "Logs", value: "logs" },
               ].map((tab) => (
                 <TabsTrigger
                   key={tab.value}
@@ -627,6 +630,28 @@ const ViolationDetail: React.FC = () => {
                                   </p>
                                 </div>
                                 <p className="text-sm text-gray-700">{comment.comment || comment.body}</p>
+                                {/* Attachments for this comment */}
+                                {Array.isArray(comment.attachments) && comment.attachments.length > 0 && (
+                                  <div className="mt-3">
+                                    <div className="text-xs font-semibold text-gray-600 mb-1">Attachments:</div>
+                                    <div className="flex flex-wrap gap-2">
+                                      {comment.attachments.map((att: any) => (
+                                        <div key={att.id} className="flex items-center gap-1 border border-gray-200 rounded px-2 py-1 bg-gray-50">
+                                          <FileText className="w-4 h-4 text-blue-600" />
+                                          <a
+                                            href={att.document_url || att.document_file_name}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs text-blue-700 underline truncate max-w-[120px]"
+                                          >
+                                            {att.document_file_name}
+                                          </a>
+                                          <span className="text-xs text-gray-400 ml-1">{(att.document_file_size / 1024).toFixed(1)} KB</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -644,6 +669,66 @@ const ViolationDetail: React.FC = () => {
                           </p>
                         </div>
                       )
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </TabsContent>
+
+            {/* Logs Tab */}
+            <TabsContent value="logs" className="p-4 sm:p-6">
+              <Card className="mb-6 border-none bg-transparent shadow-none">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div
+                    className="px-6 py-3 border-b border-gray-200"
+                    style={{ backgroundColor: "#F6F4EE" }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E5E0D3' }}>
+                        <Clock className="w-4 h-4" style={{ color: '#C72030' }} />
+                      </div>
+                      <h3 className="text-base font-semibold text-gray-900">
+                        Logs ({logs.length})
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    {logs.length > 0 ? (
+                      <div className="space-y-4">
+                        {logs.map((log) => (
+                          <div
+                            key={log.id}
+                            className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-all duration-200"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                                <User className="w-5 h-5 text-gray-600" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <p className="text-sm font-semibold text-gray-900">
+                                    {log.commentor?.full_name || log.commentor?.email || 'User'}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {formatDate(log.created_at)}
+                                  </p>
+                                </div>
+                                <p className="text-sm text-gray-700">{log.comment}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
+                        <Clock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          No Logs
+                        </h3>
+                        <p className="text-gray-500">
+                          No logs have been added to this deviation yet.
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
