@@ -409,7 +409,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                                     ))
                                 ) : (
                                     <>
-                                        <SelectItem value="">No categories available</SelectItem>
+                                        <SelectItem value="" disabled>No categories available</SelectItem>
                                     </>
                                 )}
                             </SelectContent>
