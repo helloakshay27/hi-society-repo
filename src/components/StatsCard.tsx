@@ -21,7 +21,6 @@
 // };
 
 import React, { useState } from "react";
-import { Download } from "lucide-react";
 
 interface StatsCardProps {
   title: string;
@@ -30,8 +29,6 @@ interface StatsCardProps {
   onClick?: (status: string) => void;
   className?: string;
   selected?: boolean; // <-- add prop for selection
-  onDownload?: () => void; // <-- add download callback
-  downloadData?: any[]; // <-- optional data for CSV export
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({
@@ -41,58 +38,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   onClick,
   className,
   selected = false,
-  onDownload,
-  downloadData,
 }) => {
-  const handleDownload = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click when clicking download button
-    
-    if (onDownload) {
-      onDownload();
-    } else if (downloadData) {
-      // Default CSV export functionality
-      exportToCSV(downloadData, title);
-    }
-  };
-
-  const exportToCSV = (data: any[], filename: string) => {
-    if (!data || data.length === 0) {
-      console.warn("No data to export");
-      return;
-    }
-
-    // Get headers from the first object
-    const headers = Object.keys(data[0]);
-    
-    // Create CSV content
-    const csvContent = [
-      headers.join(","), // Header row
-      ...data.map(row => 
-        headers.map(header => {
-          const value = row[header];
-          // Escape quotes and wrap in quotes if contains comma
-          const stringValue = String(value ?? "");
-          return stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")
-            ? `"${stringValue.replace(/"/g, '""')}"`
-            : stringValue;
-        }).join(",")
-      )
-    ].join("\n");
-
-    // Create blob and download
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute("href", url);
-    link.setAttribute("download", `${filename.replace(/\s+/g, "_")}_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = "hidden";
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div
       className={`rounded-lg p-3 sm:p-4 lg:p-6 shadow-sm hover:shadow-lg transition-shadow flex items-center gap-2 sm:gap-3 lg:gap-4 cursor-pointer 
@@ -106,17 +52,6 @@ export const StatsCard: React.FC<StatsCardProps> = ({
         <p className="text-lg sm:text-xl lg:text-2xl font-semibold text-[#1A1A1A] truncate">{value}</p>
         <p className="text-xs sm:text-sm font-medium text-[#1A1A1A] truncate">{title}</p>
       </div>
-      
-      {/* Download Button - Positioned absolutely in bottom right */}
-      {(onDownload || downloadData) && (
-        <button
-          onClick={handleDownload}
-          className="absolute bottom-2 right-2 p-1.5 rounded-md hover:bg-[#C4B89D54] transition-colors duration-200 group"
-          title={`Download ${title} report`}
-        >
-          <Download className="w-4 h-4 text-[#1A1A1A] group-hover:text-[#C72031]" />
-        </button>
-      )}
     </div>
   );
 };

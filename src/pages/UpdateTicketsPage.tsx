@@ -763,6 +763,7 @@ const [loadingSuppliers, setLoadingSuppliers] = useState(false);
         proactiveReactive: ticketData.proactive_reactive || "",
         assignTo: assignedUser ? assignedUser.id.toString() : "", // Use matched user ID
         mode: matchedMode ? matchedMode.id.toString() : "",
+        serviceType: ticketData.service_or_asset || "",
         selectedStatus: matchedStatus ? matchedStatus.id.toString() : "",
         vendor: ticketData.supplier_id ? ticketData.supplier_id.toString() : "",
         comments: ticketData.comment || "",

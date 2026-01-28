@@ -367,6 +367,44 @@ export const Sidebar = () => {
             : [],
         }))
         .filter(checkItemPermission);
+    // Recursive function to filter subItems at ALL levels
+    const filterSubItemsRecursively = (items: any[]): any[] => {
+      return (
+        items
+          .map((item) => {
+            // First, recursively filter any nested subItems
+            const filteredSubItems = item.subItems
+              ? filterSubItemsRecursively(item.subItems)
+              : [];
+
+            return {
+              ...item,
+              subItems: filteredSubItems,
+            };
+          })
+          // After filtering children, keep item if:
+          // 1. It has direct permission, OR
+          // 2. It has any accessible subItems remaining (so users can navigate to them)
+          .filter((item) => {
+            const hasDirectPermission = checkItemPermission(item);
+            const hasAccessibleSubItems =
+              item.subItems && item.subItems.length > 0;
+
+            // Detailed logging for debugging
+            console.log(`🔍 Checking "${item.name}":`, {
+              hasDirectPermission,
+              hasAccessibleSubItems,
+              subItemsCount: item.subItems?.length || 0,
+              kept: hasDirectPermission || hasAccessibleSubItems,
+            });
+
+            return hasDirectPermission || hasAccessibleSubItems;
+          })
+      );
+    };
+
+    Object.entries(modulesByPackage).forEach(([sectionName, items]) => {
+      const filteredItems = filterSubItemsRecursively(items);
 
       if (filteredItems.length > 0) {
         filtered[sectionName] = filteredItems;
@@ -387,7 +425,7 @@ export const Sidebar = () => {
     );
 
     return filtered;
-  }, [modulesByPackage, userRole, checkPermission]);
+  }, [modulesByPackage, userRole, checkItemPermission]);
 
   // Reset expanded items on page load/refresh
   React.useEffect(() => {
@@ -560,6 +598,10 @@ export const Sidebar = () => {
     // console.log("currentSectionItems:", JSON.stringify({ currentSectionItems }, null, 2));
     // console.log("locationPathname:", JSON.stringify({ locationPathname: location.pathname }, null, 2));
     // console.log("filteredModulesByPackage:", JSON.stringify({ filteredModulesByPackage }, null, 2));
+    console.log(
+      "🔍 Debug - Safety section after filtering:",
+      JSON.stringify(filteredModulesByPackage["Safety"], null, 2)
+    );
     // console.log("modulesByPackage:", JSON.stringify({ modulesByPackage }, null, 2));
     // console.log("userRole:", JSON.stringify({ userRole }, null, 2));
     // console.log("hasPermissionForPath:", JSON.stringify({ hasPermissionForPath }, null, 2));
@@ -574,9 +616,11 @@ export const Sidebar = () => {
     const isActive = item.href ? isActiveRoute(item.href) : false;
 
     // Check permission for current item
-    if (!checkPermission(item)) {
+    if (!checkItemPermission(item)) {
       return null; // Don't render if no permission
     }
+    // NOTE: Permission check is already done by filteredModulesByPackage
+    // Items here are either: 1) have direct permission, or 2) have accessible children
 
     if (hasSubItems) {
       return (
@@ -606,7 +650,7 @@ export const Sidebar = () => {
             <div className="space-y-1">
               {item.subItems.map((subItem: any) => {
                 // Check permission for sub-item
-                if (!checkPermission(subItem)) {
+                if (!checkItemPermission(subItem)) {
                   return null; // Don't render if no permission
                 }
 
@@ -615,14 +659,14 @@ export const Sidebar = () => {
                     key={subItem.name}
                     className={level === 0 ? "ml-8" : "ml-4"}
                   >
-                    {subItem.subItems ? (
+                    {subItem.subItems && subItem.subItems.length > 0 ? (
                       <div>
                         <button
                           onClick={() => toggleExpanded(subItem.name)}
                           className="flex items-center justify-between !w-full gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-[#1a1a1a] hover:bg-[#DBC2A9] hover:text-[#1a1a1a] relative"
                         >
                           {subItem.href && isActiveRoute(subItem.href) && (
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#1a1a1a]"></div>
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]"></div>
                           )}
                           <span>{subItem.name}</span>
                           {expandedItems.includes(subItem.name) ? (
@@ -635,7 +679,7 @@ export const Sidebar = () => {
                           <div className="ml-4 mt-1 space-y-1">
                             {subItem.subItems.map((nestedItem: any) => {
                               // Check permission for nested item
-                              if (!checkPermission(nestedItem)) {
+                              if (!checkItemPermission(nestedItem)) {
                                 return null; // Don't render if no permission
                               }
 
@@ -650,7 +694,7 @@ export const Sidebar = () => {
                                   }`}
                                 >
                                   {isActiveRoute(nestedItem.href) && (
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#1a1a1a]"></div>
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]"></div>
                                   )}
                                   {nestedItem.name}
                                 </button>
@@ -669,7 +713,7 @@ export const Sidebar = () => {
                         }`}
                       >
                         {isActiveRoute(subItem.href) && (
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#1a1a1a]"></div>
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]"></div>
                         )}
                         {subItem.name}
                       </button>
@@ -696,7 +740,7 @@ export const Sidebar = () => {
           {level === 0 && (
             <>
               {isActive && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#1a1a1a]"></div>
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]"></div>
               )}
               <item.icon className="w-5 h-5" />
             </>
@@ -778,12 +822,12 @@ export const Sidebar = () => {
           title={module.name}
         >
           {(active || isExpanded) && (
-            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#1a1a1a]"></div>
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#C72030]"></div>
           )}
           {level === 0 ? (
             <module.icon
               className={`w-5 h-5 ${
-                active || isExpanded ? "text-[#1a1a1a]" : "text-[#1a1a1a]"
+                active || isExpanded ? "text-[#C72030]" : "text-[#1a1a1a]"
               }`}
             />
           ) : (
@@ -885,12 +929,12 @@ export const Sidebar = () => {
                   title={module.name}
                 >
                   {isActiveRoute(module.href) && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#1a1a1a]"></div>
+                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#C72030]"></div>
                   )}
                   <module.icon
                     className={`w-5 h-5 ${
                       isActiveRoute(module.href)
-                        ? "text-[#1a1a1a]"
+                        ? "text-[#C72030]"
                         : "text-[#1a1a1a]"
                     }`}
                   />
