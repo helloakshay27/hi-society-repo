@@ -2823,6 +2823,13 @@ const EventEdit = () => {
               >
                 Save to draft
               </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+              >
+                Cancel
+              </button>
             </div>
             {currentStep > 0 && (
               <>

@@ -621,25 +621,9 @@ const ProjectDetails = () => {
                   </div>
                   <div className="text-[14px] font-semibold text-gray-900 flex-1">
                     {formData.project_disclaimer ? (
-                      <p
-                        style={{
-                          display: "-webkit-box",
-                          WebkitLineClamp: isExpanded ? "unset" : 1,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: isExpanded ? "normal" : "nowrap",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => setIsExpanded(!isExpanded)}
-                      >
-                        {formData.project_disclaimer}{" "}
-                        {!isExpanded && (
-                          <span style={{ color: "black", cursor: "pointer" }}>
-                            ...
-                          </span>
-                        )}
-                      </p>
+                      <span style={{ wordWrap: "break-word", whiteSpace: "normal" }}>
+                        {formData.project_disclaimer}
+                      </span>
                     ) : (
                       "-"
                     )}
