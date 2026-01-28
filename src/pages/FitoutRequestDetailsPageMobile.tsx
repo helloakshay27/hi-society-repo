@@ -407,11 +407,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                                             {annexure.name}
                                         </SelectItem>
                                     ))
-                                ) : (
-                                    <>
-                                        <SelectItem value="" disabled>No categories available</SelectItem>
-                                    </>
-                                )}
+                                ) : []}
                             </SelectContent>
                         </Select>
 
