@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Settings, Edit } from '@mui/icons-material';
+import { ArrowLeft } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import axios from 'axios';
 import { getFullUrl } from '@/config/apiConfig';
@@ -1357,8 +1358,7 @@ export default function AddOfferPage() {
                             </Box>
                         </SectionBody>
                     </SectionCard>
-                )
-
+                );
 
             case 2: // Applicability
                 return (
@@ -1537,8 +1537,22 @@ export default function AddOfferPage() {
         <Box sx={{ p: { xs: 2, sm: 4, lg: 6 }, backgroundColor: '#f5f5f5', maxHeight: '90vh', overflowY: 'auto' }}>
             <Toaster position="top-right" richColors closeButton />
 
+            {/* Back Navigation */}
+            <div className="mb-8">
+                <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+                        aria-label="Go back"
+                    >
+                        <ArrowLeft className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <span>Back to Offers List</span>
+                </div>
+            </div>
+
             {/* Draft Restoration Modal */}
-            {showDraftModal && (
+            {showDraftModal ? (
                 <Box
                     sx={{
                         position: 'fixed',
@@ -1594,7 +1608,7 @@ export default function AddOfferPage() {
                         </Box>
                     </Box>
                 </Box>
-            )}
+            ) : null}
 
             {/* Breadcrumb */}
             <Typography variant="body2" sx={{ mb: 3, color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
