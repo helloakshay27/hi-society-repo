@@ -300,6 +300,9 @@ const FitoutRequestDetails: React.FC = () => {
     Record<number, { ans_descr?: string; quest_option_id?: number | null }>
   >({});
 
+  const [editedAnnexureFilesByMapId, setEditedAnnexureFilesByMapId] = useState<Record<number, File[]>>({});
+  const [editedAnnexureSignaturesByMapId, setEditedAnnexureSignaturesByMapId] = useState<Record<number, string>>({});
+
   const [annexureSaveLoading, setAnnexureSaveLoading] = useState(false);
   
   // Logs Modal State
@@ -393,9 +396,118 @@ const FitoutRequestDetails: React.FC = () => {
     fetchLogs();
   };
 
+  const SignatureCanvas: React.FC<{
+    mapId: number;
+    value?: string;
+    onChange: (dataUrl: string) => void;
+  }> = ({ mapId, value, onChange }) => {
+    const canvasRef = React.useRef<HTMLCanvasElement>(null);
+    const [isDrawing, setIsDrawing] = React.useState(false);
+
+    React.useEffect(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      canvas.width = canvas.offsetWidth;
+      canvas.height = 200;
+
+      if (value) {
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0);
+        img.src = value;
+      } else {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }, [value]);
+
+    const startDrawing = (
+      e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+    ) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      setIsDrawing(true);
+      const rect = canvas.getBoundingClientRect();
+      const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+      const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    };
+
+    const draw = (
+      e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+    ) => {
+      if (!isDrawing) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+      const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    };
+
+    const stopDrawing = () => {
+      if (!isDrawing) return;
+      setIsDrawing(false);
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      onChange(canvas.toDataURL('image/png'));
+    };
+
+    const clearSignature = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      onChange('');
+    };
+
+    return (
+      <div>
+        <canvas
+          ref={canvasRef}
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={stopDrawing}
+          className="w-full border-2 border-gray-300 rounded cursor-crosshair bg-white"
+          style={{ touchAction: 'none' }}
+        />
+        <Button
+          type="button"
+          onClick={clearSignature}
+          variant="outline"
+          size="sm"
+          className="mt-2 border-gray-300 hover:bg-gray-50"
+        >
+          Clear Signature
+        </Button>
+      </div>
+    );
+  };
+
   const handleAnnexureResponsesEditButtonClick = async () => {
     if (!annexureResponsesEditMode) {
       setEditedAnnexureAnswers({});
+      setEditedAnnexureFilesByMapId({});
+      setEditedAnnexureSignaturesByMapId({});
       setAnnexureResponsesEditMode(true);
       return;
     }
@@ -410,35 +522,13 @@ const FitoutRequestDetails: React.FC = () => {
         });
       });
 
-      const snag_answers: Record<string, any> = {};
+      const editedMapIds = new Set<number>([
+        ...Object.keys(editedAnnexureAnswers).map((k) => Number(k)),
+        ...Object.keys(editedAnnexureFilesByMapId).map((k) => Number(k)),
+        ...Object.keys(editedAnnexureSignaturesByMapId).map((k) => Number(k)),
+      ]);
 
-      Object.entries(editedAnnexureAnswers).forEach(([mapIdStr, edited]) => {
-        const mapIdNum = Number(mapIdStr);
-        const questMap = questMapById.get(mapIdNum);
-        if (!questMap) return;
-
-        const question = questMap.snag_question;
-        // Skip file type answers here; file upload is handled via Upload button
-        if (question.qtype === 'file') return;
-
-        const mapId = String(questMap.id);
-        const questionId = String(question.id);
-
-        const payload: any = {
-          snag_quest_map_id: mapId,
-          snag_question_id: questionId,
-          ans_descr: (edited.ans_descr ?? '').toString(),
-        };
-
-        // Include option_id ONLY if the user actually edited it (so we can also clear it)
-        if (Object.prototype.hasOwnProperty.call(edited, 'quest_option_id')) {
-          payload.snag_quest_option_id = edited.quest_option_id ? String(edited.quest_option_id) : '';
-        }
-
-        snag_answers[mapId] = payload;
-      });
-
-      if (Object.keys(snag_answers).length === 0) {
+      if (editedMapIds.size === 0) {
         toast.error('No changes to save', {
           position: 'top-right',
           duration: 3000,
@@ -450,11 +540,72 @@ const FitoutRequestDetails: React.FC = () => {
         });
         setAnnexureResponsesEditMode(false);
         setEditedAnnexureAnswers({});
+        setEditedAnnexureFilesByMapId({});
+        setEditedAnnexureSignaturesByMapId({});
         return;
       }
 
-      await apiClient.post('/fitout_requests/create_feedback', {
-        snag_answers,
+      const formData = new FormData();
+
+      const signatureFilesByMapId: Record<number, File> = {};
+      for (const [mapIdStr, dataUrl] of Object.entries(editedAnnexureSignaturesByMapId)) {
+        const mapIdNum = Number(mapIdStr);
+        if (!dataUrl) continue;
+        const blob = await fetch(dataUrl).then((r) => r.blob());
+        signatureFilesByMapId[mapIdNum] = new File([blob], `signature_${mapIdStr}_${Date.now()}.png`, {
+          type: 'image/png',
+        });
+      }
+
+      editedMapIds.forEach((mapIdNum) => {
+        const questMap = questMapById.get(mapIdNum);
+        if (!questMap) return;
+        const question = questMap.snag_question;
+        const existingAnswer = Array.isArray(questMap.snag_answers) && questMap.snag_answers.length > 0
+          ? questMap.snag_answers[questMap.snag_answers.length - 1]
+          : undefined;
+
+        const edited = editedAnnexureAnswers[mapIdNum];
+        const qKeyBase = `snag_answers[${mapIdNum}]`;
+
+        formData.append(`${qKeyBase}[snag_quest_map_id]`, String(mapIdNum));
+        formData.append(`${qKeyBase}[snag_question_id]`, String(question.id));
+
+        if (question.qtype === 'multiple') {
+          if (edited && Object.prototype.hasOwnProperty.call(edited, 'quest_option_id')) {
+            formData.append(
+              `${qKeyBase}[snag_quest_option_id]`,
+              edited.quest_option_id ? String(edited.quest_option_id) : ''
+            );
+            formData.append(`${qKeyBase}[ans_descr]`, (edited.ans_descr ?? '').toString());
+          } else if (existingAnswer?.quest_option_id) {
+            formData.append(`${qKeyBase}[snag_quest_option_id]`, String(existingAnswer.quest_option_id));
+            formData.append(`${qKeyBase}[ans_descr]`, (existingAnswer.ans_descr ?? '').toString());
+          } else {
+            formData.append(`${qKeyBase}[snag_quest_option_id]`, '');
+            formData.append(`${qKeyBase}[ans_descr]`, (edited?.ans_descr ?? '').toString());
+          }
+        } else if (question.qtype === 'file') {
+          formData.append(`${qKeyBase}[snag_quest_option_id]`, '');
+          formData.append(`${qKeyBase}[ans_descr]`, '');
+          const files = editedAnnexureFilesByMapId[mapIdNum] || [];
+          files.forEach((f) => formData.append(`${qKeyBase}[docs][]`, f));
+        } else if (question.qtype === 'signature') {
+          formData.append(`${qKeyBase}[snag_quest_option_id]`, '');
+          formData.append(`${qKeyBase}[ans_descr]`, '');
+          const signatureFile = signatureFilesByMapId[mapIdNum];
+          if (signatureFile) {
+            formData.append(`${qKeyBase}[docs][]`, signatureFile);
+          }
+        } else {
+          formData.append(`${qKeyBase}[ans_descr]`, (edited?.ans_descr ?? '').toString());
+        }
+      });
+
+      await apiClient.post('/fitout_requests/create_feedback', formData, {
+        headers: {
+          'Content-Type': undefined,
+        },
       });
 
       toast.success('Responses updated successfully', {
@@ -469,6 +620,8 @@ const FitoutRequestDetails: React.FC = () => {
 
       setAnnexureResponsesEditMode(false);
       setEditedAnnexureAnswers({});
+      setEditedAnnexureFilesByMapId({});
+      setEditedAnnexureSignaturesByMapId({});
 
       if (id) {
         fetchFitoutRequestDetails(parseInt(id));
@@ -1894,6 +2047,56 @@ const FitoutRequestDetails: React.FC = () => {
                                                         ))}
                                                       </SelectContent>
                                                     </Select>
+                                                  ) : question.qtype === 'date' ? (
+                                                    <Input
+                                                      type="date"
+                                                      value={currentAnsDescr}
+                                                      onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setEditedAnnexureAnswers((prev) => ({
+                                                          ...prev,
+                                                          [questMap.id]: {
+                                                            ...prev[questMap.id],
+                                                            ans_descr: val,
+                                                          },
+                                                        }));
+                                                      }}
+                                                      className="h-9 bg-white"
+                                                    />
+                                                  ) : question.qtype === 'file' ? (
+                                                    <div className="space-y-2">
+                                                      <Input
+                                                        type="file"
+                                                        multiple
+                                                        onChange={(e) => {
+                                                          const files = e.target.files ? Array.from(e.target.files) : [];
+                                                          setEditedAnnexureFilesByMapId((prev) => ({
+                                                            ...prev,
+                                                            [questMap.id]: files,
+                                                          }));
+                                                        }}
+                                                        className="bg-white"
+                                                      />
+                                                      {editedAnnexureFilesByMapId[questMap.id] &&
+                                                        editedAnnexureFilesByMapId[questMap.id].length > 0 && (
+                                                          <p className="text-xs text-gray-600">
+                                                            {editedAnnexureFilesByMapId[questMap.id].length} file(s) selected
+                                                          </p>
+                                                        )}
+                                                    </div>
+                                                  ) : question.qtype === 'signature' ? (
+                                                    <div className="space-y-2">
+                                                      <SignatureCanvas
+                                                        mapId={questMap.id}
+                                                        value={editedAnnexureSignaturesByMapId[questMap.id]}
+                                                        onChange={(dataUrl) => {
+                                                          setEditedAnnexureSignaturesByMapId((prev) => ({
+                                                            ...prev,
+                                                            [questMap.id]: dataUrl,
+                                                          }));
+                                                        }}
+                                                      />
+                                                    </div>
                                                   ) : (
                                                     <Input
                                                       value={currentAnsDescr}
