@@ -207,6 +207,27 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
             comments: (fitoutData?.comments || []).map(mapCommentFields),
         })) || [];
 
+    const fetchFitoutResponses = async () => {
+        try {
+            if (!token) {
+                throw new Error("No authentication token found in URL");
+            }
+
+            const response = await baseClient.get(
+                `/crm/admin/fitout_requests/${id}/fitout_responses.json`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            setFitoutResponses(response.data);
+            console.log("✅ Fitout responses refreshed:", response.data);
+        } catch (err) {
+            console.error("❌ Error refreshing fitout responses:", err);
+        }
+    };
+
     const handlePostComment = async () => {
         // Validate inputs
         if (!commentText.trim()) return;
@@ -248,6 +269,10 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
 
             console.log("✅ Comment posted successfully:", response.data);
             setCommentText("");
+
+            // Refetch the APIs to reflect the new comment
+            await fetchFitoutResponses();
+            toast.success("Comment posted successfully!");
         } catch (err) {
             console.error("❌ Error posting comment:", err);
             toast.error("Failed to post comment. Please try again.");
