@@ -409,8 +409,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                                     ))
                                 ) : (
                                     <>
-                                        <SelectItem value="fitout">Fitout Security Deposits</SelectItem>
-                                        <SelectItem value="general">General</SelectItem>
+                                        <SelectItem value="">No categories available</SelectItem>
                                     </>
                                 )}
                             </SelectContent>
