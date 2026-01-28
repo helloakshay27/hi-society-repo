@@ -227,7 +227,7 @@ const FaqCreate = () => {
             <div className="p-6" style={{ backgroundColor: "#AAB9C50D" }}>
               {/* Category and Subcategory Selection */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <FormControl fullWidth variant="outlined" required>
+                <FormControl fullWidth variant="outlined">
                   <InputLabel shrink htmlFor="faq-category">
                     FAQ Category <span style={{ color: '#C72030' }}>*</span>
                   </InputLabel>
@@ -238,7 +238,6 @@ const FaqCreate = () => {
                     label="FAQ Category *"
                     notched
                     displayEmpty
-                    required
                     inputProps={{ id: "faq-category" }}
                     sx={fieldStyles}
                   >
@@ -253,7 +252,7 @@ const FaqCreate = () => {
                   </MuiSelect>
                 </FormControl>
 
-                <FormControl fullWidth variant="outlined" required>
+                <FormControl fullWidth variant="outlined">
                   <InputLabel shrink htmlFor="faq-sub-category">
                     FAQ Sub Category <span style={{ color: '#C72030' }}>*</span>
                   </InputLabel>
@@ -264,7 +263,6 @@ const FaqCreate = () => {
                     label="FAQ Sub Category *"
                     notched
                     displayEmpty
-                    required
                     inputProps={{ id: "faq-sub-category" }}
                     sx={fieldStyles}
                   >
@@ -291,7 +289,6 @@ const FaqCreate = () => {
                   }
                   variant="outlined"
                   fullWidth
-                  required
                   placeholder="Enter Question"
                   value={formData.question}
                   onChange={(e) => setFormData({ ...formData, question: e.target.value })}
@@ -309,7 +306,6 @@ const FaqCreate = () => {
                   }
                   variant="outlined"
                   fullWidth
-                  required
                   placeholder="Enter Answer"
                   value={formData.answer}
                   onChange={(e) => setFormData({ ...formData, answer: e.target.value })}
