@@ -328,7 +328,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
 
                         <div className="px-5 py-5">
                             <h2 className="text-lg font-semibold text-gray-900 mb-1">
-                                Fitout <span className="font-normal text-gray-700">(#{fitoutData?.fitout_number || "951"})</span>
+                                Fitout <span className="font-normal text-gray-700">(#{fitoutData?.id || "951"})</span>
                             </h2>
 
                             <div>
