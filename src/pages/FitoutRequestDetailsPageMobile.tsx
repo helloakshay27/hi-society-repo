@@ -28,7 +28,7 @@ interface FitoutRequestCategory {
 interface FitoutRequest {
     id: number;
     fitout_number: string;
-    status: string;
+    status_name: string;
     created_at: string;
     requested_at: string;
     updated_at: string;
@@ -295,7 +295,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                             <div className="flex justify-end">
                                 <div className="flex items-center">
                                     <Badge className="rounded-l-none rounded-tr-[10px] rounded-br-none bg-[#00A650] px-6 py-1.5 text-xs font-semibold tracking-wide text-white">
-                                        {fitoutData?.status || "WORK IN PROGRESS"}
+                                        {fitoutData?.status_name || "PENDING"}
                                     </Badge>
                                 </div>
                             </div>
