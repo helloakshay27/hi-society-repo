@@ -565,16 +565,16 @@ export const EditFitoutChecklistPage = () => {
     }
   };
 
-  if (initialLoading) {
-    return (
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-        <div className="text-center py-8">Loading checklist data...</div>
-      </div>
-    );
-  }
+
+  // Always show the form, but show loading overlay if initialLoading
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
+    <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7', position: 'relative' }}>
+      {initialLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-80">
+          <div className="text-center py-8 text-lg font-medium text-gray-700">Loading checklist data...</div>
+        </div>
+      )}
       {/* Header */}
       <div className="mb-6">
         <button
