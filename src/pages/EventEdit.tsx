@@ -1672,6 +1672,19 @@ const EventEdit = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Back to Event List</span>
+        </div>
+      </div>
+      
       {!isPreviewMode && <StepperComponent />}
       
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
