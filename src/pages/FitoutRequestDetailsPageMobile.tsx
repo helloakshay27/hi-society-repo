@@ -30,7 +30,7 @@ interface FitoutRequest {
     fitout_number: string;
     status_name: string;
     created_at: string;
-    requested_at: string;
+    start_date: string;
     updated_at: string;
     description: string;
     documents: Array<{ id: number; title: string; thumbnail: string }>;
@@ -356,7 +356,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                                         Created On
                                     </p>
                                     <p className="text-xs font-semibold text-gray-900 mt-1">
-                                        {fitoutData?.created_at ? new Date(fitoutData.created_at).toLocaleDateString("en-IN") : "21/02/2023"}
+                                        {fitoutData?.created_at ? formatCommentDate(fitoutData.created_at) : "21/02/2023"}
                                     </p>
                                 </div>
                                 <div className="bg-[#f4f4f4] rounded-xl px-2 py-2 text-center">
@@ -364,7 +364,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                                         Requested On
                                     </p>
                                     <p className="text-xs font-semibold text-gray-900 mt-1">
-                                        {fitoutData?.requested_at ? new Date(fitoutData.requested_at).toLocaleDateString("en-IN") : "-"}
+                                        {fitoutData?.start_date || "-"}
                                     </p>
                                 </div>
                                 <div className="bg-[#f4f4f4] rounded-xl px-2 py-2 text-center">
@@ -372,7 +372,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                                         Updated On
                                     </p>
                                     <p className="text-xs font-semibold text-gray-900 mt-1">
-                                        {fitoutData?.updated_at ? new Date(fitoutData.updated_at).toLocaleDateString("en-IN") : "06/06/2023"}
+                                        {fitoutData?.updated_at ? formatCommentDate(fitoutData.updated_at) : "06/06/2023"}
                                     </p>
                                 </div>
                             </div>
