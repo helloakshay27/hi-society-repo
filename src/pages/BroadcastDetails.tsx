@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import axios from "axios";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { ArrowLeft } from "lucide-react";
 
 const BroadcastDetails = () => {
   const { id } = useParams();
@@ -122,6 +123,20 @@ const BroadcastDetails = () => {
   return (
     <div className="p-6 bg-gray-50 h-screen overflow-y-auto scrollbar-thin pb-28">
       <Toaster position="top-right" richColors closeButton />
+      
+      {/* Back Navigation */}
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Back to Broadcast List</span>
+        </div>
+      </div>
       
       <style>
         {`

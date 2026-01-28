@@ -245,10 +245,6 @@ const BroadcastCreate = () => {
       errors.push("Description is required.");
       return errors;
     }
-    if (formData.notice_text.length > 255) {
-      errors.push("Description cannot exceed 255 characters.");
-      return errors;
-    }
     return errors;
   };
 
