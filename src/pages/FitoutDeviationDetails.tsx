@@ -78,9 +78,25 @@ const FitoutDeviationDetails: React.FC = () => {
   // Edit Status Dialog State
   const [isEditStatusOpen, setIsEditStatusOpen] = useState(false);
   const [selectedEditDeviationId, setSelectedEditDeviationId] = useState<number | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState(''); // will store status id as string
   const [statusComment, setStatusComment] = useState('');
   const [isSubmittingStatus, setIsSubmittingStatus] = useState(false);
+  const [statusOptions, setStatusOptions] = useState<{ id: number; name: string; color_code?: string }[]>([]);
+    // Fetch complaint statuses for dropdown
+    useEffect(() => {
+      const fetchStatuses = async () => {
+        try {
+          const res = await axios.get(`${baseURL}/fitout_categories/get_complaint_statuses.json?q[of_atype_eq]=fitout_category`, {
+            headers: { 'Authorization': getAuthHeader() }
+          });
+          const statuses = res.data.complaint_statuses || [];
+          setStatusOptions(statuses);
+        } catch (err) {
+          toast.error('Failed to fetch status options');
+        }
+      };
+      fetchStatuses();
+    }, [baseURL]);
   
   // Send Violation Dialog State
   const [isSendViolationOpen, setIsSendViolationOpen] = useState(false);
@@ -198,7 +214,9 @@ const FitoutDeviationDetails: React.FC = () => {
 
   const handleEditStatus = (item: TableDeviation) => {
     setSelectedEditDeviationId(item.id);
-    setSelectedStatus(item.status);
+    // Try to find the status id by name
+    const found = statusOptions.find(opt => opt.name === item.status);
+    setSelectedStatus(found ? String(found.id) : '');
     setStatusComment(item.comment || '');
     setIsEditStatusOpen(true);
   };
@@ -208,19 +226,16 @@ const FitoutDeviationDetails: React.FC = () => {
       toast.error('Please select a status');
       return;
     }
-
     if (!selectedEditDeviationId) {
       toast.error('No deviation selected');
       return;
     }
-
     setIsSubmittingStatus(true);
     try {
-      // TODO: Replace with actual API endpoint when available
       await axios.put(
-        `${baseURL}/crm/admin/deviation_details/${selectedEditDeviationId}.json`,
+        `${baseURL}/crm/fitout_requests/update_deviation_status.json?id=${selectedEditDeviationId}`,
         {
-          status: selectedStatus,
+          complaint_status_id: Number(selectedStatus),
           comment: statusComment,
         },
         {
@@ -230,7 +245,6 @@ const FitoutDeviationDetails: React.FC = () => {
           },
         }
       );
-      
       toast.success('Status updated successfully');
       setIsEditStatusOpen(false);
       setSelectedStatus('');
@@ -534,12 +548,11 @@ const FitoutDeviationDetails: React.FC = () => {
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Resolved">Resolved</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                  <SelectItem value="Work In Progress">Work In Progress</SelectItem>
-                  <SelectItem value="Complied">Complied</SelectItem>
+                  {statusOptions.map((status) => (
+                    <SelectItem key={status.id} value={String(status.id)}>
+                      {status.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

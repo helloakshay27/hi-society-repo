@@ -93,9 +93,25 @@ const ViolationDetail: React.FC = () => {
   
   // Edit Status Dialog State
   const [isEditStatusOpen, setIsEditStatusOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState(''); // will store status id as string
   const [statusComment, setStatusComment] = useState('');
   const [isSubmittingStatus, setIsSubmittingStatus] = useState(false);
+  const [statusOptions, setStatusOptions] = useState<{ id: number; name: string; color_code?: string }[]>([]);
+    // Fetch complaint statuses for dropdown
+    useEffect(() => {
+      const fetchStatuses = async () => {
+        try {
+          const res = await axios.get(`${baseURL}/fitout_categories/get_complaint_statuses.json?q[of_atype_eq]=fitout_category`, {
+            headers: { 'Authorization': getAuthHeader() }
+          });
+          const statuses = res.data.complaint_statuses || [];
+          setStatusOptions(statuses);
+        } catch (err) {
+          toast.error('Failed to fetch status options');
+        }
+      };
+      fetchStatuses();
+    }, [baseURL]);
   
   // Send Violation Dialog State
   const [isSendViolationOpen, setIsSendViolationOpen] = useState(false);
@@ -168,7 +184,9 @@ const ViolationDetail: React.FC = () => {
 
   const handleEditStatus = () => {
     if (deviation) {
-      setSelectedStatus(deviation.status);
+      // Try to find the status id by name
+      const found = statusOptions.find(opt => opt.name === deviation.status);
+      setSelectedStatus(found ? String(found.id) : '');
       setStatusComment('');
     }
     setIsEditStatusOpen(true);
@@ -196,12 +214,21 @@ const ViolationDetail: React.FC = () => {
       toast.error('Please select a status');
       return;
     }
-
     setIsSubmittingStatus(true);
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await axios.put(
+        `${baseURL}/crm/fitout_requests/update_deviation_status.json?id=${deviation_id}`,
+        {
+          complaint_status_id: Number(selectedStatus),
+          comment: statusComment,
+        },
+        {
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+        }
+      );
       toast.success('Status updated successfully');
       setIsEditStatusOpen(false);
       fetchViolationDetail(searchTerm);
@@ -552,11 +579,33 @@ const ViolationDetail: React.FC = () => {
                         <MessageSquare className="w-4 h-4" style={{ color: '#C72030' }} />
                       </div>
                       <h3 className="text-base font-semibold text-gray-900">
-                        Comments ({deviation.comments.length})
+                        Comments ({deviation.comments.length + (deviation.comment ? 1 : 0)})
                       </h3>
                     </div>
                   </div>
-                  <div className="p-6">
+                  <div className="p-6 space-y-4">
+                    {/* Main deviation comment (admin/primary) */}
+                    {deviation.comment && (
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-full bg-orange-200 flex items-center justify-center flex-shrink-0">
+                            <User className="w-5 h-5 text-orange-600" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-sm font-semibold text-orange-800">
+                                Admin
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {formatDate(deviation.updated_at)}
+                              </p>
+                            </div>
+                            <p className="text-sm text-gray-800">{deviation.comment}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {/* Threaded comments */}
                     {deviation.comments.length > 0 ? (
                       <div className="space-y-4">
                         {deviation.comments.map((comment) => (
@@ -571,28 +620,30 @@ const ViolationDetail: React.FC = () => {
                               <div className="flex-1">
                                 <div className="flex items-center justify-between mb-1">
                                   <p className="text-sm font-semibold text-gray-900">
-                                    {comment.commentor?.email || 'User'}
+                                    {comment.commentor?.full_name || comment.commentor?.email || 'User'}
                                   </p>
                                   <p className="text-xs text-gray-500">
                                     {formatDate(comment.created_at)}
                                   </p>
                                 </div>
-                                <p className="text-sm text-gray-700">{comment.body}</p>
+                                <p className="text-sm text-gray-700">{comment.comment || comment.body}</p>
                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
-                        <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                          No Comments
-                        </h3>
-                        <p className="text-gray-500">
-                          No comments have been added to this deviation yet.
-                        </p>
-                      </div>
+                      !deviation.comment && (
+                        <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
+                          <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">
+                            No Comments
+                          </h3>
+                          <p className="text-gray-500">
+                            No comments have been added to this deviation yet.
+                          </p>
+                        </div>
+                      )
                     )}
                   </div>
                 </div>
@@ -620,11 +671,11 @@ const ViolationDetail: React.FC = () => {
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Work In Progress">Work In Progress</SelectItem>
-                  <SelectItem value="Complied">Complied</SelectItem>
-                  <SelectItem value="Resolved">Resolved</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
+                  {statusOptions.map((status) => (
+                    <SelectItem key={status.id} value={String(status.id)}>
+                      {status.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
