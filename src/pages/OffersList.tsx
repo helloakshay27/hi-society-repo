@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/pagination';
 import { Column } from 'jspdf-autotable';
 import axios from 'axios';
+import { getFullUrl, HI_SOCIETY_CONFIG } from '@/config/apiConfig';
 
 interface ApiOffer {
   id: number;
@@ -158,7 +159,7 @@ export default function OffersList() {
     setLoading(true);
     try {
       const response = await axios.get<ApiResponse>(
-        `${HI_SOCIETY_CONFIG.BASE_URL}/crm/offers.json`,
+        getFullUrl('/crm/offers.json'),
         {
           params: {
             token: HI_SOCIETY_CONFIG.TOKEN

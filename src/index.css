@@ -1465,3 +1465,28 @@ button.text-blue-600{
   scrollbar-width: thin;
   scrollbar-color: #9ca3af transparent; /* gray-400 */
 }
+
+[data-sonner-toast] {
+  min-height: 60px !important;
+  padding: 16px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+[data-sonner-toast] [data-content] {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex: 1 !important;
+}
+
+[data-sonner-toast] [data-title] {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+}
+
+[data-sonner-toast] [data-icon] {
+  flex-shrink: 0 !important;
+  margin-top: 0 !important;
+}
