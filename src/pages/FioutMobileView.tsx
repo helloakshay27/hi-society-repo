@@ -282,6 +282,10 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({
   const [serverSubmitted, setServerSubmitted] = useState(false);
   // when true, allow editing even if server had answers; we will prefill
   const [allowEdit, setAllowEdit] = useState(false);
+  // Track category status and whether form can be edited
+  const [categoryStatus, setCategoryStatus] = useState<string>("");
+  const [categoryName, setCategoryName] = useState<string>("");
+  const [canEditForm, setCanEditForm] = useState<boolean>(true);
   // Toast notifications
   const [toast, setToast] = useState<{
     show: boolean;
@@ -330,6 +334,44 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({
         if (cancelled) return;
         const data = response.data;
         const payload = Array.isArray(data) ? data : data || [];
+        
+        // Check category status and whether answers exist
+        const firstCategory = payload[0];
+        if (firstCategory && typeof firstCategory === "object") {
+          const cat = firstCategory as any;
+          const status = cat.status || cat.complaint_status_name || "";
+          const name = cat.name || "";
+          setCategoryStatus(status);
+          setCategoryName(name);
+          
+          // Check if any snag_answers exist
+          const hasAnswers = (cat.snag_quest_maps || []).some((map: any) => 
+            map.snag_answers && Array.isArray(map.snag_answers) && map.snag_answers.length > 0
+          );
+          
+          // Allow editing if:
+          // 1. No answers exist (snag_answers is empty) OR
+          // 2. Status is "Need Modification", "Pending", or "Work In Progress"
+          const allowedStatuses = [
+            "Need Modification", 
+            "Pending", 
+            "Work In Progress",
+            "need modification", 
+            "pending",
+            "work in progress"
+          ];
+          const canEdit = !hasAnswers || allowedStatuses.includes(status);
+          setCanEditForm(canEdit);
+          
+          if (!canEdit && !allowEdit) {
+            // Form cannot be edited
+            setServerSubmitted(true);
+            setCategories([]);
+            setLoading(false);
+            return;
+          }
+        }
+        
         // If any snag_answers exist in the payload, treat the form as already submitted
         const answeredExists = (payload || []).some((item: unknown) => {
           if (!item || typeof item !== "object") return false;
@@ -482,14 +524,63 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({
     const reqs = categories.flatMap((c) =>
       c.questions.filter((q) => q.required)
     );
+    
     return reqs.every((q) => {
-      const val = answers[String(q.id)];
+      const qid = String(q.id);
+      
+      // Check signature questions
+      if (q.qtype === "signature") {
+        return signaturesByQid[qid] && signaturesByQid[qid].length > 0;
+      }
+      
+      // Check file questions
+      if (q.qtype === "file") {
+        return filesByQid[qid] && filesByQid[qid].length > 0;
+      }
+      
+      // Check text-based answers
+      const val = answers[qid];
       return typeof val === "string" && val.trim().length > 0;
     });
   };
 
   const handleSubmit = async () => {
-    if (!allRequiredAnswered()) return;
+    // Check if all required fields are filled
+    if (!allRequiredAnswered()) {
+      // Show which fields are missing
+      const reqs = categories.flatMap((c) =>
+        c.questions.filter((q) => q.required)
+      );
+      const missingQuestions: string[] = [];
+      
+      reqs.forEach((q) => {
+        const qid = String(q.id);
+        let isFilled = false;
+        
+        if (q.qtype === "signature") {
+          isFilled = signaturesByQid[qid] && signaturesByQid[qid].length > 0;
+        } else if (q.qtype === "file") {
+          isFilled = filesByQid[qid] && filesByQid[qid].length > 0;
+        } else {
+          const val = answers[qid];
+          isFilled = typeof val === "string" && val.trim().length > 0;
+        }
+        
+        if (!isFilled) {
+          missingQuestions.push(q.title);
+        }
+      });
+      
+      if (missingQuestions.length > 0) {
+        const firstMissing = missingQuestions.slice(0, 3).join(", ");
+        const message = missingQuestions.length > 3 
+          ? `Please fill: ${firstMissing} and ${missingQuestions.length - 3} more...`
+          : `Please fill: ${firstMissing}`;
+        showToast(message, "error");
+      }
+      return;
+    }
+    
     setSubmitting(true);
     try {
       const form = new FormData();
@@ -705,23 +796,39 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({
         <div className="w-full max-w-md md:max-w-4xl px-4 mt-24">
           <div className="bg-white/90 rounded-md p-6 md:p-8 text-center shadow-md">
             <h2 className="text-2xl font-semibold mb-2">
-              Form already submitted
+              {canEditForm ? "Form already submitted" : "Form Not Editable"}
             </h2>
-            <p className="text-sm text-gray-700 mb-4">
-              We found previous answers for this fitout mapping. The form cannot
-              be edited.
+            <p className="text-sm text-gray-700 mb-2">
+              {categoryName && (
+                <span className="font-medium block mb-2">
+                  Category: {categoryName}
+                </span>
+              )}
+              {categoryStatus && (
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-3" 
+                  style={{ backgroundColor: '#FFF3CD', color: '#856404' }}>
+                  Status: {categoryStatus}
+                </span>
+              )}
             </p>
-            <button
-              type="button"
-              onClick={() => {
-                setAllowEdit(true);
-                setServerSubmitted(false);
-                setFetchAttempt((s) => s + 1);
-              }}
-              className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold"
-            >
-              Edit form
-            </button>
+            <p className="text-sm text-gray-700 mb-4">
+              {canEditForm 
+                ? "We found previous answers for this fitout mapping. The form cannot be edited."
+                : "This form has already been submitted and is not in 'Pending' or 'Need Modification' status. It cannot be edited at this time."}
+            </p>
+            {canEditForm && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAllowEdit(true);
+                  setServerSubmitted(false);
+                  setFetchAttempt((s) => s + 1);
+                }}
+                className="mt-2 w-full py-3 rounded bg-[#1E56D6] text-white font-semibold"
+              >
+                Edit form
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1062,16 +1169,22 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({
       <div className="w-full max-w-md md:max-w-5xl px-4 mt-2 mb-6 md:mx-auto">
         <div className="bg-white/90 md:bg-white md:border md:border-gray-200 md:rounded-1xl md:shadow-xl rounded-md p-3 md:p-6">
           <button
+            type="button"
             onClick={handleSubmit}
-            disabled={!allRequiredAnswered()}
-            className={`w-full py-4 rounded font-semibold text-white ${
-              allRequiredAnswered()
-                ? "bg-[#1E56D6]"
-                : "bg-gray-300 cursor-not-allowed"
+            disabled={submitting || !allRequiredAnswered()}
+            className={`w-full py-4 rounded font-semibold transition-all ${
+              submitting || !allRequiredAnswered()
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-[#1E56D6] text-white hover:bg-[#1645b8]"
             }`}
           >
-            Submit Fitout
+            {submitting ? "Submitting..." : "Submit Fitout"}
           </button>
+          {!allRequiredAnswered() && !submitting && (
+            <p className="text-xs text-red-600 mt-2 text-center">
+              Please fill all required fields (marked with *)
+            </p>
+          )}
         </div>
       </div>
     </div>
