@@ -1430,7 +1430,15 @@ const ProjectDetailsEdit = () => {
       );
       
       if (response.data && Array.isArray(response.data)) {
-        const configs = {};
+        const configs = {
+          ProjectImage: [],
+          ProjectCoverImage: [],
+          ProjectGallery: [],
+          Project2DImage: [],
+          BannerAttachment: [],
+          EventImage: [],
+          EventCoverImage: [],
+        };
         
         response.data.forEach((config) => {
           const { name, value } = config;
@@ -1440,12 +1448,10 @@ const ProjectDetailsEdit = () => {
           if (ratioMatch) {
             const ratio = `${ratioMatch[1]}:${ratioMatch[2]}`;
             
-            if (!configs[name]) {
-              configs[name] = [];
-            }
-            
-            if (!configs[name].includes(ratio)) {
-              configs[name].push(ratio);
+            if (name && Object.prototype.hasOwnProperty.call(configs, name)) {
+              if (!configs[name].includes(ratio)) {
+                configs[name].push(ratio);
+              }
             }
           }
         });
@@ -2083,28 +2089,20 @@ const ProjectDetailsEdit = () => {
       return false;
     }
 
-    // Validate connectivity data - all fields must be filled if any data is entered
+    // Validate connectivity data - if any data is entered, Type and Place Name are required
     if (formData.connectivities && formData.connectivities.length > 0) {
       for (let i = 0; i < formData.connectivities.length; i++) {
         const connectivity = formData.connectivities[i];
         const hasType = connectivity.connectivity_type_id && connectivity.connectivity_type_id !== '';
         const hasPlace = connectivity.place_name && connectivity.place_name.trim() !== '';
-        const hasImage = connectivity.image instanceof File || 
-                         (typeof connectivity.image === 'string' && connectivity.image) ||
-                         connectivity.document_url; // existing images have document_url
 
-        // If any field is filled, all fields must be filled
-        if (hasType || hasPlace || hasImage) {
+        if (hasType || hasPlace) {
           if (!hasType) {
             toast.error(`Connectivity #${i + 1}: Type is required`);
             return false;
           }
           if (!hasPlace) {
             toast.error(`Connectivity #${i + 1}: Place Name is required`);
-            return false;
-          }
-          if (!hasImage) {
-            toast.error(`Connectivity #${i + 1}: Image is required`);
             return false;
           }
         }
@@ -2304,40 +2302,21 @@ const ProjectDetailsEdit = () => {
         console.log("=== End RERA Data ===");
       } else if (key === "connectivities" && Array.isArray(value)) {
         value.forEach((item) => {
-          // Check if all required fields are present
           const hasType = item.connectivity_type_id && item.connectivity_type_id !== '';
           const hasPlace = item.place_name && item.place_name.trim() !== '';
-          const hasImage = (item.image && item.image instanceof File) || 
-                          (typeof item.image === 'string' && item.image) ||
-                          item.document_url; // existing entries have document_url or image URL
-          
-          // Only include connectivity if all three fields are filled
-          if (hasType && hasPlace && hasImage) {
-            data.append(
-              `project[connectivities][][connectivity_type_id]`,
-              item.connectivity_type_id
-            );
-            data.append(
-              `project[connectivities][][place_name]`,
-              item.place_name
-            );
-            // Only append image if it's a new File, not an existing URL
-            if (item.image && item.image instanceof File) {
-              data.append(
-                `project[connectivities][][image]`,
-                item.image
-              );
-            }
-            // If connectivity has an ID, append it for update
+
+          // Only include connectivity if required fields are filled
+          if (hasType && hasPlace) {
+            data.append(`project[connectivities][][connectivity_type_id]`, item.connectivity_type_id);
+            data.append(`project[connectivities][][place_name]`, item.place_name);
+
             if (item.id) {
-              data.append(
-                `project[connectivities][][id]`,
-                item.id
-              );
+              data.append(`project[connectivities][][id]`, item.id);
             }
           }
         });
-      } else if (key === "project_ppt" && Array.isArray(value) && value.length > 0) {
+      }
+ else if (key === "project_ppt" && Array.isArray(value) && value.length > 0) {
         value.forEach((file) => {
           if (file instanceof File) {
             data.append("project[ProjectPPT]", file);
@@ -3858,7 +3837,7 @@ const ProjectDetailsEdit = () => {
                   />
                 </div>
 
-                <div className="mt-6">
+                {/* <div className="mt-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Image
                   </label>
@@ -3943,7 +3922,7 @@ const ProjectDetailsEdit = () => {
                       </button>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             ) : (
               <>
@@ -4016,7 +3995,7 @@ const ProjectDetailsEdit = () => {
                         />
                       </div>
 
-                      <div className="mt-6">
+                      {/* <div className="mt-6">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Image
                         </label>
@@ -4085,7 +4064,7 @@ const ProjectDetailsEdit = () => {
                             </button>
                           </div>
                         </div>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 ))}
