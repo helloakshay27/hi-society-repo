@@ -162,9 +162,9 @@ const ProjectConfiguration = () => {
           <div className="p-6">
   {/* Label box */}
   <div className="border border-gray-300 rounded-md p-4">
-    <span className="block text-sm font-medium text-gray-700 mb-3">
+    {/* <span className="block text-sm font-medium text-gray-700 mb-3">
       Project QR Code Images
-    </span>
+    </span> */}
 
     {/* Hidden input (UNCHANGED) */}
     <input

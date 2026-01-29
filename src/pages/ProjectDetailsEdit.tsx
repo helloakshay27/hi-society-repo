@@ -875,6 +875,21 @@ const ProjectDetailsEdit = () => {
   const MAX_BROCHURE_SIZE = 20 * 1024 * 1024; // 20MB
   const MAX_PPT_SIZE = 10 * 1024 * 1024; // 10MB
 
+  const handleNumberInput = (value) => {
+    if (value === "" || value === null || value === undefined) return "";
+
+    let numStr = String(value).replace(/[^0-9.]/g, "");
+
+    if (parseFloat(numStr) < 0) return "";
+
+    if (numStr.includes(".")) {
+      const parts = numStr.split(".");
+      numStr = parts[0] + "." + (parts[1] || "").substring(0, 2);
+    }
+
+    return numStr;
+  };
+
   // Format file size to human-readable format
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + " B";
@@ -1996,10 +2011,42 @@ const ProjectDetailsEdit = () => {
       setFormData({ ...formData, KnwYrApt_Technical: updatedFiles });
       toast.success("Technical file removed successfully");
     } else if (fileType === "project_layout") {
+      const fileToRemove = formData.project_layout[index];
+      
+      // If the file has an ID, it's an existing server file - call delete API
+      if (fileToRemove?.id && projectId) {
+        try {
+          await axios.delete(
+            getFullUrl(`/projects/${projectId}/remove_layout_image/${fileToRemove.id}.json`),
+            {
+              headers: {
+                Authorization: getAuthHeader(),
+              },
+            }
+          );
+          toast.success("Layout deleted successfully", { description: "Success" });
+        } catch (error) {
+          console.error("Error deleting layout:", error);
+          
+          // If 404, the file doesn't exist on server, still remove from UI
+          if (error.response?.status === 404) {
+            toast.warning("Layout not found on server, removing from list", { description: "Warning" });
+          } else {
+            toast.error("Failed to delete layout from server", { description: "Error" });
+            return; // Don't update local state if server delete failed
+          }
+        }
+      }
+      
+      // Update local state
       const updatedFiles = [...formData.project_layout];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, project_layout: updatedFiles });
-      toast.success("Layout removed successfully");
+      
+      // Show success toast only for newly uploaded files (without ID)
+      if (!fileToRemove?.id) {
+        toast.success("Layout removed successfully");
+      }
     } else if (fileType === "videos") {
       const updatedVideos = [...formData.videos];
       updatedVideos.splice(index, 1);
@@ -2803,25 +2850,25 @@ const ProjectDetailsEdit = () => {
                 placeholder="Enter Size in Sq. Mtr."
                 type="number"
                 value={formData.Project_Size_Sq_Mtr}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '' || parseFloat(value) >= 0) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      Project_Size_Sq_Mtr: value,
-                    }));
-                  }
-                }}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    Project_Size_Sq_Mtr: handleNumberInput(e.target.value),
+                  }))
+                }
                 fullWidth
                 variant="outlined"
                 slotProps={{
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0, step: "any" }
+                  htmlInput: { min: 0, step: "0.01" },
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "e" || e.key === "E") e.preventDefault();
                 }}
               />
 
@@ -2830,25 +2877,25 @@ const ProjectDetailsEdit = () => {
                 placeholder="Enter Size in Sq. Ft."
                 type="number"
                 value={formData.Project_Size_Sq_Ft}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '' || parseFloat(value) >= 0) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      Project_Size_Sq_Ft: value,
-                    }));
-                  }
-                }}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    Project_Size_Sq_Ft: handleNumberInput(e.target.value),
+                  }))
+                }
                 fullWidth
                 variant="outlined"
                 slotProps={{
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0, step: "any" }
+                  htmlInput: { min: 0, step: "0.01" },
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "e" || e.key === "E") e.preventDefault();
                 }}
               />
 
@@ -2860,7 +2907,7 @@ const ProjectDetailsEdit = () => {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    development_area_sqmt: e.target.value,
+                    development_area_sqmt: handleNumberInput(e.target.value),
                   }))
                 }
                 fullWidth
@@ -2869,10 +2916,13 @@ const ProjectDetailsEdit = () => {
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0 }
+                  htmlInput: { min: 0, step: "0.01" },
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "e" || e.key === "E") e.preventDefault();
                 }}
               />
 
@@ -2884,7 +2934,7 @@ const ProjectDetailsEdit = () => {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    development_area_sqft: e.target.value,
+                    development_area_sqft: handleNumberInput(e.target.value),
                   }))
                 }
                 fullWidth
@@ -2893,10 +2943,13 @@ const ProjectDetailsEdit = () => {
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0 }
+                  htmlInput: { min: 0, step: "0.01" },
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "e" || e.key === "E") e.preventDefault();
                 }}
               />
                <TextField
@@ -2907,7 +2960,7 @@ const ProjectDetailsEdit = () => {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    Rera_Carpet_Area_Sq_M: e.target.value,
+                    Rera_Carpet_Area_Sq_M: handleNumberInput(e.target.value),
                   }))
                 }
                 fullWidth
@@ -2916,10 +2969,13 @@ const ProjectDetailsEdit = () => {
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0 }
+                  htmlInput: { min: 0, step: "0.01" },
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "e" || e.key === "E") e.preventDefault();
                 }}
               />
 
@@ -2931,7 +2987,7 @@ const ProjectDetailsEdit = () => {
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    Rera_Carpet_Area_sqft: e.target.value,
+                    Rera_Carpet_Area_sqft: handleNumberInput(e.target.value),
                   }))
                 }
                 fullWidth
@@ -2940,10 +2996,13 @@ const ProjectDetailsEdit = () => {
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0 }
+                  htmlInput: { min: 0, step: "0.01" },
                 }}
                 InputProps={{
                   sx: fieldStyles,
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "e" || e.key === "E") e.preventDefault();
                 }}
               />
 
