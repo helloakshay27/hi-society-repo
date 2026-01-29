@@ -86,7 +86,7 @@ const FitoutDeviationDetails: React.FC = () => {
     useEffect(() => {
       const fetchStatuses = async () => {
         try {
-          const res = await axios.get(`${baseURL}/fitout_categories/get_complaint_statuses.json?q[of_atype_eq]=fitout_category`, {
+          const res = await axios.get(`${baseURL}/fitout_categories/get_complaint_statuses.json?q[of_atype_eq]=deviation_details`, {
             headers: { 'Authorization': getAuthHeader() }
           });
           const statuses = res.data.complaint_statuses || [];
