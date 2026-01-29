@@ -438,7 +438,7 @@ export const DeviationStatusTab: React.FC = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="status-name">Status Name *</Label>
+              <Label htmlFor="status-name">Status Name <span className='text-red-600'>*</span></Label>
               <Input
                 id="status-name"
                 placeholder="Enter status name"
@@ -447,7 +447,7 @@ export const DeviationStatusTab: React.FC = () => {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="fixed-state">Fixed State *</Label>
+              <Label htmlFor="fixed-state">Fixed State <span className='text-red-600'>*</span></Label>
               <Select value={fixedState} onValueChange={setFixedState}>
                 <SelectTrigger id="fixed-state">
                   <SelectValue placeholder="Select Fixed State" />
@@ -463,7 +463,7 @@ export const DeviationStatusTab: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="color">Color *</Label>
+                <Label htmlFor="color">Color <span className='text-red-600'>*</span></Label>
                 <Select value={selectedColor} onValueChange={setSelectedColor}>
                   <SelectTrigger id="color">
                     <SelectValue placeholder="Select Color" />
@@ -484,7 +484,7 @@ export const DeviationStatusTab: React.FC = () => {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="position">Position *</Label>
+                <Label htmlFor="position">Position <span className='text-red-600'>*</span></Label>
                 <Input
                   id="position"
                   type="number"

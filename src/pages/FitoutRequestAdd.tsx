@@ -502,7 +502,7 @@ const FitoutRequestAdd: React.FC = () => {
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Tower/Site *</InputLabel>
+                <InputLabel shrink>Tower/Site <span className='text-red-600'>*</span></InputLabel>
                 <MuiSelect
                   value={formData.site_id}
                   onChange={handleSelectChange('site_id')}
@@ -524,7 +524,7 @@ const FitoutRequestAdd: React.FC = () => {
               </FormControl>
 
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Flat *</InputLabel>
+                <InputLabel shrink>Flat <span className='text-red-600'>*</span></InputLabel>
                 <MuiSelect
                   value={formData.unit_id}
                   onChange={handleSelectChange('unit_id')}
@@ -547,7 +547,7 @@ const FitoutRequestAdd: React.FC = () => {
               </FormControl>
 
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>User *</InputLabel>
+                <InputLabel shrink>User <span className='text-red-600'>*</span></InputLabel>
                 <MuiSelect
                   value={formData.user_id}
                   onChange={handleSelectChange('user_id')}
@@ -645,7 +645,7 @@ const FitoutRequestAdd: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Fitout Type *</InputLabel>
+                <InputLabel shrink>Fitout Type <span className='text-red-600'>*</span></InputLabel>
                 <MuiSelect
                   value={formData.fitout_type}
                   onChange={handleSelectChange('fitout_type')}

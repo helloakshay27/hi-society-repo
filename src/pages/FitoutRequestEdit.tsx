@@ -656,7 +656,7 @@ const FitoutRequestEdit: React.FC = () => {
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Tower *</InputLabel>
+                <InputLabel shrink>Tower <span className='text-red-600'>*</span></InputLabel>
                 <MuiSelect
                   value={formData.tower}
                   onChange={handleSelectChange('tower')}
@@ -678,7 +678,7 @@ const FitoutRequestEdit: React.FC = () => {
               </FormControl>
 
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Flat *</InputLabel>
+                <InputLabel shrink>Flat <span className='text-red-600'>*</span></InputLabel>
                 <MuiSelect
                   value={formData.flat}
                   onChange={handleSelectChange('flat')}
@@ -701,7 +701,7 @@ const FitoutRequestEdit: React.FC = () => {
               </FormControl>
 
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>User *</InputLabel>
+                <InputLabel shrink>User <span className='text-red-600'>*</span></InputLabel>
                 <MuiSelect
                   value={formData.user}
                   onChange={handleSelectChange('user')}

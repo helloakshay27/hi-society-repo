@@ -603,7 +603,7 @@ export const EditFitoutChecklistPage = () => {
           <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <TextField
-              label="Checklist Title *"
+              label={<span>Checklist Title <span className="text-red-600">*</span></span>}
               variant="outlined"
               fullWidth
               value={title}
@@ -612,7 +612,7 @@ export const EditFitoutChecklistPage = () => {
             />
 
             <FormControl fullWidth sx={fieldStyles}>
-              <InputLabel>Category *</InputLabel>
+              <InputLabel>Category <span className="text-red-600">*</span></InputLabel>
               <Select
                 value={category}
                 label="Category *"
@@ -646,7 +646,7 @@ export const EditFitoutChecklistPage = () => {
             </FormControl>
 
             <FormControl fullWidth sx={fieldStyles}>
-              <InputLabel>Checklist Type *</InputLabel>
+              <InputLabel>Checklist Type <span className="text-red-600">*</span></InputLabel>
               <Select
                 value={checkType}
                 label="Check Type *"
@@ -706,7 +706,7 @@ export const EditFitoutChecklistPage = () => {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <TextField
-                        label="Question Text *"
+                        label={<span>Question Text <span className="text-red-600">*</span></span>}
                         variant="outlined"
                         // fullWidth
                         // multiline
@@ -719,7 +719,7 @@ export const EditFitoutChecklistPage = () => {
                       />
 
                       <FormControl fullWidth sx={fieldStyles}>
-                        <InputLabel>Answer Type *</InputLabel>
+                        <InputLabel>Answer Type <span className="text-red-600">*</span></InputLabel>
                         <Select
                           value={question.answerType}
                           label="Answer Type *"

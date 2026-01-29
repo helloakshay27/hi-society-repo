@@ -355,7 +355,7 @@ export const CategoryTab: React.FC = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="category-name">Category Name *</Label>
+              <Label htmlFor="category-name">Category Name <span className="text-red-600">*</span></Label>
               <Input
                 id="category-name"
                 placeholder="Enter category name"

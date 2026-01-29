@@ -402,7 +402,7 @@ export const FitoutCategoryRateTab: React.FC = () => {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="amount">Amount *</Label>
+              <Label htmlFor="amount">Amount <span className="text-red-600">*</span></Label>
               <Input
                 id="amount"
                 type="number"

@@ -342,7 +342,7 @@ export const StatusTab: React.FC = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="status-name">Status Name *</Label>
+              <Label htmlFor="status-name">Status Name <span className='text-red-600'>*</span></Label>
               <Input
                 id="status-name"
                 placeholder="Enter status name"
@@ -383,7 +383,7 @@ export const StatusTab: React.FC = () => {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="position">Position *</Label>
+                <Label htmlFor="position">Position <span className='text-red-600'>*</span> </Label>
                 <Input
                   id="position"
                   type="number"
