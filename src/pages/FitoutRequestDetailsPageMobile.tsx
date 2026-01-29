@@ -67,12 +67,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                 }
 
                 const response = await baseClient.get(
-                    `/crm/admin/fitout_requests/${id}.json`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
+                    `/crm/admin/fitout_requests/${id}.json?token=${token}`
                 );
                 setFitoutData(response.data);
                 console.log("✅ Fitout request loaded:", response.data);
