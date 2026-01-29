@@ -93,12 +93,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
                 }
 
                 const response = await baseClient.get(
-                    `/crm/admin/fitout_requests/${id}/fitout_responses.json`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
+                    `/crm/admin/fitout_requests/${id}/fitout_responses.json?token=${token}`,
                 );
                 setFitoutResponses(response.data);
                 console.log("✅ Fitout responses loaded:", response.data);
@@ -210,12 +205,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
             }
 
             const response = await baseClient.get(
-                `/crm/admin/fitout_requests/${id}/fitout_responses.json`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
+                `/crm/admin/fitout_requests/${id}/fitout_responses.json?token=${token}`,
             );
             setFitoutResponses(response.data);
             console.log("✅ Fitout responses refreshed:", response.data);
@@ -249,18 +239,13 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
 
             // Make API call to post comment
             const response = await baseClient.put(
-                `/fitout_request_categories/${selectedAnnexure.id}.json`,
+                `/fitout_request_categories/${selectedAnnexure.id}.json?token=${token}`,
                 {
                     id: selectedAnnexure.id.toString(),
                     comment: {
                         body: commentText,
                     },
                 },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
             );
 
             console.log("✅ Comment posted successfully:", response.data);
