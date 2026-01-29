@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Wallet,
@@ -12,6 +12,7 @@ import {
   Settings,
 } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
+import { getFullUrl } from "@/config/apiConfig";
 import {
   Select,
   SelectContent,
@@ -32,16 +33,40 @@ export const LoyaltyDashboard = () => {
   const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState("30");
 
-  // Mock data for the dashboard
-  const stats = {
-    walletBalance: "1,245,890",
-    pointsDistributed: "2,847,650",
-    pointsRedeemed: "1,601,760",
-    pointsExpiring: "89,450",
-    totalRedemptionValue: "320,352",
-    avgCostPerRedemption: "4.85",
-    discountEarned: "89,720",
-  };
+  // State for API data
+  const [stats, setStats] = useState({
+    walletBalance: "-",
+    pointsDistributed: "-",
+    pointsRedeemed: "-",
+    pointsExpiring: "-",
+    totalRedemptionValue: "-",
+    avgCostPerRedemption: "-",
+    discountEarned: "-",
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const url = getFullUrl("/organizations/loyalty_dashboard?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
+        const res = await fetch(url);
+        const json = await res.json();
+        if (json.success && json.data) {
+          setStats({
+            walletBalance: Number(json.data.wallet_balance).toLocaleString(),
+            pointsDistributed: Number(json.data.points_distributed).toLocaleString(),
+            pointsRedeemed: Number(json.data.points_redeemed).toLocaleString(),
+            pointsExpiring: Number(json.data.points_expiring).toLocaleString(),
+            totalRedemptionValue: Number(json.data.total_redemption_value).toLocaleString(),
+            avgCostPerRedemption: Number(json.data.avg_cost_per_redemption).toLocaleString(),
+            discountEarned: Number(json.data.discount_earned).toLocaleString(),
+          });
+        }
+      } catch (e) {
+        // Optionally handle error
+      }
+    };
+    fetchStats();
+  }, []);
 
   // Burn Trend Chart Data
   const burnTrendData = [
@@ -107,7 +132,7 @@ export const LoyaltyDashboard = () => {
           icon={<Gift className="w-6 h-6 text-[#C72030]" />}
           className="cursor-pointer hover:shadow-md transition-shadow"
           iconRounded={true}
-          valueColor="#C72030"
+          valueColor="text-[#C72030]"
         />
         <StatsCard
           title="Points Redeemed"

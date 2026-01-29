@@ -517,7 +517,7 @@ import { EditRosterTemplatePage } from "./pages/setup/EditRosterTemplatePage";
 // Import Loyalty Rule Engine Dashboard
 import { LoyaltyRuleEngineDashboard } from "./pages/LoyaltyRuleEngineDashboard";
 import { LoyaltyDashboard } from "./pages/LoyaltyDashboard";
-import { WalletManagement } from "./pages/WalletManagement";
+import WalletManagement from "./pages/WalletManagement";
 import { LoyaltyCustomers } from "./pages/LoyaltyCustomers";
 import { LoyaltyCustomerDetails } from "./pages/LoyaltyCustomerDetails";
 import { LoyaltyInventorySection } from "./pages/LoyaltyInventorySection";

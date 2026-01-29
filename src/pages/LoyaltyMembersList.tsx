@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
-import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { getFullUrl, getAuthHeader, API_CONFIG } from '@/config/apiConfig';
 
 interface MemberStatus {
   tier_level: string;
@@ -49,7 +49,9 @@ const LoyaltyMembersList = () => {
     setLoading(true);
     setIsSearching(!!search);
     try {
-      const response = await fetch(getFullUrl('/loyalty/members.json'), {
+      const token = API_CONFIG.TOKEN || ""; // fallback if needed
+      const url = getFullUrl(`/loyalty/members.json?token=${token}`);
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),
@@ -63,11 +65,15 @@ const LoyaltyMembersList = () => {
 
       const data = await response.json();
       const membersData: LoyaltyMember[] = (data || []).map((member: any) => ({
-        ...member,
-        tier_validity: formatDate(member.tier_validity),
-        last_sign_in: formatDate(member.last_sign_in),
+        id: member.id,
+        firstname: member.firstname,
+        lasttname: member.lasttname,
+        member_status: member.member_status,
+        current_loyalty_points: member.current_loyalty_points,
+        tier_validity: member.tier_validity ? formatDate(member.tier_validity) : 'N/A',
+        last_sign_in: member.last_sign_in ? formatDate(member.last_sign_in) : 'N/A',
       }));
-      
+
       // Client-side search filtering
       let filteredMembers = membersData;
       if (search) {
@@ -75,18 +81,18 @@ const LoyaltyMembersList = () => {
         filteredMembers = membersData.filter((member: LoyaltyMember) =>
           String(member.id || '').toLowerCase().includes(searchLower) ||
           `${member.firstname} ${member.lasttname}`.toLowerCase().includes(searchLower) ||
-          member.member_status?.tier_level?.toLowerCase().includes(searchLower) ||
+          (member.member_status?.tier_level || '').toLowerCase().includes(searchLower) ||
           String(member.current_loyalty_points || '').toLowerCase().includes(searchLower) ||
-          member.member_status?.last_activity_date?.toLowerCase().includes(searchLower) ||
-          member.member_status?.tier_validity?.toLowerCase().includes(searchLower)
+          (member.member_status?.last_activity_date || '').toLowerCase().includes(searchLower) ||
+          (member.member_status?.tier_validity || '').toLowerCase().includes(searchLower)
         );
       }
-      
+
       // Client-side pagination
       const startIndex = (page - 1) * itemsPerPage;
       const endIndex = startIndex + itemsPerPage;
       const paginatedMembers = filteredMembers.slice(startIndex, endIndex);
-      
+
       setMembers(paginatedMembers);
       setCurrentPage(page);
       setTotalPages(Math.ceil(filteredMembers.length / itemsPerPage));

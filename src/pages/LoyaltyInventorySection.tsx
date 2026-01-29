@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, X } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
+import { API_CONFIG, getAuthHeader, getFullUrl } from "@/config/apiConfig";
+import { toast } from "sonner";
 import {
     Dialog,
     DialogContent,
@@ -22,9 +25,16 @@ import {
 } from "@/components/ui/select";
 
 export const LoyaltyInventorySection = () => {
+    // const baseURL = API_CONFIG.BASE_URL;
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
+    const [inventoryData, setInventoryData] = useState([]);
+    const [stats, setStats] = useState({
+        totalItems: "0",
+        inStock: "0",
+        outOfStock: "0",
+    });
     
     // Add Item Form States
     const [isActive, setIsActive] = useState(true);
@@ -35,68 +45,82 @@ export const LoyaltyInventorySection = () => {
     const [pointsRequired, setPointsRequired] = useState("");
     const [initialQuantity, setInitialQuantity] = useState("");
 
-    // Mock data for stats
-    const stats = {
-        totalItems: "1020",
-        inStock: "760",
-        outOfStock: "240",
-    };
-
-    // Mock data for inventory items
-    const inventoryData = [
-        {
-            id: 1,
-            category: "Electronics",
-            skuItemName: "Wireless Headphones",
-            uom: "3.3,000",
-            latestPrice: "1.3,000",
-            quantity: "50%",
-            vendorNames: "AW05",
-        },
-        {
-            id: 2,
-            category: "Fashion",
-            skuItemName: "Designer Sunglasses",
-            uom: "2.5,000",
-            latestPrice: "1.4,000",
-            quantity: "30%",
-            vendorNames: "LUX",
-        },
-        {
-            id: 3,
-            category: "Shoes",
-            skuItemName: "Running Shoes",
-            uom: "2.5,000",
-            latestPrice: "1.4,000",
-            quantity: "30%",
-            vendorNames: "LUX",
-        },
-    ];
+    // Categories fetched from API
+    const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
 
     // Define columns for EnhancedTable
     const columns = [
-        { key: "category", label: "Category", sortable: true },
-        { key: "skuItemName", label: "SKU/Item Name", sortable: true },
-        { key: "uom", label: "UOM", sortable: true },
-        { key: "latestPrice", label: "Latest Price", sortable: true },
-        { key: "quantity", label: "Quantity", sortable: false },
-        { key: "vendorNames", label: "Vendor Name(s)", sortable: false },
+        { key: "brand", label: "Brand" },
+        { key: "sku", label: "SKU Code" },
+        { key: "name", label: "Name" },
+        { key: "base_price", label: "MRP" },
+        { key: "final_price", label: "Client Price" },
+        { key: "stock_quantity", label: "Stock Quantity" },
     ];
+
+
+    // Fetch inventory and categories data
+    useEffect(() => {
+        fetchInventoryData();
+        fetchCategories();
+    }, []);
+
+    const fetchCategories = async () => {
+        try {
+            const url = getFullUrl("/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
+            const response = await axios.get(url);
+            const cats = response.data?.categories || [];
+            setCategories(cats.map((cat: any) => ({ id: cat.id, name: cat.name })));
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+            toast.error("Failed to load categories");
+        }
+    };
+
+    const fetchInventoryData = async () => {
+        try {
+            setLoading(true);
+            const url = getFullUrl("/products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
+            const response = await axios.get(url);
+            const products = response.data?.products || [];
+            setInventoryData(products);
+
+            // Calculate stats
+            const totalItems = products.length;
+            const inStock = products.filter((p) => p.stock_quantity > 0).length;
+            const outOfStock = products.filter((p) => p.stock_quantity === 0).length;
+
+            setStats({
+                totalItems: totalItems.toString(),
+                inStock: inStock.toString(),
+                outOfStock: outOfStock.toString(),
+            });
+        } catch (error) {
+            console.error("Error fetching inventory data:", error);
+            toast.error("Failed to load inventory data");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const renderCell = (item: any, columnKey: string) => {
         switch (columnKey) {
-            case "category":
-                return <span>{item.category || "-"}</span>;
-            case "skuItemName":
-                return <span>{item.skuItemName || "-"}</span>;
-            case "uom":
-                return <span>{item.uom || "-"}</span>;
-            case "latestPrice":
-                return <span>{item.latestPrice || "-"}</span>;
-            case "quantity":
-                return <span>{item.quantity || "-"}</span>;
-            case "vendorNames":
-                return <span>{item.vendorNames || "-"}</span>;
+            case "brand":
+                return <span>{item.brand || "-"}</span>;
+            case "sku":
+                return <span>{item.sku || "-"}</span>;
+            case "name":
+                return <span>{item.name || "-"}</span>;
+            case "base_price":
+                return <span>₹{parseFloat(item.base_price || 0).toFixed(2)}</span>;
+            case "final_price":
+                return <span>₹{parseFloat(item.final_price || 0).toFixed(2)}</span>;
+            case "stock_quantity":
+                return (
+                    <span className={item.stock_quantity > 0 ? "text-green-600" : "text-red-600"}>
+                        {item.stock_quantity || 0}
+                    </span>
+                );
             default:
                 return null;
         }
@@ -114,25 +138,62 @@ export const LoyaltyInventorySection = () => {
         setIsAddItemModalOpen(true);
     };
 
-    const handleSubmitItem = () => {
-        console.log("Submitting new item:", {
-            isActive,
-            category,
-            skuCode,
-            mrp,
-            clientPrice,
-            pointsRequired,
-            initialQuantity,
-        });
-        // Add item submission logic here
-        setIsAddItemModalOpen(false);
-        // Reset form
-        setCategory("");
-        setSkuCode("");
-        setMrp("");
-        setClientPrice("");
-        setPointsRequired("");
-        setInitialQuantity("");
+    const handleSubmitItem = async () => {
+        // Validate required fields
+        if (!category || !skuCode || !mrp || !clientPrice || !pointsRequired) {
+            toast.error("Please fill all required fields.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            const formData = new FormData();
+            formData.append("product[name]", skuCode); // Using SKU as name for demo
+            formData.append("product[description]", ""); // No description field in form
+            formData.append("product[sku]", skuCode);
+            formData.append("product[base_price]", mrp);
+            formData.append("product[sale_price]", clientPrice);
+            formData.append("product[stock_quantity]", initialQuantity || "0");
+            formData.append("product[brand]", ""); // No brand field in form
+            formData.append("product[is_trending]", "false");
+            formData.append("product[is_bestseller]", "false");
+            formData.append("product[is_new_arrival]", "false");
+            formData.append("product[category_ids][]", category ? category.toString() : "");
+            // formData.append("product[images][]", file) // Not implemented
+
+            // Add points as a custom field if your backend supports it
+            formData.append("product[points_required]", pointsRequired);
+
+            // API expects token as query param
+            const url = getFullUrl("/products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
+            await axios.post(
+                url,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+
+            toast.success("Item added successfully!");
+            setIsAddItemModalOpen(false);
+            // Reset form
+            setCategory("");
+            setSkuCode("");
+            setMrp("");
+            setClientPrice("");
+            setPointsRequired("");
+            setInitialQuantity("");
+            // Refresh inventory
+            fetchInventoryData();
+        } catch (error) {
+            console.error("Error adding item:", error);
+            toast.error("Failed to add item.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const renderLeftActions = () => (
@@ -285,11 +346,15 @@ export const LoyaltyInventorySection = () => {
                                     <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="electronics">Electronics</SelectItem>
-                                    <SelectItem value="fashion">Fashion</SelectItem>
-                                    <SelectItem value="shoes">Shoes</SelectItem>
-                                    <SelectItem value="accessories">Accessories</SelectItem>
-                                    <SelectItem value="home">Home & Living</SelectItem>
+                                    {categories.length === 0 ? (
+                                        <div className="px-3 py-2 text-gray-400">No categories found</div>
+                                    ) : (
+                                        categories.map((cat) => (
+                                            <SelectItem key={cat.id} value={cat.id.toString()}>
+                                                {cat.name}
+                                            </SelectItem>
+                                        ))
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>

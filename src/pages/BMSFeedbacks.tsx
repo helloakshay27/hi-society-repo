@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { API_CONFIG, getFullUrl } from "@/config/apiConfig";
 
 interface Feedback {
   id: string;
@@ -47,147 +48,35 @@ const BMSFeedbacks: React.FC = () => {
   } = useQuery({
     queryKey: ["feedbacks", debouncedSearchQuery, currentPage, pageSize],
     queryFn: async () => {
-      // TODO: Replace with actual API endpoint
-      // Mock data for demonstration
-      const mockData: Feedback[] = [
-        {
-          id: "1",
-          tower: "A",
-          flat: "101",
-          qualityOfApartment: "5",
-          timelinessOfPossession: "5",
-          servicesAndInfrastructure: "5",
-          easeOfPossessionProcess: "5",
-          serviceQualityFromBooking: "5",
-          comment: "",
-          submittedOn: "09/09/2025 14:42PM",
-          submittedBy: "Ubaid Hashmat",
-        },
-        {
-          id: "2",
-          tower: "FM",
-          flat: "Office",
-          qualityOfApartment: "5",
-          timelinessOfPossession: "5",
-          servicesAndInfrastructure: "5",
-          easeOfPossessionProcess: "5",
-          serviceQualityFromBooking: "5",
-          comment: "Godrej.living@Lockated.Com",
-          submittedOn: "16/08/2025 17:08PM",
-          submittedBy: "Godrej Living",
-        },
-        {
-          id: "3",
-          tower: "A",
-          flat: "104",
-          qualityOfApartment: "3",
-          timelinessOfPossession: "3",
-          servicesAndInfrastructure: "3",
-          easeOfPossessionProcess: "3",
-          serviceQualityFromBooking: "3",
-          comment: "",
-          submittedOn: "27/02/2025 12:39PM",
-          submittedBy: "Deepak Gupta",
-        },
-        {
-          id: "4",
-          tower: "A",
-          flat: "101",
-          qualityOfApartment: "5",
-          timelinessOfPossession: "5",
-          servicesAndInfrastructure: "5",
-          easeOfPossessionProcess: "5",
-          serviceQualityFromBooking: "5",
-          comment: "",
-          submittedOn: "26/08/2024 12:53PM",
-          submittedBy: "Prashant Sangle",
-        },
-        {
-          id: "5",
-          tower: "GL",
-          flat: "Team",
-          qualityOfApartment: "5",
-          timelinessOfPossession: "5",
-          servicesAndInfrastructure: "5",
-          easeOfPossessionProcess: "5",
-          serviceQualityFromBooking: "5",
-          comment: "",
-          submittedOn: "21/03/2024 16:24PM",
-          submittedBy: "Ashik Bhattacharya",
-        },
-        {
-          id: "6",
-          tower: "A",
-          flat: "102",
-          qualityOfApartment: "5",
-          timelinessOfPossession: "5",
-          servicesAndInfrastructure: "5",
-          easeOfPossessionProcess: "5",
-          serviceQualityFromBooking: "5",
-          comment: "",
-          submittedOn: "20/07/2023 16:57PM",
-          submittedBy: "Samay Seth",
-        },
-        {
-          id: "7",
-          tower: "FM",
-          flat: "Office",
-          qualityOfApartment: "5",
-          timelinessOfPossession: "4",
-          servicesAndInfrastructure: "5",
-          easeOfPossessionProcess: "5",
-          serviceQualityFromBooking: "5",
-          comment: "",
-          submittedOn: "23/01/2023 16:08PM",
-          submittedBy: "Godrej Living",
-        },
-        {
-          id: "8",
-          tower: "FM",
-          flat: "Office",
-          qualityOfApartment: "5",
-          timelinessOfPossession: "5",
-          servicesAndInfrastructure: "5",
-          easeOfPossessionProcess: "5",
-          serviceQualityFromBooking: "5",
-          comment: "",
-          submittedOn: "22/11/2022 19:16PM",
-          submittedBy: "Godrej Living",
-        },
-        {
-          id: "9",
-          tower: "A",
-          flat: "101",
-          qualityOfApartment: "2",
-          timelinessOfPossession: "2",
-          servicesAndInfrastructure: "2",
-          easeOfPossessionProcess: "2",
-          serviceQualityFromBooking: "2",
-          comment: "",
-          submittedOn: "11/11/2022 08:26AM",
-          submittedBy: "Deepak Gupta",
-        },
-        {
-          id: "10",
-          tower: "A",
-          flat: "101",
-          qualityOfApartment: "3",
-          timelinessOfPossession: "3",
-          servicesAndInfrastructure: "3",
-          easeOfPossessionProcess: "2",
-          serviceQualityFromBooking: "1",
-          comment: "",
-          submittedOn: "07/11/2022 10:28PM",
-          submittedBy: "Deepak Gupta",
-        },
-      ];
+      const token = API_CONFIG.TOKEN || ""; // or get from storage/context if needed
+      const url = getFullUrl(
+        `/crm/feedbacks.json?token=${token}&page=${currentPage}&per_page=${pageSize}&search=${encodeURIComponent(debouncedSearchQuery)}`
+      );
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch feedbacks");
+      const data = await response.json();
+
+      // Map API response to Feedback[]
+      const feedbacks: Feedback[] = (data.lead_project_feedbacks || []).map((item: any) => ({
+        id: item.id?.toString() || "",
+        tower: item.tower || "-",
+        flat: item.flat || "-",
+        qualityOfApartment: item.quality_of_apartment || "-",
+        timelinessOfPossession: item.timeliness_of_possession || "-",
+        servicesAndInfrastructure: item.services_and_infrastructure || "-",
+        easeOfPossessionProcess: item.ease_of_possession_process || "-",
+        serviceQualityFromBooking: item.service_quality_from_booking || "-",
+        comment: item.comment || "",
+        submittedOn: item.submitted_on || "-",
+        submittedBy: item.submitted_by || "-",
+      }));
 
       return {
-        feedbacks: mockData,
+        feedbacks,
         pagination: {
-          total_count: mockData.length,
-          total_pages: Math.ceil(mockData.length / pageSize),
-          current_page: currentPage,
+          total_count: data.count || feedbacks.length,
+          total_pages: data.total_pages || 1,
+          current_page: data.current_page || 1,
         },
       };
     },

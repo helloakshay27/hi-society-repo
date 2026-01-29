@@ -1,53 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Eye, Edit, Trash2 } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { getFullUrl } from "@/config/apiConfig";
 
 export const LoyaltyCustomers = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
-    // Mock data for customers
-    const customersData = [
-        {
-            id: 1,
-            customerId: "1234",
-            customerName: "Deepa Synghal",
-            tierLevel: "Plexits",
-            tierValidity: "24/05/2026",
-            websites: "V4I48",
-            dateJoined: "13/04/2024",
-        },
-        {
-            id: 2,
-            customerId: "6789",
-            customerName: "Sarita Thakur",
-            tierLevel: "TEJAS",
-            tierValidity: "04/05/2018",
-            websites: "TEJA",
-            dateJoined: "03/04/2001",
-        },
-        {
-            id: 3,
-            customerId: "4530",
-            customerName: "Samuel Desousha",
-            tierLevel: "Plexits",
-            tierValidity: "02/04/2018",
-            websites: "TEJA",
-            dateJoined: "13/04/2026",
-        },
-        {
-            id: 4,
-            customerId: "4530",
-            customerName: "Supreet",
-            tierLevel: "Plexits",
-            tierValidity: "02/04/2018",
-            websites: "TEJA",
-            dateJoined: "13/04/2026",
-        },
-    ];
+    // API data for customers
+    const [customersData, setCustomersData] = useState<any[]>([]);
+    useEffect(() => {
+        const fetchCustomers = async () => {
+            setLoading(true);
+            try {
+                const url = getFullUrl("/loyalty/members?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
+                const res = await fetch(url);
+                const data = await res.json();
+                // Map API data to table row format
+                setCustomersData(
+                    (Array.isArray(data) ? data : []).map((item) => ({
+                        id: item.id,
+                        customerId: item.user_id,
+                        customerName: `${item.firstname || ""} ${item.lasttname || ""}`.trim(),
+                        tierLevel: item.member_status?.tier_level || "-",
+                        tierValidity: item.tier_validity || "-",
+                        websites: item.email || "-",
+                        dateJoined: item.joining_date || "-",
+                    }))
+                );
+            } catch (e) {
+                setCustomersData([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCustomers();
+    }, []);
 
     // Define columns for EnhancedTable
     const columns = [

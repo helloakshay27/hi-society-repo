@@ -1,69 +1,63 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { StatsCard } from "@/components/StatsCard";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Settings, User, CreditCard } from "lucide-react";
+import { getFullUrl } from "@/config/apiConfig";
 
 const LoyaltyCustomerDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
-    // Mock customer data
-    const customerData = {
-        id: id,
-        fullName: "Sanjay Singhaniya",
-        email: "sanjaysingh@tochhu.com",
-        phoneNo: "9871098090",
-        address: "-",
-        startingLoyaltyPoints: "12500",
-        tierProgress: "0%",
-        membershipStatus: "N/A",
-        interestStatus: "Active",
-        totalPointsEarned: "1920",
-        totalPointsRedeemed: "760",
-        currentPoints: "240",
-    };
+    // API data for customer details and transactions
+    const [customerData, setCustomerData] = useState<any | null>(null);
+    const [transactionData, setTransactionData] = useState<any[]>([]);
 
-    // Mock transaction data
-    const transactionData = [
-        {
-            id: 1,
-            date: "10/02/2024",
-            transactionDate: "08/12/21",
-            transactionType: "Credit",
-            transactionMode: "Credit",
-            earnedPoints: "-",
-            balancePoints: "-",
-        },
-        {
-            id: 2,
-            date: "10/02/2024",
-            transactionDate: "08/12/21",
-            transactionType: "Credit",
-            transactionMode: "Credit",
-            earnedPoints: "-",
-            balancePoints: "-",
-        },
-        {
-            id: 3,
-            date: "10/02/2024",
-            transactionDate: "08/12/21",
-            transactionType: "Credit",
-            transactionMode: "Credit",
-            earnedPoints: "-",
-            balancePoints: "-",
-        },
-        {
-            id: 4,
-            date: "10/02/2024",
-            transactionDate: "08/12/21",
-            transactionType: "Credit",
-            transactionMode: "Credit",
-            earnedPoints: "-",
-            balancePoints: "-",
-        },
-    ];
+    useEffect(() => {
+        if (!id) return;
+        setLoading(true);
+        const fetchDetails = async () => {
+            try {
+                const url = getFullUrl(`/loyalty/members/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`);
+                const res = await fetch(url);
+                const data = await res.json();
+                setCustomerData({
+                    id: data.id,
+                    fullName: `${data.firstname || ""} ${data.lasttname || ""}`.trim(),
+                    email: data.email || "-",
+                    phoneNo: data.mobile || "-",
+                    address: data.address || "-",
+                    startingLoyaltyPoints: data.starting_loyalty_points || "-",
+                    tierProgress: data.member_status?.tier_progression || "-",
+                    membershipStatus: data.member_status?.tier_level || "-",
+                    interestStatus: data.active ? "Active" : "Inactive",
+                    totalPointsEarned: data.earned_points ?? "-",
+                    totalPointsRedeemed: data.reedem_points ?? "-",
+                    currentPoints: data.current_loyalty_points ?? "-",
+                });
+                setTransactionData(
+                    Array.isArray(data.member_transactions)
+                        ? data.member_transactions.map((t: any, idx: number) => ({
+                              id: t.id || idx,
+                              date: t.date || "-",
+                              transactionDate: t.transaction_date || "-",
+                              transactionType: t.transaction_type || "-",
+                              transactionMode: t.transaction_mode || "-",
+                              earnedPoints: t.earned_points ?? "-",
+                              balancePoints: t.balance_points ?? "-",
+                          }))
+                        : []
+                );
+            } catch (e) {
+                setCustomerData(null);
+                setTransactionData([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchDetails();
+    }, [id]);
 
     // Define columns for transaction table
     const transactionColumns = [
@@ -107,7 +101,7 @@ const LoyaltyCustomerDetails = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <StatsCard
                         title="Total Points Earned"
-                        value={customerData.totalPointsEarned}
+                        value={customerData?.totalPointsEarned ?? "-"}
                         icon={
                             <svg
                                 className="w-6 h-6 text-[#C72030]"
@@ -129,7 +123,7 @@ const LoyaltyCustomerDetails = () => {
                     />
                     <StatsCard
                         title="Total Points Redeemed"
-                        value={customerData.totalPointsRedeemed}
+                        value={customerData?.totalPointsRedeemed ?? "-"}
                         icon={
                             <svg
                                 className="w-6 h-6 text-[#C72030]"
@@ -151,7 +145,7 @@ const LoyaltyCustomerDetails = () => {
                     />
                     <StatsCard
                         title="Current Points"
-                        value={customerData.currentPoints}
+                        value={customerData?.currentPoints ?? "-"}
                         icon={
                             <svg
                                 className="w-6 h-6 text-[#C72030]"
@@ -193,7 +187,7 @@ const LoyaltyCustomerDetails = () => {
                                     Full Name
                                 </div>
                                 <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                    {customerData.fullName}
+                                    {customerData?.fullName || "-"}
                                 </div>
                             </div>
                             
@@ -202,7 +196,7 @@ const LoyaltyCustomerDetails = () => {
                                     Email
                                 </div>
                                 <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                    {customerData.email}
+                                    {customerData?.email || "-"}
                                 </div>
                             </div>
 
@@ -211,7 +205,7 @@ const LoyaltyCustomerDetails = () => {
                                     Phone No
                                 </div>
                                 <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                    {customerData.phoneNo}
+                                    {customerData?.phoneNo || "-"}
                                 </div>
                             </div>
                             
@@ -220,7 +214,7 @@ const LoyaltyCustomerDetails = () => {
                                     Address
                                 </div>
                                 <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                    {customerData.address}
+                                    {customerData?.address || "-"}
                                 </div>
                             </div>
                         </div>
@@ -247,7 +241,7 @@ const LoyaltyCustomerDetails = () => {
                                     Starting Loyalty Points
                                 </div>
                                 <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                    {customerData.startingLoyaltyPoints}
+                                    {customerData?.startingLoyaltyPoints || "-"}
                                 </div>
                             </div>
                             
@@ -256,7 +250,7 @@ const LoyaltyCustomerDetails = () => {
                                     Tier Progress
                                 </div>
                                 <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                    {customerData.tierProgress}
+                                    {customerData?.tierProgress || "-"}
                                 </div>
                             </div>
 
@@ -265,7 +259,7 @@ const LoyaltyCustomerDetails = () => {
                                     Membership Status
                                 </div>
                                 <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                    {customerData.membershipStatus}
+                                    {customerData?.membershipStatus || "-"}
                                 </div>
                             </div>
                             
@@ -274,7 +268,7 @@ const LoyaltyCustomerDetails = () => {
                                     Interest Status
                                 </div>
                                 <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                    {customerData.interestStatus}
+                                    {customerData?.interestStatus || "-"}
                                 </div>
                             </div>
                         </div>
