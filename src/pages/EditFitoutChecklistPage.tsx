@@ -322,7 +322,7 @@ export const EditFitoutChecklistPage = () => {
     }
 
     try {
-      await apiClient.delete(`/snag_checklists/${id}/delete_questions.json`, {
+      await apiClient.delete(`/crm/admin/snag_checklists/${id}/delete_questions.json`, {
         data: { question_ids: [numericQuestionId] },
       });
 
