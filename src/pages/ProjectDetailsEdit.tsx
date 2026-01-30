@@ -22,8 +22,19 @@ import {
   Avatar,
   Switch,
 } from "@mui/material";
-import { DeleteForeverRounded, FileUpload, SettingsOutlined as SettingsOutlinedIcon } from "@mui/icons-material";
-import { Building2, FileText, Trash2, ArrowLeft, Plus, Info } from "lucide-react";
+import {
+  DeleteForeverRounded,
+  FileUpload,
+  SettingsOutlined as SettingsOutlinedIcon,
+} from "@mui/icons-material";
+import {
+  Building2,
+  FileText,
+  Trash2,
+  ArrowLeft,
+  Plus,
+  Info,
+} from "lucide-react";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import "../styles/mor.css";
 
@@ -323,8 +334,10 @@ const ProjectDetailsEdit = () => {
   const [showTooltipPPT, setShowTooltipPPT] = useState(false);
   const [showTooltipLayout, setShowTooltipLayout] = useState(false);
   const [showTooltipCreatives, setShowTooltipCreatives] = useState(false);
-  const [showTooltipCreativeGenerics, setShowTooltipCreativeGenerics] = useState(false);
-  const [showTooltipCreativeOffers, setShowTooltipCreativeOffers] = useState(false);
+  const [showTooltipCreativeGenerics, setShowTooltipCreativeGenerics] =
+    useState(false);
+  const [showTooltipCreativeOffers, setShowTooltipCreativeOffers] =
+    useState(false);
   const [showTooltipInteriors, setShowTooltipInteriors] = useState(false);
   const [showTooltipExteriors, setShowTooltipExteriors] = useState(false);
   const [showTooltipEmailer, setShowTooltipEmailer] = useState(false);
@@ -459,11 +472,13 @@ const ProjectDetailsEdit = () => {
           virtual_tour_url: virtualTourUrl,
         },
       ],
-    }));    
+    }));
 
     setVirtualTourName("");
     setVirtualTourUrl("");
-    toast.success("Virtual tour added successfully!", { description: "Success" });
+    toast.success("Virtual tour added successfully!", {
+      description: "Success",
+    });
   };
 
   // QR Code handlers with RERA number association
@@ -471,12 +486,14 @@ const ProjectDetailsEdit = () => {
     const files = Array.from(e.target.files) as File[];
     const MAX_SIZE = 50 * 1024 * 1024; // 50MB
     const validFiles: any[] = [];
-    
+
     // Get the RERA number for this section
-    const reraNumber = reraIndex !== undefined 
-      ? (formData.Rera_Number_multiple[reraIndex]?.rera_number || `rera_${reraIndex}`)
-      : (formData.Rera_Number_multiple[0]?.rera_number || 'default_rera');
-    
+    const reraNumber =
+      reraIndex !== undefined
+        ? formData.Rera_Number_multiple[reraIndex]?.rera_number ||
+          `rera_${reraIndex}`
+        : formData.Rera_Number_multiple[0]?.rera_number || "default_rera";
+
     files.forEach((file) => {
       if (file.size > MAX_SIZE) {
         toast.error(`File ${file.name} is too large. Max size is 50MB.`);
@@ -489,16 +506,19 @@ const ProjectDetailsEdit = () => {
         isNew: true,
       });
     });
-    
+
     if (validFiles.length > 0) {
       setFormData((prev) => ({
         ...prev,
         project_qrcode_image: [...prev.project_qrcode_image, ...validFiles],
       }));
-      toast.success(`${validFiles.length} QR Code(s) added for RERA: ${reraNumber}`, { description: "Success" });
+      toast.success(
+        `${validFiles.length} QR Code(s) added for RERA: ${reraNumber}`,
+        { description: "Success" }
+      );
     }
   };
-  
+
   const handleQRCodeImageNameChange = (index, newTitle) => {
     setFormData((prev) => ({
       ...prev,
@@ -507,28 +527,35 @@ const ProjectDetailsEdit = () => {
       ),
     }));
   };
-  
+
   const handleRemoveQRCodeImage = async (index) => {
     const qrImage = formData.project_qrcode_image[index];
-    
+
     // If the image has an ID, it's an existing server image - call delete API
     if (qrImage?.id && projectId) {
       try {
         await axios.delete(
-          getFullUrl(`/projects/${projectId}/remove_qr_code_images/${qrImage.id}.json`),
+          getFullUrl(
+            `/projects/${projectId}/remove_qr_code_images/${qrImage.id}.json`
+          ),
           {
             headers: {
               Authorization: getAuthHeader(),
             },
           }
         );
-        toast.success("QR Code image deleted successfully", { description: "Success" });
+        toast.success("QR Code image deleted successfully", {
+          description: "Success",
+        });
       } catch (error) {
         console.error("Error deleting QR code image:", error);
-        
+
         // If 404, the image doesn't exist on server, still remove from UI
         if (error.response?.status === 404) {
-          toast.success("QR Code image removed from UI (already deleted on server).", { description: "Success" });
+          toast.success(
+            "QR Code image removed from UI (already deleted on server).",
+            { description: "Success" }
+          );
         } else {
           toast.error("Failed to delete QR Code image. Please try again.");
           return; // Don't remove from UI if delete failed
@@ -538,11 +565,13 @@ const ProjectDetailsEdit = () => {
       // New image without ID, just show success for local removal
       toast.success("QR Code image removed", { description: "Success" });
     }
-    
+
     // Update local state
     setFormData((prev) => ({
       ...prev,
-      project_qrcode_image: prev.project_qrcode_image.filter((_, i) => i !== index),
+      project_qrcode_image: prev.project_qrcode_image.filter(
+        (_, i) => i !== index
+      ),
     }));
   };
 
@@ -560,8 +589,8 @@ const ProjectDetailsEdit = () => {
       ...prev,
       connectivities: [
         ...prev.connectivities,
-        { connectivity_type_id: '', place_name: '', image: null }
-      ]
+        { connectivity_type_id: "", place_name: "", distance: "", image: null },
+      ],
     }));
   };
 
@@ -575,47 +604,49 @@ const ProjectDetailsEdit = () => {
 
   const handleConnectivityImageChange = (index, file) => {
     if (!file) return;
-    
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Invalid file type. Only JPG, PNG, WEBP, and GIF are allowed.');
+      toast.error(
+        "Invalid file type. Only JPG, PNG, WEBP, and GIF are allowed."
+      );
       return;
     }
-    
+
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      toast.error('File size exceeds 5MB limit.');
+      toast.error("File size exceeds 5MB limit.");
       return;
     }
-    
-    handleConnectivityChange(index, 'image', file);
+
+    handleConnectivityChange(index, "image", file);
   };
 
   const handleRemoveConnectivity = async (index) => {
     const connectivity = formData.connectivities[index];
-    
+
     // If the connectivity has an ID, it's an existing one - call delete API
-    if (connectivity?.id && projectId) {
+    if (connectivity?.id) {
       try {
         await axios.delete(
-          getFullUrl(`/projects/${projectId}/connectivities/${connectivity.id}.json`),
+          getFullUrl(`/connectivities/${connectivity.id}.json`),
           { headers: { Authorization: getAuthHeader() } }
         );
-        toast.success('Connectivity deleted successfully');
+        toast.success("Connectivity deleted successfully");
       } catch (error) {
-        console.error('Error deleting connectivity:', error);
-        toast.error('Failed to delete connectivity');
+        console.error("Error deleting connectivity:", error);
+        toast.error("Failed to delete connectivity");
         return;
       }
     }
-    
+
     setFormData((prev) => ({
       ...prev,
-      connectivities: prev.connectivities.filter((_, i) => i !== index)
+      connectivities: prev.connectivities.filter((_, i) => i !== index),
     }));
-    
+
     if (!connectivity?.id) {
-      toast.success('Connectivity removed');
+      toast.success("Connectivity removed");
     }
   };
 
@@ -792,24 +823,23 @@ const ProjectDetailsEdit = () => {
     if (imageToRemove.id && projectId) {
       try {
         // Determine which API endpoint to use based on image type
-        const isGalleryImage = key.startsWith('gallery_image_');
+        const isGalleryImage = key.startsWith("gallery_image_");
         const endpoint = isGalleryImage
           ? `/projects/${projectId}/remove_gallery_image/${imageToRemove.id}.json`
           : `/projects/${projectId}/remove_creative_image/${imageToRemove.id}.json`;
-        
-        const response = await axios.delete(
-          getFullUrl(endpoint),
-          {
-            headers: { Authorization: getAuthHeader() },
-          }
-        );
-        
+
+        const response = await axios.delete(getFullUrl(endpoint), {
+          headers: { Authorization: getAuthHeader() },
+        });
+
         if (response.status === 200) {
           toast.success("Image removed successfully");
         }
       } catch (error) {
         console.error("Error deleting image:", error);
-        toast.error("Failed to delete image from server", { description: "Error" });
+        toast.error("Failed to delete image from server", {
+          description: "Error",
+        });
         return; // Don't update local state if server delete failed
       }
     }
@@ -817,7 +847,7 @@ const ProjectDetailsEdit = () => {
     // Update local state
     setFormData((prev) => {
       const currentArray = prev[key] || [];
-      
+
       // Find the index of the image to remove
       const indexToRemove = currentArray.findIndex((img) => {
         // For images with id (existing server images)
@@ -858,7 +888,7 @@ const ProjectDetailsEdit = () => {
 
       return newFormData;
     });
-    
+
     // Show success toast only for newly uploaded images (without ID)
     if (!imageToRemove.id) {
       toast.success("Image removed successfully", { description: "Success" });
@@ -981,12 +1011,12 @@ const ProjectDetailsEdit = () => {
 
         const project = response.data;
 
-        console.log('Project configurations from API:', project.configurations);
+        console.log("Project configurations from API:", project.configurations);
 
         // Fetch dropdown options first to match property_type and construction_status text to IDs
         const [propertyTypesRes, statusRes] = await Promise.all([
-          axios.get(getFullUrl('/property_types.json')),
-          axios.get(getFullUrl('/construction_statuses.json'))
+          axios.get(getFullUrl("/property_types.json")),
+          axios.get(getFullUrl("/construction_statuses.json")),
         ]);
 
         // Find matching property type by name
@@ -996,8 +1026,9 @@ const ProjectDetailsEdit = () => {
 
         // Find matching construction status by name
         const matchedStatus = statusRes.data.find(
-          (st) => st.construction_status === project.Project_Construction_Status ||
-                  st.construction_status === project.project_construction_status
+          (st) =>
+            st.construction_status === project.Project_Construction_Status ||
+            st.construction_status === project.project_construction_status
         );
 
         // Helper function to normalize image data (handle both single object and array)
@@ -1009,54 +1040,74 @@ const ProjectDetailsEdit = () => {
         };
 
         // Helper function to extract gallery images from the API response
-        const extractGalleryImages = (galleryArray, galleryAttachments, ratioKey) => {
-          if (!Array.isArray(galleryArray) || galleryArray.length === 0) return [];
-          
+        const extractGalleryImages = (
+          galleryArray,
+          galleryAttachments,
+          ratioKey
+        ) => {
+          if (!Array.isArray(galleryArray) || galleryArray.length === 0)
+            return [];
+
           // Map ratio key to gallery type format
           // e.g., "gallery_image_16_by_9" -> "ProjectGallery_16_by_9"
           const galleryTypeMap = {
-            'gallery_image_16_by_9': 'ProjectGallery_16_by_9',
-            'gallery_image_1_by_1': 'ProjectGallery_1_by_1',
-            'gallery_image_9_by_16': 'ProjectGallery_9_by_16',
-            'gallery_image_3_by_2': 'ProjectGallery_3_by_2',
+            gallery_image_16_by_9: "ProjectGallery_16_by_9",
+            gallery_image_1_by_1: "ProjectGallery_1_by_1",
+            gallery_image_9_by_16: "ProjectGallery_9_by_16",
+            gallery_image_3_by_2: "ProjectGallery_3_by_2",
           };
-          
+
           const expectedGalleryType = galleryTypeMap[ratioKey];
-          
+
           // Find the gallery metadata for this ratio
-          const galleryMetadata = galleryArray.find(item => item.gallery_type === expectedGalleryType);
-          
+          const galleryMetadata = galleryArray.find(
+            (item) => item.gallery_type === expectedGalleryType
+          );
+
           if (!galleryMetadata) return [];
-          
+
           // If gallery has attachments directly, return them
-          if (galleryMetadata[ratioKey] && Array.isArray(galleryMetadata[ratioKey])) {
+          if (
+            galleryMetadata[ratioKey] &&
+            Array.isArray(galleryMetadata[ratioKey])
+          ) {
             return galleryMetadata[ratioKey];
           }
-          
+
           // Otherwise, filter gallery_attachments by gallery_id
-          if (Array.isArray(galleryAttachments) && galleryAttachments.length > 0) {
-            return galleryAttachments.filter(attachment => attachment.gallery_id === galleryMetadata.id);
+          if (
+            Array.isArray(galleryAttachments) &&
+            galleryAttachments.length > 0
+          ) {
+            return galleryAttachments.filter(
+              (attachment) => attachment.gallery_id === galleryMetadata.id
+            );
           }
-          
+
           return [];
         };
 
         // Map API response to formData structure
         setFormData({
           Property_Type: project.property_type || "",
-          Property_type_id: matchedPropertyType?.id || project.property_type_id || "",
+          Property_type_id:
+            matchedPropertyType?.id || project.property_type_id || "",
           building_type: project.building_type || "",
           SFDC_Project_Id: project.SFDC_Project_Id || "",
-          Project_Construction_Status: project.Project_Construction_Status || project.project_construction_status || "",
-          Construction_Status_id: matchedStatus?.id || project.construction_status_id || "",
-          Configuration_Type: Array.isArray(project.configurations) 
-            ? project.configurations.map(c => ({
+          Project_Construction_Status:
+            project.Project_Construction_Status ||
+            project.project_construction_status ||
+            "",
+          Construction_Status_id:
+            matchedStatus?.id || project.construction_status_id || "",
+          Configuration_Type: Array.isArray(project.configurations)
+            ? project.configurations.map((c) => ({
                 id: c.id,
-                name: c.name
-              })) 
-            : (Array.isArray(project.configuration_type) 
-              ? project.configuration_type 
-              : []),
+                name: c.name,
+              }))
+            : Array.isArray(project.configuration_type)
+              ? project.configuration_type
+              : [],
           Project_Name: project.project_name || "",
           project_address: project.project_address || "",
           Project_Description: project.project_description || "",
@@ -1072,12 +1123,12 @@ const ProjectDetailsEdit = () => {
           Number_Of_Units: project.no_of_apartments || "",
           show_on_home: project.show_on_home || false,
           no_of_floors: project.no_of_floors || "",
-          Amenities: Array.isArray(project.amenities) 
-            ? project.amenities.map(a => ({
+          Amenities: Array.isArray(project.amenities)
+            ? project.amenities.map((a) => ({
                 id: a.amenity_id || a.id,
                 name: a.amenity_name || a.name,
-                association_id: a.id // This is the project_amenity association ID for deletion
-              })) 
+                association_id: a.id, // This is the project_amenity association ID for deletion
+              }))
             : [],
           Specifications: project.specifications || [],
           Land_Area: project.land_area || "",
@@ -1086,34 +1137,70 @@ const ProjectDetailsEdit = () => {
           map_url: project.map_url || "",
           virtual_tour_url_multiple: project.virtual_tour_url_multiple || [],
           Rera_Number_multiple: project.rera_number_multiple || [],
-          Address: project.location ? {
-            address_line_1: project.location.address || "",
-            address_line_2: project.location.address_line_two || "",
-            city: project.location.city || "",
-            state: project.location.state || "",
-            pin_code: project.location.pin_code || "",
-            country: project.location.country || "",
-          } : {
-            address_line_1: "",
-            address_line_2: "",
-            city: "",
-            state: "",
-            pin_code: "",
-            country: "",
-          },
-          brochure: project.brochure ? (Array.isArray(project.brochure) ? project.brochure : [project.brochure]) : [],
-          two_d_images: Array.isArray(project.two_d_images) ? project.two_d_images : [],
+          Address: project.location
+            ? {
+                address_line_1: project.location.address || "",
+                address_line_2: project.location.address_line_two || "",
+                city: project.location.city || "",
+                state: project.location.state || "",
+                pin_code: project.location.pin_code || "",
+                country: project.location.country || "",
+              }
+            : {
+                address_line_1: "",
+                address_line_2: "",
+                city: "",
+                state: "",
+                pin_code: "",
+                country: "",
+              },
+          brochure: project.brochure
+            ? Array.isArray(project.brochure)
+              ? project.brochure
+              : [project.brochure]
+            : [],
+          two_d_images: Array.isArray(project.two_d_images)
+            ? project.two_d_images
+            : [],
           videos: Array.isArray(project.videos) ? project.videos : [],
-          gallery_image: Array.isArray(project.gallery_image) ? project.gallery_image : [],
-          project_ppt: project.project_ppt ? (Array.isArray(project.project_ppt) ? project.project_ppt : [project.project_ppt]) : [],
-          project_creatives: Array.isArray(project.project_creatives) ? project.project_creatives : [],
-          project_creative_generics: Array.isArray(project.project_creative_generics) ? project.project_creative_generics : [],
-          project_creative_offers: Array.isArray(project.project_creative_offers) ? project.project_creative_offers : [],
-          project_interiors: Array.isArray(project.project_interiors) ? project.project_interiors : [],
-          project_exteriors: Array.isArray(project.project_exteriors) ? project.project_exteriors : [],
-          project_emailer_templetes: Array.isArray(project.project_emailer_templetes) ? project.project_emailer_templetes : [],
-          KnwYrApt_Technical: Array.isArray(project.KnwYrApt_Technical) ? project.KnwYrApt_Technical : [],
-          project_layout: Array.isArray(project.project_layout) ? project.project_layout : [],
+          gallery_image: Array.isArray(project.gallery_image)
+            ? project.gallery_image
+            : [],
+          project_ppt: project.project_ppt
+            ? Array.isArray(project.project_ppt)
+              ? project.project_ppt
+              : [project.project_ppt]
+            : [],
+          project_creatives: Array.isArray(project.project_creatives)
+            ? project.project_creatives
+            : [],
+          project_creative_generics: Array.isArray(
+            project.project_creative_generics
+          )
+            ? project.project_creative_generics
+            : [],
+          project_creative_offers: Array.isArray(
+            project.project_creative_offers
+          )
+            ? project.project_creative_offers
+            : [],
+          project_interiors: Array.isArray(project.project_interiors)
+            ? project.project_interiors
+            : [],
+          project_exteriors: Array.isArray(project.project_exteriors)
+            ? project.project_exteriors
+            : [],
+          project_emailer_templetes: Array.isArray(
+            project.project_emailer_templetes
+          )
+            ? project.project_emailer_templetes
+            : [],
+          KnwYrApt_Technical: Array.isArray(project.KnwYrApt_Technical)
+            ? project.KnwYrApt_Technical
+            : [],
+          project_layout: Array.isArray(project.project_layout)
+            ? project.project_layout
+            : [],
           project_sales_type: project.project_sales_type || "",
           order_no: project.order_no || null,
           video_preview_image_url: project.video_preview_image_url || null,
@@ -1121,74 +1208,111 @@ const ProjectDetailsEdit = () => {
           rera_url: project.rera_url || "",
           // isDay: project.is_day !== undefined ? project.is_day : true,
           disclaimer: project.project_disclaimer || "",
-          project_qrcode_image: Array.isArray(project.project_qrcode_images) 
-            ? project.project_qrcode_images.map(qr => ({
+          project_qrcode_image: Array.isArray(project.project_qrcode_images)
+            ? project.project_qrcode_images.map((qr) => ({
                 id: qr.id,
                 document_file_name: qr.document_file_name,
                 document_url: qr.document_url,
                 title: qr.file_name || qr.document_file_name || "",
                 rera_identifier: qr.file_name || qr.document_file_name || "", // Use existing title as identifier
-                isNew: false
+                isNew: false,
               }))
             : [],
           cover_images: project.cover_images || [],
           is_sold: project.is_sold || false,
           plans: project.plans || [],
           image: project.image || [],
-          connectivities: Array.isArray(project.connectivities) 
-            ? project.connectivities.map(c => ({
+          connectivities: Array.isArray(project.connectivities)
+            ? project.connectivities.map((c) => ({
                 id: c.id,
                 connectivity_type_id: c.connectivity_type_id,
                 place_name: c.place_name,
+                distance: c.distance || "",
                 image: c.image?.document_url || c.document_url || null,
                 document_url: c.image?.document_url || c.document_url || null,
                 image_id: c.image?.id || null,
-                document_file_name: c.image?.document_file_name || null
+                document_file_name: c.image?.document_file_name || null,
               }))
             : [],
-          
+
           // Banner images with different ratios
           image_1_by_1: normalizeImageData(project.image_1_by_1),
           image_16_by_9: normalizeImageData(project.image_16_by_9),
           image_9_by_16: normalizeImageData(project.image_9_by_16),
           image_3_by_2: normalizeImageData(project.image_3_by_2),
-          
+
           // Cover images with different ratios
           cover_images_1_by_1: normalizeImageData(project.cover_images_1_by_1),
-          cover_images_16_by_9: normalizeImageData(project.cover_images_16_by_9),
-          cover_images_9_by_16: normalizeImageData(project.cover_images_9_by_16),
+          cover_images_16_by_9: normalizeImageData(
+            project.cover_images_16_by_9
+          ),
+          cover_images_9_by_16: normalizeImageData(
+            project.cover_images_9_by_16
+          ),
           cover_images_3_by_2: normalizeImageData(project.cover_images_3_by_2),
-          
+
           // Gallery images with different ratios (from nested structure)
-          gallery_image_16_by_9: extractGalleryImages(project.gallery_image, project.gallery_attachments, 'gallery_image_16_by_9'),
-          gallery_image_1_by_1: extractGalleryImages(project.gallery_image, project.gallery_attachments, 'gallery_image_1_by_1'),
-          gallery_image_9_by_16: extractGalleryImages(project.gallery_image, project.gallery_attachments, 'gallery_image_9_by_16'),
-          gallery_image_3_by_2: extractGalleryImages(project.gallery_image, project.gallery_attachments, 'gallery_image_3_by_2'),
-          
+          gallery_image_16_by_9: extractGalleryImages(
+            project.gallery_image,
+            project.gallery_attachments,
+            "gallery_image_16_by_9"
+          ),
+          gallery_image_1_by_1: extractGalleryImages(
+            project.gallery_image,
+            project.gallery_attachments,
+            "gallery_image_1_by_1"
+          ),
+          gallery_image_9_by_16: extractGalleryImages(
+            project.gallery_image,
+            project.gallery_attachments,
+            "gallery_image_9_by_16"
+          ),
+          gallery_image_3_by_2: extractGalleryImages(
+            project.gallery_image,
+            project.gallery_attachments,
+            "gallery_image_3_by_2"
+          ),
+
           // Floor plan images with different ratios
-          project_2d_image_16_by_9: normalizeImageData(project.project_2d_image_16_by_9),
-          project_2d_image_1_by_1: normalizeImageData(project.project_2d_image_1_by_1),
-          project_2d_image_3_by_2: normalizeImageData(project.project_2d_image_3_by_2),
-          project_2d_image_9_by_16: normalizeImageData(project.project_2d_image_9_by_16),
+          project_2d_image_16_by_9: normalizeImageData(
+            project.project_2d_image_16_by_9
+          ),
+          project_2d_image_1_by_1: normalizeImageData(
+            project.project_2d_image_1_by_1
+          ),
+          project_2d_image_3_by_2: normalizeImageData(
+            project.project_2d_image_3_by_2
+          ),
+          project_2d_image_9_by_16: normalizeImageData(
+            project.project_2d_image_9_by_16
+          ),
         });
 
-        console.log('Configuration_Type set to formData:', Array.isArray(project.configurations) 
-          ? project.configurations.map(c => ({ id: c.id, name: c.name })) 
-          : []);
+        console.log(
+          "Configuration_Type set to formData:",
+          Array.isArray(project.configurations)
+            ? project.configurations.map((c) => ({ id: c.id, name: c.name }))
+            : []
+        );
 
         setPlans(project.plans || []);
-        
+
         // If building type exists, fetch building types for that property type
-        const propertyTypeIdToUse = matchedPropertyType?.id || project.property_type_id;
+        const propertyTypeIdToUse =
+          matchedPropertyType?.id || project.property_type_id;
         if (propertyTypeIdToUse) {
           try {
             const buildingResponse = await axios.get(
-              getFullUrl(`/building_types.json?q[property_type_id_eq]=${propertyTypeIdToUse}`)
+              getFullUrl(
+                `/building_types.json?q[property_type_id_eq]=${propertyTypeIdToUse}`
+              )
             );
-            const formattedBuildingTypes = buildingResponse.data.map((item) => ({
-              value: item.building_type,
-              label: item.building_type,
-            }));
+            const formattedBuildingTypes = buildingResponse.data.map(
+              (item) => ({
+                value: item.building_type,
+                label: item.building_type,
+              })
+            );
             setBuildingTypes(formattedBuildingTypes);
           } catch (error) {
             console.error("Error fetching building types:", error);
@@ -1209,20 +1333,20 @@ const ProjectDetailsEdit = () => {
 
   // Fetch helpers (same as create)
   const fetchAmenities = () => {
-    return axios.get(getFullUrl('/amenity_setups.json')).then((response) => {
+    return axios.get(getFullUrl("/amenity_setups.json")).then((response) => {
       setAmenities(response.data.amenities_setups || []);
     });
   };
 
   const fetchConfigurations = () => {
-    return axios.get(getFullUrl('/configurations.json')).then((response) => {
+    return axios.get(getFullUrl("/configurations.json")).then((response) => {
       setConfigurations(response.data);
     });
   };
 
   const fetchStatusOptions = () => {
     return axios
-      .get(getFullUrl('/construction_statuses.json'))
+      .get(getFullUrl("/construction_statuses.json"))
       .then((response) => {
         const options = response.data
           .filter((status) => status.active === true)
@@ -1236,7 +1360,7 @@ const ProjectDetailsEdit = () => {
   };
 
   const fetchPropertyTypes = () => {
-    return axios.get(getFullUrl('/property_types.json')).then((response) => {
+    return axios.get(getFullUrl("/property_types.json")).then((response) => {
       const options = response.data
         .filter((type) => type.active === true)
         .map((type) => ({
@@ -1250,7 +1374,7 @@ const ProjectDetailsEdit = () => {
 
   const fetchBuildingTypes = async () => {
     try {
-      const response = await axios.get(getFullUrl('/building_types.json'));
+      const response = await axios.get(getFullUrl("/building_types.json"));
       const options = response.data
         .filter((item) => item.active === true)
         .map((type) => ({
@@ -1266,17 +1390,17 @@ const ProjectDetailsEdit = () => {
 
   const fetchConnectivityTypes = async () => {
     try {
-      const response = await axios.get(getFullUrl('/connectivity_types.json'));
+      const response = await axios.get(getFullUrl("/connectivity_types.json"));
       if (response.data && Array.isArray(response.data)) {
         // Filter only active connectivity types
-        const activeTypes = response.data.filter(type => type.active);
+        const activeTypes = response.data.filter((type) => type.active);
         setConnectivityTypes(activeTypes);
       } else {
         setConnectivityTypes([]);
       }
     } catch (error) {
-      console.error('Error fetching connectivity types:', error);
-      toast.error('Failed to fetch connectivity types');
+      console.error("Error fetching connectivity types:", error);
+      toast.error("Failed to fetch connectivity types");
       setConnectivityTypes([]);
     }
   };
@@ -1285,7 +1409,9 @@ const ProjectDetailsEdit = () => {
   const handleDeleteAmenity = async (amenityToRemove) => {
     // Find the amenity object that contains the association ID
     const amenityObj = formData.Amenities.find(
-      (a) => (typeof a?.id === 'string' ? parseInt(a.id, 10) : a?.id) === amenityToRemove.value
+      (a) =>
+        (typeof a?.id === "string" ? parseInt(a.id, 10) : a?.id) ===
+        amenityToRemove.value
     );
 
     // If amenity has an association ID, delete it from the server
@@ -1311,7 +1437,9 @@ const ProjectDetailsEdit = () => {
     setFormData((prev) => ({
       ...prev,
       Amenities: prev.Amenities.filter(
-        (a) => (typeof a?.id === 'string' ? parseInt(a.id, 10) : a?.id) !== amenityToRemove.value
+        (a) =>
+          (typeof a?.id === "string" ? parseInt(a.id, 10) : a?.id) !==
+          amenityToRemove.value
       ),
     }));
   };
@@ -1347,7 +1475,7 @@ const ProjectDetailsEdit = () => {
   // Fetch property types on mount
   useEffect(() => {
     axios
-      .get(getFullUrl('/property_types.json'))
+      .get(getFullUrl("/property_types.json"))
       .then((response) => {
         const options = response.data
           .filter((type) => type.active === true)
@@ -1367,12 +1495,14 @@ const ProjectDetailsEdit = () => {
   // Fetch amenities
   useEffect(() => {
     axios
-      .get(getFullUrl('/amenity_setups.json'))
+      .get(getFullUrl("/amenity_setups.json"))
       .then((response) => {
         const fetchedAmenities = response.data.amenities_setups || [];
-        console.log('Fetched amenities from API:', fetchedAmenities);
-        console.log('Current formData.Amenities:', formData.Amenities);
-        setAmenities(fetchedAmenities.filter((amenity) => amenity.active === true));
+        console.log("Fetched amenities from API:", fetchedAmenities);
+        console.log("Current formData.Amenities:", formData.Amenities);
+        setAmenities(
+          fetchedAmenities.filter((amenity) => amenity.active === true)
+        );
       })
       .catch((error) => {
         console.error("Error fetching amenities:", error);
@@ -1383,10 +1513,12 @@ const ProjectDetailsEdit = () => {
   // Fetch configurations
   useEffect(() => {
     axios
-      .get(getFullUrl('/configuration_setups.json'))
+      .get(getFullUrl("/configuration_setups.json"))
       .then((response) => {
-        const activeConfigs = response.data.filter((config) => config.active === true);
-        console.log('Configurations loaded:', activeConfigs);
+        const activeConfigs = response.data.filter(
+          (config) => config.active === true
+        );
+        console.log("Configurations loaded:", activeConfigs);
         setConfigurations(activeConfigs);
       })
       .catch((error) => {
@@ -1398,7 +1530,7 @@ const ProjectDetailsEdit = () => {
   // Fetch status options
   useEffect(() => {
     axios
-      .get(getFullUrl('/construction_statuses.json'))
+      .get(getFullUrl("/construction_statuses.json"))
       .then((response) => {
         const options = response.data
           .filter((status) => status.active === true)
@@ -1426,9 +1558,11 @@ const ProjectDetailsEdit = () => {
   const fetchImageConfigurations = async () => {
     try {
       const response = await axios.get(
-        getFullUrl('/system_constants.json?q[description_eq]=ImagesConfiguration')
+        getFullUrl(
+          "/system_constants.json?q[description_eq]=ImagesConfiguration"
+        )
       );
-      
+
       if (response.data && Array.isArray(response.data)) {
         const configs = {
           ProjectImage: [],
@@ -1439,15 +1573,15 @@ const ProjectDetailsEdit = () => {
           EventImage: [],
           EventCoverImage: [],
         };
-        
+
         response.data.forEach((config) => {
           const { name, value } = config;
-          
+
           // Extract ratio from value (e.g., "image_16_by_9" -> "16:9")
           const ratioMatch = value.match(/(\d+)_by_(\d+)/);
           if (ratioMatch) {
             const ratio = `${ratioMatch[1]}:${ratioMatch[2]}`;
-            
+
             if (name && Object.prototype.hasOwnProperty.call(configs, name)) {
               if (!configs[name].includes(ratio)) {
                 configs[name].push(ratio);
@@ -1455,28 +1589,28 @@ const ProjectDetailsEdit = () => {
             }
           }
         });
-        
+
         setImageConfigurations(configs);
       }
     } catch (error) {
-      console.error('Error fetching image configurations:', error);
+      console.error("Error fetching image configurations:", error);
       // Set default configurations if API fails
       setImageConfigurations({
-        ProjectImage: ['9:16', '1:1', '16:9', '3:2'],
-        ProjectCoverImage: ['1:1', '16:9', '9:16', '3:2'],
-        ProjectGallery: ['16:9', '1:1', '9:16', '3:2'],
-        Project2DImage: ['16:9', '1:1', '9:16', '3:2'],
-        BannerAttachment: ['1:1', '9:16', '16:9', '3:2'],
-        EventImage: ['16:9', '1:1', '9:16', '3:2'],
-        EventCoverImage: ['16:9', '1:1', '9:16', '3:2'],
+        ProjectImage: ["9:16", "1:1", "16:9", "3:2"],
+        ProjectCoverImage: ["1:1", "16:9", "9:16", "3:2"],
+        ProjectGallery: ["16:9", "1:1", "9:16", "3:2"],
+        Project2DImage: ["16:9", "1:1", "9:16", "3:2"],
+        BannerAttachment: ["1:1", "9:16", "16:9", "3:2"],
+        EventImage: ["16:9", "1:1", "9:16", "3:2"],
+        EventCoverImage: ["16:9", "1:1", "9:16", "3:2"],
       });
     }
   };
 
   const amenityTypes = Array.isArray(amenities)
-    ? [
-        ...new Set(amenities.map((ammit) => ammit.amenity_type)),
-      ].map((type) => ({ value: type, label: type }))
+    ? [...new Set(amenities.map((ammit) => ammit.amenity_type))].map(
+        (type) => ({ value: type, label: type })
+      )
     : [];
 
   // Filter amenities based on selected type
@@ -1550,12 +1684,28 @@ const ProjectDetailsEdit = () => {
 
     const allowedTypes = {
       image: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-      video_preview_image_url: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-      two_d_images: ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"],
+      video_preview_image_url: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ],
+      two_d_images: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+      ],
       gallery_image: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       videos: ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"],
       plans: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-      project_qrcode_image: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+      project_qrcode_image: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ],
       brochure: [
         "image/jpeg",
         "image/png",
@@ -1567,12 +1717,26 @@ const ProjectDetailsEdit = () => {
         "application/vnd.ms-powerpoint",
         "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       ],
-      project_ppt: ["application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation"],
-      project_emailer_templetes: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
-      KnwYrApt_Technical: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+      project_ppt: [
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      ],
+      project_emailer_templetes: [
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ],
+      KnwYrApt_Technical: [
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ],
       project_creatives: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       cover_images: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-      project_creative_generics: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+      project_creative_generics: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ],
       project_creative_offers: [
         "image/jpeg",
         "image/png",
@@ -1624,7 +1788,9 @@ const ProjectDetailsEdit = () => {
 
       newFiles.forEach((file) => {
         if (!allowedTypes.project_emailer_templetes.includes(file.type)) {
-          toast.error("Only PDF and DOCX files are allowed for project emailer templetes.");
+          toast.error(
+            "Only PDF and DOCX files are allowed for project emailer templetes."
+          );
           return;
         }
         if (!validateFile(file, MAX_SIZES[name])) return;
@@ -1634,7 +1800,10 @@ const ProjectDetailsEdit = () => {
       if (validFiles.length > 0) {
         setFormData((prev) => ({
           ...prev,
-          project_emailer_templetes: [...prev.project_emailer_templetes, ...validFiles],
+          project_emailer_templetes: [
+            ...prev.project_emailer_templetes,
+            ...validFiles,
+          ],
         }));
       }
     }
@@ -1645,7 +1814,9 @@ const ProjectDetailsEdit = () => {
 
       newFiles.forEach((file) => {
         if (!allowedTypes.KnwYrApt_Technical.includes(file.type)) {
-          toast.error("Only PDF and DOCX files are allowed for project technical files.");
+          toast.error(
+            "Only PDF and DOCX files are allowed for project technical files."
+          );
           return;
         }
         if (!validateFile(file, MAX_SIZES[name])) return;
@@ -1714,7 +1885,9 @@ const ProjectDetailsEdit = () => {
 
       newFiles.forEach((file) => {
         if (!allowedTypes.project_creative_offers.includes(file.type)) {
-          toast.error("Only images, PDFs, DOCs, and PPTs are allowed for project offers.");
+          toast.error(
+            "Only images, PDFs, DOCs, and PPTs are allowed for project offers."
+          );
           return;
         }
         if (file.size > MAX_SIZES.project_creative_offers) {
@@ -1727,7 +1900,10 @@ const ProjectDetailsEdit = () => {
       if (validFiles.length > 0) {
         setFormData((prev) => ({
           ...prev,
-          project_creative_offers: [...(prev.project_creative_offers || []), ...validFiles],
+          project_creative_offers: [
+            ...(prev.project_creative_offers || []),
+            ...validFiles,
+          ],
         }));
       }
     }
@@ -1751,7 +1927,10 @@ const ProjectDetailsEdit = () => {
       if (validFiles.length > 0) {
         setFormData((prev) => ({
           ...prev,
-          project_creative_generics: [...(prev.project_creative_generics || []), ...validFiles],
+          project_creative_generics: [
+            ...(prev.project_creative_generics || []),
+            ...validFiles,
+          ],
         }));
       }
     }
@@ -1834,7 +2013,9 @@ const ProjectDetailsEdit = () => {
 
       newFiles.forEach((file) => {
         if (!allowedTypes.brochure.includes(file.type)) {
-          toast.error("Only images, PDFs, DOCs, and PPTs are allowed for brochure.");
+          toast.error(
+            "Only images, PDFs, DOCs, and PPTs are allowed for brochure."
+          );
           return;
         }
         if (!validateFile(file, MAX_SIZES[name])) return;
@@ -1855,12 +2036,18 @@ const ProjectDetailsEdit = () => {
     ) {
       const newFiles = Array.from(files) as File[];
       const validFiles: File[] = [];
-      const tooLargeFiles: Array<{ valid: boolean; name?: string; size?: string }> = [];
+      const tooLargeFiles: Array<{
+        valid: boolean;
+        name?: string;
+        size?: string;
+      }> = [];
 
       newFiles.forEach((file) => {
         if (allowedTypes[name] && !allowedTypes[name].includes(file.type)) {
           const fileType = name === "videos" ? "video" : "image";
-          toast.error(`Only supported ${fileType} formats are allowed for ${name.replace("_", " ")}.`);
+          toast.error(
+            `Only supported ${fileType} formats are allowed for ${name.replace("_", " ")}.`
+          );
           return;
         }
 
@@ -1911,32 +2098,36 @@ const ProjectDetailsEdit = () => {
     if (fileType === "brochure") {
       if (index !== undefined) {
         const brochureToRemove = formData.brochure[index];
-        
+
         // If the brochure has an ID, it's an existing server file - call delete API
         if (brochureToRemove?.id && projectId) {
           try {
             const response = await axios.delete(
-              getFullUrl(`/projects/${projectId}/remove_brochures/${brochureToRemove.id}`),
+              getFullUrl(
+                `/projects/${projectId}/remove_brochures/${brochureToRemove.id}`
+              ),
               {
                 headers: { Authorization: getAuthHeader() },
               }
             );
-            
+
             if (response.status === 200) {
               toast.success("Brochure removed successfully");
             }
           } catch (error) {
             console.error("Error deleting brochure:", error);
-            toast.error("Failed to delete brochure from server", { description: "Error" });
+            toast.error("Failed to delete brochure from server", {
+              description: "Error",
+            });
             return; // Don't update local state if server delete failed
           }
         }
-        
+
         // Update local state
         const updatedBrochures = [...formData.brochure];
         updatedBrochures.splice(index, 1);
         setFormData({ ...formData, brochure: updatedBrochures });
-        
+
         // Show success toast only for newly uploaded files (without ID)
         if (!brochureToRemove?.id) {
           toast.success("Brochure removed successfully");
@@ -1966,32 +2157,36 @@ const ProjectDetailsEdit = () => {
       toast.success("Creative generic removed successfully");
     } else if (fileType === "project_creative_offers") {
       const fileToRemove = formData.project_creative_offers[index];
-      
+
       // If the file has an ID, it's an existing server file - call delete API
       if (fileToRemove?.id && projectId) {
         try {
           const response = await axios.delete(
-            getFullUrl(`/projects/${projectId}/remove_creative_image/${fileToRemove.id}.json`),
+            getFullUrl(
+              `/projects/${projectId}/remove_creative_image/${fileToRemove.id}.json`
+            ),
             {
               headers: { Authorization: getAuthHeader() },
             }
           );
-          
+
           if (response.status === 200) {
             toast.success("Creative offer removed successfully");
           }
         } catch (error) {
           console.error("Error deleting creative offer:", error);
-          toast.error("Failed to delete creative offer from server", { description: "Error" });
+          toast.error("Failed to delete creative offer from server", {
+            description: "Error",
+          });
           return; // Don't update local state if server delete failed
         }
       }
-      
+
       // Update local state
       const updatedFiles = [...formData.project_creative_offers];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, project_creative_offers: updatedFiles });
-      
+
       // Show success toast only for newly uploaded files (without ID)
       if (!fileToRemove?.id) {
         toast.success("Creative offer removed successfully");
@@ -2018,37 +2213,45 @@ const ProjectDetailsEdit = () => {
       toast.success("Technical file removed successfully");
     } else if (fileType === "project_layout") {
       const fileToRemove = formData.project_layout[index];
-      
+
       // If the file has an ID, it's an existing server file - call delete API
       if (fileToRemove?.id && projectId) {
         try {
           await axios.delete(
-            getFullUrl(`/projects/${projectId}/remove_layout_image/${fileToRemove.id}.json`),
+            getFullUrl(
+              `/projects/${projectId}/remove_layout_image/${fileToRemove.id}.json`
+            ),
             {
               headers: {
                 Authorization: getAuthHeader(),
               },
             }
           );
-          toast.success("Layout deleted successfully", { description: "Success" });
+          toast.success("Layout deleted successfully", {
+            description: "Success",
+          });
         } catch (error) {
           console.error("Error deleting layout:", error);
-          
+
           // If 404, the file doesn't exist on server, still remove from UI
           if (error.response?.status === 404) {
-            toast.warning("Layout not found on server, removing from list", { description: "Warning" });
+            toast.warning("Layout not found on server, removing from list", {
+              description: "Warning",
+            });
           } else {
-            toast.error("Failed to delete layout from server", { description: "Error" });
+            toast.error("Failed to delete layout from server", {
+              description: "Error",
+            });
             return; // Don't update local state if server delete failed
           }
         }
       }
-      
+
       // Update local state
       const updatedFiles = [...formData.project_layout];
       updatedFiles.splice(index, 1);
       setFormData({ ...formData, project_layout: updatedFiles });
-      
+
       // Show success toast only for newly uploaded files (without ID)
       if (!fileToRemove?.id) {
         toast.success("Layout removed successfully");
@@ -2074,7 +2277,11 @@ const ProjectDetailsEdit = () => {
   const validateForm = (formData) => {
     toast.dismiss();
 
-    if (!formData.Property_Type || (Array.isArray(formData.Property_Type) && formData.Property_Type.length === 0)) {
+    if (
+      !formData.Property_Type ||
+      (Array.isArray(formData.Property_Type) &&
+        formData.Property_Type.length === 0)
+    ) {
       toast.error("Property Type is required.");
       return false;
     }
@@ -2083,7 +2290,7 @@ const ProjectDetailsEdit = () => {
       toast.error("Project Name is required.");
       return false;
     }
-    
+
     if (!formData.project_address) {
       toast.error("Location is required.");
       return false;
@@ -2093,8 +2300,11 @@ const ProjectDetailsEdit = () => {
     if (formData.connectivities && formData.connectivities.length > 0) {
       for (let i = 0; i < formData.connectivities.length; i++) {
         const connectivity = formData.connectivities[i];
-        const hasType = connectivity.connectivity_type_id && connectivity.connectivity_type_id !== '';
-        const hasPlace = connectivity.place_name && connectivity.place_name.trim() !== '';
+        const hasType =
+          connectivity.connectivity_type_id &&
+          connectivity.connectivity_type_id !== "";
+        const hasPlace =
+          connectivity.place_name && connectivity.place_name.trim() !== "";
 
         if (hasType || hasPlace) {
           if (!hasType) {
@@ -2162,8 +2372,14 @@ const ProjectDetailsEdit = () => {
     const hasValue = (val) => {
       if (val === null || val === undefined || val === "") return false;
       if (Array.isArray(val) && val.length === 0) return false;
-      if (typeof val === "object" && !Array.isArray(val) && !(val instanceof File)) {
-        return Object.values(val).some(v => v !== "" && v !== null && v !== undefined);
+      if (
+        typeof val === "object" &&
+        !Array.isArray(val) &&
+        !(val instanceof File)
+      ) {
+        return Object.values(val).some(
+          (v) => v !== "" && v !== null && v !== undefined
+        );
       }
       return true;
     };
@@ -2189,49 +2405,116 @@ const ProjectDetailsEdit = () => {
             data.append(`project[Address][${addressKey}]`, value[addressKey]);
           }
         }
-      } else if (key === "brochure" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "brochure" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((file) => {
           if (file instanceof File) {
             data.append("project[ProjectBrochure][]", file);
           }
         });
-      } else if (key === "project_emailer_templetes" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "project_emailer_templetes" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((file) => {
           if (file instanceof File) {
             data.append("project[ProjectEmailerTempletes][]", file);
           }
         });
-      } else if (key === "KnwYrApt_Technical" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "KnwYrApt_Technical" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((file) => {
           if (file instanceof File) {
             data.append("project[KnwYrApt_Technical][]", file);
           }
         });
-      } else if (key === "two_d_images" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "two_d_images" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((file) => data.append("project[Project2DImage][]", file));
-      } else if (key === "project_creatives" && Array.isArray(value) && value.length > 0) {
-        value.forEach((file) => data.append("project[ProjectCreatives][]", file));
-      } else if (key === "cover_images" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "project_creatives" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
+        value.forEach((file) =>
+          data.append("project[ProjectCreatives][]", file)
+        );
+      } else if (
+        key === "cover_images" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((file) => data.append("project[cover_images][]", file));
-      } else if (key === "project_creative_generics" && Array.isArray(value) && value.length > 0) {
-        value.forEach((file) => data.append("project[ProjectCreativeGenerics][]", file));
-      } else if (key === "project_creative_offers" && Array.isArray(value) && value.length > 0) {
-        value.forEach((file) => data.append("project[ProjectCreativeOffers][]", file));
-      } else if (key === "project_interiors" && Array.isArray(value) && value.length > 0) {
-        value.forEach((file) => data.append("project[ProjectInteriors][]", file));
-      } else if (key === "project_exteriors" && Array.isArray(value) && value.length > 0) {
-        value.forEach((file) => data.append("project[ProjectExteriors][]", file));
-      } else if (key === "project_layout" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "project_creative_generics" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
+        value.forEach((file) =>
+          data.append("project[ProjectCreativeGenerics][]", file)
+        );
+      } else if (
+        key === "project_creative_offers" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
+        value.forEach((file) =>
+          data.append("project[ProjectCreativeOffers][]", file)
+        );
+      } else if (
+        key === "project_interiors" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
+        value.forEach((file) =>
+          data.append("project[ProjectInteriors][]", file)
+        );
+      } else if (
+        key === "project_exteriors" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
+        value.forEach((file) =>
+          data.append("project[ProjectExteriors][]", file)
+        );
+      } else if (
+        key === "project_layout" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((file) => data.append("project[ProjectLayout][]", file));
       } else if (key === "videos" && Array.isArray(value) && value.length > 0) {
         value.forEach((file) => data.append("project[ProjectVideo][]", file));
-      } else if (key === "gallery_image" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "gallery_image" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((fileObj, index) => {
           if (fileObj.gallery_image instanceof File) {
             data.append("project[gallery_image][]", fileObj.gallery_image);
-            data.append(`project[gallery_image_file_name][${index}]`, fileObj.gallery_image_file_name || "");
-            data.append(`project[gallery_type]`, fileObj.gallery_image_file_type || "");
-            data.append(`project[gallery_image_is_day][${index}]`, fileObj.isDay);
+            data.append(
+              `project[gallery_image_file_name][${index}]`,
+              fileObj.gallery_image_file_name || ""
+            );
+            data.append(
+              `project[gallery_type]`,
+              fileObj.gallery_image_file_type || ""
+            );
+            data.append(
+              `project[gallery_image_is_day][${index}]`,
+              fileObj.isDay
+            );
           }
         });
       } else if (key === "image" && mainImageUpload[0]?.file instanceof File) {
@@ -2242,28 +2525,42 @@ const ProjectDetailsEdit = () => {
         } else if (typeof value === "string" && value.trim() !== "") {
           data.append("project[video_preview_image_url]", value);
         }
-      } else if (key === "project_qrcode_image" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "project_qrcode_image" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((fileObj) => {
           // Only submit new files (File objects), skip existing ones (already saved in backend)
           if (fileObj.isNew && fileObj.project_qrcode_image instanceof File) {
-            data.append("project[project_qrcode_image][]", fileObj.project_qrcode_image);
-            data.append("project[project_qrcode_image_titles][]", fileObj.title || "");
+            data.append(
+              "project[project_qrcode_image][]",
+              fileObj.project_qrcode_image
+            );
+            data.append(
+              "project[project_qrcode_image_titles][]",
+              fileObj.title || ""
+            );
           }
         });
-      } else if (key === "virtual_tour_url_multiple" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "virtual_tour_url_multiple" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         console.log("=== Virtual Tour Data Being Submitted ===");
         console.log("Total Virtual Tour entries:", value.length);
         console.log("Virtual Tour Array:", JSON.stringify(value, null, 2));
-        
+
         value.forEach((item, index) => {
           const tourName = item.virtual_tour_name || "test";
           const tourUrl = item.virtual_tour_url || "test";
-          
+
           console.log(`Virtual Tour Entry ${index}:`, {
             virtual_tour_name: tourName,
-            virtual_tour_url: tourUrl
+            virtual_tour_url: tourUrl,
           });
-          
+
           // Send all entries, even with empty fields (backend will handle validation)
           data.append(
             `project[virtual_tour_url_multiple][${index}][virtual_tour_name]`,
@@ -2274,115 +2571,197 @@ const ProjectDetailsEdit = () => {
             tourUrl
           );
         });
-        
+
         console.log("=== End Virtual Tour Data ===");
-      } else if (key === "Rera_Number_multiple" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "Rera_Number_multiple" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         console.log("=== RERA Data Being Submitted ===");
         console.log("Total RERA entries:", value.length);
         console.log("RERA Array:", JSON.stringify(value, null, 2));
-        
+
         value.forEach((item, index) => {
           // Support both 'tower' and 'tower_name' keys for flexibility
           const towerName = item.tower_name || item.tower || "";
           const reraNumber = item.rera_number || "";
           const reraUrl = item.rera_url || "";
-          
+
           console.log(`RERA Entry ${index}:`, {
             tower_name: towerName,
             rera_number: reraNumber,
-            rera_url: reraUrl
+            rera_url: reraUrl,
           });
-          
+
           // Send all entries, even with empty fields (backend will handle validation)
-          data.append(`project[Rera_Number_multiple][${index}][tower_name]`, towerName);
-          data.append(`project[Rera_Number_multiple][${index}][rera_number]`, reraNumber);
-          data.append(`project[Rera_Number_multiple][${index}][rera_url]`, reraUrl);
+          data.append(
+            `project[Rera_Number_multiple][${index}][tower_name]`,
+            towerName
+          );
+          data.append(
+            `project[Rera_Number_multiple][${index}][rera_number]`,
+            reraNumber
+          );
+          data.append(
+            `project[Rera_Number_multiple][${index}][rera_url]`,
+            reraUrl
+          );
         });
-        
+
         console.log("=== End RERA Data ===");
       } else if (key === "connectivities" && Array.isArray(value)) {
         value.forEach((item) => {
-          const hasType = item.connectivity_type_id && item.connectivity_type_id !== '';
-          const hasPlace = item.place_name && item.place_name.trim() !== '';
+          const hasType =
+            item.connectivity_type_id && item.connectivity_type_id !== "";
+          const hasPlace = item.place_name && item.place_name.trim() !== "";
 
           // Only include connectivity if required fields are filled
           if (hasType && hasPlace) {
-            data.append(`project[connectivities][][connectivity_type_id]`, item.connectivity_type_id);
-            data.append(`project[connectivities][][place_name]`, item.place_name);
+            data.append(
+              `project[connectivities][][connectivity_type_id]`,
+              item.connectivity_type_id
+            );
+            data.append(
+              `project[connectivities][][place_name]`,
+              item.place_name
+            );
+
+            if (item.distance) {
+              data.append(`project[connectivities][][distance]`, item.distance);
+            }
 
             if (item.id) {
               data.append(`project[connectivities][][id]`, item.id);
             }
           }
         });
-      }
- else if (key === "project_ppt" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "project_ppt" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((file) => {
           if (file instanceof File) {
             data.append("project[ProjectPPT]", file);
           }
         });
-      } else if (key === "Amenities" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "Amenities" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         // Convert array to comma-separated string of names for backend
         const amenityNames = value
-          .map(amenity => amenity?.name)
+          .map((amenity) => amenity?.name)
           .filter(Boolean)
           .join(",");
         if (amenityNames) {
           data.append("project[Amenities]", amenityNames);
         }
-      } else if (key === "Configuration_Type" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "Configuration_Type" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         // Convert configuration objects array to comma-separated string of names
         const configNames = value
-          .map(c => c.name || c)
+          .map((c) => c.name || c)
           .filter((name) => name !== null && name !== undefined)
           .join(",");
         if (configNames) {
           data.append("project[Configuration_Type]", configNames);
         }
-      } else if (key === "Specifications" && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key === "Specifications" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((spec) => {
           if (spec) {
             data.append("project[Specifications][]", spec);
           }
         });
-      } else if (key.startsWith("image") && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key.startsWith("image") &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((img) => {
           const backendField = key.replace("image", "project[image") + "]";
           if (img.file instanceof File) {
             data.append(backendField, img.file);
           }
         });
-      } else if (key.startsWith("cover_images_") && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key.startsWith("cover_images_") &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((img) => {
-          const backendField = key.replace("cover_images_", "project[cover_images_") + "]";
+          const backendField =
+            key.replace("cover_images_", "project[cover_images_") + "]";
           if (img.file instanceof File) {
             data.append(backendField, img.file);
           }
         });
-      } else if (key.startsWith("gallery_image_") && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key.startsWith("gallery_image_") &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((img, index) => {
           if (img.file instanceof File) {
             data.append(`project[${key}][][file]`, img.file);
-            data.append(`project[${key}][][file_name]`, img.file_name || img.file.name);
-            data.append(`project[${key}][][order_no]`, img.order_no || index + 1);
+            data.append(
+              `project[${key}][][file_name]`,
+              img.file_name || img.file.name
+            );
+            data.append(
+              `project[${key}][][order_no]`,
+              img.order_no || index + 1
+            );
           }
         });
-      } else if (key.startsWith("project_2d_image") && Array.isArray(value) && value.length > 0) {
+      } else if (
+        key.startsWith("project_2d_image") &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
         value.forEach((img) => {
           if (img.file instanceof File) {
-            const backendField = key.replace("project_2d_image", "project[project_2d_image") + "][]";
+            const backendField =
+              key.replace("project_2d_image", "project[project_2d_image") +
+              "][]";
             data.append(backendField, img.file);
           }
         });
       } else if (
         ![
-          "plans", "Address", "brochure", "project_emailer_templetes", "KnwYrApt_Technical",
-          "two_d_images", "project_creatives", "cover_images", "project_creative_generics",
-          "project_creative_offers", "project_interiors", "project_exteriors", "project_layout",
-          "videos", "gallery_image", "image", "video_preview_image_url", "project_qrcode_image",
-          "virtual_tour_url_multiple", "Rera_Number_multiple", "project_ppt", "Amenities",
-          "Configuration_Type", "Specifications"
+          "plans",
+          "Address",
+          "brochure",
+          "project_emailer_templetes",
+          "KnwYrApt_Technical",
+          "two_d_images",
+          "project_creatives",
+          "cover_images",
+          "project_creative_generics",
+          "project_creative_offers",
+          "project_interiors",
+          "project_exteriors",
+          "project_layout",
+          "videos",
+          "gallery_image",
+          "image",
+          "video_preview_image_url",
+          "project_qrcode_image",
+          "virtual_tour_url_multiple",
+          "Rera_Number_multiple",
+          "project_ppt",
+          "Amenities",
+          "Configuration_Type",
+          "Specifications",
         ].includes(key) &&
         !key.startsWith("image_") &&
         !key.startsWith("cover_images_") &&
@@ -2436,12 +2815,18 @@ const ProjectDetailsEdit = () => {
         error.response.data &&
         (error.response.data.project_name || error.response.data.Project_Name)
       ) {
-        toast.error("Project name already exists.", { description: "Validation Error" });
+        toast.error("Project name already exists.", {
+          description: "Validation Error",
+        });
       } else if (error.response && error.response.status === 401) {
-        toast.error("Authentication failed. Please log in again.", { description: "Error" });
+        toast.error("Authentication failed. Please log in again.", {
+          description: "Error",
+        });
         navigate("/login");
       } else {
-        toast.error("Failed to update the project. Please try again.", { description: "Error" });
+        toast.error("Failed to update the project. Please try again.", {
+          description: "Error",
+        });
       }
     } finally {
       setLoading(false);
@@ -2461,66 +2846,72 @@ const ProjectDetailsEdit = () => {
     );
   }
 
-    function handlePlanDelete(id: any, planIndex: any): void {
-        // Remove plan by index (planIndex is provided where function is called)
-        setPlans((prevPlans) => {
-            const updated = prevPlans.filter((_, idx) => idx !== planIndex);
-            // Update formData.plans to keep in sync
-            setFormData((prev) => ({ ...prev, plans: updated }));
-            return updated;
-        });
+  function handlePlanDelete(id: any, planIndex: any): void {
+    // Remove plan by index (planIndex is provided where function is called)
+    setPlans((prevPlans) => {
+      const updated = prevPlans.filter((_, idx) => idx !== planIndex);
+      // Update formData.plans to keep in sync
+      setFormData((prev) => ({ ...prev, plans: updated }));
+      return updated;
+    });
 
-        toast.success("Plan deleted", { description: "Success" });
-    }
-    function handleDiscardPpt(fileType: string, index: number): void {
-        // Safely remove a PPT file at given index from formData and revoke any blob preview URL
-        setFormData((prev) => {
-            const next: any = { ...prev };
-            const list: any[] = Array.isArray(next[fileType]) ? [...next[fileType]] : [];
+    toast.success("Plan deleted", { description: "Success" });
+  }
+  function handleDiscardPpt(fileType: string, index: number): void {
+    // Safely remove a PPT file at given index from formData and revoke any blob preview URL
+    setFormData((prev) => {
+      const next: any = { ...prev };
+      const list: any[] = Array.isArray(next[fileType])
+        ? [...next[fileType]]
+        : [];
 
-            if (index < 0 || index >= list.length) return prev;
+      if (index < 0 || index >= list.length) return prev;
 
-            const [removed] = list.splice(index, 1);
+      const [removed] = list.splice(index, 1);
 
-            // revoke blob preview URLs to avoid memory leaks
-            const preview = removed?.preview || (typeof removed === "string" ? removed : undefined);
-            if (typeof preview === "string" && preview.startsWith("blob:")) {
-                try {
-                    URL.revokeObjectURL(preview);
-                } catch (err) {
-                    // ignore revoke errors
-                }
-            }
+      // revoke blob preview URLs to avoid memory leaks
+      const preview =
+        removed?.preview || (typeof removed === "string" ? removed : undefined);
+      if (typeof preview === "string" && preview.startsWith("blob:")) {
+        try {
+          URL.revokeObjectURL(preview);
+        } catch (err) {
+          // ignore revoke errors
+        }
+      }
 
-            next[fileType] = list;
-            toast.success("PPT removed", { description: "Success" });
-            return next;
-        });
-    }
+      next[fileType] = list;
+      toast.success("PPT removed", { description: "Success" });
+      return next;
+    });
+  }
   return (
     <div className="p-6 bg-gray-50 h-screen overflow-y-auto scrollbar-thin pb-28">
       <Toaster position="top-right" richColors closeButton />
       {/* Header Section */}
-       <div className="mb-8">
-                   <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-                     <button
-                       onClick={() => navigate(-1)}
-                       className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
-                       aria-label="Go back"
-                     >
-                       <ArrowLeft className="w-4 h-4 text-gray-600" />
-                     </button>
-                     <span>Back to Project List</span>
-                     {/* <span>{">"}</span> */}
-                     {/* <span className="text-gray-900 font-medium">Create New Project</span> */}
-                   </div>
-                   <h1 className="text-2xl font-bold text-gray-900">EDIT PROJECT</h1>
-                 </div>
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <span>Back to Project List</span>
+          {/* <span>{">"}</span> */}
+          {/* <span className="text-gray-900 font-medium">Create New Project</span> */}
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900">EDIT PROJECT</h1>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+          <div
+            className="px-6 py-3 border-b border-gray-200"
+            style={{ backgroundColor: "#F6F4EE" }}
+          >
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -2531,7 +2922,10 @@ const ProjectDetailsEdit = () => {
               Basic Information
             </h2>
           </div>
-         <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
+          <div
+            className="p-6 space-y-6"
+            style={{ backgroundColor: "#AAB9C50D" }}
+          >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormControl
                 fullWidth
@@ -2630,28 +3024,41 @@ const ProjectDetailsEdit = () => {
                   </label>
                   <Select
                     isMulti
-                    value={Array.isArray(formData.Configuration_Type)
-                      ? formData.Configuration_Type.map((c) => ({
-                          value: typeof c?.id === 'string' ? parseInt(c.id, 10) : c?.id,
-                          label: c?.name || '',
-                        })).filter((opt) => opt.value && opt.label)
-                      : []}
+                    value={
+                      Array.isArray(formData.Configuration_Type)
+                        ? formData.Configuration_Type.map((c) => ({
+                            value:
+                              typeof c?.id === "string"
+                                ? parseInt(c.id, 10)
+                                : c?.id,
+                            label: c?.name || "",
+                          })).filter((opt) => opt.value && opt.label)
+                        : []
+                    }
                     onChange={(selected, actionMeta) => {
                       // Handle adding new configurations
-                      if (actionMeta.action === 'select-option') {
+                      if (actionMeta.action === "select-option") {
                         const newConfig = actionMeta.option;
-                        const config = configurations.find((c) => c.id === newConfig.value);
+                        const config = configurations.find(
+                          (c) => c.id === newConfig.value
+                        );
                         if (config) {
                           setFormData((prev) => ({
                             ...prev,
-                            Configuration_Type: [...prev.Configuration_Type, { id: config.id, name: config.name }],
+                            Configuration_Type: [
+                              ...prev.Configuration_Type,
+                              { id: config.id, name: config.name },
+                            ],
                           }));
                         }
                         return;
                       }
-                      
+
                       // Handle removal
-                      if (actionMeta.action === 'remove-value' || actionMeta.action === 'pop-value') {
+                      if (
+                        actionMeta.action === "remove-value" ||
+                        actionMeta.action === "pop-value"
+                      ) {
                         setFormData((prev) => ({
                           ...prev,
                           Configuration_Type: prev.Configuration_Type.filter(
@@ -2662,14 +3069,17 @@ const ProjectDetailsEdit = () => {
                       }
 
                       // Handle clear all
-                      if (actionMeta.action === 'clear') {
+                      if (actionMeta.action === "clear") {
                         setFormData((prev) => ({
                           ...prev,
                           Configuration_Type: [],
                         }));
                       }
                     }}
-                    options={configurations.map((c) => ({ value: c.id, label: c.name }))}
+                    options={configurations.map((c) => ({
+                      value: c.id,
+                      label: c.name,
+                    }))}
                     styles={customStyles}
                     components={{
                       MultiValue: CustomMultiValue,
@@ -2681,7 +3091,7 @@ const ProjectDetailsEdit = () => {
                   />
                 </div>
               </div>
-               <TextField
+              <TextField
                 label="Project Name"
                 placeholder="Enter Project Name"
                 value={formData.Project_Name}
@@ -2774,26 +3184,26 @@ const ProjectDetailsEdit = () => {
                 </MUISelect>
               </FormControl>
               <TextField
-                  label="Project Description"
-                  placeholder="Enter Project Description"
-                  value={formData.Project_Description}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      Project_Description: e.target.value,
-                    }))
-                  }
-                  fullWidth
-                  variant="outlined"
-                  slotProps={{
-                    inputLabel: {
-                      shrink: true,
-                    },
-                  }}
-                  InputProps={{
-                    sx: fieldStyles,
-                  }}
-                />
+                label="Project Description"
+                placeholder="Enter Project Description"
+                value={formData.Project_Description}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    Project_Description: e.target.value,
+                  }))
+                }
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
               <TextField
                 label="Price Onward"
                 placeholder="Enter Price Onward"
@@ -2817,13 +3227,10 @@ const ProjectDetailsEdit = () => {
               />
 
               {/* Enable Enquiry Toggle */}
-            
-            {/* </div> */}
-           
 
-           
+              {/* </div> */}
 
-            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> */}
+              {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> */}
               <TextField
                 label="Size (Sq. Mtr.)"
                 placeholder="Enter Size in Sq. Mtr."
@@ -2847,7 +3254,8 @@ const ProjectDetailsEdit = () => {
                   sx: fieldStyles,
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "-" || e.key === "e" || e.key === "E") e.preventDefault();
+                  if (e.key === "-" || e.key === "e" || e.key === "E")
+                    e.preventDefault();
                 }}
               />
 
@@ -2874,7 +3282,8 @@ const ProjectDetailsEdit = () => {
                   sx: fieldStyles,
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "-" || e.key === "e" || e.key === "E") e.preventDefault();
+                  if (e.key === "-" || e.key === "e" || e.key === "E")
+                    e.preventDefault();
                 }}
               />
 
@@ -2901,7 +3310,8 @@ const ProjectDetailsEdit = () => {
                   sx: fieldStyles,
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "-" || e.key === "e" || e.key === "E") e.preventDefault();
+                  if (e.key === "-" || e.key === "e" || e.key === "E")
+                    e.preventDefault();
                 }}
               />
 
@@ -2928,10 +3338,11 @@ const ProjectDetailsEdit = () => {
                   sx: fieldStyles,
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "-" || e.key === "e" || e.key === "E") e.preventDefault();
+                  if (e.key === "-" || e.key === "e" || e.key === "E")
+                    e.preventDefault();
                 }}
               />
-               <TextField
+              <TextField
                 label="RERA Carpet Area (Sq. M)"
                 placeholder="Enter RERA Carpet Area (Sq. M)"
                 type="number"
@@ -2954,7 +3365,8 @@ const ProjectDetailsEdit = () => {
                   sx: fieldStyles,
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "-" || e.key === "e" || e.key === "E") e.preventDefault();
+                  if (e.key === "-" || e.key === "e" || e.key === "E")
+                    e.preventDefault();
                 }}
               />
 
@@ -2981,7 +3393,8 @@ const ProjectDetailsEdit = () => {
                   sx: fieldStyles,
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "-" || e.key === "e" || e.key === "E") e.preventDefault();
+                  if (e.key === "-" || e.key === "e" || e.key === "E")
+                    e.preventDefault();
                 }}
               />
 
@@ -3002,7 +3415,7 @@ const ProjectDetailsEdit = () => {
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0 }
+                  htmlInput: { min: 0 },
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -3026,13 +3439,13 @@ const ProjectDetailsEdit = () => {
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0 }
+                  htmlInput: { min: 0 },
                 }}
                 InputProps={{
                   sx: fieldStyles,
                 }}
               />
-               <TextField
+              <TextField
                 label="Number of Units"
                 placeholder="Enter Number of Units"
                 type="number"
@@ -3049,7 +3462,7 @@ const ProjectDetailsEdit = () => {
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0 }
+                  htmlInput: { min: 0 },
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -3073,7 +3486,7 @@ const ProjectDetailsEdit = () => {
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0 }
+                  htmlInput: { min: 0 },
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -3136,7 +3549,7 @@ const ProjectDetailsEdit = () => {
                   <MenuItem value="Lease">Lease</MenuItem>
                 </MUISelect>
               </FormControl>
-                <TextField
+              <TextField
                 label="Order Number"
                 placeholder="Enter Order Number"
                 type="number"
@@ -3150,7 +3563,7 @@ const ProjectDetailsEdit = () => {
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0 }
+                  htmlInput: { min: 0 },
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -3178,17 +3591,24 @@ const ProjectDetailsEdit = () => {
                 }}
               />
 
-                <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-700">Enable Enquiry</label>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Enable Enquiry
+                </label>
                 <Switch
                   checked={formData.enable_enquiry}
-                  onChange={(e) => setFormData(prev => ({ ...prev, enable_enquiry: e.target.checked }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      enable_enquiry: e.target.checked,
+                    }))
+                  }
                   sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: '#C72030',
+                    "& .MuiSwitch-switchBase.Mui-checked": {
+                      color: "#C72030",
                     },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: '#C72030',
+                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                      backgroundColor: "#C72030",
                     },
                   }}
                 />
@@ -3196,16 +3616,23 @@ const ProjectDetailsEdit = () => {
 
               {/* Is Sold Toggle */}
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-700">Is Sold</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Is Sold
+                </label>
                 <Switch
                   checked={formData.is_sold}
-                  onChange={(e) => setFormData(prev => ({ ...prev, is_sold: e.target.checked }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      is_sold: e.target.checked,
+                    }))
+                  }
                   sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: '#C72030',
+                    "& .MuiSwitch-switchBase.Mui-checked": {
+                      color: "#C72030",
                     },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: '#C72030',
+                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                      backgroundColor: "#C72030",
                     },
                   }}
                 />
@@ -3217,450 +3644,539 @@ const ProjectDetailsEdit = () => {
         </div>
         {/* {API_CONFIG.BASE_URL !== "https://dev-panchshil-super-app.lockated.com/" &&
           API_CONFIG.BASE_URL !== "https://rustomjee-live.lockated.com/" && ( */}
-            <>
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
-                  <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                    <span
-                      className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
-                      style={{ backgroundColor: "#E5E0D3" }}
-                    >
-                      <FileText size={16} color="#C72030" />
-                    </span>
-                    RERA Number
-                  </h2>
-                </div>
-                <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
-                  {/* Render all RERA sections */}
-                  {formData.Rera_Number_multiple.length === 0 ? (
-                    // Initial section when no RERA entries exist
-                    <div className="grid grid-cols-1 gap-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <TextField
-                          label="Tower"
-                          placeholder="Enter Tower Name"
-                          value={formData.Rera_Number_multiple[0]?.tower_name || ""}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            setFormData((prev) => {
-                              const updated = [...prev.Rera_Number_multiple];
-                              if (updated.length === 0) {
-                                updated.push({ tower_name: value, rera_number: "", rera_url: "" });
-                              } else {
-                                updated[0] = { ...updated[0], tower_name: value };
-                              }
-                              return { ...prev, Rera_Number_multiple: updated };
+        <>
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div
+              className="px-6 py-3 border-b border-gray-200"
+              style={{ backgroundColor: "#F6F4EE" }}
+            >
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <span
+                  className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
+                  style={{ backgroundColor: "#E5E0D3" }}
+                >
+                  <FileText size={16} color="#C72030" />
+                </span>
+                RERA Number
+              </h2>
+            </div>
+            <div
+              className="p-6 space-y-6"
+              style={{ backgroundColor: "#AAB9C50D" }}
+            >
+              {/* Render all RERA sections */}
+              {formData.Rera_Number_multiple.length === 0 ? (
+                // Initial section when no RERA entries exist
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <TextField
+                      label="Tower"
+                      placeholder="Enter Tower Name"
+                      value={formData.Rera_Number_multiple[0]?.tower_name || ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData((prev) => {
+                          const updated = [...prev.Rera_Number_multiple];
+                          if (updated.length === 0) {
+                            updated.push({
+                              tower_name: value,
+                              rera_number: "",
+                              rera_url: "",
                             });
-                          }}
-                          fullWidth
-                          variant="outlined"
-                          slotProps={{
-                            inputLabel: {
-                              shrink: true,
-                            },
-                          }}
-                          InputProps={{
-                            sx: fieldStyles,
-                          }}
-                        />
+                          } else {
+                            updated[0] = { ...updated[0], tower_name: value };
+                          }
+                          return { ...prev, Rera_Number_multiple: updated };
+                        });
+                      }}
+                      fullWidth
+                      variant="outlined"
+                      slotProps={{
+                        inputLabel: {
+                          shrink: true,
+                        },
+                      }}
+                      InputProps={{
+                        sx: fieldStyles,
+                      }}
+                    />
 
-                        <TextField
-                          label="RERA Number"
-                          placeholder="Enter RERA Number"
-                          value={formData.Rera_Number_multiple[0]?.rera_number || ""}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            setFormData((prev) => {
-                              const updated = [...prev.Rera_Number_multiple];
-                              if (updated.length === 0) {
-                                updated.push({ tower_name: "", rera_number: value, rera_url: "" });
-                              } else {
-                                updated[0] = { ...updated[0], rera_number: value };
-                              }
-                              return { ...prev, Rera_Number_multiple: updated };
+                    <TextField
+                      label="RERA Number"
+                      placeholder="Enter RERA Number"
+                      value={
+                        formData.Rera_Number_multiple[0]?.rera_number || ""
+                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData((prev) => {
+                          const updated = [...prev.Rera_Number_multiple];
+                          if (updated.length === 0) {
+                            updated.push({
+                              tower_name: "",
+                              rera_number: value,
+                              rera_url: "",
                             });
-                          }}
-                          inputProps={{ maxLength: 12 }}
-                          fullWidth
-                          variant="outlined"
-                          slotProps={{
-                            inputLabel: {
-                              shrink: true,
-                            },
-                          }}
-                          InputProps={{
-                            sx: fieldStyles,
-                          }}
-                        />
+                          } else {
+                            updated[0] = { ...updated[0], rera_number: value };
+                          }
+                          return { ...prev, Rera_Number_multiple: updated };
+                        });
+                      }}
+                      inputProps={{ maxLength: 12 }}
+                      fullWidth
+                      variant="outlined"
+                      slotProps={{
+                        inputLabel: {
+                          shrink: true,
+                        },
+                      }}
+                      InputProps={{
+                        sx: fieldStyles,
+                      }}
+                    />
 
-                        <TextField
-                          label="RERA URL"
-                          placeholder="Enter RERA URL"
-                          value={formData.Rera_Number_multiple[0]?.rera_url || ""}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            setFormData((prev) => {
-                              const updated = [...prev.Rera_Number_multiple];
-                              if (updated.length === 0) {
-                                updated.push({ tower_name: "", rera_number: "", rera_url: value });
-                              } else {
-                                updated[0] = { ...updated[0], rera_url: value };
-                              }
-                              return { ...prev, Rera_Number_multiple: updated };
+                    <TextField
+                      label="RERA URL"
+                      placeholder="Enter RERA URL"
+                      value={formData.Rera_Number_multiple[0]?.rera_url || ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData((prev) => {
+                          const updated = [...prev.Rera_Number_multiple];
+                          if (updated.length === 0) {
+                            updated.push({
+                              tower_name: "",
+                              rera_number: "",
+                              rera_url: value,
                             });
-                          }}
-                          fullWidth
-                          variant="outlined"
-                          slotProps={{
-                            inputLabel: {
-                              shrink: true,
-                            },
-                          }}
-                          InputProps={{
-                            sx: fieldStyles,
-                          }}
-                        />
-                      </div>
+                          } else {
+                            updated[0] = { ...updated[0], rera_url: value };
+                          }
+                          return { ...prev, Rera_Number_multiple: updated };
+                        });
+                      }}
+                      fullWidth
+                      variant="outlined"
+                      slotProps={{
+                        inputLabel: {
+                          shrink: true,
+                        },
+                      }}
+                      InputProps={{
+                        sx: fieldStyles,
+                      }}
+                    />
+                  </div>
 
-                      {/* Project QR Code Images Section */}
-                      <div className="mt-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Project QR Code Images
-                        </label>
-                        
-                        <div className="border border-gray-300 rounded-md p-4 min-h-[150px]">
-                          {/* Hidden input */}
-                          <input
-                            type="file"
-                            onChange={(e) => handleQRCodeImageChange(e, 0)}
-                            className="hidden"
-                            id="qr-code-file-upload-0"
-                            accept="image/*"
-                            multiple
-                          />
+                  {/* Project QR Code Images Section */}
+                  <div className="mt-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Project QR Code Images
+                    </label>
 
-                          {/* Preview section inside the box */}
-                          {(() => {
-                            const reraNumber = formData.Rera_Number_multiple[0]?.rera_number || 'default_rera';
-                            const filteredQRCodes = getQRCodesForRera(reraNumber);
-                            
-                            return filteredQRCodes.length > 0 && (
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                {filteredQRCodes.map((image, displayIndex) => {
-                                  // Find the actual index in the full array
-                                  const actualIndex = formData.project_qrcode_image.findIndex(
+                    <div className="border border-gray-300 rounded-md p-4 min-h-[150px]">
+                      {/* Hidden input */}
+                      <input
+                        type="file"
+                        onChange={(e) => handleQRCodeImageChange(e, 0)}
+                        className="hidden"
+                        id="qr-code-file-upload-0"
+                        accept="image/*"
+                        multiple
+                      />
+
+                      {/* Preview section inside the box */}
+                      {(() => {
+                        const reraNumber =
+                          formData.Rera_Number_multiple[0]?.rera_number ||
+                          "default_rera";
+                        const filteredQRCodes = getQRCodesForRera(reraNumber);
+
+                        return (
+                          filteredQRCodes.length > 0 && (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                              {filteredQRCodes.map((image, displayIndex) => {
+                                // Find the actual index in the full array
+                                const actualIndex =
+                                  formData.project_qrcode_image.findIndex(
                                     (qr) => qr === image
                                   );
-                                  
-                                  return (
-                                    <div key={actualIndex} className="relative border rounded-lg p-3 bg-gray-50">
-                                      <img
-                                        src={
-                                          image.isNew
-                                            ? URL.createObjectURL(image.project_qrcode_image)
-                                            : image.document_url || image.project_qrcode_image
-                                        }
-                                        alt={`QR Code ${displayIndex + 1}`}
-                                        className="w-full h-24 object-contain mb-2 rounded"
-                                      />
-                                      <p className="text-xs text-gray-600 text-center">
-                                        RERA: {image.title || reraNumber}
-                                      </p>
-                                      <button
-                                        type="button"
-                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                                        onClick={() => handleRemoveQRCodeImage(actualIndex)}
-                                      >
-                                        <Trash2 size={14} />
-                                      </button>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            );
-                          })()}
 
-                          {/* Upload button centered at bottom */}
-                          <div className="flex">
-                            <button
-                              type="button"
-                              onClick={() => document.getElementById("qr-code-file-upload-0")?.click()}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
-                              style={{ backgroundColor: "#c4b89d59" }}
-                            >
-                              <span className="font-medium text-sm text-gray-700">Upload Files</span>
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="#C72030"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="17 8 12 3 7 8" />
-                                <line x1="12" y1="3" x2="12" y2="15" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
+                                return (
+                                  <div
+                                    key={actualIndex}
+                                    className="relative border rounded-lg p-3 bg-gray-50"
+                                  >
+                                    <img
+                                      src={
+                                        image.isNew
+                                          ? URL.createObjectURL(
+                                              image.project_qrcode_image
+                                            )
+                                          : image.document_url ||
+                                            image.project_qrcode_image
+                                      }
+                                      alt={`QR Code ${displayIndex + 1}`}
+                                      className="w-full h-24 object-contain mb-2 rounded"
+                                    />
+                                    <p className="text-xs text-gray-600 text-center">
+                                      RERA: {image.title || reraNumber}
+                                    </p>
+                                    <button
+                                      type="button"
+                                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                      onClick={() =>
+                                        handleRemoveQRCodeImage(actualIndex)
+                                      }
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )
+                        );
+                      })()}
+
+                      {/* Upload button centered at bottom */}
+                      <div className="flex">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            document
+                              .getElementById("qr-code-file-upload-0")
+                              ?.click()
+                          }
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
+                          style={{ backgroundColor: "#c4b89d59" }}
+                        >
+                          <span className="font-medium text-sm text-gray-700">
+                            Upload Files
+                          </span>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#C72030"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
-                  ) : (
-                    <>
-                      {/* Show all saved RERA sections */}
-                      {formData.Rera_Number_multiple.map((reraEntry, entryIndex) => (
-                        <div key={entryIndex} className="p-4 border border-gray-300 rounded-md relative mb-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-medium text-gray-900">
-                              Section {entryIndex + 1}
-                            </h3>
-                            <button
-                              type="button"
-                              className="text-red-600 hover:text-red-800 p-1"
-                              onClick={() => {
-                                const updated = formData.Rera_Number_multiple.filter(
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Show all saved RERA sections */}
+                  {formData.Rera_Number_multiple.map(
+                    (reraEntry, entryIndex) => (
+                      <div
+                        key={entryIndex}
+                        className="p-4 border border-gray-300 rounded-md relative mb-6"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-sm font-medium text-gray-900">
+                            Section {entryIndex + 1}
+                          </h3>
+                          <button
+                            type="button"
+                            className="text-red-600 hover:text-red-800 p-1"
+                            onClick={() => {
+                              const updated =
+                                formData.Rera_Number_multiple.filter(
                                   (_, i) => i !== entryIndex
                                 );
+                              setFormData((prev) => ({
+                                ...prev,
+                                Rera_Number_multiple: updated,
+                              }));
+                              toast.success("RERA section deleted", {
+                                description: "Success",
+                              });
+                            }}
+                            title="Delete Section"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <TextField
+                              label="Tower"
+                              placeholder="Enter Tower Name"
+                              value={
+                                reraEntry.tower_name || reraEntry.tower || ""
+                              }
+                              onChange={(e) => {
+                                const updated = [
+                                  ...formData.Rera_Number_multiple,
+                                ];
+                                updated[entryIndex] = {
+                                  ...updated[entryIndex],
+                                  tower_name: e.target.value,
+                                };
                                 setFormData((prev) => ({
                                   ...prev,
                                   Rera_Number_multiple: updated,
                                 }));
-                                toast.success("RERA section deleted", { description: "Success" });
                               }}
-                              title="Delete Section"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                              fullWidth
+                              variant="outlined"
+                              slotProps={{
+                                inputLabel: {
+                                  shrink: true,
+                                },
+                              }}
+                              InputProps={{
+                                sx: fieldStyles,
+                              }}
+                            />
+
+                            <TextField
+                              label="RERA Number"
+                              placeholder="Enter RERA Number"
+                              value={reraEntry.rera_number || ""}
+                              onChange={(e) => {
+                                const updated = [
+                                  ...formData.Rera_Number_multiple,
+                                ];
+                                updated[entryIndex] = {
+                                  ...updated[entryIndex],
+                                  rera_number: e.target.value,
+                                };
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  Rera_Number_multiple: updated,
+                                }));
+                              }}
+                              inputProps={{ maxLength: 12 }}
+                              fullWidth
+                              variant="outlined"
+                              slotProps={{
+                                inputLabel: {
+                                  shrink: true,
+                                },
+                              }}
+                              InputProps={{
+                                sx: fieldStyles,
+                              }}
+                            />
+
+                            <TextField
+                              label="RERA URL"
+                              placeholder="Enter RERA URL"
+                              value={reraEntry.rera_url || ""}
+                              onChange={(e) => {
+                                const updated = [
+                                  ...formData.Rera_Number_multiple,
+                                ];
+                                updated[entryIndex] = {
+                                  ...updated[entryIndex],
+                                  rera_url: e.target.value,
+                                };
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  Rera_Number_multiple: updated,
+                                }));
+                              }}
+                              fullWidth
+                              variant="outlined"
+                              slotProps={{
+                                inputLabel: {
+                                  shrink: true,
+                                },
+                              }}
+                              InputProps={{
+                                sx: fieldStyles,
+                              }}
+                            />
                           </div>
 
-                          <div className="grid grid-cols-1 gap-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <TextField
-                                label="Tower"
-                                placeholder="Enter Tower Name"
-                                value={reraEntry.tower_name || reraEntry.tower || ""}
-                                onChange={(e) => {
-                                  const updated = [...formData.Rera_Number_multiple];
-                                  updated[entryIndex] = {
-                                    ...updated[entryIndex],
-                                    tower_name: e.target.value,
-                                  };
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    Rera_Number_multiple: updated,
-                                  }));
-                                }}
-                                fullWidth
-                                variant="outlined"
-                                slotProps={{
-                                  inputLabel: {
-                                    shrink: true,
-                                  },
-                                }}
-                                InputProps={{
-                                  sx: fieldStyles,
-                                }}
+                          {/* Project QR Code Images Section */}
+                          <div className="mt-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Project QR Code Images
+                            </label>
+
+                            <div className="border border-gray-300 rounded-md p-4 min-h-[150px]">
+                              {/* Hidden input */}
+                              <input
+                                type="file"
+                                onChange={(e) =>
+                                  handleQRCodeImageChange(e, entryIndex)
+                                }
+                                className="hidden"
+                                id={`qr-code-file-upload-${entryIndex}`}
+                                accept="image/*"
+                                multiple
                               />
 
-                              <TextField
-                                label="RERA Number"
-                                placeholder="Enter RERA Number"
-                                value={reraEntry.rera_number || ""}
-                                onChange={(e) => {
-                                  const updated = [...formData.Rera_Number_multiple];
-                                  updated[entryIndex] = {
-                                    ...updated[entryIndex],
-                                    rera_number: e.target.value,
-                                  };
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    Rera_Number_multiple: updated,
-                                  }));
-                                }}
-                                inputProps={{ maxLength: 12 }}
-                                fullWidth
-                                variant="outlined"
-                                slotProps={{
-                                  inputLabel: {
-                                    shrink: true,
-                                  },
-                                }}
-                                InputProps={{
-                                  sx: fieldStyles,
-                                }}
-                              />
+                              {/* Preview section inside the box */}
+                              {(() => {
+                                const reraNumber =
+                                  reraEntry.rera_number || `rera_${entryIndex}`;
+                                const filteredQRCodes =
+                                  getQRCodesForRera(reraNumber);
 
-                              <TextField
-                                label="RERA URL"
-                                placeholder="Enter RERA URL"
-                                value={reraEntry.rera_url || ""}
-                                onChange={(e) => {
-                                  const updated = [...formData.Rera_Number_multiple];
-                                  updated[entryIndex] = {
-                                    ...updated[entryIndex],
-                                    rera_url: e.target.value,
-                                  };
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    Rera_Number_multiple: updated,
-                                  }));
-                                }}
-                                fullWidth
-                                variant="outlined"
-                                slotProps={{
-                                  inputLabel: {
-                                    shrink: true,
-                                  },
-                                }}
-                                InputProps={{
-                                  sx: fieldStyles,
-                                }}
-                              />
-                            </div>
-
-                            {/* Project QR Code Images Section */}
-                            <div className="mt-6">
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Project QR Code Images
-                              </label>
-                              
-                              <div className="border border-gray-300 rounded-md p-4 min-h-[150px]">
-                                {/* Hidden input */}
-                                <input
-                                  type="file"
-                                  onChange={(e) => handleQRCodeImageChange(e, entryIndex)}
-                                  className="hidden"
-                                  id={`qr-code-file-upload-${entryIndex}`}
-                                  accept="image/*"
-                                  multiple
-                                />
-
-                                {/* Preview section inside the box */}
-                                {(() => {
-                                  const reraNumber = reraEntry.rera_number || `rera_${entryIndex}`;
-                                  const filteredQRCodes = getQRCodesForRera(reraNumber);
-                                  
-                                  return filteredQRCodes.length > 0 && (
+                                return (
+                                  filteredQRCodes.length > 0 && (
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                      {filteredQRCodes.map((image, displayIndex) => {
-                                        // Find the actual index in the full array
-                                        const actualIndex = formData.project_qrcode_image.findIndex(
-                                          (qr) => qr === image
-                                        );
-                                        
-                                        return (
-                                          <div key={actualIndex} className="relative border rounded-lg p-3 bg-gray-50">
-                                            <img
-                                              src={
-                                                image.isNew
-                                                  ? URL.createObjectURL(image.project_qrcode_image)
-                                                  : image.document_url || image.project_qrcode_image
-                                              }
-                                              alt={`QR Code ${displayIndex + 1}`}
-                                              className="w-full h-24 object-contain mb-2 rounded"
-                                            />
-                                            <p className="text-xs text-gray-600 text-center">
-                                              RERA: {image.title || reraNumber}
-                                            </p>
-                                            <button
-                                              type="button"
-                                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                                              onClick={() => handleRemoveQRCodeImage(actualIndex)}
-                                            >
-                                              <Trash2 size={14} />
-                                            </button>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  );
-                                })()}
+                                      {filteredQRCodes.map(
+                                        (image, displayIndex) => {
+                                          // Find the actual index in the full array
+                                          const actualIndex =
+                                            formData.project_qrcode_image.findIndex(
+                                              (qr) => qr === image
+                                            );
 
-                                {/* Upload button centered at bottom */}
-                                <div className="flex">
-                                  <button
-                                    type="button"
-                                    onClick={() => document.getElementById(`qr-code-file-upload-${entryIndex}`)?.click()}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
-                                    style={{ backgroundColor: "#c4b89d59" }}
+                                          return (
+                                            <div
+                                              key={actualIndex}
+                                              className="relative border rounded-lg p-3 bg-gray-50"
+                                            >
+                                              <img
+                                                src={
+                                                  image.isNew
+                                                    ? URL.createObjectURL(
+                                                        image.project_qrcode_image
+                                                      )
+                                                    : image.document_url ||
+                                                      image.project_qrcode_image
+                                                }
+                                                alt={`QR Code ${displayIndex + 1}`}
+                                                className="w-full h-24 object-contain mb-2 rounded"
+                                              />
+                                              <p className="text-xs text-gray-600 text-center">
+                                                RERA:{" "}
+                                                {image.title || reraNumber}
+                                              </p>
+                                              <button
+                                                type="button"
+                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                                onClick={() =>
+                                                  handleRemoveQRCodeImage(
+                                                    actualIndex
+                                                  )
+                                                }
+                                              >
+                                                <Trash2 size={14} />
+                                              </button>
+                                            </div>
+                                          );
+                                        }
+                                      )}
+                                    </div>
+                                  )
+                                );
+                              })()}
+
+                              {/* Upload button centered at bottom */}
+                              <div className="flex">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    document
+                                      .getElementById(
+                                        `qr-code-file-upload-${entryIndex}`
+                                      )
+                                      ?.click()
+                                  }
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition"
+                                  style={{ backgroundColor: "#c4b89d59" }}
+                                >
+                                  <span className="font-medium text-sm text-gray-700">
+                                    Upload Files
+                                  </span>
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="#C72030"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
                                   >
-                                    <span className="font-medium text-sm text-gray-700">Upload Files</span>
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      width="16"
-                                      height="16"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      stroke="#C72030"
-                                      strokeWidth="2"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    >
-                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                      <polyline points="17 8 12 3 7 8" />
-                                      <line x1="12" y1="3" x2="12" y2="15" />
-                                    </svg>
-                                  </button>
-                                </div>
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="17 8 12 3 7 8" />
+                                    <line x1="12" y1="3" x2="12" y2="15" />
+                                  </svg>
+                                </button>
                               </div>
                             </div>
                           </div>
                         </div>
-                      ))}
-
-                      {/* Add RERA Button - Only adds new empty section */}
-                      <div className="flex justify-end mt-4">
-                        <button
-                          type="button"
-                          className="flex items-center gap-2 px-6 py-2.5 rounded-md text-[#C72030] font-medium transition-colors"
-                          style={{
-                            height: "45px",
-                            backgroundColor: "#C4B89D59",
-                          }}
-                          onClick={() => {
-                            // Add empty section - data will be saved when typing in the fields
-                            setFormData((prev) => ({
-                              ...prev,
-                              Rera_Number_multiple: [
-                                ...prev.Rera_Number_multiple,
-                                {
-                                  tower_name: "",
-                                  rera_number: "",
-                                  rera_url: "",
-                                },
-                              ],
-                            }));
-                            toast.success("New RERA section added. Fill in the details and click Update to save.", { description: "Success" });
-                          }}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width={20}
-                            height={20}
-                            fill="currentColor"
-                            viewBox="0 0 16 16"
-                          >
-                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                          </svg>
-                          Add RERA
-                        </button>
                       </div>
-                    </>
+                    )
                   )}
-                </div>
-              </div>
-            </>
-          {/* // )} */}
+
+                  {/* Add RERA Button - Only adds new empty section */}
+                  <div className="flex justify-end mt-4">
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 px-6 py-2.5 rounded-md text-[#C72030] font-medium transition-colors"
+                      style={{
+                        height: "45px",
+                        backgroundColor: "#C4B89D59",
+                      }}
+                      onClick={() => {
+                        // Add empty section - data will be saved when typing in the fields
+                        setFormData((prev) => ({
+                          ...prev,
+                          Rera_Number_multiple: [
+                            ...prev.Rera_Number_multiple,
+                            {
+                              tower_name: "",
+                              rera_number: "",
+                              rera_url: "",
+                            },
+                          ],
+                        }));
+                        toast.success(
+                          "New RERA section added. Fill in the details and click Update to save.",
+                          { description: "Success" }
+                        );
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width={20}
+                        height={20}
+                        fill="currentColor"
+                        viewBox="0 0 16 16"
+                      >
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
+                      </svg>
+                      Add RERA
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+        {/* // )} */}
 
         {/* RERA Section - copy from create, but show existing data */}
         {/* Amenities, Address, Plans, File Upload sections - all copied from create */}
         {/* Amenities Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+          <div
+            className="px-6 py-3 border-b border-gray-200"
+            style={{ backgroundColor: "#F6F4EE" }}
+          >
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -3671,7 +4187,10 @@ const ProjectDetailsEdit = () => {
               Amenities
             </h2>
           </div>
-            <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
+          <div
+            className="p-6 space-y-6"
+            style={{ backgroundColor: "#AAB9C50D" }}
+          >
             <div className="grid grid-cols-1 gap-4">
               <div className="w-full md:w-1/3">
                 <div className="relative">
@@ -3680,58 +4199,80 @@ const ProjectDetailsEdit = () => {
                   </label>
                   <Select
                     isMulti
-                    value={Array.isArray(formData.Amenities)
-                      ? formData.Amenities.map((a) => ({
-                          value: typeof a?.id === 'string' ? parseInt(a.id, 10) : a?.id,
-                          label: a?.name || '',
-                        })).filter((opt) => opt.value && opt.label)
-                      : []}
+                    value={
+                      Array.isArray(formData.Amenities)
+                        ? formData.Amenities.map((a) => ({
+                            value:
+                              typeof a?.id === "string"
+                                ? parseInt(a.id, 10)
+                                : a?.id,
+                            label: a?.name || "",
+                          })).filter((opt) => opt.value && opt.label)
+                        : []
+                    }
                     onChange={(selected, actionMeta) => {
                       // Handle removal
-                      if (actionMeta.action === 'remove-value' || actionMeta.action === 'pop-value') {
+                      if (
+                        actionMeta.action === "remove-value" ||
+                        actionMeta.action === "pop-value"
+                      ) {
                         handleDeleteAmenity(actionMeta.removedValue);
                         return;
                       }
-                      
+
                       // Handle adding new amenities
-                      if (actionMeta.action === 'select-option') {
+                      if (actionMeta.action === "select-option") {
                         const newAmenity = actionMeta.option;
-                        const amenity = amenities.find((a) => a.id === newAmenity.value);
+                        const amenity = amenities.find(
+                          (a) => a.id === newAmenity.value
+                        );
                         if (amenity) {
                           setFormData((prev) => ({
                             ...prev,
-                            Amenities: [...prev.Amenities, { id: amenity.id, name: amenity.name }],
+                            Amenities: [
+                              ...prev.Amenities,
+                              { id: amenity.id, name: amenity.name },
+                            ],
                           }));
                         }
                         return;
                       }
 
                       // Handle clear all
-                      if (actionMeta.action === 'clear') {
+                      if (actionMeta.action === "clear") {
                         // Delete all amenities
-                        const deletePromises = formData.Amenities
-                          .filter(a => a.association_id)
-                          .map(a => 
-                            axios.delete(
+                        const deletePromises = formData.Amenities.filter(
+                          (a) => a.association_id
+                        ).map((a) =>
+                          axios
+                            .delete(
                               getFullUrl(`/amenities/${a.association_id}.json`),
                               {
                                 headers: {
                                   Authorization: getAuthHeader(),
                                 },
                               }
-                            ).catch(err => console.error('Error deleting amenity:', err))
-                          );
-                        
+                            )
+                            .catch((err) =>
+                              console.error("Error deleting amenity:", err)
+                            )
+                        );
+
                         Promise.all(deletePromises).then(() => {
                           setFormData((prev) => ({
                             ...prev,
                             Amenities: [],
                           }));
-                          toast.success("All amenities removed", { description: "Success" });
+                          toast.success("All amenities removed", {
+                            description: "Success",
+                          });
                         });
                       }
                     }}
-                    options={amenities.map((a) => ({ value: a.id, label: a.name }))}
+                    options={amenities.map((a) => ({
+                      value: a.id,
+                      label: a.name,
+                    }))}
                     styles={customStyles}
                     components={{
                       MultiValue: CustomMultiValue,
@@ -3749,7 +4290,10 @@ const ProjectDetailsEdit = () => {
 
         {/* Connectivity Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+          <div
+            className="px-6 py-3 border-b border-gray-200"
+            style={{ backgroundColor: "#F6F4EE" }}
+          >
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -3760,45 +4304,64 @@ const ProjectDetailsEdit = () => {
               Connectivity
             </h2>
           </div>
-          <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
+          <div
+            className="p-6 space-y-6"
+            style={{ backgroundColor: "#AAB9C50D" }}
+          >
             {formData.connectivities.length === 0 ? (
               <div className="grid grid-cols-1 gap-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormControl fullWidth variant="outlined">
-                    <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                    <InputLabel
+                      shrink
+                      sx={{
+                        backgroundColor: "white",
+                        px: 1,
+                        "&.Mui-focused": { color: "#C72030" },
+                      }}
+                    >
                       Type
                     </InputLabel>
                     <MUISelect
-                      value={formData.connectivities[0]?.connectivity_type_id || ''}
+                      value={
+                        formData.connectivities[0]?.connectivity_type_id || ""
+                      }
                       onChange={(e) => {
                         const value = e.target.value;
                         setFormData((prev) => {
                           const updated = [...prev.connectivities];
                           if (updated.length === 0) {
-                            updated.push({ connectivity_type_id: value, place_name: '', image: null });
+                            updated.push({
+                              connectivity_type_id: value,
+                              place_name: "",
+                              image: null,
+                            });
                           } else {
-                            updated[0] = { ...updated[0], connectivity_type_id: value };
+                            updated[0] = {
+                              ...updated[0],
+                              connectivity_type_id: value,
+                            };
                           }
                           return { ...prev, connectivities: updated };
                         });
                       }}
                       displayEmpty
                       sx={{
-                        height: '45px',
-                        backgroundColor: '#fff',
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#ddd',
+                        height: "45px",
+                        backgroundColor: "#fff",
+                        "& .MuiOutlinedInput-notchedOutline": {
+                          borderColor: "#ddd",
                         },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#C72030',
+                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                          borderColor: "#C72030",
                         },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#C72030',
+                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                          borderColor: "#C72030",
                         },
                       }}
                     >
                       <MenuItem value="" disabled>
-                        <span style={{ color: '#999' }}>Select Type</span>
+                        <span style={{ color: "#999" }}>Select Type</span>
                       </MenuItem>
                       {connectivityTypes.map((type) => (
                         <MenuItem key={type.id} value={type.id}>
@@ -3811,15 +4374,53 @@ const ProjectDetailsEdit = () => {
                   <TextField
                     label="Place Name"
                     placeholder="Enter Place Name"
-                    value={formData.connectivities[0]?.place_name || ''}
+                    value={formData.connectivities[0]?.place_name || ""}
                     onChange={(e) => {
                       const value = e.target.value;
                       setFormData((prev) => {
                         const updated = [...prev.connectivities];
                         if (updated.length === 0) {
-                          updated.push({ connectivity_type_id: '', place_name: value, image: null });
+                          updated.push({
+                            connectivity_type_id: "",
+                            place_name: value,
+                            distance: "",
+                            image: null,
+                          });
                         } else {
                           updated[0] = { ...updated[0], place_name: value };
+                        }
+                        return { ...prev, connectivities: updated };
+                      });
+                    }}
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
+                    InputProps={{
+                      sx: fieldStyles,
+                    }}
+                  />
+
+                  <TextField
+                    label="Distance"
+                    placeholder="e.g. 4.4KM"
+                    value={formData.connectivities[0]?.distance || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData((prev) => {
+                        const updated = [...prev.connectivities];
+                        if (updated.length === 0) {
+                          updated.push({
+                            connectivity_type_id: "",
+                            place_name: "",
+                            distance: value,
+                            image: null,
+                          });
+                        } else {
+                          updated[0] = { ...updated[0], distance: value };
                         }
                         return { ...prev, connectivities: updated };
                       });
@@ -3927,7 +4528,10 @@ const ProjectDetailsEdit = () => {
             ) : (
               <>
                 {formData.connectivities.map((connectivity, index) => (
-                  <div key={index} className="p-4 border border-gray-300 rounded-md relative mb-4">
+                  <div
+                    key={index}
+                    className="p-4 border border-gray-300 rounded-md relative mb-4"
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-sm font-medium text-gray-900">
                         Section {index + 1}
@@ -3943,31 +4547,45 @@ const ProjectDetailsEdit = () => {
                     </div>
 
                     <div className="grid grid-cols-1 gap-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <FormControl fullWidth variant="outlined">
-                          <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                          <InputLabel
+                            shrink
+                            sx={{
+                              backgroundColor: "white",
+                              px: 1,
+                              "&.Mui-focused": { color: "#C72030" },
+                            }}
+                          >
                             Type
                           </InputLabel>
                           <MUISelect
-                            value={connectivity.connectivity_type_id || ''}
-                            onChange={(e) => handleConnectivityChange(index, 'connectivity_type_id', e.target.value)}
+                            value={connectivity.connectivity_type_id || ""}
+                            onChange={(e) =>
+                              handleConnectivityChange(
+                                index,
+                                "connectivity_type_id",
+                                e.target.value
+                              )
+                            }
                             displayEmpty
                             sx={{
-                              height: '45px',
-                              backgroundColor: '#fff',
-                              '& .MuiOutlinedInput-notchedOutline': {
-                                borderColor: '#ddd',
+                              height: "45px",
+                              backgroundColor: "#fff",
+                              "& .MuiOutlinedInput-notchedOutline": {
+                                borderColor: "#ddd",
                               },
-                              '&:hover .MuiOutlinedInput-notchedOutline': {
-                                borderColor: '#C72030',
+                              "&:hover .MuiOutlinedInput-notchedOutline": {
+                                borderColor: "#C72030",
                               },
-                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                borderColor: '#C72030',
-                              },
+                              "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                {
+                                  borderColor: "#C72030",
+                                },
                             }}
                           >
                             <MenuItem value="" disabled>
-                              <span style={{ color: '#999' }}>Select Type</span>
+                              <span style={{ color: "#999" }}>Select Type</span>
                             </MenuItem>
                             {connectivityTypes.map((type) => (
                               <MenuItem key={type.id} value={type.id}>
@@ -3980,8 +4598,37 @@ const ProjectDetailsEdit = () => {
                         <TextField
                           label="Place Name"
                           placeholder="Enter Place Name"
-                          value={connectivity.place_name || ''}
-                          onChange={(e) => handleConnectivityChange(index, 'place_name', e.target.value)}
+                          value={connectivity.place_name || ""}
+                          onChange={(e) =>
+                            handleConnectivityChange(
+                              index,
+                              "place_name",
+                              e.target.value
+                            )
+                          }
+                          fullWidth
+                          variant="outlined"
+                          slotProps={{
+                            inputLabel: {
+                              shrink: true,
+                            },
+                          }}
+                          InputProps={{
+                            sx: fieldStyles,
+                          }}
+                        />
+
+                        <TextField
+                          label="Distance"
+                          placeholder="e.g. 4.4KM"
+                          value={connectivity.distance || ""}
+                          onChange={(e) =>
+                            handleConnectivityChange(
+                              index,
+                              "distance",
+                              e.target.value
+                            )
+                          }
                           fullWidth
                           variant="outlined"
                           slotProps={{
@@ -4077,9 +4724,9 @@ const ProjectDetailsEdit = () => {
                 onClick={handleAddConnectivity}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md"
                 style={{
-                  backgroundColor: '#EDEAE3',
-                  border: '1px solid #C72030',
-                  color: '#C72030',
+                  backgroundColor: "#EDEAE3",
+                  border: "1px solid #C72030",
+                  color: "#C72030",
                 }}
               >
                 <span>Add</span>
@@ -4090,7 +4737,10 @@ const ProjectDetailsEdit = () => {
 
         {/* Address Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+          <div
+            className="px-6 py-3 border-b border-gray-200"
+            style={{ backgroundColor: "#F6F4EE" }}
+          >
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -4101,7 +4751,10 @@ const ProjectDetailsEdit = () => {
               Address
             </h2>
           </div>
-           <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
+          <div
+            className="p-6 space-y-6"
+            style={{ backgroundColor: "#AAB9C50D" }}
+          >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <TextField
                 label="Address Line 1"
@@ -4253,7 +4906,8 @@ const ProjectDetailsEdit = () => {
             </div>
           </div>
         </div>
-        {(API_CONFIG.BASE_URL === "https://dev-panchshil-super-app.lockated.com/" ||
+        {(API_CONFIG.BASE_URL ===
+          "https://dev-panchshil-super-app.lockated.com/" ||
           API_CONFIG.BASE_URL === "https://rustomjee-live.lockated.com/") && (
           <div className="card mt-3 pb-4 mx-4">
             <div className="card-header3">
@@ -4400,7 +5054,10 @@ const ProjectDetailsEdit = () => {
           </div>
         )}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
+          <div
+            className="px-6 py-3 border-b border-gray-200"
+            style={{ backgroundColor: "#F6F4EE" }}
+          >
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <span
                 className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
@@ -4411,13 +5068,16 @@ const ProjectDetailsEdit = () => {
               File Uploads
             </h2>
           </div>
-           <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
+          <div
+            className="p-6 space-y-6"
+            style={{ backgroundColor: "#AAB9C50D" }}
+          >
             <div className="row">
               <div className="col-12 mb-4"></div>
               <div className="mb-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
-                   <h5 className="section-heading inline-flex items-center gap-1">
+                  <h5 className="section-heading inline-flex items-center gap-1">
                     Project Banner{" "}
                     <span
                       className="relative inline-block cursor-pointer"
@@ -4553,14 +5213,14 @@ const ProjectDetailsEdit = () => {
               <div className="mb-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
-                    <h5 className="section-heading inline-flex items-center gap-1">
+                  <h5 className="section-heading inline-flex items-center gap-1">
                     Project Cover Image{" "}
                     <span
                       className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowTooltipCover(true)}
                       onMouseLeave={() => setShowTooltipCover(false)}
                     >
-                    <Info className="w-5 h-5 fill-black text-white" />
+                      <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipCover && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10 m-5">
                           Max Upload Size 5 MB and{" "}
@@ -4685,7 +5345,7 @@ const ProjectDetailsEdit = () => {
                                   // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                   onClick={() => discardImage(key, file)}
                                 >
-                                 <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
                                 </button>
                               </td>
                             </tr>
@@ -4716,7 +5376,7 @@ const ProjectDetailsEdit = () => {
               <div className="mb-6">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">
-                    <h5 className="section-heading inline-flex items-center gap-1">
+                  <h5 className="section-heading inline-flex items-center gap-1">
                     Gallery Images{" "}
                     <span
                       className="relative inline-block cursor-pointer"
@@ -4726,7 +5386,7 @@ const ProjectDetailsEdit = () => {
                       <Info className="w-5 h-5 fill-black text-white" />
                       {showTooltipGallery && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10 m-12">
-                          Max Upload Size 3 MB and {" "}
+                          Max Upload Size 3 MB and{" "}
                           {getDynamicRatiosText("ProjectGallery")}
                         </span>
                       )}
@@ -4902,7 +5562,7 @@ const ProjectDetailsEdit = () => {
                                   // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                   onClick={() => discardImage(key, file)}
                                 >
-                                 <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
                                 </button>
                               </td>
                             </tr>
@@ -5110,10 +5770,13 @@ const ProjectDetailsEdit = () => {
                       {formData.brochure.length > 0
                         ? formData.brochure.map((brochure, index) => {
                             // Handle both File objects and API response objects
-                            const fileName = brochure instanceof File 
-                              ? brochure.name 
-                              : (brochure.document_file_name || brochure.name || 'Unknown');
-                            
+                            const fileName =
+                              brochure instanceof File
+                                ? brochure.name
+                                : brochure.document_file_name ||
+                                  brochure.name ||
+                                  "Unknown";
+
                             return (
                               <tr
                                 key={`brochures-${index}`}
@@ -5142,8 +5805,8 @@ const ProjectDetailsEdit = () => {
               </div>
               {/* {baseURL !== "https://dev-panchshil-super-app.lockated.com/" &&
                 baseURL !== "https://rustomjee-live.lockated.com/" && ( */}
-                  <>
-                    {/* <div className="mb-6">
+              <>
+                {/* <div className="mb-6">
                     
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
@@ -5227,122 +5890,129 @@ const ProjectDetailsEdit = () => {
                         </table>
                       </div>
                     </div> */}
-                    <div className="mb-6">
-                     
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="section-heading inline-flex items-center gap-1">
-                          Layouts & Floor Plans{" "}
-                          <span
-                            className="relative inline-block cursor-pointer"
-                            onMouseEnter={() => setShowTooltipLayout(true)}
-                            onMouseLeave={() => setShowTooltipLayout(false)}
-                          >
-                            <Info className="w-5 h-5 fill-black text-white" />
-                            {showTooltipLayout && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                                Max Upload Size 3 MB
-                              </span>
-                            )}
+                <div className="mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h5 className="section-heading inline-flex items-center gap-1">
+                      Layouts & Floor Plans{" "}
+                      <span
+                        className="relative inline-block cursor-pointer"
+                        onMouseEnter={() => setShowTooltipLayout(true)}
+                        onMouseLeave={() => setShowTooltipLayout(false)}
+                      >
+                        <Info className="w-5 h-5 fill-black text-white" />
+                        {showTooltipLayout && (
+                          <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                            Max Upload Size 3 MB
                           </span>
-                        </h5>
+                        )}
+                      </span>
+                    </h5>
 
-                        <button
-                          type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-                          onClick={() =>
-                            document.getElementById("project_layout").click()
-                          }
-                        >
-                         
-                          <span>Add</span>
-                        </button>
-                      </div>
-                      <input
-                        id="project_layout"
-                        className="form-control"
-                        type="file"
-                        name="project_layout"
-                         accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
-                        onChange={(e) =>
-                          handleFileUpload("project_layout", e.target.files)
-                        }
-                        style={{ display: "none" }}
-                      />
-                    
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full border-separate">
-                          <thead>
-                            <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
-                                style={{ borderColor: "#fff" }}
-                              >
-                                File Name
-                              </th>
-                              <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
-                                style={{ borderColor: "#fff" }}
-                              >
-                                Preview
-                              </th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">
-                                Action
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.project_layout.map((file, index) => {
-                              // Handle both File objects (new uploads) and API response objects (existing files)
-                              const fileName = file instanceof File ? file.name : (file.document_file_name || file.name || 'Unknown');
-                              const isImage = file instanceof File 
-                                ? file.type?.startsWith("image")
-                                : file.document_content_type?.startsWith("image");
-                              const imageUrl = file instanceof File
-                                ? URL.createObjectURL(file)
-                                : file.document_url;
-                              
-                              return (
-                                <tr
-                                  key={index}
-                                  className="hover:bg-gray-50 transition-colors"
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                      onClick={() =>
+                        document.getElementById("project_layout").click()
+                      }
+                    >
+                      <span>Add</span>
+                    </button>
+                  </div>
+                  <input
+                    id="project_layout"
+                    className="form-control"
+                    type="file"
+                    name="project_layout"
+                    accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
+                    onChange={(e) =>
+                      handleFileUpload("project_layout", e.target.files)
+                    }
+                    style={{ display: "none" }}
+                  />
+
+                  <div className="rounded-lg border border-gray-200 overflow-hidden">
+                    <table className="w-full border-separate">
+                      <thead>
+                        <tr style={{ backgroundColor: "#e6e2d8" }}>
+                          <th
+                            className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
+                            style={{ borderColor: "#fff" }}
+                          >
+                            File Name
+                          </th>
+                          <th
+                            className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
+                            style={{ borderColor: "#fff" }}
+                          >
+                            Preview
+                          </th>
+                          <th className="font-semibold text-gray-900 py-3 px-4 text-left">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {formData.project_layout.map((file, index) => {
+                          // Handle both File objects (new uploads) and API response objects (existing files)
+                          const fileName =
+                            file instanceof File
+                              ? file.name
+                              : file.document_file_name ||
+                                file.name ||
+                                "Unknown";
+                          const isImage =
+                            file instanceof File
+                              ? file.type?.startsWith("image")
+                              : file.document_content_type?.startsWith("image");
+                          const imageUrl =
+                            file instanceof File
+                              ? URL.createObjectURL(file)
+                              : file.document_url;
+
+                          return (
+                            <tr
+                              key={index}
+                              className="hover:bg-gray-50 transition-colors"
+                            >
+                              <td className="py-3 px-4 font-medium">
+                                {fileName}
+                              </td>
+                              <td className="py-3 px-4">
+                                {isImage && imageUrl ? (
+                                  <img
+                                    style={{
+                                      maxWidth: 100,
+                                      maxHeight: 100,
+                                      objectFit: "cover",
+                                    }}
+                                    className="rounded border border-gray-200"
+                                    src={imageUrl}
+                                    alt={fileName}
+                                  />
+                                ) : (
+                                  <span className="text-gray-500">
+                                    No preview
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDiscardFile("project_layout", index)
+                                  }
                                 >
-                                  <td className="py-3 px-4 font-medium">
-                                    {fileName}
-                                  </td>
-                                  <td className="py-3 px-4">
-                                    {isImage && imageUrl ? (
-                                      <img
-                                        style={{
-                                          maxWidth: 100,
-                                          maxHeight: 100,
-                                          objectFit: "cover",
-                                        }}
-                                        className="rounded border border-gray-200"
-                                        src={imageUrl}
-                                        alt={fileName}
-                                      />
-                                    ) : (
-                                      <span className="text-gray-500">No preview</span>
-                                    )}
-                                  </td>
-                                  <td className="py-3 px-4">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleDiscardFile("project_layout", index)
-                                      }
-                                    >
-                                      <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    {/* <div className="mb-6">
+                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                {/* <div className="mb-6">
                       
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
@@ -5462,7 +6132,7 @@ const ProjectDetailsEdit = () => {
                         </table>
                       </div>
                     </div> */}
-                    {/* <div className="mb-6">
+                {/* <div className="mb-6">
                      
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
@@ -5587,34 +6257,34 @@ const ProjectDetailsEdit = () => {
                         </table>
                       </div>
                     </div> */}
-                    <div className="mb-6">
-                      {/* Header */}
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="section-heading inline-flex items-center gap-1">
-                          Project Offers{" "}
-                          <span
-                            className="relative inline-block cursor-pointer"
-                            onMouseEnter={() => setShowTooltipCreativeOffers(true)}
-                            onMouseLeave={() => setShowTooltipCreativeOffers(false)}
-                          >
-                            <Info className="w-5 h-5 fill-black text-white" />
-                            {showTooltipCreativeOffers && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                                Max Upload Size 3 MB
-                              </span>
-                            )}
+                <div className="mb-6">
+                  {/* Header */}
+                  <div className="flex justify-between items-center mb-4">
+                    <h5 className="section-heading inline-flex items-center gap-1">
+                      Project Offers{" "}
+                      <span
+                        className="relative inline-block cursor-pointer"
+                        onMouseEnter={() => setShowTooltipCreativeOffers(true)}
+                        onMouseLeave={() => setShowTooltipCreativeOffers(false)}
+                      >
+                        <Info className="w-5 h-5 fill-black text-white" />
+                        {showTooltipCreativeOffers && (
+                          <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                            Max Upload Size 3 MB
                           </span>
-                        </h5>
-                        <button
-                          type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-                          onClick={() =>
-                            document
-                              .getElementById("project_creative_offers")
-                              .click()
-                          }
-                        >
-                          {/* <svg
+                        )}
+                      </span>
+                    </h5>
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                      onClick={() =>
+                        document
+                          .getElementById("project_creative_offers")
+                          .click()
+                      }
+                    >
+                      {/* <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width={20}
                             height={20}
@@ -5623,104 +6293,111 @@ const ProjectDetailsEdit = () => {
                           >
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
                           </svg> */}
-                          <span>Add</span>
-                        </button>
-                        <input
-                          id="project_creative_offers"
-                          className="form-control"
-                          type="file"
-                          name="project_creative_offers"
-                          accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
-                          onChange={(e) =>
-                            handleFileUpload(
-                              "project_creative_offers",
-                              e.target.files
-                            )
-                          }
-                          multiple
-                          style={{ display: "none" }}
-                        />
-                      </div>
-                      {/* Table */}
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full border-separate">
-                          <thead>
-                            <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
-                                style={{ borderColor: "#fff" }}
-                              >
-                                File Name
-                              </th>
-                              <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
-                                style={{ borderColor: "#fff" }}
-                              >
-                                Preview
-                              </th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 text-left">
-                                Action
-                              </th>
+                      <span>Add</span>
+                    </button>
+                    <input
+                      id="project_creative_offers"
+                      className="form-control"
+                      type="file"
+                      name="project_creative_offers"
+                      accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
+                      onChange={(e) =>
+                        handleFileUpload(
+                          "project_creative_offers",
+                          e.target.files
+                        )
+                      }
+                      multiple
+                      style={{ display: "none" }}
+                    />
+                  </div>
+                  {/* Table */}
+                  <div className="rounded-lg border border-gray-200 overflow-hidden">
+                    <table className="w-full border-separate">
+                      <thead>
+                        <tr style={{ backgroundColor: "#e6e2d8" }}>
+                          <th
+                            className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
+                            style={{ borderColor: "#fff" }}
+                          >
+                            File Name
+                          </th>
+                          <th
+                            className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
+                            style={{ borderColor: "#fff" }}
+                          >
+                            Preview
+                          </th>
+                          <th className="font-semibold text-gray-900 py-3 px-4 text-left">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {formData.project_creative_offers.map((file, index) => {
+                          // Handle both File objects (new uploads) and API response objects (existing files)
+                          const fileName =
+                            file instanceof File
+                              ? file.name
+                              : file.document_file_name ||
+                                file.name ||
+                                "Unknown";
+                          const isImage =
+                            file instanceof File
+                              ? file.type?.startsWith("image")
+                              : file.document_content_type?.startsWith("image");
+                          const imageUrl =
+                            file instanceof File
+                              ? URL.createObjectURL(file)
+                              : file.document_url;
+
+                          return (
+                            <tr
+                              key={index}
+                              className="hover:bg-gray-50 transition-colors"
+                            >
+                              <td className="py-3 px-4 font-medium">
+                                {fileName}
+                              </td>
+                              <td className="py-3 px-4">
+                                {isImage && imageUrl ? (
+                                  <img
+                                    style={{
+                                      maxWidth: 100,
+                                      maxHeight: 100,
+                                      objectFit: "cover",
+                                    }}
+                                    className="rounded border border-gray-200"
+                                    src={imageUrl}
+                                    alt={fileName}
+                                  />
+                                ) : (
+                                  <span className="text-gray-500">
+                                    No preview
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDiscardFile(
+                                      "project_creative_offers",
+                                      index
+                                    )
+                                  }
+                                >
+                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                </button>
+                              </td>
                             </tr>
-                          </thead>
-                          <tbody>
-                            {formData.project_creative_offers.map(
-                              (file, index) => {
-                                // Handle both File objects (new uploads) and API response objects (existing files)
-                                const fileName = file instanceof File ? file.name : (file.document_file_name || file.name || 'Unknown');
-                                const isImage = file instanceof File 
-                                  ? file.type?.startsWith("image")
-                                  : file.document_content_type?.startsWith("image");
-                                const imageUrl = file instanceof File
-                                  ? URL.createObjectURL(file)
-                                  : file.document_url;
-                                
-                                return (
-                                  <tr
-                                    key={index}
-                                    className="hover:bg-gray-50 transition-colors"
-                                  >
-                                    <td className="py-3 px-4 font-medium">
-                                      {fileName}
-                                    </td>
-                                    <td className="py-3 px-4">
-                                      {isImage && imageUrl ? (
-                                        <img
-                                          style={{
-                                            maxWidth: 100,
-                                            maxHeight: 100,
-                                            objectFit: "cover",
-                                          }}
-                                          className="rounded border border-gray-200"
-                                          src={imageUrl}
-                                          alt={fileName}
-                                        />
-                                      ) : (
-                                        <span className="text-gray-500">No preview</span>
-                                      )}
-                                    </td>
-                                    <td className="py-3 px-4">
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          handleDiscardFile(
-                                            "project_creative_offers",
-                                            index
-                                          )
-                                        }
-                                      >
-                                        <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                      </button>
-                                    </td>
-                                  </tr>
-                                );
-                              }
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    {/* <div className="mb-6">
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                {/* <div className="mb-6">
                      
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
@@ -5841,7 +6518,7 @@ const ProjectDetailsEdit = () => {
                         </table>
                       </div>
                     </div> */}
-                    {/* <div className="mb-6">
+                {/* <div className="mb-6">
                     
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
@@ -5962,7 +6639,7 @@ const ProjectDetailsEdit = () => {
                         </table>
                       </div>
                     </div> */}
-                    {/* <div className="mb-6">
+                {/* <div className="mb-6">
                      
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
@@ -6062,7 +6739,7 @@ const ProjectDetailsEdit = () => {
                         </table>
                       </div>
                     </div> */}
-                    {/* <div className="mb-6">
+                {/* <div className="mb-6">
                     
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
@@ -6162,32 +6839,30 @@ const ProjectDetailsEdit = () => {
                         </table>
                       </div>
                     </div> */}
-                    <div className="mb-6">
-                      {/* Header */}
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="section-heading inline-flex items-center gap-1">
-                          Videos{" "}
-                          <span
-                            className="relative inline-block cursor-pointer"
-                            onMouseEnter={() => setShowTooltipVideos(true)}
-                            onMouseLeave={() => setShowTooltipVideos(false)}
-                          >
-                            <Info className="w-5 h-5 fill-black text-white" />
-                            {showTooltipVideos && (
-                              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                                Max Upload Size 10 MB
-                              </span>
-                            )}
+                <div className="mb-6">
+                  {/* Header */}
+                  <div className="flex justify-between items-center mb-4">
+                    <h5 className="section-heading inline-flex items-center gap-1">
+                      Videos{" "}
+                      <span
+                        className="relative inline-block cursor-pointer"
+                        onMouseEnter={() => setShowTooltipVideos(true)}
+                        onMouseLeave={() => setShowTooltipVideos(false)}
+                      >
+                        <Info className="w-5 h-5 fill-black text-white" />
+                        {showTooltipVideos && (
+                          <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                            Max Upload Size 10 MB
                           </span>
-                        </h5>
-                        <button
-                          type="button"
-                          className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-                          onClick={() =>
-                            document.getElementById("videos").click()
-                          }
-                        >
-                          {/* <svg
+                        )}
+                      </span>
+                    </h5>
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                      onClick={() => document.getElementById("videos").click()}
+                    >
+                      {/* <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width={20}
                             height={20}
@@ -6196,98 +6871,107 @@ const ProjectDetailsEdit = () => {
                           >
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
                           </svg> */}
-                          <span>Add</span>
-                        </button>
-                        <input
-                          id="videos"
-                          className="form-control"
-                          type="file"
-                          name="videos"
-                          accept="video/*"
-                          onChange={(e) =>
-                            handleFileUpload("videos", e.target.files)
-                          }
-                          multiple
-                          style={{ display: "none" }}
-                        />
-                      </div>
-                      {/* Table */}
-                      <div className="rounded-lg border border-gray-200 overflow-hidden">
-                        <table className="w-full border-separate">
-                          <thead>
-                            <tr style={{ backgroundColor: "#e6e2d8" }}>
-                              <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
-                                style={{ borderColor: "#fff" }}
-                              >
-                                File Name
-                              </th>
-                              <th
-                                className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
-                                style={{ borderColor: "#fff" }}
-                              >
-                                Preview
-                              </th>
-                              <th className="font-semibold text-gray-900 py-3 px-4 text-left" >
-                                Action
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.videos.map((file, index) => {
-                              // Handle both File objects (new uploads) and API response objects (existing files)
-                              const fileName = file instanceof File ? file.name : (file.document_file_name || file.name || 'Unknown');
-                              const isVideo = file instanceof File 
-                                ? file.type?.startsWith("video")
-                                : file.document_content_type?.includes("video");
-                              const videoUrl = file instanceof File
-                                ? URL.createObjectURL(file)
-                                : file.document_url;
-                              
-                              return (
-                                <tr
-                                  key={index}
-                                  className="hover:bg-gray-50 transition-colors"
+                      <span>Add</span>
+                    </button>
+                    <input
+                      id="videos"
+                      className="form-control"
+                      type="file"
+                      name="videos"
+                      accept="video/*"
+                      onChange={(e) =>
+                        handleFileUpload("videos", e.target.files)
+                      }
+                      multiple
+                      style={{ display: "none" }}
+                    />
+                  </div>
+                  {/* Table */}
+                  <div className="rounded-lg border border-gray-200 overflow-hidden">
+                    <table className="w-full border-separate">
+                      <thead>
+                        <tr style={{ backgroundColor: "#e6e2d8" }}>
+                          <th
+                            className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
+                            style={{ borderColor: "#fff" }}
+                          >
+                            File Name
+                          </th>
+                          <th
+                            className="font-semibold text-gray-900 py-3 px-4 border-r text-left"
+                            style={{ borderColor: "#fff" }}
+                          >
+                            Preview
+                          </th>
+                          <th className="font-semibold text-gray-900 py-3 px-4 text-left">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {formData.videos.map((file, index) => {
+                          // Handle both File objects (new uploads) and API response objects (existing files)
+                          const fileName =
+                            file instanceof File
+                              ? file.name
+                              : file.document_file_name ||
+                                file.name ||
+                                "Unknown";
+                          const isVideo =
+                            file instanceof File
+                              ? file.type?.startsWith("video")
+                              : file.document_content_type?.includes("video");
+                          const videoUrl =
+                            file instanceof File
+                              ? URL.createObjectURL(file)
+                              : file.document_url;
+
+                          return (
+                            <tr
+                              key={index}
+                              className="hover:bg-gray-50 transition-colors"
+                            >
+                              <td className="py-3 px-4 font-medium">
+                                {fileName}
+                              </td>
+                              <td className="py-3 px-4">
+                                {isVideo && videoUrl ? (
+                                  <video
+                                    style={{
+                                      maxWidth: 100,
+                                      maxHeight: 100,
+                                      objectFit: "cover",
+                                    }}
+                                    className="rounded border border-gray-200"
+                                    autoPlay
+                                    muted
+                                    loop
+                                    playsInline
+                                    src={videoUrl}
+                                  />
+                                ) : (
+                                  <span className="text-gray-500">
+                                    No preview
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDiscardFile("videos", index)
+                                  }
                                 >
-                                  <td className="py-3 px-4 font-medium">
-                                    {fileName}
-                                  </td>
-                                  <td className="py-3 px-4">
-                                    {isVideo && videoUrl ? (
-                                      <video
-                                        style={{
-                                          maxWidth: 100,
-                                          maxHeight: 100,
-                                          objectFit: "cover",
-                                        }}
-                                        className="rounded border border-gray-200"
-                                        autoPlay
-                                        muted
-                                        loop
-                                        playsInline
-                                        src={videoUrl}
-                                      />
-                                    ) : (
-                                      <span className="text-gray-500">No preview</span>
-                                    )}
-                                  </td>
-                                  <td className="py-3 px-4">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleDiscardFile("videos", index)
-                                      }
-                                    >
-                                      <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                       {/* <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-12">
+                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-12">
                                              <TextField
                                                label="Video Preview Image URL"
                                                placeholder="Enter Video URL"
@@ -6306,32 +6990,35 @@ const ProjectDetailsEdit = () => {
                                                }}
                                              />
                                            </div> */}
-                    </div>
-                  </>
-                {/* // )} */}
+                </div>
+              </>
+              {/* // )} */}
             </div>
           </div>
         </div>
         {/* {baseURL !== "https://dev-panchshil-super-app.lockated.com/" &&
           baseURL !== "https://rustomjee-live.lockated.com/" && ( */}
-            <>
-               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                        <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: "#F6F4EE" }}>
-                          <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                            <span
-                              className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
-                              style={{ backgroundColor: "#E5E0D3" }}
-                            >
-                              <FileText size={16} color="#C72030" />
-                            </span>
-                            Virtual Tours
-                          </h2>
-                          <button
-                            type="button"
-                            className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
-                            onClick={handleAddVirtualTour}
-                          >
-                            {/* <svg
+        <>
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div
+              className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+              style={{ backgroundColor: "#F6F4EE" }}
+            >
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <span
+                  className="w-8 h-8 text-white rounded-full flex items-center justify-center mr-3"
+                  style={{ backgroundColor: "#E5E0D3" }}
+                >
+                  <FileText size={16} color="#C72030" />
+                </span>
+                Virtual Tours
+              </h2>
+              <button
+                type="button"
+                className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59]/90 transition-colors"
+                onClick={handleAddVirtualTour}
+              >
+                {/* <svg
                               xmlns="http://www.w3.org/2000/svg"
                               width={18}
                               height={18}
@@ -6340,118 +7027,182 @@ const ProjectDetailsEdit = () => {
                             >
                               <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
                             </svg> */}
-                            <span>Add</span>
-                          </button>
-                        </div>
-                  <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                    <TextField
-                      label="Virtual Tour Name"
-                      placeholder="Enter Virtual Tour Name"
-                      type="text"
-                      name="virtual_tour_name"
-                      value={virtualTourName}
-                      onChange={handleVirtualTourNameChange}
-                      fullWidth
-                      variant="outlined"
-                      slotProps={{ inputLabel: { shrink: true } }}
-                      InputProps={{ sx: fieldStyles }}
-                    />
-                    <TextField
-                      label="Virtual Tour URL"
-                      placeholder="Enter Virtual Tour URL"
-                      type="url"
-                      name="virtual_tour_url"
-                      value={virtualTourUrl}
-                      onChange={handleVirtualTourChange}
-                      fullWidth
-                      variant="outlined"
-                      slotProps={{ inputLabel: { shrink: true } }}
-                      InputProps={{ sx: fieldStyles }}
-                    />
-                  </div>
-                  {formData.virtual_tour_url_multiple.length > 0 && (
-                    <div className="col-md-12 mt-2">
-                      <div className="mt-4">
-                        <EnhancedTable
-                          data={formData.virtual_tour_url_multiple.map(
-                            (item, index) => ({
-                              ...item,
-                              id: index,
-                              srNo: index + 1,
-                            })
-                          )}
-                          columns={[
-                            {
-                              key: "srNo",
-                              label: "Sr No",
-                              sortable: false,
-                              draggable: false,
-                            },
-                            {
-                              key: "virtual_tour_name",
-                              label: "Tour Name",
-                              sortable: true,
-                            },
-                            {
-                              key: "virtual_tour_url",
-                              label: "Tour URL",
-                              sortable: false,
-                            },
-                          ]}
-                          renderCell={(item, columnKey) => {
-                            if (columnKey === "srNo") {
-                              return <span>{item.srNo}</span>;
-                            }
-                            return item[columnKey] || "-";
-                          }}
-                          renderActions={(item) => (
-                            <button
-                              type="button"
-                              className="text-red-600 hover:text-red-800 p-1 transition-colors"
-                              onClick={() => {
-                                const updated =
+                <span>Add</span>
+              </button>
+            </div>
+            <div
+              className="p-6 space-y-6"
+              style={{ backgroundColor: "#AAB9C50D" }}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <TextField
+                  label="Virtual Tour Name"
+                  placeholder="Enter Virtual Tour Name"
+                  type="text"
+                  name="virtual_tour_name"
+                  value={virtualTourName}
+                  onChange={handleVirtualTourNameChange}
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{ inputLabel: { shrink: true } }}
+                  InputProps={{ sx: fieldStyles }}
+                />
+                <TextField
+                  label="Virtual Tour URL"
+                  placeholder="Enter Virtual Tour URL"
+                  type="url"
+                  name="virtual_tour_url"
+                  value={virtualTourUrl}
+                  onChange={handleVirtualTourChange}
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{ inputLabel: { shrink: true } }}
+                  InputProps={{ sx: fieldStyles }}
+                />
+              </div>
+              {formData.virtual_tour_url_multiple.length > 0 && (
+                <div className="col-md-12 mt-2">
+                  <div className="mt-4">
+                    <EnhancedTable
+                      data={formData.virtual_tour_url_multiple.map(
+                        (item, index) => ({
+                          ...item,
+                          id: index,
+                          srNo: index + 1,
+                        })
+                      )}
+                      columns={[
+                        {
+                          key: "srNo",
+                          label: "Sr No",
+                          sortable: false,
+                          draggable: false,
+                        },
+                        {
+                          key: "virtual_tour_name",
+                          label: "Tour Name",
+                          sortable: true,
+                        },
+                        {
+                          key: "virtual_tour_url",
+                          label: "Tour URL",
+                          sortable: false,
+                        },
+                      ]}
+                      renderCell={(item, columnKey) => {
+                        if (columnKey === "srNo") {
+                          return <span>{item.srNo}</span>;
+                        }
+                        return item[columnKey] || "-";
+                      }}
+                      renderActions={(item) => (
+                        <button
+                          type="button"
+                          className="text-red-600 hover:text-red-800 p-1 transition-colors"
+                          onClick={async () => {
+                            // For existing projects, always call API to update virtual tours
+                            if (projectId) {
+                              try {
+                                // Create updated list without this tour
+                                const updatedTours =
                                   formData.virtual_tour_url_multiple.filter(
                                     (_, i) => i !== item.id
                                   );
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  virtual_tour_url_multiple: updated,
-                                }));
-                                toast.success("Virtual tour deleted", { description: "Success" });
-                              }}
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          )}
-                          hideTableSearch
-                          hideTableExport
-                          hideColumnsButton
-                          emptyMessage="No virtual tours added yet"
-                        />
-                      </div>
-                    </div>
-                  )}
+
+                                // Prepare form data with updated virtual tours
+                                const data = new FormData();
+
+                                if (updatedTours.length > 0) {
+                                  updatedTours.forEach((tour, index) => {
+                                    data.append(
+                                      `project[virtual_tour_url_multiple][${index}][virtual_tour_name]`,
+                                      tour.virtual_tour_name || ""
+                                    );
+                                    data.append(
+                                      `project[virtual_tour_url_multiple][${index}][virtual_tour_url]`,
+                                      tour.virtual_tour_url || ""
+                                    );
+                                  });
+                                } else {
+                                  // Send empty to clear all tours
+                                  data.append(
+                                    "project[virtual_tour_url_multiple][]",
+                                    ""
+                                  );
+                                }
+
+                                await axios.put(
+                                  getFullUrl(`/projects/${projectId}.json`),
+                                  data,
+                                  {
+                                    headers: {
+                                      Authorization: getAuthHeader(),
+                                      "Content-Type": "multipart/form-data",
+                                    },
+                                  }
+                                );
+
+                                toast.success(
+                                  "Virtual tour deleted successfully",
+                                  { description: "Success" }
+                                );
+                              } catch (error) {
+                                console.error(
+                                  "Error deleting virtual tour:",
+                                  error
+                                );
+                                toast.error(
+                                  "Failed to delete virtual tour. Please try again."
+                                );
+                                return;
+                              }
+                            }
+
+                            // Update local state
+                            const updated =
+                              formData.virtual_tour_url_multiple.filter(
+                                (_, i) => i !== item.id
+                              );
+                            setFormData((prev) => ({
+                              ...prev,
+                              virtual_tour_url_multiple: updated,
+                            }));
+                          }}
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
+                      hideTableSearch
+                      hideTableExport
+                      hideColumnsButton
+                      emptyMessage="No virtual tours added yet"
+                    />
+                  </div>
                 </div>
-              </div>
-            </>
-          {/* )} */}
+              )}
+            </div>
+          </div>
+        </>
+        {/* )} */}
         {/* Virtual Tour - copy from create */}
 
         {/* Visibility Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+          <div
+            className="px-6 py-3 border-b border-gray-200"
+            style={{ backgroundColor: "#F6F4EE" }}
+          >
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
               <Avatar
                 sx={{
                   width: 32,
                   height: 32,
-                  backgroundColor: '#E5E0D3',
-                  mr: 1.5
+                  backgroundColor: "#E5E0D3",
+                  mr: 1.5,
                 }}
               >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                <SettingsOutlinedIcon sx={{ fontSize: 18, color: "#C72030" }} />
               </Avatar>
               Visibility
             </h2>
@@ -6460,18 +7211,27 @@ const ProjectDetailsEdit = () => {
             {/* Show on Home Page */}
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
-                <p className="text-sm text-gray-500">Display this project on the home page</p>
+                <h3 className="text-sm font-medium text-gray-900">
+                  Show on Home Page
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Display this project on the home page
+                </p>
               </div>
               <Switch
                 checked={formData.show_on_home}
-                onChange={(e) => setFormData(prev => ({ ...prev, show_on_home: e.target.checked }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    show_on_home: e.target.checked,
+                  }))
+                }
                 sx={{
-                  '& .MuiSwitch-switchBase.Mui-checked': {
-                    color: '#C72030',
+                  "& .MuiSwitch-switchBase.Mui-checked": {
+                    color: "#C72030",
                   },
-                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                    backgroundColor: '#C72030',
+                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                    backgroundColor: "#C72030",
                   },
                 }}
               />

@@ -1716,7 +1716,7 @@ const ProjectDetailsCreate = () => {
       ...prev,
       connectivities: [
         ...prev.connectivities,
-        { connectivity_type_id: '', place_name: '', image: null }
+        { connectivity_type_id: '', place_name: '', distance: '', image: null }
       ]
     }));
   };
@@ -2019,6 +2019,9 @@ const ProjectDetailsCreate = () => {
               `project[connectivities][][place_name]`,
               item.place_name
             );
+            if (item.distance) {
+              data.append(`project[connectivities][][distance]`, item.distance);
+            }
             // data.append(
             //   `project[connectivities][][image]`,
             //   item.image
@@ -3500,7 +3503,7 @@ const ProjectDetailsCreate = () => {
           <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
             {formData.connectivities.length === 0 ? (
               <div className="grid grid-cols-1 gap-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormControl fullWidth variant="outlined">
                     <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
                       Type
@@ -3512,7 +3515,7 @@ const ProjectDetailsCreate = () => {
                         setFormData((prev) => {
                           const updated = [...prev.connectivities];
                           if (updated.length === 0) {
-                            updated.push({ connectivity_type_id: value, place_name: '', image: null });
+                            updated.push({ connectivity_type_id: value, place_name: '', distance: '', image: null });
                           } else {
                             updated[0] = { ...updated[0], connectivity_type_id: value };
                           }
@@ -3554,9 +3557,37 @@ const ProjectDetailsCreate = () => {
                       setFormData((prev) => {
                         const updated = [...prev.connectivities];
                         if (updated.length === 0) {
-                          updated.push({ connectivity_type_id: '', place_name: value, image: null });
+                          updated.push({ connectivity_type_id: '', place_name: value, distance: '', image: null });
                         } else {
                           updated[0] = { ...updated[0], place_name: value };
+                        }
+                        return { ...prev, connectivities: updated };
+                      });
+                    }}
+                    fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
+                    InputProps={{
+                      sx: fieldStyles,
+                    }}
+                  />
+
+                  <TextField
+                    label="Distance"
+                    placeholder="e.g. 4.4KM"
+                    value={formData.connectivities[0]?.distance || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData((prev) => {
+                        const updated = [...prev.connectivities];
+                        if (updated.length === 0) {
+                          updated.push({ connectivity_type_id: '', place_name: '', distance: value, image: null });
+                        } else {
+                          updated[0] = { ...updated[0], distance: value };
                         }
                         return { ...prev, connectivities: updated };
                       });
@@ -3676,7 +3707,7 @@ const ProjectDetailsCreate = () => {
                     </div>
 
                     <div className="grid grid-cols-1 gap-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <FormControl fullWidth variant="outlined">
                           <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
                             Type
@@ -3715,6 +3746,23 @@ const ProjectDetailsCreate = () => {
                           placeholder="Enter Place Name"
                           value={connectivity.place_name || ''}
                           onChange={(e) => handleConnectivityChange(index, 'place_name', e.target.value)}
+                          fullWidth
+                          variant="outlined"
+                          slotProps={{
+                            inputLabel: {
+                              shrink: true,
+                            },
+                          }}
+                          InputProps={{
+                            sx: fieldStyles,
+                          }}
+                        />
+
+                        <TextField
+                          label="Distance"
+                          placeholder="e.g. 4.4KM"
+                          value={connectivity.distance || ''}
+                          onChange={(e) => handleConnectivityChange(index, 'distance', e.target.value)}
                           fullWidth
                           variant="outlined"
                           slotProps={{

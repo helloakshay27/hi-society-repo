@@ -148,8 +148,7 @@ const NoticeboardList = () => {
         {
           method: "PUT",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
+            Authorization: getAuthHeader(),
           },
           body: JSON.stringify({ noticeboard: { active: !currentStatus } }),
         }
@@ -189,7 +188,7 @@ const NoticeboardList = () => {
     { key: "notice_heading", label: "Notice Heading", sortable: true },
     { key: "notice_type", label: "Notice Type", sortable: true },
     { key: "user_name", label: "Created By", sortable: true },
-    { key: "society_name", label: "Project", sortable: true },
+    { key: "project_name", label: "Project", sortable: true },
     { key: "is_important", label: "Important", sortable: false },
     { key: "expire_time", label: "Expire Time", sortable: false },
     { key: "active", label: "Status", sortable: false },
@@ -245,8 +244,8 @@ const NoticeboardList = () => {
           : "-";
       case "user_name":
         return item.user_name || "-";
-      case "society_name":
-        return item.society_name || "-";
+      case "project_name":
+        return item.project_name || "-";
       case "is_important":
         return (
           <span

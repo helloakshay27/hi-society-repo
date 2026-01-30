@@ -289,25 +289,48 @@ export const EditFitoutChecklistPage = () => {
     setQuestions([...questions, newQuestion]);
   };
 
-  const handleRemoveQuestion = (id: string) => {
+  const handleRemoveQuestion = async (questionId: string) => {
     const activeQuestions = questions.filter(
-      (q) => !q.markedForDeletion && q.id && (q.text.trim() || q.id.startsWith("new_"))
+      (q) =>
+        !q.markedForDeletion &&
+        q.id &&
+        (q.text.trim() || q.id.startsWith("new_"))
     );
 
-    if (activeQuestions.length > 1) {
-      setQuestions((prevQuestions) => {
-        return prevQuestions.map((q) => {
-          if (q.id === id) {
-            if (q.id.startsWith("new_")) {
-              return null;
-            } else {
-              setDestroyQuestionIds((prev) => [...prev, id]);
-              return { ...q, markedForDeletion: true };
-            }
-          }
-          return q;
-        }).filter((q) => q !== null) as Question[];
+    if (activeQuestions.length <= 1) return;
+
+    // New question: remove locally (no API)
+    if (questionId.startsWith("new_")) {
+      setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+      return;
+    }
+
+    // Existing question: delete via API
+    if (!id) {
+      toast.error("Unable to delete question", {
+        description: "Checklist id is missing.",
       });
+      return;
+    }
+
+    const numericQuestionId = Number(questionId);
+    if (!Number.isFinite(numericQuestionId)) {
+      toast.error("Unable to delete question", {
+        description: "Invalid question id.",
+      });
+      return;
+    }
+
+    try {
+      await apiClient.delete(`/snag_checklists/${id}/delete_questions.json`, {
+        data: { question_ids: [numericQuestionId] },
+      });
+
+      setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+      toast.success("Question deleted successfully");
+    } catch (error) {
+      console.error("Error deleting question:", error);
+      toast.error("Failed to delete question");
     }
   };
 
