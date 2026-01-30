@@ -166,7 +166,7 @@ const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0
 
 const isHiSocietySite = isLocalhost || hostname.includes("ui-hisociety.lockated.com") || hostname.includes("web.hisociety.lockated.com");
 
-const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "ui-hisociety.lockated.com";
+// const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "ui-hisociety.lockated.com";
 
 export const getOrganizationsByEmail = async (
   email: string
