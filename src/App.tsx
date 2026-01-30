@@ -1116,16 +1116,27 @@ function App() {
             <PermissionsProvider>
               <ActionLayoutProvider>
                 <Routes>
+                  {/* Setup Member Routes - wrapped in Layout */}
+                  <Route
+                    path="/"
+                    element={
+                      <ProtectedRoute>
+                        <Layout />
+                      </ProtectedRoute>
+                    }
+                  >
+                    {setupMemberRoutes}
+                  </Route>
 
-                    {/* Admin Routes */}
-                    <Route
-                      path="/ops-console"
-                      element={
-                        <ProtectedRoute>
-                          <AdminLayout />
-                        </ProtectedRoute>
-                      }
-                    >
+                  {/* Admin Routes */}
+                  <Route
+                    path="/ops-console"
+                    element={
+                      <ProtectedRoute>
+                        <AdminLayout />
+                      </ProtectedRoute>
+                    }
+                  >
                       <Route
                         path="master/location/account"
                         element={<OpsAccountPage />}
@@ -1800,9 +1811,6 @@ function App() {
                         path="/communication/notifications"
                         element={<NotificationsPage />}
                       />
-
-                      {/* Setup Member Routes */}
-                      {setupMemberRoutes}
 
                       {/* Setup - Manage Flats Route */}
                       <Route

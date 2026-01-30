@@ -96,25 +96,25 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   }, []);
 
-  // Auto-detect Hi-Society site and set layout mode (only on initial load)
-  const { toggleLayoutMode } = useLayout();
-  useEffect(() => {
-    const hostname = window.location.hostname;
-    const isHiSocietySite =
-      hostname.includes("localhost") ||
-      hostname.includes("ui-hisociety.lockated.com") ||
-      hostname.includes("web.hisociety.lockated.com");
+  // // Auto-detect Hi-Society site and set layout mode (only on initial load)
+  // const { toggleLayoutMode } = useLayout();
+  // useEffect(() => {
+  //   const hostname = window.location.hostname;
+  //   const isHiSocietySite =
+  //     hostname.includes("localhost") ||
+  //     hostname.includes("ui-hisociety.lockated.com") ||
+  //     hostname.includes("web.hisociety.lockated.com");
 
-    // Only auto-set Hi-Society mode on initial load if no mode is explicitly set
-    // Don't override user's manual mode selection
-    if (isHiSocietySite) {
-      const currentMode = localStorage.getItem("layoutMode");
-      // Only set to hi-society if no mode exists (first time visit)
-      if (!currentMode) {
-        localStorage.setItem("layoutMode", "hi-society");
-      }
-    }
-  }, []); // Empty dependency array - only run once on mount
+  //   // Only auto-set Hi-Society mode on initial load if no mode is explicitly set
+  //   // Don't override user's manual mode selection
+  //   if (isHiSocietySite) {
+  //     const currentMode = localStorage.getItem("layoutMode");
+  //     // Only set to hi-society if no mode exists (first time visit)
+  //     if (!currentMode) {
+  //       localStorage.setItem("layoutMode", "hi-society");
+  //     }
+  //   }
+  // }, []); // Empty dependency array - only run once on mount
 
   // Check if non-employee user needs to select project/site
   const hostname = window.location.hostname;

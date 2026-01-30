@@ -34,39 +34,13 @@ export const HI_SOCIETY_CONFIG = {
 const getApiConfig = () => {
   const savedToken = getToken();
   const savedBaseUrl = getBaseUrl();
-  
-  // Check layout mode from localStorage
-  const layoutMode = localStorage.getItem('layoutMode');
 
-  // Determine base URL based on layout mode
-  let finalBaseUrl = savedBaseUrl;
-  
-  // If in FM Matrix mode, use FM Matrix API URL
-  if (layoutMode === 'fm-matrix') {
-    finalBaseUrl = 'https://fm-uat-api.lockated.com/';
-  } else if (layoutMode === 'hi-society') {
-    // If in Hi-Society mode, use saved base URL or determine from hostname
-    if (!savedBaseUrl) {
-      const hostname = window.location.hostname;
-      if (hostname === 'web.hisociety.lockated.com') {
-        finalBaseUrl = 'https://hi-society.lockated.com/';
-      } else if (hostname === 'ui-hisociety.lockated.com') {
-        finalBaseUrl = 'https://uat-hi-society.lockated.com/';
-      } else {
-        finalBaseUrl = 'https://uat-hi-society.lockated.com/';
-      }
-    }
-  }
-  
-  // Fallback to saved base URL if layout mode is not set
-  if (!finalBaseUrl) {
-    finalBaseUrl = savedBaseUrl;
-  }
+  // Always use dynamic base URL from localStorage only
+  const finalBaseUrl = savedBaseUrl;
 
   console.log("API Config Debug:", {
     savedToken: savedToken ? "Present" : "Missing",
     savedBaseUrl: savedBaseUrl || "Missing",
-    layoutMode: layoutMode || "Not Set",
     finalBaseUrl,
     tokenLength: savedToken?.length || 0,
     baseUrlValue: finalBaseUrl,

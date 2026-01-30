@@ -501,16 +501,16 @@ export const HiSocietyHeader = () => {
                 // Set base URL BEFORE toggling mode to ensure proper API routing
                 if (layoutMode === 'hi-society') {
                   // Switching to FM Matrix - set FM Matrix base URL
-                  localStorage.setItem('baseUrl', 'https://fm-uat-api.lockated.com');
+                  // localStorage.setItem('baseUrl', 'https://fm-uat-api.lockated.com');
                   toggleLayoutMode();
                   // Use React Router navigate for client-side navigation (preserves auth)
-                  navigate('/maintenance/assets');
+                  navigate('/maintenance/asset');
                 } else {
                   // Switching to Hi-Society - set Hi-Society base URL
-                  localStorage.setItem('baseUrl', 'https://hi-society.lockated.com');
+                  // localStorage.setItem('baseUrl', 'https://hi-society.lockated.com');
                   toggleLayoutMode();
                   // Use React Router navigate for client-side navigation (preserves auth)
-                  navigate('/bms');
+                  navigate('/maintenance/project-details-list');
                 }
               }}
               variant="outline"

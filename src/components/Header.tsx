@@ -747,13 +747,13 @@ export const Header = () => {
                   localStorage.setItem('baseUrl', 'https://fm-uat-api.lockated.com');
                   toggleLayoutMode();
                   // Use React Router navigate for client-side navigation (preserves auth)
-                  navigate('/maintenance/assets');
+                  navigate('/maintenance/asset');
                 } else {
                   // Switching to Hi-Society - set Hi-Society base URL
                   localStorage.setItem('baseUrl', 'https://hi-society.lockated.com');
                   toggleLayoutMode();
                   // Use React Router navigate for client-side navigation (preserves auth)
-                  navigate('/bms');
+                  navigate('/maintenance/project-details-list');
                 }
               }}
               variant="outline"

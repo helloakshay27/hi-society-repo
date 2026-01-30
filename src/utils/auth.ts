@@ -566,11 +566,10 @@ export const getOrganizationsByEmailAndAutoSelect = async (
   const isFmSite =
     hostname.includes("fm-uat.gophygital.work") ||
     hostname.includes("fm.gophygital.work");
-  const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "ui-hisociety.lockated.com";
 
   const isDevSite = hostname === "dev-fm-matrix.lockated.com";
   const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
-  const isHiSocietySite = isLocalhost || hostname.includes("ui-hisociety.lockated.com") || hostname.includes("web.hisociety.lockated.com");
+  const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "ui-hisociety.lockated.com" || isLocalhost;
 
   let apiUrl = "";
 

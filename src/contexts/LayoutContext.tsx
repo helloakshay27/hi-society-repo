@@ -44,27 +44,28 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
     return savedState ? JSON.parse(savedState) : false;
   });
 
-  // Get initial layout mode from localStorage, default to 'fm-matrix'
-  // Auto-detect Hi-Society sites on first visit only
+  // Get initial layout mode from localStorage
+  // On first visit, auto-detect based on hostname
+  // After that, always respect user's manual selection
   const [layoutMode, setLayoutMode] = useState<'fm-matrix' | 'hi-society'>(() => {
+    const savedMode = localStorage.getItem("layoutMode");
+    
+    // If mode already exists, respect it (user has made a choice)
+    if (savedMode) {
+      return (savedMode === 'hi-society' ? 'hi-society' : 'fm-matrix') as 'fm-matrix' | 'hi-society';
+    }
+    
+    // First visit - auto-detect based on hostname
     const hostname = window.location.hostname;
     const isHiSocietySite =
       hostname.includes("localhost") ||
       hostname.includes("ui-hisociety.lockated.com") ||
       hostname.includes("web.hisociety.lockated.com");
     
-    // Check saved mode first (respect user's manual selection)
-    const savedMode = localStorage.getItem("layoutMode");
-    
-    // If on Hi-Society domain and no mode is set, default to hi-society
-    // But if user has manually set a mode, respect that choice
-    if (isHiSocietySite && !savedMode) {
-      localStorage.setItem("layoutMode", "hi-society");
-      return "hi-society";
-    }
-    
-    // Return saved mode or default to fm-matrix
-    return (savedMode === 'hi-society' ? 'hi-society' : 'fm-matrix') as 'fm-matrix' | 'hi-society';
+    // Set initial mode based on hostname and save it
+    const initialMode = isHiSocietySite ? 'hi-society' : 'fm-matrix';
+    localStorage.setItem("layoutMode", initialMode);
+    return initialMode;
   });
 
   // Toggle between FM Matrix and Hi-Society layouts
