@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { Switch } from '@mui/material';
 import {
   Dialog,
   DialogContent,
@@ -77,39 +78,55 @@ export const CategoryTab: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      // Get society_id from localStorage
+      
+      // Get selected user_society ID from localStorage
       const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
       
-      // First, get the selected user society to extract id_society
-      let idSociety = '';
-      if (selectedUserSocietyId) {
-        const selectedSocietyResponse = await apiClient.get(`/crm/admin/user_societies.json`);
-        const userSocieties = selectedSocietyResponse.data || [];
-        const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
-        idSociety = selectedSociety?.id_society || '';
-      }
-      
-      if (!idSociety) {
-        toast.error('Society information not found. Please select a society.');
+      if (!selectedUserSocietyId) {
+        toast.error('Please select a society from the header dropdown.');
         return;
       }
+      
+      // Get societies data from localStorage (already fetched by header)
+      const societiesData = localStorage.getItem('hiSocietyApprovedSocieties');
+      
+      if (!societiesData) {
+        toast.error('Society data not found. Please refresh the page.');
+        return;
+      }
+      
+      const userSocieties = JSON.parse(societiesData);
+      
+      // Find the selected user_society record
+      const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
+      
+      if (!selectedSociety || !selectedSociety.id_society) {
+        toast.error('Society information not found. Please select a valid society.');
+        return;
+      }
+      
+      const societyId = parseInt(selectedSociety.id_society);
+      
+      console.log('Creating category with society_id:', societyId, 'for user_society:', selectedUserSocietyId);
 
       const response = await apiClient.post('/crm/admin/fitout_categories.json', {
         fitout_category: {
           name: categoryName,
           category_type: categoryType,
           active: true,
-          society_id: idSociety,
+          society_id: societyId,
         }
       });
+      
       toast.success('Category added successfully');
       setIsDialogOpen(false);
       setCategoryName('');
       setCategoryType('');
       fetchCategories(); // Refresh the list
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding category:', error);
-      toast.error('Failed to add category');
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to add category';
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -157,6 +174,21 @@ export const CategoryTab: React.FC = () => {
     } catch (error) {
       console.error('Error deleting category:', error);
       toast.error('Failed to delete category');
+    }
+  };
+
+  const handleToggle = async (id: number, currentStatus: boolean) => {
+    try {
+      await apiClient.put(`/crm/admin/fitout_categories/${id}.json`, {
+        fitout_category: {
+          active: !currentStatus,
+        }
+      });
+      toast.success(`Category ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+      fetchCategories(); // Refresh the list
+    } catch (error) {
+      console.error('Error toggling category status:', error);
+      toast.error('Failed to update category status');
     }
   };
 
@@ -259,13 +291,18 @@ export const CategoryTab: React.FC = () => {
         );
       case 'active':
         return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            item.active 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-red-100 text-red-800'
-          }`}>
-            {item.active ? 'Active' : 'Inactive'}
-          </span>
+          <Switch
+            checked={item.active || false}
+            onChange={() => handleToggle(item.id, item.active)}
+            sx={{
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "#C72030",
+              },
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                backgroundColor: "#C72030",
+              },
+            }}
+          />
         );
       case 'created_at':
         return <span>{new Date(item.created_at).toLocaleDateString('en-IN', {

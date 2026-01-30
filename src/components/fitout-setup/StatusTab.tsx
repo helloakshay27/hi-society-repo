@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/select';
 import { EnhancedTable } from '../enhanced-table/EnhancedTable';
 import { apiClient } from '@/utils/apiClient';
+import { Switch } from '@mui/material';
+import { fetchCategories } from '@/services/wasteGenerationAPI';
 
 interface Status {
   id: number;
@@ -59,6 +61,7 @@ export const StatusTab: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchStatuses();
@@ -67,8 +70,8 @@ export const StatusTab: React.FC = () => {
   const fetchStatuses = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/crm/admin/fitout_requests/fitout_statuses.json');
-      const statusesData = response.data?.data || [];
+      const response = await apiClient.get('/fitout_categories/get_complaint_statuses.json?q[of_atype_eq]=fitout_category');
+      const statusesData = response.data?.complaint_statuses || [];
       setStatuses(Array.isArray(statusesData) ? statusesData : []);
     } catch (error) {
       console.error('Error fetching statuses:', error);
@@ -109,12 +112,27 @@ export const StatusTab: React.FC = () => {
     }
   };
 
+   const handleToggle = async (id: number, currentStatus: boolean) => {
+      try {
+        await apiClient.put(`/crm/admin/fitout_categories/modify_complaint_status.json`, {
+          complaint_statuses: {
+            active: !currentStatus,
+          }
+        });
+        toast.success(`Category ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+        fetchCategories(); // Refresh the list
+      } catch (error) {
+        console.error('Error toggling category status:', error);
+        toast.error('Failed to update category status');
+      }
+    };
+
   const handleEdit = useCallback((status: Status) => {
     setEditingId(status.id);
     setStatusName(status.name);
-    setStatusOrder(status.position.toString());
+    setStatusOrder(status.position ? status.position.toString() : '');
     setFixedState(status.fixed_state || '');
-    setSelectedColor(status.color_code);
+    setSelectedColor(status.color_code || '#FF0000');
     setIsDialogOpen(true);
   }, []);
 
@@ -123,15 +141,18 @@ export const StatusTab: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      const response = await apiClient.put(`/crm/admin/fitout_categories/update_fitout_statuses/${editingId}.json`, {
-        complaint_status: {
+      const response = await apiClient.post(`/crm/admin/fitout_categories/modify_complaint_status.json?`, 
+        {
+       
+          id: editingId,
           name: statusName,
           color_code: selectedColor,
           position: parseInt(statusOrder),
           fixed_state: fixedState || '',
           of_phase: 'fitout_category',
-          of_atype: 'fitout_category'
-        }
+          of_atype: 'fitout_category',
+          active: 1
+       
       });
       toast.success(response.data?.message || 'Status updated successfully');
       setIsDialogOpen(false);
@@ -213,6 +234,13 @@ export const StatusTab: React.FC = () => {
         draggable: true,
         defaultVisible: true,
       },
+      {
+        key: 'active',
+        label: 'Status',
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      }
     ],
     []
   );
@@ -258,6 +286,21 @@ export const StatusTab: React.FC = () => {
         );
       default:
         return <span>{String(item[columnKey as keyof Status] || '-')}</span>;
+        case 'active':
+        return (
+          <Switch
+            checked={item.active || false}
+            onChange={() => handleToggle(item.id, item.active)}
+            sx={{
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "#C72030",
+              },
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                backgroundColor: "#C72030",
+              },
+            }}
+          />
+        );
     }
   }, [handleDelete, handleEdit]);
 
@@ -272,8 +315,8 @@ export const StatusTab: React.FC = () => {
         storageKey="fitout-statuses-table"
         enableExport={true}
         exportFileName="fitout-statuses"
-        searchTerm=""
-        onSearchChange={() => {}}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
         searchPlaceholder="Search statuses..."
         pagination={true}
         pageSize={10}

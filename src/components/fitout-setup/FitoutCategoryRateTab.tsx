@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { Switch } from '@mui/material';
 import {
   Dialog,
   DialogContent,
@@ -60,6 +61,7 @@ export const FitoutCategoryRateTab: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchRates();
@@ -130,22 +132,24 @@ export const FitoutCategoryRateTab: React.FC = () => {
 
   const handleEdit = (rate: FitoutFlatRate) => {
     setEditingId(rate.id);
-    setFitoutCategoryId(rate.fitout_category_id.toString());
+    setFitoutCategoryId(rate.fitout_category_id?.toString() || '');
     setCategoryType(rate.fitout_type || '');
-    setAmount(rate.amount.toString());
-    setConvenienceCharge(rate.convenience_charge.toString());
-    setDeposit(rate.deposit.toString());
+    setAmount(rate.amount?.toString() || '');
+    setConvenienceCharge(rate.convenience_charge?.toString() || '');
+    setDeposit(rate.deposit?.toString() || '');
     setIsDialogOpen(true);
   };
 
   const handleUpdate = async () => {
-    if (!fitoutCategoryId || !amount || !editingId) return;
+    if (!amount || !editingId) {
+      toast.error('Please enter amount');
+      return;
+    }
 
     try {
       setIsSubmitting(true);
       await apiClient.put(`/crm/admin/fitout_flat_rates/${editingId}.json`, {
         fitout_flat_rate: {
-          fitout_category_id: parseInt(fitoutCategoryId),
           fitout_type: categoryType,
           amount: parseFloat(amount),
           convenience_charge: convenienceCharge ? parseFloat(convenienceCharge) : 0,
@@ -175,6 +179,21 @@ export const FitoutCategoryRateTab: React.FC = () => {
     } catch (error) {
       console.error('Error deleting rate:', error);
       toast.error('Failed to delete rate');
+    }
+  };
+
+  const handleToggle = async (id: number, currentStatus: boolean) => {
+    try {
+      await apiClient.put(`/crm/admin/fitout_flat_rates/${id}.json`, {
+        fitout_flat_rate: {
+          active: !currentStatus,
+        }
+      });
+      toast.success(`Rate ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+      fetchRates(); // Refresh the list
+    } catch (error) {
+      console.error('Error toggling rate status:', error);
+      toast.error('Failed to update rate status');
     }
   };
 
@@ -283,20 +302,25 @@ export const FitoutCategoryRateTab: React.FC = () => {
       case 'fitout_category_name':
         return <span>{item.fitout_category_name || categories.find(c => c.id === item.fitout_category_id)?.name || '-'}</span>;
       case 'amount':
-        return <span>₹{item.amount}</span>;
+        return <span>₹{Number(item.amount || 0).toFixed(2)}</span>;
       case 'convenience_charge':
-        return <span>₹{item.convenience_charge || 0}</span>;
+        return <span>₹{Number(item.convenience_charge || 0).toFixed(2)}</span>;
       case 'deposit':
-        return <span>₹{item.deposit || 0}</span>;
+        return <span>₹{Number(item.deposit || 0).toFixed(2)}</span>;
       case 'active':
         return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            item.active 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-red-100 text-red-800'
-          }`}>
-            {item.active ? 'Active' : 'Inactive'}
-          </span>
+          <Switch
+            checked={item.active || false}
+            onChange={() => handleToggle(item.id, item.active)}
+            sx={{
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "#C72030",
+              },
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                backgroundColor: "#C72030",
+              },
+            }}
+          />
         );
       case 'created_at':
         return <span>{new Date(item.created_at).toLocaleDateString('en-IN', {
@@ -322,8 +346,8 @@ export const FitoutCategoryRateTab: React.FC = () => {
         storageKey="fitout-category-rate-table"
         enableExport={true}
         exportFileName="fitout-category-rates"
-        searchTerm=""
-        onSearchChange={() => {}}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
         searchPlaceholder="Search rates..."
         pagination={true}
         pageSize={10}

@@ -1091,6 +1091,23 @@ export const modulesByPackage = {
       href: "/safety/m-safe/circle",
     },
   ],
+  "Appointmentz": [
+    {
+      name: "RM Config",
+      icon: Users,
+      href: "/appointmentz/rm-config",
+    },
+    {
+      name: "Site Scheduling",
+      icon: Calendar,
+      href: "/appointmentz/site-scheduling",
+    },
+    {
+      name: "Request",
+      icon: FileText,
+      href: "/appointmentz/request",
+    },
+  ],
 };
 
 // Direct mapping from sidebar item names to their expected API function names

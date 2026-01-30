@@ -3,12 +3,12 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ArrowLeft, FileText, Calendar, Users, X, Plus, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info } from "lucide-react";
-import MultiSelectBox from "../components/ui/multi-selector";
+import MultiSelectBox from "../../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
-import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
+import ProjectBannerUpload from "../../components/reusable/ProjectBannerUpload";
+import ProjectImageVideoUpload from "../../components/reusable/ProjectImageVideoUpload";
 import {
   TextField,
   FormControl,
@@ -21,7 +21,7 @@ import {
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 
-const EventCreate = () => {
+const EventCommunicationCreate = () => {
   const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -33,8 +33,6 @@ const EventCreate = () => {
     from_time: "",
     to_time: "",
     rsvp_action: "",
-    rsvp_name: "",
-    rsvp_number: "",
     description: "",
     publish: "",
     user_id: [],
@@ -54,7 +52,6 @@ const EventCreate = () => {
     event_images_9_by_16: [],
     event_images_3_by_2: [],
     event_images_16_by_9: [],
-    show_on_home: false,
   });
 
   console.log("formData", formData);
@@ -732,18 +729,8 @@ const EventCreate = () => {
     formDataToSend.append("event[to_time]", formData.to_time || "");
     formDataToSend.append("event[shared]", formData.shared === "all" ? "0" : "1");
     formDataToSend.append("event[is_important]", formData.is_important === true ? "1" : "0");
-    formDataToSend.append("event[email_trigger_enabled]", formData.email_trigger_enabled === "true" ? "1" : "0");
-    formDataToSend.append("event[show_on_home]", formData.show_on_home === true ? "1" : "0");
+    formDataToSend.append("event[email_trigger_enabled]", formData.email_trigger_enabled === true ? "1" : "0");
     formDataToSend.append("event[active]", "true");
-
-    // === RSVP FIELDS ===
-    if (formData.rsvp_action === "1") {
-      formDataToSend.append("event[rsvp_action]", "1");
-      formDataToSend.append("event[rsvp_name]", formData.rsvp_name || "");
-      formDataToSend.append("event[rsvp_number]", formData.rsvp_number || "");
-    } else {
-      formDataToSend.append("event[rsvp_action]", "0");
-    }
 
     // Add swusers (individual users) if shared with individuals
     if (formData.shared === "individual" && Array.isArray(formData.user_id)) {
@@ -872,8 +859,6 @@ const EventCreate = () => {
         from_time: "",
         to_time: "",
         rsvp_action: "",
-        rsvp_name: "",
-        rsvp_number: "",
         description: "",
         publish: "",
         user_id: [],
@@ -893,11 +878,10 @@ const EventCreate = () => {
         event_images_9_by_16: [],
         event_images_3_by_2: [],
         event_images_16_by_9: [],
-        show_on_home: false,
       });
       setSelectedChannelPartners([]);
 
-      navigate("/maintenance/event-list");
+      navigate("/communication/events");
     } catch (error) {
       console.error("Error submitting the form:", error);
       if (error.response && error.response.data) {
@@ -1890,8 +1874,8 @@ const EventCreate = () => {
                   <p className="text-sm text-gray-500">Display this event on the home page</p>
                 </div>
                 <Switch
-                  checked={formData.show_on_home}
-                  onChange={(e) => setFormData(prev => ({ ...prev, show_on_home: e.target.checked }))}
+                  checked={visibility.showOnHomePage}
+                  onChange={(e) => setVisibility(prev => ({ ...prev, showOnHomePage: e.target.checked }))}
                   sx={{
                     '& .MuiSwitch-switchBase.Mui-checked': {
                       color: '#C72030',
@@ -4170,4 +4154,4 @@ const EventCreate = () => {
   );
 };
 
-export default EventCreate;
+export default EventCommunicationCreate;

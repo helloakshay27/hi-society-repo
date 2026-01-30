@@ -47,6 +47,7 @@ import { ZycusDynamicHeader } from "./ZycusDynamicHeader";
 import { ActionSidebar } from "./ActionSidebar";
 import { ActionHeader } from "./ActionHeader";
 import { useActionLayout } from "../contexts/ActionLayoutContext";
+import { AppointmentzSidebar } from "./AppointmentzSidebar";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -209,6 +210,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
 
     // FM Matrix mode (default) - original logic
+    // Check for Appointmentz routes first
+    if (location.pathname.startsWith('/appointmentz')) {
+      return <AppointmentzSidebar />;
+    }
+
     // Check if user is employee (pms_occupant) - Employee layout takes priority
     // Use specific sidebars for different sections
     if (isEmployeeUser) {
@@ -472,7 +478,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* View Selection Modal - Choose Admin or Employee View */}
       <ViewSelectionModal
         isOpen={!isEmployeeUser && isLocalhost ? showViewModal : false}
-        onComplete={() => setShowViewModal(false)}
+        onComplete={() => { setShowViewModal(false); }}
       />
     {console.log("layoutMode:", layoutMode)}
     

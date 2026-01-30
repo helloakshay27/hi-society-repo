@@ -3,14 +3,19 @@ import { getBaseUrl, getToken } from '@/utils/auth';
 // Hi-Society API Configuration
 export const HI_SOCIETY_CONFIG = {
   get BASE_URL() {
+      const savedBaseUrl = getBaseUrl();
+
     const hostname = window.location.hostname;
-    const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
-    const isHiSocietySite = isLocalhost || hostname.includes('ui-hisociety.lockated.com') || hostname.includes('web.hisociety.lockated.com');
-    
-    if (isHiSocietySite) {
-      return isLocalhost ? 'https://hi-society.lockated.com' : 'https://uat-hi-society.lockated.com';
+    // Use production URL for web.hisociety.lockated.com (strict check)
+    if (hostname === 'web.hisociety.lockated.com') {
+      return savedBaseUrl || 'https://hi-society.lockated.com';
     }
-    return 'https://uat-hi-society.lockated.com';
+    // Use UAT URL for ui-hisociety.lockated.com
+    if (hostname === 'ui-hisociety.lockated.com') {
+      return savedBaseUrl || 'https://uat-hi-society.lockated.com';
+    }
+    // Default to UAT for other environments
+    return savedBaseUrl || 'https://uat-hi-society.lockated.com';
   },
   get TOKEN() {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -29,13 +34,39 @@ export const HI_SOCIETY_CONFIG = {
 const getApiConfig = () => {
   const savedToken = getToken();
   const savedBaseUrl = getBaseUrl();
+  
+  // Check layout mode from localStorage
+  const layoutMode = localStorage.getItem('layoutMode');
 
-  // Always use dynamic base URL from localStorage only
-  const finalBaseUrl = savedBaseUrl;
+  // Determine base URL based on layout mode
+  let finalBaseUrl = savedBaseUrl;
+  
+  // If in FM Matrix mode, use FM Matrix API URL
+  if (layoutMode === 'fm-matrix') {
+    finalBaseUrl = 'https://fm-uat-api.lockated.com/';
+  } else if (layoutMode === 'hi-society') {
+    // If in Hi-Society mode, use saved base URL or determine from hostname
+    if (!savedBaseUrl) {
+      const hostname = window.location.hostname;
+      if (hostname === 'web.hisociety.lockated.com') {
+        finalBaseUrl = 'https://hi-society.lockated.com/';
+      } else if (hostname === 'ui-hisociety.lockated.com') {
+        finalBaseUrl = 'https://uat-hi-society.lockated.com/';
+      } else {
+        finalBaseUrl = 'https://uat-hi-society.lockated.com/';
+      }
+    }
+  }
+  
+  // Fallback to saved base URL if layout mode is not set
+  if (!finalBaseUrl) {
+    finalBaseUrl = savedBaseUrl;
+  }
 
   console.log("API Config Debug:", {
     savedToken: savedToken ? "Present" : "Missing",
     savedBaseUrl: savedBaseUrl || "Missing",
+    layoutMode: layoutMode || "Not Set",
     finalBaseUrl,
     tokenLength: savedToken?.length || 0,
     baseUrlValue: finalBaseUrl,
@@ -48,6 +79,9 @@ const getApiConfig = () => {
 };
 
 export const API_CONFIG = {
+  get baseURL() {
+    return getApiConfig().BASE_URL;
+  },
   get BASE_URL() {
     return getApiConfig().BASE_URL;
   },

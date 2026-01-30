@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, Download, Trash2 } from 'lucide-react';
@@ -5,12 +7,23 @@ import { toast } from 'sonner';
 import { EnhancedTable } from '../enhanced-table/EnhancedTable';
 import { apiClient } from '@/utils/apiClient';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 interface FitoutGuide {
   id: number;
-  sr_no: number;
-  file_name: string;
-  file_url: string;
-  uploaded_at: string;
+  name: string;
+  url: string;
+  file_size: number;
+  created_at: string;
 }
 
 export const FitoutGuideTab: React.FC = () => {
@@ -19,6 +32,10 @@ export const FitoutGuideTab: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  // Delete confirmation states
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [idToDelete, setIdToDelete] = useState<number | null>(null);
+
   useEffect(() => {
     fetchGuides();
   }, []);
@@ -26,8 +43,9 @@ export const FitoutGuideTab: React.FC = () => {
   const fetchGuides = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/fitout_guide/documents.json');
-      setGuides(Array.isArray(response.data) ? response.data : []);
+      const response = await apiClient.get('/fitout_guide/index.json');
+      const guidesData = response.data?.fitout_guides || [];
+      setGuides(Array.isArray(guidesData) ? guidesData : []);
     } catch (error) {
       console.error('Error fetching guides:', error);
       toast.error('Failed to load fitout guides');
@@ -85,36 +103,32 @@ export const FitoutGuideTab: React.FC = () => {
 
   const handleDownload = async (guide: FitoutGuide) => {
     try {
-      const response = await apiClient.get(guide.file_url, {
-        responseType: 'blob',
-      });
-      
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', guide.file_name);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      
-      toast.success('File downloaded successfully');
+      window.open(guide.url, '_blank');
+      toast.success('Opening file in new tab');
     } catch (error) {
-      console.error('Error downloading guide:', error);
-      toast.error('Failed to download file');
+      console.error('Error opening guide:', error);
+      toast.error('Failed to open file');
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this fitout guide?')) return;
+  const handleDelete = (id: number) => {
+    setIdToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!idToDelete) return;
 
     try {
-      await apiClient.delete(`/fitout_guide/documents/${id}.json`);
+      await apiClient.delete(`/attachfiles/${idToDelete}.json`);
       toast.success('Fitout guide deleted successfully');
-      setGuides(Array.isArray(guides) ? guides.filter(guide => guide.id !== id) : []);
+      setGuides(prev => prev.filter(guide => guide.id !== idToDelete));
     } catch (error) {
       console.error('Error deleting guide:', error);
       toast.error('Failed to delete fitout guide');
+    } finally {
+      setShowDeleteConfirm(false);
+      setIdToDelete(null);
     }
   };
 
@@ -141,6 +155,20 @@ export const FitoutGuideTab: React.FC = () => {
         draggable: true,
         defaultVisible: true,
       },
+      {
+        key: 'file_size',
+        label: 'File Size',
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
+        key: 'created_at',
+        label: 'Uploaded At',
+        sortable: true,
+        draggable: true,
+        defaultVisible: true,
+      },
     ],
     []
   );
@@ -152,14 +180,14 @@ export const FitoutGuideTab: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={() => handleDownload(item)}
-              className="text-blue-600 hover:text-blue-800"
+              className="text-black hover:text-black"
               title="Download"
             >
               <Download className="w-4 h-4" />
             </button>
             <button
               onClick={() => handleDelete(item.id)}
-              className="text-red-600 hover:text-red-800"
+              className="text-black hover:text-black"
               title="Delete"
             >
               <Trash2 className="w-4 h-4" />
@@ -170,7 +198,23 @@ export const FitoutGuideTab: React.FC = () => {
         const index = guides.findIndex(g => g.id === item.id);
         return <div>{index + 1}</div>;
       case 'file_name':
-        return <span>{item.file_name}</span>;
+        return <span>{item.name}</span>;
+      case 'file_size':
+        const sizeInKB = (item.file_size / 1024).toFixed(2);
+        const sizeInMB = (item.file_size / (1024 * 1024)).toFixed(2);
+        return <span>{item.file_size > 1024 * 1024 ? `${sizeInMB} MB` : `${sizeInKB} KB`}</span>;
+      case 'created_at':
+        return (
+          <span>
+            {new Date(item.created_at).toLocaleDateString('en-IN', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </span>
+        );
       default:
         return <span>{String(item[columnKey as keyof FitoutGuide] || '-')}</span>;
     }
@@ -225,6 +269,27 @@ export const FitoutGuideTab: React.FC = () => {
           </Button>
         }
       />
+
+      {/* Custom Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Fitout Guide?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the file. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white focus:ring-red-600"
+              onClick={confirmDelete}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { Settings, Edit } from '@mui/icons-material';
 import { toast, Toaster } from 'sonner';
 import axios from 'axios';
 import { getFullUrl } from '@/config/apiConfig';
+import { HI_SOCIETY_CONFIG } from '@/config/apiConfig';
 import ProjectBannerUpload from '@/components/reusable/ProjectBannerUpload';
 import Select from 'react-select';
 import {
@@ -614,10 +615,10 @@ export default function AddOfferPage() {
         setLoadingTemplates(true);
         try {
             const response = await axios.get<OfferTemplate[]>(
-                'https://uat-hi-society.lockated.com/offer_templates.json',
+                `${HI_SOCIETY_CONFIG.BASE_URL}/offer_templates.json`,
                 {
                     params: {
-                        token: 'bfa5004e7b0175622be8f7e69b37d01290b737f82e078414'
+                        token: HI_SOCIETY_CONFIG.TOKEN
                     }
                 }
             );
@@ -634,10 +635,10 @@ export default function AddOfferPage() {
         setLoadingProjects(true);
         try {
             const response = await axios.get(
-                'https://uat-hi-society.lockated.com/projects_for_dropdown.json',
+                `${HI_SOCIETY_CONFIG.BASE_URL}/projects_for_dropdown.json`,
                 {
                     params: {
-                        token: 'bfa5004e7b0175622be8f7e69b37d01290b737f82e078414',
+                        token: HI_SOCIETY_CONFIG.TOKEN,
                         'q[society_id_eq]': '3876'
                     }
                 }
@@ -654,10 +655,10 @@ export default function AddOfferPage() {
     const fetchOfferDetails = async (id: string) => {
         try {
             const response = await axios.get(
-                getFullUrl(`/crm/offers/${id}.json`),
+                `${HI_SOCIETY_CONFIG.BASE_URL}/crm/offers/${id}.json`,
                 {
                     params: {
-                        token: 'bfa5004e7b0175622be8f7e69b37d01290b737f82e078414'
+                        token: HI_SOCIETY_CONFIG.TOKEN
                     }
                 }
             );
@@ -949,11 +950,11 @@ export default function AddOfferPage() {
                 formDataPayload.append('offer[offer_pdf]', newPdfFiles[0].file);
             }
 
-            let apiUrl = getFullUrl('/crm/offers.json');
+            let apiUrl = `${HI_SOCIETY_CONFIG.BASE_URL}/crm/offers.json`;
             let method: 'post' | 'put' = 'post';
 
             if (isEditMode && offerId) {
-                apiUrl = getFullUrl(`/crm/offers/${offerId}.json`);
+                apiUrl = `${HI_SOCIETY_CONFIG.BASE_URL}/crm/offers/${offerId}.json`;
                 method = 'put';
             }
 
@@ -963,7 +964,7 @@ export default function AddOfferPage() {
                 method,
                 data: formDataPayload,
                 params: {
-                    token: 'bfa5004e7b0175622be8f7e69b37d01290b737f82e078414'
+                    token: HI_SOCIETY_CONFIG.TOKEN
                 },
                 headers: {
                     'Content-Type': 'multipart/form-data'

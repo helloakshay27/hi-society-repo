@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, SelectChangeEvent } from '@mui/material';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { apiClient } from '@/utils/apiClient';
 
 interface FitoutRequestFormData {
@@ -34,13 +34,13 @@ interface FitoutRequestCategory {
 
 const FitoutRequestAdd: React.FC = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [towers, setTowers] = useState<any[]>([]);
   const [flats, setFlats] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [fitoutFlatRates, setFitoutFlatRates] = useState<any[]>([]);
+  const [fitoutTypes, setFitoutTypes] = useState<string[]>([]);
   const [convenienceCharge, setConvenienceCharge] = useState('0.00');
   const [deposit, setDeposit] = useState('0.00');
   const [requestCategories, setRequestCategories] = useState<FitoutRequestCategory[]>([]);
@@ -137,9 +137,14 @@ const FitoutRequestAdd: React.FC = () => {
         setConvenienceCharge(firstRate.convenience_charge?.toString() || '0.00');
         setDeposit(firstRate.deposit?.toString() || '0.00');
         
-        toast({
-          title: 'Success',
-          description: `Loaded ${matchingRates.length} annexure(s) with amounts for ${fitoutType}`,
+        toast.success(`Loaded ${matchingRates.length} annexure(s) with amounts for ${fitoutType}`, {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
         });
       } else {
         // No matching rates found for this fitout type
@@ -148,28 +153,36 @@ const FitoutRequestAdd: React.FC = () => {
         setConvenienceCharge('0.00');
         setDeposit('0.00');
         
-        toast({
-          title: 'No Rates Found',
-          description: `No fitout rates configured for ${fitoutType} type`,
-          variant: 'destructive',
+        toast.error(`No fitout rates configured for ${fitoutType} type`, {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
         });
       }
     } catch (error) {
       console.error('Error fetching fitout flat rates:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch fitout rates',
-        variant: 'destructive',
+      toast.error('Failed to fetch fitout rates', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     }
   };
 
   const fetchDropdownData = async () => {
     try {
-      // Get society_id from localStorage (this is the user_society.id)
+      // Get user_society.id from localStorage
       const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
       
-      // First, get the selected user society to extract id_society
+      // First, get the selected user society to extract id_society for API calls
       let idSociety = '';
       if (selectedUserSocietyId) {
         const selectedSocietyResponse = await apiClient.get(`/crm/admin/user_societies.json`);
@@ -181,10 +194,14 @@ const FitoutRequestAdd: React.FC = () => {
       
       if (!idSociety) {
         console.error('No id_society found. Please ensure selectedUserSociety is set in localStorage.');
-        toast({
-          title: 'Error',
-          description: 'Society information not found. Please select a society.',
-          variant: 'destructive',
+        toast.error('Society information not found. Please select a society.', {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
         });
         return;
       }
@@ -224,14 +241,21 @@ const FitoutRequestAdd: React.FC = () => {
       
       setCategories(categoriesArray);
       
-      // Set id_society in formData for user_society_id parameter
-      setFormData(prev => ({ ...prev, user_society_id: idSociety }));
+      // Set static fitout types
+      setFitoutTypes(['Move In', 'Fitout']);
+      
+      // Set user_society.id in formData for user_society_id parameter
+      setFormData(prev => ({ ...prev, user_society_id: selectedUserSocietyId }));
     } catch (error) {
       console.error('Error fetching dropdown data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load form data',
-        variant: 'destructive',
+      toast.error('Failed to load form data', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     }
   };
@@ -274,9 +298,13 @@ const FitoutRequestAdd: React.FC = () => {
     
     if (flatId && formData.site_id) {
       try {
-        const response = await apiClient.get(`/get_user_society.json?society_block_id=${formData.site_id}&society_flat_id=${flatId}`);
+        const response = await apiClient.get(`/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${flatId}&q[approve_eq]=true`);
         console.log('Users API Response:', response.data);
-        const usersArray = response.data?.user_societies || [];
+        // Response is an array of [name, id] tuples like [["ubaid hashmat", 110466]]
+        const usersArray = Array.isArray(response.data) ? response.data.map(([name, id]: [string, number]) => ({
+          id,
+          name
+        })) : [];
         console.log('Users Array:', usersArray);
         setUsers(usersArray);
       } catch (error) {
@@ -348,11 +376,15 @@ const FitoutRequestAdd: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.site_id || !formData.unit_id || !formData.user_id) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill in all required fields',
-        variant: 'destructive',
+    if (!formData.site_id || !formData.unit_id || !formData.user_id || !formData.fitout_type) {
+      toast.error('Please fill in all required fields (Tower/Site, Flat, User, and Fitout Type)', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
       return;
     }
@@ -363,11 +395,10 @@ const FitoutRequestAdd: React.FC = () => {
       const formDataToSend = new FormData();
       
       // Add main fitout request fields
-      formDataToSend.append('fitout_request[user_society_id]', formData.user_society_id);
       formDataToSend.append('fitout_request[site_id]', formData.site_id);
       formDataToSend.append('fitout_request[unit_id]', formData.unit_id);
       
-      if (formData.user_id) formDataToSend.append('fitout_request[user_id]', formData.user_id);
+      if (formData.user_id) formDataToSend.append('fitout_request[user_society_id]', formData.user_id);
       if (formData.fitout_category_id) formDataToSend.append('fitout_request[fitout_category_id]', formData.fitout_category_id);
       if (formData.requested_date) formDataToSend.append('fitout_request[start_date]', formData.requested_date);
       if (formData.expiry_date) formDataToSend.append('fitout_request[expiry_date]', formData.expiry_date);
@@ -414,18 +445,27 @@ const FitoutRequestAdd: React.FC = () => {
         },
       });
 
-      toast({
-        title: 'Success',
-        description: 'Fitout request created successfully!',
+      toast.success('Fitout request created successfully!', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
 
       navigate('/fitout/requests');
     } catch (error) {
       console.error('Error creating fitout request:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create fitout request',
-        variant: 'destructive',
+      toast.error('Failed to create fitout request', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     } finally {
       setLoading(false);
@@ -518,9 +558,9 @@ const FitoutRequestAdd: React.FC = () => {
                 >
                   <MenuItem value="">Select User</MenuItem>
                   {Array.isArray(users) && users.length > 0 ? (
-                    users.map((userSociety: any) => (
-                      <MenuItem key={userSociety.id} value={userSociety.user?.id || userSociety.id_user}>
-                        {userSociety.user?.firstname || ''} {userSociety.user?.lastname || ''}
+                    users.map((user: any) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        {user.name}
                       </MenuItem>
                     ))
                   ) : (
@@ -540,6 +580,18 @@ const FitoutRequestAdd: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
               />
+                <TextField
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Description"
+              fullWidth
+              // multiline
+              // rows={3}
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+            />
 
               <TextField
                 label="Expiry Date"
@@ -564,10 +616,7 @@ const FitoutRequestAdd: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <TextField
+                <TextField
                 label="Contractor Name"
                 name="contactor_name"
                 value={formData.contactor_name}
@@ -591,33 +640,29 @@ const FitoutRequestAdd: React.FC = () => {
                 InputProps={{ sx: fieldStyles }}
                 inputProps={{ maxLength: 10 }}             
               />
-              <TextField
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Description"
-              fullWidth
-              // multiline
-              // rows={3}
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-            />
             </div>
+
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormControl fullWidth variant="outlined">
-                <InputLabel shrink>Fitout Type</InputLabel>
+                <InputLabel shrink>Fitout Type *</InputLabel>
                 <MuiSelect
                   value={formData.fitout_type}
                   onChange={handleSelectChange('fitout_type')}
-                  label="Type"
+                  label="Fitout Type *"
                   displayEmpty
                   sx={fieldStyles}
                 >
                   <MenuItem value="">Select Type</MenuItem>
-                  <MenuItem value="Move In">Move In</MenuItem>
-                  <MenuItem value="Fitout">Fitout</MenuItem>
+                  {fitoutTypes.length > 0 ? (
+                    fitoutTypes.map((type) => (
+                      <MenuItem key={type} value={type}>
+                        {type}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>No active fitout types available</MenuItem>
+                  )}
                 </MuiSelect>
               </FormControl>
             </div>

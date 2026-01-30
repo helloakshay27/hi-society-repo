@@ -13,6 +13,7 @@ import {
   Gift,
   ChevronLeft,
   ChevronRight,
+  LayoutDashboard,
 } from "lucide-react";
 
 interface MenuItem {
@@ -28,6 +29,12 @@ export const LoyaltySidebar: React.FC = () => {
   const { isSidebarCollapsed, setIsSidebarCollapsed } = useLayout();
 
   const loyaltyMenuItems: MenuItem[] = [
+    {
+      id: "loyalty-dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      path: "/loyalty/dashboard",
+    },
     {
       id: "loyalty-members",
       label: "Members",

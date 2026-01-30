@@ -33,6 +33,7 @@ import {
   Cloud,
   File,
   TrendingUp,
+  Package,
 } from "lucide-react";
 
 interface MenuItem {
@@ -150,6 +151,30 @@ export const BMSSidebar: React.FC = () => {
 
   // Loyalty sub-items
   const loyaltyItems: MenuItem[] = [
+    {
+      id: "loyalty-dashboard",
+      label: "Dashboard",
+      icon: BarChart3,
+      path: "/loyalty/dashboard",
+    },
+    {
+      id: "wallet-management",
+      label: "Wallet Management",
+      icon: TrendingUp,
+      path: "/loyalty/wallet-management",
+    },
+    {
+      id: "loyalty-customers",
+      label: "Customers",
+      icon: Users,
+      path: "/loyalty/customers",
+    },
+    {
+      id: "loyalty-inventory-section",
+      label: "Inventory Section",
+      icon: Package,
+      path: "/loyalty/inventory-section",
+    },
     {
       id: "loyalty-members",
       label: "Members",

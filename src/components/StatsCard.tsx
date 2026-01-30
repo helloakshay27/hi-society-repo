@@ -29,6 +29,10 @@ interface StatsCardProps {
   onClick?: (status: string) => void;
   className?: string;
   selected?: boolean; // <-- add prop for selection
+  onDownload?: () => void; // <-- add download callback
+  downloadData?: any[]; // <-- optional data for CSV export
+  iconRounded?: boolean; // <-- add prop for rounded icon background
+  valueColor?: string; // <-- add prop for value text color
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({
@@ -38,18 +42,22 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   onClick,
   className,
   selected = false,
+  onDownload,
+  downloadData,
+  iconRounded = false,
+  valueColor,
 }) => {
   return (
     <div
       className={`rounded-lg p-3 sm:p-4 lg:p-6 shadow-sm hover:shadow-lg transition-shadow flex items-center gap-2 sm:gap-3 lg:gap-4 cursor-pointer 
-      ${selected ? "bg-[rgb(230_226_218_/_1)]" : "bg-[#f6f4ee]"} ${className}`}
+      ${selected ? "bg-[rgb(230_226_218_/_1)]" : "bg-[#f6f4ee]"} ${className}`} 
       onClick={() => onClick?.(title)}
     >
-      <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-[#C4B89D54] flex items-center justify-center flex-shrink-0">
+      <div className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-[#C4B89D54] flex items-center justify-center flex-shrink-0 ${iconRounded ? 'rounded-full' : ''}`}>
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-lg sm:text-xl lg:text-2xl font-semibold text-[#1A1A1A] truncate">{value}</p>
+        <p className={`text-lg sm:text-xl lg:text-2xl font-semibold truncate ${valueColor ? valueColor : 'text-[#1A1A1A]'}`}>{value}</p>
         <p className="text-xs sm:text-sm font-medium text-[#1A1A1A] truncate">{title}</p>
       </div>
     </div>

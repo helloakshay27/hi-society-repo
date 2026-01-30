@@ -966,6 +966,8 @@ const ProjectDetailsEdit = () => {
 
         const project = response.data;
 
+        console.log('Project configurations from API:', project.configurations);
+
         // Fetch dropdown options first to match property_type and construction_status text to IDs
         const [propertyTypesRes, statusRes] = await Promise.all([
           axios.get(getFullUrl('/property_types.json')),
@@ -1032,9 +1034,14 @@ const ProjectDetailsEdit = () => {
           SFDC_Project_Id: project.SFDC_Project_Id || "",
           Project_Construction_Status: project.Project_Construction_Status || project.project_construction_status || "",
           Construction_Status_id: matchedStatus?.id || project.construction_status_id || "",
-          Configuration_Type: Array.isArray(project.configuration_type) 
-            ? project.configuration_type 
-            : (project.configurations?.map(c => c.name) || []),
+          Configuration_Type: Array.isArray(project.configurations) 
+            ? project.configurations.map(c => ({
+                id: c.id,
+                name: c.name
+              })) 
+            : (Array.isArray(project.configuration_type) 
+              ? project.configuration_type 
+              : []),
           Project_Name: project.project_name || "",
           project_address: project.project_address || "",
           Project_Description: project.project_description || "",
@@ -1149,6 +1156,10 @@ const ProjectDetailsEdit = () => {
           project_2d_image_3_by_2: normalizeImageData(project.project_2d_image_3_by_2),
           project_2d_image_9_by_16: normalizeImageData(project.project_2d_image_9_by_16),
         });
+
+        console.log('Configuration_Type set to formData:', Array.isArray(project.configurations) 
+          ? project.configurations.map(c => ({ id: c.id, name: c.name })) 
+          : []);
 
         setPlans(project.plans || []);
         
@@ -1359,7 +1370,9 @@ const ProjectDetailsEdit = () => {
     axios
       .get(getFullUrl('/configuration_setups.json'))
       .then((response) => {
-        setConfigurations(response.data.filter((config) => config.active === true));
+        const activeConfigs = response.data.filter((config) => config.active === true);
+        console.log('Configurations loaded:', activeConfigs);
+        setConfigurations(activeConfigs);
       })
       .catch((error) => {
         console.error("Error fetching configurations:", error);
@@ -1522,14 +1535,34 @@ const ProjectDetailsEdit = () => {
       videos: ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"],
       plans: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_qrcode_image: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-      brochure: ["application/pdf"],
+      brochure: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      ],
       project_ppt: ["application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation"],
       project_emailer_templetes: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
       KnwYrApt_Technical: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
       project_creatives: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       cover_images: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_creative_generics: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-      project_creative_offers: ["application/pdf"],
+      project_creative_offers: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      ],
       project_interiors: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_exteriors: ["image/jpeg", "image/png", "image/gif", "image/webp"],
       project_layout: [
@@ -1660,11 +1693,11 @@ const ProjectDetailsEdit = () => {
 
       newFiles.forEach((file) => {
         if (!allowedTypes.project_creative_offers.includes(file.type)) {
-          toast.error("Only PDF files are allowed for project offers.");
+          toast.error("Only images, PDFs, DOCs, and PPTs are allowed for project offers.");
           return;
         }
         if (file.size > MAX_SIZES.project_creative_offers) {
-          toast.error("PDF size must be less than 3MB.");
+          toast.error("File size must be less than 3MB.");
           return;
         }
         validFiles.push(file);
@@ -1780,7 +1813,7 @@ const ProjectDetailsEdit = () => {
 
       newFiles.forEach((file) => {
         if (!allowedTypes.brochure.includes(file.type)) {
-          toast.error("Only PDF files are allowed for brochure.");
+          toast.error("Only images, PDFs, DOCs, and PPTs are allowed for brochure.");
           return;
         }
         if (!validateFile(file, MAX_SIZES[name])) return;
@@ -2068,14 +2101,14 @@ const ProjectDetailsEdit = () => {
       totalValidGalleryImages += images.length;
     }
 
-    if (totalValidGalleryImages > 0 && totalValidGalleryImages % 3 !== 0) {
-      const remainder = totalValidGalleryImages % 3;
-      const imagesNeeded = 3 - remainder;
-      toast.error(`Upload ${imagesNeeded} more images to make multiple of 3.`);
-      setLoading(false);
-      setIsSubmitting(false);
-      return;
-    }
+    // if (totalValidGalleryImages > 0 && totalValidGalleryImages % 3 !== 0) {
+    //   const remainder = totalValidGalleryImages % 3;
+    //   const imagesNeeded = 3 - remainder;
+    //   toast.error(`Upload ${imagesNeeded} more images to make multiple of 3.`);
+    //   setLoading(false);
+    //   setIsSubmitting(false);
+    //   return;
+    // }
 
     const data = new FormData();
     data.append("project[id]", projectId || "");
@@ -2273,8 +2306,14 @@ const ProjectDetailsEdit = () => {
           data.append("project[Amenities]", amenityNames);
         }
       } else if (key === "Configuration_Type" && Array.isArray(value) && value.length > 0) {
-        // Convert array to comma-separated string for backend
-        data.append("project[Configuration_Type]", value.join(", "));
+        // Convert configuration objects array to comma-separated string of names
+        const configNames = value
+          .map(c => c.name || c)
+          .filter((name) => name !== null && name !== undefined)
+          .join(",");
+        if (configNames) {
+          data.append("project[Configuration_Type]", configNames);
+        }
       } else if (key === "Specifications" && Array.isArray(value) && value.length > 0) {
         value.forEach((spec) => {
           if (spec) {
@@ -2463,7 +2502,7 @@ const ProjectDetailsEdit = () => {
               >
                 <Building2 size={16} color="#C72030" />
               </span>
-              Basic Information njjnijn
+              Basic Information
             </h2>
           </div>
          <div className="p-6 space-y-6" style={{ backgroundColor: "#AAB9C50D" }}>
@@ -2558,41 +2597,64 @@ const ProjectDetailsEdit = () => {
                 </MUISelect>
               </FormControl>
 
-              <FormControl
-                fullWidth
-                variant="outlined"
-                sx={{ "& .MuiInputBase-root": fieldStyles }}
-              >
-                <InputLabel shrink>Configuration Type</InputLabel>
-                <MUISelect
-                  multiple
-                  value={formData.Configuration_Type}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      Configuration_Type: e.target.value as string[],
-                    }))
-                  }
-                  label="Configuration Type"
-                  notched
-                  displayEmpty
-                  renderValue={(selected) => {
-                    if ((selected as string[]).length === 0) {
-                      return "Select Configuration";
-                    }
-                    return (selected as string[]).join(", ");
-                  }}
-                >
-                  <MenuItem value="" disabled>
-                    Select Configuration
-                  </MenuItem>
-                  {configurations.map((config) => (
-                    <MenuItem key={config.id} value={config.name}>
-                      {config.name}
-                    </MenuItem>
-                  ))}
-                </MUISelect>
-              </FormControl>
+              <div className="w-full">
+                <div className="relative">
+                  <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
+                    Configuration Type
+                  </label>
+                  <Select
+                    isMulti
+                    value={Array.isArray(formData.Configuration_Type)
+                      ? formData.Configuration_Type.map((c) => ({
+                          value: typeof c?.id === 'string' ? parseInt(c.id, 10) : c?.id,
+                          label: c?.name || '',
+                        })).filter((opt) => opt.value && opt.label)
+                      : []}
+                    onChange={(selected, actionMeta) => {
+                      // Handle adding new configurations
+                      if (actionMeta.action === 'select-option') {
+                        const newConfig = actionMeta.option;
+                        const config = configurations.find((c) => c.id === newConfig.value);
+                        if (config) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            Configuration_Type: [...prev.Configuration_Type, { id: config.id, name: config.name }],
+                          }));
+                        }
+                        return;
+                      }
+                      
+                      // Handle removal
+                      if (actionMeta.action === 'remove-value' || actionMeta.action === 'pop-value') {
+                        setFormData((prev) => ({
+                          ...prev,
+                          Configuration_Type: prev.Configuration_Type.filter(
+                            (c) => c.id !== actionMeta.removedValue.value
+                          ),
+                        }));
+                        return;
+                      }
+
+                      // Handle clear all
+                      if (actionMeta.action === 'clear') {
+                        setFormData((prev) => ({
+                          ...prev,
+                          Configuration_Type: [],
+                        }));
+                      }
+                    }}
+                    options={configurations.map((c) => ({ value: c.id, label: c.name }))}
+                    styles={customStyles}
+                    components={{
+                      MultiValue: CustomMultiValue,
+                    }}
+                    closeMenuOnSelect={false}
+                    placeholder="Select Configuration..."
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                  />
+                </div>
+              </div>
                <TextField
                 label="Project Name"
                 placeholder="Enter Project Name"
@@ -2741,19 +2803,22 @@ const ProjectDetailsEdit = () => {
                 placeholder="Enter Size in Sq. Mtr."
                 type="number"
                 value={formData.Project_Size_Sq_Mtr}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    Project_Size_Sq_Mtr: e.target.value,
-                  }))
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || parseFloat(value) >= 0) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      Project_Size_Sq_Mtr: value,
+                    }));
+                  }
+                }}
                 fullWidth
                 variant="outlined"
                 slotProps={{
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0 }
+                  htmlInput: { min: 0, step: "any" }
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -2765,19 +2830,22 @@ const ProjectDetailsEdit = () => {
                 placeholder="Enter Size in Sq. Ft."
                 type="number"
                 value={formData.Project_Size_Sq_Ft}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    Project_Size_Sq_Ft: e.target.value,
-                  }))
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || parseFloat(value) >= 0) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      Project_Size_Sq_Ft: value,
+                    }));
+                  }
+                }}
                 fullWidth
                 variant="outlined"
                 slotProps={{
                   inputLabel: {
                     shrink: true,
                   },
-                  htmlInput: { min: 0 }
+                  htmlInput: { min: 0, step: "any" }
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -4809,11 +4877,11 @@ const ProjectDetailsEdit = () => {
               </div>
 
               {/* {baseURL !== "https://dev-panchshil-super-app.lockated.com/" && baseURL !== "https://rustomjee-live.lockated.com/" && ( */}
-              <div className="mb-6">
-                {/* Header */}
+              {/* <div className="mb-6">
+            
                 <div className="flex justify-between items-center mb-4">
                     <h5 className="section-heading inline-flex items-center gap-1">
-                    Layouts & Floor Plans{" "}
+                    Floor Plans{" "}
                     <span
                       className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowTooltipFloor(true)}
@@ -4834,20 +4902,12 @@ const ProjectDetailsEdit = () => {
                     type="button"
                     onClick={() => setShowFloorPlanModal(true)}
                   >
-                    {/* <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width={20}
-                      height={20}
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                    </svg> */}
+                   
                     <span>Add</span>
                   </button>
                 </div>
 
-                {/* Upload Modal */}
+             
                 {showFloorPlanModal && (
                   <ProjectBannerUpload
                     onClose={() => setShowFloorPlanModal(false)}
@@ -4861,7 +4921,7 @@ const ProjectDetailsEdit = () => {
                   />
                 )}
 
-                {/* Table */}
+           
                 <div className="rounded-lg border border-gray-200 overflow-hidden">
                   <table className="w-full border-separate">
                     <thead>
@@ -4941,7 +5001,7 @@ const ProjectDetailsEdit = () => {
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </div> */}
               {/* )} */}
               <div className="mb-6">
                 {/* Header */}
@@ -4983,7 +5043,7 @@ const ProjectDetailsEdit = () => {
                     className="form-control"
                     type="file"
                     name="brochure"
-                    accept=".pdf,.docx"
+                    accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
                     onChange={(e) =>
                       handleFileUpload("brochure", e.target.files)
                     }
@@ -5129,11 +5189,11 @@ const ProjectDetailsEdit = () => {
                         </table>
                       </div>
                     </div> */}
-                    {/* <div className="mb-6">
+                    <div className="mb-6">
                      
                       <div className="flex justify-between items-center mb-4">
                         <h5 className="section-heading inline-flex items-center gap-1">
-                          Project Layout{" "}
+                          Layouts & Floor Plans{" "}
                           <span
                             className="relative inline-block cursor-pointer"
                             onMouseEnter={() => setShowTooltipLayout(true)}
@@ -5164,7 +5224,7 @@ const ProjectDetailsEdit = () => {
                         className="form-control"
                         type="file"
                         name="project_layout"
-                        accept="image/*"
+                         accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
                         onChange={(e) =>
                           handleFileUpload("project_layout", e.target.files)
                         }
@@ -5243,7 +5303,7 @@ const ProjectDetailsEdit = () => {
                           </tbody>
                         </table>
                       </div>
-                    </div> */}
+                    </div>
                     {/* <div className="mb-6">
                       
                       <div className="flex justify-between items-center mb-4">
@@ -5532,7 +5592,7 @@ const ProjectDetailsEdit = () => {
                           className="form-control"
                           type="file"
                           name="project_creative_offers"
-                          accept="application/pdf"
+                          accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
                           onChange={(e) =>
                             handleFileUpload(
                               "project_creative_offers",
@@ -6189,7 +6249,7 @@ const ProjectDetailsEdit = () => {
                           </tbody>
                         </table>
                       </div>
-                       <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-12">
+                       {/* <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-12">
                                              <TextField
                                                label="Video Preview Image URL"
                                                placeholder="Enter Video URL"
@@ -6207,7 +6267,7 @@ const ProjectDetailsEdit = () => {
                                                  sx: fieldStyles,
                                                }}
                                              />
-                                           </div>
+                                           </div> */}
                     </div>
                   </>
                 {/* // )} */}

@@ -539,6 +539,11 @@ import { EditRosterTemplatePage } from "./pages/setup/EditRosterTemplatePage";
 
 // Import Loyalty Rule Engine Dashboard
 import { LoyaltyRuleEngineDashboard } from "./pages/LoyaltyRuleEngineDashboard";
+import { LoyaltyDashboard } from "./pages/LoyaltyDashboard";
+import { WalletManagement } from "./pages/WalletManagement";
+import { LoyaltyCustomers } from "./pages/LoyaltyCustomers";
+import { LoyaltyCustomerDetails } from "./pages/LoyaltyCustomerDetails";
+import { LoyaltyInventorySection } from "./pages/LoyaltyInventorySection";
 
 // Import OSR pages
 import { OSRDashboard } from "./pages/OSRDashboard";
@@ -572,6 +577,18 @@ import { BroadcastDashboard } from "./pages/BroadcastDashboard";
 import { AddBroadcastPage } from "./pages/AddBroadcastPage";
 import { EditBroadcastPage } from "./pages/EditBroadcastPage";
 import { BroadcastDetailsPage } from "./pages/BroadcastDetailsPage";
+
+// Import Notice pages
+import NoticePageList from "./pages/communication/NoticePageList";
+import NoticePageCreate from "./pages/communication/NoticePageCreate";
+import NoticePageEdit from "./pages/communication/NoticePageEdit";
+import NoticePageDetails from "./pages/communication/NoticePageDetails";
+
+// Import Communication Event pages
+import EventCommunicationList from "./pages/communication/EventCommunicationList";
+import EventCommunicationCreate from "./pages/communication/EventCommunicationCreate";
+import EventCommunicationEdit from "./pages/communication/EventCommunicationEdit";
+import EventCommunicationDetails from "./pages/communication/EventCommunicationDetails";
 
 // Import Redemption Marketplace page
 import { RedemptionMarketplacePage } from "./pages/RedemptionMarketplacePage";
@@ -1283,6 +1300,35 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+                  {/* Rule Engine Routes */}
+                  <Route
+                    path="/rule-engine/rule-list"
+                    element={<RuleListPage />}
+                  />
+                  <Route
+                    path="/loyalty/dashboard"
+                    element={<LoyaltyDashboard />}
+                  />
+                  <Route
+                    path="/loyalty/wallet-management"
+                    element={<WalletManagement />}
+                  />
+                  <Route
+                    path="/loyalty/customers"
+                    element={<LoyaltyCustomers />}
+                  />
+                  <Route
+                    path="/loyalty/customers/:id"
+                    element={<LoyaltyCustomerDetails />}
+                  />
+                  <Route
+                    path="/loyalty/inventory-section"
+                    element={<LoyaltyInventorySection />}
+                  />
+                  <Route
+                    path="/loyalty-rule-engine"
+                    element={<LoyaltyRuleEngineDashboard />}
+                  />
 
                     <Route
                       path="/dashboard-executive"
@@ -2096,6 +2142,32 @@ function App() {
                       path="/visitors/fill_form/:id"
                       element={<VisitorSharingFormWeb />}
                     />
+                 
+
+                  {/* <Route
+                    path="/communication/events"
+                    element={<EventsPage />}
+                  />
+                  <Route
+                    path="/communication/events/add"
+                    element={<CommunicationAddEventPage />}
+                  />
+                  <Route
+                    path="/communication/events/view/:id"
+                    element={<EventDetailPage />}
+                  /> */}
+                  <Route
+                    path="/communication/polls"
+                    element={<PollsPage />}
+                  />
+                  <Route
+                    path="/communication/polls/add"
+                    element={<AddPollPage />}
+                  />
+                  <Route
+                    path="/communication/notifications"
+                    element={<NotificationsPage />}
+                  />
 
                     <Route
                       path="/login"
@@ -2151,6 +2223,106 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+                  {/* CRM Routes */}
+                  <Route path="/crm/campaign" element={<CRMCampaignPage />} />
+                  <Route path="/crm/campaign/add" element={<AddLeadPage />} />
+                  <Route
+                    path="/crm/campaign/details/:id"
+                    element={<LeadDetailsPage />}
+                  />
+                  <Route
+                    path="/crm/customers"
+                    element={<CRMCustomersDashboard />}
+                  />
+                  <Route
+                    path="/crm/fm-users"
+                    element={<CRMFMUserDashboard />}
+                  />
+                  <Route
+                    path="/crm/occupant-users"
+                    element={<CRMOccupantUsersDashboard />}
+                  />
+                  <Route path="/crm/events" element={<CRMEventsPage />} />
+                  <Route path="/crm/events/add" element={<AddEventPage />} />
+                  <Route
+                    path="/crm/events/details/:id"
+                    element={<CRMEventDetailsPage />}
+                  />
+                  <Route
+                    path="/crm/broadcast"
+                    element={<BroadcastDashboard />}
+                  />
+                  <Route
+                    path="/crm/broadcast/add"
+                    element={<AddBroadcastPage />}
+                  />
+                  <Route
+                    path="/crm/broadcast/details/:id"
+                    element={<BroadcastDetailsPage />}
+                  />
+                  <Route
+                    path="/communication/notice"
+                    element={<NoticePageList />}
+                  />
+                  <Route
+                    path="/communication/notice/create"
+                    element={<NoticePageCreate />}
+                  />
+                  <Route
+                    path="/communication/notice/edit/:id"
+                    element={<NoticePageEdit />}
+                  />
+                  <Route
+                    path="/communication/notice/details/:id"
+                    element={<NoticePageDetails />}
+                  />
+                  <Route
+                    path="/communication/events"
+                    element={<EventCommunicationList />}
+                  />
+                  <Route
+                    path="/communication/events/create"
+                    element={<EventCommunicationCreate />}
+                  />
+                  <Route
+                    path="/communication/events/edit/:id"
+                    element={<EventCommunicationEdit />}
+                  />
+                  <Route
+                    path="/communication/events/details/:id"
+                    element={<EventCommunicationDetails />}
+                  />
+                  <Route path="/crm/polls" element={<CRMPollsPage />} />
+                  <Route path="/crm/polls/add" element={<AddPollPage />} />
+                  <Route
+                    path="/crm/groups/details/:id"
+                    element={<CRMGroupDetailsPage />}
+                  />
+                  <Route
+                    path="/crm/occupant-users/:id"
+                    element={<CRMOccupantUserDetailPage />}
+                  />
+                  <Route
+                    path="/crm/occupant-users/:id/edit"
+                    element={<CRMOccupantUserEditPage />}
+                  />
+                  <Route
+                    path="/crm/customers/add"
+                    element={<AddCRMCustomerPage />}
+                  />
+                  <Route
+                    path="/crm/customers/:id"
+                    element={<CrmCustomerDetails />}
+                  />
+                  <Route
+                    path="/crm/customers/edit/:id"
+                    element={<EditCrmCustomer />}
+                  />
+                  <Route path="/crm/wallet-list" element={<CRMWalletList />} />
+                  <Route
+                    path="/crm/wallet-list/:id"
+                    element={<CRMWalletDetails />}
+                  />
 
                     <Route
                       path="/msafe-dashboard"

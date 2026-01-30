@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +25,18 @@ import {
 } from '@/components/ui/select';
 import { EnhancedTable } from '../enhanced-table/EnhancedTable';
 
+// Correct shadcn/ui AlertDialog imports
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
 interface DeviationStatus {
   id: number;
   society_id: number;
@@ -46,6 +60,7 @@ const FIXED_STATES = [
   { value: 'closed', label: 'Closed' },
   // { value: 'false', label: 'False' },
 ];
+
 const COLORS = [
   { value: '#22C55E', label: 'Green' },
   { value: '#EAB308', label: 'Yellow' },
@@ -68,6 +83,10 @@ export const DeviationStatusTab: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Delete confirmation states
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [idToDelete, setIdToDelete] = useState<number | null>(null);
+
   useEffect(() => {
     fetchStatuses();
   }, []);
@@ -85,13 +104,35 @@ export const DeviationStatusTab: React.FC = () => {
         }
       );
       setStatuses(response.data.complaint_statuses || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching deviation statuses:', error);
       toast.error('Failed to load deviation statuses');
       setStatuses([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const getErrorMessage = (error: any): string => {
+    if (error.response) {
+      const { status, data } = error.response;
+      if (status === 422) {
+        if (data?.message) return data.message;
+        if (data?.errors) {
+          if (typeof data.errors === 'object' && !Array.isArray(data.errors)) {
+            return Object.entries(data.errors)
+              .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+              .join('; ');
+          }
+          if (Array.isArray(data.errors)) return data.errors.join('; ');
+          return JSON.stringify(data.errors);
+        }
+      }
+      if (data?.message) return data.message;
+      if (data?.error) return data.error;
+    }
+    if (error.message?.includes('Network')) return 'Network error - please check your connection';
+    return error.message || 'An unexpected error occurred';
   };
 
   const handleAdd = async () => {
@@ -102,14 +143,14 @@ export const DeviationStatusTab: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      const response = await axios.post(
+      await axios.post(
         `${API_CONFIG.BASE_URL}/fitout_categories/create_fitout_statuses.json`,
         {
           complaint_status: {
             name: statusName,
             color_code: selectedColor,
             position: parseInt(statusPosition),
-            fixed_state: fixedState === 'true',
+            fixed_state: fixedState,
             of_atype: 'deviation_details'
           }
         },
@@ -123,10 +164,11 @@ export const DeviationStatusTab: React.FC = () => {
       toast.success('Deviation status added successfully');
       setIsDialogOpen(false);
       resetForm();
-      fetchStatuses(); // Refresh the list
+      fetchStatuses();
     } catch (error: any) {
       console.error('Error adding deviation status:', error);
-      toast.error(error.response?.data?.message || 'Failed to add deviation status');
+      const msg = getErrorMessage(error);
+      toast.error(`Failed to add: ${msg}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -136,7 +178,7 @@ export const DeviationStatusTab: React.FC = () => {
     setEditingId(status.id);
     setStatusName(status.name);
     setStatusPosition(status.position.toString());
-    setFixedState(status.fixed_state === '1' || status.fixed_state === 'true' ? 'true' : 'false');
+    setFixedState(status.fixed_state);
     setSelectedColor(status.color_code);
     setIsDialogOpen(true);
   };
@@ -147,15 +189,14 @@ export const DeviationStatusTab: React.FC = () => {
     try {
       setIsSubmitting(true);
       await axios.put(
-        `${API_CONFIG.BASE_URL}/fitout_categories/modify_complaint_status/${editingId}.json`,
+        `${API_CONFIG.BASE_URL}/fitout_categories/modify_complaint_status.json`,
         {
-          complaint_status: {
-            name: statusName,
-            color_code: selectedColor,
-            position: parseInt(statusPosition),
-            fixed_state: fixedState === 'true',
-            of_atype: 'deviation_details'
-          }
+          id: editingId,
+          name: statusName,
+          color_code: selectedColor,
+          position: parseInt(statusPosition),
+          fixed_state: fixedState,
+          of_atype: 'deviation_details'
         },
         {
           headers: {
@@ -167,21 +208,27 @@ export const DeviationStatusTab: React.FC = () => {
       toast.success('Deviation status updated successfully');
       setIsDialogOpen(false);
       resetForm();
-      fetchStatuses(); // Refresh the list
+      fetchStatuses();
     } catch (error: any) {
       console.error('Error updating deviation status:', error);
-      toast.error(error.response?.data?.message || 'Failed to update deviation status');
+      const msg = getErrorMessage(error);
+      toast.error(`Failed to update: ${msg}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this deviation status?')) return;
+  const handleDelete = (id: number) => {
+    setIdToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!idToDelete) return;
 
     try {
       await axios.delete(
-        `${API_CONFIG.BASE_URL}/fitout_categories/delete_fitout_statuses/${id}.json`,
+        `${API_CONFIG.BASE_URL}/fitout_categories/delete_fitout_statuses/${idToDelete}.json`,
         {
           headers: {
             'Authorization': getAuthHeader(),
@@ -190,10 +237,14 @@ export const DeviationStatusTab: React.FC = () => {
         }
       );
       toast.success('Deviation status deleted successfully');
-      setStatuses(statuses.filter(stat => stat.id !== id));
+      setStatuses((prev) => prev.filter((stat) => stat.id !== idToDelete));
     } catch (error: any) {
       console.error('Error deleting deviation status:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete deviation status');
+      const msg = getErrorMessage(error);
+      toast.error(`Failed to delete: ${msg}`);
+    } finally {
+      setShowDeleteConfirm(false);
+      setIdToDelete(null);
     }
   };
 
@@ -263,65 +314,68 @@ export const DeviationStatusTab: React.FC = () => {
     []
   );
 
-  const renderCell = useCallback((item: DeviationStatus, columnKey: string) => {
-    switch (columnKey) {
-      case 'actions':
-        return (
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleEdit(item)}
-              className="text-black-600 hover:text-black-800"
-            >
-              <Pencil className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => handleDelete(item.id)}
-              className="text-black-600 hover:text-black-800"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        );
-      case 'position':
-        return <span className="font-medium">{item.position}</span>;
-      case 'name':
-        return <span className="font-medium">{item.name}</span>;
-      case 'fixed_state':
-        return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            item.fixed_state === '1' || item.fixed_state === 'true'
-              ? 'bg-green-100 text-green-800'
-              : 'bg-gray-100 text-gray-800'
-          }`}>
-            {item.fixed_state === '1' || item.fixed_state === 'true' ? 'True' : 'False'}
-          </span>
-        );
-      case 'color_code':
-        return (
-          <div className="flex items-center gap-2">
-            <div
-              className="w-10 h-6 rounded border border-gray-300"
-              style={{ backgroundColor: item.color_code }}
-            />
-            <span className="text-xs text-gray-600">{item.color_code}</span>
-          </div>
-        );
-      case 'created_at':
-        return (
-          <span className="text-sm text-gray-600">
-            {new Date(item.created_at).toLocaleString('en-US', {
-              month: '2-digit',
-              day: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </span>
-        );
-      default:
-        return <span>{String(item[columnKey as keyof DeviationStatus] || '-')}</span>;
-    }
-  }, []);
+  const renderCell = useCallback(
+    (item: DeviationStatus, columnKey: string) => {
+      switch (columnKey) {
+        case 'actions':
+          return (
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleEdit(item)}
+                className="text-black hover:text-black"
+                title="Edit"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleDelete(item.id)}
+                className="text-black hover:text-black"
+                title="Delete"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          );
+        case 'position':
+          return <span className="font-medium">{item.position}</span>;
+        case 'name':
+          return <span className="font-medium">{item.name}</span>;
+        case 'fixed_state':
+          return (
+            <span className="font-medium">
+              {item.fixed_state
+                ? item.fixed_state.charAt(0).toUpperCase() + item.fixed_state.slice(1)
+                : ''}
+            </span>
+          );
+        case 'color_code':
+          return (
+            <div className="flex items-center gap-2">
+              <div
+                className="w-10 h-6 rounded border border-gray-300"
+                style={{ backgroundColor: item.color_code }}
+              />
+              <span className="text-xs text-gray-600">{item.color_code}</span>
+            </div>
+          );
+        case 'created_at':
+          return (
+            <span className="text-sm text-gray-600">
+              {new Date(item.created_at).toLocaleString('en-US', {
+                month: '2-digit',
+                day: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+          );
+        default:
+          return <span>{String(item[columnKey as keyof DeviationStatus] || '-')}</span>;
+      }
+    },
+    [] // No need for statuses dependency here unless you use it inside
+  );
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -350,13 +404,36 @@ export const DeviationStatusTab: React.FC = () => {
         }
       />
 
-      {/* Add/Edit Deviation Status Dialog */}
+      {/* Custom Delete Confirmation */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Deviation Status?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the status. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white focus:ring-red-600"
+              onClick={confirmDelete}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit Deviation Status' : 'Add Deviation Status'}</DialogTitle>
             <DialogDescription>
-              {editingId ? 'Update the deviation status details below.' : 'Enter the deviation status details below.'}
+              {editingId
+                ? 'Update the deviation status details below.'
+                : 'Enter the deviation status details below.'}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -429,7 +506,6 @@ export const DeviationStatusTab: React.FC = () => {
               Cancel
             </Button>
             <Button
-              type="submit"
               onClick={editingId ? handleUpdate : handleAdd}
               disabled={isSubmitting}
               className="bg-[#2C3F87] hover:bg-[#1e2a5e] text-white"

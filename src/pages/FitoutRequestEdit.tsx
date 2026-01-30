@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem, SelectChangeEvent } from '@mui/material';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { apiClient } from '@/utils/apiClient';
 
 interface FitoutRequestFormData {
@@ -40,7 +40,6 @@ interface FitoutRequestCategory {
 const FitoutRequestEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [towers, setTowers] = useState([]);
@@ -53,6 +52,7 @@ const FitoutRequestEdit: React.FC = () => {
   const [requestCategories, setRequestCategories] = useState<FitoutRequestCategory[]>([]);
   const [fitoutFlatRates, setFitoutFlatRates] = useState<any[]>([]);
   const [deposit, setDeposit] = useState('0.00');
+  const fitoutTypes = ['Move In', 'Fitout'];
 
   const [formData, setFormData] = useState<FitoutRequestFormData>({
     tower: '',
@@ -149,24 +149,37 @@ const FitoutRequestEdit: React.FC = () => {
         }));
         setDeposit(firstRate.deposit?.toString() || '0.00');
         
-        toast({
-          title: 'Success',
-          description: `Loaded ${matchingRates.length} annexure(s) with amounts for ${fitoutType}`,
+        toast.success(`Loaded ${matchingRates.length} annexure(s) with amounts for ${fitoutType}`, {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
         });
       } else if (matchingRates.length === 0) {
         console.warn('No matching rates found for fitout type:', fitoutType);
-        toast({
-          title: 'No Rates Found',
-          description: `No fitout rates configured for ${fitoutType} type`,
-          variant: 'destructive',
+        toast.error(`No fitout rates configured for ${fitoutType} type`, {
+          position: 'top-right',
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: 'black',
+            border: 'none',
+          },
         });
       }
     } catch (error) {
       console.error('Error fetching fitout flat rates:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch fitout rates',
-        variant: 'destructive',
+      toast.error('Failed to fetch fitout rates', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     }
   };
@@ -276,9 +289,13 @@ const FitoutRequestEdit: React.FC = () => {
     
     if (flatId && formData.tower) {
       try {
-        const response = await apiClient.get(`/get_user_society.json?society_block_id=${formData.tower}&society_flat_id=${flatId}`);
+        const response = await apiClient.get(`/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${flatId}&q[approve_eq]=true`);
         console.log('Users API Response:', response.data);
-        const usersArray = response.data?.user_societies || [];
+        // Response is an array of [name, id] tuples like [["ubaid hashmat", 110466]]
+        const usersArray = Array.isArray(response.data) ? response.data.map(([name, id]: [string, number]) => ({
+          id,
+          name
+        })) : [];
         console.log('Users Array:', usersArray);
         setUsers(usersArray);
       } catch (error) {
@@ -403,31 +420,34 @@ const FitoutRequestEdit: React.FC = () => {
       // Load users for the selected flat
       if (flatId && towerId) {
         try {
-          const usersResponse = await apiClient.get(`/get_user_society.json?society_block_id=${towerId}&society_flat_id=${flatId}`);
-          const usersArray = usersResponse.data?.user_societies || [];
+          const usersResponse = await apiClient.get(`/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${flatId}&q[approve_eq]=true`);
+          // Response is an array of [name, id] tuples like [["ubaid hashmat", 110466]]
+          const usersArray = Array.isArray(usersResponse.data) ? usersResponse.data.map(([name, id]: [string, number]) => ({
+            id,
+            name
+          })) : [];
           setUsers(usersArray);
           console.log('Loaded users for flat:', usersArray);
           
-          // Find the correct user_society.id that matches the user_id
-          const matchingUserSociety = usersArray.find((us: any) => us.user?.id === data.user_id);
-          if (matchingUserSociety) {
-            console.log('Found matching user_society:', matchingUserSociety);
-            // Update form data with the correct user_society.id
-            setFormData(prev => ({
-              ...prev,
-              user: matchingUserSociety.id.toString()
-            }));
-          }
+          // Set the user ID directly from the API response (data.user_id)
+          setFormData(prev => ({
+            ...prev,
+            user: data.user_society_id?.toString() || ''
+          }));
         } catch (error) {
           console.error('Error loading users:', error);
         }
       }
     } catch (error) {
       console.error('Error fetching fitout request:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load fitout request data',
-        variant: 'destructive',
+      toast.error('Failed to load fitout request data', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     } finally {
       setDataLoading(false);
@@ -499,10 +519,14 @@ const FitoutRequestEdit: React.FC = () => {
     e.preventDefault();
     
     if (!formData.tower || !formData.flat || !formData.user) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill in all required fields',
-        variant: 'destructive',
+      toast.error('Please fill in all required fields', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
       return;
     }
@@ -516,7 +540,7 @@ const FitoutRequestEdit: React.FC = () => {
       // Add basic fields
       submitData.append('fitout_request[site_id]', formData.tower);
       submitData.append('fitout_request[unit_id]', formData.flat);
-      submitData.append('fitout_request[user_id]', formData.user);
+      submitData.append('fitout_request[user_society_id]', formData.user);
       submitData.append('fitout_request[start_date]', formData.requestedDate);
       submitData.append('fitout_request[description]', formData.description);
       submitData.append('fitout_request[contactor_name]', formData.contractorName);
@@ -564,18 +588,27 @@ const FitoutRequestEdit: React.FC = () => {
         },
       });
 
-      toast({
-        title: 'Success',
-        description: 'Fitout request updated successfully!',
+      toast.success('Fitout request updated successfully!', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
 
       navigate('/fitout/requests');
     } catch (error) {
       console.error('Error updating fitout request:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update fitout request',
-        variant: 'destructive',
+      toast.error('Failed to update fitout request', {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
       });
     } finally {
       setLoading(false);
@@ -679,9 +712,9 @@ const FitoutRequestEdit: React.FC = () => {
                 >
                   <MenuItem value="">Select User</MenuItem>
                   {Array.isArray(users) && users.length > 0 ? (
-                    users.map((userSociety: any) => (
-                      <MenuItem key={userSociety.id} value={userSociety.id.toString()}>
-                        {userSociety.user?.firstname || ''} {userSociety.user?.lastname || ''}
+                    users.map((user: any) => (
+                      <MenuItem key={user.id} value={user.id.toString()}>
+                        {user.name}
                       </MenuItem>
                     ))
                   ) : (
@@ -701,6 +734,19 @@ const FitoutRequestEdit: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
               />
+
+               <TextField
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Description"
+              fullWidth
+              // multiline
+              // rows={3}
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+            />
 
               <TextField
                 label="Expiry Date"
@@ -750,18 +796,7 @@ const FitoutRequestEdit: React.FC = () => {
                 InputProps={{ sx: fieldStyles }}
                 inputProps={{ maxLength: 10 }}  
               />
-               <TextField
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Description"
-              fullWidth
-              // multiline
-              // rows={3}
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-            />
+              
 
               <FormControl fullWidth variant="outlined">
                 <InputLabel shrink>Fitout Type</InputLabel>
