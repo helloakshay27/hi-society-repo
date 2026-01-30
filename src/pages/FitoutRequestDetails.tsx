@@ -778,8 +778,14 @@ const FitoutRequestDetails: React.FC = () => {
       }
       
       await apiClient.put(`/fitout_request_categories/${selectedCategory.id}/change_status.json`, requestBody);
-      
-      toast.success('Status updated successfully', {
+
+      const selectedStatus = statuses.find((s) => s.id === newStatusId);
+      const successMessage =
+        selectedStatus?.fixed_state === 'Need Modification'
+          ? 'Status updated & Email sent to user'
+          : 'Status updated successfully';
+
+      toast.success(successMessage, {
         position: 'top-right',
         duration: 3000,
         style: {
@@ -2017,111 +2023,155 @@ const FitoutRequestDetails: React.FC = () => {
                                             
                                             {/* Answer */}
                                             <div className="ml-9 space-y-2">
-                                              <div className="bg-gray-50 rounded-md p-3 border border-gray-100">
-                                                {annexureResponsesEditMode ? (
-                                                  question.qtype === 'multiple' ? (
-                                                    <Select
-                                                      value={currentOptionId ? String(currentOptionId) : ''}
-                                                      onValueChange={(val) => {
-                                                        const selectedId = val ? Number(val) : null;
-                                                        const selectedOption = question.snag_quest_options?.find(
-                                                          (opt) => opt.id === selectedId
-                                                        );
-                                                        setEditedAnnexureAnswers((prev) => ({
-                                                          ...prev,
-                                                          [questMap.id]: {
-                                                            quest_option_id: selectedId,
-                                                            ans_descr: selectedOption?.qname || '',
-                                                          },
-                                                        }));
-                                                      }}
-                                                    >
-                                                      <SelectTrigger className="h-9 bg-white">
-                                                        <SelectValue placeholder="Select" />
-                                                      </SelectTrigger>
-                                                      <SelectContent>
-                                                        {(question.snag_quest_options || []).map((opt) => (
-                                                          <SelectItem key={opt.id} value={String(opt.id)}>
-                                                            {opt.qname}
-                                                          </SelectItem>
-                                                        ))}
-                                                      </SelectContent>
-                                                    </Select>
-                                                  ) : question.qtype === 'date' ? (
-                                                    <Input
-                                                      type="date"
-                                                      value={currentAnsDescr}
-                                                      onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        setEditedAnnexureAnswers((prev) => ({
-                                                          ...prev,
-                                                          [questMap.id]: {
-                                                            ...prev[questMap.id],
-                                                            ans_descr: val,
-                                                          },
-                                                        }));
-                                                      }}
-                                                      className="h-9 bg-white"
-                                                    />
-                                                  ) : question.qtype === 'file' ? (
-                                                    <div className="space-y-2">
+                                              {(annexureResponsesEditMode || (question.qtype !== 'file' && question.qtype !== 'signature')) && (
+                                                <div className="bg-gray-50 rounded-md p-3 border border-gray-100">
+                                                  {annexureResponsesEditMode ? (
+                                                    question.qtype === 'multiple' ? (
+                                                      <Select
+                                                        value={currentOptionId ? String(currentOptionId) : ''}
+                                                        onValueChange={(val) => {
+                                                          const selectedId = val ? Number(val) : null;
+                                                          const selectedOption = question.snag_quest_options?.find(
+                                                            (opt) => opt.id === selectedId
+                                                          );
+                                                          setEditedAnnexureAnswers((prev) => ({
+                                                            ...prev,
+                                                            [questMap.id]: {
+                                                              quest_option_id: selectedId,
+                                                              ans_descr: selectedOption?.qname || '',
+                                                            },
+                                                          }));
+                                                        }}
+                                                      >
+                                                        <SelectTrigger className="h-9 bg-white">
+                                                          <SelectValue placeholder="Select" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                          {(question.snag_quest_options || []).map((opt) => (
+                                                            <SelectItem key={opt.id} value={String(opt.id)}>
+                                                              {opt.qname}
+                                                            </SelectItem>
+                                                          ))}
+                                                        </SelectContent>
+                                                      </Select>
+                                                    ) : question.qtype === 'date' ? (
                                                       <Input
-                                                        type="file"
-                                                        multiple
+                                                        type="date"
+                                                        value={currentAnsDescr}
                                                         onChange={(e) => {
-                                                          const files = e.target.files ? Array.from(e.target.files) : [];
-                                                          setEditedAnnexureFilesByMapId((prev) => ({
+                                                          const val = e.target.value;
+                                                          setEditedAnnexureAnswers((prev) => ({
                                                             ...prev,
-                                                            [questMap.id]: files,
+                                                            [questMap.id]: {
+                                                              ...prev[questMap.id],
+                                                              ans_descr: val,
+                                                            },
                                                           }));
                                                         }}
-                                                        className="bg-white"
+                                                        className="h-9 bg-white"
                                                       />
-                                                      {editedAnnexureFilesByMapId[questMap.id] &&
-                                                        editedAnnexureFilesByMapId[questMap.id].length > 0 && (
-                                                          <p className="text-xs text-gray-600">
-                                                            {editedAnnexureFilesByMapId[questMap.id].length} file(s) selected
-                                                          </p>
+                                                    ) : question.qtype === 'file' ? (
+                                                      <div className="space-y-2">
+                                                        <Input
+                                                          type="file"
+                                                          multiple
+                                                          onChange={(e) => {
+                                                            const files = e.target.files ? Array.from(e.target.files) : [];
+                                                            setEditedAnnexureFilesByMapId((prev) => ({
+                                                              ...prev,
+                                                              [questMap.id]: files,
+                                                            }));
+                                                          }}
+                                                          className="bg-white"
+                                                        />
+                                                        {editedAnnexureFilesByMapId[questMap.id] &&
+                                                          editedAnnexureFilesByMapId[questMap.id].length > 0 && (
+                                                            <p className="text-xs text-gray-600">
+                                                              {editedAnnexureFilesByMapId[questMap.id].length} file(s) selected
+                                                            </p>
+                                                          )}
+                                                      </div>
+                                                    ) : question.qtype === 'signature' ? (
+                                                      <div className="space-y-2">
+                                                        {latestAnswer?.docs && latestAnswer.docs.length > 0 && (
+                                                          <div className="space-y-2">
+                                                            <p className="text-xs font-medium text-gray-600">
+                                                              Current Signature ({latestAnswer.docs.length})
+                                                            </p>
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                              {latestAnswer.docs.map((doc: any, docIdx: number) => (
+                                                                <div
+                                                                  key={doc.id}
+                                                                  className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
+                                                                >
+                                                                  {doc.document_type?.startsWith('image/') ? (
+                                                                    <img
+                                                                      src={doc.document}
+                                                                      alt={`Signature ${docIdx + 1}`}
+                                                                      className="w-full h-24 object-cover"
+                                                                      onError={(e) => {
+                                                                        const target = e.target as HTMLImageElement;
+                                                                        target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+                                                                      }}
+                                                                    />
+                                                                  ) : (
+                                                                    <div className="w-full h-24 bg-gray-100 flex items-center justify-center">
+                                                                      <Paperclip className="w-8 h-8 text-gray-400" />
+                                                                    </div>
+                                                                  )}
+                                                                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
+                                                                    <Button
+                                                                      size="sm"
+                                                                      variant="secondary"
+                                                                      className="opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-1 h-auto"
+                                                                      onClick={() => window.open(doc.document, '_blank')}
+                                                                    >
+                                                                      <Download className="w-3 h-3 mr-1" />
+                                                                      View
+                                                                    </Button>
+                                                                  </div>
+                                                                </div>
+                                                              ))}
+                                                            </div>
+                                                          </div>
                                                         )}
-                                                    </div>
-                                                  ) : question.qtype === 'signature' ? (
-                                                    <div className="space-y-2">
-                                                      <SignatureCanvas
-                                                        mapId={questMap.id}
-                                                        value={editedAnnexureSignaturesByMapId[questMap.id]}
-                                                        onChange={(dataUrl) => {
-                                                          setEditedAnnexureSignaturesByMapId((prev) => ({
+                                                        <SignatureCanvas
+                                                          mapId={questMap.id}
+                                                          value={editedAnnexureSignaturesByMapId[questMap.id]}
+                                                          onChange={(dataUrl) => {
+                                                            setEditedAnnexureSignaturesByMapId((prev) => ({
+                                                              ...prev,
+                                                              [questMap.id]: dataUrl,
+                                                            }));
+                                                          }}
+                                                        />
+                                                      </div>
+                                                    ) : (
+                                                      <Input
+                                                        value={currentAnsDescr}
+                                                        onChange={(e) => {
+                                                          const val = e.target.value;
+                                                          setEditedAnnexureAnswers((prev) => ({
                                                             ...prev,
-                                                            [questMap.id]: dataUrl,
+                                                            [questMap.id]: {
+                                                              ...prev[questMap.id],
+                                                              ans_descr: val,
+                                                              quest_option_id: null,
+                                                            },
                                                           }));
                                                         }}
+                                                        className="h-9 bg-white"
                                                       />
-                                                    </div>
+                                                    )
                                                   ) : (
-                                                    <Input
-                                                      value={currentAnsDescr}
-                                                      onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        setEditedAnnexureAnswers((prev) => ({
-                                                          ...prev,
-                                                          [questMap.id]: {
-                                                            ...prev[questMap.id],
-                                                            ans_descr: val,
-                                                            quest_option_id: null,
-                                                          },
-                                                        }));
-                                                      }}
-                                                      className="h-9 bg-white"
-                                                    />
-                                                  )
-                                                ) : (
-                                                  <p className={`text-sm ${latestAnswer ? 'text-gray-900' : 'text-gray-400 italic'}`}>
-                                                    {answerDisplay}
-                                                  </p>
-                                                )}
-                                              </div>
+                                                    <p className={`text-sm ${latestAnswer ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+                                                      {answerDisplay}
+                                                    </p>
+                                                  )}
+                                                </div>
+                                              )}
 
-                                              {sortedAnswers.length > 1 && (
+                                              {question.qtype !== 'file' && question.qtype !== 'signature' && sortedAnswers.length > 1 && (
                                                 <div className="space-y-2">
                                                   <p className="text-xs font-medium text-gray-600">
                                                     Response History ({sortedAnswers.length})
@@ -2153,48 +2203,59 @@ const FitoutRequestDetails: React.FC = () => {
                                               )}
                                               
                                               {/* Answer Documents */}
-                                              {latestAnswer?.docs && latestAnswer.docs.length > 0 && (
+                                              {sortedAnswers.some((a) => Array.isArray(a.docs) && a.docs.length > 0) && (
                                                 <div className="space-y-2">
-                                                  <p className="text-xs font-medium text-gray-600">
-                                                    Attachments ({latestAnswer.docs.length})
-                                                  </p>
-                                                  <div className="grid grid-cols-2 gap-2">
-                                                    {latestAnswer.docs.map((doc: any, docIdx: number) => (
-                                                      <div
-                                                        key={doc.id}
-                                                        className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
-                                                      >
-                                                        {doc.document_type?.startsWith('image/') ? (
-                                                          <img
-                                                            src={doc.document}
-                                                            alt={`Attachment ${docIdx + 1}`}
-                                                            className="w-full h-24 object-cover"
-                                                            onError={(e) => {
-                                                              const target = e.target as HTMLImageElement;
-                                                              target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
-                                                            }}
-                                                          />
-                                                        ) : (
-                                                          <div className="w-full h-24 bg-gray-100 flex items-center justify-center">
-                                                            <Paperclip className="w-8 h-8 text-gray-400" />
+                                                  <p className="text-xs font-medium text-gray-600">Attachments</p>
+                                                  <div className="space-y-3">
+                                                    {sortedAnswers
+                                                      .filter((a) => Array.isArray(a.docs) && a.docs.length > 0)
+                                                      .slice()
+                                                      .reverse()
+                                                      .map((ansWithDocs) => (
+                                                        <div key={ansWithDocs.id} className="space-y-2">
+                                                          <p className="text-xs text-gray-500">
+                                                            {formatDateTime(ansWithDocs.created_at)}
+                                                          </p>
+                                                          <div className="grid grid-cols-2 gap-2">
+                                                            {(ansWithDocs.docs || []).map((doc: any, docIdx: number) => (
+                                                              <div
+                                                                key={doc.id}
+                                                                className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-all"
+                                                              >
+                                                                {doc.document_type?.startsWith('image/') ? (
+                                                                  <img
+                                                                    src={doc.document}
+                                                                    alt={`Attachment ${docIdx + 1}`}
+                                                                    className="w-full h-24 object-cover"
+                                                                    onError={(e) => {
+                                                                      const target = e.target as HTMLImageElement;
+                                                                      target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+                                                                    }}
+                                                                  />
+                                                                ) : (
+                                                                  <div className="w-full h-24 bg-gray-100 flex items-center justify-center">
+                                                                    <Paperclip className="w-8 h-8 text-gray-400" />
+                                                                  </div>
+                                                                )}
+                                                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
+                                                                  <Button
+                                                                    size="sm"
+                                                                    variant="secondary"
+                                                                    className="opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-1 h-auto"
+                                                                    onClick={() => window.open(doc.document, '_blank')}
+                                                                  >
+                                                                    <Download className="w-3 h-3 mr-1" />
+                                                                    View
+                                                                  </Button>
+                                                                </div>
+                                                                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs px-2 py-1 text-center truncate">
+                                                                  {doc.document_type?.split('/')[1]?.toUpperCase() || 'File'}
+                                                                </div>
+                                                              </div>
+                                                            ))}
                                                           </div>
-                                                        )}
-                                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
-                                                          <Button
-                                                            size="sm"
-                                                            variant="secondary"
-                                                            className="opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-1 h-auto"
-                                                            onClick={() => window.open(doc.document, '_blank')}
-                                                          >
-                                                            <Download className="w-3 h-3 mr-1" />
-                                                            View
-                                                          </Button>
                                                         </div>
-                                                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs px-2 py-1 text-center truncate">
-                                                          {doc.document_type?.split('/')[1]?.toUpperCase() || 'File'}
-                                                        </div>
-                                                      </div>
-                                                    ))}
+                                                      ))}
                                                   </div>
                                                 </div>
                                               )}
