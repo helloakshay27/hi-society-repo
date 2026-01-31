@@ -106,15 +106,10 @@ export const HiSocietyNavigation: React.FC = () => {
 
   // Filter navigation items based on domain
   const filteredNavigationItems = isCMSDomain
-    ? navigationItems.filter(
-        (item) => item.id === "home" || item.id === "settings"
-      )
-    : isFitoutDomain
-      ? navigationItems.filter(
-          (item) => item.id === "fitout" || item.id === "settings"
-        )
-      : navigationItems.filter((item) => item.id !== "home");
-
+  ? navigationItems.filter(
+      (item) => item.id === "home" || item.id === "settings"
+    )
+  : navigationItems; 
   // Detect active navigation based on current path
   useEffect(() => {
     const path = location.pathname;
