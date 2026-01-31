@@ -140,12 +140,25 @@ export const isAuthenticated = (): boolean => {
 
 // Clear all auth data
 export const clearAuth = (): void => {
+  // Save layout preferences before clearing
+  const layoutMode = localStorage.getItem('layoutMode');
+  const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
+  
   localStorage.removeItem(AUTH_KEYS.USER);
   localStorage.removeItem(AUTH_KEYS.TOKEN);
   localStorage.removeItem(AUTH_KEYS.TEMP_PHONE);
   localStorage.removeItem(AUTH_KEYS.TEMP_EMAIL);
   localStorage.removeItem(AUTH_KEYS.BASE_URL);
   localStorage.clear();
+  
+  // Restore layout preferences after clearing
+  if (layoutMode) {
+    localStorage.setItem('layoutMode', layoutMode);
+    console.log('🎨 Preserved layoutMode during auth clear:', layoutMode);
+  }
+  if (sidebarCollapsed) {
+    localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+  }
 };
 const hostname = window.location.hostname;
 

@@ -52,6 +52,7 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
     
     // If mode already exists, respect it (user has made a choice)
     if (savedMode) {
+      console.log('🎨 Loading saved layout mode from localStorage:', savedMode);
       return (savedMode === 'hi-society' ? 'hi-society' : 'fm-matrix') as 'fm-matrix' | 'hi-society';
     }
     
@@ -64,6 +65,7 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
     
     // Set initial mode based on hostname and save it
     const initialMode = isHiSocietySite ? 'hi-society' : 'fm-matrix';
+    console.log('🎨 First visit - Auto-detecting layout mode:', initialMode, '(hostname:', hostname, ')');
     localStorage.setItem("layoutMode", initialMode);
     return initialMode;
   });
@@ -73,9 +75,19 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
     setLayoutMode(prevMode => {
       const newMode = prevMode === 'fm-matrix' ? 'hi-society' : 'fm-matrix';
       localStorage.setItem('layoutMode', newMode);
+      console.log('🔄 Layout mode toggled to:', newMode);
       return newMode;
     });
   };
+
+  // Ensure layoutMode is always synced with localStorage
+  useEffect(() => {
+    const currentMode = localStorage.getItem('layoutMode');
+    if (currentMode !== layoutMode) {
+      console.log('💾 Syncing layoutMode to localStorage:', layoutMode);
+      localStorage.setItem('layoutMode', layoutMode);
+    }
+  }, [layoutMode]);
 
   // Get current selected company from Redux store
   const { selectedCompany } = useSelector((state: RootState) => state.project);

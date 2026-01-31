@@ -66,6 +66,16 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { selectedSite } = useSelector((state: RootState) => state.site);
   const location = useLocation();
 
+  // Debug layoutMode state and localStorage sync
+  useEffect(() => {
+    const storedMode = localStorage.getItem('layoutMode');
+    console.log('🎨 Layout Component - layoutMode:', layoutMode, '| localStorage:', storedMode);
+    if (!storedMode) {
+      console.warn('⚠️ layoutMode missing in localStorage! Setting it now...');
+      localStorage.setItem('layoutMode', layoutMode);
+    }
+  }, [layoutMode]);
+
   /**
    * EMPLOYEE VIEW DETECTION
    *

@@ -40,9 +40,17 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       console.warn("401 Unauthorized - Logging out globally");
 
+      // Save layout preferences before clearing
+      const layoutMode = localStorage.getItem('layoutMode');
+      const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
+
       // Clear all auth data
       localStorage.clear();
       sessionStorage.clear();
+
+      // Restore layout preferences
+      if (layoutMode) localStorage.setItem('layoutMode', layoutMode);
+      if (sidebarCollapsed) localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
 
       // Redirect to login page
       window.location.href = "/login";
@@ -54,9 +62,17 @@ apiClient.interceptors.response.use(
     if (error.message === "Network Error" || !error.response) {
       console.warn("Network Error - Logging out globally");
 
+      // Save layout preferences before clearing
+      const layoutMode = localStorage.getItem('layoutMode');
+      const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
+
       // Clear all auth data
       localStorage.clear();
       sessionStorage.clear();
+
+      // Restore layout preferences
+      if (layoutMode) localStorage.setItem('layoutMode', layoutMode);
+      if (sidebarCollapsed) localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
 
       // Redirect to login page
       window.location.href = "/login";

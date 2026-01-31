@@ -18,12 +18,6 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   {
-    id: "home",
-    label: "Home",
-    icon: <Home className="w-4 h-4" />,
-    path: "/maintenance/project-details-list",
-  },
-  {
     id: "bms",
     label: "BMS",
     icon: <Home className="w-4 h-4" />,
@@ -95,7 +89,7 @@ export const HiSocietyNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isSidebarCollapsed } = useLayout();
-  const [activeNav, setActiveNav] = useState<string>("home");
+  const [activeNav, setActiveNav] = useState<string>("bms");
 
   // Check if current domain is CMS domain
   const isCMSDomain = window.location.hostname === "ui-cms.lockated.com";
@@ -107,13 +101,13 @@ export const HiSocietyNavigation: React.FC = () => {
   // Filter navigation items based on domain
   const filteredNavigationItems = isCMSDomain
     ? navigationItems.filter(
-        (item) => item.id === "home" || item.id === "settings"
+        (item) => item.id === "bms" || item.id === "settings"
       )
     : isFitoutDomain
       ? navigationItems.filter(
           (item) => item.id === "fitout" || item.id === "settings"
         )
-      : navigationItems.filter((item) => item.id !== "home");
+      : navigationItems.filter((item) => item.id !== "bms");
 
   // Detect active navigation based on current path
   useEffect(() => {
@@ -146,9 +140,9 @@ export const HiSocietyNavigation: React.FC = () => {
       path.startsWith("/setup-member") ||
       path.startsWith("/setup")
     ) {
-      setActiveNav(isCMSDomain ? "home" : "bms");
+      setActiveNav(isCMSDomain ? "bms" : "bms");
     } else {
-      setActiveNav(isCMSDomain ? "home" : "bms");
+      setActiveNav(isCMSDomain ? "bms" : "bms");
     }
   }, [location.pathname, isCMSDomain]);
 
