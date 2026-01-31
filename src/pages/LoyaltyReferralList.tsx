@@ -95,9 +95,9 @@ const LoyaltyReferralList = () => {
 
   const columns = [
     { key: 'id', label: 'Sr No', sortable: true },
-    { key: 'name', label: 'Name', sortable: true },
-    { key: 'email', label: 'Email', sortable: true },
-    { key: 'mobile', label: 'Mobile No', sortable: true },
+    { key: 'ref_name', label: 'Name', sortable: true },
+    { key: 'client_email', label: 'Email', sortable: true },
+    { key: 'ref_phone', label: 'Mobile No', sortable: true },
     { key: 'referral_code', label: 'Referral Code', sortable: true },
     { key: 'project_name', label: 'Project Name', sortable: true },
   ];
@@ -126,6 +126,11 @@ const LoyaltyReferralList = () => {
         searchPlaceholder="Search referrals (name, email, mobile, code, project)..."
         loading={isSearching || loading}
         loadingMessage={isSearching ? "Searching referrals..." : "Loading referrals..."}
+        // --- Bind pagination state to table ---
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        onPageChange={handlePageChange}
       />
       {!searchTerm && totalPages > 1 && (
         <div className="mt-6 flex justify-center">

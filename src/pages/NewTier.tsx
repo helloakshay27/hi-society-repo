@@ -3,7 +3,7 @@ import { Formik, Form, Field, ErrorMessage, FieldArray } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getFullUrl } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { ChevronRight, ArrowLeft, X } from "lucide-react";
 
@@ -12,36 +12,35 @@ const validationSchema = Yup.object().shape({
     .required("Tier name is required")
     .test('unique-name', 'Tier name already exists.', async function(value) {
       if (!value) return true;
-      
       try {
         const storedValue = sessionStorage.getItem("selectedId");
-        const response = await axios.get(
-          `${API_CONFIG.BASE_URL}/loyalty/tiers.json?q[loyalty_type_id_eq]=1`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        
-        if (response.data) {
-          const existingTier = response.data.find(tier => 
+        const token = localStorage.getItem("access_token");
+        const url = getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=1${token ? `&access_token=${token}` : ''}`);
+        const response = await axios.get(url, {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+            "Content-Type": "application/json",
+          },
+        });
+        let tiersArray = [];
+        if (Array.isArray(response.data)) {
+          tiersArray = response.data;
+        } else if (Array.isArray(response.data.tiers)) {
+          tiersArray = response.data.tiers;
+        }
+        if (tiersArray.length > 0) {
+          const existingTier = tiersArray.find(tier =>
             tier.name && tier.name.toLowerCase() === value.toLowerCase()
           );
-          
           if (existingTier) return false;
         }
-        
         const { tiers } = this.parent;
         if (tiers && tiers.length > 0) {
-          const duplicateCount = tiers.filter(tier => 
+          const duplicateCount = tiers.filter(tier =>
             tier.name && tier.name.toLowerCase() === value.toLowerCase()
           ).length;
-          
           return duplicateCount === 0;
         }
-        
         return true;
       } catch (error) {
         console.error("Error checking tier name:", error);
@@ -97,42 +96,38 @@ const NewTier = () => {
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
       const storedValue = sessionStorage.getItem("selectedId");
-      
-      const existingTiersResponse = await axios.get(
-        `${baseURL}/loyalty/tiers.json?q[loyalty_type_id_eq]=${storedValue}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      
-      const existingTiers = existingTiersResponse.data || [];
-      
+      const token = localStorage.getItem("access_token");
+      const getTiersUrl = getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=${storedValue}${token ? `&access_token=${token}` : ''}`);
+      const existingTiersResponse = await axios.get(getTiersUrl, {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+          "Content-Type": "application/json",
+        },
+      });
+      let existingTiers = [];
+      if (Array.isArray(existingTiersResponse.data)) {
+        existingTiers = existingTiersResponse.data;
+      } else if (Array.isArray(existingTiersResponse.data.tiers)) {
+        existingTiers = existingTiersResponse.data.tiers;
+      }
       const allNewTierNames = [values.name, ...(values.tiers || []).map(tier => tier.name)];
       const lowerCaseNewNames = allNewTierNames.map(name => name?.toLowerCase()).filter(Boolean);
-      
-      const conflictingTier = existingTiers.find(existingTier => 
-        lowerCaseNewNames.some(newName => 
+      const conflictingTier = existingTiers.find(existingTier =>
+        lowerCaseNewNames.some(newName =>
           existingTier.name && existingTier.name.toLowerCase() === newName
         )
       );
-      
       if (conflictingTier) {
         toast.error(`Tier name "${conflictingTier.name}" already exists.`);
         setSubmitting(false);
         return;
       }
-      
       const hasDuplicates = lowerCaseNewNames.length !== new Set(lowerCaseNewNames).size;
-      
       if (hasDuplicates) {
         toast.error("Tier name already exists in your submission.");
         setSubmitting(false);
         return;
       }
-
       const formattedTiers = values.tiers?.map((tier) => ({
         loyalty_type_id: 1,
         name: tier.name,
@@ -141,7 +136,6 @@ const NewTier = () => {
         welcome_bonus: Number(tier.welcome_bonus),
         point_type: timeframe,
       }));
-
       const newTier = {
         loyalty_type_id: 1,
         name: values.name,
@@ -150,26 +144,23 @@ const NewTier = () => {
         welcome_bonus: Number(values.welcome_bonus),
         point_type: timeframe,
       };
-
       const data = {
         loyalty_tier:
           formattedTiers?.length > 0 ? [...formattedTiers, newTier] : newTier,
       };
-
-      const token = localStorage.getItem("access_token");
-      const url =
-        formattedTiers?.length > 0
-          ? `${baseURL}/loyalty/tiers/bulk_create?token=${token}`
-          : `${baseURL}/loyalty/tiers.json?access_token=${token}`;
-
-      const response = await fetch(url, {
+      let postUrl = "";
+      if (formattedTiers?.length > 0) {
+        postUrl = getFullUrl(`/loyalty/tiers/bulk_create${token ? `?token=${token}` : ''}`);
+      } else {
+        postUrl = getFullUrl(`/loyalty/tiers.json${token ? `?access_token=${token}` : ''}`);
+      }
+      const response = await fetch(postUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
-
       if (response.ok) {
         toast.success("Tier saved successfully!");
         setTimeout(() => {

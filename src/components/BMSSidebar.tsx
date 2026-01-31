@@ -187,12 +187,12 @@ export const BMSSidebar: React.FC = () => {
       icon: Award,
       path: "/loyalty/loyalty-tiers-list",
     },
-    {
-      id: "rule-engine",
-      label: "Rule Engine",
-      icon: Settings,
-      path: "/loyalty/rule-engine-list",
-    },
+    // {
+    //   id: "rule-engine",
+    //   label: "Rule Engine",
+    //   icon: Settings,
+    //   path: "/loyalty/rule-engine-list",
+    // },
     {
       id: "loyalty-referral",
       label: "Referrals",
