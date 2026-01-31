@@ -148,7 +148,7 @@ const AmenitiesList = () => {
     { key: "icon", label: "Icon", sortable: false },
     { key: "dark_mode_icon", label: "Dark Mode Icon", sortable: false },
     { key: "status", label: "Status", sortable: false },
-    { key: "night_mode", label: "Night Mode", sortable: false },
+    // { key: "night_mode", label: "Night Mode", sortable: false },
   ];
 
   const renderCell = (item, columnKey) => {

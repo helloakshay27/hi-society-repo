@@ -164,7 +164,7 @@ const Amenities = () => {
                 required
               />
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
                   Night Mode
                 </label>
@@ -180,7 +180,7 @@ const Amenities = () => {
                     },
                   }}
                 />
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
