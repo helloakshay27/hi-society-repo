@@ -16,7 +16,7 @@ const validationSchema = Yup.object().shape({
       try {
         const storedValue = sessionStorage.getItem("selectedId");
         const response = await axios.get(
-          `${API_CONFIG.BASE_URL}/loyalty/tiers.json?q[loyalty_type_id_eq]=${storedValue}`,
+          `${API_CONFIG.BASE_URL}/loyalty/tiers.json?q[loyalty_type_id_eq]=1`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -134,7 +134,7 @@ const NewTier = () => {
       }
 
       const formattedTiers = values.tiers?.map((tier) => ({
-        loyalty_type_id: Number(storedValue),
+        loyalty_type_id: 1,
         name: tier.name,
         exit_points: Number(tier.exit_points),
         multipliers: Number(tier.multipliers),
@@ -143,7 +143,7 @@ const NewTier = () => {
       }));
 
       const newTier = {
-        loyalty_type_id: Number(storedValue),
+        loyalty_type_id: 1,
         name: values.name,
         exit_points: Number(values.exit_points),
         multipliers: Number(values.multipliers),

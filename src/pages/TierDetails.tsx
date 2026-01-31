@@ -27,7 +27,7 @@ export default function TierDetails() {
   const getMemberDetails = async (id) => {
     try {
       const response = await axios.get(
-        `${baseURL}loyalty/tiers/${id}.json?access_token=${token}&&q[loyalty_type_id_eq]=${storedValue}`
+        `${baseURL}loyalty/tiers/${id}.json?access_token=${token}&&q[loyalty_type_id_eq]=1`
       );
 
       const formattedMember = {

@@ -55,7 +55,7 @@ const LoyaltyTiersList = () => {
     setIsSearching(!!search);
     const storedValue = sessionStorage.getItem('selectedId');
     try {
-      const response = await fetch(getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=${storedValue}`), {
+      const response = await fetch(getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=1`), {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),

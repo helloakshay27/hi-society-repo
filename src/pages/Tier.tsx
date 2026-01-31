@@ -61,7 +61,7 @@ const Tiers = () => {
   const fetchTiers = async () => {
     try {
       const response = await axios.get(
-        `${baseURL}loyalty/tiers.json?access_token=${token}&&q[loyalty_type_id_eq]=${storedValue}`
+        `${baseURL}loyalty/tiers.json?access_token=${token}&&q[loyalty_type_id_eq]=1`
       );
       if (response && response.data) {
         setTiers(response.data);
@@ -238,7 +238,7 @@ const Tiers = () => {
       const token = localStorage.getItem("access_token");
       
       const existingTiersResponse = await axios.get(
-        `${baseURL}/loyalty/tiers.json?access_token=${token}&&q[loyalty_type_id_eq]=${storedValue}`
+        `${baseURL}/loyalty/tiers.json?access_token=${token}&&q[loyalty_type_id_eq]=1`
       );
       
       const existingTiers = existingTiersResponse.data || [];
@@ -267,7 +267,7 @@ const Tiers = () => {
       }
 
       const formattedTiers = values.tiers?.map((tier) => ({
-        loyalty_type_id: Number(storedValue),
+        loyalty_type_id: 1,
         name: tier.name,
         exit_points: Number(tier.exit_points),
         multipliers: Number(tier.multipliers),
@@ -276,7 +276,7 @@ const Tiers = () => {
       }));
 
       const newTier = {
-        loyalty_type_id: Number(storedValue),
+        loyalty_type_id: 1,
         name: values.name,
         exit_points: Number(values.exit_points),
         multipliers: Number(values.multipliers),
