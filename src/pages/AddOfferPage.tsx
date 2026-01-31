@@ -635,12 +635,32 @@ export default function AddOfferPage() {
     const fetchProjects = async () => {
         setLoadingProjects(true);
         try {
+            // Get selected society ID from localStorage
+            const selectedUserSocietyId = localStorage.getItem("selectedUserSociety");
+            const societiesData = localStorage.getItem("hiSocietyApprovedSocieties");
+            
+            let societyId = '';
+            if (selectedUserSocietyId && societiesData) {
+                const societies = JSON.parse(societiesData);
+                const selectedSociety = societies.find((s: any) => s.id.toString() === selectedUserSocietyId);
+                if (selectedSociety) {
+                    societyId = selectedSociety.id_society;
+                }
+            }
+            
+            // If no society ID found, show error and return
+            if (!societyId) {
+                toast.error('Please select a society from the header');
+                setLoadingProjects(false);
+                return;
+            }
+            
             const response = await axios.get(
                 getFullUrl('/projects_for_dropdown.json'),
                 {
                     params: {
                         token: HI_SOCIETY_CONFIG.TOKEN,
-                        'q[society_id_eq]': '3876'
+                        'q[society_id_eq]': societyId
                     }
                 }
             );
