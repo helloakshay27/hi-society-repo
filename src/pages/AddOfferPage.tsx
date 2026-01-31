@@ -659,8 +659,8 @@ export default function AddOfferPage() {
                 getFullUrl('/projects_for_dropdown.json'),
                 {
                     params: {
-                        token: HI_SOCIETY_CONFIG.TOKEN,
-                        'q[society_id_eq]': societyId
+                        token: HI_SOCIETY_CONFIG.TOKEN
+                        // 'q[society_id_eq]': societyId
                     }
                 }
             );
