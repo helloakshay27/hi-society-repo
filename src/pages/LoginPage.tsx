@@ -33,7 +33,7 @@ const fetchHiSocietyData = async (token: string) => {
     // Store account and societies data
     localStorage.setItem('hiSocietyAccount', JSON.stringify(accountData));
     localStorage.setItem('hiSocietySocieties', JSON.stringify(societiesData));
-    
+
     return { accountData, societiesData };
   } catch (error) {
     console.error('Error fetching Hi-Society data:', error);
@@ -171,7 +171,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         sessionStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
         sessionStorage.setItem("selectedUserSociety", accountData.selected_user_society?.toString() || "");
       }
-      
+
       // Fetch user approved societies
       const societiesResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
       if (societiesResponse.ok) {
@@ -432,10 +432,10 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         // Session storage
         sessionStorage.setItem("userId", response.id.toString());
         sessionStorage.setItem("userType", "pms_organization_admin");
-        
+
         // Fetch Hi-Society specific data
         await fetchHiSocietyData(response.spree_api_key);
-        
+
         toast.success(`Welcome back, ${response.firstname}! Login successful.`);
 
         // Navigate directly to Hi Society dashboard
@@ -520,10 +520,10 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
         }, 500);
       }
       // Navigate based on domain
-      const redirectPath = isHiSocietySite 
-        ? "/fitout/requests" 
+      const redirectPath = isHiSocietySite
+        ? "/fitout/requests"
         : "/maintenance/project-details-list";
-      
+
       setTimeout(() => {
         navigate(redirectPath, { replace: true });
       }, 500);

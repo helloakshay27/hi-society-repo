@@ -23,7 +23,9 @@ const Index = () => {
       hostname.includes("fm-matrix.lockated.com");
     const isPulseSite =
       hostname.includes("pulse.lockated.com") ||
-      hostname.includes("pulse.gophygital.work");
+      hostname.includes("pulse.gophygital.work") ||
+      hostname.includes("pulse-uat.panchshil.com");
+    const isClubSite = hostname.includes("club.lockated.com");
 
     // PRIORITY 1: Dynamic route from userRole permissions (highest priority)
     if (userRole) {
@@ -39,7 +41,7 @@ const Index = () => {
     if (userType && isLocalhost) {
       // Navigate based on userType
       if (userType === "pms_organization_admin") {
-        navigate("/admin/dashboard", { replace: true });
+        navigate("/maintenance/asset", { replace: true });
         return;
       } else if (userType === "pms_occupant") {
         navigate("/vas/projects", { replace: true });
@@ -63,13 +65,15 @@ const Index = () => {
         }
       }
       // Fallback to default admin route for these companies
-      navigate("/admin/dashboard", { replace: true });
+      navigate("/maintenance/asset", { replace: true });
       return;
     }
 
     // PRIORITY 4: Domain-specific fallback routing
     if (isViSite) {
       navigate("/safety/m-safe/internal", { replace: true });
+    } else if (isClubSite) {
+      navigate("/club-management/membership", { replace: true });
     } else if (isPulseSite) {
       navigate("/maintenance/ticket", { replace: true });
     } else {

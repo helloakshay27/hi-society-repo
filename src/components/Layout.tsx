@@ -65,6 +65,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { selectedCompany } = useSelector((state: RootState) => state.project);
   const { selectedSite } = useSelector((state: RootState) => state.site);
   const location = useLocation();
+  const currentUser = getUser();
+  const userEmail = currentUser?.email || "No email";
+  const hostname = window.location.hostname;
+
+  // Detect Club Management routes
+  const isClubManagementRoute = hostname === "club.lockated.com" || location.pathname.startsWith("/club-management");
 
   // Debug layoutMode state and localStorage sync
   useEffect(() => {
@@ -127,7 +133,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // }, []); // Empty dependency array - only run once on mount
 
   // Check if non-employee user needs to select project/site
-  const hostname = window.location.hostname;
   const isViSite = hostname.includes("vi-web.gophygital.work") ||
     hostname.includes("localhost:5174");
 
@@ -136,6 +141,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Handle token-based authentication from URL parameters
   // Get current domain for backward compatibility
   const isOmanSite = hostname.includes("oig.gophygital.work");
+
+  const isFMSite = hostname === "fm-matrix.lockated.com" || hostname === "web.gophygital.work" || hostname === "lockated.gophygital.work" || hostname === "localhost";
 
   const isLockatedSite =
     hostname.includes("lockated.gophygital.work") ||
@@ -152,69 +159,72 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isPulseSite =
     hostname.includes("pulse.lockated.com") ||
     hostname.includes("pulse.gophygital.work") ||
+    hostname.includes("pulse-uat.panchshil.com") ||
     location.pathname.startsWith("/pulse");
   const isLocalhost =
     hostname.includes("localhost") ||
     hostname.includes("lockated.gophygital.work") ||
-    hostname.includes("fm-matrix.lockated.com");
+    hostname.includes("fm-matrix.lockated.com") ||
+    userEmail === "ubaid.hashmat@lockated.com";
 
   // Layout behavior:
   // - Company ID 189 (Lockated HO): Default layout (Sidebar + DynamicHeader)
   // - Company ID 199 (Customer Support): Default layout (Sidebar + DynamicHeader)
   // - Other companies (193, 204): Static layout (Sidebar + StaticDynamicHeader)
   // - No company selected: Static layout (fallback)
+  // - Club Management routes: Separate Club Management layout
 
   // Render sidebar component based on configuration
   const renderSidebar = () => {
     // If Hi-Society mode is active, show Hi-Society sidebars
     if (layoutMode === 'hi-society') {
       const path = location.pathname;
-      
+
       // CMS routes use CMSSidebar
       if (path.startsWith('/cms')) {
         return <CMSSidebar />;
       }
-      
+
       // Campaigns routes use CampaignsSidebar
       if (path.startsWith('/campaigns')) {
         return <CampaignsSidebar />;
       }
-      
+
       // F & B routes use FBSidebar
       if (path.startsWith('/fb')) {
         return <FBSidebar />;
       }
-      
+
       // OSR routes use OSRSidebar
       if (path.startsWith('/osr')) {
         return <OSRSidebar />;
       }
-      
+
       // Fitout routes use FitoutSidebar
       if (path.startsWith('/fitout')) {
         return <FitoutSidebar />;
       }
-      
+
       // Accounting routes use AccountingSidebar
       if (path.startsWith('/accounting')) {
         return <AccountingSidebar />;
       }
-      
+
       // SmartSecure routes use SmartSecureSidebar
       if (path.startsWith('/smartsecure')) {
         return <SmartSecureSidebar />;
       }
-      
+
       // Incidents routes use IncidentsSidebar
       if (path.startsWith('/incidents')) {
         return <IncidentsSidebar />;
       }
-      
+
       // Settings routes use SettingsSidebar
       if (path.startsWith('/settings')) {
         return <SettingsSidebar />;
       }
-      
+
       // All other routes use BMSSidebar for Hi-Society
       return <BMSSidebar />;
     }
@@ -229,52 +239,52 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     // Use specific sidebars for different sections
     if (isEmployeeUser) {
       const path = location.pathname;
-      
+
       // CMS routes use CMSSidebar
       if (path.startsWith('/cms')) {
         return <CMSSidebar />;
       }
-      
+
       // Campaigns routes use CampaignsSidebar
       if (path.startsWith('/campaigns')) {
         return <CampaignsSidebar />;
       }
-      
+
       // F & B routes use FBSidebar
       if (path.startsWith('/fb')) {
         return <FBSidebar />;
       }
-      
+
       // OSR routes use OSRSidebar
       if (path.startsWith('/osr')) {
         return <OSRSidebar />;
       }
-      
+
       // Fitout routes use FitoutSidebar
       if (path.startsWith('/fitout')) {
         return <FitoutSidebar />;
       }
-      
+
       // Accounting routes use AccountingSidebar
       if (path.startsWith('/accounting')) {
         return <AccountingSidebar />;
       }
-      
+
       // SmartSecure routes use SmartSecureSidebar
       if (path.startsWith('/smartsecure')) {
         return <SmartSecureSidebar />;
       }
-      
+
       // Incidents routes use IncidentsSidebar
       if (path.startsWith('/incidents')) {
         return <IncidentsSidebar />;
       }
-      
+
       // Settings routes use SettingsSidebar
       if (path.startsWith('/settings')) {
         return <SettingsSidebar />;
       }
-      
+
       // For localhost, check module-based logic
       if (isLocalhost && currentSection === "Project Task") {
         // Use EmployeeSidebar for specific companies, otherwise EmployeeSidebarStatic
@@ -288,12 +298,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         }
         return <EmployeeSidebarStatic />;
       }
-      
+
       // For localhost other modules (Ticket, MOM, Visitors), don't render sidebar
       if (isLocalhost && currentSection !== "Project Task") {
         return null;
       }
-      
+
       // All other routes use BMSSidebar
       return <BMSSidebar />;
     }
@@ -303,6 +313,16 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     const hasTokenParam = urlParams.has("access_token");
     const storedToken = localStorage.getItem("token");
     const hasToken = hasTokenParam || storedToken;
+
+    if (
+      selectedCompany?.id === 300 ||
+      selectedCompany?.id === 295 ||
+      selectedCompany?.id === 298 ||
+      selectedCompany?.id === 199 ||
+      userEmail === "ubaid.hashmat@lockated.com"
+    ) {
+      return <ActionSidebar />;
+    }
 
     // Domain-based logic takes precedence for backward compatibility
     if (isOmanSite) {
@@ -336,15 +356,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       return <PulseSidebar />;
     }
 
-    if (
-      selectedCompany?.id === 300 ||
-      selectedCompany?.id === 295 ||
-      selectedCompany?.id === 298 ||
-      selectedCompany?.id === 199
-    ) {
-      return <ActionSidebar />;
-    }
-
     // Use company ID-based layout
     switch (layoutConfig.sidebarComponent) {
       case "oman":
@@ -371,6 +382,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     // Employees don't need dynamic header, they use HiSocietyHeader instead
     if (isEmployeeUser) {
       return null; // No dynamic header for Hi Society dashboard
+    }
+
+    if (
+      selectedCompany?.id === 300 ||
+      selectedCompany?.id === 295 ||
+      selectedCompany?.id === 298 ||
+      selectedCompany?.id === 199 ||
+      userEmail === "ubaid.hashmat@lockated.com"
+    ) {
+      return <ActionHeader />;
+    }
+
+    if (isFMSite) {
+      return <StaticDynamicHeader />
     }
 
     // Domain-based logic takes precedence for backward compatibility
@@ -490,8 +515,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         isOpen={!isEmployeeUser && isLocalhost ? showViewModal : false}
         onComplete={() => { setShowViewModal(false); }}
       />
-    {console.log("layoutMode:", layoutMode)}
-    
+      {console.log("layoutMode:", layoutMode)}
+
       {/* Conditional Header - Hi-Society mode shows HiSocietyHeader, FM Matrix mode shows admin Header */}
       {layoutMode === 'hi-society' ? (
         <HiSocietyHeader />
@@ -520,25 +545,25 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               ? "ml-16"
               : "ml-64"
             : // For employee users
-              isEmployeeUser
+            isEmployeeUser
               ? isLocalhost
                 ? // Localhost: only add left margin if on Project Task module
-                  currentSection === "Project Task"
+                currentSection === "Project Task"
                   ? isSidebarCollapsed
                     ? "ml-16"
                     : "ml-64"
                   : "ml-0" // No margin for other modules
                 : // Non-localhost: always show sidebar
-                  isSidebarCollapsed
+                isSidebarCollapsed
                   ? "ml-16"
                   : "ml-64"
               : // For admin users
-                isActionSidebarVisible
+              isActionSidebarVisible
                 ? "ml-64 pt-28" // ActionSidebar is visible (fixed width 64)
                 : isSidebarCollapsed
                   ? "ml-16"
                   : "ml-64"
-        } ${
+          } ${
           // Top padding based on mode
           layoutMode === 'hi-society'
             ? "pt-28" // Header (16) + Navigation (12) = 28
@@ -549,7 +574,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               : isActionSidebarVisible
                 ? ""
                 : "pt-28"
-        } transition-all duration-300`}
+          } transition-all duration-300`}
       >
         <Outlet />
       </main>
