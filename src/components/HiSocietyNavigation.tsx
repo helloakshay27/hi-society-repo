@@ -107,7 +107,7 @@ export const HiSocietyNavigation: React.FC = () => {
       ? navigationItems.filter(
           (item) => item.id === "fitout" || item.id === "settings"
         )
-      : navigationItems.filter((item) => item.id !== "bms");
+      : navigationItems; // Show all navigation items including BMS
 
   // Detect active navigation based on current path
   useEffect(() => {
