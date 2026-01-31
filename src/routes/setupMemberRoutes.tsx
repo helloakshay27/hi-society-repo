@@ -4,6 +4,13 @@ import ProjectConfigEdit from "@/pages/ProjectConfigEdit";
 import LockFunctionEdit from "@/pages/LockFunctionEdit";
 import EventDetails from "@/pages/EventDetails";
 
+import { LoyaltyDashboard } from "@/pages/LoyaltyDashboard";
+import { WalletManagement } from "@/pages/WalletManagement";
+import { LoyaltyCustomers } from "@/pages/LoyaltyCustomers";
+import { LoyaltyCustomerDetails } from "@/pages/LoyaltyCustomerDetails";
+import { LoyaltyInventorySection } from "@/pages/LoyaltyInventorySection";
+
+
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
 const NewTier = lazy(() => import("@/pages/NewTier"));
@@ -391,6 +398,26 @@ const withSuspense = (Component: React.LazyExoticComponent<any>) => {
 export const setupMemberRoutes = (
   <>
     {/* Amenities Routes */}
+    <Route
+      path="/loyalty/dashboard"
+      element={<LoyaltyDashboard />}
+    />
+    <Route
+      path="/loyalty/wallet-management"
+      element={<WalletManagement />}
+    />
+    <Route
+      path="/loyalty/customers"
+      element={<LoyaltyCustomers />}
+    />
+    <Route
+      path="/loyalty/customers/:id"
+      element={<LoyaltyCustomerDetails />}
+    />
+    <Route
+      path="/loyalty/inventory-section"
+      element={<LoyaltyInventorySection />}
+    />
     <Route path="/settings/amenities" Component={withSuspense(Amenities)} />
     <Route
       path="/settings/amenities-list"
