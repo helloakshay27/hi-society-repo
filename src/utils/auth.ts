@@ -10,8 +10,11 @@ export interface User {
   longitude?: number;
   country_code?: string;
   spree_api_key?: string;
+  is_login?: boolean;
   access_token?: string;
   number_verified?: number;
+  company_id?: number;
+  web_enabled?: boolean;
   lock_role?: {
     id: number;
     name: string;
@@ -44,6 +47,9 @@ export interface LoginResponse {
   country_code?: string;
   spree_api_key?: string;
   number_verified?: number;
+  company_id?: number;
+  web_enabled?: boolean;
+  user_type?: string;
   lock_role?: {
     id: number;
     name: string;
@@ -150,14 +156,35 @@ const isViSite =
   hostname.includes("lockated.gophygital.work");
 
 const isFmSite =
-  hostname.includes("fm-uat.gophygital.work") ||
-  hostname.includes("fm.gophygital.work");
+  hostname === "fm-uat.gophygital.work" || hostname === "fm.gophygital.work";
 
-const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "ui-hisociety.lockated.com";
+const isDevSite = hostname === "dev-fm-matrix.lockated.com";
+
+const isPulseSite = hostname.includes("pulse.lockated.com");
+
+const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
+
+const isHiSocietySite = isLocalhost || hostname.includes("ui-hisociety.lockated.com") || hostname.includes("web.hisociety.lockated.com");
+
+// const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "ui-hisociety.lockated.com";
 
 export const getOrganizationsByEmail = async (
   email: string
 ): Promise<Organization[]> => {
+  // For Hi-Society sites (localhost or production), use Hi-Society API
+  if (isHiSocietySite) {
+    const apiUrl = isLocalhost 
+      ? 'https://hi-society.lockated.com/api/users/get_organizations_by_email.json'
+      : 'https://uat-hi-society.lockated.com/api/users/get_organizations_by_email.json';
+    
+    const response = await fetch(`${apiUrl}?email=${email}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch organizations");
+    }
+
+    const data = await response.json();
+    return data.organizations || [];
+  }
   if (isOmanSite || isFmSite) {
     const response = await fetch(
       `https://uat.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
@@ -200,7 +227,33 @@ export const getOrganizationsByEmail = async (
     return data.organizations || [];
   }
 
-  // Default fallback for other sites
+  if (isDevSite) {
+    const response = await fetch(
+      `https://dev-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch organizations");
+    }
+
+    const data = await response.json();
+    return data.organizations || [];
+  }
+
+  if (isPulseSite) {
+    const response = await fetch(
+      `https://pulse-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch organizations");
+    }
+
+    const data = await response.json();
+    return data.organizations || [];
+  }
+
+  // Default fallback for other sitess
   const response = await fetch(
     `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
   );
@@ -513,11 +566,19 @@ export const getOrganizationsByEmailAndAutoSelect = async (
   const isFmSite =
     hostname.includes("fm-uat.gophygital.work") ||
     hostname.includes("fm.gophygital.work");
-  const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "ui-hisociety.lockated.com";
+
+  const isDevSite = hostname === "dev-fm-matrix.lockated.com";
+  const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
+  const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "ui-hisociety.lockated.com" || isLocalhost;
 
   let apiUrl = "";
 
-  if (isOmanSite || isFmSite) {
+  // For Hi-Society sites (localhost or production), use Hi-Society API
+  if (isHiSocietySite) {
+    apiUrl = isLocalhost 
+      ? `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+      : `https://uat-hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
+  } else if (isOmanSite || isFmSite) {
     apiUrl = `https://uat.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
   } else if (isHiSocietySite) {
     // Use production API for web.hisociety.lockated.com, UAT for ui-hisociety.lockated.com
@@ -527,9 +588,11 @@ export const getOrganizationsByEmailAndAutoSelect = async (
     apiUrl = `${hiSocietyBase}/api/users/get_organizations_by_email.json?email=${email}`;
   } else if (isViSite) {
     apiUrl = `https://live-api.gophygital.work/api/users/get_organizations_by_email.json?email=${email}`;
+  } else if (isDevSite) {
+    apiUrl = `https://dev-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
   } else {
     // Default fallback
-    apiUrl = `https://uat.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
+    apiUrl = `https://uat-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
   }
 
   const response = await fetch(apiUrl);

@@ -17,6 +17,8 @@ import {
   getOrganizations,
   getCompanies,
 } from "@/services/adminUserAPI";
+import { DuplicateUserDialog } from "@/components/DuplicateUserDialog";
+import axios from "axios";
 
 const fieldStyles = {
   height: "45px",
@@ -69,6 +71,15 @@ interface Company {
   organization_id: number;
 }
 
+interface FormErrors {
+  firstname?: string;
+  lastname?: string;
+  email?: string;
+  mobile?: string;
+  organization_id?: string;
+  company_id?: string;
+}
+
 export const CreateAdminUserPage = () => {
   const navigate = useNavigate();
   const { getFullUrl, getAuthHeader } = useApiConfig();
@@ -81,7 +92,7 @@ export const CreateAdminUserPage = () => {
     organization_id: "",
     company_id: "",
   });
-
+  const [errors, setErrors] = useState<FormErrors>({});
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
@@ -89,6 +100,11 @@ export const CreateAdminUserPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingOrganizations, setLoadingOrganizations] = useState(false);
   const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const [duplicateUserDialog, setDuplicateUserDialog] = useState({
+    open: false,
+    companies: [],
+    errorMessage: "",
+  });
 
   // Fetch organizations on component mount
   useEffect(() => {
@@ -101,6 +117,7 @@ export const CreateAdminUserPage = () => {
     if (formData.organization_id) {
       const filtered = companies.filter(
         (company) =>
+          company.organization_id !== null &&
           company.organization_id.toString() === formData.organization_id
       );
       setFilteredCompanies(filtered);
@@ -115,7 +132,7 @@ export const CreateAdminUserPage = () => {
       setFilteredCompanies([]);
       setFormData((prev) => ({ ...prev, company_id: "" }));
     }
-  }, [formData.organization_id, companies]);
+  }, [formData.organization_id, formData.company_id, companies]);
 
   const fetchOrganizations = async () => {
     setLoadingOrganizations(true);
@@ -164,42 +181,50 @@ export const CreateAdminUserPage = () => {
       ...prev,
       [field]: value,
     }));
+    // Clear field error on change
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
   const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
     if (!formData.firstname.trim()) {
-      toast.error("First name is required");
-      return false;
+      newErrors.firstname = "First name is required";
     }
     if (!formData.lastname.trim()) {
-      toast.error("Last name is required");
-      return false;
+      newErrors.lastname = "Last name is required";
     }
     if (!formData.email.trim()) {
-      toast.error("Email is required");
-      return false;
-    }
-    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      toast.error("Please enter a valid email address");
-      return false;
+      newErrors.email = "Email is required";
+    } else if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      newErrors.email = "Please enter a valid email address";
     }
     if (!formData.mobile.trim()) {
-      toast.error("Mobile number is required");
-      return false;
-    }
-    if (!formData.mobile.match(/^\d{10,15}$/)) {
-      toast.error("Please enter a valid mobile number (10-15 digits)");
-      return false;
+      newErrors.mobile = "Mobile number is required";
+    } else if (!formData.mobile.match(/^\d{10,15}$/)) {
+      newErrors.mobile = "Please enter a valid mobile number (10-15 digits)";
     }
     if (!formData.organization_id) {
-      toast.error("Organization is required");
-      return false;
+      newErrors.organization_id = "Organization is required";
     }
     if (!formData.company_id) {
-      toast.error("Company is required");
-      return false;
+      newErrors.company_id = "Company is required";
     }
-    return true;
+
+    setErrors(newErrors);
+    const isValid = Object.keys(newErrors).length === 0;
+    if (!isValid) {
+      // Use toasts only as supplemental; inline errors render under fields
+    }
+    return isValid;
+  };
+
+  // Type guard for Axios-like errors
+  const isAxiosError = (
+    e: unknown
+  ): e is { response?: { data?: { message?: string; error?: string } } ; message?: string } => {
+    if (typeof e !== 'object' || e === null) return false;
+    const obj = e as Record<string, unknown>;
+    return 'message' in obj || 'response' in obj;
   };
 
   const handleSubmit = async () => {
@@ -219,39 +244,54 @@ export const CreateAdminUserPage = () => {
         },
       };
 
-      console.log("Creating admin user with payload:", payload);
+  console.warn("Creating admin user with payload:", payload);
 
       const result = await createOrganizationAdmin(payload);
 
       if (result.success) {
-        console.log("Admin user created successfully:", result.data);
+  console.warn("Admin user created successfully:", result.data);
         toast.success("Organization admin user created successfully!");
 
         // Navigate back to the users list or admin console
-        navigate("/ops-console/master/user/fm-users");
+        navigate("/ops-console/admin/users");
       } else {
         console.error("Failed to create admin user:", result.error);
 
         // Handle specific error messages
         const errorMessage = result.error || "Failed to create admin user";
+        const errorData = result.errorData;
 
-        if (
+        if (errorData?.companies && errorData.companies.length > 0) {
+          setDuplicateUserDialog({
+            open: true,
+            companies: errorData.companies,
+            errorMessage: errorMessage,
+          });
+        } else if (
           errorMessage.toLowerCase().includes("user is already exists") ||
           errorMessage.toLowerCase().includes("user already exists")
         ) {
           toast.error(
             "User with this email or mobile already exists. Please use different credentials."
           );
+        } else if (
+          errorMessage.toLowerCase().includes("firstname with same last name already exists")
+        ) {
+          toast.error(
+            "Firstname with same last name already exists. Please use different credentials."
+          );
         } else {
           toast.error(errorMessage);
+          console.log("Unhandled error data:", errorMessage)
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating admin user:", error);
 
       // Check if error object has response data with message
-      const errorMessage =
-        error?.response?.data?.message || error?.message || "";
+      const errorMessage = isAxiosError(error)
+        ? error.response?.data?.message || error.message || ""
+        : "";
 
       if (
         errorMessage.toLowerCase().includes("user is already exists") ||
@@ -259,6 +299,12 @@ export const CreateAdminUserPage = () => {
       ) {
         toast.error(
           "User with this email or mobile already exists. Please use different credentials."
+        );
+      } else if (
+        errorMessage.toLowerCase().includes("firstname with same last name already exists")
+      ) {
+        toast.error(
+          "Firstname with same last name already exists. Please use different credentials."
         );
       } else {
         toast.error("An unexpected error occurred. Please try again.");
@@ -270,6 +316,42 @@ export const CreateAdminUserPage = () => {
 
   const handleCancel = () => {
     navigate("/ops-console/admin/users");
+  };
+
+  const handleAssignPermission = async () => {
+    try {
+      setIsSubmitting(true);
+      const token = localStorage.getItem("token");
+      const baseUrl = localStorage.getItem("baseUrl");
+
+      const payload = {
+        user: {
+          email: formData.email,
+          mobile: formData.mobile,
+          organization_id: parseInt(formData.organization_id),
+          company_id: parseInt(formData.company_id),
+        },
+      };
+
+      const response = await axios.post(
+        `https://${baseUrl}/pms/users/create_lock_for_admin.json?access_token=${token}`,
+        payload
+      );
+
+      if (response.data) {
+        toast.success("Permissions assigned successfully");
+        setDuplicateUserDialog((prev) => ({ ...prev, open: false }));
+        navigate("/ops-console/master/user/fm-users");
+      }
+    } catch (error: unknown) {
+      console.error("Error assigning permissions:", error);
+      const errMsg = isAxiosError(error)
+        ? error.response?.data?.error || "Failed to assign permissions"
+        : "Failed to assign permissions";
+      toast.error(errMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -320,10 +402,12 @@ export const CreateAdminUserPage = () => {
                   }
                   fullWidth
                   variant="outlined"
-                  InputLabelProps={{ shrink: true }}
+                  InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#C72030' } } }}
                   InputProps={{ sx: fieldStyles }}
                   required
                   disabled={isSubmitting}
+                  error={!!errors.firstname}
+                  helperText={errors.firstname}
                 />
 
                 <TextField
@@ -335,10 +419,12 @@ export const CreateAdminUserPage = () => {
                   }
                   fullWidth
                   variant="outlined"
-                  InputLabelProps={{ shrink: true }}
+                  InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#C72030' } } }}
                   InputProps={{ sx: fieldStyles }}
                   required
                   disabled={isSubmitting}
+                  error={!!errors.lastname}
+                  helperText={errors.lastname}
                 />
 
                 <TextField
@@ -349,10 +435,12 @@ export const CreateAdminUserPage = () => {
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   fullWidth
                   variant="outlined"
-                  InputLabelProps={{ shrink: true }}
+                  InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#C72030' } } }}
                   InputProps={{ sx: fieldStyles }}
                   required
                   disabled={isSubmitting}
+                  error={!!errors.email}
+                  helperText={errors.email}
                 />
 
                 <TextField
@@ -369,10 +457,12 @@ export const CreateAdminUserPage = () => {
                   }}
                   fullWidth
                   variant="outlined"
-                  InputLabelProps={{ shrink: true }}
+                  InputLabelProps={{ shrink: true, sx: { '& .MuiFormLabel-asterisk': { color: '#C72030' } } }}
                   InputProps={{ sx: fieldStyles }}
                   required
                   disabled={isSubmitting}
+                  error={!!errors.mobile}
+                  helperText={errors.mobile}
                 />
               </div>
             </div>
@@ -384,8 +474,8 @@ export const CreateAdminUserPage = () => {
               </h3>
 
               <div className="grid grid-cols-2 gap-6">
-                <FormControl fullWidth variant="outlined" required>
-                  <InputLabel shrink>Organization</InputLabel>
+                <FormControl fullWidth variant="outlined" required error={!!errors.organization_id}>
+                  <InputLabel shrink sx={{ '& .MuiFormLabel-asterisk': { color: '#C72030' } }}>Organization</InputLabel>
                   <MuiSelect
                     value={formData.organization_id}
                     onChange={(e) =>
@@ -413,10 +503,14 @@ export const CreateAdminUserPage = () => {
                       </MenuItem>
                     ))}
                   </MuiSelect>
+                  {/* Helper text for organization */}
+                  {errors.organization_id && (
+                    <span className="text-red-600 text-xs mt-1">{errors.organization_id}</span>
+                  )}
                 </FormControl>
 
-                <FormControl fullWidth variant="outlined" required>
-                  <InputLabel shrink>Company</InputLabel>
+                <FormControl fullWidth variant="outlined" required error={!!errors.company_id}>
+                  <InputLabel shrink sx={{ '& .MuiFormLabel-asterisk': { color: '#C72030' } }}>Company</InputLabel>
                   <MuiSelect
                     value={formData.company_id}
                     onChange={(e) =>
@@ -450,6 +544,9 @@ export const CreateAdminUserPage = () => {
                       </MenuItem>
                     ))}
                   </MuiSelect>
+                  {errors.company_id && (
+                    <span className="text-red-600 text-xs mt-1">{errors.company_id}</span>
+                  )}
                 </FormControl>
               </div>
             </div>
@@ -485,6 +582,16 @@ export const CreateAdminUserPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      <DuplicateUserDialog
+        open={duplicateUserDialog.open}
+        onClose={() =>
+          setDuplicateUserDialog((prev) => ({ ...prev, open: false }))
+        }
+        onConfirm={handleAssignPermission}
+        companies={duplicateUserDialog.companies}
+        errorMessage={duplicateUserDialog.errorMessage}
+      />
     </div>
   );
 };

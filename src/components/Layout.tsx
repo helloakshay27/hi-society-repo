@@ -32,6 +32,21 @@ import { AccountingSidebar } from "./AccountingSidebar";
 import { SmartSecureSidebar } from "./SmartSecureSidebar";
 import { IncidentsSidebar } from "./IncidentsSidebar";
 import { SettingsSidebar } from "./SettingsSidebar";
+import { PrimeSupportSidebar } from "./PrimeSupportSidebar";
+import { PrimeSupportDynamicHeader } from "./PrimeSupportDynamicHeader";
+import { EmployeeSidebar } from "./EmployeeSidebar";
+import { EmployeeSidebarStatic } from "./EmployeeSidebarStatic";
+import { EmployeeDynamicHeader } from "./EmployeeDynamicHeader";
+import { EmployeeHeader } from "./EmployeeHeader";
+import { EmployeeHeaderStatic } from "./EmployeeHeaderStatic";
+import { ViewSelectionModal } from "./ViewSelectionModal";
+import { PulseSidebar } from "./PulseSidebar";
+import { PulseDynamicHeader } from "./PulseDynamicHeader";
+import { ZycusSidebar } from "./ZycusSidebar";
+import { ZycusDynamicHeader } from "./ZycusDynamicHeader";
+import { ActionSidebar } from "./ActionSidebar";
+import { ActionHeader } from "./ActionHeader";
+import { useActionLayout } from "../contexts/ActionLayoutContext";
 import { AppointmentzSidebar } from "./AppointmentzSidebar";
 
 interface LayoutProps {
@@ -44,7 +59,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     getLayoutByCompanyId,
     currentSection,
     setCurrentSection,
+    layoutMode,
   } = useLayout();
+  const { isActionSidebarVisible } = useActionLayout();
   const { selectedCompany } = useSelector((state: RootState) => state.project);
   const { selectedSite } = useSelector((state: RootState) => state.site);
   const location = useLocation();
@@ -63,10 +80,45 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const userType = localStorage.getItem("userType");
   const isEmployeeUser = isEmployeeRoute || userType === "pms_occupant";
 
+  // Check if user needs to select a view (Admin or Employee)
+  const [showViewModal, setShowViewModal] = useState(false);
+
+  useEffect(() => {
+    // Check if user has already selected a view
+    const selectedView = localStorage.getItem("selectedView");
+    const storedUserType = localStorage.getItem("userType");
+
+    // If no view is selected, show the view selection modal
+    if (!selectedView || !storedUserType) {
+      setShowViewModal(true);
+    } else {
+      setShowViewModal(false);
+    }
+  }, []);
+
+  // // Auto-detect Hi-Society site and set layout mode (only on initial load)
+  // const { toggleLayoutMode } = useLayout();
+  // useEffect(() => {
+  //   const hostname = window.location.hostname;
+  //   const isHiSocietySite =
+  //     hostname.includes("localhost") ||
+  //     hostname.includes("ui-hisociety.lockated.com") ||
+  //     hostname.includes("web.hisociety.lockated.com");
+
+  //   // Only auto-set Hi-Society mode on initial load if no mode is explicitly set
+  //   // Don't override user's manual mode selection
+  //   if (isHiSocietySite) {
+  //     const currentMode = localStorage.getItem("layoutMode");
+  //     // Only set to hi-society if no mode exists (first time visit)
+  //     if (!currentMode) {
+  //       localStorage.setItem("layoutMode", "hi-society");
+  //     }
+  //   }
+  // }, []); // Empty dependency array - only run once on mount
+
   // Check if non-employee user needs to select project/site
   const hostname = window.location.hostname;
-  const isViSite =
-    hostname.includes("vi-web.gophygital.work") ||
+  const isViSite = hostname.includes("vi-web.gophygital.work") ||
     hostname.includes("localhost:5174");
 
   // Removed project selection modal logic - now handled by view selection
@@ -86,6 +138,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       : null
   );
 
+  // Detect Pulse site - used for fallback when no API role exists
+  const isPulseSite =
+    hostname.includes("pulse.lockated.com") ||
+    hostname.includes("pulse.gophygital.work") ||
+    location.pathname.startsWith("/pulse");
   const isLocalhost =
     hostname.includes("localhost") ||
     hostname.includes("lockated.gophygital.work") ||
@@ -99,6 +156,60 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Render sidebar component based on configuration
   const renderSidebar = () => {
+    // If Hi-Society mode is active, show Hi-Society sidebars
+    if (layoutMode === 'hi-society') {
+      const path = location.pathname;
+      
+      // CMS routes use CMSSidebar
+      if (path.startsWith('/cms')) {
+        return <CMSSidebar />;
+      }
+      
+      // Campaigns routes use CampaignsSidebar
+      if (path.startsWith('/campaigns')) {
+        return <CampaignsSidebar />;
+      }
+      
+      // F & B routes use FBSidebar
+      if (path.startsWith('/fb')) {
+        return <FBSidebar />;
+      }
+      
+      // OSR routes use OSRSidebar
+      if (path.startsWith('/osr')) {
+        return <OSRSidebar />;
+      }
+      
+      // Fitout routes use FitoutSidebar
+      if (path.startsWith('/fitout')) {
+        return <FitoutSidebar />;
+      }
+      
+      // Accounting routes use AccountingSidebar
+      if (path.startsWith('/accounting')) {
+        return <AccountingSidebar />;
+      }
+      
+      // SmartSecure routes use SmartSecureSidebar
+      if (path.startsWith('/smartsecure')) {
+        return <SmartSecureSidebar />;
+      }
+      
+      // Incidents routes use IncidentsSidebar
+      if (path.startsWith('/incidents')) {
+        return <IncidentsSidebar />;
+      }
+      
+      // Settings routes use SettingsSidebar
+      if (path.startsWith('/settings')) {
+        return <SettingsSidebar />;
+      }
+      
+      // All other routes use BMSSidebar for Hi-Society
+      return <BMSSidebar />;
+    }
+
+    // FM Matrix mode (default) - original logic
     // Check for Appointmentz routes first
     if (location.pathname.startsWith('/appointmentz')) {
       return <AppointmentzSidebar />;
@@ -154,6 +265,25 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         return <SettingsSidebar />;
       }
       
+      // For localhost, check module-based logic
+      if (isLocalhost && currentSection === "Project Task") {
+        // Use EmployeeSidebar for specific companies, otherwise EmployeeSidebarStatic
+        if (
+          selectedCompany?.id === 300 ||
+          selectedCompany?.id === 295 ||
+          selectedCompany?.id === 298 ||
+          selectedCompany?.id === 199
+        ) {
+          return <EmployeeSidebar />;
+        }
+        return <EmployeeSidebarStatic />;
+      }
+      
+      // For localhost other modules (Ticket, MOM, Visitors), don't render sidebar
+      if (isLocalhost && currentSection !== "Project Task") {
+        return null;
+      }
+      
       // All other routes use BMSSidebar
       return <BMSSidebar />;
     }
@@ -183,17 +313,26 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       return <ZxSidebar />;
     }
 
+    if (selectedCompany?.id === 294) {
+      return <ZycusSidebar />;
+    }
 
+    if (selectedCompany?.id === 304) {
+      return <PrimeSupportSidebar />;
+    }
 
+    // Pulse Privilege - Company ID 305 OR isPulseSite fallback
+    if (selectedCompany?.id === 305 || isPulseSite) {
+      return <PulseSidebar />;
+    }
 
     if (
       selectedCompany?.id === 300 ||
       selectedCompany?.id === 295 ||
       selectedCompany?.id === 298 ||
-      selectedCompany?.id === 199 ||
-      selectedCompany?.id === 298
+      selectedCompany?.id === 199
     ) {
-      return <Sidebar />;
+      return <ActionSidebar />;
     }
 
     // Use company ID-based layout
@@ -206,12 +345,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         return <StacticSidebar />;
       case "default":
       default:
-        return <Sidebar />;
+        return <StacticSidebar />; // Changed from ActionSidebar to StacticSidebar as fallback
     }
   };
 
   // Render header component based on configuration
   const renderDynamicHeader = () => {
+    // If Hi-Society mode is active, show HiSocietyNavigation
+    if (layoutMode === 'hi-society') {
+      return <HiSocietyNavigation />;
+    }
+
+    // FM Matrix mode (default) - original logic
     // Check if user is employee (pms_occupant) - Employee layout takes priority
     // Employees don't need dynamic header, they use HiSocietyHeader instead
     if (isEmployeeUser) {
@@ -231,13 +376,24 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       return <ZxDynamicHeader />;
     }
 
+    if (selectedCompany?.id === 294) {
+      return <ZycusDynamicHeader />;
+    }
+
+    if (selectedCompany?.id === 304) {
+      return <PrimeSupportDynamicHeader />;
+    }
+
+    // Pulse Privilege - Company ID 305 OR isPulseSite fallback
+    if (selectedCompany?.id === 305 || isPulseSite) {
+      return <PulseDynamicHeader />;
+    }
 
     if (
       selectedCompany?.id === 300 ||
       selectedCompany?.id === 295 ||
       selectedCompany?.id === 298 ||
-      selectedCompany?.id === 199 ||
-      selectedCompany?.id === 298
+      selectedCompany?.id === 199
     ) {
       return <DynamicHeader />;
     }
@@ -319,25 +475,71 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         allowedDomains={["vi-web.gophygital.work"]}
       />
 
-      {/* Conditional Header - Use HiSocietyHeader for employee users */}
-      {isEmployeeUser ? <HiSocietyHeader /> : <Header />}
+      {/* View Selection Modal - Choose Admin or Employee View */}
+      <ViewSelectionModal
+        isOpen={!isEmployeeUser && isLocalhost ? showViewModal : false}
+        onComplete={() => { setShowViewModal(false); }}
+      />
+    {console.log("layoutMode:", layoutMode)}
+    
+      {/* Conditional Header - Hi-Society mode shows HiSocietyHeader, FM Matrix mode shows admin Header */}
+      {layoutMode === 'hi-society' ? (
+        <HiSocietyHeader />
+      ) : (
+        <Header />
+      )}
 
-        {renderSidebar()}
+      {renderSidebar()}
 
-      {/* Navigation - HiSocietyNavigation for employees, DynamicHeader for admins */}
-      {isEmployeeUser ? <HiSocietyNavigation /> : renderDynamicHeader()}
+      {/* Navigation - Conditional based on layoutMode and user type */}
+      {layoutMode === 'hi-society' ? (
+        <HiSocietyNavigation />
+      ) : isEmployeeUser && !isLocalhost ? (
+        <HiSocietyNavigation />
+      ) : (
+        renderDynamicHeader()
+      )}
+
+      {/* Action-based navigation - only shown when action context is active */}
 
       <main
         className={`${
-          // For employee users (Hi Society), always show sidebar
-          isEmployeeUser
+          // Hi-Society mode styling
+          layoutMode === 'hi-society'
             ? isSidebarCollapsed
               ? "ml-16"
               : "ml-64"
-            : isSidebarCollapsed
-              ? "ml-16"
-              : "ml-64"
-          } ${isEmployeeUser ? "pt-24" : "pt-24"} transition-all duration-300`}
+            : // For employee users
+              isEmployeeUser
+              ? isLocalhost
+                ? // Localhost: only add left margin if on Project Task module
+                  currentSection === "Project Task"
+                  ? isSidebarCollapsed
+                    ? "ml-16"
+                    : "ml-64"
+                  : "ml-0" // No margin for other modules
+                : // Non-localhost: always show sidebar
+                  isSidebarCollapsed
+                  ? "ml-16"
+                  : "ml-64"
+              : // For admin users
+                isActionSidebarVisible
+                ? "ml-64 pt-28" // ActionSidebar is visible (fixed width 64)
+                : isSidebarCollapsed
+                  ? "ml-16"
+                  : "ml-64"
+        } ${
+          // Top padding based on mode
+          layoutMode === 'hi-society'
+            ? "pt-28" // Header (16) + Navigation (12) = 28
+            : isEmployeeUser
+              ? isLocalhost
+                ? "pt-16"
+                : "pt-24"
+              : isActionSidebarVisible
+                ? ""
+                : "pt-28"
+        } transition-all duration-300`}
       >
         <Outlet />
       </main>

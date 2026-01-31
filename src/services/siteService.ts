@@ -1,5 +1,5 @@
-import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
-import { toast } from 'sonner';
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { toast } from "sonner";
 
 export interface SiteData {
   id?: number;
@@ -146,6 +146,13 @@ export interface SiteData {
     url: string;
     doctype: string;
   }>;
+  attachfile?: Array<{
+    id?: number;
+    url: string;
+    document_url?: string;
+  }> | {
+    document_url: string;
+  };
   shared_content?: string;
   google_maps_url?: string;
 }
@@ -163,6 +170,24 @@ export interface SiteFormData {
   city?: string;
   district?: string;
   zone_id?: string;
+  // Single image file to upload
+  attachfile?: File | null;
+  // Boolean configuration fields
+  skip_host_approval?: boolean;
+  survey_enabled?: boolean;
+  fitout_enabled?: boolean;
+  mailroom_enabled?: boolean;
+  create_breakdown_ticket?: boolean;
+  parking_enabled?: boolean;
+  default_visitor_pass?: boolean;
+  ecommerce_service_enabled?: boolean;
+  operational_audit_enabled?: boolean;
+  steps_enabled?: boolean;
+  transportation_enabled?: boolean;
+  business_card_enabled?: boolean;
+  visitor_enabled?: boolean;
+  govt_id_enabled?: boolean;
+  visitor_host_mandatory?: boolean;
 }
 
 export interface SiteResponse {
@@ -208,133 +233,248 @@ export interface RegionOption {
 class SiteService {
   private getFullUrl(endpoint: string): string {
     const baseUrl = API_CONFIG.BASE_URL;
-    const token = API_CONFIG.TOKEN;
-    
-    if (!baseUrl.startsWith('http')) {
-      return `https://${baseUrl}${endpoint}?access_token=${token}`;
+    if (!baseUrl.startsWith("http")) {
+      return `https://${baseUrl}${endpoint}`;
     }
-    return `${baseUrl}${endpoint}?access_token=${token}`;
+    return `${baseUrl}${endpoint}`;
   }
 
   async createSite(siteData: SiteFormData): Promise<SiteResponse> {
     try {
       const token = API_CONFIG.TOKEN;
       if (!token) {
-        toast.error('Authentication token missing');
-        return { success: false, error: 'Authentication token missing' };
+        toast.error("Authentication token missing");
+        return { success: false, error: "Authentication token missing" };
       }
 
-      const url = this.getFullUrl('/pms/sites/site_create.json');
+      const url = this.getFullUrl("/pms/sites/site_create.json");
 
-      const payload = {
-        pms_site: {
-          name: siteData.name,
-          company_id: siteData.company_id,
-          headquarter_id: siteData.headquarter_id,
-          region_id: siteData.region_id,
-          latitude: siteData.latitude || "",
-          longitude: siteData.longitude || "",
-          geofence_range: siteData.geofence_range || "",
-          address: siteData.address || "",
-          state: siteData.state || "",
-          city: siteData.city || "",
-          district: siteData.district || "",
-          zone_id: siteData.zone_id || ""
-        }
+      const basePayload = {
+        name: siteData.name,
+        company_id: siteData.company_id,
+        headquarter_id: siteData.headquarter_id,
+        region_id: siteData.region_id,
+        latitude: siteData.latitude || "",
+        longitude: siteData.longitude || "",
+        geofence_range: siteData.geofence_range || "",
+        address: siteData.address || "",
+        state: siteData.state || "",
+        city: siteData.city || "",
+        district: siteData.district || "",
+        zone_id: siteData.zone_id || "",
+        // Boolean configuration fields
+        skip_host_approval: siteData.skip_host_approval ?? false,
+        survey_enabled: siteData.survey_enabled ?? false,
+        fitout_enabled: siteData.fitout_enabled ?? false,
+        mailroom_enabled: siteData.mailroom_enabled ?? false,
+        create_breakdown_ticket: siteData.create_breakdown_ticket ?? false,
+        parking_enabled: siteData.parking_enabled ?? false,
+        default_visitor_pass: siteData.default_visitor_pass ?? false,
+        ecommerce_service_enabled: siteData.ecommerce_service_enabled ?? false,
+        operational_audit_enabled: siteData.operational_audit_enabled ?? false,
+        steps_enabled: siteData.steps_enabled ?? false,
+        transportation_enabled: siteData.transportation_enabled ?? false,
+        business_card_enabled: siteData.business_card_enabled ?? false,
+        visitor_enabled: siteData.visitor_enabled ?? false,
+        govt_id_enabled: siteData.govt_id_enabled ?? false,
+        visitor_host_mandatory: siteData.visitor_host_mandatory ?? false,
       };
 
-      console.log('Creating site with URL:', url);
-      console.log('Payload:', payload);
+      let response: Response;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': getAuthHeader(),
-        },
-        body: JSON.stringify(payload),
-      });
+      if (siteData.attachfile && siteData.attachfile instanceof File) {
+        const formData = new FormData();
+        formData.append("pms_site[name]", basePayload.name);
+        formData.append("pms_site[company_id]", String(basePayload.company_id));
+        formData.append("pms_site[headquarter_id]", String(basePayload.headquarter_id));
+        formData.append("pms_site[region_id]", String(basePayload.region_id));
+        formData.append("pms_site[latitude]", String(basePayload.latitude));
+        formData.append("pms_site[longitude]", String(basePayload.longitude));
+        formData.append("pms_site[geofence_range]", String(basePayload.geofence_range));
+        formData.append("pms_site[address]", String(basePayload.address));
+        formData.append("pms_site[state]", String(basePayload.state));
+        formData.append("pms_site[city]", String(basePayload.city));
+        formData.append("pms_site[district]", String(basePayload.district));
+        formData.append("pms_site[zone_id]", String(basePayload.zone_id));
+        formData.append("pms_site[skip_host_approval]", String(basePayload.skip_host_approval));
+        formData.append("pms_site[survey_enabled]", String(basePayload.survey_enabled));
+        formData.append("pms_site[fitout_enabled]", String(basePayload.fitout_enabled));
+        formData.append("pms_site[mailroom_enabled]", String(basePayload.mailroom_enabled));
+        formData.append("pms_site[create_breakdown_ticket]", String(basePayload.create_breakdown_ticket));
+        formData.append("pms_site[parking_enabled]", String(basePayload.parking_enabled));
+        formData.append("pms_site[default_visitor_pass]", String(basePayload.default_visitor_pass));
+        formData.append("pms_site[ecommerce_service_enabled]", String(basePayload.ecommerce_service_enabled));
+        formData.append("pms_site[operational_audit_enabled]", String(basePayload.operational_audit_enabled));
+        formData.append("pms_site[steps_enabled]", String(basePayload.steps_enabled));
+        formData.append("pms_site[transportation_enabled]", String(basePayload.transportation_enabled));
+        formData.append("pms_site[business_card_enabled]", String(basePayload.business_card_enabled));
+        formData.append("pms_site[visitor_enabled]", String(basePayload.visitor_enabled));
+        formData.append("pms_site[govt_id_enabled]", String(basePayload.govt_id_enabled));
+        formData.append("pms_site[visitor_host_mandatory]", String(basePayload.visitor_host_mandatory));
+        // Single image upload
+        formData.append("pms_site[attachfile]", siteData.attachfile);
+
+        response = await fetch(url, {
+          method: "POST",
+          headers: {
+            Authorization: getAuthHeader(),
+          },
+          body: formData,
+        });
+      } else {
+        const payload = { pms_site: basePayload };
+        response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: getAuthHeader(),
+          },
+          body: JSON.stringify(payload),
+        });
+      }
 
       const result = await response.json();
-      console.log('Create site response:', result);
+  console.warn("Create site response:", result);
 
       if (response.ok) {
-        toast.success('Site created successfully');
-        return { 
-          success: true, 
+        toast.success("Site created successfully");
+        return {
+          success: true,
           data: result.data || result,
-          message: result.message || 'Site created successfully'
+          message: result.message || "Site created successfully",
         };
       } else {
-        const errorMessage = result.message || result.error || 'Failed to create site';
+        const errorMessage =
+          result.message || result.error || "Failed to create site";
         toast.error(errorMessage);
         return { success: false, error: errorMessage };
       }
     } catch (error) {
-      console.error('Error creating site:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create site';
+      console.error("Error creating site:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create site";
       toast.error(errorMessage);
       return { success: false, error: errorMessage };
     }
   }
 
-  async updateSite(siteId: number, siteData: SiteFormData): Promise<SiteResponse> {
+  async updateSite(
+    siteId: number,
+    siteData: SiteFormData
+  ): Promise<SiteResponse> {
     try {
       const token = API_CONFIG.TOKEN;
       if (!token) {
-        toast.error('Authentication token missing');
-        return { success: false, error: 'Authentication token missing' };
+        toast.error("Authentication token missing");
+        return { success: false, error: "Authentication token missing" };
       }
 
       const url = this.getFullUrl(`/pms/sites/${siteId}/site_update.json`);
 
-      const payload = {
-        pms_site: {
-          name: siteData.name,
-          company_id: siteData.company_id,
-          headquarter_id: siteData.headquarter_id,
-          region_id: siteData.region_id,
-          latitude: siteData.latitude || "",
-          longitude: siteData.longitude || "",
-          geofence_range: siteData.geofence_range || "",
-          address: siteData.address || "",
-          state: siteData.state || "",
-          city: siteData.city || "",
-          district: siteData.district || "",
-          zone_id: siteData.zone_id || ""
-        }
+      const basePayload = {
+        name: siteData.name,
+        company_id: siteData.company_id,
+        headquarter_id: siteData.headquarter_id,
+        region_id: siteData.region_id,
+        latitude: siteData.latitude || "",
+        longitude: siteData.longitude || "",
+        geofence_range: siteData.geofence_range || "",
+        address: siteData.address || "",
+        state: siteData.state || "",
+        city: siteData.city || "",
+        district: siteData.district || "",
+        zone_id: siteData.zone_id || "",
+        // Boolean configuration fields
+        skip_host_approval: siteData.skip_host_approval ?? false,
+        survey_enabled: siteData.survey_enabled ?? false,
+        fitout_enabled: siteData.fitout_enabled ?? false,
+        mailroom_enabled: siteData.mailroom_enabled ?? false,
+        create_breakdown_ticket: siteData.create_breakdown_ticket ?? false,
+        parking_enabled: siteData.parking_enabled ?? false,
+        default_visitor_pass: siteData.default_visitor_pass ?? false,
+        ecommerce_service_enabled: siteData.ecommerce_service_enabled ?? false,
+        operational_audit_enabled: siteData.operational_audit_enabled ?? false,
+        steps_enabled: siteData.steps_enabled ?? false,
+        transportation_enabled: siteData.transportation_enabled ?? false,
+        business_card_enabled: siteData.business_card_enabled ?? false,
+        visitor_enabled: siteData.visitor_enabled ?? false,
+        govt_id_enabled: siteData.govt_id_enabled ?? false,
+        visitor_host_mandatory: siteData.visitor_host_mandatory ?? false,
       };
 
-      console.log('Updating site with URL:', url);
-      console.log('Payload:', payload);
+      let response: Response;
 
-      const response = await fetch(url, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': getAuthHeader(),
-        },
-        body: JSON.stringify(payload),
-      });
+      if (siteData.attachfile && siteData.attachfile instanceof File) {
+        const formData = new FormData();
+        formData.append("pms_site[name]", basePayload.name);
+        formData.append("pms_site[company_id]", String(basePayload.company_id));
+        formData.append("pms_site[headquarter_id]", String(basePayload.headquarter_id));
+        formData.append("pms_site[region_id]", String(basePayload.region_id));
+        formData.append("pms_site[latitude]", String(basePayload.latitude));
+        formData.append("pms_site[longitude]", String(basePayload.longitude));
+        formData.append("pms_site[geofence_range]", String(basePayload.geofence_range));
+        formData.append("pms_site[address]", String(basePayload.address));
+        formData.append("pms_site[state]", String(basePayload.state));
+        formData.append("pms_site[city]", String(basePayload.city));
+        formData.append("pms_site[district]", String(basePayload.district));
+        formData.append("pms_site[zone_id]", String(basePayload.zone_id));
+        formData.append("pms_site[skip_host_approval]", String(basePayload.skip_host_approval));
+        formData.append("pms_site[survey_enabled]", String(basePayload.survey_enabled));
+        formData.append("pms_site[fitout_enabled]", String(basePayload.fitout_enabled));
+        formData.append("pms_site[mailroom_enabled]", String(basePayload.mailroom_enabled));
+        formData.append("pms_site[create_breakdown_ticket]", String(basePayload.create_breakdown_ticket));
+        formData.append("pms_site[parking_enabled]", String(basePayload.parking_enabled));
+        formData.append("pms_site[default_visitor_pass]", String(basePayload.default_visitor_pass));
+        formData.append("pms_site[ecommerce_service_enabled]", String(basePayload.ecommerce_service_enabled));
+        formData.append("pms_site[operational_audit_enabled]", String(basePayload.operational_audit_enabled));
+        formData.append("pms_site[steps_enabled]", String(basePayload.steps_enabled));
+        formData.append("pms_site[transportation_enabled]", String(basePayload.transportation_enabled));
+        formData.append("pms_site[business_card_enabled]", String(basePayload.business_card_enabled));
+        formData.append("pms_site[visitor_enabled]", String(basePayload.visitor_enabled));
+        formData.append("pms_site[govt_id_enabled]", String(basePayload.govt_id_enabled));
+        formData.append("pms_site[visitor_host_mandatory]", String(basePayload.visitor_host_mandatory));
+        // Single image upload
+        formData.append("pms_site[attachfile]", siteData.attachfile);
+
+        response = await fetch(url, {
+          method: "PUT",
+          headers: {
+            Authorization: getAuthHeader(),
+          },
+          body: formData,
+        });
+      } else {
+        const payload = { pms_site: basePayload };
+        response = await fetch(url, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: getAuthHeader(),
+          },
+          body: JSON.stringify(payload),
+        });
+      }
 
       const result = await response.json();
-      console.log('Update site response:', result);
+  console.warn("Update site response:", result);
 
       if (response.ok) {
-        toast.success('Site updated successfully');
-        return { 
-          success: true, 
+        toast.success("Site updated successfully");
+        return {
+          success: true,
           data: result.data || result,
-          message: result.message || 'Site updated successfully'
+          message: result.message || "Site updated successfully",
         };
       } else {
-        const errorMessage = result.message || result.error || 'Failed to update site';
+        const errorMessage =
+          result.message || result.error || "Failed to update site";
         toast.error(errorMessage);
         return { success: false, error: errorMessage };
       }
     } catch (error) {
-      console.error('Error updating site:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update site';
+      console.error("Error updating site:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update site";
       toast.error(errorMessage);
       return { success: false, error: errorMessage };
     }
@@ -344,23 +484,23 @@ class SiteService {
     try {
       const token = API_CONFIG.TOKEN;
       if (!token) {
-        toast.error('Authentication token missing');
+        toast.error("Authentication token missing");
         return [];
       }
 
-      const url = this.getFullUrl('/pms/sites.json?all_sites=true');
-      console.log('Fetching sites from URL:', url);
+      const url = this.getFullUrl("/pms/sites.json?all_sites=true");
+  console.warn("Fetching sites from URL:", url);
 
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': getAuthHeader(),
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
         },
       });
 
       const result = await response.json();
-      console.log('Get sites response:', result);
+  console.warn("Get sites response:", result);
 
       if (response.ok) {
         // Handle different response formats
@@ -371,54 +511,56 @@ class SiteService {
         } else if (result.data && Array.isArray(result.data)) {
           return result.data;
         } else {
-          console.log('Unexpected sites response format:', result);
+          console.warn("Unexpected sites response format:", result);
           return [];
         }
       } else {
-        const errorMessage = result.message || result.error || 'Failed to fetch sites';
+        const errorMessage =
+          result.message || result.error || "Failed to fetch sites";
         toast.error(errorMessage);
         return [];
       }
     } catch (error) {
-      console.error('Error fetching sites:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch sites';
-      toast.error(errorMessage);
-      return [];
-    }
-  }
+      console.error("Error fetching sites:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch sites";
+    }}
+
 
   async getSiteById(siteId: number): Promise<SiteData | null> {
     try {
-      const token = API_CONFIG.TOKEN;
       if (!token) {
-        toast.error('Authentication token missing');
+        toast.error("Authentication token missing");
         return null;
       }
 
       const url = this.getFullUrl(`/pms/sites/${siteId}.json`);
-      console.log('Fetching site by ID from URL:', url);
+  console.warn("Fetching site by ID from URL:", url);
 
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': getAuthHeader(),
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
         },
       });
 
       const result = await response.json();
-      console.log('Get site by ID response:', result);
+  console.warn("Get site by ID response:", result);
+  console.log("Site data returned from getSiteById:", result.data || result);
 
       if (response.ok) {
         return result.data || result;
       } else {
-        const errorMessage = result.message || result.error || 'Failed to fetch site';
+        const errorMessage =
+          result.message || result.error || "Failed to fetch site";
         toast.error(errorMessage);
         return null;
       }
     } catch (error) {
-      console.error('Error fetching site:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch site';
+      console.error("Error fetching site:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch site";
       toast.error(errorMessage);
       return null;
     }
@@ -428,23 +570,23 @@ class SiteService {
     try {
       const token = API_CONFIG.TOKEN;
       if (!token) {
-        toast.error('Authentication token missing');
+        toast.error("Authentication token missing");
         return [];
       }
 
-      const url = this.getFullUrl('/pms/company_setups/company_index.json');
-      console.log('Fetching companies from URL:', url);
+      const url = this.getFullUrl("/pms/company_setups/company_index.json");
+  console.warn("Fetching companies from URL:", url);
 
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': getAuthHeader(),
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
         },
       });
 
       const result = await response.json();
-      console.log('Get companies response:', result);
+  console.warn("Get companies response:", result);
 
       if (response.ok) {
         if (result && result.code === 200 && Array.isArray(result.data)) {
@@ -457,13 +599,15 @@ class SiteService {
           return [];
         }
       } else {
-        const errorMessage = result.message || result.error || 'Failed to fetch companies';
+        const errorMessage =
+          result.message || result.error || "Failed to fetch companies";
         toast.error(errorMessage);
         return [];
       }
     } catch (error) {
-      console.error('Error fetching companies:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch companies';
+      console.error("Error fetching companies:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch companies";
       toast.error(errorMessage);
       return [];
     }
@@ -473,28 +617,32 @@ class SiteService {
     try {
       const token = API_CONFIG.TOKEN;
       if (!token) {
-        toast.error('Authentication token missing');
+        toast.error("Authentication token missing");
         return [];
       }
 
-      const url = this.getFullUrl('/headquarters.json');
-      console.log('Fetching headquarters from URL:', url);
+      const url = this.getFullUrl("/headquarters.json");
+  console.warn("Fetching headquarters from URL:", url);
 
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': getAuthHeader(),
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
         },
       });
 
       const result = await response.json();
-      console.log('Get headquarters response:', result);
+  console.warn("Get headquarters response:", result);
 
       if (response.ok) {
         if (Array.isArray(result)) {
           return result;
-        } else if (result && result.headquarters && Array.isArray(result.headquarters)) {
+        } else if (
+          result &&
+          result.headquarters &&
+          Array.isArray(result.headquarters)
+        ) {
           return result.headquarters;
         } else if (result && result.data && Array.isArray(result.data)) {
           return result.data;
@@ -502,13 +650,15 @@ class SiteService {
           return [];
         }
       } else {
-        const errorMessage = result.message || result.error || 'Failed to fetch headquarters';
+        const errorMessage =
+          result.message || result.error || "Failed to fetch headquarters";
         toast.error(errorMessage);
         return [];
       }
     } catch (error) {
-      console.error('Error fetching headquarters:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch headquarters';
+      console.error("Error fetching headquarters:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch headquarters";
       toast.error(errorMessage);
       return [];
     }
@@ -518,23 +668,23 @@ class SiteService {
     try {
       const token = API_CONFIG.TOKEN;
       if (!token) {
-        toast.error('Authentication token missing');
+        toast.error("Authentication token missing");
         return [];
       }
 
-      const url = this.getFullUrl('/pms/regions.json');
-      console.log('Fetching regions from URL:', url);
+      const url = this.getFullUrl("/pms/regions.json");
+  console.warn("Fetching regions from URL:", url);
 
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': getAuthHeader(),
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
         },
       });
 
       const result = await response.json();
-      console.log('Get regions response:', result);
+  console.warn("Get regions response:", result);
 
       if (response.ok) {
         if (Array.isArray(result)) {
@@ -547,13 +697,15 @@ class SiteService {
           return [];
         }
       } else {
-        const errorMessage = result.message || result.error || 'Failed to fetch regions';
+        const errorMessage =
+          result.message || result.error || "Failed to fetch regions";
         toast.error(errorMessage);
         return [];
       }
     } catch (error) {
-      console.error('Error fetching regions:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch regions';
+      console.error("Error fetching regions:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch regions";
       toast.error(errorMessage);
       return [];
     }

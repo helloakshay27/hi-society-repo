@@ -2,8 +2,23 @@ import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import KanbanBoard from "./KanbanBoard";
 import ProjectCard from "./ProjectCard";
 import { DndContext, DragEndEvent, closestCorners, DragStartEvent, DragOverlay } from "@dnd-kit/core";
-import { changeProjectStatus } from "@/store/slices/projectManagementSlice";
-import { useCallback, useState } from "react";
+import { changeProjectStatus, fetchKanbanProjects } from "@/store/slices/projectManagementSlice";
+import { useCallback, useEffect, useState } from "react";
+import { useLayout } from "@/contexts/LayoutContext";
+
+interface Project {
+    id: number;
+    status: string;
+    [key: string]: any;
+}
+
+interface KanbanData {
+    project_managements: Project[];
+}
+
+interface ProjectManagementKanbanProps {
+    fetchData: () => void;
+}
 
 export const cardsTitle = [
     {
@@ -38,8 +53,17 @@ export const cardsTitle = [
     },
 ];
 
-const ProjectManagementKanban = () => {
-    const { data } = useAppSelector((state) => state.filterProjects);
+const ProjectManagementKanban: React.FC<ProjectManagementKanbanProps> = ({ fetchData }) => {
+    const { setCurrentSection } = useLayout();
+
+    const view = localStorage.getItem("selectedView");
+
+    useEffect(() => {
+        setCurrentSection(view === "admin" ? "Value Added Services" : "Project Task");
+    }, [setCurrentSection]);
+
+    const { data } = useAppSelector((state) => state.fetchKanbanProjects);
+    const kanbanData = data as KanbanData;
     const dispatch = useAppDispatch();
     const token = localStorage.getItem("token");
     const baseUrl = localStorage.getItem("baseUrl");
@@ -47,6 +71,18 @@ const ProjectManagementKanban = () => {
     // Track dragging and project updates
     const [draggedProjectId, setDraggedProjectId] = useState<string | null>(null);
     const [droppedProjects, setDroppedProjects] = useState<{ [key: string]: string }>({});
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                await dispatch(fetchKanbanProjects({ token, baseUrl }));
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        fetchProjects();
+    }, [])
 
     const handleDragStart = useCallback((event: DragStartEvent) => {
         const activeData = event.active.data.current;
@@ -99,7 +135,9 @@ const ProjectManagementKanban = () => {
                     baseUrl,
                     id: projectId.toString(),
                     payload: { status: apiStatus }
-                }));
+                })).then(() => {
+                    fetchData()
+                })
             }
         }
     }, [dispatch, token, baseUrl]);
@@ -119,8 +157,8 @@ const ProjectManagementKanban = () => {
                         const cardStatus = card.title.toLowerCase().replace(" ", "_");
 
                         const filteredProjects =
-                            Array.isArray(data) &&
-                            data.filter((project) => {
+                            Array.isArray(kanbanData?.project_managements) &&
+                            kanbanData.project_managements.filter((project) => {
                                 // Check if this project was dropped with a new status
                                 const droppedStatus = droppedProjects[project.id];
                                 const projectStatus = droppedStatus || project.status;
@@ -136,7 +174,7 @@ const ProjectManagementKanban = () => {
                                 key={card.id}
                                 add={card.add}
                                 color={card.color}
-                                count={0}
+                                count={filteredProjects.length}
                                 title={card.title}
                             >
                                 {filteredProjects.length > 0 ? (
@@ -210,10 +248,10 @@ const ProjectManagementKanban = () => {
                 </div>
                 <DragOverlay>
                     {draggedProjectId ? (
-                        Array.isArray(data) &&
-                            data.find(project => project.id.toString() === draggedProjectId) ? (
+                        Array.isArray(kanbanData?.project_managements) &&
+                            kanbanData.project_managements.find(project => project.id.toString() === draggedProjectId) ? (
                             <div className="w-60 opacity-100">
-                                <ProjectCard project={data.find(project => project.id.toString() === draggedProjectId)} />
+                                <ProjectCard project={kanbanData.project_managements.find(project => project.id.toString() === draggedProjectId)!} />
                             </div>
                         ) : null
                     ) : null}

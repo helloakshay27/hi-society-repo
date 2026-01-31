@@ -130,6 +130,26 @@ export const MovementToSection: React.FC<MovementToSectionProps> = ({
     }
   }, [dispatch]);
 
+  useEffect(() => {
+    if (siteId) return;
+    if (!sites?.length) return;
+
+    const localSelectedSiteId = (() => {
+      const raw = localStorage.getItem("selectedSiteId");
+      if (!raw) return null;
+      const numericMatch = raw.match(/-?\d+/);
+      return numericMatch ? Number(numericMatch[0]) : null;
+    })();
+
+    const nextSiteId =
+      selectedSite?.id ||
+      localSelectedSiteId ||
+      sites[0]?.id ||
+      null;
+
+    if (nextSiteId) setSiteId(nextSiteId);
+  }, [siteId, sites, selectedSite, setSiteId]);
+
   // Handle cascading dropdown changes
   useEffect(() => {
     if (siteId) {
@@ -146,6 +166,10 @@ export const MovementToSection: React.FC<MovementToSectionProps> = ({
   useEffect(() => {
     if (buildingId) {
       fetchWings(buildingId);
+      // Also fetch all areas, floors, and rooms for this building
+      fetchAreas(0, buildingId);
+      fetchFloors(0, buildingId);
+      fetchRooms(0, buildingId);
       // Reset dependent dropdowns
       setWingId(null);
       setAreaId(null);
@@ -155,31 +179,39 @@ export const MovementToSection: React.FC<MovementToSectionProps> = ({
   }, [buildingId]);
 
   useEffect(() => {
-    if (wingId) {
-      fetchAreas(wingId);
+    if (wingId && buildingId) {
+      // Fetch areas for this wing
+      fetchAreas(wingId, buildingId);
+      // Also fetch floors and rooms with wing_id
+      fetchFloors(0, buildingId, wingId);
+      fetchRooms(0, buildingId, wingId);
       // Reset dependent dropdowns
       setAreaId(null);
       setFloorId(null);
       setRoomId(null);
     }
-  }, [wingId]);
+  }, [wingId, buildingId]);
 
   useEffect(() => {
-    if (areaId) {
-      fetchFloors(areaId);
+    if (areaId && buildingId) {
+      // Fetch floors for this area, passing wing_id if available
+      fetchFloors(areaId, buildingId, wingId || undefined);
+      // Also fetch rooms with area_id and wing_id
+      fetchRooms(0, buildingId, wingId || undefined, areaId);
       // Reset dependent dropdowns
       setFloorId(null);
       setRoomId(null);
     }
-  }, [areaId]);
+  }, [areaId, buildingId, wingId]);
 
   useEffect(() => {
-    if (floorId) {
-      fetchRooms(floorId);
+    if (floorId && buildingId) {
+      // Fetch rooms for this floor, passing all parent IDs
+      fetchRooms(floorId, buildingId, wingId || undefined, areaId || undefined);
       // Reset dependent dropdowns
       setRoomId(null);
     }
-  }, [floorId]);
+  }, [floorId, buildingId, wingId, areaId]);
 
   return (
     <div className="mb-6">
@@ -188,7 +220,7 @@ export const MovementToSection: React.FC<MovementToSectionProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           <TextField
             select
-            label="Site*"
+            label="Site"
             value={siteId || ''}
             onChange={(e) => setSiteId(e.target.value ? Number(e.target.value) : null)}
             variant="outlined"
@@ -284,7 +316,7 @@ export const MovementToSection: React.FC<MovementToSectionProps> = ({
             variant="outlined"
             size="small"
             placeholder="Select Area"
-            disabled={!wingId || loading.areas}
+            disabled={!buildingId || loading.areas}
             InputLabelProps={{
               shrink: true,
             }}
@@ -314,7 +346,7 @@ export const MovementToSection: React.FC<MovementToSectionProps> = ({
             variant="outlined"
             size="small"
             placeholder="Select Floor"
-            disabled={!areaId || loading.floors}
+            disabled={!buildingId || loading.floors}
             InputLabelProps={{
               shrink: true,
             }}
@@ -344,7 +376,7 @@ export const MovementToSection: React.FC<MovementToSectionProps> = ({
             variant="outlined"
             size="small"
             placeholder="Select Room"
-            disabled={!floorId || loading.rooms}
+            disabled={!buildingId || loading.rooms}
             InputLabelProps={{
               shrink: true,
             }}

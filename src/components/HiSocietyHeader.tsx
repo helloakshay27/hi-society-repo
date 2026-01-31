@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SearchWithSuggestions } from "./SearchWithSuggestions";
 import { getUser, clearAuth } from "@/utils/auth";
 import { permissionService } from "@/services/permissionService";
@@ -33,6 +34,7 @@ import { is } from "date-fns/locale";
 import { Dashboard } from "@mui/icons-material";
 import { AnalyticsGrid } from "./dashboard/AnalyticsGrid";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
+import { useLayout } from "@/contexts/LayoutContext";
 
 export interface HiSocietySociety {
   id: number;
@@ -65,6 +67,9 @@ export const HiSocietyHeader = () => {
   const [selectedSociety, setSelectedSociety] = useState<HiSocietySociety | null>(null);
   const [selectedFlat, setSelectedFlat] = useState<HiSocietySociety | null>(null);
   const [hiSocietyLoading, setHiSocietyLoading] = useState(false);
+  
+  // Layout mode
+  const { layoutMode, toggleLayoutMode } = useLayout();
 
   const currentPath = window.location.pathname;
 
@@ -489,6 +494,43 @@ export const HiSocietyHeader = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Layout Mode Toggle Button - Only available on localhost for development */}
+          {hostname.includes("localhost") && (
+            <Button
+              onClick={() => {
+                // Set base URL BEFORE toggling mode to ensure proper API routing
+                if (layoutMode === 'hi-society') {
+                  // Switching to FM Matrix - set FM Matrix base URL
+                  // localStorage.setItem('baseUrl', 'https://fm-uat-api.lockated.com');
+                  toggleLayoutMode();
+                  // Use React Router navigate for client-side navigation (preserves auth)
+                  navigate('/maintenance/asset');
+                } else {
+                  // Switching to Hi-Society - set Hi-Society base URL
+                  // localStorage.setItem('baseUrl', 'https://hi-society.lockated.com');
+                  toggleLayoutMode();
+                  // Use React Router navigate for client-side navigation (preserves auth)
+                  navigate('/maintenance/project-details-list');
+                }
+              }}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 text-xs font-medium border-[#D5DbDB] hover:bg-[#f6f4ee] hover:text-[#C72030] transition-colors"
+            >
+              {layoutMode === 'fm-matrix' ? (
+                <>
+                  <Building2 className="w-3.5 h-3.5" />
+                  Switch to Hi-Society
+                </>
+              ) : (
+                <>
+                  <Home className="w-3.5 h-3.5" />
+                  Switch to FM Matrix
+                </>
+              )}
+            </Button>
+          )}
+          
           {/* Society Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">

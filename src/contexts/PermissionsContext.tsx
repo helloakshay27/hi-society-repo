@@ -67,6 +67,15 @@ export const PermissionsProvider: React.FC<PermissionsProviderProps> = ({
       return;
     }
 
+    // Don't fetch permissions if in Hi-Society mode (permissions are FM Matrix specific)
+    const layoutMode = localStorage.getItem("layoutMode");
+    if (layoutMode === "hi-society") {
+      console.log("Skipping permission fetch in Hi-Society mode");
+      setUserRole(null);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -89,7 +98,8 @@ export const PermissionsProvider: React.FC<PermissionsProviderProps> = ({
 
   // Refresh permissions on every route change (page navigation)
   useEffect(() => {
-    if (isAuthenticated()) {
+    const layoutMode = localStorage.getItem("layoutMode");
+    if (isAuthenticated() && layoutMode !== "hi-society") {
       fetchUserPermissions();
     }
   }, [location.pathname, fetchUserPermissions]);

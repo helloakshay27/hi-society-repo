@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Form, useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/store/store';
+import { fetchAssetsData } from '@/store/slices/assetsSlice';
 import {
   ChevronDown,
   ChevronUp,
@@ -262,6 +265,7 @@ const AddAssetPage = () => {
   const currency = (typeof window !== 'undefined' && window.localStorage.getItem('currency')) || 'INR';
   const currencySymbol = (typeof window !== 'undefined' && window.localStorage.getItem('currencySymbol')) || '';
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
   // Location data hook
   const {
@@ -1136,19 +1140,49 @@ const AddAssetPage = () => {
         newLocation.area = "";
         newLocation.floor = "";
         newLocation.room = "";
-        if (value) fetchWings(parseInt(value));
+        if (value) {
+          const buildingId = parseInt(value);
+          fetchWings(buildingId);
+          // Also fetch areas, floors, and rooms with buildingId filter
+          fetchAreas(0, buildingId);
+          fetchFloors(0, buildingId);
+          fetchRooms(0, buildingId);
+        }
       } else if (field === "wing") {
         newLocation.area = "";
         newLocation.floor = "";
         newLocation.room = "";
-        if (value) fetchAreas(parseInt(value));
+        if (value && newLocation.building) {
+          const wingId = parseInt(value);
+          const buildingId = parseInt(newLocation.building);
+          // Fetch areas for this wing
+          fetchAreas(wingId, buildingId);
+          // Also fetch floors and rooms with wing_id
+          fetchFloors(0, buildingId, wingId);
+          fetchRooms(0, buildingId, wingId);
+        }
       } else if (field === "area") {
         newLocation.floor = "";
         newLocation.room = "";
-        if (value) fetchFloors(parseInt(value));
+        if (value && newLocation.building) {
+          const areaId = parseInt(value);
+          const buildingId = parseInt(newLocation.building);
+          const wingId = newLocation.wing ? parseInt(newLocation.wing) : undefined;
+          // Fetch floors for this area, passing wing_id if available
+          fetchFloors(areaId, buildingId, wingId);
+          // Also fetch rooms with area_id and wing_id
+          fetchRooms(0, buildingId, wingId, areaId);
+        }
       } else if (field === "floor") {
         newLocation.room = "";
-        if (value) fetchRooms(parseInt(value));
+        if (value && newLocation.building) {
+          const floorId = parseInt(value);
+          const buildingId = parseInt(newLocation.building);
+          const wingId = newLocation.wing ? parseInt(newLocation.wing) : undefined;
+          const areaId = newLocation.area ? parseInt(newLocation.area) : undefined;
+          // Fetch rooms for this floor, passing all parent IDs
+          fetchRooms(floorId, buildingId, wingId, areaId);
+        }
       }
 
       return newLocation;
@@ -1866,24 +1900,8 @@ const AddAssetPage = () => {
       });
     });
 
-    // IT Assets custom fields - only include fields with non-empty values
-    Object.keys(itAssetsCustomFields).forEach((sectionKey) => {
-      (itAssetsCustomFields[sectionKey] || []).forEach((field) => {
-        // Only add field if it has a non-empty value
-        if (!isEmpty(field.value)) {
-          console.log(`Including IT assets field: ${field.name} = ${field.value}`);
-          extraFields.push({
-            field_name: field.name,
-            field_value: field.value,
-            group_name: sectionKey,
-            field_description: "custom_field",
-            _destroy: false,
-          });
-        } else {
-          console.log(`Skipping empty IT assets field: ${field.name} (value: ${field.value})`);
-        }
-      });
-    });
+    // IT Assets custom fields are already synchronized with customFields, 
+    // so we don't need to iterate over them separately to avoid duplicates.
 
     // Standard extra fields (dynamic) - with proper date formatting
     Object.entries(extraFormFields).forEach(([key, fieldObj]) => {
@@ -2082,7 +2100,6 @@ const AddAssetPage = () => {
   useEffect(() => {
     // Priority: selectedLocation.site, then formData.pms_site_id
     const siteIdToUse = selectedLocation.site || formData.pms_site_id;
-    
     if (siteIdToUse) {
       const siteId = parseInt(siteIdToUse);
       if (siteId) {
@@ -2151,7 +2168,7 @@ const AddAssetPage = () => {
     setUsersLoading(true);
     try {
       const response = await apiClient.get(
-        "/pms/users/get_escalate_to_users.json"
+        "/pms/users/get_escalate_to_users.json?type=Asset"
       );
       setUsers(response.data?.users || []);
     } catch (error) {
@@ -2512,30 +2529,30 @@ const AddAssetPage = () => {
       },
       "Furniture & Fixtures": {
         ...baseValidationRules,
-        locationFields: ["site", "building"],
+        locationFields: ["site"],
         categorySpecificFields: [],
       },
       "IT Equipment": {
         ...baseValidationRules,
-        locationFields: ["site", "building"],
+        locationFields: ["site"],
         // warrantyFields: [],
         categorySpecificFields: [],
       },
       "Machinery & Equipment": {
         ...baseValidationRules,
-        locationFields: ["site", "building"],
+        locationFields: ["site"],
         // warrantyFields: ["warranty_expiry"],
         categorySpecificFields: [],
       },
       "Tools & Instruments": {
         ...baseValidationRules,
-        locationFields: ["site", "building"],
+        locationFields: ["site"],
         // warrantyFields: ["warranty_expiry"],
         categorySpecificFields: [],
       },
       Meter: {
         ...baseValidationRules,
-        locationFields: ["site", "building"],
+        locationFields: ["site"],
         // warrantyFields: ["warranty_expiry"],
         categorySpecificFields: [],
       },
@@ -2666,11 +2683,11 @@ const AddAssetPage = () => {
       },
       "Furniture & Fixtures": {
         description:
-          "Furniture assets require basic identification, group selection, purchase details, warranty, and location information (Site & Building minimum) as they are fixed to specific locations.",
+          "Furniture assets require basic identification, group selection, purchase details, warranty, and location information (Site minimum) as they are fixed to specific locations.",
         requiredSections: [
           "Asset Name",
           "Group & Subgroup",
-          "Location (Site & Building)",
+          "Location (Site)",
           "Purchase Details",
           "Commissioning Date",
           "Warranty Expiry",
@@ -2678,11 +2695,11 @@ const AddAssetPage = () => {
       },
       "IT Equipment": {
         description:
-          "IT Equipment requires basic identification, group selection, purchase details, warranty, and location information (Site & Building minimum) for proper asset tracking.",
+          "IT Equipment requires basic identification, group selection, purchase details, warranty, and location information (Site minimum) for proper asset tracking.",
         requiredSections: [
           "Asset Name",
           "Group & Subgroup",
-          "Location (Site & Building)",
+          "Location (Site)",
           "Purchase Details",
           "Commissioning Date",
           "Warranty Expiry",
@@ -2690,11 +2707,11 @@ const AddAssetPage = () => {
       },
       "Machinery & Equipment": {
         description:
-          "Machinery requires basic identification, group selection, purchase details, warranty, and location information (Site & Building minimum) for maintenance and tracking.",
+          "Machinery requires basic identification, group selection, purchase details, warranty, and location information (Site minimum) for maintenance and tracking.",
         requiredSections: [
           "Asset Name",
           "Group & Subgroup",
-          "Location (Site & Building)",
+          "Location (Site)",
           "Purchase Details",
           "Commissioning Date",
           "Warranty Expiry",
@@ -2702,11 +2719,11 @@ const AddAssetPage = () => {
       },
       "Tools & Instruments": {
         description:
-          "Tools require basic identification, group selection, purchase details, warranty, and location information (Site & Building minimum) for inventory management.",
+          "Tools require basic identification, group selection, purchase details, warranty, and location information (Site minimum) for inventory management.",
         requiredSections: [
           "Asset Name",
           "Group & Subgroup",
-          "Location (Site & Building)",
+          "Location (Site)",
           "Purchase Details",
           "Commissioning Date",
           "Warranty Expiry",
@@ -2714,11 +2731,11 @@ const AddAssetPage = () => {
       },
       Meter: {
         description:
-          "Meter assets require basic identification, group selection, purchase details, warranty, and location information (Site & Building minimum) for utility monitoring and maintenance.",
+          "Meter assets require basic identification, group selection, purchase details, warranty, and location information (Site minimum) for utility monitoring and maintenance.",
         requiredSections: [
           "Asset Name",
           "Group & Subgroup",
-          "Location (Site & Building)",
+          "Location (Site)",
           "Purchase Details",
           "Commissioning Date",
           "Warranty Expiry",
@@ -2814,30 +2831,30 @@ const AddAssetPage = () => {
       },
       "Furniture & Fixtures": {
         ...baseValidationRules,
-        locationFields: ["site", "building"], // Furniture needs location
+        locationFields: ["site"], // Furniture needs location
         categorySpecificFields: [], // No specific required fields beyond base ones
       },
       "IT Equipment": {
         ...baseValidationRules,
-        locationFields: ["site", "building"], // IT Equipment needs location
+        locationFields: ["site"], // IT Equipment needs location
         // warrantyFields: ["warranty_expiry"], // IT Equipment typically has warranty
         categorySpecificFields: [], // No specific required fields beyond base ones
       },
       "Machinery & Equipment": {
         ...baseValidationRules,
-        locationFields: ["site", "building"], // Machinery needs location
+        locationFields: ["site"], // Machinery needs location
         // warrantyFields: ["warranty_expiry"], // Machinery typically has warranty
         categorySpecificFields: [], // No specific required fields beyond base ones
       },
       "Tools & Instruments": {
         ...baseValidationRules,
-        locationFields: ["site", "building"], // Tools need location
+        locationFields: ["site"], // Tools need location
         // warrantyFields: ["warranty_expiry"], // Tools typically have warranty
         categorySpecificFields: [], // No specific required fields beyond base ones
       },
       Meter: {
         ...baseValidationRules,
-        locationFields: ["site", "building"], // Meters need location
+        locationFields: ["site"], // Meters need location
         // warrantyFields: ["warranty_expiry"], // Meters typically have warranty
         categorySpecificFields: [], // No specific required fields beyond base ones
       },
@@ -3055,44 +3072,44 @@ const AddAssetPage = () => {
     // and only for asset categories that have useful life fields
     const categoriesWithUsefulLife = [
       // "Leasehold Improvement",
-      "Furniture & Fixtures", 
+      "Furniture & Fixtures",
       "IT Equipment",
       "Machinery & Equipment",
       "Meter",
       "Tools & Instruments"
     ];
-    
-    if (formData.purchase_cost && parseFloat(formData.purchase_cost) > 0 && 
-        categoriesWithUsefulLife.includes(selectedAssetCategory)) {
-      if (!formData.useful_life) {
-        toast.error("Useful Life Required", {
-          description:
-            "Please enter the useful life for depreciation calculation when purchase cost is provided.",
-          duration: 4000,
-        });
-        return ["Useful Life is required for Depreciation"];
-      }
 
-      if (!formData.salvage_value) {
-        toast.error("Salvage Value Required", {
-          description:
-            "Please enter the salvage value for depreciation calculation when purchase cost is provided.",
-          duration: 4000,
-        });
-        return ["Salvage Value is required for Depreciation"];
-      }
+    if (formData.purchase_cost && parseFloat(formData.purchase_cost) > 0 &&
+      categoriesWithUsefulLife.includes(selectedAssetCategory)) {
+      // if (!formData.useful_life) {
+      //   toast.error("Useful Life Required", {
+      //     description:
+      //       "Please enter the useful life for depreciation calculation when purchase cost is provided.",
+      //     duration: 4000,
+      //   });
+      //   return ["Useful Life is required for Depreciation"];
+      // }
 
-      if (!formData.depreciation_rate) {
-        toast.error("Depreciation Rate Required", {
-          description:
-            "Please enter the depreciation rate for depreciation calculation when purchase cost is provided.",
-          duration: 4000,
-        });
-        return ["Depreciation Rate is required for Depreciation"];
-      }
+      // if (!formData.salvage_value) {
+      //   toast.error("Salvage Value Required", {
+      //     description:
+      //       "Please enter the salvage value for depreciation calculation when purchase cost is provided.",
+      //     duration: 4000,
+      //   });
+      //   return ["Salvage Value is required for Depreciation"];
+      // }
+
+      // if (!formData.depreciation_rate) {
+      //   toast.error("Depreciation Rate Required", {
+      //     description:
+      //       "Please enter the depreciation rate for depreciation calculation when purchase cost is provided.",
+      //     duration: 4000,
+      //   });
+      //   return ["Depreciation Rate is required for Depreciation"];
+      // }
 
       // Validate Purchase Cost is not equal to Salvage Value
-      if (parseFloat(formData.purchase_cost) === parseFloat(formData.salvage_value)) {
+      if (formData.salvage_value && parseFloat(formData.purchase_cost) === parseFloat(formData.salvage_value)) {
         toast.error("Invalid Salvage Value", {
           description: "Purchase Cost cannot be equal to Salvage Value.",
           duration: 4000,
@@ -3101,7 +3118,7 @@ const AddAssetPage = () => {
       }
 
       // Validate Salvage Value is not greater than Purchase Cost
-      if (parseFloat(formData.salvage_value) > parseFloat(formData.purchase_cost)) {
+      if (formData.salvage_value && parseFloat(formData.salvage_value) > parseFloat(formData.purchase_cost)) {
         toast.error("Invalid Salvage Value", {
           description: "Salvage Value cannot be greater than Purchase Cost.",
           duration: 4000,
@@ -3112,38 +3129,38 @@ const AddAssetPage = () => {
 
     // Meter Details validation (if applicable toggle is on)
     // IT Assets Details validation for IT Equipment
-    if (selectedAssetCategory === "IT Equipment") {
-      // System Details required fields
-      const systemFields = [
-        { key: "os", label: "OS" },
-        { key: "memory", label: "Total Memory" },
-        { key: "processor", label: "Processor" },
-      ];
-      for (const field of systemFields) {
-        if (!itAssetDetails.system_details[field.key]) {
-          toast.error(`${field.label} Required`, {
-            description: `Please enter ${field.label} in IT ASSETS DETAILS to continue.`,
-            duration: 4000,
-          });
-          return [`${field.label} is required in IT ASSETS DETAILS`];
-        }
-      }
-      // Hardware Details required fields
-      const hardwareFields = [
-        { key: "model", label: "Model" },
-        { key: "serial_no", label: "Serial No." },
-        { key: "capacity", label: "Capacity" },
-      ];
-      for (const field of hardwareFields) {
-        if (!itAssetDetails.hardware[field.key]) {
-          toast.error(`${field.label} Required`, {
-            description: `Please enter ${field.label} in IT ASSETS DETAILS to continue.`,
-            duration: 4000,
-          });
-          return [`${field.label} is required in IT ASSETS DETAILS`];
-        }
-      }
-    }
+    // if (selectedAssetCategory === "IT Equipment") {
+    //   // System Details required fields
+    //   const systemFields = [
+    //     { key: "os", label: "OS" },
+    //     { key: "memory", label: "Total Memory" },
+    //     { key: "processor", label: "Processor" },
+    //   ];
+    //   for (const field of systemFields) {
+    //     if (!itAssetDetails.system_details[field.key]) {
+    //       toast.error(`${field.label} Required`, {
+    //         description: `Please enter ${field.label} in IT ASSETS DETAILS to continue.`,
+    //         duration: 4000,
+    //       });
+    //       return [`${field.label} is required in IT ASSETS DETAILS`];
+    //     }
+    //   }
+    //   // Hardware Details required fields
+    //   const hardwareFields = [
+    //     { key: "model", label: "Model" },
+    //     { key: "serial_no", label: "Serial No." },
+    //     { key: "capacity", label: "Capacity" },
+    //   ];
+    //   for (const field of hardwareFields) {
+    //     if (!itAssetDetails.hardware[field.key]) {
+    //       toast.error(`${field.label} Required`, {
+    //         description: `Please enter ${field.label} in IT ASSETS DETAILS to continue.`,
+    //         duration: 4000,
+    //       });
+    //       return [`${field.label} is required in IT ASSETS DETAILS`];
+    //     }
+    //   }
+    // }
     if (
       meterType === "SubMeter" &&
       !selectedParentMeterId
@@ -3320,7 +3337,7 @@ const AddAssetPage = () => {
         // Asset type flags
         it_asset: selectedAssetCategory === "IT Equipment" ? true : formData.it_asset,
         it_meter: formData.it_meter,
-        is_meter: formData.is_meter,
+        is_meter: (consumptionMeasureFields.length > 0 || nonConsumptionMeasureFields.length > 0) ? true : formData.is_meter,
         asset_loaned: formData.asset_loaned,
         depreciation_applicable: true,
 
@@ -3678,6 +3695,8 @@ const AddAssetPage = () => {
             description: "The asset has been created and saved.",
             duration: 3000,
           });
+          // Refresh asset dashboard data
+          dispatch(fetchAssetsData({}));
           // Small delay to show the toast before redirect
           setTimeout(() => {
             if (assetId) {
@@ -3733,6 +3752,8 @@ const AddAssetPage = () => {
             description: "The asset has been created and saved.",
             duration: 3000,
           });
+          // Refresh asset dashboard data
+          dispatch(fetchAssetsData({}));
           // Small delay to show the toast before redirect
           setTimeout(() => {
             if (assetId) {
@@ -4219,6 +4240,8 @@ const AddAssetPage = () => {
             description: "The asset has been created and saved.",
             duration: 3000,
           });
+          // Refresh asset dashboard data
+          dispatch(fetchAssetsData({}));
           // Small delay to show the toast before redirect
           setTimeout(() => {
             // window.location.href = "/maintenance/asset";
@@ -4269,6 +4292,8 @@ const AddAssetPage = () => {
             description: "The asset has been created and saved.",
             duration: 3000,
           });
+          // Refresh asset dashboard data
+          dispatch(fetchAssetsData({}));
         })
         .catch((err) => {
           console.error("Error creating asset:", err);
@@ -5594,14 +5619,6 @@ const AddAssetPage = () => {
                       placeholder="Describe the improvement work"
                       variant="outlined"
                       fullWidth
-                      multiline
-                      rows={2}
-                      sx={{
-                        gridColumn: { md: "span 2" },
-                        "& .MuiOutlinedInput-root": {
-                          minHeight: { xs: "60px", md: "70px" },
-                        },
-                      }}
                       onChange={(e) => {
                         const value = (e.target as HTMLInputElement).value;
                         handleExtraFieldChange(
@@ -8132,9 +8149,9 @@ const AddAssetPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <TextField
-                     label={<span>Asset Name <span style={{ color: '#C72030' }}>*</span></span>}
-                     
+                    <TextField
+                      label={<span>Asset Name <span style={{ color: '#C72030' }}>*</span></span>}
+
                       placeholder="Enter name"
                       variant="outlined"
                       fullWidth
@@ -9957,7 +9974,7 @@ const AddAssetPage = () => {
                         sx={{ minWidth: 120 }}
                       >
                         <InputLabel id="building-select-label" shrink>
-                          Building<span style={{ color: '#C72030' }}>*</span>
+                          Building
                         </InputLabel>
                         <MuiSelect
                           labelId="building-select-label"
@@ -10039,7 +10056,7 @@ const AddAssetPage = () => {
                             handleFieldChange("pms_area_id", e.target.value);
                           }}
                           sx={fieldStyles}
-                          disabled={!selectedLocation.wing || loading.areas}
+                          disabled={!selectedLocation.building || loading.areas}
                         >
                           <MenuItem value="">
                             <em>Select Area</em>
@@ -10071,7 +10088,7 @@ const AddAssetPage = () => {
                             handleFieldChange("pms_floor_id", e.target.value);
                           }}
                           sx={fieldStyles}
-                          disabled={!selectedLocation.area || loading.floors}
+                          disabled={!selectedLocation.building || loading.floors}
                         >
                           <MenuItem value="">
                             <em>Select Floor</em>
@@ -10105,7 +10122,7 @@ const AddAssetPage = () => {
                             handleFieldChange("pms_room_id", e.target.value);
                           }}
                           sx={fieldStyles}
-                          disabled={!selectedLocation.floor || loading.rooms}
+                          disabled={!selectedLocation.building || loading.rooms}
                         >
                           <MenuItem value="">
                             <em>Select Room</em>
@@ -12820,7 +12837,7 @@ const AddAssetPage = () => {
           <button
             onClick={handleSaveAndShow}
             className="border border-[#C72030] text-[#C72030] px-6 sm:px-8 py-2 rounded-md   text-sm sm:text-base"
-            // disabled={submitting}
+          // disabled={submitting}
           >
             Save & Show Details
           </button>
