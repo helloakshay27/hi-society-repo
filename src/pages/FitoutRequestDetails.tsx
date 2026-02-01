@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import html2pdf from "html2pdf.js";
 import { 
   ArrowLeft, 
   FileText, 
@@ -304,6 +305,7 @@ const FitoutRequestDetails: React.FC = () => {
   const [editedAnnexureSignaturesByMapId, setEditedAnnexureSignaturesByMapId] = useState<Record<number, string>>({});
 
   const [annexureSaveLoading, setAnnexureSaveLoading] = useState(false);
+  const [isDownloadingAnnexurePDF, setIsDownloadingAnnexurePDF] = useState(false);
   
   // Logs Modal State
   const [logsModalOpen, setLogsModalOpen] = useState(false);
@@ -702,7 +704,7 @@ const FitoutRequestDetails: React.FC = () => {
       });
 
       await apiClient.post(
-        `/crm/admin/fitout_requests/${id}/fitout_request_categories/${selectedCategoryForUpload.id}/upload_documents.json`,
+        `/fitout_request_categories/${selectedCategoryForUpload.id}/upload_documents.json`,
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
@@ -1318,6 +1320,434 @@ const FitoutRequestDetails: React.FC = () => {
     }
   };
 
+  // Helper function to convert image URL to base64
+  const convertImageToBase64 = async (url: string): Promise<string> => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error converting image to base64:', error);
+      return '';
+    }
+  };
+
+  // Download Annexures as PDF
+  const handleDownloadAnnexuresPDF = async () => {
+    if (!requestData || !annexureResponses || annexureResponses.length === 0) {
+      toast.error("No annexure data available to download");
+      return;
+    }
+
+    setIsDownloadingAnnexurePDF(true);
+
+    try {
+      // Build complete HTML document
+      let htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              padding: 20px;
+              background: white;
+              margin: 0;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              border-bottom: 2px solid #C72030;
+              padding-bottom: 20px;
+            }
+            .header h1 {
+              color: #C72030;
+              font-size: 24px;
+              margin: 0 0 10px 0;
+            }
+            .header p {
+              color: #666;
+              font-size: 14px;
+              margin: 0;
+            }
+            .category {
+              margin-bottom: 40px;
+              page-break-inside: avoid;
+            }
+            .category-header {
+              background-color: #F6F4EE;
+              padding: 15px;
+              border-radius: 8px;
+              margin-bottom: 15px;
+            }
+            .category-title-row {
+              margin-bottom: 10px;
+            }
+            .category-number {
+              display: inline-block;
+              width: 32px;
+              height: 32px;
+              background-color: #C72030;
+              color: white;
+              border-radius: 50%;
+              text-align: center;
+              line-height: 32px;
+              font-weight: bold;
+              margin-right: 10px;
+              vertical-align: middle;
+            }
+            .category-name {
+              font-size: 16px;
+              color: #1a1a1a;
+              font-weight: 600;
+              display: inline;
+              vertical-align: middle;
+            }
+            .category-amount {
+              float: right;
+              font-size: 16px;
+              font-weight: bold;
+              color: #1a1a1a;
+            }
+            .status-badge {
+              display: inline-block;
+              padding: 4px 12px;
+              border-radius: 4px;
+              font-size: 12px;
+              color: white;
+              margin-left: 42px;
+            }
+            .comments-section {
+              background-color: #f6f4ee;
+              padding: 15px;
+              border-radius: 8px;
+              margin-bottom: 15px;
+            }
+            .comments-section h3 {
+              font-size: 14px;
+              font-weight: 600;
+              margin: 0 0 10px 0;
+              color: #1a1a1a;
+            }
+            .comment {
+              background-color: white;
+              padding: 12px;
+              border-radius: 6px;
+              border: 1px solid #e5e7eb;
+              margin-bottom: 10px;
+            }
+            .comment-author {
+              font-size: 13px;
+              font-weight: bold;
+              color: #1a1a1a;
+            }
+            .comment-date {
+              font-size: 11px;
+              color: #6b7280;
+              float: right;
+            }
+            .comment-body {
+              font-size: 13px;
+              color: #374151;
+              margin-top: 5px;
+              clear: both;
+            }
+            .questions-section {
+              margin-top: 15px;
+            }
+            .questions-section h3 {
+              font-size: 14px;
+              font-weight: 600;
+              margin: 0 0 15px 0;
+              color: #1a1a1a;
+            }
+            .question-card {
+              background-color: white;
+              padding: 15px;
+              border: 1px solid #e5e7eb;
+              border-radius: 6px;
+              margin-bottom: 15px;
+            }
+            .question-number {
+              display: inline-block;
+              width: 24px;
+              height: 24px;
+              background-color: #C72030;
+              color: white;
+              border-radius: 50%;
+              text-align: center;
+              line-height: 24px;
+              font-size: 11px;
+              font-weight: bold;
+              margin-right: 10px;
+              vertical-align: top;
+            }
+            .question-text {
+              font-size: 13px;
+              font-weight: 500;
+              color: #1a1a1a;
+              display: inline-block;
+              width: calc(100% - 40px);
+              vertical-align: top;
+            }
+            .answer-box {
+              margin-left: 34px;
+              background-color: #f9fafb;
+              padding: 10px;
+              border-radius: 4px;
+              margin-top: 10px;
+            }
+            .answer-text {
+              font-size: 13px;
+              color: #1a1a1a;
+              margin: 0;
+            }
+            .answer-text.empty {
+              color: #9ca3af;
+              font-style: italic;
+            }
+            .attachments-info {
+              margin-left: 34px;
+              margin-top: 8px;
+              font-size: 12px;
+              color: #6b7280;
+            }
+            .attachments-section {
+              margin-left: 34px;
+              margin-top: 15px;
+            }
+            .attachments-section h4 {
+              font-size: 13px;
+              font-weight: 600;
+              margin: 0 0 10px 0;
+              color: #1a1a1a;
+            }
+            .attachment-grid {
+              display: block;
+              margin-top: 10px;
+            }
+            .attachment-item {
+              margin-bottom: 15px;
+              page-break-inside: avoid;
+            }
+            .attachment-image {
+              max-width: 100%;
+              height: auto;
+              border: 1px solid #e5e7eb;
+              border-radius: 4px;
+              margin-bottom: 5px;
+            }
+            .attachment-label {
+              font-size: 11px;
+              color: #6b7280;
+              display: block;
+              margin-top: 5px;
+            }
+            .documents-section {
+              margin-top: 15px;
+              padding-top: 15px;
+              border-top: 1px solid #e5e7eb;
+            }
+            .documents-section p {
+              font-size: 13px;
+              color: #374151;
+              margin: 5px 0;
+            }
+            .clearfix::after {
+              content: "";
+              display: table;
+              clear: both;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Fitout Request - Annexures</h1>
+            <p>Request #${requestData.id} - ${requestData.flat_name || requestData.flat || ''}</p>
+          </div>
+      `;
+
+      // Add each annexure category
+      for (const categoryResponse of annexureResponses) {
+        const category = requestData.fitout_request_categories.find(
+          (cat) => cat.category_name === categoryResponse.name
+        );
+        const comments = categoryResponse.comments || [];
+        const index = annexureResponses.indexOf(categoryResponse);
+
+        htmlContent += `
+          <div class="category">
+            <div class="category-header">
+              <div class="category-title-row clearfix">
+                <span class="category-number">${index + 1}</span>
+                <span class="category-name">${categoryResponse.name}</span>
+                <span class="category-amount">₹${(category?.amount || 0).toLocaleString()}</span>
+              </div>
+              <div>
+                <span class="status-badge" style="background-color: ${categoryResponse.status_color || '#C72030'};">
+                  ${categoryResponse.status || categoryResponse.complaint_status_name || 'Pending'}
+                </span>
+              </div>
+            </div>
+        `;
+
+        // Add comments if available
+        if (comments.length > 0) {
+          htmlContent += `
+            <div class="comments-section">
+              <h3>💬 Comments (${comments.length})</h3>
+          `;
+          
+          comments.forEach((comment: any) => {
+            htmlContent += `
+              <div class="comment clearfix">
+                <span class="comment-author">${comment.commentor_name || 'User'}</span>
+                <span class="comment-date">${formatDateTime(comment.created_at)}</span>
+                <p class="comment-body">${comment.body || ''}</p>
+              </div>
+            `;
+          });
+          
+          htmlContent += `</div>`;
+        }
+
+        // Add questions and responses
+        if (categoryResponse?.snag_quest_maps && categoryResponse.snag_quest_maps.length > 0) {
+          htmlContent += `
+            <div class="questions-section">
+              <h3>📋 Questions & Responses (${categoryResponse.snag_quest_maps.length})</h3>
+          `;
+
+          for (const questMap of categoryResponse.snag_quest_maps.filter((qm) => Boolean(qm?.snag_question))) {
+            const question = questMap.snag_question;
+            const allAnswers = Array.isArray(questMap.snag_answers) ? [...questMap.snag_answers] : [];
+            const sortedAnswers = allAnswers.sort(
+              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            );
+            const latestAnswer = sortedAnswers.length > 0 ? sortedAnswers[sortedAnswers.length - 1] : undefined;
+
+            let answerDisplay = 'No response';
+            let hasAnswer = false;
+            
+            if (latestAnswer) {
+              hasAnswer = true;
+              if (question.qtype === 'multiple' && latestAnswer.quest_option_id) {
+                const selectedOption = question.snag_quest_options?.find(
+                  opt => opt.id === latestAnswer.quest_option_id
+                );
+                answerDisplay = selectedOption?.qname || 'Selected';
+              } else if (latestAnswer.ans_descr) {
+                answerDisplay = latestAnswer.ans_descr;
+              }
+            }
+
+            htmlContent += `
+              <div class="question-card">
+                <div>
+                  <span class="question-number">${question.qnumber}</span>
+                  <span class="question-text">${question.descr}</span>
+                </div>
+                <div class="answer-box">
+                  <p class="answer-text ${!hasAnswer ? 'empty' : ''}">
+                    <strong>Answer:</strong> ${answerDisplay}
+                  </p>
+                </div>
+            `;
+
+            // Add actual attachments/images if available
+            const allDocs: any[] = [];
+            sortedAnswers.forEach((answer) => {
+              if (Array.isArray(answer.docs) && answer.docs.length > 0) {
+                answer.docs.forEach((doc) => {
+                  allDocs.push({
+                    ...doc,
+                    answeredAt: formatDateTime(answer.created_at)
+                  });
+                });
+              }
+            });
+
+            if (allDocs.length > 0) {
+              htmlContent += `
+                <div class="attachments-section">
+                  <h4>📎 Attachments (${allDocs.length})</h4>
+                  <div class="attachment-grid">
+              `;
+              
+              // Convert images to base64 and add them
+              for (let docIndex = 0; docIndex < allDocs.length; docIndex++) {
+                const doc = allDocs[docIndex];
+                const docUrl = doc.document_url || doc.url;
+                if (docUrl) {
+                  const base64Image = await convertImageToBase64(docUrl);
+                  if (base64Image) {
+                    htmlContent += `
+                      <div class="attachment-item">
+                        <img src="${base64Image}" class="attachment-image" alt="Attachment ${docIndex + 1}" />
+                        <span class="attachment-label">Attachment ${docIndex + 1} - ${doc.answeredAt}</span>
+                      </div>
+                    `;
+                  }
+                }
+              }
+              
+              htmlContent += `
+                  </div>
+                </div>
+              `;
+            }
+
+            htmlContent += `</div>`;
+          }
+
+          htmlContent += `</div>`;
+        }
+
+        // Add documents section
+        if (category && category.documents && category.documents.length > 0) {
+          htmlContent += `
+            <div class="documents-section">
+              <p><strong>📄 Documents (${category.documents.length})</strong></p>
+              <p style="font-size: 12px; color: #6b7280;">${category.documents.length} document(s) attached to this annexure</p>
+            </div>
+          `;
+        }
+
+        htmlContent += `</div>`;
+      }
+
+      htmlContent += `
+        </body>
+        </html>
+      `;
+
+      // Generate PDF
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `Fitout_Request_${requestData.id}_Annexures.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, logging: false, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      await html2pdf().from(htmlContent).set(opt).save();
+
+      toast.success("Annexures PDF downloaded successfully!");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsDownloadingAnnexurePDF(false);
+    }
+  };
+
   // Transform responses into tabular format for EnhancedTable
   const getTabularResponseData = (): TabularResponseData[] => {
     const tabularData: TabularResponseData[] = [];
@@ -1837,20 +2267,36 @@ const FitoutRequestDetails: React.FC = () => {
                         </h3>
                       </div>
 
-                      <Button
-                        onClick={handleAnnexureResponsesEditButtonClick}
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs border-gray-300 hover:bg-gray-50"
-                        disabled={annexureSaveLoading}
-                      >
-                        {annexureSaveLoading ? (
-                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                        ) : (
-                          <Edit className="w-3 h-3 mr-1" />
-                        )}
-                        {annexureResponsesEditMode ? 'Done' : 'Edit Responses'}
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          onClick={handleDownloadAnnexuresPDF}
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs border-gray-300 hover:bg-gray-50"
+                          disabled={isDownloadingAnnexurePDF || annexureSaveLoading}
+                        >
+                          {isDownloadingAnnexurePDF ? (
+                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          ) : (
+                            <Download className="w-3 h-3 mr-1" />
+                          )}
+                          {isDownloadingAnnexurePDF ? 'Generating...' : 'Download PDF'}
+                        </Button>
+                        <Button
+                          onClick={handleAnnexureResponsesEditButtonClick}
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs border-gray-300 hover:bg-gray-50"
+                          disabled={annexureSaveLoading}
+                        >
+                          {annexureSaveLoading ? (
+                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          ) : (
+                            <Edit className="w-3 h-3 mr-1" />
+                          )}
+                          {annexureResponsesEditMode ? 'Done' : 'Edit Responses'}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   <div className="p-6">
@@ -1862,11 +2308,8 @@ const FitoutRequestDetails: React.FC = () => {
                             (cat) => cat.category_name === categoryResponse.name
                           );
 
-                          // Get comments and check if has file-type questions
+                          // Get comments
                           const comments = categoryResponse.comments || [];
-                          const hasFileQuestions = categoryResponse.snag_quest_maps?.some(
-                            (qm) => qm.snag_question.qtype === 'file'
-                          );
                           
                           return (
                             <div
@@ -1911,7 +2354,7 @@ const FitoutRequestDetails: React.FC = () => {
                                     <Edit className="w-3 h-3 mr-1" />
                                     Change Status
                                   </Button>
-                                  {hasFileQuestions && (
+                                  {annexureResponsesEditMode && (
                                     <Button
                                       onClick={() => category && handleFileUploadOpen(category)}
                                       size="sm"
@@ -1958,8 +2401,8 @@ const FitoutRequestDetails: React.FC = () => {
 
                               {/* Questions and Responses Section */}
                               {categoryResponse?.snag_quest_maps && categoryResponse.snag_quest_maps.length > 0 && (
-                                <div className="pt-4 border-t border-gray-200">
-                                  <div className="flex items-center gap-2 mb-4 ml-4">
+                                <div className="pt-4 border-t border-gray-200 px-4">
+                                  <div className="flex items-center gap-2 mb-4">
                                     <div className="w-8 h-8 rounded-full bg-[#C72030] bg-opacity-10 flex items-center justify-center">
                                       <FileText className="w-4 h-4 text-[#C72030]" />
                                     </div>
@@ -1971,7 +2414,9 @@ const FitoutRequestDetails: React.FC = () => {
                                     </Badge>
                                   </div>
                                   <div className="space-y-3">
-                                    {categoryResponse.snag_quest_maps.map((questMap, qIndex) => {
+                                    {categoryResponse.snag_quest_maps
+                                      .filter((questMap) => Boolean(questMap?.snag_question))
+                                      .map((questMap, qIndex) => {
                                       const question = questMap.snag_question;
                                       const allAnswers = Array.isArray(questMap.snag_answers)
                                         ? [...questMap.snag_answers]
@@ -2024,7 +2469,7 @@ const FitoutRequestDetails: React.FC = () => {
                                             {/* Answer */}
                                             <div className="ml-9 space-y-2">
                                               {(annexureResponsesEditMode || (question.qtype !== 'file' && question.qtype !== 'signature')) && (
-                                                <div className="bg-gray-50 rounded-md p-3 border border-gray-100">
+                                                <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
                                                   {annexureResponsesEditMode ? (
                                                     question.qtype === 'multiple' ? (
                                                       <Select
@@ -2171,6 +2616,57 @@ const FitoutRequestDetails: React.FC = () => {
                                                 </div>
                                               )}
 
+                                              {/* Display selected files for upload */}
+                                              {annexureResponsesEditMode && editedAnnexureFilesByMapId[questMap.id] && editedAnnexureFilesByMapId[questMap.id].length > 0 && (
+                                                <div className="space-y-2">
+                                                  <div className="flex items-center justify-between">
+                                                    <p className="text-xs font-medium text-gray-600">
+                                                      Files to Upload ({editedAnnexureFilesByMapId[questMap.id].length})
+                                                    </p>
+                                                    <Button
+                                                      size="sm"
+                                                      variant="ghost"
+                                                      className="h-6 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                      onClick={() => {
+                                                        setEditedAnnexureFilesByMapId((prev) => {
+                                                          const updated = { ...prev };
+                                                          delete updated[questMap.id];
+                                                          return updated;
+                                                        });
+                                                      }}
+                                                    >
+                                                      Clear All
+                                                    </Button>
+                                                  </div>
+                                                  <div className="space-y-1">
+                                                    {editedAnnexureFilesByMapId[questMap.id].map((file: File, fileIdx: number) => (
+                                                      <div key={fileIdx} className="flex items-center justify-between bg-white rounded p-2 border border-gray-200">
+                                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                          <Paperclip className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                                                          <span className="text-xs text-gray-700 truncate">{file.name}</span>
+                                                          <span className="text-xs text-gray-400 flex-shrink-0">
+                                                            ({(file.size / 1024).toFixed(1)} KB)
+                                                          </span>
+                                                        </div>
+                                                        <Button
+                                                          size="sm"
+                                                          variant="ghost"
+                                                          className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                                                          onClick={() => {
+                                                            setEditedAnnexureFilesByMapId((prev) => ({
+                                                              ...prev,
+                                                              [questMap.id]: prev[questMap.id].filter((_, idx) => idx !== fileIdx),
+                                                            }));
+                                                          }}
+                                                        >
+                                                          <Trash2 className="w-3 h-3" />
+                                                        </Button>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              )}
+
                                               {question.qtype !== 'file' && question.qtype !== 'signature' && sortedAnswers.length > 1 && (
                                                 <div className="space-y-2">
                                                   <p className="text-xs font-medium text-gray-600">
@@ -2271,10 +2767,10 @@ const FitoutRequestDetails: React.FC = () => {
                               {/* Documents Section */}
                               {category.documents.length > 0 && (
                                 <div className="mt-4 pt-4 border-t border-gray-200">
-                                  <p className="text-sm font-medium text-gray-700 mb-3">
+                                  <p className="text-sm font-medium text-gray-700 mb-3 ml-3">
                                     Documents ({category.documents.length})
                                   </p>
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 ml-3 mb-3">
                                     {category.documents.map((doc, docIndex) => (
                                       <div
                                         key={doc.id}
@@ -2294,10 +2790,10 @@ const FitoutRequestDetails: React.FC = () => {
                                             size="sm"
                                             variant="secondary"
                                             className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={() => downloadDocument(doc.document_url, `document-${doc.id}.png`)}
+                                            onClick={() => window.open(doc.document_url, '_blank')}
                                           >
-                                            <Download className="w-4 h-4 mr-1" />
-                                            Download
+                                            <Eye className="w-4 h-4 mr-1" />
+                                            View
                                           </Button>
                                         </div>
                                         <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs px-2 py-1 text-center">
