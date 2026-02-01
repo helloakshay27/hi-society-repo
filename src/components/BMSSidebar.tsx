@@ -176,6 +176,12 @@ export const BMSSidebar: React.FC = () => {
       path: "/loyalty/inventory-section",
     },
     {
+      id: "aggregator-inventory-section",
+      label: "Aggregator Inventory",
+      icon: Package,
+      path: "/loyalty/aggregator-inventory-section",
+    },
+    {
       id: "loyalty-members",
       label: "Members",
       icon: Users,

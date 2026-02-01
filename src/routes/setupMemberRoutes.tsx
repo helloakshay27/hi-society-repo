@@ -176,6 +176,7 @@ const HomeLoanRequestsList = lazy(() => import("@/pages/HomeLoanRequestsList"));
 const DemandNotesList = lazy(() => import("@/pages/DemandNotesList"));
 const OrdersList = lazy(() => import("@/pages/OrdersList"));
 const EncashList = lazy(() => import("@/pages/EncashList"));
+const AggregatorInventorySection = lazy(() => import("@/pages/AggregatorInventorySection"));
 
 // Add missing lazy imports
 const ProjectConfiguration = lazy(() => import("@/pages/ProjectConfiguraion"));
@@ -984,6 +985,10 @@ export const setupMemberRoutes = (
     />
     <Route path="/loyalty/orders-list" Component={withSuspense(OrdersList)} />
     <Route path="/loyalty/encash-list" Component={withSuspense(EncashList)} />
+    <Route
+      path="/loyalty/aggregator-inventory-section"
+      Component={withSuspense(AggregatorInventorySection)}
+    />
 
     {/* Project Configuration Routes */}
     <Route
