@@ -21,9 +21,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-
-const BASE_URL = "https://runwal-api.lockated.com";
-const TOKEN = "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+import { getFullUrl, API_CONFIG } from "@/config/apiConfig";
 
 export const AggregatorInventorySection = () => {
     const [loading, setLoading] = useState(false);
@@ -54,7 +52,7 @@ export const AggregatorInventorySection = () => {
     const fetchInventoryData = async () => {
         try {
             setLoading(true);
-            const url = `${BASE_URL}/aggregator_products?token=${TOKEN}`;
+            const url = getFullUrl(`/aggregator_products?token=${API_CONFIG.TOKEN}`);
             const response = await axios.get(url);
             const products = response.data?.data || [];
             setInventoryData(products);
@@ -137,9 +135,8 @@ export const AggregatorInventorySection = () => {
 
     const fetchOrganizations = async () => {
         try {
-            const url = `${BASE_URL}/organizations.json?token=${TOKEN}`;
+            const url = getFullUrl(`/organizations.json?token=${API_CONFIG.TOKEN}`);
             const response = await axios.get(url);
-            // Use response.data.organizations for dropdown
             const orgs = response.data?.organizations || [];
             setOrganizations(orgs.map((o: any) => ({ id: o.id, name: o.name })));
         } catch (error) {
@@ -154,7 +151,7 @@ export const AggregatorInventorySection = () => {
         }
         try {
             setLoading(true);
-            const url = `${BASE_URL}/aggregator_products/${selectedProductId}/add_to_store?token=${TOKEN}`;
+            const url = getFullUrl(`/aggregator_products/${selectedProductId}/add_to_store?token=${API_CONFIG.TOKEN}`);
             await axios.post(
                 url,
                 { organization_ids: selectedOrgIds }
