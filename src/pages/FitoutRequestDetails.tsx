@@ -1338,7 +1338,79 @@ const FitoutRequestDetails: React.FC = () => {
   };
 
   // Download Annexures as PDF
+  // Download PDF for a specific category
+  const handleDownloadCategoryPDF = async (categoryId: number, categoryName: string) => {
+    try {
+      const response = await apiClient.get(
+        `/fitout_request_categories/${categoryId}/download.pdf`,
+        { responseType: 'blob' }
+      );
+
+      // Create a blob URL and trigger download
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${categoryName.replace(/\s+/g, '_')}_${categoryId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success(`PDF downloaded successfully for ${categoryName}`);
+    } catch (error) {
+      console.error('Error downloading category PDF:', error);
+      toast.error(`Failed to download PDF for ${categoryName}`);
+    }
+  };
+
+  // Download all annexures PDF (downloads first category only)
   const handleDownloadAnnexuresPDF = async () => {
+    if (!requestData || !annexureResponses || annexureResponses.length === 0) {
+      toast.error("No annexure data available to download");
+      return;
+    }
+
+    setIsDownloadingAnnexurePDF(true);
+
+    try {
+      // Download PDF for the first category only
+      const firstCategoryResponse = annexureResponses[0];
+      const firstCategory = requestData.fitout_request_categories.find(
+        (cat) => cat.category_name === firstCategoryResponse.name
+      );
+      
+      if (firstCategory) {
+        const response = await apiClient.get(
+          `/fitout_request_categories/${firstCategory.id}/download.pdf`,
+          { responseType: 'blob' }
+        );
+
+        // Create a blob URL and trigger download
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Fitout_Request_${requestData.id}_Annexures.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        toast.success("Annexures PDF downloaded successfully!");
+      } else {
+        toast.error("No valid category found to download");
+      }
+    } catch (error) {
+      console.error("Error downloading annexures PDF:", error);
+      toast.error("Failed to download PDF. Please try again.");
+    } finally {
+      setIsDownloadingAnnexurePDF(false);
+    }
+  };
+
+  // Keep the old HTML-based approach as backup (commented out)
+  const handleDownloadAnnexuresPDF_HTMLBackup = async () => {
     if (!requestData || !annexureResponses || annexureResponses.length === 0) {
       toast.error("No annexure data available to download");
       return;
@@ -2345,6 +2417,15 @@ const FitoutRequestDetails: React.FC = () => {
                                   >
                                     {categoryResponse.status || categoryResponse.complaint_status_name || 'Pending'}
                                   </Badge>
+                                  {/* <Button
+                                    onClick={() => category && handleDownloadCategoryPDF(category.id, category.category_name)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs border-gray-300 hover:bg-gray-50"
+                                  >
+                                    <Download className="w-3 h-3 mr-1" />
+                                    Download PDF
+                                  </Button> */}
                                   <Button
                                     onClick={() => category && handleStatusChangeOpen(category)}
                                     variant="outline"
