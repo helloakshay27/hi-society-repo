@@ -33,6 +33,7 @@ import { SmartSecureSidebar } from "./SmartSecureSidebar";
 import { IncidentsSidebar } from "./IncidentsSidebar";
 import { SettingsSidebar } from "./SettingsSidebar";
 import { AppointmentzSidebar } from "./AppointmentzSidebar";
+import { LoyaltySidebar } from "./LoyaltySidebar";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -109,6 +110,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     if (isEmployeeUser) {
       const path = location.pathname;
       
+      // CMS routes use CMSSidebar
+      if (path.startsWith('/loyalty')) {
+        return <LoyaltySidebar />;
+      }
+
       // CMS routes use CMSSidebar
       if (path.startsWith('/cms')) {
         return <CMSSidebar />;
