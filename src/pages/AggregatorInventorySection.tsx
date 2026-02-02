@@ -41,7 +41,7 @@ export const AggregatorInventorySection = () => {
         { key: "sale_price", label: "Sale Price" },
         { key: "stock_quantity", label: "Stock Quantity" },
         { key: "created_at", label: "Created At" },
-        { key: "add_to_cart", label: "Add to Cart" },
+        { key: "add_to_cart", label: "Add to Store" },
     ];
 
     // Fetch inventory data
