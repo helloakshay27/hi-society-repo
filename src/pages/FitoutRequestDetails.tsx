@@ -1342,7 +1342,7 @@ const FitoutRequestDetails: React.FC = () => {
   const handleDownloadCategoryPDF = async (categoryId: number, categoryName: string) => {
     try {
       const response = await apiClient.get(
-        `/fitout_request_categories/${categoryId}/download.pdf`,
+        `/crm/admin/fitout_requests/${categoryId}/download_responses`,
         { responseType: 'blob' }
       );
 
@@ -1364,43 +1364,34 @@ const FitoutRequestDetails: React.FC = () => {
     }
   };
 
-  // Download all annexures PDF (downloads first category only)
+  // Download all annexures PDF using request ID
   const handleDownloadAnnexuresPDF = async () => {
-    if (!requestData || !annexureResponses || annexureResponses.length === 0) {
-      toast.error("No annexure data available to download");
+    if (!requestData) {
+      toast.error("No request data available");
       return;
     }
 
     setIsDownloadingAnnexurePDF(true);
 
     try {
-      // Download PDF for the first category only
-      const firstCategoryResponse = annexureResponses[0];
-      const firstCategory = requestData.fitout_request_categories.find(
-        (cat) => cat.category_name === firstCategoryResponse.name
+      // Call API with request ID
+      const response = await apiClient.get(
+        `/crm/admin/fitout_requests/${requestData.id}/download_responses.pdf`,
+        { responseType: 'blob' }
       );
-      
-      if (firstCategory) {
-        const response = await apiClient.get(
-          `/fitout_request_categories/${firstCategory.id}/download.pdf`,
-          { responseType: 'blob' }
-        );
 
-        // Create a blob URL and trigger download
-        const blob = new Blob([response.data], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Fitout_Request_${requestData.id}_Annexures.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+      // Create a blob URL and trigger download
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Fitout_Request_${requestData.id}_Responses.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
-        toast.success("Annexures PDF downloaded successfully!");
-      } else {
-        toast.error("No valid category found to download");
-      }
+      toast.success("Annexures PDF downloaded successfully!");
     } catch (error) {
       console.error("Error downloading annexures PDF:", error);
       toast.error("Failed to download PDF. Please try again.");
@@ -2435,7 +2426,7 @@ const FitoutRequestDetails: React.FC = () => {
                                     <Edit className="w-3 h-3 mr-1" />
                                     Change Status
                                   </Button>
-                                  {annexureResponsesEditMode && (
+                                  {/* {annexureResponsesEditMode && ( */}
                                     <Button
                                       onClick={() => category && handleFileUploadOpen(category)}
                                       size="sm"
@@ -2445,7 +2436,7 @@ const FitoutRequestDetails: React.FC = () => {
                                       <Upload className="w-3 h-3 mr-1" />
                                       Upload
                                     </Button>
-                                  )}
+                                  {/* )} */}
                                 </div>
                               </div>
 
