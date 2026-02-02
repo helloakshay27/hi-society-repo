@@ -27,6 +27,7 @@ export const AggregatorInventorySection = () => {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [inventoryData, setInventoryData] = useState([]);
+    const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
     const [stats, setStats] = useState({
         totalProducts: "0",
         totalStock: "0",
@@ -34,6 +35,7 @@ export const AggregatorInventorySection = () => {
 
     // Define columns for EnhancedTable
     const columns = [
+        { key: "checkbox", label: "Select" },
         { key: "name", label: "Product Name" },
         { key: "sku", label: "SKU" },
         { key: "brand", label: "Brand" },
@@ -41,7 +43,7 @@ export const AggregatorInventorySection = () => {
         { key: "sale_price", label: "Sale Price" },
         { key: "stock_quantity", label: "Stock Quantity" },
         { key: "created_at", label: "Created At" },
-        { key: "add_to_cart", label: "Add to Store" },
+        // { key: "add_to_cart", label: "Add to Store" },
     ];
 
     // Fetch inventory data
@@ -75,6 +77,21 @@ export const AggregatorInventorySection = () => {
 
     const renderCell = (item: any, columnKey: string) => {
         switch (columnKey) {
+            case "checkbox":
+                return (
+                    <input
+                        type="checkbox"
+                        checked={selectedProductIds.includes(item.id)}
+                        onChange={(e) => {
+                            if (e.target.checked) {
+                                setSelectedProductIds([...selectedProductIds, item.id]);
+                            } else {
+                                setSelectedProductIds(selectedProductIds.filter(id => id !== item.id));
+                            }
+                        }}
+                        className="w-4 h-4 cursor-pointer"
+                    />
+                );
             case "name":
                 return <span>{item.name || "-"}</span>;
             case "sku":
@@ -93,20 +110,20 @@ export const AggregatorInventorySection = () => {
                 );
             case "created_at":
                 return <span>{item.created_at ? new Date(item.created_at).toLocaleDateString() : "-"}</span>;
-            case "add_to_cart":
-                return (
-                    <Button
-                        size="sm"
-                        className="bg-[#C72030] hover:bg-[#A01828] text-white"
-                        onClick={() => {
-                            setSelectedProductId(item.id);
-                            setSelectedOrgIds([]);
-                            setIsAddModalOpen(true);
-                        }}
-                    >
-                        Add
-                    </Button>
-                );
+            // case "add_to_cart":
+            //     return (
+            //         <Button
+            //             size="sm"
+            //             className="bg-[#C72030] hover:bg-[#A01828] text-white"
+            //             onClick={() => {
+            //                 setSelectedProductId(item.id);
+            //                 setSelectedOrgIds([]);
+            //                 setIsAddModalOpen(true);
+            //             }}
+            //         >
+            //             Add
+            //         </Button>
+            //     );
             default:
                 return null;
         }
@@ -124,7 +141,6 @@ export const AggregatorInventorySection = () => {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
     const [selectedOrgIds, setSelectedOrgIds] = useState<number[]>([]);
-    const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
     // Fetch organizations and products for modal
     useEffect(() => {
@@ -145,30 +161,60 @@ export const AggregatorInventorySection = () => {
     };
 
     const handleAddToStore = async () => {
-        if (!selectedProductId || selectedOrgIds.length === 0) {
-            toast.error("Please select at least one organization.");
+        if (selectedProductIds.length === 0) {
+            toast.error("Please select at least one product.");
             return;
         }
         try {
             setLoading(true);
-            const url = getFullUrl(`/aggregator_products/${selectedProductId}/add_to_store?token=${API_CONFIG.TOKEN}`);
+            const url = getFullUrl(`/aggregator_products/add_products_to_store?token=${API_CONFIG.TOKEN}`);
             await axios.post(
                 url,
-                { organization_ids: selectedOrgIds }
+                { 
+                    product_ids: selectedProductIds
+                }
             );
-            toast.success("Product added to store successfully!");
-            setIsAddModalOpen(false);
+            toast.success("Products added to store successfully!");
+            setSelectedProductIds([]);
             fetchInventoryData();
         } catch (error) {
-            toast.error("Failed to add product to store.");
+            toast.error("Failed to add products to store.");
         } finally {
             setLoading(false);
         }
+        
+        // Previous implementation with organization selection
+        // if (selectedOrgIds.length === 0) {
+        //     toast.error("Please select at least one organization.");
+        //     return;
+        // }
+        // const url = getFullUrl(`/aggregator_products/add_to_store?token=${API_CONFIG.TOKEN}`);
+        // await axios.post(
+        //     url,
+        //     { 
+        //         product_ids: selectedProductIds,
+        //         organization_ids: selectedOrgIds 
+        //     }
+        // );
+        // setIsAddModalOpen(false);
+        // setSelectedOrgIds([]);
     };
 
     return (
         <div className="p-6 space-y-6 bg-white min-h-screen">
             
+            {/* Add to Store Button */}
+            <div className="flex justify-end">
+                <Button
+                    onClick={handleAddToStore}
+                    className="bg-[#C72030] hover:bg-[#A01828] text-white"
+                    disabled={selectedProductIds.length === 0 || loading}
+                >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add to Store ({selectedProductIds.length})
+                </Button>
+            </div>
+
             {/* Inventory Table */}
             <div className="space-y-4">
                 <EnhancedTable
@@ -183,21 +229,18 @@ export const AggregatorInventorySection = () => {
                     loadingMessage="Loading aggregator products..."
                     emptyMessage="No aggregator products found"
                 />
-            </div>
-
-            {/* Add to Store Modal (per product) */}
-            <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+                </div>
+                {/* <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
                 <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-xl font-semibold text-[#1A1A1A]">
-                            Add Product to Store
+                            Add Products to Store
                         </DialogTitle>
                         <DialogDescription className="text-sm text-gray-500 mt-1">
-                            Select one or more organizations to add this product to their store.
+                            Select one or more organizations to add {selectedProductIds.length} selected product(s) to their store.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 mt-4 pb-4">
-                        {/* Organization Multi-Select */}
                         <div className="space-y-2">
                             <Label className="text-sm font-medium text-[#1A1A1A]">
                                 Organizations <span className="text-red-500">*</span>
@@ -225,7 +268,6 @@ export const AggregatorInventorySection = () => {
                                 )}
                             </div>
                         </div>
-                        {/* Submit Button */}
                         <div className="flex justify-center pt-4">
                             <Button
                                 onClick={handleAddToStore}
@@ -237,9 +279,7 @@ export const AggregatorInventorySection = () => {
                         </div>
                     </div>
                 </DialogContent>
-            </Dialog>
-        </div>
-    );
-};
-
-export default AggregatorInventorySection;
+            </Dialog> */}
+            </div>
+    
+)}
