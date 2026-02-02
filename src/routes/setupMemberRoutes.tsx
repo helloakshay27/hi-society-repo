@@ -9,6 +9,8 @@ import { WalletManagement } from "@/pages/WalletManagement";
 import { LoyaltyCustomers } from "@/pages/LoyaltyCustomers";
 import { LoyaltyCustomerDetails } from "@/pages/LoyaltyCustomerDetails";
 import { LoyaltyInventorySection } from "@/pages/LoyaltyInventorySection";
+import { TicketDashboard } from "@/TicketDashboardbackup";
+import CRMGroupsPage from "@/pages/CRMGroupsPage";
 
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
@@ -1037,14 +1039,14 @@ export const setupMemberRoutes = (
     />
 
     {/* BMS Routes */}
-    <Route path="/bms/helpdesk" Component={withSuspense(BMSHelpdesk)} />
+    <Route path="/bms/helpdesk" Component={withSuspense(TicketDashboard)} />
     <Route
       path="/bms/communication-template"
       Component={withSuspense(BMSCommunicationTemplate)}
     />
     <Route path="/bms/feedbacks" Component={withSuspense(BMSFeedbacks)} />
     <Route path="/bms/parking" Component={withSuspense(BMSParking)} />
-    <Route path="/bms/groups" Component={withSuspense(BMSGroups)} />
+    <Route path="/bms/groups" Component={withSuspense(CRMGroupsPage)} />
     <Route
       path="/bms/quarantine-tracker"
       Component={withSuspense(BMSQuarantineTracker)}
