@@ -55,7 +55,7 @@ export const BMSSidebar: React.FC = () => {
   const [communicationOpen, setCommunicationOpen] = useState(false);
   const [helpdeskOpen, setHelpdeskOpen] = useState(false);
   const [homeOpen, setHomeOpen] = useState(false);
-  const [loyaltyOpen, setLoyaltyOpen] = useState(false);
+  // Loyalty removed from BMS sidebar
   const [documentsOpen, setDocumentsOpen] = useState(false);
   const [businessDirectoryOpen, setBusinessDirectoryOpen] = useState(false);
 
@@ -149,93 +149,7 @@ export const BMSSidebar: React.FC = () => {
     },
   ];
 
-  // Loyalty sub-items
-  const loyaltyItems: MenuItem[] = [
-    {
-      id: "loyalty-dashboard",
-      label: "Dashboard",
-      icon: BarChart3,
-      path: "/loyalty/dashboard",
-    },
-    {
-      id: "wallet-management",
-      label: "Wallet Management",
-      icon: TrendingUp,
-      path: "/loyalty/wallet-management",
-    },
-    {
-      id: "loyalty-customers",
-      label: "Customers",
-      icon: Users,
-      path: "/loyalty/customers",
-    },
-    {
-      id: "loyalty-inventory-section",
-      label: "Inventory Section",
-      icon: Package,
-      path: "/loyalty/inventory-section",
-    },
-    {
-      id: "aggregator-inventory-section",
-      label: "Aggregator Inventory",
-      icon: Package,
-      path: "/loyalty/aggregator-inventory-section",
-    },
-    {
-      id: "loyalty-members",
-      label: "Members",
-      icon: Users,
-      path: "/loyalty/loyalty-members-list",
-    },
-    {
-      id: "loyalty-tiers",
-      label: "Tiers",
-      icon: Award,
-      path: "/loyalty/loyalty-tiers-list",
-    },
-    // {
-    //   id: "rule-engine",
-    //   label: "Rule Engine",
-    //   icon: Settings,
-    //   path: "/loyalty/rule-engine-list",
-    // },
-    {
-      id: "loyalty-referral",
-      label: "Referrals",
-      icon: UserCheck,
-      path: "/loyalty/referral-list",
-    },
-    {
-      id: "lock-payments",
-      label: "Lock Payments",
-      icon: Shield,
-      path: "/loyalty/lock-payments-list",
-    },
-    {
-      id: "home-loan-requests",
-      label: "Home Loan Requests",
-      icon: Home,
-      path: "/loyalty/home-loan-requests-list",
-    },
-    {
-      id: "demand-notes",
-      label: "Demand Notes",
-      icon: FileText,
-      path: "/loyalty/demand-notes-list",
-    },
-    {
-      id: "orders",
-      label: "Orders",
-      icon: Briefcase,
-      path: "/loyalty/orders-list",
-    },
-    {
-      id: "encash",
-      label: "Encash",
-      icon: Gift,
-      path: "/loyalty/encash-list",
-    },
-  ];
+  // Loyalty menu removed from BMS sidebar
 
   // Documents sub-items
   const documentsItems: MenuItem[] = [
@@ -576,28 +490,7 @@ export const BMSSidebar: React.FC = () => {
             </div>
           )}
 
-          {/* Loyalty Parent - Only show when NOT on CMS domain */}
-          {!isCMSDomain && (
-            <div>
-              <button
-                onClick={() => setLoyaltyOpen(!loyaltyOpen)}
-                className="flex items-center justify-between gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] text-[#1a1a1a]"
-              >
-                <div className="flex items-center gap-3">
-                  <Award className="w-5 h-5 flex-shrink-0" />
-                  {!isSidebarCollapsed && <span>Loyalty</span>}
-                </div>
-                {!isSidebarCollapsed && (
-                  loyaltyOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                )}
-              </button>
-              {loyaltyOpen && !isSidebarCollapsed && (
-                <div className="mt-1 space-y-1">
-                  {renderSubItems(loyaltyItems)}
-                </div>
-              )}
-            </div>
-          )}
+          {/* Loyalty menu removed from BMS sidebar */}
         </nav>
       </div>
     </div>

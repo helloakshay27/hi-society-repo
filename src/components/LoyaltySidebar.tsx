@@ -5,7 +5,6 @@ import {
   Users,
   Shield,
   Award,
-  Settings,
   UserCheck,
   Home,
   FileText,
@@ -13,7 +12,9 @@ import {
   Gift,
   ChevronLeft,
   ChevronRight,
-  LayoutDashboard,
+  BarChart3,
+  TrendingUp,
+  Package,
 } from "lucide-react";
 
 interface MenuItem {
@@ -32,8 +33,32 @@ export const LoyaltySidebar: React.FC = () => {
     {
       id: "loyalty-dashboard",
       label: "Dashboard",
-      icon: LayoutDashboard,
+      icon: BarChart3,
       path: "/loyalty/dashboard",
+    },
+    {
+      id: "wallet-management",
+      label: "Wallet Management",
+      icon: TrendingUp,
+      path: "/loyalty/wallet-management",
+    },
+    {
+      id: "loyalty-customers",
+      label: "Customers",
+      icon: Users,
+      path: "/loyalty/customers",
+    },
+    {
+      id: "loyalty-inventory-section",
+      label: "Inventory Section",
+      icon: Package,
+      path: "/loyalty/inventory-section",
+    },
+    {
+      id: "aggregator-inventory-section",
+      label: "Aggregator Inventory",
+      icon: Package,
+      path: "/loyalty/aggregator-inventory-section",
     },
     {
       id: "loyalty-members",
@@ -46,12 +71,6 @@ export const LoyaltySidebar: React.FC = () => {
       label: "Tiers",
       icon: Award,
       path: "/loyalty/loyalty-tiers-list",
-    },
-    {
-      id: "rule-engine",
-      label: "Rule Engine",
-      icon: Settings,
-      path: "/loyalty/rule-engine-list",
     },
     {
       id: "loyalty-referral",
@@ -132,7 +151,7 @@ export const LoyaltySidebar: React.FC = () => {
               isSidebarCollapsed ? "" : "tracking-wide"
             }`}
           >
-            {isSidebarCollapsed ? "" : "Loyalty"}
+            {isSidebarCollapsed ? "" : "LOYALTY"}
           </h3>
         </div>
 

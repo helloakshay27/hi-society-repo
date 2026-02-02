@@ -30,6 +30,12 @@ const navigationItems: NavigationItem[] = [
     path: "/maintenance/project-details-list",
   },
   {
+    id: "loyalty",
+    label: "Loyalty",
+    icon: <Gift className="w-4 h-4" />,
+    path: "/loyalty/dashboard",
+  },
+  {
     id: "cms",
     label: "CMS",
     icon: <SettingsIcon className="w-4 h-4" />,
@@ -133,11 +139,12 @@ export const HiSocietyNavigation: React.FC = () => {
       setActiveNav("Appointmentz");
     } else if (path.startsWith("/settings")) {
       setActiveNav("settings");
+    } else if (path.startsWith("/loyalty")) {
+      setActiveNav("loyalty");
     } else if (
       path.startsWith("/bms") ||
       path.startsWith("/maintenance") ||
       path.startsWith("/communication") ||
-      path.startsWith("/loyalty") ||
       path.startsWith("/setup-member") ||
       path.startsWith("/setup")
     ) {
