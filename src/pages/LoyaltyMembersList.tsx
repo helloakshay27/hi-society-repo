@@ -6,7 +6,8 @@ import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
-import { getFullUrl, getAuthHeader, API_CONFIG } from '@/config/apiConfig';
+// import { getFullUrl, getAuthHeader, API_CONFIG } from '@/config/apiConfig';
+import { getAuthHeader } from '@/config/apiConfig';
 
 interface MemberStatus {
   tier_level: string;
@@ -49,8 +50,9 @@ const LoyaltyMembersList = () => {
     setLoading(true);
     setIsSearching(!!search);
     try {
-      const token = API_CONFIG.TOKEN || ""; // fallback if needed
-      const url = getFullUrl(`/loyalty/members.json?token=${token}`);
+      // const token = API_CONFIG.TOKEN || ""; // fallback if needed
+      // const url = getFullUrl(`/loyalty/members.json?token=${token}`);
+      const url = "https://runwal-api.lockated.com/loyalty/members.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
       const response = await fetch(url, {
         method: 'GET',
         headers: {

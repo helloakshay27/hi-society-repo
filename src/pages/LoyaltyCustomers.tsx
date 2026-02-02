@@ -3,7 +3,7 @@ import { Eye, Edit, Trash2 } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { getFullUrl } from "@/config/apiConfig";
+// import { getFullUrl } from "@/config/apiConfig";
 
 export const LoyaltyCustomers = () => {
     const navigate = useNavigate();
@@ -16,7 +16,8 @@ export const LoyaltyCustomers = () => {
         const fetchCustomers = async () => {
             setLoading(true);
             try {
-                const url = getFullUrl("/loyalty/members?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
+                // const url = getFullUrl("/loyalty/members?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
+                const url = "https://runwal-api.lockated.com/loyalty/members?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
                 const res = await fetch(url);
                 const data = await res.json();
                 // Map API data to table row format
@@ -64,7 +65,7 @@ export const LoyaltyCustomers = () => {
                         >
                             <Eye className="h-4 w-4" />
                         </Button>
-                        <Button
+                        {/* <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-gray-600 hover:text-[#C72030] hover:bg-gray-100"
@@ -79,7 +80,7 @@ export const LoyaltyCustomers = () => {
                             onClick={() => handleDelete(item.id)}
                         >
                             <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </Button> */}
                     </div>
                 );
             case "customerId":

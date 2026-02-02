@@ -1,425 +1,501 @@
-import React, { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
-import SubHeader from "../components/SubHeader";
-import axios from "axios";
-import LoginModal from "../components/LoginModal";
-import {baseURL} from "../pages/baseurl/apiDomain";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { StatsCard } from "@/components/StatsCard";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { Settings, ShoppingCart, Package, CreditCard } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const OrderDetails = () => {
-  const [showModal, setShowModal] = useState(false);
-  const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [updatingStatus, setUpdatingStatus] = useState(false);
-  const { id } = useParams();
-  const navigate = useNavigate();
+    const { id } = useParams();
+    const [loading, setLoading] = useState(false);
 
-  const statusOptions = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"];
+    // API data for order details
+    const [orderData, setOrderData] = useState<any | null>(null);
+    const [orderItems, setOrderItems] = useState<any[]>([]);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = String(date.getFullYear());
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${day}-${month}-${year} ${hours}:${minutes}`;
-  };
+    useEffect(() => {
+        if (!id) return;
+        setLoading(true);
+        const fetchDetails = async () => {
+            try {
+                const url = `https://runwal-api.lockated.com/admin/orders/${id}.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
+                const res = await fetch(url);
+                const response = await res.json();
+                const data = response.order; // Extract the order object
+                
+                setOrderData({
+                    id: data.id,
+                    orderNumber: data.order_number || "-",
+                    customerName: data.user 
+                        ? `${data.user.firstname || ''} ${data.user.lastname || ''}`.trim() || "-"
+                        : "-",
+                    customerEmail: data.user?.email || "-",
+                    customerPhone: data.user?.mobile || "-",
+                    status: data.status || "-",
+                    paymentStatus: data.payment_status || "-",
+                    paymentMethod: data.payment_method || "-",
+                    totalAmount: data.total_amount ?? "-",
+                    subtotal: data.subtotal_amount ?? "-",
+                    taxAmount: data.tax_amount ?? "-",
+                    discountAmount: data.discount_amount ?? "-",
+                    shippingCost: data.shipping_amount ?? "-",
+                    loyaltyPointsRedeemed: data.loyalty_points_redeemed ?? "-",
+                    loyaltyPointsValue: data.loyalty_discount_amount ?? "-",
+                    loyaltyPointsEarned: data.loyalty_points_earned ?? "-",
+                    totalItems: data.total_items ?? "-",
+                    shippingAddress: data.shipping_address
+                        ? `${data.shipping_address.address || ''}, ${data.shipping_address.address_line_two || ''}, ${data.shipping_address.city || ''}, ${data.shipping_address.state || ''}, ${data.shipping_address.country || ''} - ${data.shipping_address.pin_code || ''}`.replace(/,\s*,/g, ',').replace(/^,\s*|,\s*$/g, '')
+                        : "-",
+                    billingAddress: data.billing_address
+                        ? `${data.billing_address.address || ''}, ${data.billing_address.address_line_two || ''}, ${data.billing_address.city || ''}, ${data.billing_address.state || ''}, ${data.billing_address.country || ''} - ${data.billing_address.pin_code || ''}`.replace(/,\s*,/g, ',').replace(/^,\s*|,\s*$/g, '')
+                        : "-",
+                    shippingContact: data.shipping_address?.contact_person || "-",
+                    shippingMobile: data.shipping_address?.mobile || "-",
+                    billingContact: data.billing_address?.contact_person || "-",
+                    billingMobile: data.billing_address?.mobile || "-",
+                    createdAt: data.created_at || "-",
+                    updatedAt: data.updated_at || "-",
+                    notes: data.notes || "-",
+                });
 
-  const getOrderDetails = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("access_token");
-      
-      if (!token) {
-        setShowModal(true);
-        return;
-      }
+                setOrderItems(
+                    Array.isArray(data.order_items)
+                        ? data.order_items.map((item: any, idx: number) => ({
+                              id: item.id || idx,
+                              productName: item.item_name || item.product?.name || "-",
+                              sku: item.product?.sku || "-",
+                              quantity: item.quantity ?? "-",
+                              price: item.unit_price ?? "-",
+                              subtotal: item.unit_price ?? "-",
+                              taxAmount: "0.0",
+                              total: item.total_price ?? "-",
+                              loyaltyPointsEarned: item.loyalty_points_earned ?? "-",
+                          }))
+                        : []
+                );
+            } catch (e) {
+                console.error("Error fetching order details:", e);
+                setOrderData(null);
+                setOrderItems([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchDetails();
+    }, [id]);
 
-      const response = await axios.get(`${baseURL}orders/${id}.json`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    // Order Items Table Columns
+    const orderItemsColumns = [
+        { key: "productName", label: "Product Name", sortable: true },
+        { key: "sku", label: "SKU", sortable: true },
+        { key: "quantity", label: "Quantity", sortable: true },
+        { key: "price", label: "Price", sortable: true },
+        { key: "subtotal", label: "Subtotal", sortable: true },
+        { key: "taxAmount", label: "Tax", sortable: true },
+        { key: "total", label: "Total", sortable: true },
+    ];
 
-      if (response.data) {
-        setOrder(response.data.order || response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching order details:", error);
-      if (error.response?.status === 401) {
-        setShowModal(true);
-      } else if (error.response?.status === 404) {
-        setError("Order not found");
-      } else {
-        setError("Failed to fetch order details");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+    const renderOrderItemCell = (item: any, columnKey: string) => {
+        switch (columnKey) {
+            case "productName":
+                return <span>{item.productName}</span>;
+            case "sku":
+                return <span>{item.sku}</span>;
+            case "quantity":
+                return <span>{item.quantity}</span>;
+            case "price":
+                return <span>₹{parseFloat(item.price || 0).toFixed(2)}</span>;
+            case "subtotal":
+                return <span>₹{parseFloat(item.subtotal || 0).toFixed(2)}</span>;
+            case "taxAmount":
+                return <span>₹{parseFloat(item.taxAmount || 0).toFixed(2)}</span>;
+            case "total":
+                return <span className="font-semibold">₹{parseFloat(item.total || 0).toFixed(2)}</span>;
+            default:
+                return null;
+        }
+    };
 
-  const updateOrderStatus = async (newStatus, notes = "") => {
-    try {
-      setUpdatingStatus(true);
-      const token = localStorage.getItem("access_token");
-      
-      if (!token) {
-        setShowModal(true);
-        return;
-      }
+    const formatDate = (dateString: string) => {
+        if (!dateString || dateString === "-") return "-";
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return "-";
+        return date.toLocaleString();
+    };
 
-      const url = `${baseURL}orders/${id}/status_update.json?status=${newStatus}&notes=${encodeURIComponent(notes)}`;
-      
-      await axios.put(url, {}, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // Refresh order details after successful update
-      await getOrderDetails();
-      
-    } catch (error) {
-      console.error("Error updating order status:", error);
-      if (error.response?.status === 401) {
-        setShowModal(true);
-      } else {
-        setError("Failed to update order status");
-      }
-    } finally {
-      setUpdatingStatus(false);
-    }
-  };
-
-  useEffect(() => {
-    if (id) {
-      getOrderDetails();
-    }
-  }, [id]);
-
-  const handleStatusChange = (newStatus) => {
-    const notes = prompt("Enter notes for status update (optional):");
-    if (notes !== null) { // User didn't cancel
-      updateOrderStatus(newStatus, notes);
-    }
-  };
-
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case 'pending': return 'badge bg-warning text-dark';
-      case 'confirmed': return 'badge bg-info';
-      case 'processing': return 'badge bg-primary';
-      case 'shipped': return 'badge bg-secondary';
-      case 'delivered': return 'badge bg-success';
-      case 'cancelled': return 'badge bg-danger';
-      case 'refunded': return 'badge bg-dark';
-      default: return 'badge bg-light text-dark';
-    }
-  };
-
-  const getPaymentStatusBadgeClass = (status) => {
-    switch (status) {
-      case 'pending': return 'badge bg-warning text-dark';
-      case 'paid': return 'badge bg-success';
-      case 'partially_paid': return 'badge bg-info';
-      case 'failed': return 'badge bg-danger';
-      case 'refunded': return 'badge bg-secondary';
-      default: return 'badge bg-light text-dark';
-    }
-  };
-
-  if (loading) {
     return (
-      <div className="container-fluid">
-        <SubHeader />
-        <div className="d-flex justify-content-center align-items-center" style={{ height: "400px" }}>
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container-fluid">
-        <SubHeader />
-        <div className="container-fluid px-0 my-4">
-          <div className="row mx-0">
-            <div className="col-lg-12 px-0">
-              <div className="main_content_iner overly_inner">
-                <div className="container-fluid p-0">
-                  <div className="row">
-                    <div className="col-12">
-                      <div className="alert alert-danger" role="alert">
-                        {error}
-                      </div>
-                      <Link to="/orders" className="btn btn-primary">
-                        Back to Orders
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <div className="p-6 space-y-6 bg-[#fafafa] min-h-screen">
+            {/* Breadcrumb */}
+            <div className="text-sm text-gray-600 mb-4">
+                Orders &gt; Details
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  if (!order) {
-    return (
-      <div className="container-fluid">
-        <SubHeader />
-        <div className="container-fluid px-0 my-4">
-          <div className="text-center">
-            <p>Order not found</p>
-            <Link to="/orders" className="btn btn-primary">
-              Back to Orders
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container-fluid">
-      <SubHeader />
-      <div className="container-fluid px-0 my-4">
-        <div className="row mx-0">
-          <div className="col-lg-12 px-0">
-            <div className="main_content_iner overly_inner">
-              <div className="container-fluid p-0">
-                <div className="row">
-                  <div className="col-12">
-                    <div className="page_title_box d-flex align-items-center justify-content-between">
-                      <div className="page_title_left">
-                        <h3 className="f_s_30 f_w_700 text_white">Order Details</h3>
-                        <ol className="breadcrumb page_bradcam mb-0">
-                          <li className="breadcrumb-item">
-                            <Link to="/">Dashboard</Link>
-                          </li>
-                          <li className="breadcrumb-item">
-                            <Link to="/orders">Orders</Link>
-                          </li>
-                          <li className="breadcrumb-item active">Order #{order.order_number}</li>
-                        </ol>
-                      </div>
-                      <div>
-                        <Link to="/orders" className="btn btn-outline-light">
-                          Back to Orders
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Order Summary */}
-                <div className="row mt-4">
-                  <div className="col-md-8">
-                    <div className="card">
-                      <div className="card-header">
-                        <h5 className="card-title mb-0">Order Information</h5>
-                      </div>
-                      <div className="card-body">
-                        <div className="row">
-                          <div className="col-md-6">
-                            <table className="table table-borderless">
-                              <tbody>
-                                <tr>
-                                  <td><strong>Order ID:</strong></td>
-                                  <td>{order.id}</td>
-                                </tr>
-                                <tr>
-                                  <td><strong>Order Number:</strong></td>
-                                  <td><code>{order.order_number}</code></td>
-                                </tr>
-                                <tr>
-                                  <td><strong>Status:</strong></td>
-                                  <td>
-                                    <select
-                                      className={`form-select form-select-sm ${getStatusBadgeClass(order.status)}`}
-                                      value={order.status}
-                                      onChange={(e) => handleStatusChange(e.target.value)}
-                                      disabled={updatingStatus}
-                                      style={{ maxWidth: '150px' }}
-                                    >
-                                      {statusOptions.map(status => (
-                                        <option key={status} value={status}>
-                                          {status.charAt(0).toUpperCase() + status.slice(1)}
-                                        </option>
-                                      ))}
-                                    </select>
-                                    {updatingStatus && (
-                                      <div className="spinner-border spinner-border-sm ms-2" role="status">
-                                        <span className="visually-hidden">Updating...</span>
-                                      </div>
-                                    )}
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td><strong>Payment Status:</strong></td>
-                                  <td>
-                                    <span className={getPaymentStatusBadgeClass(order.payment_status)}>
-                                      {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1).replace('_', ' ')}
-                                    </span>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                          <div className="col-md-6">
-                            <table className="table table-borderless">
-                              <tbody>
-                                <tr>
-                                  <td><strong>Total Amount:</strong></td>
-                                  <td className="text-success">₹{parseFloat(order.total_amount).toFixed(2)}</td>
-                                </tr>
-                                <tr>
-                                  <td><strong>Points Redeemed:</strong></td>
-                                  <td>
-                                    <span className="badge bg-primary">
-                                      {order.loyalty_points_redeemed.toLocaleString()} pts
-                                    </span>
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td><strong>Total Items:</strong></td>
-                                  <td>{order.total_items}</td>
-                                </tr>
-                                <tr>
-                                  <td><strong>Created At:</strong></td>
-                                  <td>{formatDate(order.created_at)}</td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
+            {/* Order Details Card (Always visible) */}
+            <div className="w-full bg-white rounded-lg shadow-sm border mb-4">
+                <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
+                            <ShoppingCart className="w-5 h-5 text-[#C72030]" />
                         </div>
-                      </div>
+                        <h3 className="text-lg font-semibold uppercase text-black">
+                            Order Information
+                        </h3>
                     </div>
-
-                    {/* Order Items */}
-                    <div className="card mt-4">
-                      <div className="card-header">
-                        <h5 className="card-title mb-0">Order Items</h5>
-                      </div>
-                      <div className="card-body">
-                        <div className="table-responsive">
-                          <table className="table">
-                            <thead>
-                              <tr>
-                                <th>Product Name</th>
-                                <th>Quantity</th>
-                                <th>Unit Price</th>
-                                <th>Total Price</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {order.order_items.map((item, index) => (
-                                <tr key={index}>
-                                  <td>{item.product_name}</td>
-                                  <td>{item.quantity}</td>
-                                  <td>₹{parseFloat(item.unit_price).toFixed(2)}</td>
-                                  <td>₹{parseFloat(item.total_price).toFixed(2)}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-md-4">
-                    {/* Customer Information */}
-                    <div className="card">
-                      <div className="card-header">
-                        <h5 className="card-title mb-0">Customer Information</h5>
-                      </div>
-                      <div className="card-body">
-                        <table className="table table-borderless">
-                          <tbody>
-                            <tr>
-                              <td><strong>Name:</strong></td>
-                              <td>{order.user.name || 'N/A'}</td>
-                            </tr>
-                            <tr>
-                              <td><strong>Email:</strong></td>
-                              <td>{order.user.email}</td>
-                            </tr>
-                            <tr>
-                              <td><strong>User ID:</strong></td>
-                              <td>{order.user.id}</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    {/* Shipping Address */}
-                    <div className="card mt-4">
-                      <div className="card-header">
-                        <h5 className="card-title mb-0">Shipping Address</h5>
-                      </div>
-                      <div className="card-body">
-                        <address>
-                          <strong>{order.shipping_address.contact_person}</strong><br />
-                          {order.shipping_address.address}<br />
-                          {order.shipping_address.city}, {order.shipping_address.state}<br />
-                          PIN: {order.shipping_address.pin_code}<br />
-                          <strong>Mobile:</strong> {order.shipping_address.mobile}
-                        </address>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="card mt-4">
-                      <div className="card-header">
-                        <h5 className="card-title mb-0">Actions</h5>
-                      </div>
-                      <div className="card-body">
-                        {order.can_be_cancelled && (
-                          <button 
-                            className="btn btn-danger w-100 mb-2"
-                            onClick={() => handleStatusChange('cancelled')}
-                            disabled={updatingStatus}
-                          >
-                            Cancel Order
-                          </button>
-                        )}
-                        <button 
-                          className="btn btn-info w-100 mb-2"
-                          onClick={() => window.print()}
-                        >
-                          Print Order
-                        </button>
-                        <Link 
-                          to={`/members/${order.user.id}`}
-                          className="btn btn-outline-primary w-100"
-                        >
-                          View Customer Profile
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              </div>
+                <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-8">
+                        <div className="flex items-start">
+                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                                Order Number
+                            </div>
+                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                                {orderData?.orderNumber || "-"}
+                            </div>
+                        </div>
+                        <div className="flex items-start">
+                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                                Customer Name
+                            </div>
+                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                                {orderData?.customerName || "-"}
+                            </div>
+                        </div>
+                        <div className="flex items-start">
+                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                                Customer Email
+                            </div>
+                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                                {orderData?.customerEmail || "-"}
+                            </div>
+                        </div>
+                        <div className="flex items-start">
+                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                                Customer Phone
+                            </div>
+                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                                {orderData?.customerPhone || "-"}
+                            </div>
+                        </div>
+                        <div className="flex items-start">
+                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                                Status
+                            </div>
+                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                                {orderData?.status || "-"}
+                            </div>
+                        </div>
+                        <div className="flex items-start">
+                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                                Payment Status
+                            </div>
+                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                                {orderData?.paymentStatus || "-"}
+                            </div>
+                        </div>
+                        <div className="flex items-start">
+                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                                Payment Method
+                            </div>
+                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                                {orderData?.paymentMethod || "-"}
+                            </div>
+                        </div>
+                        <div className="flex items-start">
+                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                                Created At
+                            </div>
+                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                                {formatDate(orderData?.createdAt) || "-"}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {showModal && (
-        <LoginModal showModal={showModal} setShowModal={setShowModal} />
-      )}
-    </div>
-  );
+            {/* Stats Cards */}
+            {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                <StatsCard
+                    title="Total Amount"
+                    value={`₹${parseFloat(orderData?.totalAmount || 0).toFixed(2)}`}
+                    icon={
+                        <svg
+                            className="w-6 h-6 text-[#C72030]"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        </svg>
+                    }
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    iconRounded={true}
+                    valueColor="text-[#C72030]"
+                />
+                <StatsCard
+                    title="Subtotal"
+                    value={`₹${parseFloat(orderData?.subtotal || 0).toFixed(2)}`}
+                    icon={
+                        <svg
+                            className="w-6 h-6 text-[#C72030]"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                            />
+                        </svg>
+                    }
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    iconRounded={true}
+                    valueColor="text-[#C72030]"
+                />
+                <StatsCard
+                    title="Tax Amount"
+                    value={`₹${parseFloat(orderData?.taxAmount || 0).toFixed(2)}`}
+                    icon={
+                        <svg
+                            className="w-6 h-6 text-[#C72030]"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                            />
+                        </svg>
+                    }
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    iconRounded={true}
+                    valueColor="text-[#C72030]"
+                />
+                <StatsCard
+                    title="Loyalty Points Used"
+                    value={orderData?.loyaltyPointsRedeemed ?? "-"}
+                    icon={
+                        <svg
+                            className="w-6 h-6 text-[#C72030]"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                            />
+                        </svg>
+                    }
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    iconRounded={true}
+                    valueColor="text-[#C72030]"
+                />
+            </div> */}
+
+            {/* Tabs UI */}
+            <Tabs defaultValue="items" className="w-full mt-6">
+                <TabsList className="bg-[#f6f4ee] p-1 h-auto">
+                    <TabsTrigger
+                        value="items"
+                        className="data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
+                    >
+                        Order Items
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="payment"
+                        className="data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
+                    >
+                        Payment Details
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="shipping"
+                        className="data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
+                    >
+                        Shipping Details
+                    </TabsTrigger>
+                </TabsList>
+
+                {/* Order Items Tab */}
+                <TabsContent value="items" className="mt-6">
+                    <div className="w-full bg-white rounded-lg shadow-sm border">
+                        <div className="flex items-center justify-between gap-3 bg-[#FAF7F1] py-3 px-4 border border-[#ECE9E2]">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F3EBDD]">
+                                    <Package className="w-5 h-5 text-[#C72030]" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-black">
+                                    Order Items
+                                </h3>
+                            </div>
+                        </div>
+                        <div className="bg-[#FBFBFA] border border-t-0 border-[#ECE9E2] px-5 py-6">
+                            <EnhancedTable
+                                data={orderItems}
+                                columns={orderItemsColumns}
+                                renderCell={renderOrderItemCell}
+                                enableExport={false}
+                                enableGlobalSearch={false}
+                                hideTableSearch={true}
+                                hideTableExport={true}
+                                hideColumnsButton={true}
+                                loading={loading}
+                                loadingMessage="Loading order items..."
+                                emptyMessage="No items found"
+                            />
+                        </div>
+                    </div>
+                </TabsContent>
+
+                {/* Payment Details Tab */}
+                <TabsContent value="payment" className="space-y-6 mt-6">
+                    <div className="w-full bg-white rounded-lg shadow-sm border">
+                        <div className="flex items-center justify-between gap-3 bg-[#FAF7F1] py-3 px-4 border border-[#ECE9E2]">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F3EBDD]">
+                                    <CreditCard className="w-5 h-5 text-[#C72030]" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-black">
+                                    Payment Information
+                                </h3>
+                            </div>
+                        </div>
+                        <div className="bg-[#FBFBFA] border border-t-0 border-[#ECE9E2] px-5 py-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-8">
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Payment Status</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        {orderData?.paymentStatus ?? "-"}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Payment Method</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        {orderData?.paymentMethod ?? "-"}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Subtotal</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        ₹{parseFloat(orderData?.subtotal || 0).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Tax Amount</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        ₹{parseFloat(orderData?.taxAmount || 0).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Discount Amount</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        ₹{parseFloat(orderData?.discountAmount || 0).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Shipping Cost</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        ₹{parseFloat(orderData?.shippingCost || 0).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Loyalty Points Value</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        ₹{parseFloat(orderData?.loyaltyPointsValue || 0).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Total Amount</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        ₹{parseFloat(orderData?.totalAmount || 0).toFixed(2)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </TabsContent>
+
+                {/* Shipping Details Tab */}
+                <TabsContent value="shipping" className="space-y-6 mt-6">
+                    <div className="w-full bg-white rounded-lg shadow-sm border">
+                        <div className="flex items-center justify-between gap-3 bg-[#FAF7F1] py-3 px-4 border border-[#ECE9E2]">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F3EBDD]">
+                                    <Package className="w-5 h-5 text-[#C72030]" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-black">
+                                    Shipping & Billing Information
+                                </h3>
+                            </div>
+                        </div>
+                        <div className="bg-[#FBFBFA] border border-t-0 border-[#ECE9E2] px-5 py-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Shipping Address</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        {orderData?.shippingAddress ?? "-"}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Billing Address</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        {orderData?.billingAddress ?? "-"}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Shipping Contact Person</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        {orderData?.shippingContact ?? "-"}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Billing Contact Person</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        {orderData?.billingContact ?? "-"}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Shipping Mobile</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        {orderData?.shippingMobile ?? "-"}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Billing Mobile</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        {orderData?.billingMobile ?? "-"}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Order Notes</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        {orderData?.notes ?? "-"}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-gray-500 text-[14px]">Last Updated</span>
+                                    <span className="font-semibold text-[15px] text-gray-900">
+                                        {formatDate(orderData?.updatedAt) ?? "-"}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </TabsContent>
+            </Tabs>
+        </div>
+    );
 };
 
-export default OrderDetails;
+export default OrderDetails

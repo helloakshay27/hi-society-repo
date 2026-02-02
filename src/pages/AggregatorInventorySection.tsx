@@ -21,9 +21,9 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import { getFullUrl, API_CONFIG } from "@/config/apiConfig";
+// import { getFullUrl, API_CONFIG } from "@/config/apiConfig";
 
-export const AggregatorInventorySection = () => {
+const AggregatorInventorySection = () => {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [inventoryData, setInventoryData] = useState([]);
@@ -54,7 +54,8 @@ export const AggregatorInventorySection = () => {
     const fetchInventoryData = async () => {
         try {
             setLoading(true);
-            const url = getFullUrl(`/aggregator_products?token=${API_CONFIG.TOKEN}`);
+            // const url = getFullUrl(`/aggregator_products?token=${API_CONFIG.TOKEN}`);
+            const url = "https://runwal-api.lockated.com/aggregator_products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
             const response = await axios.get(url);
             const products = response.data?.data || [];
             setInventoryData(products);
@@ -151,7 +152,8 @@ export const AggregatorInventorySection = () => {
 
     const fetchOrganizations = async () => {
         try {
-            const url = getFullUrl(`/organizations.json?token=${API_CONFIG.TOKEN}`);
+            // const url = getFullUrl(`/organizations.json?token=${API_CONFIG.TOKEN}`);
+            const url = "https://runwal-api.lockated.com/organizations.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
             const response = await axios.get(url);
             const orgs = response.data?.organizations || [];
             setOrganizations(orgs.map((o: any) => ({ id: o.id, name: o.name })));
@@ -167,7 +169,8 @@ export const AggregatorInventorySection = () => {
         }
         try {
             setLoading(true);
-            const url = getFullUrl(`/aggregator_products/add_products_to_store?token=${API_CONFIG.TOKEN}`);
+            // const url = getFullUrl(`/aggregator_products/add_products_to_store?token=${API_CONFIG.TOKEN}`);
+            const url = "https://runwal-api.lockated.com/aggregator_products/add_products_to_store?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
             await axios.post(
                 url,
                 { 
@@ -281,5 +284,6 @@ export const AggregatorInventorySection = () => {
                 </DialogContent>
             </Dialog> */}
             </div>
-    
 )}
+
+export default AggregatorInventorySection;

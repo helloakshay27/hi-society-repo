@@ -67,7 +67,8 @@ export const LoyaltyInventorySection = () => {
 
     const fetchCategories = async () => {
         try {
-            const url = getFullUrl("/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
+            // const url = getFullUrl("/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
+            const url = "https://runwal-api.lockated.com/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
             const response = await axios.get(url);
             const cats = response.data?.categories || [];
             setCategories(cats.map((cat: any) => ({ id: cat.id, name: cat.name })));
@@ -80,7 +81,8 @@ export const LoyaltyInventorySection = () => {
     const fetchInventoryData = async () => {
         try {
             setLoading(true);
-            const url = getFullUrl("/products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
+            // const url = getFullUrl("/products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
+            const url = "https://runwal-api.lockated.com/products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
             const response = await axios.get(url);
             const products = response.data?.products || [];
             setInventoryData(products);
@@ -166,7 +168,8 @@ export const LoyaltyInventorySection = () => {
             formData.append("product[points_required]", pointsRequired);
 
             // API expects token as query param
-            const url = getFullUrl("/products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
+            // const url = getFullUrl("/products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
+            const url = "https://runwal-api.lockated.com/products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
             await axios.post(
                 url,
                 formData,

@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
+// import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
+import { getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 
 interface WalletTransaction {
@@ -28,6 +29,7 @@ interface WalletTransaction {
 const WalletManagement: React.FC = () => {
   const [timeRange, setTimeRange] = useState("10");
   const [loading, setLoading] = useState(false);
+  const [cardsData, setCardsData] = useState<any>([]);
   const [activeTab, setActiveTab] = useState("wallet-management");
 
   // Auto Top-Up states
@@ -56,8 +58,9 @@ const WalletManagement: React.FC = () => {
     setLoading(true);
     const fetchTransactions = async () => {
     try {
-      const token = API_CONFIG.TOKEN || "";
-      const url = getFullUrl(`/organization_wallet/transactions.json?token=${token}`);
+      // const token = API_CONFIG.TOKEN || "";
+      // const url = getFullUrl(`/organization_wallet/transactions.json?token=${token}`);
+      const url = "https://runwal-api.lockated.com/organization_wallet/transactions.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
       const response = await fetch(url, {
       headers: {
         Authorization: getAuthHeader(),
@@ -66,6 +69,7 @@ const WalletManagement: React.FC = () => {
       });
       if (!response.ok) throw new Error("Failed to fetch transactions");
       const data = await response.json();
+      setCardsData(data.wallet)
       setTransactions(data.transactions || []);
     } catch (error) {
       toast.error("Failed to load wallet transactions");
@@ -182,12 +186,12 @@ const WalletManagement: React.FC = () => {
           >
             Wallet Management
           </TabsTrigger>
-          <TabsTrigger
+          {/* <TabsTrigger
             value="auto-top-up"
             className="data-[state=active]:bg-white data-[state=active]:text-[#1A1A1A] px-6 py-2"
           >
             Auto Top Up
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger
             value="alerts"
             className="data-[state=active]:bg-white data-[state=active]:text-[#1A1A1A] px-6 py-2"
@@ -211,7 +215,7 @@ const WalletManagement: React.FC = () => {
 
           {/* Top Stats Cards - 4 Column Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatsCard
+            {/* <StatsCard
               title="Opening Balance"
               value={stats.openingBalance}
               icon={
@@ -232,10 +236,10 @@ const WalletManagement: React.FC = () => {
               className="cursor-pointer hover:shadow-md transition-shadow"
               iconRounded={true}
               valueColor="text-[#C72030]"
-            />
+            /> */}
             <StatsCard
               title="Total Recharges"
-              value={stats.totalRecharges}
+              value={cardsData.credited_amount}
               icon={
                 <svg
                   className="w-6 h-6 text-[#C72030]"
@@ -256,8 +260,8 @@ const WalletManagement: React.FC = () => {
               valueColor="text-[#C72030]"
             />
             <StatsCard
-              title="EMails"
-              value={stats.emails}
+              title="Total Redeemed"
+              value={cardsData.debited_amount}
               icon={
                 <svg
                   className="w-6 h-6 text-[#C72030]"
@@ -269,7 +273,7 @@ const WalletManagement: React.FC = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                   />
                 </svg>
               }
@@ -278,8 +282,8 @@ const WalletManagement: React.FC = () => {
               valueColor="text-[#C72030]"
             />
             <StatsCard
-              title="Closing Balance"
-              value={stats.closingBalance}
+              title="Available Balance"
+              value={cardsData.available_amount}
               icon={
                 <svg
                   className="w-6 h-6 text-[#C72030]"

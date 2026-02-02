@@ -100,6 +100,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Render sidebar component based on configuration
   const renderSidebar = () => {
+    // Loyalty routes always use LoyaltySidebar
+    if (location.pathname.startsWith('/loyalty')) {
+      return <LoyaltySidebar />;
+    }
+
     // Check for Appointmentz routes first
     if (location.pathname.startsWith('/appointmentz')) {
       return <AppointmentzSidebar />;
@@ -110,11 +115,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     if (isEmployeeUser) {
       const path = location.pathname;
       
-      // CMS routes use CMSSidebar
-      if (path.startsWith('/loyalty')) {
-        return <LoyaltySidebar />;
-      }
-
       // CMS routes use CMSSidebar
       if (path.startsWith('/cms')) {
         return <CMSSidebar />;

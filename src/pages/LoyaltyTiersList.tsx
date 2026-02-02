@@ -9,6 +9,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, Pagi
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import { StatsCard } from '@/components/StatsCard';
 
 const validationSchema = Yup.object({
   name: Yup.string().required('Tier Name is required'),
@@ -55,7 +56,8 @@ const LoyaltyTiersList = () => {
     setIsSearching(!!search);
     const storedValue = sessionStorage.getItem('selectedId');
     try {
-      const response = await fetch(getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=1`), {
+      // const response = await fetch(getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=1`), {
+      const response = await fetch("https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ", {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),
@@ -150,7 +152,8 @@ const LoyaltyTiersList = () => {
   const handleFormSubmit = async (values: any) => {
     if (selectedTier) {
       try {
-        const response = await fetch(getFullUrl(`/loyalty/tiers/${selectedTier.id}.json`), {
+        // const response = await fetch(getFullUrl(`/loyalty/tiers/${selectedTier.id}.json`), {
+        const response = await fetch(`https://runwal-api.lockated.com/loyalty/tiers/${selectedTier.id}.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`, {
           method: 'PUT',
           headers: {
             'Authorization': getAuthHeader(),
@@ -291,19 +294,70 @@ const LoyaltyTiersList = () => {
       <Toaster position="top-right" richColors closeButton />
       
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-gradient-to-r from-[#c72030] to-[#C72030] rounded-lg p-4 text-white">
-          <p className="text-3xl font-bold mb-1">{allTiers.length}</p>
-          <p className="text-sm opacity-90">Total Tiers</p>
-        </div>
-        <div className="bg-gradient-to-r from-[#c72030] to-[#C72030] rounded-lg p-4 text-white">
-          <p className="text-3xl font-bold mb-1">{yearlyTier}</p>
-          <p className="text-sm opacity-90">Rolling Year Tiers</p>
-        </div>
-        <div className="bg-gradient-to-r from-[#c72030] to-[#C72030] rounded-lg p-4 text-white">
-          <p className="text-3xl font-bold mb-1">{lifeTimeTier}</p>
-          <p className="text-sm opacity-90">Life Time Tiers</p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <StatsCard
+          title="Total Tiers"
+          value={allTiers.length}
+          icon={
+            <svg
+              className="w-6 h-6 text-[#C72030]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
+            </svg>
+          }
+          iconRounded={true}
+          valueColor="text-[#C72030]"
+        />
+        <StatsCard
+          title="Rolling Year Tiers"
+          value={yearlyTier}
+          icon={
+            <svg
+              className="w-6 h-6 text-[#C72030]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          }
+          iconRounded={true}
+          valueColor="text-[#C72030]"
+        />
+        <StatsCard
+          title="Life Time Tiers"
+          value={lifeTimeTier}
+          icon={
+            <svg
+              className="w-6 h-6 text-[#C72030]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          }
+          iconRounded={true}
+          valueColor="text-[#C72030]"
+        />
       </div>
 
       {renderListTab()}

@@ -4,7 +4,8 @@ import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import SelectBox from '../components/ui/select-box';
-import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
+// import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { getAuthHeader } from '@/config/apiConfig';
 
 interface EncashRequest {
   id: number;
@@ -46,7 +47,8 @@ const EncashList = () => {
     setLoading(true);
     setIsSearching(!!search);
     try {
-      const response = await fetch(getFullUrl('/encash_requests.json?is_admin=true'), {
+      // const response = await fetch(getFullUrl('/encash_requests.json?is_admin=true'), {
+      const response = await fetch('https://runwal-api.lockated.com/encash_requests.json?is_admin=true&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ', {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),
@@ -123,7 +125,8 @@ const EncashList = () => {
     }
 
     try {
-      const response = await fetch(getFullUrl(`/encash_requests/${selectedRequest.id}.json`), {
+      // const response = await fetch(getFullUrl(`/encash_requests/${selectedRequest.id}.json`), {
+      const response = await fetch(`https://runwal-api.lockated.com/encash_requests/${selectedRequest.id}.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`, {
         method: 'PUT',
         headers: {
           'Authorization': getAuthHeader(),

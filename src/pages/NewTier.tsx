@@ -15,7 +15,9 @@ const validationSchema = Yup.object().shape({
       try {
         const storedValue = sessionStorage.getItem("selectedId");
         const token = localStorage.getItem("access_token");
-        const url = getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=1${token ? `&access_token=${token}` : ''}`);
+        // const url = getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=1${token ? `&access_token=${token}` : ''}`);
+        // Use static baseurl and token for now:
+        const url = 'https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ';
         const response = await axios.get(url, {
           headers: {
             Authorization: token ? `Bearer ${token}` : undefined,
@@ -95,12 +97,14 @@ const NewTier = () => {
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      const storedValue = sessionStorage.getItem("selectedId");
-      const token = localStorage.getItem("access_token");
-      const getTiersUrl = getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=${storedValue}${token ? `&access_token=${token}` : ''}`);
+      // const storedValue = sessionStorage.getItem("selectedId");
+      // const token = localStorage.getItem("access_token");
+      // const getTiersUrl = getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=${storedValue}${token ? `&access_token=${token}` : ''}`);
+      // Use static baseurl and token for now:
+      const getTiersUrl = 'https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ';
       const existingTiersResponse = await axios.get(getTiersUrl, {
         headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
+          // Authorization: token ? `Bearer ${token}` : undefined,
           "Content-Type": "application/json",
         },
       });
@@ -150,9 +154,11 @@ const NewTier = () => {
       };
       let postUrl = "";
       if (formattedTiers?.length > 0) {
-        postUrl = getFullUrl(`/loyalty/tiers/bulk_create${token ? `?token=${token}` : ''}`);
+        // postUrl = getFullUrl(`/loyalty/tiers/bulk_create${token ? `?token=${token}` : ''}`);
+        postUrl = "https://runwal-api.lockated.com/loyalty/tiers/bulk_create?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
       } else {
-        postUrl = getFullUrl(`/loyalty/tiers.json${token ? `?access_token=${token}` : ''}`);
+        // postUrl = getFullUrl(`/loyalty/tiers.json${token ? `?access_token=${token}` : ''}`);
+        postUrl = "https://runwal-api.lockated.com/loyalty/tiers.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
       }
       const response = await fetch(postUrl, {
         method: "POST",
@@ -165,7 +171,7 @@ const NewTier = () => {
         toast.success("Tier saved successfully!");
         setTimeout(() => {
           resetForm();
-          navigate("/setup-member/loyalty-tiers-list");
+          navigate("/loyalty/loyalty-tiers-list");
         }, 1500);
       } else {
         const errorData = await response.json();
@@ -197,8 +203,6 @@ const NewTier = () => {
                 <span className="text-gray-400">Setup Member</span>
                 <ChevronRight className="w-4 h-4" />
                 <span className="text-gray-400">Loyalty</span>
-                <ChevronRight className="w-4 h-4" />
-                <span className="text-gray-400">Tiers</span>
                 <ChevronRight className="w-4 h-4" />
                 <span className="text-[#C72030] font-medium">Create</span>
               </div>

@@ -3,7 +3,8 @@ import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
-import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
+// import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { getAuthHeader } from '@/config/apiConfig';
 
 interface DemandNote {
   id: number;
@@ -34,7 +35,8 @@ const DemandNotesList = () => {
     setLoading(true);
     setIsSearching(!!search);
     try {
-      const response = await fetch(getFullUrl('/demand_notes'), {
+      // const response = await fetch(getFullUrl('/demand_notes'), {
+      const response = await fetch('https://runwal-api.lockated.com/demand_notes?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ', {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),

@@ -77,9 +77,14 @@ export const PermissionsProvider: React.FC<PermissionsProviderProps> = ({
         // Store in cache for fast access
         permissionCache.store(role);
       }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch user permissions";
+    } catch (err: any) {
+      // Improved error handling for 500 errors and Axios errors
+      let errorMessage = "Failed to fetch user permissions";
+      if (err?.response?.status === 500) {
+        errorMessage = "Server error (500) while fetching user role. Please try again later.";
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
       setError(errorMessage);
       console.error("Error fetching user permissions:", err);
     } finally {

@@ -39,7 +39,8 @@ const HomeLoanList = () => {
     setLoading(true);
     setIsSearching(!!searchTerm);
     try {
-      const response = await fetch(getFullUrl('/home_loans.json'), {
+      // const response = await fetch(getFullUrl('/home_loans.json'), {
+      const response = await fetch('https://runwal-api.lockated.com/home_loans.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ', {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),

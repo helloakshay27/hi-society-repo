@@ -5,6 +5,7 @@ import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
 import SelectBox from '../components/ui/select-box';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   name: string;
@@ -29,6 +30,7 @@ interface Order {
 }
 
 const OrdersList = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,9 @@ const OrdersList = () => {
     setLoading(true);
     setIsSearching(!!search || !!status || !!paymentStatus);
     try {
-      const response = await fetch(getFullUrl('/admin/orders.json'), {
+      // Use baseurl and token as done for updateOrderStatus
+      const url = `https://runwal-api.lockated.com/admin/orders.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),
@@ -142,7 +146,8 @@ const OrdersList = () => {
   const updateOrderStatus = async (orderId: number, newStatus: string, notes = '') => {
     setUpdatingStatus(orderId);
     try {
-      const url = getFullUrl(`/orders/${orderId}/status_update.json?status=${newStatus}&notes=${encodeURIComponent(notes)}`);
+      // const url = getFullUrl(`/orders/${orderId}/status_update.json?status=${newStatus}&notes=${encodeURIComponent(notes)}`);
+      const url = `https://runwal-api.lockated.com/orders/${orderId}/status_update.json?status=${newStatus}&notes=${encodeURIComponent(notes)}&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
@@ -210,9 +215,23 @@ const OrdersList = () => {
   const renderCell = (item: Order, columnKey: string) => {
     switch (columnKey) {
       case 'id':
-        return <span className="font-medium">{item.id}</span>;
+        return (
+          <span 
+            className="font-medium text-[#C72030] cursor-pointer hover:underline"
+            onClick={() => navigate(`/loyalty/orders/${item.id}`)}
+          >
+            {item.id}
+          </span>
+        );
       case 'order_number':
-        return <span className="text-sm text-gray-600">{item.order_number || '-'}</span>;
+        return (
+          <span 
+            className="text-sm text-[#C72030] cursor-pointer hover:underline"
+            onClick={() => navigate(`/orders/${item.id}`)}
+          >
+            {item.order_number || '-'}
+          </span>
+        );
       case 'customer':
         return (
           <div>
