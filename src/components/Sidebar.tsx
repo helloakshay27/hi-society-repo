@@ -358,15 +358,6 @@ export const Sidebar = () => {
     // Convert object to format that can be filtered
     const filtered = {};
 
-    Object.entries(modulesByPackage).forEach(([sectionName, items]) => {
-      const filteredItems = items
-        .map((item) => ({
-          ...item,
-          subItems: item.subItems
-            ? item.subItems.filter(checkItemPermission)
-            : [],
-        }))
-        .filter(checkItemPermission);
     // Recursive function to filter subItems at ALL levels
     const filterSubItemsRecursively = (items: any[]): any[] => {
       return (

@@ -423,16 +423,20 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       setToken(response.access_token);
       saveBaseUrl(baseUrl);
 
-      if (isHiSocietySite) {
-        // Hi Society specific logic
-        localStorage.setItem("userId", response.id.toString());
-        // Always set to Admin view on login
-        localStorage.setItem("userType", "pms_organization_admin");
-        localStorage.setItem("selectedView", "admin");
-        // Session storage
-        sessionStorage.setItem("userId", response.id.toString());
-        sessionStorage.setItem("userType", "pms_organization_admin");
+      // Always set to Hi-Society layout mode and Admin view on login
+      localStorage.setItem("layoutMode", "hi-society");
+      localStorage.setItem("selectedView", "admin");
+      localStorage.setItem("userType", "pms_organization_admin");
+      localStorage.setItem("userId", response.id.toString());
+      
+      // Session storage
+      sessionStorage.setItem("layoutMode", "hi-society");
+      sessionStorage.setItem("selectedView", "admin");
+      sessionStorage.setItem("userType", "pms_organization_admin");
+      sessionStorage.setItem("userId", response.id.toString());
 
+      if (isHiSocietySite) {
+        // Hi Society specific logic - fetch additional data
         // Fetch Hi-Society specific data
         await fetchHiSocietyData(response.spree_api_key);
 
@@ -443,12 +447,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
           navigate("/maintenance/project-details-list", { replace: true });
         }, 500);
       } else {
-        // Other sites logic
-        localStorage.setItem("userId", response.id?.toString() || "");
-        localStorage.setItem("userType", response.user_type?.toString() || "");
-        // Session storage
-        sessionStorage.setItem("userId", response.id?.toString() || "");
-        sessionStorage.setItem("userType", response.user_type?.toString() || "");
+        // Other sites logic - still use hi-society mode and admin view
 
         const from =
           (location.state as { from?: Location })?.from?.pathname +
