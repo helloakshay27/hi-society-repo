@@ -27,7 +27,7 @@ const navigationItems: NavigationItem[] = [
     id: "cms",
     label: "CMS",
     icon: <SettingsIcon className="w-4 h-4" />,
-    path: "/cms/facility",
+    path: "/cms/facility-setup",
   },
   {
     id: "campaigns",
@@ -101,12 +101,12 @@ export const HiSocietyNavigation: React.FC = () => {
   // Filter navigation items based on domain
   const filteredNavigationItems = isCMSDomain
     ? navigationItems.filter(
-        (item) => item.id === "bms" || item.id === "settings"
-      )
+      (item) => item.id === "bms" || item.id === "settings"
+    )
     : isFitoutDomain
       ? navigationItems.filter(
-          (item) => item.id === "fitout" || item.id === "settings"
-        )
+        (item) => item.id === "fitout" || item.id === "settings"
+      )
       : navigationItems; // Show all navigation items including BMS
 
   // Detect active navigation based on current path
@@ -166,11 +166,10 @@ export const HiSocietyNavigation: React.FC = () => {
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item)}
-                  className={`pb-3 text-sm transition-colors whitespace-nowrap flex items-center gap-2 flex-shrink-0 ${
-                    isActive
+                  className={`pb-3 text-sm transition-colors whitespace-nowrap flex items-center gap-2 flex-shrink-0 ${isActive
                       ? "text-[#C72030] border-b-2 border-[#C72030] font-medium"
                       : "text-[#1a1a1a] opacity-70 hover:opacity-100"
-                  }`}
+                    }`}
                 >
                   <span>{item.label}</span>
                 </button>

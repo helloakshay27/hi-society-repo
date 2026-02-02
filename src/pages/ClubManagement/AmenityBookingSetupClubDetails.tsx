@@ -122,8 +122,13 @@ export const BookingSetupDetailClubPage = () => {
   const [blockDaySlots, setBlockDaySlots] = useState<{ [key: number]: any[] }>({});
   const [formData, setFormData] = useState({
     facilityName: "",
+    shareable: "",
+    linkToBilling: "",
+    minGuarantee: "",
     isBookable: true,
     isRequest: false,
+    active: "1",
+    addSubFacility: false,
     department: "",
     appKey: "",
     postpaid: false,
@@ -156,14 +161,39 @@ export const BookingSetupDetailClubPage = () => {
         concurrentSlots: "",
         slotBy: 15,
         wrapTime: "",
+        consecutiveSlotsAllowed: false,
       },
     ],
     chargeSetup: {
       member: { selected: false, adult: "", child: "" },
       guest: { selected: false, adult: "", child: "" },
+      nonMember: { selected: false, adult: "", child: "" },
+      tenant: { selected: false, adult: "", child: "" },
       minimumPersonAllowed: "1",
       maximumPersonAllowed: "1",
+      refundableDeposit: "0.0",
     },
+    facilityBookings: [] as Array<{
+      id: string;
+      isChecked: boolean;
+      times: string;
+      unit: string;
+    }>,
+    subFacilities: [] as Array<{
+      id: string;
+      name: string;
+      status: string;
+      chargeSetup: {
+        member: { selected: boolean; adult: string; child: string };
+        guest: { selected: boolean; adult: string; child: string };
+        nonMember: { selected: boolean; adult: string; child: string };
+        tenant: { selected: boolean; adult: string; child: string };
+      };
+      minimumPersonAllowed: string;
+      maximumPersonAllowed: string;
+      gst: string;
+      refundableDeposit: string;
+    }>,
     blockDays: [] as Array<{
       id: number;
       startDate: string;
@@ -318,7 +348,7 @@ export const BookingSetupDetailClubPage = () => {
   };
 
   const handleEditClick = (id) => {
-    navigate(`/settings/vas/booking-club/setup/edit/${id}`);
+    navigate(`/cms/facility-setup/edit/${id}`);
   }
 
   const fetchFacilityBookingDetails = async () => {
@@ -332,8 +362,13 @@ export const BookingSetupDetailClubPage = () => {
       console.log('📦 facility_blockings from response:', response?.facility_blockings);
       setFormData({
         facilityName: response.fac_name,
+        shareable: response.shareable || "",
+        linkToBilling: response.link_to_billing || "",
+        minGuarantee: response.min_guarantee || "",
         isBookable: response.fac_type === "bookable" ? true : false,
         isRequest: response.fac_type === "request" ? true : false,
+        active: response.active || "1",
+        addSubFacility: response.sub_facility_enabled,
         department: response.department_id ?? "",
         appKey: response.app_key,
         postpaid: response.postpaid,
@@ -381,13 +416,70 @@ export const BookingSetupDetailClubPage = () => {
           concurrentSlots: slot.facility_slot.max_bookings,
           slotBy: slot.facility_slot.breakminutes_label,
           wrapTime: slot.facility_slot.wrap_time,
+          consecutiveSlotsAllowed: response.consecutive_slot || false,
         })) || [],
         chargeSetup: {
-          member: { selected: response.facility_charge?.adult_member_charge, adult: response.facility_charge?.adult_member_charge, child: response.facility_charge?.child_member_charge },
-          guest: { selected: response.facility_charge?.adult_guest_charge, adult: response.facility_charge?.adult_guest_charge, child: response.facility_charge?.child_guest_charge },
-          minimumPersonAllowed: response.min_people,
-          maximumPersonAllowed: response.max_people,
+          member: {
+            selected: response.facility_charge?.member === "true" || response.facility_charge?.member === true,
+            adult: response.facility_charge?.adult_member_charge || "",
+            child: response.facility_charge?.child_member_charge || "",
+          },
+          guest: {
+            selected: response.facility_charge?.guest === "true" || response.facility_charge?.guest === true,
+            adult: response.facility_charge?.adult_guest_charge || "",
+            child: response.facility_charge?.child_guest_charge || "",
+          },
+          nonMember: {
+            selected: response.facility_charge?.non_member === "true" || response.facility_charge?.non_member === true,
+            adult: response.facility_charge?.adult_non_member_charge || "",
+            child: response.facility_charge?.child_non_member_charge || "",
+          },
+          tenant: {
+            selected: response.facility_charge?.tenant === "true" || response.facility_charge?.tenant === true,
+            adult: response.facility_charge?.adult_tenant_charge || "",
+            child: response.facility_charge?.child_tenant_charge || "",
+          },
+          minimumPersonAllowed: response.min_people || "1",
+          maximumPersonAllowed: response.max_people || "1",
+          refundableDeposit: response.deposit || "0.0",
         },
+        facilityBookings: (response.slot_booking_rules || []).map((rule: any) => ({
+          id: rule.id?.toString() || Date.now().toString(),
+          isChecked: rule.active === "1",
+          times: rule.enumerator || "",
+          unit: rule.level || "Select",
+        })) || [],
+        subFacilities: (response.sub_facilities || []).map((subFac: any) => ({
+          id: subFac.sub_facility?.id?.toString() || Date.now().toString(),
+          name: subFac.sub_facility.name || "",
+          status: subFac.sub_facility.active || "true",
+          chargeSetup: {
+            member: {
+              selected: subFac.sub_facility.facility_charge?.member === "true" || subFac.facility_charge?.member === true,
+              adult: subFac.sub_facility.facility_charge?.adult_member_charge || "",
+              child: subFac.sub_facility.facility_charge?.child_member_charge || "",
+            },
+            guest: {
+              selected: subFac.sub_facility.facility_charge?.guest === "true" || subFac.facility_charge?.guest === true,
+              adult: subFac.sub_facility.facility_charge?.adult_guest_charge || "",
+              child: subFac.sub_facility.facility_charge?.child_guest_charge || "",
+            },
+            nonMember: {
+              selected: subFac.sub_facility.facility_charge?.non_member === "true" || subFac.facility_charge?.non_member === true,
+              adult: subFac.sub_facility.facility_charge?.adult_non_member_charge || "",
+              child: subFac.sub_facility.facility_charge?.child_non_member_charge || "",
+            },
+            tenant: {
+              selected: subFac.sub_facility.facility_charge?.tenant === "true" || subFac.facility_charge?.tenant === true,
+              adult: subFac.sub_facility.facility_charge?.adult_tenant_charge || "",
+              child: subFac.sub_facility.facility_charge?.child_tenant_charge || "",
+            },
+          },
+          minimumPersonAllowed: subFac.sub_facility.min_people || "1",
+          maximumPersonAllowed: subFac.sub_facility.max_people || "1",
+          gst: subFac.sub_facility.gst || "",
+          refundableDeposit: subFac.sub_facility.deposit || "0.0",
+        })) || [],
         blockDays: response?.facility_blockings?.map((blocking: any) => ({
           id: blocking.facility_blocking?.id,
           startDate: blocking.facility_blocking?.ondate || "",
@@ -397,7 +489,7 @@ export const BookingSetupDetailClubPage = () => {
           selectedSlots: blocking.facility_blocking?.block_slot || [],
         })) || [],
       });
-      
+
       console.log('=== Block Days Debug ===');
       console.log('Raw facility_blockings from API:', response?.facility_blockings);
       console.log('Total facility_blockings count:', response?.facility_blockings?.length);
@@ -409,20 +501,20 @@ export const BookingSetupDetailClubPage = () => {
         selectedSlots: blocking.facility_blocking?.block_slot,
       })));
       console.log('======================');
-      
+
       // Fetch slots for ALL block days (so we can display them in the UI)
       response?.facility_blockings?.forEach((blocking: any, index: number) => {
         const ondate = blocking.facility_blocking?.ondate;
-        
+
         if (ondate) {
-          console.log(`Fetching slots for block day ${index}:`, { 
-            date: ondate, 
+          console.log(`Fetching slots for block day ${index}:`, {
+            date: ondate,
             blockSlotIds: blocking.facility_blocking?.block_slot
           });
           fetchBlockDaySlots(id!, ondate, index);
         }
       });
-      
+
       const transformedRules = response.cancellation_rules?.map((rule: any) => ({
         description: rule.description,
         time: {
@@ -466,7 +558,7 @@ export const BookingSetupDetailClubPage = () => {
 
       // Setup gallery images
       const allGalleryImages: any[] = [];
-      
+
       // 1:1 images
       if (response?.gallery_image_1_by_1 && Array.isArray(response.gallery_image_1_by_1)) {
         response.gallery_image_1_by_1.forEach((item: any) => {
@@ -480,7 +572,7 @@ export const BookingSetupDetailClubPage = () => {
           }
         });
       }
-      
+
       // 16:9 images
       if (response?.gallery_image_16_by_9 && Array.isArray(response.gallery_image_16_by_9)) {
         response.gallery_image_16_by_9.forEach((item: any) => {
@@ -494,7 +586,7 @@ export const BookingSetupDetailClubPage = () => {
           }
         });
       }
-      
+
       // 9:16 images
       if (response?.gallery_image_9_by_16 && Array.isArray(response.gallery_image_9_by_16)) {
         response.gallery_image_9_by_16.forEach((item: any) => {
@@ -508,7 +600,7 @@ export const BookingSetupDetailClubPage = () => {
           }
         });
       }
-      
+
       // 3:2 images
       if (response?.gallery_image_3_by_2 && Array.isArray(response.gallery_image_3_by_2)) {
         response.gallery_image_3_by_2.forEach((item: any) => {
@@ -522,7 +614,7 @@ export const BookingSetupDetailClubPage = () => {
           }
         });
       }
-      
+
       setGalleryImages(allGalleryImages);
     } catch (error) {
       console.error("Error fetching facility details:", error);
@@ -598,7 +690,7 @@ export const BookingSetupDetailClubPage = () => {
             <Button
               variant="ghost"
               onClick={() => location.pathname.includes("/club-management/") ?
-               navigate("/club-management/vas/booking/setup") : navigate("/settings/vas/booking-club/setup") 
+                navigate("/club-management/vas/booking/setup") : navigate("/cms/facility-setup")
               }
               className="p-0"
             >
@@ -660,15 +752,203 @@ export const BookingSetupDetailClubPage = () => {
                   {formData.isBookable ? "Bookable" : formData.isRequest ? "Request" : "-"}
                 </span>
               </div>
-              {/* <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Department</span>
+              <div className="flex items-start">
+                <span className="text-gray-500 min-w-[140px]">Active</span>
                 <span className="text-gray-500 mx-2">:</span>
                 <span className="text-gray-900 font-medium">
-                  {formData.department ? departments.find(d => d.id === formData.department)?.department_name || "-" : "-"}
+                  {formData.active === "1" ? "Yes" : "No"}
                 </span>
-              </div> */}
+              </div>
+              <div className="flex items-start">
+                <span className="text-gray-500 min-w-[140px]">Shareable</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium">
+                  {formData.shareable || "-"}
+                </span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-gray-500 min-w-[140px]">Link to Billing</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium">
+                  {formData.linkToBilling || "-"}
+                </span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-gray-500 min-w-[140px]">Min Guarantee</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium">
+                  {formData.minGuarantee || "-"}
+                </span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-gray-500 min-w-[140px]">Sub Facility Enabled</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium">
+                  {formData.addSubFacility ? "Yes" : "No"}
+                </span>
+              </div>
             </div>
           </div>
+
+          {/* Facility Booking Rules Section */}
+          {formData.facilityBookings && formData.facilityBookings.length > 0 && (
+            <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                  <Settings className="w-4 h-4" />
+                </div>
+                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                  FACILITY BOOKING RULES
+                </h3>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-[#E5E0D3]">
+                      <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Active</th>
+                      <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Times</th>
+                      <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Unit/Level</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formData.facilityBookings.map((fb, idx) => (
+                      <tr key={fb.id || idx} className="border-b hover:bg-gray-50">
+                        <td className="border border-gray-300 px-4 py-3">
+                          <Checkbox checked={fb.isChecked} disabled />
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3">
+                          <span className="text-gray-900">{fb.times || "-"}</span>
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3">
+                          <span className="text-gray-900">{fb.unit || "-"}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Sub-Facilities Section */}
+          {formData.addSubFacility && formData.subFacilities && formData.subFacilities.length > 0 && (
+            <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                  <FileCog className="w-4 h-4" />
+                </div>
+                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">SUB-FACILITIES</h3>
+              </div>
+
+              <div className="space-y-6">
+                {formData.subFacilities.map((subFacility, idx) => (
+                  <div key={subFacility.id || idx} className="border rounded-lg p-6 space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-sm font-semibold text-gray-700">Sub-Facility {idx + 1}: {subFacility.name}</h4>
+                      <span className={`text-xs font-medium px-2 py-1 rounded ${subFacility.status === "1" || subFacility.status === "true" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                        {subFacility.status === "1" || subFacility.status === "true" ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">Name</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{subFacility.name || "-"}</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">Min Person</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{subFacility.minimumPersonAllowed || "-"}</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-500 min-w-[140px]">Max Person</span>
+                        <span className="text-gray-500 mx-2">:</span>
+                        <span className="text-gray-900 font-medium">{subFacility.maximumPersonAllowed || "-"}</span>
+                      </div>
+                      {formData.isBookable && (
+                        <div className="flex items-start">
+                          <span className="text-gray-500 min-w-[140px]">GST (%)</span>
+                          <span className="text-gray-500 mx-2">:</span>
+                          <span className="text-gray-900 font-medium">{subFacility.gst || "-"}</span>
+                        </div>
+                      )}
+                      {formData.isRequest && (
+                        <div className="flex items-start">
+                          <span className="text-gray-500 min-w-[140px]">Deposit</span>
+                          <span className="text-gray-500 mx-2">:</span>
+                          <span className="text-gray-900 font-medium">{subFacility.refundableDeposit || "-"}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <h5 className="text-sm font-semibold text-gray-700 mb-3">Charge Setup</h5>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {subFacility.chargeSetup.member.selected && (
+                          <>
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">Member Adult</span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.member.adult || "-"}</span>
+                            </div>
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">Member Child</span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.member.child || "-"}</span>
+                            </div>
+                          </>
+                        )}
+                        {subFacility.chargeSetup.guest.selected && (
+                          <>
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">Guest Adult</span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.guest.adult || "-"}</span>
+                            </div>
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">Guest Child</span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.guest.child || "-"}</span>
+                            </div>
+                          </>
+                        )}
+                        {subFacility.chargeSetup.nonMember.selected && (
+                          <>
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">Non-Member Adult</span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.nonMember.adult || "-"}</span>
+                            </div>
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">Non-Member Child</span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.nonMember.child || "-"}</span>
+                            </div>
+                          </>
+                        )}
+                        {subFacility.chargeSetup.tenant.selected && (
+                          <>
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">Tenant Adult</span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.tenant.adult || "-"}</span>
+                            </div>
+                            <div className="flex items-start">
+                              <span className="text-gray-500 min-w-[140px]">Tenant Child</span>
+                              <span className="text-gray-500 mx-2">:</span>
+                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.tenant.child || "-"}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Charge Setup Card */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
@@ -682,34 +962,78 @@ export const BookingSetupDetailClubPage = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Member Adult Charge</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium">
-                  {formData.chargeSetup.member.adult || "-"}
-                </span>
-              </div>
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Guest Adult Charge</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium">
-                  {formData.chargeSetup.guest.adult || "-"}
-                </span>
-              </div>
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Member Child Charge</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium">
-                  {formData.chargeSetup.member.child || "-"}
-                </span>
-              </div>
-              <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Guest Child Charge</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium">
-                  {formData.chargeSetup.guest.child || "-"}
-                </span>
-              </div>
+              {formData.chargeSetup.member.selected && (
+                <>
+                  <div className="flex items-start">
+                    <span className="text-gray-500 min-w-[140px]">Member Adult Charge</span>
+                    <span className="text-gray-500 mx-2">:</span>
+                    <span className="text-gray-900 font-medium">
+                      {formData.chargeSetup.member.adult || "-"}
+                    </span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="text-gray-500 min-w-[140px]">Member Child Charge</span>
+                    <span className="text-gray-500 mx-2">:</span>
+                    <span className="text-gray-900 font-medium">
+                      {formData.chargeSetup.member.child || "-"}
+                    </span>
+                  </div>
+                </>
+              )}
+              {formData.chargeSetup.guest.selected && (
+                <>
+                  <div className="flex items-start">
+                    <span className="text-gray-500 min-w-[140px]">Guest Adult Charge</span>
+                    <span className="text-gray-500 mx-2">:</span>
+                    <span className="text-gray-900 font-medium">
+                      {formData.chargeSetup.guest.adult || "-"}
+                    </span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="text-gray-500 min-w-[140px]">Guest Child Charge</span>
+                    <span className="text-gray-500 mx-2">:</span>
+                    <span className="text-gray-900 font-medium">
+                      {formData.chargeSetup.guest.child || "-"}
+                    </span>
+                  </div>
+                </>
+              )}
+              {formData.chargeSetup.nonMember.selected && (
+                <>
+                  <div className="flex items-start">
+                    <span className="text-gray-500 min-w-[140px]">Non-Member Adult Charge</span>
+                    <span className="text-gray-500 mx-2">:</span>
+                    <span className="text-gray-900 font-medium">
+                      {formData.chargeSetup.nonMember.adult || "-"}
+                    </span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="text-gray-500 min-w-[140px]">Non-Member Child Charge</span>
+                    <span className="text-gray-500 mx-2">:</span>
+                    <span className="text-gray-900 font-medium">
+                      {formData.chargeSetup.nonMember.child || "-"}
+                    </span>
+                  </div>
+                </>
+              )}
+              {formData.chargeSetup.tenant.selected && (
+                <>
+                  <div className="flex items-start">
+                    <span className="text-gray-500 min-w-[140px]">Tenant Adult Charge</span>
+                    <span className="text-gray-500 mx-2">:</span>
+                    <span className="text-gray-900 font-medium">
+                      {formData.chargeSetup.tenant.adult || "-"}
+                    </span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="text-gray-500 min-w-[140px]">Tenant Child Charge</span>
+                    <span className="text-gray-500 mx-2">:</span>
+                    <span className="text-gray-900 font-medium">
+                      {formData.chargeSetup.tenant.child || "-"}
+                    </span>
+                  </div>
+                </>
+              )}
               <div className="flex items-start">
                 <span className="text-gray-500 min-w-[140px]">Minimum Person Allowed</span>
                 <span className="text-gray-500 mx-2">:</span>
@@ -724,6 +1048,15 @@ export const BookingSetupDetailClubPage = () => {
                   {formData.chargeSetup.maximumPersonAllowed || "-"}
                 </span>
               </div>
+              {formData.isRequest && (
+                <div className="flex items-start">
+                  <span className="text-gray-500 min-w-[140px]">Refundable Deposit</span>
+                  <span className="text-gray-500 mx-2">:</span>
+                  <span className="text-gray-900 font-medium">
+                    {formData.chargeSetup.refundableDeposit || "-"}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -783,13 +1116,20 @@ export const BookingSetupDetailClubPage = () => {
                         {slot.slotBy || "-"}
                       </span>
                     </div>
-                    {/* <div className="flex items-start">
+                    <div className="flex items-start">
                       <span className="text-gray-500 min-w-[140px]">Wrap Time</span>
                       <span className="text-gray-500 mx-2">:</span>
                       <span className="text-gray-900 font-medium">
                         {slot.wrapTime || "-"}
                       </span>
-                    </div> */}
+                    </div>
+                    <div className="flex items-start">
+                      <span className="text-gray-500 min-w-[140px]">Consecutive Slots</span>
+                      <span className="text-gray-500 mx-2">:</span>
+                      <span className="text-gray-900 font-medium">
+                        {slot.consecutiveSlotsAllowed ? "Yes" : "No"}
+                      </span>
+                    </div>
                   </div>
                   {index < formData.slots.length - 1 && <hr className="mt-4" />}
                 </div>
@@ -979,7 +1319,7 @@ export const BookingSetupDetailClubPage = () => {
                 {formData.blockDays.map((blockDay, index) => (
                   <div key={blockDay.id || index} className="p-4 border rounded-lg space-y-4">
                     <h4 className="text-sm font-semibold text-gray-700">Block Day {index + 1}</h4>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <TextField
                         label="Date"
@@ -1079,6 +1419,13 @@ export const BookingSetupDetailClubPage = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="flex items-start">
+                <span className="text-gray-500 min-w-[140px]">Postpaid</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium">
+                  {formData.postpaid ? "Yes" : "No"}
+                </span>
+              </div>
+              <div className="flex items-start">
                 <span className="text-gray-500 min-w-[140px]">Prepaid</span>
                 <span className="text-gray-500 mx-2">:</span>
                 <span className="text-gray-900 font-medium">
@@ -1090,6 +1437,13 @@ export const BookingSetupDetailClubPage = () => {
                 <span className="text-gray-500 mx-2">:</span>
                 <span className="text-gray-900 font-medium">
                   {formData.payOnFacility ? "Yes" : "No"}
+                </span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-gray-500 min-w-[140px]">Complimentary</span>
+                <span className="text-gray-500 mx-2">:</span>
+                <span className="text-gray-900 font-medium">
+                  {formData.complimentary ? "Yes" : "No"}
                 </span>
               </div>
               <div className="flex items-start">
@@ -1113,13 +1467,6 @@ export const BookingSetupDetailClubPage = () => {
                   {formData.igstPercentage || "-"}
                 </span>
               </div>
-              {/* <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Per Slot Charge</span>
-                <span className="text-gray-500 mx-2">:</span>
-                <span className="text-gray-900 font-medium">
-                  {formData.perSlotCharge || "-"}
-                </span>
-              </div> */}
             </div>
           </div>
 
@@ -1373,7 +1720,7 @@ export const BookingSetupDetailClubPage = () => {
             </div>
           </div>
 
-          {/* /* Additional Setup */ }
+          {/* /* Additional Setup */}
           <div className={`bg-white rounded-lg border-2 p-6 space-y-6 overflow-hidden ${additionalOpen ? "h-auto" : "h-[6rem]"}`}>
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">

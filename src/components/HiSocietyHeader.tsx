@@ -61,13 +61,13 @@ export const HiSocietyHeader = () => {
     email?: string;
     role_name?: string;
   } | null>(null);
-  
+
   // Hi-Society specific state
   const [hiSocietySocieties, setHiSocietySocieties] = useState<HiSocietySociety[]>([]);
   const [selectedSociety, setSelectedSociety] = useState<HiSocietySociety | null>(null);
   const [selectedFlat, setSelectedFlat] = useState<HiSocietySociety | null>(null);
   const [hiSocietyLoading, setHiSocietyLoading] = useState(false);
-  
+
   // Layout mode
   const { layoutMode, toggleLayoutMode } = useLayout();
 
@@ -164,7 +164,7 @@ export const HiSocietyHeader = () => {
             role_name: data?.role_name,
           });
         })
-        .catch(() => {});
+        .catch(() => { });
     } catch {
       /* no-op */
     }
@@ -174,17 +174,17 @@ export const HiSocietyHeader = () => {
   const fetchHiSocietyData = async (token: string) => {
     try {
       let accountData: any = null;
-      
+
       // Fetch account data
       const accountResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`);
       if (accountResponse.ok) {
         accountData = await accountResponse.json();
         localStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
-        localStorage.setItem("selectedUserSociety", accountData.selected_user_society?.toString() || "");
+        localStorage.setItem("selectedUserSociety", accountData?.society?.id?.toString() || "");
         sessionStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
         sessionStorage.setItem("selectedUserSociety", accountData.selected_user_society?.toString() || "");
       }
-      
+
       // Fetch user approved societies
       const societiesResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
       if (societiesResponse.ok) {
@@ -192,10 +192,10 @@ export const HiSocietyHeader = () => {
         const societies = societiesData.user_societies || [];
         localStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(societies));
         sessionStorage.setItem("hiSocietyApprovedSocieties", JSON.stringify(societies));
-        
+
         // Update state immediately
         setHiSocietySocieties(societies);
-        
+
         // Set selected society and flat
         const selectedUserSociety = accountData?.selected_user_society?.toString();
         if (selectedUserSociety) {
@@ -218,11 +218,11 @@ export const HiSocietyHeader = () => {
       // First load from localStorage for immediate display
       const societiesData = localStorage.getItem("hiSocietyApprovedSocieties");
       const selectedUserSociety = localStorage.getItem("selectedUserSociety");
-      
+
       if (societiesData) {
         const societies: HiSocietySociety[] = JSON.parse(societiesData);
         setHiSocietySocieties(societies);
-        
+
         // Find and set selected society and flat
         if (selectedUserSociety) {
           const selected = societies.find(s => s.id.toString() === selectedUserSociety);
@@ -232,7 +232,7 @@ export const HiSocietyHeader = () => {
           }
         }
       }
-      
+
       // Then fetch fresh data from API
       const user = getUser();
       if (user?.spree_api_key) {
@@ -282,7 +282,7 @@ export const HiSocietyHeader = () => {
       }
 
       const data = await response.json();
-      
+
       // Update selected society and flat
       const selected = hiSocietySocieties.find(s => s.id === societyId);
       if (selected) {
@@ -530,7 +530,7 @@ export const HiSocietyHeader = () => {
               )}
             </Button>
           )}
-          
+
           {/* Society Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
@@ -623,7 +623,7 @@ export const HiSocietyHeader = () => {
                 <p className="text-sm font-semibold text-gray-900">
                   {isViSite && viAccount
                     ? `${viAccount.firstname || ""} ${viAccount.lastname || ""}`.trim() ||
-                      "User"
+                    "User"
                     : `${user.firstname} ${user.lastname}`}
                 </p>
                 <div className="flex items-center text-gray-600 text-xs mt-0.5">

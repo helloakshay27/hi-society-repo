@@ -3,6 +3,10 @@ import { lazy, Suspense } from "react";
 import ProjectConfigEdit from "@/pages/ProjectConfigEdit";
 import LockFunctionEdit from "@/pages/LockFunctionEdit";
 import EventDetails from "@/pages/EventDetails";
+import { BookingSetupClubDashboard } from "@/pages/ClubManagement/AmenityBookingSetupClub";
+import { AddBookingSetupClubPage } from "@/pages/ClubManagement/AmenityBookingSetupClubAdd";
+import { BookingSetupDetailClubPage } from "@/pages/ClubManagement/AmenityBookingSetupClubDetails";
+import { EditBookingSetupClubPage } from "@/pages/ClubManagement/AmenityBookingSetupClubEdit";
 
 import { LoyaltyDashboard } from "@/pages/LoyaltyDashboard";
 import { WalletManagement } from "@/pages/WalletManagement";
@@ -222,6 +226,8 @@ const BMSCommunicationTemplate = lazy(
 const CMSFacility = lazy(() => import("@/pages/CMSFacility"));
 const CMSRules = lazy(() => import("@/pages/CMSRules"));
 const CMSClubMembers = lazy(() => import("@/pages/CMSClubMembers"));
+const AddCMSClubMembers = lazy(() => import("@/pages/AddCMSClubMembers"));
+const EditCMSClubMembers = lazy(() => import("@/pages/EditCMSClubMembers"));
 const CMSFacilityBookings = lazy(() => import("@/pages/CMSFacilityBookings"));
 const CMSPayments = lazy(() => import("@/pages/CMSPayments"));
 
@@ -1079,9 +1085,14 @@ export const setupMemberRoutes = (
     />
 
     {/* CMS Routes */}
-    <Route path="/cms/facility" Component={withSuspense(CMSFacility)} />
+    <Route path="/cms/facility-setup" Component={withSuspense(BookingSetupClubDashboard)} />
+    <Route path="/cms/facility-setup/add" Component={withSuspense(AddBookingSetupClubPage)} />
+    <Route path="/cms/facility-setup/:id" Component={withSuspense(BookingSetupDetailClubPage)} />
+    <Route path="/cms/facility-setup/edit/:id" Component={withSuspense(EditBookingSetupClubPage)} />
     <Route path="/cms/rules" Component={withSuspense(CMSRules)} />
     <Route path="/cms/club-members" Component={withSuspense(CMSClubMembers)} />
+    <Route path="/cms/club-members/add" Component={withSuspense(AddCMSClubMembers)} />
+    <Route path="/cms/club-members/edit/:id" Component={withSuspense(EditCMSClubMembers)} />
     <Route
       path="/cms/facility-bookings"
       Component={withSuspense(CMSFacilityBookings)}

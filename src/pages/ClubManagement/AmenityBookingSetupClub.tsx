@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Plus, Filter, Eye, Pencil } from "lucide-react";
+import { Plus, Eye } from "lucide-react";
 import { BookingSetupFilterModal } from "@/components/BookingSetupFilterModal";
 import { apiClient } from "@/utils/apiClient";
 import { toast } from "sonner";
@@ -11,6 +10,7 @@ import { editFacilityBookingSetup } from "@/store/slices/facilityBookingsSlice";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 interface BookingSetup {
   id: string;
@@ -25,16 +25,68 @@ interface BookingSetup {
   status: boolean;
 }
 
+const columns: ColumnConfig[] = [
+  {
+    key: 'id',
+    label: 'ID',
+    sortable: true,
+    draggable: true,
+  },
+  {
+    key: 'name',
+    label: 'Name',
+    sortable: true,
+    draggable: true,
+  },
+  {
+    key: 'type',
+    label: 'Type',
+    sortable: true,
+    draggable: true,
+  },
+  {
+    key: 'bookBefore',
+    label: 'Book before',
+    sortable: true,
+    draggable: true,
+  },
+  {
+    key: 'createdOn',
+    label: 'Created On',
+    sortable: true,
+    draggable: true,
+  },
+  {
+    key: 'createdBy',
+    label: 'Created by',
+    sortable: true,
+    draggable: true,
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    sortable: true,
+    draggable: true,
+  },
+];
+
 export const BookingSetupClubDashboard = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
   const baseUrl = localStorage.getItem("baseUrl");
   const token = localStorage.getItem("token");
-  const navigate = useNavigate();
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [bookingSetupData, setBookingSetupData] = useState<BookingSetup[]>([]);
-  const [bookingData, setBookingData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showActionPanel, setShowActionPanel] = useState(false);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    total_count: 0,
+    total_pages: 0,
+  });
+  const pageSize = 10;
 
   const handleFilterApply = (filters: any) => {
     console.log("Applied booking setup filters:", filters);
@@ -42,8 +94,8 @@ export const BookingSetupClubDashboard = () => {
 
   // Format dhm object to string like "0D • 0H • 4M"
   const formatDHM = (dhm: { d: number; h: number; m: number } | null) => {
-    if (!dhm) return "0D • 0H • 0M";
-    return `${dhm.d ?? 0}D • ${dhm.h ?? 0}H • ${dhm.m ?? 0}M`;
+    if (!dhm) return "0 DD • 0 HH • 0 MM";
+    return `${dhm.d ?? 0} DD • ${dhm.h ?? 0} HH • ${dhm.m ?? 0} MM`;
   };
 
   // Format date string to "22-11-2022" format
@@ -63,13 +115,17 @@ export const BookingSetupClubDashboard = () => {
   };
 
   // Fetch booking setup data from API
-  const fetchBookingSetupData = async () => {
+  const fetchBookingSetupData = async (page: number = 1) => {
     try {
       setLoading(true);
-      const response = await apiClient.get("/pms/admin/facility_setups.json");
-      setBookingData(response.data.facility_setups);
-      if (response.data && response.data.facility_setups) {
-        const formattedData = response.data.facility_setups.map(
+      const response = await apiClient.get("/crm/admin/facility_setups.json", {
+        params: {
+          page,
+          per_page: pageSize,
+        }
+      });
+      if (response.data && response.data.data) {
+        const formattedData = response.data.data.map(
           (item: any) => ({
             id: item.id.toString(),
             name: item.fac_name || "",
@@ -77,13 +133,17 @@ export const BookingSetupClubDashboard = () => {
             department: item.department_name || "",
             bookBy: item.book_by || "",
             bookBefore: formatDHM(item.bb_dhm),
-            advanceBooking: formatDHM(item.ab_dhm),
-            createdOn: item.created_at.split(" ")[0],
-            createdBy: item.create_by_user || "",
+            createdOn: item?.created_at?.split("T")[0],
+            createdBy: item.created_by.name || "",
             status: item.active || false,
           })
         );
         setBookingSetupData(formattedData);
+        setPagination({
+          current_page: response.data.meta.current_page || page,
+          total_count: response.data.meta.total_count || 0,
+          total_pages: response.data.meta.total_pages || 1,
+        });
       }
     } catch (error) {
       console.error("Error fetching booking setup data:", error);
@@ -98,7 +158,7 @@ export const BookingSetupClubDashboard = () => {
   }, []);
 
   const handleAddBooking = () => {
-    navigate("/settings/vas/booking-club/setup/add");
+    navigate("/cms/facility-setup/add");
   };
 
   const handleStatusToggle = async (id: string) => {
@@ -140,65 +200,8 @@ export const BookingSetupClubDashboard = () => {
   };
 
   const handleViewDetails = (id: string) => {
-    navigate(`/settings/vas/booking-club/setup/details/${id}`);
+    navigate(`/cms/facility-setup/${id}`);
   };
-
-  const columns: ColumnConfig[] = [
-    {
-      key: 'id',
-      label: 'ID',
-      sortable: true,
-      draggable: true,
-    },
-    {
-      key: 'name',
-      label: 'Name',
-      sortable: true,
-      draggable: true,
-    },
-    {
-      key: 'type',
-      label: 'Type',
-      sortable: true,
-      draggable: true,
-    },
-    // {
-    //   key: 'department',
-    //   label: 'Department',
-    //   sortable: true,
-    //   draggable: true,
-    // },
-    {
-      key: 'bookBefore',
-      label: 'Book before',
-      sortable: true,
-      draggable: true,
-    },
-    {
-      key: 'advanceBooking',
-      label: 'Advance Booking',
-      sortable: true,
-      draggable: true,
-    },
-    {
-      key: 'createdOn',
-      label: 'Created On',
-      sortable: true,
-      draggable: true,
-    },
-    {
-      key: 'createdBy',
-      label: 'Created by',
-      sortable: true,
-      draggable: true,
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      sortable: true,
-      draggable: true,
-    },
-  ];
 
   const renderCell = (item: BookingSetup, columnKey: string) => {
     switch (columnKey) {
@@ -214,8 +217,6 @@ export const BookingSetupClubDashboard = () => {
         return item.bookBy || '';
       case 'bookBefore':
         return item.bookBefore || '';
-      case 'advanceBooking':
-        return item.advanceBooking || '';
       case 'createdOn': {
         if (!item.createdOn) return '';
         // If format is YYYY-MM-DD, convert to DD/MM/YYYY directly
@@ -290,6 +291,142 @@ export const BookingSetupClubDashboard = () => {
     </div>
   );
 
+  const handlePageChange = async (page: number) => {
+    if (page < 1 || page > pagination.total_pages || page === pagination.current_page || loading) {
+      return;
+    }
+
+    try {
+      setPagination((prev) => ({ ...prev, current_page: page }));
+      await fetchBookingSetupData(page);
+    } catch (error) {
+      console.error("Error changing page:", error);
+      toast.error("Failed to load page data. Please try again.");
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!pagination.total_pages || pagination.total_pages <= 0) {
+      return null;
+    }
+    const items = [];
+    const totalPages = pagination.total_pages;
+    const currentPage = pagination.current_page;
+    const showEllipsis = totalPages > 7;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink
+            onClick={() => handlePageChange(1)}
+            isActive={currentPage === 1}
+            aria-disabled={loading}
+            className={loading ? "pointer-events-none opacity-50" : ""}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+                aria-disabled={loading}
+                className={loading ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+                aria-disabled={loading}
+                className={loading ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink
+                  onClick={() => handlePageChange(i)}
+                  isActive={currentPage === i}
+                  aria-disabled={loading}
+                  className={loading ? "pointer-events-none opacity-50" : ""}
+                >
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+              aria-disabled={loading}
+              className={loading ? "pointer-events-none opacity-50" : ""}
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+              aria-disabled={loading}
+              className={loading ? "pointer-events-none opacity-50" : ""}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   return (
     <div className="p-6 bg-white">
       {showActionPanel && (
@@ -313,9 +450,27 @@ export const BookingSetupClubDashboard = () => {
           // onFilterClick={() => setIsFilterOpen(true)}
           enableSelection={false}
           hideTableExport={true}
-          pagination={true}
-          pageSize={10}
         />
+
+        <div className="flex justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(Math.max(1, pagination.current_page - 1))}
+                  className={pagination.current_page === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(Math.min(pagination.total_pages, pagination.current_page + 1))}
+                  className={pagination.current_page === pagination.total_pages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
 
         <BookingSetupFilterModal
           open={isFilterOpen}

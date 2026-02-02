@@ -166,8 +166,10 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       const accountResponse = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.ACCOUNT}?token=${token}`);
       if (accountResponse.ok) {
         const accountData = await accountResponse.json();
+
+        console.log(accountData)
         localStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
-        localStorage.setItem("selectedUserSociety", accountData.selected_user_society?.toString() || "");
+        localStorage.setItem("selectedUserSociety", accountData?.society?.id?.toString() || "");
         sessionStorage.setItem("hiSocietyAccount", JSON.stringify(accountData));
         sessionStorage.setItem("selectedUserSociety", accountData.selected_user_society?.toString() || "");
       }
@@ -428,7 +430,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       localStorage.setItem("selectedView", "admin");
       localStorage.setItem("userType", "pms_organization_admin");
       localStorage.setItem("userId", response.id.toString());
-      
+
       // Session storage
       sessionStorage.setItem("layoutMode", "hi-society");
       sessionStorage.setItem("selectedView", "admin");

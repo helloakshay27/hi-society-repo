@@ -33,9 +33,8 @@ export const CMSSidebar: React.FC = () => {
 
   return (
     <div
-      className={`${
-        isSidebarCollapsed ? "w-16" : "w-64"
-      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      className={`${isSidebarCollapsed ? "w-16" : "w-64"
+        } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
       style={{ top: "4rem", height: "calc(100% - 4rem)" }}
     >
       <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>
@@ -59,9 +58,8 @@ export const CMSSidebar: React.FC = () => {
         {/* Header */}
         <div className={`mb-4 ${isSidebarCollapsed ? "text-center" : ""}`}>
           <h3
-            className={`text-sm font-medium text-[#1a1a1a] opacity-70 uppercase ${
-              isSidebarCollapsed ? "" : "tracking-wide"
-            }`}
+            className={`text-sm font-medium text-[#1a1a1a] opacity-70 uppercase ${isSidebarCollapsed ? "" : "tracking-wide"
+              }`}
           >
             {isSidebarCollapsed ? "" : "Setup"}
           </h3>
@@ -88,11 +86,11 @@ export const CMSSidebar: React.FC = () => {
             {setupOpen && !isSidebarCollapsed && (
               <div className="space-y-1">
                 <button
-                  onClick={() => handleNavigation("/cms/facility")}
+                  onClick={() => handleNavigation("/cms/facility-setup")}
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
                   title="Facility"
                 >
-                  {isActive("/cms/facility") && (
+                  {isActive("/cms/facility-setup") && (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
                   )}
                   <Building2 className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
