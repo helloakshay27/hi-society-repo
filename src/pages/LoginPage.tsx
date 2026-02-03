@@ -75,7 +75,8 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   const isHiSocietySite = hostname === "web.hisociety.lockated.com";
   // Check if it's Runwal site
   const isRunwalSite = hostname === "runwal-cp.lockated.com";
-
+  console.log("domain is runwal",isRunwalSite, hostname);
+  
   // Check URL for email and orgId parameters on component mount
   React.useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
