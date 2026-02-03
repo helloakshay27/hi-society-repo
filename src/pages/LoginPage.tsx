@@ -73,6 +73,8 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   const isWebSite = hostname.includes("web.gophygital.work");
   // Check if it's Hi-Society site
   const isHiSocietySite = hostname === "web.hisociety.lockated.com";
+  // Check if it's Runwal site
+  const isRunwalSite = hostname === "runwal-cp.lockated.com";
 
   // Check URL for email and orgId parameters on component mount
   React.useEffect(() => {
@@ -262,7 +264,9 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
     try {
       // Determine base URL based on hostname
       let baseUrl: string;
-      if (isHiSocietySite) {
+      if (isRunwalSite) {
+        baseUrl = 'runwal-cp.lockated.com';
+      } else if (isHiSocietySite) {
         baseUrl = 'hi-society.lockated.com';
       } else {
         // Use HI_SOCIETY_CONFIG for other environments
