@@ -154,10 +154,23 @@ const isFmSite =
   hostname.includes("fm.gophygital.work");
 
 const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "ui-hisociety.lockated.com";
+const isRunwalSite = hostname === "runwal-cp.lockated.com";
 
 export const getOrganizationsByEmail = async (
   email: string
 ): Promise<Organization[]> => {
+  if (isRunwalSite) {
+    const response = await fetch(
+      `https://runwal-cp.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch organizations");
+    }
+
+    const data = await response.json();
+    return data.organizations || [];
+  }
+
   if (isOmanSite || isFmSite) {
     const response = await fetch(
       `https://uat.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
@@ -514,10 +527,13 @@ export const getOrganizationsByEmailAndAutoSelect = async (
     hostname.includes("fm-uat.gophygital.work") ||
     hostname.includes("fm.gophygital.work");
   const isHiSocietySite = hostname === "web.hisociety.lockated.com" || hostname === "ui-hisociety.lockated.com";
+  const isRunwalSite = hostname === "runwal-cp.lockated.com";
 
   let apiUrl = "";
 
-  if (isOmanSite || isFmSite) {
+  if (isRunwalSite) {
+    apiUrl = `https://runwal-cp.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
+  } else if (isOmanSite || isFmSite) {
     apiUrl = `https://uat.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
   } else if (isHiSocietySite) {
     // Use production API for web.hisociety.lockated.com, UAT for ui-hisociety.lockated.com

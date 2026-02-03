@@ -68,6 +68,9 @@ baseClient.interceptors.request.use(
       const isHiSocietyUIHost = hostname === "ui-hisociety.lockated.com";
       const isHiSocietyUATHost = hostname === "uat-hi-society.lockated.com" || hostname === "localhost";
       const isHiSocietySite = isHiSocietyWebHost || isHiSocietyUIHost || isHiSocietyUATHost;
+      
+      // Runwal specific host
+      const isRunwalSite = hostname === "runwal-cp.lockated.com";
 
       // Map hi-society host -> backend/base API URL
       let hiSocietyApiBase = "https://hi-society.lockated.com";
@@ -78,7 +81,21 @@ baseClient.interceptors.request.use(
       // Build API URL based on site type and available parameters
       let apiUrl = "";
 
-      if (isHiSocietySite) {
+      if (isRunwalSite) {
+        // Runwal: prefer org_id, fallback to email
+        if (organizationId) {
+          apiUrl = `https://runwal-cp.lockated.com/api/users/get_organizations_by_email.json?org_id=${organizationId}`;
+          console.log("🔍 Runwal using organizationId:", organizationId);
+        } else if (orgId) {
+          apiUrl = `https://runwal-cp.lockated.com/api/users/get_organizations_by_email.json?org_id=${orgId}`;
+          console.log("🔍 Runwal using orgId:", orgId);
+        } else if (email) {
+          apiUrl = `https://runwal-cp.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
+          console.log("🔍 Runwal using email:", email);
+        } else {
+          throw new Error("Either org_id or email is required for Runwal site");
+        }
+      } else if (isHiSocietySite) {
         // Hi-Society: prefer org_id, fallback to email
         if (organizationId) {
           apiUrl = `${hiSocietyApiBase}/api/users/get_organizations_by_email.json?org_id=${organizationId}`;
@@ -197,7 +214,10 @@ baseClient.interceptors.request.use(
       }
 
       // Priority 4: Fallback URL
-      if (isHiSocietySite) {
+      if (isRunwalSite) {
+        config.baseURL = "https://runwal-cp.lockated.com/";
+        console.warn("⚠️ Using Runwal fallback URL:", config.baseURL);
+      } else if (isHiSocietySite) {
         config.baseURL = `${hiSocietyApiBase}/`;
         console.warn("⚠️ Using Hi-Society fallback URL:", config.baseURL);
       } else {
@@ -207,7 +227,11 @@ baseClient.interceptors.request.use(
     } catch (error) {
       console.error("❌ Error in request interceptor:", error);
       // Always set a fallback URL on error
-      if (typeof isHiSocietySite !== 'undefined' && isHiSocietySite) {
+      const hostname = window.location.hostname;
+      if (hostname === "runwal-cp.lockated.com") {
+        config.baseURL = "https://runwal-cp.lockated.com/";
+        console.warn("⚠️ Using Runwal fallback URL due to error:", config.baseURL);
+      } else if (typeof isHiSocietySite !== 'undefined' && isHiSocietySite) {
         config.baseURL = `${hiSocietyApiBase}/`;
         console.warn("⚠️ Using Hi-Society fallback URL due to error:", config.baseURL);
       } else {
