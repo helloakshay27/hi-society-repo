@@ -1112,9 +1112,12 @@ const FitoutRequestDetails: React.FC = () => {
       const response = await apiClient.get('/crm/admin/snag_checklists.json?q[check_type_eq]=Fitout');
       const checklistsData = response.data?.data || [];
       
-      // Use the first checklist if available
-      if (checklistsData.length > 0) {
-        const firstChecklist = checklistsData[0];
+      // Filter out inactive checklists (active === 0)
+      const activeChecklists = checklistsData.filter((checklist: any) => checklist.active === 1);
+      
+      // Use the first active checklist if available
+      if (activeChecklists.length > 0) {
+        const firstChecklist = activeChecklists[0];
         setSelectedChecklistId(firstChecklist.id);
         
         // Extract questions from the first checklist

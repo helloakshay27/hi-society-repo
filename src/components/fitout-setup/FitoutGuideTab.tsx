@@ -258,6 +258,8 @@ export const FitoutGuideTab: React.FC = () => {
         searchPlaceholder="Search fitout guides..."
         pagination={true}
         pageSize={10}
+        onExportError={(message) => toast.error(message)}
+        onExportSuccess={(message) => toast.success(message)}
         leftActions={
           <Button
             onClick={handleFileSelect}

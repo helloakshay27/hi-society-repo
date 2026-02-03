@@ -821,10 +821,14 @@ import { TextField } from "@mui/material";
 const exportToExcel = <T extends Record<string, any>>(
   data: T[],
   columns: ColumnConfig[],
-  fileName: string = "table-export"
+  fileName: string = "table-export",
+  onError?: (message: string) => void,
+  onSuccess?: (message: string) => void
 ) => {
   if (data.length === 0) {
-    alert("No data to export");
+    if (onError) {
+      onError("No data to export");
+    }
     return;
   }
 
@@ -928,6 +932,8 @@ interface EnhancedTableProps<T> {
   loadingMessage?: string;
   rowClassName?: (item: T) => string;
   isRowDisabled?: (item: T) => boolean;
+  onExportError?: (message: string) => void;
+  onExportSuccess?: (message: string) => void;
 }
 
 export function EnhancedTable<T extends Record<string, any>>({
@@ -980,6 +986,8 @@ export function EnhancedTable<T extends Record<string, any>>({
   loadingMessage = "Loading...",
   rowClassName,
   isRowDisabled,
+  onExportError,
+  onExportSuccess,
 }: EnhancedTableProps<T>) {
   const [internalSearchTerm, setInternalSearchTerm] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -1436,7 +1444,7 @@ export function EnhancedTable<T extends Record<string, any>>({
       handleExport(columnVisibility);
     } else {
       // Fallback to CSV export
-      exportToExcel(data, columns, exportFileName);
+      exportToExcel(data, columns, exportFileName, onExportError, onExportSuccess);
     }
   };
 

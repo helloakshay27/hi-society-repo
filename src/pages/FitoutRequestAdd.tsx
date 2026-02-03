@@ -376,8 +376,8 @@ const FitoutRequestAdd: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.site_id || !formData.unit_id || !formData.user_id || !formData.fitout_type) {
-      toast.error('Please fill in all required fields (Tower/Site, Flat, User, and Fitout Type)', {
+    if (!formData.site_id || !formData.unit_id || !formData.user_id || !formData.fitout_type || !formData.requested_date) {
+      toast.error('Please fill in all required fields (Tower/Site, Flat, User, Fitout Type, and Requested Date)', {
         position: 'top-right',
         duration: 3000,
         style: {
@@ -570,15 +570,19 @@ const FitoutRequestAdd: React.FC = () => {
               </FormControl>
 
               <TextField
-                label="Requested Date"
+                label={<>Requested Date<span className='text-red-600'> *</span> </>}
                 name="requested_date"
                 type="date"
                 value={formData.requested_date}
                 onChange={handleInputChange}
                 fullWidth
+                // required
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
+                inputProps={{
+                  min: new Date().toISOString().split('T')[0]
+                }}
               />
                 <TextField
               label="Description"
@@ -594,7 +598,7 @@ const FitoutRequestAdd: React.FC = () => {
             />
 
               <TextField
-                label="Expiry Date"
+                label="Cheque Expiry Date"
                 name="expiry_date"
                 type="date"
                 value={formData.expiry_date}
@@ -606,7 +610,7 @@ const FitoutRequestAdd: React.FC = () => {
               />
 
               <TextField
-                label="Refund Date"
+                label="Cheque Refund Date"
                 name="refund_date"
                 type="date"
                 value={formData.refund_date}

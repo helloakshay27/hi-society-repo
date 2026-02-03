@@ -724,15 +724,19 @@ const FitoutRequestEdit: React.FC = () => {
               </FormControl>
 
               <TextField
-                label="Requested Date"
+                label={<>Requested Date<span className='text-red-600'> *</span> </>}
                 name="requestedDate"
                 type="date"
                 value={formData.requestedDate}
                 onChange={handleInputChange}
                 fullWidth
+                // required
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
+                inputProps={{
+                  min: new Date().toISOString().split('T')[0]
+                }}
               />
 
                <TextField
@@ -749,7 +753,7 @@ const FitoutRequestEdit: React.FC = () => {
             />
 
               <TextField
-                label="Expiry Date"
+                label="Cheque Expiry Date"
                 name="expiryDate"
                 type="date"
                 value={formData.expiryDate}
@@ -761,7 +765,7 @@ const FitoutRequestEdit: React.FC = () => {
               />
 
               <TextField
-                label="Refund Date"
+                label="Cheque Refund Date"
                 name="refundDate"
                 type="date"
                 value={formData.refundDate}
