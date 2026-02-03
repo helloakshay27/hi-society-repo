@@ -84,13 +84,13 @@ baseClient.interceptors.request.use(
       if (isRunwalSite) {
         // Runwal: prefer org_id, fallback to email
         if (organizationId) {
-          apiUrl = `https://runwal-cp.lockated.com/api/users/get_organizations_by_email.json?org_id=${organizationId}`;
+          apiUrl = `https://runwal-cp-api.lockated.com/api/users/get_organizations_by_email.json?org_id=${organizationId}`;
           console.log("🔍 Runwal using organizationId:", organizationId);
         } else if (orgId) {
-          apiUrl = `https://runwal-cp.lockated.com/api/users/get_organizations_by_email.json?org_id=${orgId}`;
+          apiUrl = `https://runwal-cp-api.lockated.com/api/users/get_organizations_by_email.json?org_id=${orgId}`;
           console.log("🔍 Runwal using orgId:", orgId);
         } else if (email) {
-          apiUrl = `https://runwal-cp.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
+          apiUrl = `https://runwal-cp-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
           console.log("🔍 Runwal using email:", email);
         } else {
           throw new Error("Either org_id or email is required for Runwal site");
@@ -215,7 +215,7 @@ baseClient.interceptors.request.use(
 
       // Priority 4: Fallback URL
       if (isRunwalSite) {
-        config.baseURL = "https://runwal-cp.lockated.com/";
+        config.baseURL = "https://runwal-cp-api.lockated.com/";
         console.warn("⚠️ Using Runwal fallback URL:", config.baseURL);
       } else if (isHiSocietySite) {
         config.baseURL = `${hiSocietyApiBase}/`;
@@ -229,7 +229,7 @@ baseClient.interceptors.request.use(
       // Always set a fallback URL on error
       const hostname = window.location.hostname;
       if (hostname === "runwal-cp.lockated.com") {
-        config.baseURL = "https://runwal-cp.lockated.com/";
+        config.baseURL = "https://runwal-cp-api.lockated.com/";
         console.warn("⚠️ Using Runwal fallback URL due to error:", config.baseURL);
       } else if (typeof isHiSocietySite !== 'undefined' && isHiSocietySite) {
         config.baseURL = `${hiSocietyApiBase}/`;

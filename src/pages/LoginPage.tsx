@@ -266,7 +266,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       // Determine base URL based on hostname
       let baseUrl: string;
       if (isRunwalSite) {
-        baseUrl = 'runwal-cp.lockated.com';
+        baseUrl = 'runwal-cp-api.lockated.com';
       } else if (isHiSocietySite) {
         baseUrl = 'hi-society.lockated.com';
       } else {

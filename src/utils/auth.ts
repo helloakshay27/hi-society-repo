@@ -161,7 +161,7 @@ export const getOrganizationsByEmail = async (
 ): Promise<Organization[]> => {
   if (isRunwalSite) {
     const response = await fetch(
-      `https://runwal-cp.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+      `https://runwal-cp-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch organizations");
@@ -532,7 +532,7 @@ export const getOrganizationsByEmailAndAutoSelect = async (
   let apiUrl = "";
 
   if (isRunwalSite) {
-    apiUrl = `https://runwal-cp.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
+    apiUrl = `https://runwal-cp-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
   } else if (isOmanSite || isFmSite) {
     apiUrl = `https://uat.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
   } else if (isHiSocietySite) {
