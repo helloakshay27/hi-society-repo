@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Edit, Pencil, Plus } from "lucide-react";
@@ -42,7 +42,7 @@ interface PressReleasePermissions {
 }
 
 const PressReleasesList = () => {
-  const baseURL = API_CONFIG.BASE_URL;
+  // const baseURL = API_CONFIG.BASE_URL;
   const [pressReleases, setPressReleases] = useState<PressRelease[]>([]);
   const [loading, setLoading] = useState(false);
   const [permissions, setPermissions] = useState<PressReleasePermissions>({});
@@ -86,7 +86,7 @@ const PressReleasesList = () => {
   const fetchPressReleases = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${baseURL}/press_releases.json`, {
+      const response = await axios.get(getFullUrl('/press_releases.json'), {
         headers: {
           Authorization: getAuthHeader(),
           "Content-Type": "application/json",
@@ -127,7 +127,7 @@ const PressReleasesList = () => {
       setLoading(false);
       setIsSearching(false);
     }
-  }, [baseURL, currentPage, searchTerm]);
+  }, [currentPage, searchTerm]);
 
   useEffect(() => {
     fetchPressReleases();

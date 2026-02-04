@@ -1054,7 +1054,7 @@ export const setupMemberRoutes = (
     />
     <Route path="/bms/feedbacks" Component={withSuspense(BMSFeedbacks)} />
     <Route path="/bms/parking" Component={withSuspense(BMSParking)} />
-    <Route path="/bms/groups" Component={withSuspense(CRMGroupsPage)} />
+    <Route path="/bms/groups" Component={withSuspense(FMGroupDashboard)} />
     <Route
       path="/bms/quarantine-tracker"
       Component={withSuspense(BMSQuarantineTracker)}

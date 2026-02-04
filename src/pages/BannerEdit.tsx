@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { ArrowLeft, FileText, Info, Trash2 } from "lucide-react";
 import { ImageCropper } from "../components/reusable/ImageCropper";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
@@ -26,7 +26,6 @@ import {
 const BannerEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const baseURL = API_CONFIG.BASE_URL;
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState([]);
   const [errors, setErrors] = useState<{title?: string; project_id?: string}>({});
@@ -83,9 +82,9 @@ const BannerEdit = () => {
   const fetchBanner = useCallback(async () => {
     if (!id) return;
     try {
-      const response = await axios.get(`${baseURL}/banners/${id}.json`, {
+      const response = await axios.get(getFullUrl(`/banners/${id}.json`), {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          Authorization: getAuthHeader(),
         },
       });
       if (response.data) {
@@ -140,11 +139,11 @@ const BannerEdit = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, baseURL]);
+  }, [id]);
 
   const fetchProjects = useCallback(async () => {
     try {
-      const response = await axios.get(`${baseURL}/projects_for_dropdown.json`, {
+      const response = await axios.get(getFullUrl('/projects_for_dropdown.json'), {
         headers: {
                  Authorization: getAuthHeader(),
                },
@@ -153,12 +152,12 @@ const BannerEdit = () => {
     } catch (error) {
       toast.error("Failed to fetch projects");
     }
-  }, [baseURL]);
+  }, []);
 
   const fetchImageConfigurations = useCallback(async () => {
     try {
       const response = await axios.get(
-        `${baseURL}/system_constants.json?q[description_eq]=ImagesConfiguration`,
+        getFullUrl('/system_constants.json?q[description_eq]=ImagesConfiguration'),
         {
           headers: {
             Authorization: getAuthHeader(),
@@ -196,7 +195,7 @@ const BannerEdit = () => {
         BannerAttachment: ['1:1', '9:16', '16:9', '3:2'],
       });
     }
-  }, [baseURL]);
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -529,7 +528,7 @@ const BannerEdit = () => {
         }
       });
 
-      await axios.put(`${baseURL}/banners/${id}.json`, sendData, {
+      await axios.put(getFullUrl(`/banners/${id}.json`), sendData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           "Content-Type": "multipart/form-data",
@@ -572,7 +571,7 @@ const BannerEdit = () => {
     // Existing image: delete from server, then remove locally
     try {
       const response = await axios.delete(
-        `${baseURL}/banners/${id}/remove_image/${imageId}.json`,
+        getFullUrl(`/banners/${id}/remove_image/${imageId}.json`),
         {
           headers: {
             Authorization: getAuthHeader(),

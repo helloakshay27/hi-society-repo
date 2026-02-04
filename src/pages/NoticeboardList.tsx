@@ -5,10 +5,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Plus, Eye, Pencil } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
 const NoticeboardList = () => {
-  const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
   const [noticeboards, setNoticeboards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +66,7 @@ const NoticeboardList = () => {
       setLoading(true);
       setIsSearching(!!search);
       try {
-        const response = await fetch(`${baseURL}/crm/admin/noticeboards.json`, {
+        const response = await fetch(getFullUrl('/crm/admin/noticeboards.json'), {
           headers: {
             Authorization: getAuthHeader(),
           },
@@ -120,7 +119,7 @@ const NoticeboardList = () => {
         setIsSearching(false);
       }
     },
-    [baseURL]
+    []
   );
 
   useEffect(() => {
@@ -143,11 +142,11 @@ const NoticeboardList = () => {
     toast.dismiss();
     try {
       const response = await fetch(
-        `${baseURL}/crm/admin/noticeboards/${id}.json`,
+        getFullUrl(`/crm/admin/noticeboards/${id}.json`),
         {
           method: "PUT",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            Authorization: getAuthHeader(),
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ noticeboard: { active: !currentStatus } }),

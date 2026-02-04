@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { ChevronRight, ArrowLeft, FileText, Info, Trash2 } from "lucide-react";
 import {
   Table,
@@ -23,7 +23,6 @@ import {
 import { DeleteForeverRounded } from "@mui/icons-material";
 
 const BannerAdd = () => {
-  const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
 
   const [projects, setProjects] = useState([]);
@@ -52,7 +51,7 @@ const BannerAdd = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get(`${baseURL}/projects_for_dropdown.json`, {
+        const response = await axios.get(getFullUrl('/projects_for_dropdown.json'), {
           headers: {
                    Authorization: getAuthHeader(),
                  },
@@ -68,7 +67,7 @@ const BannerAdd = () => {
     const fetchImageConfigurations = async () => {
       try {
         const response = await axios.get(
-          `${baseURL}/system_constants.json?q[description_eq]=ImagesConfiguration`,
+          getFullUrl('/system_constants.json?q[description_eq]=ImagesConfiguration'),
           {
             headers: {
               Authorization: getAuthHeader(),
@@ -312,7 +311,7 @@ const BannerAdd = () => {
 
       console.log("data to be sent:", Array.from(sendData.entries()));
 
-      await axios.post(`${baseURL}/banners.json`, sendData, {
+      await axios.post(getFullUrl('/banners.json'), sendData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           "Content-Type": "multipart/form-data",

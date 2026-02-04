@@ -10,7 +10,7 @@ import { ImageCropper } from "../components/reusable/ImageCropper";
 import { ImageUploadingButton } from "../components/reusable/ImageUploadingButton";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
-import { API_CONFIG, getFullUrl, getAuthHeader } from "../config/apiConfig";
+import { getFullUrl, getAuthHeader } from "../config/apiConfig";
 import {
   TextField,
   FormControl,

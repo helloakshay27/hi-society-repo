@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Plus, Edit, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { API_CONFIG } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
@@ -20,7 +20,6 @@ interface Faq {
 }
 
 const FaqList = () => {
-  const baseURL = API_CONFIG.BASE_URL;
   const [faqs, setFaqs] = useState<Faq[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,10 +46,10 @@ const FaqList = () => {
         params["s[question_cont]"] = searchParam;
       }
 
-      const response = await axios.get(`${baseURL}/faqs.json`, {
+      const response = await axios.get(getFullUrl('/faqs.json'), {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          Authorization: getAuthHeader(),
         },
         params,
       });
@@ -87,7 +86,7 @@ const FaqList = () => {
       setLoading(false);
       setIsSearching(false);
     }
-  }, [baseURL, location.search, searchTerm, currentPage]);
+  }, [location.search, searchTerm, currentPage]);
 
   useEffect(() => {
     fetchFaqs();
@@ -117,7 +116,7 @@ const FaqList = () => {
     
     try {
       await axios.put(
-        `${baseURL}/faqs/${id}.json`,
+        getFullUrl(`/faqs/${id}.json`),
         { 
           faq: {
             active: !currentStatus 
@@ -126,7 +125,7 @@ const FaqList = () => {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            Authorization: getAuthHeader(),
           },
         }
       );

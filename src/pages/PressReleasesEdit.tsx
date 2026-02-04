@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { ChevronRight, ArrowLeft, FileText, Info } from "lucide-react";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
@@ -17,7 +17,6 @@ import {
 import { DeleteForeverRounded } from "@mui/icons-material";
 
 const PressReleasesEdit = () => {
-  const baseURL = API_CONFIG.BASE_URL;
   const [loading, setLoading] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
@@ -65,7 +64,7 @@ const PressReleasesEdit = () => {
         setLoading(true);
         try {
           const response = await axios.get(
-            `${baseURL}/press_releases/${id}.json`,
+          getFullUrl(`/press_releases/${id}.json`),
             {
               headers: {
                 Authorization: getAuthHeader(),
@@ -109,7 +108,7 @@ const PressReleasesEdit = () => {
 
       fetchPressRelease();
     }
-  }, [id, baseURL]);
+  }, [id]);
 
   const formatDateForInput = (dateString) => {
     const date = new Date(dateString);
@@ -319,7 +318,7 @@ const PressReleasesEdit = () => {
         }
       });
 
-      await axios.put(`${baseURL}/press_releases/${id}.json`, sendData, {
+      await axios.put(getFullUrl(`/press_releases/${id}.json`), sendData, {
         headers: {
           Authorization: getAuthHeader(),
           "Content-Type": "multipart/form-data",
