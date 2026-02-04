@@ -24,7 +24,7 @@ interface AccountingData {
   paidOn: string;
 }
 
-export const AccountingDashboard = () => {
+const AccountingDashboard = () => {
   const navigate = useNavigate();
   
   // State management
@@ -558,3 +558,5 @@ export const AccountingDashboard = () => {
     </div>
   );
 };
+
+export default AccountingDashboard;

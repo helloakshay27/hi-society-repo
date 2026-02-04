@@ -18,10 +18,22 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   {
-    id: "bms",
-    label: "BMS",
+    id: "home",
+    label: "Home",
     icon: <Home className="w-4 h-4" />,
     path: "/maintenance/project-details-list",
+  },
+  {
+    id: "bms",
+    label: "BMS",
+    icon: <SettingsIcon className="w-4 h-4" />,
+    path: "/bms/helpdesk",
+  },
+  {
+    id: "loyalty",
+    label: "Loyalty",
+    icon: <Gift className="w-4 h-4" />,
+    path: "/loyalty/dashboard",
   },
   {
     id: "cms",
@@ -89,7 +101,7 @@ export const HiSocietyNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isSidebarCollapsed } = useLayout();
-  const [activeNav, setActiveNav] = useState<string>("bms");
+  const [activeNav, setActiveNav] = useState<string>("home");
 
   // Check if current domain is CMS domain
   const isCMSDomain = window.location.hostname === "ui-cms.lockated.com";
@@ -101,13 +113,13 @@ export const HiSocietyNavigation: React.FC = () => {
   // Filter navigation items based on domain
   const filteredNavigationItems = isCMSDomain
     ? navigationItems.filter(
-      (item) => item.id === "bms" || item.id === "settings"
+      (item) => item.id === "home" || item.id === "settings"
     )
     : isFitoutDomain
       ? navigationItems.filter(
         (item) => item.id === "fitout" || item.id === "settings"
       )
-      : navigationItems; // Show all navigation items including BMS
+      : navigationItems; // Show all navigation items including Home, BMS, and Loyalty
 
   // Detect active navigation based on current path
   useEffect(() => {
@@ -132,17 +144,21 @@ export const HiSocietyNavigation: React.FC = () => {
       setActiveNav("Appointmentz");
     } else if (path.startsWith("/settings")) {
       setActiveNav("settings");
+    } else if (path.startsWith("/loyalty")) {
+      setActiveNav("loyalty");
     } else if (
       path.startsWith("/bms") ||
+      path.startsWith("/communication")
+    ) {
+      setActiveNav("bms");
+    } else if (
       path.startsWith("/maintenance") ||
-      path.startsWith("/communication") ||
-      path.startsWith("/loyalty") ||
       path.startsWith("/setup-member") ||
       path.startsWith("/setup")
     ) {
-      setActiveNav(isCMSDomain ? "bms" : "bms");
+      setActiveNav("home");
     } else {
-      setActiveNav(isCMSDomain ? "bms" : "bms");
+      setActiveNav("home");
     }
   }, [location.pathname, isCMSDomain]);
 

@@ -22,16 +22,7 @@ import { SetupHeader } from "./SetupHeader";
 import { SetupSidebar } from "./SetupSidebar";
 import { HiSocietyHeader } from "./HiSocietyHeader";
 import { HiSocietyNavigation } from "./HiSocietyNavigation";
-import { BMSSidebar } from "./BMSSidebar";
-import { CMSSidebar } from "./CMSSidebar";
-import { CampaignsSidebar } from "./CampaignsSidebar";
-import { FBSidebar } from "./FBSidebar";
-import { OSRSidebar } from "./OSRSidebar";
-import { FitoutSidebar } from "./FitoutSidebar";
-import { AccountingSidebar } from "./AccountingSidebar";
-import { SmartSecureSidebar } from "./SmartSecureSidebar";
-import { IncidentsSidebar } from "./IncidentsSidebar";
-import { SettingsSidebar } from "./SettingsSidebar";
+import { HiSocietySidebar } from "./HiSocietySidebar";
 import { PrimeSupportSidebar } from "./PrimeSupportSidebar";
 import { PrimeSupportDynamicHeader } from "./PrimeSupportDynamicHeader";
 import { EmployeeSidebar } from "./EmployeeSidebar";
@@ -47,7 +38,6 @@ import { ZycusDynamicHeader } from "./ZycusDynamicHeader";
 import { ActionSidebar } from "./ActionSidebar";
 import { ActionHeader } from "./ActionHeader";
 import { useActionLayout } from "../contexts/ActionLayoutContext";
-import { AppointmentzSidebar } from "./AppointmentzSidebar";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -176,115 +166,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Render sidebar component based on configuration
   const renderSidebar = () => {
-    // If Hi-Society mode is active, show Hi-Society sidebars
+    // If Hi-Society mode is active, use the unified HiSocietySidebar
     if (layoutMode === 'hi-society') {
-      const path = location.pathname;
-
-      // CMS routes use CMSSidebar
-      if (path.startsWith('/cms')) {
-        return <CMSSidebar />;
-      }
-
-      // Campaigns routes use CampaignsSidebar
-      if (path.startsWith('/campaigns')) {
-        return <CampaignsSidebar />;
-      }
-
-      // F & B routes use FBSidebar
-      if (path.startsWith('/fb')) {
-        return <FBSidebar />;
-      }
-
-      // OSR routes use OSRSidebar
-      if (path.startsWith('/osr')) {
-        return <OSRSidebar />;
-      }
-
-      // Fitout routes use FitoutSidebar
-      if (path.startsWith('/fitout')) {
-        return <FitoutSidebar />;
-      }
-
-      // Accounting routes use AccountingSidebar
-      if (path.startsWith('/accounting')) {
-        return <AccountingSidebar />;
-      }
-
-      // SmartSecure routes use SmartSecureSidebar
-      if (path.startsWith('/smartsecure')) {
-        return <SmartSecureSidebar />;
-      }
-
-      // Incidents routes use IncidentsSidebar
-      if (path.startsWith('/incidents')) {
-        return <IncidentsSidebar />;
-      }
-
-      // Settings routes use SettingsSidebar
-      if (path.startsWith('/settings')) {
-        return <SettingsSidebar />;
-      }
-
-      // All other routes use BMSSidebar for Hi-Society
-      return <BMSSidebar />;
+      return <HiSocietySidebar />;
     }
 
     // FM Matrix mode (default) - original logic
-    // Check for Appointmentz routes first
-    if (location.pathname.startsWith('/appointmentz')) {
-      return <AppointmentzSidebar />;
-    }
-
     // Check if user is employee (pms_occupant) - Employee layout takes priority
     // Use specific sidebars for different sections
     if (isEmployeeUser) {
-      const path = location.pathname;
-
-      // CMS routes use CMSSidebar
-      if (path.startsWith('/cms')) {
-        return <CMSSidebar />;
-      }
-
-      // Campaigns routes use CampaignsSidebar
-      if (path.startsWith('/campaigns')) {
-        return <CampaignsSidebar />;
-      }
-
-      // F & B routes use FBSidebar
-      if (path.startsWith('/fb')) {
-        return <FBSidebar />;
-      }
-
-      // OSR routes use OSRSidebar
-      if (path.startsWith('/osr')) {
-        return <OSRSidebar />;
-      }
-
-      // Fitout routes use FitoutSidebar
-      if (path.startsWith('/fitout')) {
-        return <FitoutSidebar />;
-      }
-
-      // Accounting routes use AccountingSidebar
-      if (path.startsWith('/accounting')) {
-        return <AccountingSidebar />;
-      }
-
-      // SmartSecure routes use SmartSecureSidebar
-      if (path.startsWith('/smartsecure')) {
-        return <SmartSecureSidebar />;
-      }
-
-      // Incidents routes use IncidentsSidebar
-      if (path.startsWith('/incidents')) {
-        return <IncidentsSidebar />;
-      }
-
-      // Settings routes use SettingsSidebar
-      if (path.startsWith('/settings')) {
-        return <SettingsSidebar />;
-      }
-
       // For localhost, check module-based logic
       if (isLocalhost && currentSection === "Project Task") {
         // Use EmployeeSidebar for specific companies, otherwise EmployeeSidebarStatic
@@ -304,8 +194,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         return null;
       }
 
-      // All other routes use BMSSidebar
-      return <BMSSidebar />;
+      // All other routes use HiSocietySidebar for employee users
+      return <HiSocietySidebar />;
     }
 
     // Check for token-based VI access first
