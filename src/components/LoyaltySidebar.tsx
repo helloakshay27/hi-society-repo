@@ -17,6 +17,7 @@ import {
   Package,
   Tag,
   Calendar,
+  Eye,
 } from "lucide-react";
 
 interface MenuItem {
@@ -61,6 +62,12 @@ export const LoyaltySidebar: React.FC = () => {
       label: "Aggregator Inventory",
       icon: Package,
       path: "/loyalty/aggregator-inventory-section",
+    },
+    {
+      id: "redemption-report",
+      label: "Redemption Report",
+      icon: Eye,
+      path: "/loyalty/redemption-report",
     },
     {
       id: "loyalty-tiers",
