@@ -963,6 +963,7 @@ import VisitorSharingFormWeb from "./components/VisitorSharingFormWeb";
 import { ActionLayoutProvider } from "./contexts/ActionLayoutContext";
 import EventUserDetailsPage from "./pages/EventUserDetailsPage";
 import { OnlyOfficePublicEditorPage } from "./pages/OnlyOfficePublicEditorPage";
+import PollsPageList from "./pages/communication/PollsPageList";
 // import RouteLogger from "./components/RouteLogger";
 
 const queryClient = new QueryClient();
@@ -1783,6 +1784,12 @@ function App() {
                       path="/communication/polls/add"
                       element={<AddPollPage />}
                     />
+
+                    {/* <Route
+                      path="/communication/polls"
+                      element={<PollsPageList />}
+                    /> */}
+
                     <Route
                       path="/communication/notifications"
                       element={<NotificationsPage />}
