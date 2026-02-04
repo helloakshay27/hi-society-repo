@@ -532,16 +532,16 @@ export const setupMemberRoutes = (
 
     {/* Event Routes */}
     <Route
-      path="/maintenance/event-create"
+      path="/loyalty/event-create"
       Component={withSuspense(EventCreate)}
     />
-    {/* <Route path="/maintenance/event-details/:id" element={<EventDetails />} /> */}
-    <Route path="/maintenance/event-details/:id" element={<EventDetails />} />
+    {/* <Route path="/loyalty/event-details/:id" element={<EventDetails />} /> */}
+    <Route path="/loyalty/event-details/:id" element={<EventDetails />} />
     <Route
-      path="/maintenance/event-edit/:id"
+      path="/loyalty/event-edit/:id"
       Component={withSuspense(EventEdit)}
     />
-    <Route path="/maintenance/event-list" Component={withSuspense(EventList)} />
+    <Route path="/loyalty/events" Component={withSuspense(EventList)} />
 
     <Route
       path="/maintenance/offers-list"
@@ -1342,9 +1342,10 @@ export const setupMemberRoutes = (
 
     {/* Offers Routes */}
     <Route path="/offers/add" Component={withSuspense(AddOffersPage)} />
-    <Route path="/offer/add" Component={withSuspense(AddOfferPage)} />
-    <Route path="/offer/add/:id" Component={withSuspense(AddOfferPage)} />
-    <Route path="/offer/view/:id" Component={withSuspense(OfferViewPage)} />
+    <Route path="/loyalty/offers" Component={withSuspense(OffersList)} />
+    <Route path="/loyalty/offer-create" Component={withSuspense(AddOfferPage)} />
+    <Route path="/loyalty/offer-edit/:id" Component={withSuspense(AddOfferPage)} />
+    <Route path="/loyalty/offer-view/:id" Component={withSuspense(OfferViewPage)} />
     <Route
       path="/business-directory/add"
       Component={withSuspense(AddBusinessDirectoryPage)}

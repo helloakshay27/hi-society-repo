@@ -239,7 +239,7 @@ const WalletManagement: React.FC = () => {
             /> */}
             <StatsCard
               title="Total Recharges"
-              value={cardsData.credited_amount}
+              value={cardsData?.credited_amount || "0.00"}
               icon={
                 <svg
                   className="w-6 h-6 text-[#C72030]"
@@ -261,7 +261,7 @@ const WalletManagement: React.FC = () => {
             />
             <StatsCard
               title="Total Redeemed"
-              value={cardsData.debited_amount}
+              value={cardsData?.debited_amount || "0.00"}
               icon={
                 <svg
                   className="w-6 h-6 text-[#C72030]"
@@ -283,7 +283,7 @@ const WalletManagement: React.FC = () => {
             />
             <StatsCard
               title="Available Balance"
-              value={cardsData.available_amount}
+              value={cardsData?.available_amount || "0.00"}
               icon={
                 <svg
                   className="w-6 h-6 text-[#C72030]"

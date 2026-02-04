@@ -175,11 +175,11 @@ const Eventlist = () => {
     }
   };
 
-  const handleAddEvent = () => navigate("/maintenance/event-create");
+  const handleAddEvent = () => navigate("/loyalty/event-create");
   const handleEditEvent = (id: number) =>
-    navigate(`/maintenance/event-edit/${id}`);
+    navigate(`/loyalty/event-edit/${id}`);
   const handleViewEvent = (id: number) =>
-    navigate(`/maintenance/event-details/${id}`);
+    navigate(`/loyalty/event-details/${id}`);
   const handleClearSelection = () => {
     setShowActionPanel(false);
   };
@@ -381,7 +381,7 @@ const Eventlist = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-3 gap-4 mb-6">
         {[
           {
-            label: "Total Invited CPs",
+            label: "Total Invited CP",
             value: eventStats.totalInvitedCPs,
             icon: Users,
             type: "total",

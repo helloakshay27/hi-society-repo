@@ -15,6 +15,8 @@ import {
   BarChart3,
   TrendingUp,
   Package,
+  Tag,
+  Calendar,
 } from "lucide-react";
 
 interface MenuItem {
@@ -104,6 +106,24 @@ export const LoyaltySidebar: React.FC = () => {
     },
   ];
 
+  const eventMenuItems: MenuItem[] = [
+    {
+      id: "events",
+      label: "Events",
+      icon: Calendar,
+      path: "/loyalty/events",
+    },
+  ];
+
+  const offersMenuItems: MenuItem[] = [
+    {
+      id: "offers",
+      label: "Offers",
+      icon: Tag,
+      path: "/loyalty/offers",
+    },
+  ];
+
   const isActive = (path: string) => {
     if (location.pathname === path) return true;
     return location.pathname.startsWith(path + "/");
@@ -118,9 +138,9 @@ export const LoyaltySidebar: React.FC = () => {
       className={`${
         isSidebarCollapsed ? "w-16" : "w-64"
       } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
-      style={{ top: "4rem", height: "100%" }}
+      style={{ top: "4rem", height: "calc(100vh - 4rem)" }}
     >
-      <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>
+      <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"} pb-8`}>
         {/* Collapse Button */}
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -138,7 +158,7 @@ export const LoyaltySidebar: React.FC = () => {
         {/* Spacer */}
         <div className="w-full h-4 bg-[#f6f4ee] border-[#e5e1d8] mb-2 mt-4" />
 
-        {/* Header */}
+        {/* Loyalty Header */}
         <div className={`mb-4 ${isSidebarCollapsed ? "text-center" : ""}`}>
           <h3
             className={`text-sm font-medium text-[#1a1a1a] opacity-70 uppercase ${
@@ -149,9 +169,97 @@ export const LoyaltySidebar: React.FC = () => {
           </h3>
         </div>
 
-        {/* Menu */}
-        <nav className="space-y-2">
+        {/* Loyalty Menu */}
+        <nav className="space-y-2 mb-6">
           {loyaltyMenuItems.map((item) => {
+            const active = isActive(item.path);
+            const Icon = item.icon;
+
+            return (
+              <div key={item.id}>
+                <button
+                  onClick={() => handleNavigation(item.path)}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+                  title={item.label}
+                >
+                  {/* Active Indicator */}
+                  {active && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                  )}
+
+                  {/* Icon */}
+                  <Icon
+                    className={`w-5 h-5 flex-shrink-0 text-[#1a1a1a]`}
+                  />
+
+                  {/* Label */}
+                  {!isSidebarCollapsed && (
+                    <span className="truncate">{item.label}</span>
+                  )}
+                </button>
+              </div>
+            );
+          })}
+        </nav>
+
+        {/* Events Header */}
+        <div className={`mb-4 ${isSidebarCollapsed ? "text-center" : ""}`}>
+          <h3
+            className={`text-sm font-medium text-[#1a1a1a] opacity-70 uppercase ${
+              isSidebarCollapsed ? "" : "tracking-wide"
+            }`}
+          >
+            {isSidebarCollapsed ? "" : "EVENTS"}
+          </h3>
+        </div>
+
+        {/* Events Menu */}
+        <nav className="space-y-2 mb-6">
+          {eventMenuItems.map((item) => {
+            const active = isActive(item.path);
+            const Icon = item.icon;
+
+            return (
+              <div key={item.id}>
+                <button
+                  onClick={() => handleNavigation(item.path)}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+                  title={item.label}
+                >
+                  {/* Active Indicator */}
+                  {active && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                  )}
+
+                  {/* Icon */}
+                  <Icon
+                    className={`w-5 h-5 flex-shrink-0 text-[#1a1a1a]`}
+                  />
+
+                  {/* Label */}
+                  {!isSidebarCollapsed && (
+                    <span className="truncate">{item.label}</span>
+                  )}
+                </button>
+              </div>
+            );
+          })}
+        </nav>
+
+        {/* Offers Header */}
+        <div className={`mb-4 ${isSidebarCollapsed ? "text-center" : ""}`}>
+          <h3
+            className={`text-sm font-medium text-[#1a1a1a] opacity-70 uppercase ${
+              isSidebarCollapsed ? "" : "tracking-wide"
+            }`}
+          >
+            {isSidebarCollapsed ? "" : "OFFERS"}
+          </h3>
+        </div>
+
+        {/* Offers Menu */}
+        <nav className="space-y-2">
+          {offersMenuItems.map((item) => {
             const active = isActive(item.path);
             const Icon = item.icon;
 

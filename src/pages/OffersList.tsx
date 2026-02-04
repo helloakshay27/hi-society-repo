@@ -344,7 +344,7 @@ export default function OffersList() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/offer/view/${item.id}`)}
+              onClick={() => navigate(`/loyalty/offer-view/${item.id}`)}
               title="View"
             >
               <Eye className="w-4 h-4 text-gray-700" />
@@ -352,7 +352,7 @@ export default function OffersList() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/offer/add/${item.id}`)}
+              onClick={() => navigate(`/loyalty/offer-edit/${item.id}`)}
               title="Edit"
             >
               <Pencil className="w-4 h-4 text-gray-700" />
@@ -370,20 +370,20 @@ export default function OffersList() {
     if (checkDraftExists()) {
       setShowDraftModal(true);
     } else {
-      navigate('/offer/add');
+      navigate('/loyalty/offer-create');
     }
   };
 
   const handleContinueDraft = () => {
     setShowDraftModal(false);
-    navigate('/offer/add');
+    navigate('/loyalty/offer-create');
     // The AddOfferPage will handle loading the draft
   };
 
   const handleStartFresh = () => {
     clearDraft();
     setShowDraftModal(false);
-    navigate('/offer/add');
+    navigate('/loyalty/offer-create');
     toast.info('Starting fresh! Previous draft has been cleared.', {
       duration: 3000,
     });
