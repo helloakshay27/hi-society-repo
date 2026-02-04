@@ -89,6 +89,23 @@ export const HiSocietySidebar: React.FC = () => {
   // Determine active section based on route
   const getActiveSection = (): string => {
     const path = location.pathname;
+    
+    // Check for Application Setup paths first - these should stay in settings
+    if (
+      path.startsWith("/campaigns/referral-setup") ||
+      path.startsWith("/fitout/setup") ||
+      path.startsWith("/accounting/tax-setup") ||
+      path.startsWith("/accounting/payment-terms") ||
+      path.startsWith("/accounting/vendors") ||
+      path.startsWith("/smartsecure/visitor-purpose") ||
+      path.startsWith("/smartsecure/vehicle-type") ||
+      path.startsWith("/smartsecure/material-type") ||
+      path.startsWith("/incidents/setup") ||
+      path.startsWith("/osr/setup")
+    ) {
+      return "settings";
+    }
+    
     if (path.startsWith("/cms")) return "cms";
     if (path.startsWith("/campaigns")) return "campaigns";
     if (path.startsWith("/fb")) return "fb";

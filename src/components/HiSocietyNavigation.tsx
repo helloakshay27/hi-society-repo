@@ -124,7 +124,22 @@ export const HiSocietyNavigation: React.FC = () => {
   // Detect active navigation based on current path
   useEffect(() => {
     const path = location.pathname;
-    if (path.startsWith("/cms")) {
+    
+    // Check for Application Setup paths first - these should stay in settings
+    if (
+      path.startsWith("/campaigns/referral-setup") ||
+      path.startsWith("/fitout/setup") ||
+      path.startsWith("/accounting/tax-setup") ||
+      path.startsWith("/accounting/payment-terms") ||
+      path.startsWith("/accounting/vendors") ||
+      path.startsWith("/smartsecure/visitor-purpose") ||
+      path.startsWith("/smartsecure/vehicle-type") ||
+      path.startsWith("/smartsecure/material-type") ||
+      path.startsWith("/incidents/setup") ||
+      path.startsWith("/osr/setup")
+    ) {
+      setActiveNav("settings");
+    } else if (path.startsWith("/cms")) {
       setActiveNav("cms");
     } else if (path.startsWith("/campaigns")) {
       setActiveNav("campaigns");
