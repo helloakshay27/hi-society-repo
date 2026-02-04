@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { TextField, InputAdornment } from "@mui/material";
-import axios from 'axios';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
@@ -23,8 +22,6 @@ interface PollOption {
 
 const AddPollPage = () => {
   const navigate = useNavigate();
-   const baseUrl = localStorage.getItem('baseUrl')
-  const token = localStorage.getItem('token')
   
   const [searchTerm, setSearchTerm] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -67,11 +64,7 @@ const AddPollPage = () => {
     );
   };
 
-  const combineDateTime = (date: string, time: string) => {
-  if (!date || !time) return "";
-  return `${date} ${time}:00`;
-};
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation
@@ -93,63 +86,12 @@ const AddPollPage = () => {
 
     // Submit poll
     console.log('Poll Data:', { ...formData, options: filledOptions });
-    // toast.success('Poll created successfully!');
+    toast.success('Poll created successfully!');
     
-
-
-    const payload = {
-    subject: formData.subject,
-    user_id: 12437, // 🔹 replace with logged-in user id
-    start: combineDateTime(formData.startDate, formData.startTime),
-    end: combineDateTime(formData.endDate, formData.endTime),
-    active: true,
-    multiple: 0,
-    publish: 1,
-    vote_limit: "One",
-    shared:
-      formData.shareWith === "all"
-        ? "All"
-        : formData.shareWith === "individual"
-        ? "Individual"
-        : "Group",
-
-    // 🔹 send only when Individual selected
-    // user_ids:
-    //   formData.shareWith === "individual"
-    //     ? [3792, 3810, 3825] // dummy user ids
-    //     : [],
-
-    options: filledOptions.map(opt => ({
-      name: opt.value
-    }))
-  };
-
-  console.log("POST PAYLOAD:", payload);
-
-  /* ================= API CALL ================= */
-
-  try {
-    const res = await axios.post(
-      `https://${baseUrl}/crm/admin/polls.json?token=${token}`,
-      payload,
-      
-    );
-
-    console.log("API RESPONSE:", res.data);
-    toast.success("Poll created successfully!");
-
-    setTimeout(() => {
-      navigate("/communication/polls");
-    }, 1000);
-
-  } catch (error: any) {
-    console.error("Poll create error:", error);
-    toast.error("Failed to create poll");
-  }
     // Navigate back to polls page
-    // setTimeout(() => {
-    //   navigate('/communication/polls');
-    // }, 1000);
+    setTimeout(() => {
+      navigate('/communication/polls');
+    }, 1000);
   };
 
   return (
@@ -266,7 +208,7 @@ const AddPollPage = () => {
           </div>
 
           {/* Flat select and description */}
-          {/* <div className="md:col-span-1">
+          <div className="md:col-span-1">
             <Select value={formData.flat} onValueChange={(value) => setFormData({ ...formData, flat: value })}
               onOpenChange={(open) => setShowSearch(open)}
             >
@@ -300,10 +242,10 @@ const AddPollPage = () => {
                 </div>
               </SelectContent>
             </Select>
-          </div> */}
+          </div>
 
           <div className="md:col-span-3 flex items-center">
-            {/* <span className="text-sm text-gray-600">User can participate in the poll from a Flat.</span> */}
+            <span className="text-sm text-gray-600">User can participate in the poll from a Flat.</span>
           </div>
 
           {/* Poll Options */}
