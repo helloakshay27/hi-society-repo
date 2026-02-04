@@ -159,7 +159,7 @@ const FitoutRequestDetailsPageMobile: React.FC = () => {
             ...(category.documents || []).map((doc: any) => ({
                 id: doc.id,
                 title: doc.title || category.category_name || "Document",
-                thumbnail: doc.thumbnail || "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?w=400&h=300&fit=crop&crop=center",
+                thumbnail: doc.document_url,
             })),
         ],
         []
