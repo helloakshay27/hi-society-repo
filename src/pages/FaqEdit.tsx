@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { ArrowLeft, FileText } from "lucide-react";
 import {
   Table,
@@ -22,7 +22,6 @@ import {
 
 
 const FaqEdit = () => {
-  const baseURL = API_CONFIG.BASE_URL;
 
   const [formData, setFormData] = useState({
     faq_category_id: "",
@@ -77,7 +76,7 @@ const FaqEdit = () => {
     const fetchCategories = async () => {
       try {
         setCategoriesLoading(true);
-        const res = await axios.get(`${baseURL}/faq_categories.json`, {
+        const res = await axios.get(getFullUrl('/faq_categories.json'), {
            headers: {
                     'Authorization': getAuthHeader(),
                     'Content-Type': 'application/json',
@@ -99,14 +98,14 @@ const FaqEdit = () => {
       }
     };
     fetchCategories();
-  }, [baseURL]);
+  }, []);
 
   useEffect(() => {
     if (formData.faq_category_id) {
       const fetchSubCategories = async () => {
         try {
           setSubCategoriesLoading(true);
-          const res = await axios.get(`${baseURL}/faq_sub_categories.json`, {
+          const res = await axios.get(getFullUrl('/faq_sub_categories.json'), {
              headers: {
                       'Authorization': getAuthHeader(),
                       'Content-Type': 'application/json',
@@ -139,14 +138,14 @@ const FaqEdit = () => {
     } else {
       setSubCategories([]);
     }
-  }, [formData.faq_category_id, baseURL]);
+  }, [formData.faq_category_id]);
 
   // Fetch sites
   useEffect(() => {
     const fetchSites = async () => {
       try {
         setSitesLoading(true);
-        const res = await axios.get(`${baseURL}/sites.json`, {
+        const res = await axios.get(getFullUrl('/sites.json'), {
            headers: {
                     'Authorization': getAuthHeader(),
                     'Content-Type': 'application/json',
@@ -168,7 +167,7 @@ const FaqEdit = () => {
       }
     };
     fetchSites();
-  }, [baseURL]);
+  }, []);
 
   // Fetch existing FAQ data
   // useEffect(() => {
@@ -219,7 +218,7 @@ const FaqEdit = () => {
     const fetchFaqData = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${baseURL}/faqs/${faqId}.json`, {
+        const res = await axios.get(getFullUrl(`/faqs/${faqId}.json`), {
           headers: {
             'Authorization': getAuthHeader(),
             'Content-Type': 'application/json',
@@ -259,10 +258,10 @@ const FaqEdit = () => {
       } finally {
         setLoading(false);
       }
-    };
+    }
     fetchFaqData();
   }
-}, [faqId, hasFetched, baseURL]);
+}, [faqId, hasFetched]);
 
   const handleCategoryChange = (value) => {
     setFormData((prev) => ({
@@ -290,10 +289,10 @@ const FaqEdit = () => {
       return;
     }
 
-     if (
-        (baseURL === "https://dev-panchshil-super-app.lockated.com/" ||
-          baseURL === "https://kalpataru.lockated.com/" ||
-          baseURL === "https://rustomjee-live.lockated.com/")
+      if (
+        (getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" ||
+          getFullUrl('') === "https://kalpataru.lockated.com" ||
+          getFullUrl('') === "https://rustomjee-live.lockated.com")
       ) {
         if (!formData.faq_category_id) {
           toast.error("FAQ Category is required");
@@ -413,7 +412,7 @@ const FaqEdit = () => {
   // }
 
   if (
-  (baseURL === "https://dev-panchshil-super-app.lockated.com/" || baseURL === "https://rustomjee-live.lockated.com/") &&
+  (getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" || getFullUrl('') === "https://rustomjee-live.lockated.com") &&
   !formData.faq_category_id
 ) {
   toast.error("FAQ Category is required");
@@ -450,7 +449,7 @@ const FaqEdit = () => {
       },
     };
 
-    await axios.put(`${baseURL}/faqs/${faqId}.json`, payload, {
+    await axios.put(getFullUrl(`/faqs/${faqId}.json`), payload, {
       headers: {
         'Authorization': getAuthHeader(),
         'Content-Type': 'application/json',
@@ -508,8 +507,8 @@ const FaqEdit = () => {
                 <FormControl
                   fullWidth
                   variant="outlined"
-                  required={baseURL === "https://dev-panchshil-super-app.lockated.com/" || 
-                    baseURL === "https://rustomjee-live.lockated.com/"}
+                  required={getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" || 
+                    getFullUrl('') === "https://rustomjee-live.lockated.com"}
                   sx={{ '& .MuiInputBase-root': fieldStyles }}
                 >
                   <InputLabel shrink>FAQ Category</InputLabel>

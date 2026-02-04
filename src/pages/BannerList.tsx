@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { API_CONFIG } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,6 @@ interface BannerPermissions {
 }
 
 const BannerList = () => {
-  const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,9 +96,9 @@ const BannerList = () => {
       setLoading(true);
       setIsSearching(!!search);
       try {
-        const response = await axios.get(`${baseURL}/banners.json`, {
+        const response = await axios.get(getFullUrl('/banners.json'), {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            Authorization: getAuthHeader(),
           },
           params: {
             banner_name: true,
@@ -142,7 +141,7 @@ const BannerList = () => {
         setIsSearching(false);
       }
     },
-    [baseURL]
+    []
   );
 
   useEffect(() => {
@@ -171,7 +170,7 @@ const BannerList = () => {
     toast.dismiss();
     try {
       const response = await axios.put(
-        `${baseURL}/banners/${bannerId}.json`,
+        getFullUrl(`/banners/${bannerId}.json`),
         {
           banner: {
             active: !currentStatus,

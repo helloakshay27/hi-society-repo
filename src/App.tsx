@@ -963,6 +963,7 @@ import VisitorSharingFormWeb from "./components/VisitorSharingFormWeb";
 import { ActionLayoutProvider } from "./contexts/ActionLayoutContext";
 import EventUserDetailsPage from "./pages/EventUserDetailsPage";
 import { OnlyOfficePublicEditorPage } from "./pages/OnlyOfficePublicEditorPage";
+import NoticeboardList from "./pages/NoticeboardList";
 // import RouteLogger from "./components/RouteLogger";
 
 const queryClient = new QueryClient();
@@ -1753,7 +1754,7 @@ function App() {
                     {/* Communication Routes */}
                     <Route
                       path="/communication/notice"
-                      element={<NoticePage />}
+                      element={<NoticeboardList />}
                     />
                     <Route
                       path="/communication/notice/add"
@@ -2246,7 +2247,7 @@ function App() {
                   />
                   <Route
                     path="/communication/notice"
-                    element={<NoticePageList />}
+                    element={<NoticeboardList />}
                   />
                   <Route
                     path="/communication/notice/create"

@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ArrowLeft, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import SelectBox from "@/components/ui/select-box";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import {
@@ -15,7 +15,6 @@ import {
 } from "@mui/material";
 
 const FaqCreate = () => {
-  const baseURL = API_CONFIG.BASE_URL;
 
   // Field styles for Material-UI components
   const fieldStyles = {
@@ -74,7 +73,7 @@ const FaqCreate = () => {
     const fetchCategories = async () => {
       try {
         setCategoriesLoading(true);
-        const res = await axios.get(`${baseURL}/faq_categories.json`, {
+        const res = await axios.get(getFullUrl('/faq_categories.json'), {
          headers: { Authorization: getAuthHeader() },
         });
 
@@ -101,7 +100,7 @@ const FaqCreate = () => {
       const fetchSubCategories = async () => {
         try {
           setSubCategoriesLoading(true);
-          const res = await axios.get(`${baseURL}/faq_sub_categories.json`, {
+          const res = await axios.get(getFullUrl('/faq_sub_categories.json'), {
             headers: { Authorization: getAuthHeader() },
           });
 
@@ -139,7 +138,7 @@ const FaqCreate = () => {
     const fetchSites = async () => {
       try {
         setSitesLoading(true);
-        const res = await axios.get(`${baseURL}/sites.json`, {
+        const res = await axios.get(getFullUrl('/sites.json'), {
           headers: {
                     Authorization: getAuthHeader(),
                     "Content-Type": "multipart/form-data",
@@ -190,9 +189,9 @@ const FaqCreate = () => {
     }
 
      if (
-    (baseURL === "https://dev-panchshil-super-app.lockated.com/" ||
-      baseURL === "https://kalpataru.lockated.com/" ||
-      baseURL === "https://rustomjee-live.lockated.com/")
+    (getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" ||
+      getFullUrl('') === "https://kalpataru.lockated.com" ||
+      getFullUrl('') === "https://rustomjee-live.lockated.com")
   ) {
     if (!formData.faq_category_id) {
       toast.error("FAQ Category is required");
@@ -248,7 +247,7 @@ const FaqCreate = () => {
     //   return;
     // }
     if (
-  (baseURL === "https://dev-panchshil-super-app.lockated.com/" || baseURL === "https://rustomjee-live.lockated.com/") &&
+  (getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" || getFullUrl('') === "https://rustomjee-live.lockated.com") &&
   !formData.faq_category_id
 ) {
   toast.error("FAQ Category is required");
@@ -274,7 +273,7 @@ const FaqCreate = () => {
         faqs: formData.faqs,
       };
 
-      await axios.post(`${baseURL}/faqs.json`, payload, {
+      await axios.post(getFullUrl('/faqs.json'), payload, {
         headers: { Authorization: getAuthHeader() },
       });
 
@@ -324,7 +323,7 @@ const FaqCreate = () => {
             <div className="p-6" style={{ backgroundColor: "#AAB9C50D" }}>
               {/* Category and Subcategory Selection */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <FormControl fullWidth variant="outlined" required={(baseURL === "https://dev-panchshil-super-app.lockated.com/" || baseURL === "https://kalpataru.lockated.com/" || baseURL === "https://rustomjee-live.lockated.com/")}>
+                <FormControl fullWidth variant="outlined" required={(getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" || getFullUrl('') === "https://kalpataru.lockated.com" || getFullUrl('') === "https://rustomjee-live.lockated.com")}>
                   <InputLabel shrink htmlFor="faq-category">
                     FAQ Category
                   </InputLabel>
@@ -349,7 +348,7 @@ const FaqCreate = () => {
                   </MuiSelect>
                 </FormControl>
 
-                <FormControl fullWidth variant="outlined" required={(baseURL === "https://dev-panchshil-super-app.lockated.com/" || baseURL === "https://kalpataru.lockated.com/" || baseURL === "https://rustomjee-live.lockated.com/")}>
+                <FormControl fullWidth variant="outlined" required={(getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" || getFullUrl('') === "https://kalpataru.lockated.com" || getFullUrl('') === "https://rustomjee-live.lockated.com")}>
                   <InputLabel shrink htmlFor="faq-sub-category">
                     FAQ Sub Category
                   </InputLabel>
