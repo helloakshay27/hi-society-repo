@@ -2575,41 +2575,46 @@ const ProjectDetailsEdit = () => {
         console.log("=== End Virtual Tour Data ===");
       } else if (
         key === "Rera_Number_multiple" &&
-        Array.isArray(value) &&
-        value.length > 0
+        Array.isArray(value)
       ) {
-        console.log("=== RERA Data Being Submitted ===");
-        console.log("Total RERA entries:", value.length);
-        console.log("RERA Array:", JSON.stringify(value, null, 2));
+        if (value.length > 0) {
+          console.log("=== RERA Data Being Submitted ===");
+          console.log("Total RERA entries:", value.length);
+          console.log("RERA Array:", JSON.stringify(value, null, 2));
 
-        value.forEach((item, index) => {
-          // Support both 'tower' and 'tower_name' keys for flexibility
-          const towerName = item.tower_name || item.tower || "";
-          const reraNumber = item.rera_number || "";
-          const reraUrl = item.rera_url || "";
+          value.forEach((item, index) => {
+            // Support both 'tower' and 'tower_name' keys for flexibility
+            const towerName = item.tower_name || item.tower || "";
+            const reraNumber = item.rera_number || "";
+            const reraUrl = item.rera_url || "";
 
-          console.log(`RERA Entry ${index}:`, {
-            tower_name: towerName,
-            rera_number: reraNumber,
-            rera_url: reraUrl,
+            console.log(`RERA Entry ${index}:`, {
+              tower_name: towerName,
+              rera_number: reraNumber,
+              rera_url: reraUrl,
+            });
+
+            // Send all entries, even with empty fields (backend will handle validation)
+            data.append(
+              `project[Rera_Number_multiple][${index}][tower_name]`,
+              towerName
+            );
+            data.append(
+              `project[Rera_Number_multiple][${index}][rera_number]`,
+              reraNumber
+            );
+            data.append(
+              `project[Rera_Number_multiple][${index}][rera_url]`,
+              reraUrl
+            );
           });
 
-          // Send all entries, even with empty fields (backend will handle validation)
-          data.append(
-            `project[Rera_Number_multiple][${index}][tower_name]`,
-            towerName
-          );
-          data.append(
-            `project[Rera_Number_multiple][${index}][rera_number]`,
-            reraNumber
-          );
-          data.append(
-            `project[Rera_Number_multiple][${index}][rera_url]`,
-            reraUrl
-          );
-        });
-
-        console.log("=== End RERA Data ===");
+          console.log("=== End RERA Data ===");
+        } else {
+          // Send empty array indicator to clear all RERA records on backend
+          console.log("=== Clearing all RERA records ===");
+          data.append("project[Rera_Number_multiple][]", "");
+        }
       } else if (key === "connectivities" && Array.isArray(value)) {
         value.forEach((item) => {
           const hasType =
@@ -3642,8 +3647,7 @@ const ProjectDetailsEdit = () => {
             {/* Continue with all grids and fields from create */}
           </div>
         </div>
-        {/* {API_CONFIG.BASE_URL !== "https://dev-panchshil-super-app.lockated.com/" &&
-          API_CONFIG.BASE_URL !== "https://rustomjee-live.lockated.com/" && ( */}
+     
         <>
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div
@@ -3891,18 +3895,88 @@ const ProjectDetailsEdit = () => {
                           <button
                             type="button"
                             className="text-red-600 hover:text-red-800 p-1"
-                            onClick={() => {
-                              const updated =
+                            onClick={async () => {
+                              // Create updated list without this RERA entry
+                              const updatedRera =
                                 formData.Rera_Number_multiple.filter(
                                   (_, i) => i !== entryIndex
                                 );
+
+                              // For existing projects, always call API to update RERA numbers
+                              if (projectId) {
+                                try {
+                                  // Prepare form data with updated RERA numbers
+                                  const data = new FormData();
+
+                                  if (updatedRera.length > 0) {
+                                    updatedRera.forEach((rera, index) => {
+                                      if (rera.id) {
+                                        data.append(
+                                          `project[Rera_Number_multiple][${index}][id]`,
+                                          rera.id
+                                        );
+                                      }
+                                      data.append(
+                                        `project[Rera_Number_multiple][${index}][tower_name]`,
+                                        rera.tower_name || rera.tower || ""
+                                      );
+                                      data.append(
+                                        `project[Rera_Number_multiple][${index}][rera_number]`,
+                                        rera.rera_number || ""
+                                      );
+                                      data.append(
+                                        `project[Rera_Number_multiple][${index}][rera_url]`,
+                                        rera.rera_url || ""
+                                      );
+                                    });
+                                  } else {
+                                    // Send empty array indicator to clear all RERA entries
+                                    console.log(
+                                      "Sending empty array to clear all RERA records"
+                                    );
+                                    data.append(
+                                      "project[Rera_Number_multiple][]",
+                                      ""
+                                    );
+                                  }
+
+                                  await axios.put(
+                                    getFullUrl(`/projects/${projectId}.json`),
+                                    data,
+                                    {
+                                      headers: {
+                                        Authorization: getAuthHeader(),
+                                        "Content-Type": "multipart/form-data",
+                                      },
+                                    }
+                                  );
+
+                                  toast.success(
+                                    "RERA section deleted successfully",
+                                    { description: "Success" }
+                                  );
+                                } catch (error) {
+                                  console.error(
+                                    "Error deleting RERA section:",
+                                    error
+                                  );
+                                  toast.error(
+                                    "Failed to delete RERA section. Please try again."
+                                  );
+                                  return;
+                                }
+                              } else {
+                                // For new projects (no projectId), just show success
+                                toast.success("RERA section removed", {
+                                  description: "Success",
+                                });
+                              }
+
+                              // Update local state after successful API call or for new projects
                               setFormData((prev) => ({
                                 ...prev,
-                                Rera_Number_multiple: updated,
+                                Rera_Number_multiple: updatedRera,
                               }));
-                              toast.success("RERA section deleted", {
-                                description: "Success",
-                              });
                             }}
                             title="Delete Section"
                           >
