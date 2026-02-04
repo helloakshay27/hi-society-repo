@@ -179,6 +179,7 @@ const EncashList = lazy(() => import("@/pages/EncashList"));
 const AggregatorInventorySection = lazy(() => import("@/pages/AggregatorInventorySection"));
 const OrderDetails = lazy(() => import("@/pages/OrderDetails"));
 const RedemptionReport = lazy(() => import("@/pages/RedemptionReport"));
+const BillingInvoices = lazy(() => import("@/pages/BillingInvoices"));
 
 
 // Add missing lazy imports
@@ -995,6 +996,7 @@ export const setupMemberRoutes = (
 
     <Route path="/loyalty/orders/:id" Component={withSuspense(OrderDetails)} />
     <Route path="/loyalty/redemption-report" Component={withSuspense(RedemptionReport)} />
+    <Route path="/loyalty/billing-invoices" Component={withSuspense(BillingInvoices)} />
     {/* Project Configuration Routes */}
     <Route
       path="/settings/project-configuration"

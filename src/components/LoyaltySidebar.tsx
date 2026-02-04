@@ -18,6 +18,7 @@ import {
   Tag,
   Calendar,
   Eye,
+  Receipt,
 } from "lucide-react";
 
 interface MenuItem {
@@ -68,6 +69,12 @@ export const LoyaltySidebar: React.FC = () => {
       label: "Redemption Report",
       icon: Eye,
       path: "/loyalty/redemption-report",
+    },
+    {
+      id: "billing-invoices",
+      label: "Billing & Invoices",
+      icon: Receipt,
+      path: "/loyalty/billing-invoices",
     },
     {
       id: "loyalty-tiers",
