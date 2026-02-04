@@ -97,8 +97,8 @@ import { TaskDetailsPage } from "./pages/TaskDetailsPage";
 import { JobSheetPage } from "./pages/JobSheetPage";
 
 // Import Issue pages
-import IssuesListPage from "./pages/IssuesListPage";
-import IssueDetailsPage from "./pages/IssueDetailsPage";
+// import IssuesListPage from "./pages/IssuesListPage";
+// import IssueDetailsPage from "./pages/IssueDetailsPage";
 
 // Import Utility pages
 import { UtilityDashboard } from "./pages/UtilityDashboard";
@@ -965,6 +965,8 @@ import EventUserDetailsPage from "./pages/EventUserDetailsPage";
 import { OnlyOfficePublicEditorPage } from "./pages/OnlyOfficePublicEditorPage";
 import PollsPageList from "./pages/communication/PollsPageList";
 import NoticeboardList from "./pages/NoticeboardList";
+import IssuesListPage from "./pages/IssuesListPage";
+import IssueDetailsPage from "./pages/IssueDetailsPage";
 // import RouteLogger from "./components/RouteLogger";
 
 const queryClient = new QueryClient();
