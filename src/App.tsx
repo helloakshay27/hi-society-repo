@@ -674,7 +674,7 @@ import { BookingSetupDetailPage } from "./pages/BookingSetupDetailPage";
 import { AddBookingSetupPage } from "./pages/AddBookingSetupPage";
 
 // Import Add Facility Booking page
-import { AddFacilityBookingPage } from "./pages/AddFacilityBookingPage";
+import AddFacilityBookingPage from "./pages/AddFacilityBookingPage";
 import { PaymentRedirectPage } from "./pages/PaymentRedirectPage";
 import { AssetGroupsDashboard } from "./pages/setup/AssetGroupsDashboard";
 
@@ -1311,7 +1311,7 @@ function App() {
                     path="/rule-engine/rule-list"
                     element={<RuleListPage />}
                   />
-                  
+
                   <Route
                     path="/loyalty-rule-engine"
                     element={<LoyaltyRuleEngineDashboard />}

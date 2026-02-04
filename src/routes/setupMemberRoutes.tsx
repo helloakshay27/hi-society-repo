@@ -229,6 +229,8 @@ const CMSClubMembers = lazy(() => import("@/pages/CMSClubMembers"));
 const AddCMSClubMembers = lazy(() => import("@/pages/AddCMSClubMembers"));
 const EditCMSClubMembers = lazy(() => import("@/pages/EditCMSClubMembers"));
 const CMSFacilityBookings = lazy(() => import("@/pages/CMSFacilityBookings"));
+const AddFacilityBookingPage = lazy(() => import("@/pages/AddFacilityBookingPage"));
+const CMSMembershipPlanSetup = lazy(() => import("@/pages/ClubManagement/CMSMembershipPlanSetup"));
 const CMSPayments = lazy(() => import("@/pages/CMSPayments"));
 
 // Campaigns Pages
@@ -1090,12 +1092,17 @@ export const setupMemberRoutes = (
     <Route path="/cms/facility-setup/:id" Component={withSuspense(BookingSetupDetailClubPage)} />
     <Route path="/cms/facility-setup/edit/:id" Component={withSuspense(EditBookingSetupClubPage)} />
     <Route path="/cms/rules" Component={withSuspense(CMSRules)} />
+    <Route path="/cms/membership-plan-setup" Component={withSuspense(CMSMembershipPlanSetup)} />
     <Route path="/cms/club-members" Component={withSuspense(CMSClubMembers)} />
     <Route path="/cms/club-members/add" Component={withSuspense(AddCMSClubMembers)} />
     <Route path="/cms/club-members/edit/:id" Component={withSuspense(EditCMSClubMembers)} />
     <Route
       path="/cms/facility-bookings"
       Component={withSuspense(CMSFacilityBookings)}
+    />
+    <Route
+      path="/cms/facility-bookings/add"
+      Component={withSuspense(AddFacilityBookingPage)}
     />
     <Route path="/cms/payments" Component={withSuspense(CMSPayments)} />
 

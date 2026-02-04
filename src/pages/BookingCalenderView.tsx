@@ -36,13 +36,13 @@ const BookingCalenderView = () => {
 
     const getFacilities = async () => {
         try {
-            const response = await axios.get(`https://${baseUrl}/pms/admin/facility_setups.json?q[fac_type_eq]=${bookingType}`, {
+            const response = await axios.get(`https://${baseUrl}/crm/admin/facility_setups.json?q[fac_type_eq]=${bookingType}`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
             })
 
-            setFacilities(response.data.facility_setups)
+            setFacilities(response.data.data)
         } catch (error) {
             console.log(error)
         }
@@ -194,7 +194,7 @@ const BookingCalenderView = () => {
 
     const fetchBookingsForDate = async (date, facilityId) => {
         try {
-            const response = await axios.get(`https://${baseUrl}/pms/facility_bookings/slots_status.json?facility_id=${facilityId}&date=${date}`, {
+            const response = await axios.get(`https://${baseUrl}/crm/facility_bookings/slots_status.json?facility_id=${facilityId}&date=${date}`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -259,10 +259,7 @@ const BookingCalenderView = () => {
     };
 
     const handleAddBooking = () => {
-        const currentPath = window.location.pathname;
-        if (currentPath.includes("bookings")) navigate("/bookings/add");
-        else if (currentPath.includes("club-management")) navigate("/club-management/amenities-booking/add");
-        else navigate("/vas/booking/add");
+        navigate("/cms/facility-bookings/add");
     };
 
     // Month navigation logic with year handling

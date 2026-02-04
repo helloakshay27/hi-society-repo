@@ -342,13 +342,7 @@ const BookingListDashboard = () => {
   };
 
   const handleAddBooking = () => {
-    const currentPath = window.location.pathname;
-
-    if (currentPath.includes("bookings")) {
-      navigate('/bookings/add');
-    } else {
-      navigate('/vas/booking/add');
-    }
+    navigate('/cms/facility-bookings/add');
   };
 
   const handlePageChange = async (page: number) => {
@@ -772,7 +766,7 @@ const BookingListDashboard = () => {
                       fullWidth
                     >
                       <MenuItem value="">Select Facility</MenuItem>
-                      {facilities.map((facility) => (
+                      {(facilities || []).map((facility) => (
                         <MenuItem key={facility.id} value={facility.id}>
                           {facility.fac_name}
                         </MenuItem>

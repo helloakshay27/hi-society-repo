@@ -28,8 +28,6 @@ interface MemberForm {
     residentType: string;
     isClubMembership: boolean;
     membershipNumber: string;
-    startDate: string;
-    endDate: string;
     isAccessCardAllocated: boolean;
     accessCardId: string;
     idCard: File | null;
@@ -49,6 +47,10 @@ const AddCMSClubMembers = () => {
     const [tower, setTower] = useState("");
     const [flat, setFlat] = useState("");
 
+    // Global Date State
+    const [globalStartDate, setGlobalStartDate] = useState("");
+    const [globalEndDate, setGlobalEndDate] = useState("");
+
     const [members, setMembers] = useState<MemberForm[]>([
         {
             id: Date.now().toString(),
@@ -61,8 +63,6 @@ const AddCMSClubMembers = () => {
             residentType: "Owner",
             isClubMembership: false,
             membershipNumber: "",
-            startDate: "",
-            endDate: "",
             isAccessCardAllocated: false,
             accessCardId: "",
             idCard: null,
@@ -141,8 +141,6 @@ const AddCMSClubMembers = () => {
                 residentType: "Owner",
                 isClubMembership: false,
                 membershipNumber: "",
-                startDate: "",
-                endDate: "",
                 isAccessCardAllocated: false,
                 accessCardId: "",
                 idCard: null,
@@ -181,8 +179,8 @@ const AddCMSClubMembers = () => {
                 formData.append(`members[${idx}][resident_type]`, member.residentType)
                 formData.append(`members[${idx}][club_member_check]`, member.isClubMembership ? "true" : "false")
                 formData.append(`members[${idx}][membership_number]`, member.membershipNumber)
-                formData.append(`members[${idx}][start_date]`, member.startDate)
-                formData.append(`members[${idx}][end_date]`, member.endDate)
+                formData.append(`members[${idx}][start_date]`, globalStartDate)
+                formData.append(`members[${idx}][end_date]`, globalEndDate)
                 formData.append(`members[${idx}][access_card_check]`, member.isAccessCardAllocated ? "true" : "false")
                 formData.append(`members[${idx}][access_card_id]`, member.accessCardId)
                 formData.append(`members[${idx}][identification_image_attributes][document]`, member.idCard)
@@ -219,42 +217,64 @@ const AddCMSClubMembers = () => {
                 {/* Main Container */}
                 <div className="bg-white rounded-lg space-y-6">
 
-                    {/* Header / Tower & Flat Selection */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <FormControl required>
-                            <InputLabel className="bg-white px-1">Tower</InputLabel>
-                            <Select
-                                value={tower}
-                                onChange={(e) => setTower(e.target.value)}
-                                label="Tower"
-                                displayEmpty
-                            >
-                                <MenuItem value="" disabled>Select Tower</MenuItem>
-                                {
-                                    towers.map((tower: any) => (
-                                        <MenuItem key={tower.id} value={tower.id}>{tower.name}</MenuItem>
-                                    ))
-                                }
-                            </Select>
-                        </FormControl>
+                    {/* Header / Global Details */}
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormControl required>
+                                <InputLabel className="bg-white px-1">Tower</InputLabel>
+                                <Select
+                                    value={tower}
+                                    onChange={(e) => setTower(e.target.value)}
+                                    label="Tower"
+                                    displayEmpty
+                                >
+                                    <MenuItem value="" disabled>Select Tower</MenuItem>
+                                    {
+                                        towers.map((tower: any) => (
+                                            <MenuItem key={tower.id} value={tower.id}>{tower.name}</MenuItem>
+                                        ))
+                                    }
+                                </Select>
+                            </FormControl>
 
-                        <FormControl required>
-                            <InputLabel className="bg-white px-1">Flat</InputLabel>
-                            <Select
-                                value={flat}
-                                onChange={(e) => setFlat(e.target.value)}
-                                label="Flat"
-                                displayEmpty
-                            >
-                                <MenuItem value="" disabled>Select Flat</MenuItem>
-                                {/* Placeholder items */}
-                                {
-                                    flats.map((flat: any) => (
-                                        <MenuItem key={flat.id} value={flat.id}>{flat.flat_no}</MenuItem>
-                                    ))
-                                }
-                            </Select>
-                        </FormControl>
+                            <FormControl required>
+                                <InputLabel className="bg-white px-1">Flat</InputLabel>
+                                <Select
+                                    value={flat}
+                                    onChange={(e) => setFlat(e.target.value)}
+                                    label="Flat"
+                                    displayEmpty
+                                >
+                                    <MenuItem value="" disabled>Select Flat</MenuItem>
+                                    {/* Placeholder items */}
+                                    {
+                                        flats.map((flat: any) => (
+                                            <MenuItem key={flat.id} value={flat.id}>{flat.flat_no}</MenuItem>
+                                        ))
+                                    }
+                                </Select>
+                            </FormControl>
+                        </div>
+
+                        {/* Global Dates */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <TextField
+                                required
+                                type="date"
+                                label="Start Date (Applies to all)"
+                                value={globalStartDate}
+                                onChange={(e) => setGlobalStartDate(e.target.value)}
+                                InputLabelProps={{ shrink: true }}
+                            />
+                            <TextField
+                                required
+                                type="date"
+                                label="End Date (Applies to all)"
+                                value={globalEndDate}
+                                onChange={(e) => setGlobalEndDate(e.target.value)}
+                                InputLabelProps={{ shrink: true }}
+                            />
+                        </div>
                     </div>
 
 
@@ -374,29 +394,13 @@ const AddCMSClubMembers = () => {
                                             </label>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                                             <TextField
                                                 required
                                                 label="Membership Number"
                                                 placeholder="Enter Number"
                                                 value={member.membershipNumber}
                                                 onChange={(e) => updateMember(member.id, "membershipNumber", e.target.value)}
-                                            />
-                                            <TextField
-                                                required
-                                                type="date"
-                                                label="Start Date"
-                                                value={member.startDate}
-                                                onChange={(e) => updateMember(member.id, "startDate", e.target.value)}
-                                                InputLabelProps={{ shrink: true }}
-                                            />
-                                            <TextField
-                                                required
-                                                type="date"
-                                                label="End Date"
-                                                value={member.endDate}
-                                                onChange={(e) => updateMember(member.id, "endDate", e.target.value)}
-                                                InputLabelProps={{ shrink: true }}
                                             />
                                         </div>
                                     </div>
@@ -413,7 +417,7 @@ const AddCMSClubMembers = () => {
                                                 htmlFor={`access-card-${member.id}`}
                                                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                             >
-                                                Access Card Allocated
+                                                Access Card Allocated / Face Base
                                             </label>
                                         </div>
 

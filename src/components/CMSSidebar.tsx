@@ -107,6 +107,17 @@ export const CMSSidebar: React.FC = () => {
                   <FileText className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
                   <span className="truncate">Rules</span>
                 </button>
+                <button
+                  onClick={() => handleNavigation("/cms/membership-plan-setup")}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a] ml-6"
+                  title="Membership Plan Setup"
+                >
+                  {isActive("/cms/membership-plan-setup") && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
+                  )}
+                  <FileText className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+                  <span className="truncate">Membership Plan Setup</span>
+                </button>
               </div>
             )}
           </div>
