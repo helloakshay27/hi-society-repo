@@ -84,13 +84,6 @@ const BMSMIS: React.FC = () => {
         <Plus className="w-4 h-4 mr-2" />
         Add
       </Button>
-      <Button
-        onClick={handleExport}
-        className="bg-[#1A3765] text-white hover:bg-[#1A3765]/90"
-      >
-        <Download className="w-4 h-4 mr-2" />
-        Export
-      </Button>
     </div>
   );
 
@@ -100,6 +93,7 @@ const BMSMIS: React.FC = () => {
         data={records}
         columns={columns}
         renderCell={renderCell}
+        enableExport={true}
         onSearchChange={(query) => setSearchQuery(query)}
         searchPlaceholder="Search"
         enableSearch={true}

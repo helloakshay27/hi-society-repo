@@ -171,7 +171,7 @@ const HiSocGroupsPage = () => {
   };
 
   const handleViewGroup = (groupId: number) => {
-    navigate(`/crm/groups/details/${groupId}`);
+    navigate(`/bms/groups/details/${groupId}`);
   };
 
   const handleEditGroup = (group: Group) => {

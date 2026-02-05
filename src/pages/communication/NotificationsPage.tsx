@@ -52,7 +52,7 @@ const NotificationsPage = () => {
     const fetchUsers = async () => {
       try {
         const response = await axios.get(
-          getFullUrl('/usergroups/cp_members_list.json'),
+          getFullUrl('/usergroups/get_members_list.json'),
           {
             headers: {
               Authorization: getAuthHeader(),
@@ -60,7 +60,19 @@ const NotificationsPage = () => {
             },
           }
         );
-        setUsers(response?.data || []);
+        // Transform the response to extract user data with necessary fields
+        const transformedUsers = (response?.data || []).map((item: any) => ({
+          id: item.id,
+          user_id: item.id_user,
+          firstname: item.user?.firstname || '',
+          lastname: item.user?.lastname || '',
+          email: item.user?.email || '',
+          mobile: item.user?.mobile || '',
+          flat: item.user_flat?.flat || '',
+          block: item.user_flat?.block || '',
+          building_name: item.society?.building_name || ''
+        }));
+        setUsers(transformedUsers);
       } catch (error) {
         console.error("Error fetching Users:", error);
       }
@@ -72,7 +84,7 @@ const NotificationsPage = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get(getFullUrl('/crm/usergroups.json?q[group_type_eq]=cp'), {
+        const response = await axios.get(getFullUrl('/crm/usergroups.json'), {
           headers: {
             Authorization: getAuthHeader(),
             "Content-Type": "multipart/form-data",
@@ -387,7 +399,7 @@ const NotificationsPage = () => {
                       return selected
                         .map((id) => {
                           const user = users.find((u: any) => u.id === id || u.id.toString() === id.toString());
-                          return user ? `${user.firstname} ${user.lastname}` : id;
+                          return user ? `${user.firstname} ${user.lastname}`.trim() : id;
                         })
                         .join(", ");
                     }}
@@ -397,7 +409,7 @@ const NotificationsPage = () => {
                     </MenuItem>
                     {users.map((user: any) => (
                       <MenuItem key={user.id} value={user.id}>
-                        {user.firstname} {user.lastname}
+                        {user.firstname} {user.lastname} {user.flat ? `(${user.flat})` : ''}
                       </MenuItem>
                     ))}
                   </MuiSelect>

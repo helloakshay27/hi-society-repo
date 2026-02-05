@@ -350,6 +350,7 @@ import EventDetailPage from "./pages/communication/EventDetailPage";
 import PollsPage from "./pages/communication/PollsPage";
 import AddPollPage from "./pages/communication/AddPollPage";
 import NotificationsPage from "./pages/communication/NotificationsPage";
+import EventList from "./pages/EventList";
 
 // Import User Roasters pages
 import { UserRoastersDashboard } from "./pages/setup/UserRoastersDashboard";
@@ -1794,7 +1795,7 @@ function App() {
                     />
                     <Route
                       path="/communication/events"
-                      element={<EventsPage />}
+                      element={<EventList />}
                     />
                     <Route
                       path="/communication/events/add"
@@ -2328,7 +2329,7 @@ function App() {
                   />
                   <Route
                     path="/communication/events"
-                    element={<EventCommunicationList />}
+                    element={<EventList />}
                   />
                   <Route
                     path="/communication/events/create"
