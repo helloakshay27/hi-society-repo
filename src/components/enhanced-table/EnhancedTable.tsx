@@ -140,6 +140,9 @@ interface EnhancedTableProps<T> {
   isRowDisabled?: (item: T) => boolean;
   onExportError?: (message: string) => void;
   onExportSuccess?: (message: string) => void;
+  collapsible?: boolean;
+  getChildrenKey?: (item: T) => string;
+  renderChildrenRows?: (children: any[], parentId: string) => React.ReactNode;
 }
 
 export function EnhancedTable<T extends Record<string, any>>({
@@ -195,6 +198,9 @@ export function EnhancedTable<T extends Record<string, any>>({
   isRowDisabled,
   onExportError,
   onExportSuccess,
+  collapsible = false,
+  getChildrenKey,
+  renderChildrenRows,
 }: EnhancedTableProps<T>) {
   const [internalSearchTerm, setInternalSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');

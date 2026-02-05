@@ -433,13 +433,13 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       // Always set to Hi-Society layout mode and Admin view on login
       localStorage.setItem("layoutMode", "hi-society");
       localStorage.setItem("selectedView", "admin");
-      localStorage.setItem("userType", "pms_organization_admin");
+      localStorage.setItem("userType", "admin"); // Force admin view only
       localStorage.setItem("userId", response.id.toString());
 
       // Session storage
       sessionStorage.setItem("layoutMode", "hi-society");
       sessionStorage.setItem("selectedView", "admin");
-      sessionStorage.setItem("userType", "pms_organization_admin");
+      sessionStorage.setItem("userType", "admin"); // Force admin view only
       sessionStorage.setItem("userId", response.id.toString());
 
       if (isHiSocietySite) {

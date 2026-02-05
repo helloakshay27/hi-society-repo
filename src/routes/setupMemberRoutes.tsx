@@ -9,7 +9,7 @@ import { BookingSetupDetailClubPage } from "@/pages/ClubManagement/AmenityBookin
 import { EditBookingSetupClubPage } from "@/pages/ClubManagement/AmenityBookingSetupClubEdit";
 
 import { LoyaltyDashboard } from "@/pages/LoyaltyDashboard";
-import { WalletManagement } from "@/pages/WalletManagement";
+import WalletManagement from "@/pages/WalletManagement";
 import { LoyaltyCustomers } from "@/pages/LoyaltyCustomers";
 import { LoyaltyCustomerDetails } from "@/pages/LoyaltyCustomerDetails";
 import { LoyaltyInventorySection } from "@/pages/LoyaltyInventorySection";

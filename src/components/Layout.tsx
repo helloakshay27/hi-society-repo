@@ -73,33 +73,31 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [layoutMode]);
 
   /**
-   * EMPLOYEE VIEW DETECTION
+   * ADMIN VIEW ONLY - EMPLOYEE VIEW DISABLED
    *
-   * Determine if user is in Employee View based on:
-   * 1. Route pattern: /employee/* routes trigger employee layout
-   * 2. localStorage fallback: userType === "pms_occupant"
-   *
-   * Employee routes: /employee/portal, /vas/projects, etc.
-   * Admin routes: /admin/*, / (root), and all other routes
+   * Force admin view for all users.
+   * Employee view has been disabled.
    */
-  const isEmployeeRoute = location.pathname.startsWith("/employee");
-  const userType = localStorage.getItem("userType");
-  const isEmployeeUser = isEmployeeRoute || userType === "pms_occupant";
+  const isEmployeeRoute = false; // Disable employee route detection
+  const userType = localStorage.getItem("userType") || "admin"; // Default to admin
+  const isEmployeeUser = false; // Always use admin view
 
   // Check if user needs to select a view (Admin or Employee)
   const [showViewModal, setShowViewModal] = useState(false);
 
   useEffect(() => {
-    // Check if user has already selected a view
-    const selectedView = localStorage.getItem("selectedView");
+    // Always force admin view - disable view selection
     const storedUserType = localStorage.getItem("userType");
-
-    // If no view is selected, show the view selection modal
-    if (!selectedView || !storedUserType) {
-      setShowViewModal(true);
-    } else {
-      setShowViewModal(false);
+    
+    // Set to admin if not already set
+    if (!storedUserType || storedUserType === "pms_occupant") {
+      localStorage.setItem("userType", "admin");
+      localStorage.setItem("selectedView", "admin");
+      console.log("🔧 Forced userType to admin");
     }
+    
+    // Never show view modal - always use admin view
+    setShowViewModal(false);
   }, []);
 
   // // Auto-detect Hi-Society site and set layout mode (only on initial load)
@@ -166,14 +164,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Render sidebar component based on configuration
   const renderSidebar = () => {
-    // Loyalty routes always use LoyaltySidebar
-    // if (location.pathname.startsWith('/loyalty')) {
-    //   return <LoyaltySidebar />;
-    // }
-
-    // Check for Appointmentz routes first
-    if (location.pathname.startsWith('/appointmentz')) {
-      return <AppointmentzSidebar />;
     // If Hi-Society mode is active, use the unified HiSocietySidebar
     if (layoutMode === 'hi-society') {
       return <HiSocietySidebar />;
@@ -424,10 +414,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {renderSidebar()}
 
-      {/* Navigation - Conditional based on layoutMode and user type */}
+      {/* Navigation - Conditional based on layoutMode */}
       {layoutMode === 'hi-society' ? (
-        <HiSocietyNavigation />
-      ) : isEmployeeUser && !isLocalhost ? (
         <HiSocietyNavigation />
       ) : (
         renderDynamicHeader()
@@ -442,20 +430,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             ? isSidebarCollapsed
               ? "ml-16"
               : "ml-64"
-            : // For employee users
-            isEmployeeUser
-              ? isLocalhost
-                ? // Localhost: only add left margin if on Project Task module
-                currentSection === "Project Task"
-                  ? isSidebarCollapsed
-                    ? "ml-16"
-                    : "ml-64"
-                  : "ml-0" // No margin for other modules
-                : // Non-localhost: always show sidebar
-                isSidebarCollapsed
-                  ? "ml-16"
-                  : "ml-64"
-              : // For admin users
+            : // FM Matrix mode - always show sidebar margin for admin users
               isActionSidebarVisible
                 ? "ml-64 pt-28" // ActionSidebar is visible (fixed width 64)
                 : isSidebarCollapsed
@@ -465,11 +440,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           // Top padding based on mode
           layoutMode === 'hi-society'
             ? "pt-28" // Header (16) + Navigation (12) = 28
-            : isEmployeeUser
-              ? isLocalhost
-                ? "pt-16"
-                : "pt-24"
-              : isActionSidebarVisible
+            : isActionSidebarVisible
                 ? ""
                 : "pt-28"
           } transition-all duration-300`}

@@ -1374,7 +1374,7 @@ function App() {
                   <Route
                     path="/settings/manage-users/view-user/:id"
                     element={<ViewUserPage />}
-                    />
+                  />
                   <Route
                     path="/tickets/add"
                     element={
@@ -1392,7 +1392,7 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                    
+
 
                   <Route
                     path="/tickets/edit/:id"
@@ -5798,346 +5798,342 @@ function App() {
                   />
 
                   <Route path="*" element={<NotFound />} />
+
+                  {/* Settings Routes */}
+
+                  <Route
+                    path="/settings"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <div />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  >
+                    <Route
+                      path="/settings/approval-matrix/setup"
+                      element={<ApprovalMatrixSetupPage />}
+                    />
+                    <Route
+                      path="/settings/approval-matrix/setup/add"
+                      element={<AddApprovalMatrixPage />}
+                    />
+                    <Route
+                      path="/settings/invoice-approvals/add"
+                      element={<AddInvoiceApprovalsPage />}
+                    />
+                    <Route
+                      path="/settings/design-insights/setup"
+                      element={<DesignInsightsSetupDashboard />}
+                    />
+                    <Route
+                      path="/settings/checklist-setup/group"
+                      element={<ChecklistGroupsPage />}
+                    />
+                    <Route
+                      path="/settings/checklist-setup/email-rule"
+                      element={<EmailRuleSetupPage />}
+                    />
+                    <Route
+                      path="/settings/checklist-setup/task-escalation"
+                      element={<TaskEscalationPage />}
+                    />
+                    <Route
+                      path="/settings/ticket-management/setup"
+                      element={<TicketManagementSetupPage />}
+                    />
+                    <Route
+                      path="/settings/ticket-management/escalation-matrix"
+                      element={<EscalationMatrixPage />}
+                    />
+                    <Route
+                      path="/settings/ticket-management/cost-approval"
+                      element={<CostApprovalPage />}
+                    />
+                    <Route
+                      path="/settings/inventory-management/sac-hsn-code"
+                      element={<SacHsn />}
+                    />
+                    <Route
+                      path="/settings/inventory-management/sac-hsn-code/add"
+                      element={<AddSacHsn />}
+                    />
+                    <Route
+                      path="/settings/inventory-management/sac-hsn-code/:id"
+                      element={<DetailPageSacHsn />}
+                    />
+                    <Route
+                      path="/settings/safety/permit"
+                      element={<div>Safety Permit</div>}
+                    />
+                    <Route
+                      path="/settings/safety/permit-setup"
+                      element={<PermitSetupDashboard />}
+                    />
+                    <Route
+                      path="/settings/safety/incident"
+                      element={<IncidentSetupDashboard />}
+                    />
+                    <Route
+                      path="/settings/safety/setup"
+                      element={<IncidentSetupDashboard />}
+                    />
+                    <Route
+                      path="/settings/vas/fnb/setup"
+                      element={<FnBRestaurantDashboard />}
+                    />
+                    <Route
+                      path="/settings/vas/fnb/add"
+                      element={<AddRestaurantPage />}
+                    />
+                    <Route
+                      path="/settings/vas/fnb/details/:id"
+                      element={<FnBRestaurantDetailsPage />}
+                    />
+                    <Route
+                      path="/settings/vas/booking/setup"
+                      element={<BookingSetupDashboard />}
+                    />
+                    <Route
+                      path="/settings/vas/booking/setup/add"
+                      element={<AddBookingSetupPage />}
+                    />
+                    <Route
+                      path="/settings/vas/booking/setup/details/:id"
+                      element={<BookingSetupDetailPage />}
+                    />
+                    <Route
+                      path="/settings/vas/booking/setup/edit/:id"
+                      element={<EditBookingSetupPage />}
+                    />
+                    <Route
+                      path="/settings/vas/parking-management/parking-category"
+                      element={<ParkingCategoryPage />}
+                    />
+                    <Route
+                      path="/settings/vas/parking-management/slot-configuration"
+                      element={<SlotConfigurationPage />}
+                    />
+                    <Route
+                      path="/settings/vas/parking-management/slot-configuration/add"
+                      element={<AddSlotConfigurationPage />}
+                    />
+                    <Route
+                      path="/settings/vas/parking-management/slot-configuration/edit/:id"
+                      element={<EditSlotConfigurationPage />}
+                    />
+                    <Route
+                      path="/settings/vas/parking-management/time-slot-setup"
+                      element={<TimeSlotSetupPage />}
+                    />
+                    <Route
+                      path="/settings/waste-management/setup"
+                      element={<UtilityWasteGenerationSetupDashboard />}
+                    />
+                    <Route
+                      path="/settings/account/role-config"
+                      element={<RoleConfigList />}
+                    />
+                    <Route
+                      path="/settings/account/role-config/view/:id"
+                      element={<RoleConfigView />}
+                    />
+                    <Route
+                      path="/settings/account/role-config/edit/:id"
+                      element={<RoleConfigEdit />}
+                    />
+                    <Route
+                      path="/settings/account/lock-module"
+                      element={<LockModuleList />}
+                    />
+                    <Route
+                      path="/settings/account/lock-function"
+                      element={<LockFunctionList />}
+                    />
+                    <Route
+                      path="/settings/account/lock-function/view/:id"
+                      element={<LockFunctionView />}
+                    />
+                    <Route
+                      path="/settings/account/lock-function/edit/:id"
+                      element={<LockFunctionEdit />}
+                    />
+                    <Route
+                      path="/settings/account/lock-sub-function"
+                      element={<LockSubFunctionList />}
+                    />
+                    <Route
+                      path="/settings/account/lock-sub-function/view/:id"
+                      element={<LockSubFunctionView />}
+                    />
+                    <Route
+                      path="/settings/account/lock-sub-function/edit/:id"
+                      element={<LockSubFunctionEdit />}
+                    />
+                    <Route
+                      path="/settings/community-modules/testimonial-setup"
+                      element={<TestimonialsSetupDashboard />}
+                    />
+                    <Route
+                      path="/settings/community-modules/testimonial-setup/:id"
+                      element={<TestimonialDetailsPage />}
+                    />
+                    <Route
+                      path="/settings/community-modules/company-partner-setup"
+                      element={<CompanyPartnersSetupDashboard />}
+                    />
+                    <Route
+                      path="/settings/community-modules/banner-setup"
+                      element={<BannerSetupDashboard />}
+                    />
+                    <Route
+                      path="/settings/community-modules/banner-setup/:id"
+                      element={<BannerDetailsPage />}
+                    />
+                    <Route
+                      path="/settings/community-modules/amenity-setup"
+                      element={<AmenitySetupDashboard />}
+                    />
+                    <Route
+                      path="/settings/community-modules/amenity-setup/:id"
+                      element={<AmenityDetailsPage />}
+                    />
+                    <Route path="/settings/groups" element={<CRMGroupsPage />} />
+                  </Route>
+
+                  {/* Setup Routes - Outside of settings parent route */}
+                  <Route
+                    path="/settings/permit"
+                    element={
+                      <ProtectedRoute>
+                        <PermitSetupDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings/incident"
+                    element={
+                      <ProtectedRoute>
+                        <IncidentSetupDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Setup User Management Routes */}
+                  <Route
+                    path="/settings/fm-users"
+                    element={
+                      <ProtectedRoute>
+                        <FMUserDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings/fm-users/add"
+                    element={
+                      <ProtectedRoute>
+                        <AddFMUserDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings/occupant-users"
+                    element={
+                      <ProtectedRoute>
+                        <OccupantUsersDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings/occupant-users/add"
+                    element={
+                      <ProtectedRoute>
+                        <AddOccupantUserDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/mobile/lmc" element={<MobileLMCPage />} />
+
+                  {/* Mobile Routes */}
+                  <Route path="/mobile/tickets" element={<MobileTicketsPage />} />
+                  <Route path="/mobile/orders" element={<MobileOrdersPage />} />
+                  <Route
+                    path="/mobile/admin/orders"
+                    element={<MobileAdminOrdersPage />}
+                  />
+                  <Route
+                    path="/mobile/admin/orders/:orderId"
+                    element={<MobileAdminOrderDetailsPage />}
+                  />
+                  {/* External Flow Tester */}
+                  <Route path="/test-external" element={<ExternalFlowTester />} />
+                  {/* Mobile Restaurant Routes */}
+                  <Route
+                    path="/mr/:restaurant/:orgId"
+                    element={<MobileRestaurantPage />}
+                  />
+                  <Route
+                    path="/mobile/restaurant/:action"
+                    element={<MobileRestaurantPage />}
+                  />
+                  <Route
+                    path="/mobile/restaurant/:restaurantId/:action"
+                    element={<MobileRestaurantPage />}
+                  />
+                  {/* Mobile Restaurant Routes */}
+                  <Route
+                    path="/mobile/restaurant"
+                    element={<MobileRestaurantPage />}
+                  />
+                  <Route
+                    path="/mobile/restaurant/:action"
+                    element={<MobileRestaurantPage />}
+                  />
+                  <Route
+                    path="/mobile/restaurant/:restaurantId/:action"
+                    element={<MobileRestaurantPage />}
+                  />
+                  {/* Mobile Survey Routes */}
+                  <Route
+                    path="/mobile/survey/:mappingId"
+                    element={<MobileSurveyPage />}
+                  />
+                  <Route
+                    path="/mobile/survey/:mappingId/:action"
+                    element={<MobileSurveyPage />}
+                  />
+                  <Route
+                    path="/survey_mappings/:mappingId/survey"
+                    element={<MobileSurveyPage />}
+                  />
+                  {/* Mobile Asset Routes */}
+                  <Route path="/mobile/assets" element={<MobileAssetPage />} />
+                  <Route
+                    path="/mobile/assets/:assetId"
+                    element={<MobileAssetPage />}
+                  />
+                  <Route
+                    path="/mobile/assets/:assetId/breakdown"
+                    element={<MobileAssetPage />}
+                  />
+                  {/* Mobile Owner Cost Routes */}
+                  <Route
+                    path="/mobile/owner-cost/:assetId"
+                    element={<MobileOwnerCostAssetPage />}
+                  />
+                  <Route
+                    path="/mo/:assetId"
+                    element={<MobileOwnerCostAssetPage />}
+                  />
+                  <Route
+                    path="/fitout-details-mobile/:id"
+                    element={<FitoutRequestDetailsPageMobile />}
+                  />
+                  {/* QR Test Route */}
+                  <Route path="/qr-test" element={<QRTestPage />} />
                 </Routes>
-
-                {/* Settings Routes */}
-
-                <Route
-                  path="/settings"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <div />
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route
-                    path="/settings/approval-matrix/setup"
-                    element={<ApprovalMatrixSetupPage />}
-                  />
-                  <Route
-                    path="/settings/approval-matrix/setup/add"
-                    element={<AddApprovalMatrixPage />}
-                  />
-                  <Route
-                    path="/settings/invoice-approvals/add"
-                    element={<AddInvoiceApprovalsPage />}
-                  />
-                  <Route
-                    path="/settings/design-insights/setup"
-                    element={<DesignInsightsSetupDashboard />}
-                  />
-                  <Route
-                    path="/settings/checklist-setup/group"
-                    element={<ChecklistGroupsPage />}
-                  />
-                  <Route
-                    path="/settings/checklist-setup/email-rule"
-                    element={<EmailRuleSetupPage />}
-                  />
-                  <Route
-                    path="/settings/checklist-setup/task-escalation"
-                    element={<TaskEscalationPage />}
-                  />
-                  <Route
-                    path="/settings/ticket-management/setup"
-                    element={<TicketManagementSetupPage />}
-                  />
-                  <Route
-                    path="/settings/ticket-management/escalation-matrix"
-                    element={<EscalationMatrixPage />}
-                  />
-                  <Route
-                    path="/settings/ticket-management/cost-approval"
-                    element={<CostApprovalPage />}
-                  />
-                  <Route
-                    path="/settings/inventory-management/sac-hsn-code"
-                    element={<SacHsn />}
-                  />
-                  <Route
-                    path="/settings/inventory-management/sac-hsn-code/add"
-                    element={<AddSacHsn />}
-                  />
-                  <Route
-                    path="/settings/inventory-management/sac-hsn-code/:id"
-                    element={<DetailPageSacHsn />}
-                  />
-                  <Route
-                    path="/settings/safety/permit"
-                    element={<div>Safety Permit</div>}
-                  />
-                  <Route
-                    path="/settings/safety/permit-setup"
-                    element={<PermitSetupDashboard />}
-                  />
-                  <Route
-                    path="/settings/safety/incident"
-                    element={<IncidentSetupDashboard />}
-                  />
-                  <Route
-                    path="/settings/safety/setup"
-                    element={<IncidentSetupDashboard />}
-                  />
-                  <Route
-                    path="/settings/vas/fnb/setup"
-                    element={<FnBRestaurantDashboard />}
-                  />
-                  <Route
-                    path="/settings/vas/fnb/add"
-                    element={<AddRestaurantPage />}
-                  />
-                  <Route
-                    path="/settings/vas/fnb/details/:id"
-                    element={<FnBRestaurantDetailsPage />}
-                  />
-                  <Route
-                    path="/settings/vas/booking/setup"
-                    element={<BookingSetupDashboard />}
-                  />
-                  <Route
-                    path="/settings/vas/booking/setup/add"
-                    element={<AddBookingSetupPage />}
-                  />
-                  <Route
-                    path="/settings/vas/booking/setup/details/:id"
-                    element={<BookingSetupDetailPage />}
-                  />
-                  <Route
-                    path="/settings/vas/booking/setup/edit/:id"
-                    element={<EditBookingSetupPage />}
-                  />
-                  <Route
-                    path="/settings/vas/parking-management/parking-category"
-                    element={<ParkingCategoryPage />}
-                  />
-                  <Route
-                    path="/settings/vas/parking-management/slot-configuration"
-                    element={<SlotConfigurationPage />}
-                  />
-                  <Route
-                    path="/settings/vas/parking-management/slot-configuration/add"
-                    element={<AddSlotConfigurationPage />}
-                  />
-                  <Route
-                    path="/settings/vas/parking-management/slot-configuration/edit/:id"
-                    element={<EditSlotConfigurationPage />}
-                  />
-                  <Route
-                    path="/settings/vas/parking-management/time-slot-setup"
-                    element={<TimeSlotSetupPage />}
-                  />
-                  <Route
-                    path="/settings/waste-management/setup"
-                    element={<UtilityWasteGenerationSetupDashboard />}
-                  />
-                  <Route
-                    path="/settings/account/role-config"
-                    element={<RoleConfigList />}
-                  />
-                  <Route
-                    path="/settings/account/role-config/view/:id"
-                    element={<RoleConfigView />}
-                  />
-                  <Route
-                    path="/settings/account/role-config/edit/:id"
-                    element={<RoleConfigEdit />}
-                  />
-                  <Route
-                    path="/settings/account/lock-module"
-                    element={<LockModuleList />}
-                  />
-                  <Route
-                    path="/settings/account/lock-function"
-                    element={<LockFunctionList />}
-                  />
-                  <Route
-                    path="/settings/account/lock-function/view/:id"
-                    element={<LockFunctionView />}
-                  />
-                  <Route
-                    path="/settings/account/lock-function/edit/:id"
-                    element={<LockFunctionEdit />}
-                  />
-                  <Route
-                    path="/settings/account/lock-sub-function"
-                    element={<LockSubFunctionList />}
-                  />
-                  <Route
-                    path="/settings/account/lock-sub-function/view/:id"
-                    element={<LockSubFunctionView />}
-                  />
-                  <Route
-                    path="/settings/account/lock-sub-function/edit/:id"
-                    element={<LockSubFunctionEdit />}
-                  />
-                  <Route
-                    path="/settings/community-modules/testimonial-setup"
-                    element={<TestimonialsSetupDashboard />}
-                  />
-                  <Route
-                    path="/settings/community-modules/testimonial-setup/:id"
-                    element={<TestimonialDetailsPage />}
-                  />
-                  <Route
-                    path="/settings/community-modules/company-partner-setup"
-                    element={<CompanyPartnersSetupDashboard />}
-                  />
-                  <Route
-                    path="/settings/community-modules/banner-setup"
-                    element={<BannerSetupDashboard />}
-                  />
-                  <Route
-                    path="/settings/community-modules/banner-setup/:id"
-                    element={<BannerDetailsPage />}
-                  />
-                  <Route
-                    path="/settings/community-modules/amenity-setup"
-                    element={<AmenitySetupDashboard />}
-                  />
-                  <Route
-                    path="/settings/community-modules/amenity-setup/:id"
-                    element={<AmenityDetailsPage />}
-                  />
-                  <Route path="/settings/groups" element={<CRMGroupsPage />} />
-                </Route>
-
-                {/* Setup Routes - Outside of settings parent route */}
-                <Route
-                  path="/settings/permit"
-                  element={
-                    <ProtectedRoute>
-                      <PermitSetupDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/settings/incident"
-                  element={
-                    <ProtectedRoute>
-                      <IncidentSetupDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-
-                {/* Setup User Management Routes */}
-                <Route
-                  path="/settings/fm-users"
-                  element={
-                    <ProtectedRoute>
-                      <FMUserDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/settings/fm-users/add"
-                  element={
-                    <ProtectedRoute>
-                      <AddFMUserDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/settings/occupant-users"
-                  element={
-                    <ProtectedRoute>
-                      <OccupantUsersDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/settings/occupant-users/add"
-                  element={
-                    <ProtectedRoute>
-                      <AddOccupantUserDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/mobile/lmc" element={<MobileLMCPage />} />
-
-                {/* Mobile Routes */}
-                <Route path="/mobile/tickets" element={<MobileTicketsPage />} />
-                <Route path="/mobile/orders" element={<MobileOrdersPage />} />
-                <Route
-                  path="/mobile/admin/orders"
-                  element={<MobileAdminOrdersPage />}
-                />
-                <Route
-                  path="/mobile/admin/orders/:orderId"
-                  element={<MobileAdminOrderDetailsPage />}
-                />
-                {/* External Flow Tester */}
-                <Route path="/test-external" element={<ExternalFlowTester />} />
-                {/* Mobile Restaurant Routes */}
-                <Route
-                  path="/mr/:restaurant/:orgId"
-                  element={<MobileRestaurantPage />}
-                />
-                <Route
-                  path="/mobile/restaurant/:action"
-                  element={<MobileRestaurantPage />}
-                />
-                <Route
-                  path="/mobile/restaurant/:restaurantId/:action"
-                  element={<MobileRestaurantPage />}
-                />
-                {/* Mobile Restaurant Routes */}
-                <Route
-                  path="/mobile/restaurant"
-                  element={<MobileRestaurantPage />}
-                />
-                <Route
-                  path="/mobile/restaurant/:action"
-                  element={<MobileRestaurantPage />}
-                />
-                <Route
-                  path="/mobile/restaurant/:restaurantId/:action"
-                  element={<MobileRestaurantPage />}
-                />
-                {/* Mobile Survey Routes */}
-                <Route
-                  path="/mobile/survey/:mappingId"
-                  element={<MobileSurveyPage />}
-                />
-                <Route
-                  path="/mobile/survey/:mappingId/:action"
-                  element={<MobileSurveyPage />}
-                />
-                <Route
-                  path="/survey_mappings/:mappingId/survey"
-                  element={<MobileSurveyPage />}
-                />
-                {/* Mobile Asset Routes */}
-                <Route path="/mobile/assets" element={<MobileAssetPage />} />
-                <Route
-                  path="/mobile/assets/:assetId"
-                  element={<MobileAssetPage />}
-                />
-                <Route
-                  path="/mobile/assets/:assetId/breakdown"
-                  element={<MobileAssetPage />}
-                />
-                {/* Mobile Owner Cost Routes */}
-                <Route
-                  path="/mobile/owner-cost/:assetId"
-                  element={<MobileOwnerCostAssetPage />}
-                />
-                <Route
-                  path="/mo/:assetId"
-                  element={<MobileOwnerCostAssetPage />}
-                />
-                <Route
-                  path="/fitout-details-mobile/:id"
-                  element={<FitoutRequestDetailsPageMobile />}
-                />
-                {/* QR Test Route */}
-                <Route path="/qr-test" element={<QRTestPage />} />
-
                 {/* Mail Inbound Routes */}
-
-              {/* </Routes> */}
-              <Toaster />
                 {/* <Toaster /> */}
                 <SonnerToaster
                   position="top-right"
@@ -6151,7 +6147,7 @@ function App() {
                       color: "#374151",
                     },
                   }}
-                />{" "}
+                />
               </ActionLayoutProvider>
             </PermissionsProvider>
           </LayoutProvider>

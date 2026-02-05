@@ -97,9 +97,9 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
     const path = location.pathname;
     let newSection = "";
 
-    // Check if user is in employee mode
-    const userType = localStorage.getItem("userType");
-    const isEmployeeUser = userType === "pms_occupant";
+    // Force admin mode - disable employee detection
+    const userType = localStorage.getItem("userType") || "admin";
+    const isEmployeeUser = false; // Always use admin view
 
     console.log(
       `📍 Route changed to: ${path}, Current section: ${currentSection}`

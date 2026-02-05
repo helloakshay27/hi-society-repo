@@ -36,12 +36,6 @@ const navigationItems: NavigationItem[] = [
     path: "/loyalty/dashboard",
   },
   {
-    id: "loyalty",
-    label: "Loyalty",
-    icon: <Gift className="w-4 h-4" />,
-    path: "/loyalty/dashboard",
-  },
-  {
     id: "cms",
     label: "CMS",
     icon: <SettingsIcon className="w-4 h-4" />,
