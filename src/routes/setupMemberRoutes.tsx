@@ -167,6 +167,8 @@ const PressReleasesCreate = lazy(() => import("@/pages/PressReleasesCreate"));
 const PressReleasesEdit = lazy(() => import("@/pages/PressReleasesEdit"));
 const PressReleasesList = lazy(() => import("@/pages/PressReleasesList"));
 const SettingsGenericPage = lazy(() => import("@/pages/SettingsGenericPage"));
+const PricingRuleList = lazy(() => import("@/pages/PricingRuleList"));
+const PricingRuleCreate = lazy(() => import("@/pages/PricingRuleCreate"));
 
 // Add lazy imports for loyalty pages
 const LoyaltyMembersList = lazy(() => import("@/pages/LoyaltyMembersList"));
@@ -398,6 +400,10 @@ export const setupMemberRoutes = (
   <>
     {/* Generic Settings Route */}
     <Route path="/settings/generic" Component={withSuspense(SettingsGenericPage)} />
+
+    {/* Pricing Rule Routes */}
+    <Route path="/settings/pricing-rule-list" Component={withSuspense(PricingRuleList)} />
+    <Route path="/settings/pricing-rule-create" Component={withSuspense(PricingRuleCreate)} />
 
     {/* Amenities Routes */}
     <Route path="/settings/amenities" Component={withSuspense(Amenities)} />

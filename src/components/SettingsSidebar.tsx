@@ -87,6 +87,12 @@ export const SettingsSidebar: React.FC = () => {
       icon: FileText,
       path: "/settings/template-list",
     },
+    {
+      id: "pricing-rule-list",
+      label: "Pricing Rules",
+      icon: Settings,
+      path: "/settings/pricing-rule-list",
+    },
     // {
     //   id: "user-list",
     //   label: "User Module",
