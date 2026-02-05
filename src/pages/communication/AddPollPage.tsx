@@ -535,7 +535,7 @@ const AddPollPage = () => {
                         {users.map((user) => (
                           <ListItem key={user.id} disablePadding>
                             <ListItemButton
-                              onClick={() => handleUserSelection(user.user.id)}
+                              onClick={() => handleUserSelection(user.id)}
                               sx={{
                                 '&:hover': { bgcolor: 'rgba(199, 32, 48, 0.08)' }
                               }}
@@ -543,7 +543,7 @@ const AddPollPage = () => {
                               <ListItemIcon>
                                 <Checkbox
                                   edge="start"
-                                  checked={selectedUsers.includes(user.user.id)}
+                                  checked={selectedUsers.includes(user.id)}
                                   sx={{
                                     '&.Mui-checked': {
                                       color: '#C72030'
@@ -574,7 +574,7 @@ const AddPollPage = () => {
                         <Stack direction="row" spacing={1} flexWrap="wrap">
                           {selectedUsers.map((userId) => {
                             const selectedUser = users.find(
-                              (u) => u.user.id === userId
+                              (u) => u.id === userId
                             );
 
                             if (!selectedUser) return null;
