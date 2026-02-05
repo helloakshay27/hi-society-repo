@@ -22,11 +22,11 @@ const OrderDetails = () => {
                 const res = await fetch(url);
                 const response = await res.json();
                 const data = response.order; // Extract the order object
-                
+
                 setOrderData({
                     id: data.id,
                     orderNumber: data.order_number || "-",
-                    customerName: data.user 
+                    customerName: data.user
                         ? `${data.user.firstname || ''} ${data.user.lastname || ''}`.trim() || "-"
                         : "-",
                     customerEmail: data.user?.email || "-",
@@ -61,16 +61,16 @@ const OrderDetails = () => {
                 setOrderItems(
                     Array.isArray(data.order_items)
                         ? data.order_items.map((item: any, idx: number) => ({
-                              id: item.id || idx,
-                              productName: item.item_name || item.product?.name || "-",
-                              sku: item.product?.sku || "-",
-                              quantity: item.quantity ?? "-",
-                              price: item.unit_price ?? "-",
-                              subtotal: item.unit_price ?? "-",
-                              taxAmount: "0.0",
-                              total: item.total_price ?? "-",
-                              loyaltyPointsEarned: item.loyalty_points_earned ?? "-",
-                          }))
+                            id: item.id || idx,
+                            productName: item.item_name || item.product?.name || "-",
+                            sku: item.product?.sku || "-",
+                            quantity: item.quantity ?? "-",
+                            price: item.unit_price ?? "-",
+                            subtotal: item.unit_price ?? "-",
+                            taxAmount: "0.0",
+                            total: item.total_price ?? "-",
+                            loyaltyPointsEarned: item.loyalty_points_earned ?? "-",
+                        }))
                         : []
                 );
             } catch (e) {
@@ -305,23 +305,23 @@ const OrderDetails = () => {
             </div> */}
 
             {/* Tabs UI */}
-            <Tabs defaultValue="items" className="w-full mt-6">
-                <TabsList className="bg-[#f6f4ee] p-1 h-auto">
+            <Tabs defaultValue="items" className="w-full mt-6 ">
+                <TabsList className="bg-[#f6f4ee] p-1 h-auto w-full flex justify-between">
                     <TabsTrigger
                         value="items"
-                        className="data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
+                        className="flex-1 text-center data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
                     >
                         Order Items
                     </TabsTrigger>
                     <TabsTrigger
                         value="payment"
-                        className="data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
+                        className="flex-1 text-center data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
                     >
                         Payment Details
                     </TabsTrigger>
                     <TabsTrigger
                         value="shipping"
-                        className="data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
+                        className="flex-1 text-center data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
                     >
                         Shipping Details
                     </TabsTrigger>

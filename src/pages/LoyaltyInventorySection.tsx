@@ -58,7 +58,6 @@ export const LoyaltyInventorySection = () => {
         { key: "stock_quantity", label: "Stock Quantity" },
     ];
 
-
     // Fetch inventory and categories data
     useEffect(() => {
         fetchInventoryData();

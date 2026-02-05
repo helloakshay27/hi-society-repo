@@ -289,22 +289,22 @@ const LoyaltyCustomerDetails = () => {
 
             {/* Tabs UI */}
             <Tabs defaultValue="tier-status" className="w-full mt-6">
-                <TabsList className="bg-[#f6f4ee] p-1 h-auto">
+                <TabsList className="bg-[#f6f4ee] p-1 h-auto w-full flex justify-between">
                     <TabsTrigger
                         value="tier-status"
-                        className="data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
+                        className="flex-1 text-center data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
                     >
                         Tier Status
                     </TabsTrigger>
                     <TabsTrigger
                         value="transactions"
-                        className="data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
+                        className="flex-1 text-center data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
                     >
                         Transactions
                     </TabsTrigger>
                     <TabsTrigger
                         value="orders"
-                        className="data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
+                        className="flex-1 text-center data-[state=active]:bg-white data-[state=active]:text-[#C72030] px-6 py-2"
                     >
                         Orders
                     </TabsTrigger>
