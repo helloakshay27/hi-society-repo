@@ -15,6 +15,8 @@ import { LoyaltyCustomerDetails } from "@/pages/LoyaltyCustomerDetails";
 import { LoyaltyInventorySection } from "@/pages/LoyaltyInventorySection";
 import { TicketDashboard } from "@/TicketDashboardbackup";
 import CRMGroupsPage from "@/pages/CRMGroupsPage";
+import { VisitorsDashboard } from "@/pages/VisitorsDashboard";
+import HiSocGroupsPage from "@/pages/HiSocGroupsPage";
 
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
@@ -1054,7 +1056,7 @@ export const setupMemberRoutes = (
     />
     <Route path="/bms/feedbacks" Component={withSuspense(BMSFeedbacks)} />
     <Route path="/bms/parking" Component={withSuspense(BMSParking)} />
-    <Route path="/bms/groups" Component={withSuspense(FMGroupDashboard)} />
+    <Route path="/bms/groups" Component={withSuspense(HiSocGroupsPage)} />
     <Route
       path="/bms/quarantine-tracker"
       Component={withSuspense(BMSQuarantineTracker)}
@@ -1273,7 +1275,7 @@ export const setupMemberRoutes = (
     {/* SmartSecure Routes */}
     <Route
       path="/smartsecure/visitor-in"
-      Component={withSuspense(SmartSecureVisitorIn)}
+      Component={withSuspense(VisitorsDashboard)}
     />
     <Route
       path="/smartsecure/visitor-out"
