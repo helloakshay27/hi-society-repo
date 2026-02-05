@@ -17,6 +17,10 @@ import { TicketDashboard } from "@/TicketDashboardbackup";
 import CRMGroupsPage from "@/pages/CRMGroupsPage";
 import { VisitorsDashboard } from "@/pages/VisitorsDashboard";
 import HiSocGroupsPage from "@/pages/HiSocGroupsPage";
+import HiSocGroupDetailsPage from "@/pages/HiSocGroupDetailsPage";
+import { PatrollingDashboard } from "@/pages/PatrollingDashboard";
+import { PatrollingResponsePage } from "@/pages/PatrollingResponsePage";
+import { StaffsDashboard } from "@/pages/StaffsDashboard";
 
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
@@ -357,6 +361,12 @@ const SmartSecureReportsGuestVehicles = lazy(
 );
 const SmartSecureReportsPatrolling = lazy(
   () => import("@/pages/SmartSecureReportsPatrolling")
+);
+const SmartSecureVisitorReport = lazy(
+  () => import("@/pages/SmartSecureVisitorReport")
+);
+const SmartSecureStaffReport = lazy(
+  () => import("@/pages/SmartSecureStaffReport")
 );
 const SmartSecurePatrolling = lazy(
   () => import("@/pages/SmartSecurePatrolling")
@@ -1057,6 +1067,7 @@ export const setupMemberRoutes = (
     <Route path="/bms/feedbacks" Component={withSuspense(BMSFeedbacks)} />
     <Route path="/bms/parking" Component={withSuspense(BMSParking)} />
     <Route path="/bms/groups" Component={withSuspense(HiSocGroupsPage)} />
+    <Route path="/bms/groups/details/:id" element={<HiSocGroupDetailsPage />} />
     <Route
       path="/bms/quarantine-tracker"
       Component={withSuspense(BMSQuarantineTracker)}
@@ -1290,6 +1301,10 @@ export const setupMemberRoutes = (
       Component={withSuspense(SmartSecureStaffsAll)}
     />
     <Route
+      path="/smartsecure/staff-in"
+      element={<StaffsDashboard />}
+    />
+    <Route
       path="/smartsecure/staffs/in"
       Component={withSuspense(SmartSecureStaffsIn)}
     />
@@ -1330,8 +1345,28 @@ export const setupMemberRoutes = (
       Component={withSuspense(SmartSecureReportsPatrolling)}
     />
     <Route
+      path="/smartsecure/visitor-report"
+      Component={withSuspense(SmartSecureVisitorReport)}
+    />
+    <Route
+      path="/smartsecure/staff-report"
+      Component={withSuspense(SmartSecureStaffReport)}
+    />
+    {/* <Route
       path="/smartsecure/patrolling"
       Component={withSuspense(SmartSecurePatrolling)}
+    /> */}
+     {/* <Route
+      path="/smartsecure/patrolling"
+      Component={withSuspense(PatrollingDashboard)}
+    /> */}
+    <Route
+      path="/smartsecure/patrolling-info"
+      element={<PatrollingDashboard />}
+    />
+     <Route
+      path="/smartsecure/response"
+      element={<PatrollingResponsePage />}
     />
     <Route
       path="/smartsecure/setup/general"

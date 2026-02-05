@@ -307,6 +307,15 @@ export const HiSocietySidebar: React.FC = () => {
             { id: "material-report", label: "Material Report", icon: FileText, path: "/smartsecure/material-report" },
           ],
         },
+         {
+          id: "patrolling",
+          label: "Patrolling",
+          icon: BarChart3,
+          subItems: [
+            { id: "patrolling-info", label: "Patrolling Info", icon: FileText, path: "/smartsecure/patrolling-info" },
+            { id: "response", label: "Response", icon: FileText, path: "/smartsecure/response" },
+          ],
+        },
       ],
     },
     incidents: {
