@@ -8,14 +8,16 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-import { X, Info } from "lucide-react";
+import { X, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Toaster } from "sonner";
+import { Button } from "@/components/ui/button";
 
-// Styled Components (match AddUserPage/AddQuarantinePage)
+// Styled Components (match AddTicketDashboard)
 const SectionCard = styled(Paper)(({ theme }) => ({
   backgroundColor: "white",
-  boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
-  borderRadius: 0,
+  borderRadius: "8px",
+  border: "1px solid #e5e7eb",
   overflow: "hidden",
   marginBottom: "24px",
 }));
@@ -24,14 +26,14 @@ const SectionHeader = styled(Box)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   gap: "12px",
-  padding: "16px 24px",
-  backgroundColor: "#f9fafb",
+  padding: "12px 24px",
+  backgroundColor: "#F6F4EE",
   borderBottom: "1px solid #e5e7eb",
 }));
 
-const RedIcon = styled(Box)(({ theme }) => ({
-  color: "red",
-  backgroundColor: "#C4B89D59",
+const IconWrapper = styled(Box)(({ theme }) => ({
+  color: "#C72030",
+  backgroundColor: "#E5E0D3",
   borderRadius: "50%",
   padding: "8px",
   display: "flex",
@@ -42,69 +44,106 @@ const RedIcon = styled(Box)(({ theme }) => ({
 }));
 
 const RedButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: "#C4B89D59",
-  color: "#C72030",
-  borderRadius: 0,
+  backgroundColor: "#C72030",
+  color: "#fff",
+  borderRadius: "4px",
   textTransform: "none",
-  padding: "8px 16px",
+  padding: "10px 24px",
   fontFamily: "Work Sans, sans-serif",
   fontWeight: 500,
-  boxShadow: "0 2px 4px rgba(199, 32, 48, 0.2)",
+  fontSize: "14px",
+  boxShadow: "none",
   "&:hover": {
-    backgroundColor: "#C4B89D59",
+    backgroundColor: "#a01828",
+    boxShadow: "none",
+  },
+  "&:disabled": {
+    backgroundColor: "#e5e7eb",
+    color: "#9ca3af",
   },
 }));
 
-const DraftButton = styled(MuiButton)(({ theme }) => ({
-  backgroundColor: "#e7e3d9",
+const CancelButton = styled(MuiButton)(({ theme }) => ({
+  backgroundColor: "#fff",
+  color: "#374151",
+  border: "1px solid #d1d5db",
+  borderRadius: "4px",
+  textTransform: "none",
+  padding: "10px 24px",
+  fontFamily: "Work Sans, sans-serif",
+  fontWeight: 500,
+  fontSize: "14px",
+  boxShadow: "none",
+  "&:hover": {
+    backgroundColor: "#f9fafb",
+    boxShadow: "none",
+  },
+}));
+
+const AddButton = styled(MuiButton)(({ theme }) => ({
+  backgroundColor: "#C4B89D59",
   color: "#C72030",
-  borderRadius: 0,
+  borderRadius: "4px",
   textTransform: "none",
   padding: "8px 16px",
   fontFamily: "Work Sans, sans-serif",
   fontWeight: 500,
+  fontSize: "14px",
+  boxShadow: "none",
   "&:hover": {
-    backgroundColor: "#d9d5c9",
+    backgroundColor: "#C4B89D80",
+    boxShadow: "none",
   },
 }));
 
 const RemoveButton = styled(IconButton)(({ theme }) => ({
   color: "#C72030",
-  marginLeft: 8,
+  padding: "4px",
   "&:hover": {
-    backgroundColor: "#fbeaec",
+    backgroundColor: "#fef2f2",
   },
 }));
 
 const fieldStyles = {
-  "& .MuiOutlinedInput-root": {
-    fontSize: "14px",
-    backgroundColor: "#fff",
-    alignItems: "flex-start",
-    padding: 0,
-    "& fieldset": {
-      borderColor: "#ddd",
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
     },
-    "&:hover fieldset": {
-      borderColor: "#C72030",
+    '&:hover fieldset': {
+      borderColor: '#C72030',
     },
-    "&.Mui-focused fieldset": {
-      borderColor: "#C72030",
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
     },
   },
-
-  /* ✅ THIS IS THE REAL TARGET */
-  "& .MuiInputBase-inputMultiline": {
-    padding: "10px 14px",
-    lineHeight: "1.5",
-    overflow: "hidden", // ✅ KILLS SCROLL ARROWS
-    resize: "none",
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
   },
+};
 
-  "& .MuiInputLabel-root": {
-    fontSize: "14px",
-    "&.Mui-focused": {
-      color: "#C72030",
+const multilineFieldStyles = {
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
     },
   },
 };
@@ -136,6 +175,7 @@ const defaultItem = {
 
 const AddMISPage: React.FC = () => {
   const navigate = useNavigate();
+    const [isSubmitting, setIsSubmitting] = useState(false);
   const [sections, setSections] = useState<MISSection[]>([
     { section: "", items: [{ ...defaultItem }] },
   ]);
@@ -214,69 +254,85 @@ const AddMISPage: React.FC = () => {
     <Box
       sx={{
         minHeight: "100vh",
-        backgroundColor: "#fafafa",
+        backgroundColor: "#f9fafb",
         padding: "24px",
         fontFamily: "Work Sans, sans-serif",
       }}
     >
+      <Toaster position="top-right" richColors closeButton />
       <Box sx={{ maxWidth: "1200px", margin: "0 auto" }}>
         {/* Header */}
-        <Paper
+        <Box
           sx={{
-            backgroundColor: "#F6F4EE",
-            borderRadius: 0,
-            boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
             marginBottom: "24px",
-            padding: "16px 24px",
           }}
         >
           <h1
             style={{
-              fontSize: "24px",
+              fontSize: "28px",
               fontWeight: 600,
-              color: "#000000",
+              color: "#111827",
               margin: 0,
               fontFamily: "Work Sans, sans-serif",
             }}
           >
             Add MIS
           </h1>
-        </Paper>
+        </Box>
 
         {/* MIS Section */}
         {sections.map((section, sectionIdx) => (
           <SectionCard key={sectionIdx} sx={{ mb: 3 }}>
             <SectionHeader>
-              <RedIcon>
-                <Info size={16} />
-              </RedIcon>
+              <IconWrapper>
+                <FileText size={16} />
+              </IconWrapper>
               <h2
                 style={{
                   fontSize: "18px",
                   fontWeight: 600,
-                  color: "#000000",
+                  color: "#111827",
                   margin: 0,
                   fontFamily: "Work Sans, sans-serif",
+                  flex: 1,
                 }}
               >
                 Section {sectionIdx + 1}
               </h2>
+                 <Box sx={{ display: "flex", justifyContent: "center" }}>
+          <AddButton
+            variant="contained"
+            onClick={handleAddSection}
+            type="button"
+          >
+            + Add Section
+          </AddButton>
+        </Box>
               {sections.length > 1 && (
                 <RemoveButton onClick={() => handleRemoveSection(sectionIdx)}>
                   <X size={20} />
                 </RemoveButton>
               )}
+            
             </SectionHeader>
-            <Box sx={{ padding: "24px" }}>
+            <Box sx={{ padding: "24px", backgroundColor: "#AAB9C50D" }}>
               <TextField
                 label="Section Name"
                 value={section.section}
                 onChange={(e) =>
                   handleSectionChange(sectionIdx, e.target.value)
                 }
-                sx={{ ...fieldStyles, mb: 2 }}
-                size="small"
+                sx={{ ...fieldStyles, mb: 3 }}
                 fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
               />
               {section.items.map((item, itemIdx) => (
                 <Box
@@ -285,24 +341,26 @@ const AddMISPage: React.FC = () => {
                     display: "grid",
                     gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
                     gap: "16px",
-                    mb: 2,
+                    mb: 3,
                     alignItems: "flex-start",
                     position: "relative",
+                    padding: "16px",
+                    backgroundColor: "#fff",
+                    borderRadius: "8px",
+                    border: "1px solid #e5e7eb",
                   }}
                 >
                   {section.items.length > 1 && (
                     <RemoveButton
                       sx={{
                         position: "absolute",
-                        top: -10,
-                        right: -10,
+                        top: 8,
+                        right: 8,
                         zIndex: 1,
-                        background: "#fff",
-                        "&:hover": { background: "#fbeaec" },
                       }}
                       onClick={() => handleRemoveItem(sectionIdx, itemIdx)}
                     >
-                      <X size={20} />
+                      <X size={18} />
                     </RemoveButton>
                   )}
                   <TextField
@@ -317,8 +375,13 @@ const AddMISPage: React.FC = () => {
                       )
                     }
                     sx={fieldStyles}
-                    size="small"
                     fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
                   />
                   <TextField
                     label="Snagging Status"
@@ -332,8 +395,13 @@ const AddMISPage: React.FC = () => {
                       )
                     }
                     sx={fieldStyles}
-                    size="small"
                     fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
                   />
                   <TextField
                     label="Desnagging Status"
@@ -347,8 +415,13 @@ const AddMISPage: React.FC = () => {
                       )
                     }
                     sx={fieldStyles}
-                    size="small"
                     fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
                   />
                   <TextField
                     label="Completion Date"
@@ -362,10 +435,14 @@ const AddMISPage: React.FC = () => {
                         e.target.value
                       )
                     }
-                    InputLabelProps={{ shrink: true }}
                     sx={fieldStyles}
-                    size="small"
                     fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
                   />
                   <TextField
                     label="Handing Over To"
@@ -379,8 +456,13 @@ const AddMISPage: React.FC = () => {
                       )
                     }
                     sx={fieldStyles}
-                    size="small"
                     fullWidth
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
                   />
                   <TextField
                     label="Completion Remarks"
@@ -394,22 +476,16 @@ const AddMISPage: React.FC = () => {
                       )
                     }
                     sx={{
-                      ...fieldStyles,
+                      ...multilineFieldStyles,
                       gridColumn: "1 / -1",
                     }}
-                    size="small"
                     fullWidth
                     multiline
-                    minRows={4}
-                    InputProps={{
-                      sx: {
-                        alignItems: "flex-start",
-                        "& textarea": {
-                          overflowY: "hidden",
-                          resize: "none",
-                          padding: "10px 14px",
-                          lineHeight: "1.5",
-                        },
+                    minRows={3}
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
                       },
                     }}
                   />
@@ -422,54 +498,50 @@ const AddMISPage: React.FC = () => {
                   handleItemChange(sectionIdx, 0, "remarks", e.target.value)
                 }
                 sx={{
-                  ...fieldStyles,
-                  mb: 2,
-                  background: "#fff",
+                  ...multilineFieldStyles,
+                  mb: 3,
                 }}
-                size="small"
                 multiline
-                minRows={4}
+                minRows={3}
                 fullWidth
-                InputProps={{
-                  sx: {
-                    alignItems: "flex-start",
-                    "& textarea": {
-                      overflowY: "hidden",
-                      resize: "none",
-                      padding: "10px 14px",
-                      lineHeight: "1.5",
-                    },
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
                   },
                 }}
               />
-              <RedButton
+              <AddButton
                 variant="contained"
-                sx={{ mt: 1 }}
                 onClick={() => handleAddItem(sectionIdx)}
                 type="button"
               >
                 + Add Item
-              </RedButton>
+              </AddButton>
             </Box>
           </SectionCard>
         ))}
-        <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
-          <RedButton
-            variant="contained"
-            onClick={handleAddSection}
-            type="button"
-          >
-            + Add Section
-          </RedButton>
-        </Box>
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 2 }}>
-          <RedButton type="submit" onClick={handleSubmit}>
-            Save
-          </RedButton>
-          <DraftButton type="button" onClick={handleCancel}>
-            Cancel
-          </DraftButton>
-        </Box>
+       
+       <div className="flex gap-4 justify-center pt-6">
+  <Button
+    type="submit"
+    disabled={isSubmitting}
+    onClick={handleSubmit}
+    className="bg-red-600 hover:bg-red-700 text-white px-8 py-2"
+  >
+    {isSubmitting ? "Submitting..." : "Submit"}
+  </Button>
+
+  <Button
+    type="button"
+    variant="outline"
+    onClick={handleCancel}
+    className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-2"
+  >
+    Cancel
+  </Button>
+</div>
+
       </Box>
     </Box>
   );
