@@ -166,6 +166,7 @@ const UserList = lazy(() => import("@/pages/UserList"));
 const PressReleasesCreate = lazy(() => import("@/pages/PressReleasesCreate"));
 const PressReleasesEdit = lazy(() => import("@/pages/PressReleasesEdit"));
 const PressReleasesList = lazy(() => import("@/pages/PressReleasesList"));
+const SettingsGenericPage = lazy(() => import("@/pages/SettingsGenericPage"));
 
 // Add lazy imports for loyalty pages
 const LoyaltyMembersList = lazy(() => import("@/pages/LoyaltyMembersList"));
@@ -395,6 +396,9 @@ const withSuspense = (Component: React.LazyExoticComponent<any>) => {
 
 export const setupMemberRoutes = (
   <>
+    {/* Generic Settings Route */}
+    <Route path="/settings/generic" Component={withSuspense(SettingsGenericPage)} />
+
     {/* Amenities Routes */}
     <Route path="/settings/amenities" Component={withSuspense(Amenities)} />
     <Route

@@ -42,6 +42,12 @@ export const SettingsSidebar: React.FC = () => {
   // Setup sub-items
   const setupItems: MenuItem[] = [
     {
+      id: "generic-settings",
+      label: "Generic Settings",
+      icon: Settings,
+      path: "/settings/generic",
+    },
+    {
       id: "special-users",
       label: "Special Users Category",
       icon: Users,
