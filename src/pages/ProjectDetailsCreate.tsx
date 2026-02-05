@@ -3982,9 +3982,8 @@ const ProjectDetailsCreate = () => {
             </div>
           </div>
         </div>
-        {(API_CONFIG.BASE_URL === "https://dev-panchshil-super-app.lockated.com/" ||
-          API_CONFIG.BASE_URL === "https://rustomjee-live.lockated.com/") && (
-          <div className="card mt-3 pb-4 mx-4">
+       
+          {/* <div className="card mt-3 pb-4 mx-4">
             <div className="card-header3">
               <h3 className="card-title">Plans</h3>
             </div>
@@ -4126,8 +4125,8 @@ const ProjectDetailsCreate = () => {
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          </div> */}
+       
          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -5611,8 +5610,7 @@ const ProjectDetailsCreate = () => {
             </div>
           </div>
         </div>
-        {API_CONFIG.BASE_URL !== "https://dev-panchshil-super-app.lockated.com/" &&
-          API_CONFIG.BASE_URL !== "https://rustomjee-live.lockated.com/" && (
+       
             <>
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: "#F6F4EE" }}>
@@ -5752,7 +5750,7 @@ const ProjectDetailsCreate = () => {
                 </div>
               </div>
             </>
-          )}
+         
 
         {/* Visibility Section */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
