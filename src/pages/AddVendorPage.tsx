@@ -402,10 +402,12 @@ export const AddVendorPage = () => {
   };
 
   const handleSave = async () => {
+    // Validate current step before submitting
     if (!validateStep()) {
       toast.error("Please fill all required fields before submitting.");
       return;
     }
+    
     setIsSubmitting(true);
 
     const apiFormData = new FormData();
@@ -476,7 +478,6 @@ export const AddVendorPage = () => {
     otherAttachments.forEach(file => apiFormData.append('cancle_checque[]', file));
 
     // Hardcoded values from API spec
-    apiFormData.append('pms_supplier[society_id]', '1');
     apiFormData.append('pms_supplier[active]', 'true');
 
     // Debug: Log the FormData contents
@@ -555,15 +556,26 @@ export const AddVendorPage = () => {
   };
 
   const handleNext = () => {
-    if (validateStep()) {
-      if (!completedSteps.includes(activeStep)) {
-        setCompletedSteps((prev) => [...prev, activeStep]);
-      }
-      setActiveStep((prev) => Math.min(prev + 1, steps.length - 1));
+    // Run client-side validation only
+    if (!validateStep()) {
+      toast.error('Please fill in all required fields before proceeding to the next step');
+      return;
     }
+
+    // Mark step as completed and move forward
+    if (!completedSteps.includes(activeStep)) {
+      setCompletedSteps((prev) => [...prev, activeStep]);
+    }
+    setActiveStep((prev) => Math.min(prev + 1, steps.length - 1));
+    // Clear errors when moving to next step
+    setErrors({});
   };
 
-  const handleBack = () => setActiveStep((prev) => Math.max(prev - 1, 0));
+  const handleBack = () => {
+    setActiveStep((prev) => Math.max(prev - 1, 0));
+    // Clear errors when going back
+    setErrors({});
+  };
 
   const handleStepClick = (step: number) => {
     if (step < activeStep) {

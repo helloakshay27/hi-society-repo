@@ -3,6 +3,21 @@ import { lazy, Suspense } from "react";
 import ProjectConfigEdit from "@/pages/ProjectConfigEdit";
 import LockFunctionEdit from "@/pages/LockFunctionEdit";
 import EventDetails from "@/pages/EventDetails";
+import { BookingSetupClubDashboard } from "@/pages/ClubManagement/AmenityBookingSetupClub";
+import { AddBookingSetupClubPage } from "@/pages/ClubManagement/AmenityBookingSetupClubAdd";
+import { BookingSetupDetailClubPage } from "@/pages/ClubManagement/AmenityBookingSetupClubDetails";
+import { EditBookingSetupClubPage } from "@/pages/ClubManagement/AmenityBookingSetupClubEdit";
+
+import { LoyaltyDashboard } from "@/pages/LoyaltyDashboard";
+import { WalletManagement } from "@/pages/WalletManagement";
+import { LoyaltyCustomers } from "@/pages/LoyaltyCustomers";
+import { LoyaltyCustomerDetails } from "@/pages/LoyaltyCustomerDetails";
+import { LoyaltyInventorySection } from "@/pages/LoyaltyInventorySection";
+import { TicketDashboard } from "@/TicketDashboardbackup";
+import CRMGroupsPage from "@/pages/CRMGroupsPage";
+import { VisitorsDashboard } from "@/pages/VisitorsDashboard";
+import HiSocGroupsPage from "@/pages/HiSocGroupsPage";
+
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
@@ -219,7 +234,11 @@ const BMSCommunicationTemplate = lazy(
 const CMSFacility = lazy(() => import("@/pages/CMSFacility"));
 const CMSRules = lazy(() => import("@/pages/CMSRules"));
 const CMSClubMembers = lazy(() => import("@/pages/CMSClubMembers"));
+const AddCMSClubMembers = lazy(() => import("@/pages/AddCMSClubMembers"));
+const EditCMSClubMembers = lazy(() => import("@/pages/EditCMSClubMembers"));
 const CMSFacilityBookings = lazy(() => import("@/pages/CMSFacilityBookings"));
+const AddFacilityBookingPage = lazy(() => import("@/pages/AddFacilityBookingPage"));
+const CMSMembershipPlanSetup = lazy(() => import("@/pages/ClubManagement/CMSMembershipPlanSetup"));
 const CMSPayments = lazy(() => import("@/pages/CMSPayments"));
 
 // Campaigns Pages
@@ -400,6 +419,26 @@ export const setupMemberRoutes = (
     <Route path="/settings/generic" Component={withSuspense(SettingsGenericPage)} />
 
     {/* Amenities Routes */}
+    <Route
+      path="/loyalty/dashboard"
+      element={<LoyaltyDashboard />}
+    />
+    <Route
+      path="/loyalty/wallet-management"
+      element={<WalletManagement />}
+    />
+    <Route
+      path="/loyalty/customers"
+      element={<LoyaltyCustomers />}
+    />
+    <Route
+      path="/loyalty/customers/:id"
+      element={<LoyaltyCustomerDetails />}
+    />
+    <Route
+      path="/loyalty/inventory-section"
+      element={<LoyaltyInventorySection />}
+    />
     <Route path="/settings/amenities" Component={withSuspense(Amenities)} />
     <Route
       path="/settings/amenities-list"
@@ -1026,14 +1065,14 @@ export const setupMemberRoutes = (
     />
 
     {/* BMS Routes */}
-    <Route path="/bms/helpdesk" Component={withSuspense(BMSHelpdesk)} />
+    <Route path="/bms/helpdesk" Component={withSuspense(TicketDashboard)} />
     <Route
       path="/bms/communication-template"
       Component={withSuspense(BMSCommunicationTemplate)}
     />
     <Route path="/bms/feedbacks" Component={withSuspense(BMSFeedbacks)} />
     <Route path="/bms/parking" Component={withSuspense(BMSParking)} />
-    <Route path="/bms/groups" Component={withSuspense(BMSGroups)} />
+    <Route path="/bms/groups" Component={withSuspense(HiSocGroupsPage)} />
     <Route
       path="/bms/quarantine-tracker"
       Component={withSuspense(BMSQuarantineTracker)}
@@ -1066,12 +1105,22 @@ export const setupMemberRoutes = (
     />
 
     {/* CMS Routes */}
-    <Route path="/cms/facility" Component={withSuspense(CMSFacility)} />
+    <Route path="/cms/facility-setup" Component={withSuspense(BookingSetupClubDashboard)} />
+    <Route path="/cms/facility-setup/add" Component={withSuspense(AddBookingSetupClubPage)} />
+    <Route path="/cms/facility-setup/:id" Component={withSuspense(BookingSetupDetailClubPage)} />
+    <Route path="/cms/facility-setup/edit/:id" Component={withSuspense(EditBookingSetupClubPage)} />
     <Route path="/cms/rules" Component={withSuspense(CMSRules)} />
+    <Route path="/cms/membership-plan-setup" Component={withSuspense(CMSMembershipPlanSetup)} />
     <Route path="/cms/club-members" Component={withSuspense(CMSClubMembers)} />
+    <Route path="/cms/club-members/add" Component={withSuspense(AddCMSClubMembers)} />
+    <Route path="/cms/club-members/edit/:id" Component={withSuspense(EditCMSClubMembers)} />
     <Route
       path="/cms/facility-bookings"
       Component={withSuspense(CMSFacilityBookings)}
+    />
+    <Route
+      path="/cms/facility-bookings/add"
+      Component={withSuspense(AddFacilityBookingPage)}
     />
     <Route path="/cms/payments" Component={withSuspense(CMSPayments)} />
 
@@ -1242,7 +1291,7 @@ export const setupMemberRoutes = (
     {/* SmartSecure Routes */}
     <Route
       path="/smartsecure/visitor-in"
-      Component={withSuspense(SmartSecureVisitorIn)}
+      Component={withSuspense(VisitorsDashboard)}
     />
     <Route
       path="/smartsecure/visitor-out"

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLayout } from "../contexts/LayoutContext";
+import { getUser, isAssetRestrictedUser } from "@/utils/auth";
 import {
   Users,
   Settings,
@@ -352,7 +353,7 @@ const modulesByPackage = {
       href: "/master/user",
       subItems: [
         {
-          name: "FM Users",
+          name: "Admin Users",
           href: "/master/user/fm-users",
           color: "text-[#1a1a1a]",
         },
@@ -387,6 +388,11 @@ const modulesByPackage = {
       name: "Material Master -> EBom",
       icon: FileText,
       href: "/master/material-ebom",
+    },
+    {
+      name: 'Finance Master',
+      icon: Wallet,
+      href: '/master/finance'
     },
     {
       name: "Gate Number",
@@ -436,6 +442,18 @@ const modulesByPackage = {
         {
           name: "Corrective Action",
           href: "/master/template/corrective-action",
+          color: "text-[#1a1a1a]",
+        },
+      ],
+    },
+    {
+      name: "Document",
+      icon: FileText,
+      href: "/master/document",
+      subItems: [
+        {
+          name: "Category",
+          href: "/master/document-category",
           color: "text-[#1a1a1a]",
         },
       ],
@@ -612,17 +630,6 @@ const modulesByPackage = {
       icon: UserRoundPen,
       href: "/maintenance/vendor",
     },
-
-    // {
-    //   name: 'Projects & Tasks',
-    //   icon: Briefcase,
-    //   href: "/maintenance/projects"
-    // },
-    // {
-    //   name: 'Sprint',
-    //   icon: Briefcase,
-    //   href: "/maintenance/sprint"
-    // }
 
 
     // {
@@ -876,7 +883,20 @@ const modulesByPackage = {
         },
       ],
     },
-    { name: "Patrolling", icon: Shield, href: "/security/patrolling" },
+    {
+      name: "Patrolling", icon: Shield, href: "/security/patrolling", subItems: [
+        {
+          name: "Patrolling Info",
+          href: "/security/patrolling",
+          color: "text-[#1a1a1a]",
+        },
+        {
+          name: "Response",
+          href: "/security/patrolling/response",
+          color: "text-[#1a1a1a]",
+        },
+      ]
+    },
   ],
   "Value Added Services": [
     { name: "F&B", icon: Coffee, href: "/vas/fnb" },
@@ -993,22 +1013,61 @@ const modulesByPackage = {
         },
       ],
     },
+    // {
+    //   name: "Collaboration",
+    //   icon: Globe,
+    //   subItems: [
+    //     {
+    //       name: "Tasks",
+    //       href: "/vas/channels/tasks",
+    //       color: "text-[#1a1a1a]",
+    //     },
+    //   ]
+    // },
     {
-      name: "Collaboration",
-      icon: Globe,
+      name: 'Projects & Tasks',
+      icon: Briefcase,
       subItems: [
+        {
+          name: 'Projects',
+          href: "/vas/projects"
+        },
+        {
+          name: 'Tasks',
+          href: "/vas/tasks"
+        },
+        {
+          name: 'Sprint',
+          href: "/vas/sprint"
+        },
+        {
+          name: 'Issues',
+          href: "/vas/issues"
+        },
         {
           name: "Channels",
           href: "/vas/channels",
           color: "text-[#1a1a1a]",
         },
         {
-          name: "Tasks",
-          href: "/vas/channels/tasks",
-          color: "text-[#1a1a1a]",
+          name: 'Opportunity Register',
+          href: "/vas/opportunity"
+        },
+        {
+          name: 'ToDo',
+          href: "/vas/todo"
+        },
+        {
+          name: 'Documents',
+          href: "/vas/documents"
+        },
+        {
+          name: 'Minutes of Meeting',
+          href: "/vas/mom"
         },
       ]
-    }
+    },
+
   ],
   "Market Place": [
     {
@@ -1285,6 +1344,44 @@ const modulesByPackage = {
         },
       ]
     },
+    {
+      icon: Settings,
+      name: "Project & Task Setup",
+      subItems: [
+        {
+          name: "Roles",
+          href: "/settings/project-task-setup/roles",
+        },
+        {
+          name: "Project Teams",
+          href: "/settings/project-task-setup/project-teams",
+        },
+        {
+          name: "Project Types",
+          href: "/settings/project-task-setup/project-types",
+        },
+        {
+          name: "Project Tags",
+          href: "/settings/project-task-setup/project-tags",
+        },
+        {
+          name: "Status",
+          href: "/settings/project-task-setup/project-status",
+        },
+        {
+          name: "Project Groups",
+          href: "/settings/project-task-setup/project-groups",
+        },
+        {
+          name: "Project Templates",
+          href: "/settings/project-task-setup/project-templates",
+        },
+        {
+          name: "Issue Types",
+          href: "/settings/project-task-setup/issue-types",
+        },
+      ]
+    },
     { name: "FM Groups", icon: Users, href: "/settings/groups" },
     // {
     //   name: 'Currency',
@@ -1316,6 +1413,8 @@ export const StacticSidebar = () => {
     isSidebarCollapsed,
     setIsSidebarCollapsed,
   } = useLayout();
+  const user = getUser();
+  const assetRestricted = isAssetRestrictedUser(user);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [selectedDepartment, setSelectedRole] = useState("");
   const [selectedRole, setSelectedDepartment] = useState("");
@@ -1393,7 +1492,40 @@ export const StacticSidebar = () => {
     }
   }, [location.pathname, setCurrentSection]);
 
-  const currentModules = modulesByPackage[currentSection] || [];
+  // Helper function to recursively filter out asset-related items
+  const filterAssetItems = (items: any[]): any[] => {
+    if (!assetRestricted) return items;
+
+    return items
+      .filter((item: any) => {
+        // Filter out direct asset links
+        if (item.href === "/maintenance/asset" ||
+          item.href === "/maintenance/audit/assets" ||
+          item.href?.startsWith("/settings/asset-setup")) {
+          return false;
+        }
+        // Filter out items named "Asset Setup" or "Assets"
+        if (item.name === "Asset Setup" || item.name === "Assets") {
+          return false;
+        }
+        return true;
+      })
+      .map((item: any) => {
+        // Recursively filter subItems if they exist
+        if (item.subItems && Array.isArray(item.subItems)) {
+          return {
+            ...item,
+            subItems: filterAssetItems(item.subItems),
+          };
+        }
+        return item;
+      });
+  };
+
+  let currentModules = modulesByPackage[currentSection] || [];
+  if (assetRestricted) {
+    currentModules = filterAssetItems(currentModules);
+  }
 
   const isActiveRoute = (href: string, mode: "exact" | "prefix" = "exact") => {
     const currentPath = location.pathname;

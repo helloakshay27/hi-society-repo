@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, FileText, Trash2 } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
@@ -20,7 +20,6 @@ import {
 } from "@mui/material";
 
 const BroadcastCreate = () => {
-  const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     notice_heading: "",
@@ -327,7 +326,7 @@ const BroadcastCreate = () => {
     });
 
     try {
-      const response = await axios.post(`${baseURL}/crm/admin/noticeboards.json`, data, {
+      const response = await axios.post(getFullUrl('/crm/admin/noticeboards.json'), data, {
         headers: {
           Authorization: getAuthHeader(),
           "Content-Type": "multipart/form-data",
@@ -350,7 +349,7 @@ const BroadcastCreate = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${baseURL}/usergroups/cp_members_list.json`, {
+        const response = await axios.get(getFullUrl('/usergroups/cp_members_list.json'), {
           headers: {
             Authorization: getAuthHeader(),
             "Content-Type": "application/json",
@@ -362,12 +361,12 @@ const BroadcastCreate = () => {
       }
     };
     fetchUsers();
-  }, [baseURL]);
+  }, []);
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get(`${baseURL}/projects_for_dropdown.json`, {
+        const response = await axios.get(getFullUrl('/projects_for_dropdown.json'), {
           headers: {
                                   Authorization: getAuthHeader(),
                                   "Content-Type": "application/json",
@@ -379,7 +378,7 @@ const BroadcastCreate = () => {
       }
     };
     fetchProjects();
-  }, [baseURL]);
+  }, []);
 
   const handleCancel = () => {
     navigate(-1);
@@ -388,7 +387,7 @@ const BroadcastCreate = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get(`${baseURL}/crm/usergroups.json`, {
+        const response = await axios.get(getFullUrl('/crm/usergroups.json'), {
          headers: {
                                   Authorization: getAuthHeader(),
                                   "Content-Type": "application/json",
@@ -404,7 +403,7 @@ const BroadcastCreate = () => {
     if (formData.shared === "2" && groups.length === 0) {
       fetchGroups();
     }
-  }, [formData.shared, baseURL, groups.length]);
+  }, [formData.shared, groups.length]);
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen overflow-y-auto">

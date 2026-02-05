@@ -46,6 +46,38 @@ baseClient.interceptors.request.use(
       const organizationId = urlParams.get("organization_id");
       const orgId = urlParams.get("org_id");
 
+      // If org_id is present in URL, this takes priority over logged-in state
+      // This allows public survey access even when user is logged in
+      const hasOrgIdParam = !!(organizationId || orgId);
+
+      // First preference: use base URL saved via auth utilities (e.g., Mobile pages)
+      // BUT skip this if org_id parameter is present (for public survey access)
+      if (!hasOrgIdParam) {
+        try {
+          const storedBaseUrl = getBaseUrl();
+          if (storedBaseUrl) {
+            config.baseURL = storedBaseUrl;
+            console.log("✅ Base URL set from stored baseUrl:", storedBaseUrl);
+            return config;
+          }
+        } catch (storageError) {
+          console.warn("⚠️ Unable to read stored baseUrl:", storageError);
+        }
+
+        // Check if user is already logged in (has baseUrl in localStorage)
+        // Skip this if org_id parameter is present
+        const loggedInBaseUrl = localStorage.getItem("baseUrl");
+        if (loggedInBaseUrl) {
+          config.baseURL = loggedInBaseUrl;
+          console.log("✅ Base URL set from logged-in user:", loggedInBaseUrl);
+          return config;
+        }
+      } else {
+        console.log(
+          "🔓 org_id parameter detected - using public survey access mode"
+        );
+      }
+
       // Store token in session storage if available
       if (token) {
         sessionStorage.setItem("token", token);
@@ -57,11 +89,17 @@ baseClient.interceptors.request.use(
       const isOmanSite = hostname.includes("oig.gophygital.work");
       const isViSite =
         hostname.includes("vi-web.gophygital.work") ||
-        hostname.includes("web.gophygital.work");
+        hostname.includes("web.gophygital.work") ||
+        hostname.includes("lockated.gophygital.work");
       const isFmSite =
-        hostname.includes("fm-uat.gophygital.work") ||
-        hostname.includes("fm.gophygital.work") ||
-        hostname.includes("fm-matrix.lockated.com");
+        hostname === "fm-uat.gophygital.work" ||
+        hostname === "fm.gophygital.work" ||
+        hostname === "fm-matrix.lockated.com";
+      const isClubSite =
+        hostname.includes("club-uat-api.lockated.com") ||
+        hostname.includes("club.lockated.com");
+
+      const isDevSite = hostname === "dev-fm-matrix.lockated.com";
 
       // Hi-Society specific hosts and their API base URLs (strict equality check)
       const isHiSocietyWebHost = hostname === "web.hisociety.lockated.com";
@@ -113,7 +151,7 @@ baseClient.interceptors.request.use(
         // FM/Oman sites: prefer org_id, fallback to email
         if (organizationId) {
           apiUrl = `https://fm-uat-api.lockated.com/api/users/get_organizations_by_email.json?org_id=${organizationId}`;
-          console.log("🔍 Using org_id for FM/Oman site:", orgId);
+          console.log("🔍 Using org_id for FM/Oman site:", organizationId);
         } else if (orgId) {
           apiUrl = `https://fm-uat-api.lockated.com/api/users/get_organizations_by_email.json?org_id=${orgId}`;
           console.log("🔍 Using org_id for FM/Oman site:", orgId);
@@ -127,10 +165,9 @@ baseClient.interceptors.request.use(
         }
       } else if (isViSite) {
         // VI sites: use email
-
         if (organizationId) {
           apiUrl = `https://live-api.gophygital.work/api/users/get_organizations_by_email.json?org_id=${organizationId}`;
-          console.log("🔍 Using org_id for VI site:", orgId);
+          console.log("🔍 Using org_id for VI site:", organizationId);
         } else if (orgId) {
           apiUrl = `https://live-api.gophygital.work/api/users/get_organizations_by_email.json?org_id=${orgId}`;
           console.log("🔍 Using org_id for VI site:", orgId);
@@ -140,19 +177,29 @@ baseClient.interceptors.request.use(
         } else {
           throw new Error("Either org_id or email is required for VI sites");
         }
+      } else if (isDevSite) {
+        // Dev sites: use email
+        if (organizationId) {
+          apiUrl = `https://dev-api.lockated.com/api/users/get_organizations_by_email.json?org_id=${organizationId}`;
+          console.log("🔍 Using org_id for Dev site:", organizationId);
+        } else if (orgId) {
+          apiUrl = `https://dev-api.lockated.com/api/users/get_organizations_by_email.json?org_id=${orgId}`;
+          console.log("🔍 Using org_id for Dev site:", orgId);
+        } else if (email) {
+          apiUrl = `https://dev-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
+          console.log("🔍 Using email for Dev site:", email);
+        }
       } else {
         // Default fallback: prefer org_id, fallback to email
-        if (orgId) {
-          apiUrl = `https://fm-uat-api.lockated.com/api/users/get_organizations_by_email.json?org_id=${orgId}`;
-          console.log("🔍 Using org_id for default fallback:", orgId);
-        } else if (organizationId) {
+        if (organizationId) {
           apiUrl = `https://fm-uat-api.lockated.com/api/users/get_organizations_by_email.json?org_id=${organizationId}`;
-          console.log("🔍 Using org_id for default fallback:", orgId);
+          console.log("🔍 Using org_id for default site:", organizationId);
+        } else if (orgId) {
+          apiUrl = `https://live-api.gophygital.work/api/users/get_organizations_by_email.json?org_id=${orgId}`;
+          console.log("🔍 Using org_id for default site:", orgId);
         } else if (email) {
           apiUrl = `https://fm-uat-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
-          console.log("🔍 Using email for default fallback:", email);
-        } else {
-          throw new Error("Either org_id or email is required");
+          console.log("🔍 Using email for default site:", email);
         }
       }
 

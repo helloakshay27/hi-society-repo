@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
@@ -50,7 +50,6 @@ interface EventPermissions {
 }
 
 const Eventlist = () => {
-  const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,7 +106,7 @@ const Eventlist = () => {
       setLoading(true);
       setIsSearching(!!search);
       try {
-        const response = await axios.get(`${baseURL}/crm/admin/events.json`, {
+        const response = await axios.get(getFullUrl('/crm/admin/events.json'), {
           headers: {
             Authorization: getAuthHeader(),
           },
@@ -157,7 +156,7 @@ const Eventlist = () => {
         setIsSearching(false);
       }
     },
-    [baseURL]
+    []
   );
 
   useEffect(() => {
@@ -188,7 +187,7 @@ const Eventlist = () => {
     toast.dismiss();
     try {
       await axios.put(
-        `${baseURL}/crm/admin/events/${id}.json`,
+        getFullUrl(`/crm/admin/events/${id}.json`),
         { event: { active: !currentStatus } },
         {
          headers: {
@@ -218,7 +217,7 @@ const Eventlist = () => {
       );
 
       await axios.put(
-        `${baseURL}/crm/admin/events/${id}.json`,
+        getFullUrl(`/crm/admin/events/${id}.json`),
         { event: { show_on_home: !currentStatus } },
         {
           headers: {

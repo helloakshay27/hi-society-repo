@@ -1,9 +1,10 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Armchair, ArrowLeft, BookKey, CalendarDays, ChevronDown, ChevronUp, CreditCard, FileCog, FileImage, Image, LampFloor, MessageSquareX, NotepadText, ReceiptText, Settings, Share, Share2, Tv, Upload, User, X } from "lucide-react";
+import { Armchair, ArrowLeft, BookKey, CalendarDays, ChevronDown, ChevronUp, CreditCard, DollarSign, FileCog, FileImage, Image, LampFloor, MessageSquareX, NotepadText, Plus, ReceiptText, Settings, Share, Share2, Trash2, Tv, Upload, User, X } from "lucide-react";
+import { GalleryImageUpload } from "@/components/GalleryImageUpload";
 import {
   TextField,
   Select,
@@ -11,9 +12,11 @@ import {
   FormControl,
   InputLabel,
   Box,
+  Radio,
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { toast } from "sonner";
+import axios from "axios";
 
 // Custom theme for MUI components
 const muiTheme = createTheme({
@@ -85,23 +88,30 @@ export const AddBookingSetupPage = () => {
   const bookingImageRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState<File[]>([]);
   const [selectedBookingFiles, setSelectedBookingFiles] = useState<File[]>([]);
+  const [galleryModalOpen, setGalleryModalOpen] = useState(false);
+  const [selectedGalleryImages, setSelectedGalleryImages] = useState<any[]>([]);
 
   const [additionalOpen, setAdditionalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [inventories, setInventories] = useState<any[]>([]);
+  const [loadingInventories, setLoadingInventories] = useState(false);
 
   const [formData, setFormData] = useState({
     facilityName: "",
     isBookable: true,
     isRequest: false,
+    location: "",
     active: "1",
-    department: "",
+    category: "",
     appKey: "",
     postpaid: false,
     prepaid: false,
     payOnFacility: false,
+    billToCompany: false,
     complimentary: false,
     gstPercentage: "",
     sgstPercentage: "",
+    igstPercentage: "",
     perSlotCharge: "",
     bookingAllowedBefore: { day: "", hour: "", minute: "" },
     advanceBooking: { day: "", hour: "", minute: "" },
@@ -112,7 +122,8 @@ export const AddBookingSetupPage = () => {
     description: "",
     termsConditions: "",
     cancellationText: "",
-    amenities: {
+    amenities: {} as Record<number, boolean>,
+    staticAmenities: {
       tv: false,
       whiteboard: false,
       casting: false,
@@ -134,28 +145,46 @@ export const AddBookingSetupPage = () => {
         wrapTime: "",
       },
     ],
+    chargeSetup: {
+      member: { selected: false, adult: "", child: "" },
+      guest: { selected: false, adult: "", child: "" },
+      minimumPersonAllowed: "1",
+      maximumPersonAllowed: "1",
+      perSlotCharge: "",
+      gst: "0.0",
+      facilityDurationCharges: [
+        { hours: "", price: "" }
+      ],
+    },
+    blockDays: {
+      startDate: "",
+      endDate: "",
+      dayType: "entireDay",
+      blockReason: "",
+    },
   });
 
-  const [departments, setDepartments] = useState([]);
+  // const [departments, setDepartments] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loadingDepartments, setLoadingDepartments] = useState(false);
 
   const [cancellationRules, setCancellationRules] = useState([
     {
       description:
         "If user cancels the booking selected hours/days prior to schedule, a percentage of the amount will be deducted",
-      time: { type: "Hr", value: "00", day: "0" },
+      time: { type: "00", value: "00", day: "0" },
       deduction: "",
     },
     {
       description:
         "If user cancels the booking selected hours/days prior to schedule, a percentage of the amount will be deducted",
-      time: { type: "Hr", value: "00", day: "0" },
+      time: { type: "00", value: "00", day: "0" },
       deduction: "",
     },
     {
       description:
         "If user cancels the booking selected hours/days prior to schedule, a percentage of the amount will be deducted",
-      time: { type: "Hr", value: "00", day: "0" },
+      time: { type: "00", value: "00", day: "0" },
       deduction: "",
     },
   ]);
@@ -188,17 +217,54 @@ export const AddBookingSetupPage = () => {
     bookingImageRef.current?.click();
   };
 
+  const handleGalleryModalOpen = () => {
+    setGalleryModalOpen(true);
+  };
+
+  const handleGalleryModalClose = () => {
+    setGalleryModalOpen(false);
+  };
+
+  const handleGalleryModalContinue = (galleryImages: any[]) => {
+    setSelectedGalleryImages(galleryImages);
+    setGalleryModalOpen(false);
+  };
+
   const handleAdditionalOpen = () => {
     setAdditionalOpen(!additionalOpen);
   };
 
-  const fetchDepartments = async () => {
-    if (departments.length > 0) return; // Don't fetch if already loaded
+  const fetchCategories = async () => {
+    if (categories.length > 0) return; // Don't fetch if already loaded
 
     setLoadingDepartments(true);
     try {
+      const response = await axios.get(
+        `https://${baseUrl}/pms/admin/facility_categories.json`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      setCategories(response.data);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      setCategories([]);
+    } finally {
+      setLoadingDepartments(false);
+    }
+  };
+
+  const fetchInventories = async () => {
+    if (inventories.length > 0) return; // Don't fetch if already loaded
+
+    setLoadingInventories(true);
+    try {
       const response = await fetch(
-        `https://${baseUrl}/pms/departments.json`,
+        `https://${baseUrl}/pms/inventories.json`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -208,31 +274,40 @@ export const AddBookingSetupPage = () => {
       );
       const data = await response.json();
 
-      // Handle different response structures
-      let departmentsList = [];
-      if (Array.isArray(data)) {
-        departmentsList = data;
-      } else if (data && Array.isArray(data.departments)) {
-        departmentsList = data.departments;
-      } else if (data && data.length !== undefined) {
-        // Handle case where data might be array-like
-        departmentsList = Array.from(data);
+      if (data && Array.isArray(data.inventories)) {
+        setInventories(data.inventories);
+      } else {
+        setInventories([]);
       }
-
-      setDepartments(departmentsList);
     } catch (error) {
-      console.error("Error fetching departments:", error);
-      setDepartments([]);
+      console.error("Error fetching inventories:", error);
+      setInventories([]);
     } finally {
-      setLoadingDepartments(false);
+      setLoadingInventories(false);
     }
   };
+
+  useEffect(() => {
+    fetchCategories();
+    fetchInventories();
+  }, []);
 
   const validateForm = () => {
     if (!formData.facilityName) {
       toast.error("Please enter Facility Name");
       return false;
-    } else if (!formData.termsConditions) {
+    } else if (!formData.category) {
+      toast.error("Please select Category");
+      return false;
+    } else if (!formData.location) {
+      toast.error("Please enter Location");
+      return false;
+    }
+    // else if (!formData.facilityBookedTimes) {
+    //   toast.error("Please enter how many times facility can be booked per day");
+    //   return false;
+    // } 
+    else if (!formData.termsConditions) {
       toast.error("Please enter Terms and Conditions");
       return false;
     } else if (!formData.cancellationText) {
@@ -249,14 +324,16 @@ export const AddBookingSetupPage = () => {
       const endHour = parseInt(slot.endTime.hour);
 
       if (slot.startTime.hour !== "00") {
-        if (
-          slot.endTime.hour === "00"
-        ) {
-          toast.error(
-            `Slot ${index + 1}: End Time must be selected when Start Time is set`
-          );
-          return false;
-        }
+        // if (
+        //   slot.breakTimeStart.hour === "00" ||
+        //   slot.breakTimeEnd.hour === "00" ||
+        //   slot.endTime.hour === "00"
+        // ) {
+        //   toast.error(
+        //     `Slot ${index + 1}: All subsequent time fields must be selected when Start Time is set`
+        //   );
+        //   return false;
+        // }
 
         // if (breakStartHour < startHour) {
         //   toast.error(
@@ -335,24 +412,25 @@ export const AddBookingSetupPage = () => {
         formData.isBookable ? "bookable" : "request"
       );
       formDataToSend.append("facility_setup[fac_name]", formData.facilityName);
+      formDataToSend.append("facility_setup[location]", formData.location);
       formDataToSend.append(
         "facility_setup[active]",
         formData.active
       );
 
       // Find department ID from selected department name
-      if (formData.department) {
+      if (formData.category) {
         formDataToSend.append(
-          "facility_setup[department_id]",
-          formData.department
+          "facility_setup[facility_category_id]",
+          formData.category
         );
       }
 
       formDataToSend.append("facility_setup[app_key]", formData.appKey);
-      formDataToSend.append(
-        "facility_setup[postpaid]",
-        formData.postpaid ? "1" : "0"
-      );
+      // formDataToSend.append(
+      //   "facility_setup[postpaid]",
+      //   formData.postpaid ? "1" : "0"
+      // );
       formDataToSend.append(
         "facility_setup[prepaid]",
         formData.prepaid ? "1" : "0"
@@ -365,12 +443,80 @@ export const AddBookingSetupPage = () => {
         "facility_setup[complementary]",
         formData.complimentary ? "1" : "0"
       );
+      formDataToSend.append(
+        "facility_setup[bill_to_company]",
+        formData.billToCompany ? "1" : "0"
+      );
       formDataToSend.append("facility_setup[gst]", formData.gstPercentage);
       formDataToSend.append("facility_setup[sgst]", formData.sgstPercentage);
+      // formDataToSend.append("facility_setup[igst]", formData.igstPercentage);
+      // formDataToSend.append(
+      //   "facility_setup[facility_charge_attributes][per_slot_charge]",
+      //   formData.perSlotCharge
+      // );
+
+
+      // Charge Setup - Member charges and boolean
+      formDataToSend.append(
+        "facility_setup[facility_charge_attributes][member]",
+        formData.chargeSetup.member.selected ? "true" : "false"
+      );
+      if (formData.chargeSetup.member.selected) {
+        formDataToSend.append(
+          "facility_setup[facility_charge_attributes][adult_member_charge]",
+          formData.chargeSetup.member.adult || "0"
+        );
+        formDataToSend.append(
+          "facility_setup[facility_charge_attributes][child_member_charge]",
+          formData.chargeSetup.member.child || "0"
+        );
+      }
+
+      // Charge Setup - Guest charges and boolean
+      // formDataToSend.append(
+      //   "facility_setup[facility_charge_attributes][guest]",
+      //   formData.chargeSetup.guest.selected ? "true" : "false"
+      // );
+      // if (formData.chargeSetup.guest.selected) {
+      //   formDataToSend.append(
+      //     "facility_setup[facility_charge_attributes][adult_guest_charge]",
+      //     formData.chargeSetup.guest.adult || "0"
+      //   );
+      //   formDataToSend.append(
+      //     "facility_setup[facility_charge_attributes][child_guest_charge]",
+      //     formData.chargeSetup.guest.child || "0"
+      //   );
+      // }
+
       formDataToSend.append(
         "facility_setup[facility_charge_attributes][per_slot_charge]",
-        formData.perSlotCharge
+        formData.chargeSetup.perSlotCharge || "0"
       );
+
+      // Charge Setup - Person limits and GST
+      formDataToSend.append(
+        "facility_setup[min_people]",
+        formData.chargeSetup.minimumPersonAllowed || "1"
+      );
+      formDataToSend.append(
+        "facility_setup[max_people]",
+        formData.chargeSetup.maximumPersonAllowed || "1"
+      );
+
+      // Facility Duration Charges
+      formData.chargeSetup.facilityDurationCharges.forEach((charge, index) => {
+        if (charge.hours || charge.price) {
+          formDataToSend.append(
+            `facility_setup[facility_duration_charges_attributes][${index}][duration_hours]`,
+            charge.hours
+          );
+          formDataToSend.append(
+            `facility_setup[facility_duration_charges_attributes][${index}][price]`,
+            charge.price
+          );
+        }
+      });
+
       formDataToSend.append(
         "facility_setup[description]",
         formData.termsConditions || ""
@@ -441,19 +587,45 @@ export const AddBookingSetupPage = () => {
         formDataToSend.append(`cover_image`, file);
       });
 
-      selectedBookingFiles.forEach((file) => {
-        formDataToSend.append(`attachments[]`, file);
+      // selectedBookingFiles.forEach((file) => {
+      //   formDataToSend.append(`attachments[]`, file);
+      // });
+
+      selectedGalleryImages.forEach((image: any, index: number) => {
+        // Convert aspect ratio to format: 16_9, 9_16, 1_1, 3_2
+        const ratioKey = image.ratio.replace(':', '_by_');
+        formDataToSend.append(
+          `facility_setup[attach_file_${ratioKey}][${index}][file]`,
+          image.file
+        );
       });
 
-      // Generic Tags (Amenities)
+      const selectedAccessories = Object.entries(formData.amenities)
+        .filter(([_, isSelected]) => isSelected)
+        .map(([inventoryId]) => parseInt(inventoryId));
+
+      console.log('=== Selected Accessories ===');
+      console.log('formData.amenities:', formData.amenities);
+      console.log('selectedAccessories IDs:', selectedAccessories);
+      console.log('Total accessories selected:', selectedAccessories.length);
+      console.log('===========================');
+
+      selectedAccessories.forEach((inventoryId, index) => {
+        formDataToSend.append(
+          `facility_setup[facility_setup_accessories_attributes][${index}][pms_inventory_id]`,
+          inventoryId.toString()
+        );
+        console.log(`Appending accessory [${index}]: pms_inventory_id = ${inventoryId}`);
+      });
+
       const amenities = [];
-      if (formData.amenities.tv) amenities.push("TV");
-      if (formData.amenities.whiteboard) amenities.push("Whiteboard");
-      if (formData.amenities.casting) amenities.push("Casting");
-      if (formData.amenities.smartPenForTV) amenities.push("Smart Pen for TV");
-      if (formData.amenities.wirelessCharging)
+      if (formData.staticAmenities.tv) amenities.push("TV");
+      if (formData.staticAmenities.whiteboard) amenities.push("Whiteboard");
+      if (formData.staticAmenities.casting) amenities.push("Casting");
+      if (formData.staticAmenities.smartPenForTV) amenities.push("Smart Pen for TV");
+      if (formData.staticAmenities.wirelessCharging)
         amenities.push("Wireless Charging");
-      if (formData.amenities.meetingRoomInventory)
+      if (formData.staticAmenities.meetingRoomInventory)
         amenities.push("Meeting Room Inventory");
 
       amenities.forEach((name, index) => {
@@ -518,18 +690,18 @@ export const AddBookingSetupPage = () => {
         );
         formDataToSend.append(
           `facility_slots[][wrap_time]`,
-          slot.wrapTime || "5"
+          slot.wrapTime || "0"
         );
       });
 
       formDataToSend.append(
         "facility_setup[multi_slot]",
-        formData.allowMultipleSlots
+        formData.allowMultipleSlots ? "1" : "0"
       )
-      formDataToSend.append(
-        "facility_setup[max_slots]",
-        formData.maximumSlots
-      )
+      // formDataToSend.append(
+      //   "facility_setup[max_slots]",
+      //   formData.maximumSlots
+      // )
       formDataToSend.append(
         "facility_setup[booking_limit]", formData.facilityBookedTimes
       )
@@ -587,7 +759,7 @@ export const AddBookingSetupPage = () => {
 
       if (response.ok) {
         toast.success("Booking setup saved successfully");
-        navigate("/settings/vas/booking/setup");
+        navigate(-1);
       } else {
         console.error("Failed to save booking setup:", response.statusText);
       }
@@ -599,7 +771,7 @@ export const AddBookingSetupPage = () => {
   };
 
   const handleClose = () => {
-    navigate("/settings/vas/booking/setup");
+    navigate(-1);
   };
 
   const addSlot = () => {
@@ -646,9 +818,13 @@ export const AddBookingSetupPage = () => {
                   label="Facility Name"
                   placeholder="Enter Facility Name"
                   value={formData.facilityName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, facilityName: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Only allow letters and spaces, no numbers
+                    if (/^[a-zA-Z0-9\s]*$/.test(value)) {
+                      setFormData({ ...formData, facilityName: value });
+                    }
+                  }}
                   variant="outlined"
                   required
                   InputLabelProps={{
@@ -659,27 +835,60 @@ export const AddBookingSetupPage = () => {
                   }}
                 />
                 <FormControl>
-                  <InputLabel className="bg-[#F6F7F7]">Department</InputLabel>
+                  <InputLabel className="bg-[#F6F7F7]">Category<span className="text-red-500">*</span></InputLabel>
                   <Select
-                    value={formData.department}
-                    onChange={(e) =>
-                      setFormData({ ...formData, department: e.target.value })
-                    }
-                    onFocus={fetchDepartments}
-                    label="Department"
+                    value={formData.category}
+                    onChange={(e) => {
+                      const selectedCategoryId = e.target.value;
+                      const selectedCategory = categories.find((cat: any) => cat.id === selectedCategoryId);
+
+                      // Set isBookable based on fac_type
+                      // Assuming "bookable" fac_type = true, others = false
+                      const isBookableType = selectedCategory?.fac_type === "bookable";
+
+                      setFormData({
+                        ...formData,
+                        category: selectedCategoryId,
+                        isBookable: isBookableType,
+                        isRequest: !isBookableType,
+                      });
+                    }}
+                    onFocus={fetchCategories}
+                    label="Category"
                     displayEmpty
                   >
                     <MenuItem value="">
-                      {loadingDepartments ? "Loading..." : "All"}
+                      Select Category
                     </MenuItem>
-                    {Array.isArray(departments) &&
-                      departments.map((dept, index) => (
+                    {Array.isArray(categories) &&
+                      categories.map((dept, index) => (
                         <MenuItem key={index} value={dept.id}>
-                          {dept.department_name}
+                          {dept.name}
                         </MenuItem>
                       ))}
                   </Select>
                 </FormControl>
+
+                <TextField
+                  label="Location"
+                  placeholder="Enter Location"
+                  value={formData.location}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow address-friendly characters
+                    if (/^[a-zA-Z0-9\s,.\-/#]*$/.test(value)) {
+                      setFormData({ ...formData, location: value });
+                    }
+                  }}
+                  variant="outlined"
+                  required
+                  InputLabelProps={{
+                    classes: {
+                      asterisk: "text-red-500", // Tailwind class for red color
+                    },
+                    shrink: true,
+                  }}
+                />
               </div>
 
               <div className="flex gap-6 px-1">
@@ -721,6 +930,333 @@ export const AddBookingSetupPage = () => {
             </div>
           </div>
 
+          {/* Charge Setup Card */}
+          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                <DollarSign className="w-4 h-4" />
+              </div>
+              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CHARGE SETUP</h3>
+            </div>
+
+            {/* <div className="overflow-x-auto">
+              <table className="w-full border">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Member Type</th>
+                    <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Adult</th>
+                    <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Child</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          checked={formData.chargeSetup.member.selected}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              chargeSetup: {
+                                ...formData.chargeSetup,
+                                member: {
+                                  ...formData.chargeSetup.member,
+                                  selected: !!checked,
+                                },
+                              },
+                            })
+                          }
+                        />
+                        <span>Member</span>
+                      </div>
+                    </td>
+                    <td className="border border-gray-300 px-4 py-3">
+                      <div className="flex items-center justify-center gap-2">
+                        <Checkbox
+                          checked={!!formData.chargeSetup.member.adult}
+                          onCheckedChange={(checked) => {
+                            if (!checked) {
+                              setFormData({
+                                ...formData,
+                                chargeSetup: {
+                                  ...formData.chargeSetup,
+                                  member: {
+                                    ...formData.chargeSetup.member,
+                                    adult: "",
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                        />
+                        <TextField
+                          size="small"
+                          variant="outlined"
+                          value={formData.chargeSetup.member.adult}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow only positive numbers with max 2 decimal places
+                            if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                              setFormData({
+                                ...formData,
+                                chargeSetup: {
+                                  ...formData.chargeSetup,
+                                  member: {
+                                    ...formData.chargeSetup.member,
+                                    adult: value,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          className="w-full max-w-[200px]"
+                        />
+                      </div>
+                    </td>
+                    <td className="border border-gray-300 px-4 py-3">
+                      <div className="flex items-center justify-center gap-2">
+                        <Checkbox
+                          checked={!!formData.chargeSetup.member.child}
+                          onCheckedChange={(checked) => {
+                            setFormData({
+                              ...formData,
+                              chargeSetup: {
+                                ...formData.chargeSetup,
+                                member: {
+                                  ...formData.chargeSetup.member,
+                                  child: checked ? formData.chargeSetup.member.child || "" : "",
+                                },
+                              },
+                            });
+                          }}
+                        />
+                        <TextField
+                          size="small"
+                          variant="outlined"
+                          value={formData.chargeSetup.member.child}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow only positive numbers with max 2 decimal places
+                            if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                              setFormData({
+                                ...formData,
+                                chargeSetup: {
+                                  ...formData.chargeSetup,
+                                  member: {
+                                    ...formData.chargeSetup.member,
+                                    child: value,
+                                  },
+                                },
+                              });
+                            }
+                          }}
+                          className="w-full max-w-[200px]"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div> */}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-semibold whitespace-nowrap">Minimum Person Allowed</label>
+                <TextField
+                  size="small"
+                  variant="outlined"
+                  value={formData.chargeSetup.minimumPersonAllowed}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow only positive integers (no decimals, no negatives)
+                    if (value === '' || /^[1-9]\d*$/.test(value)) {
+                      setFormData({
+                        ...formData,
+                        chargeSetup: {
+                          ...formData.chargeSetup,
+                          minimumPersonAllowed: value,
+                        },
+                      });
+                      // Check if maximum is valid after updating minimum
+                      if (formData.chargeSetup.maximumPersonAllowed && parseInt(formData.chargeSetup.maximumPersonAllowed) <= parseInt(value)) {
+                        toast.error("Maximum Person Allowed must be greater than Minimum Person Allowed");
+                      }
+                    }
+                  }}
+                  className="w-32"
+                  placeholder="1"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-semibold whitespace-nowrap">Maximum Person Allowed</label>
+                <TextField
+                  size="small"
+                  variant="outlined"
+                  value={formData.chargeSetup.maximumPersonAllowed}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow only positive integers (no decimals, no negatives)
+                    if (value === '' || /^[1-9]\d*$/.test(value)) {
+                      // Check if value is greater than minimum
+                      if (formData.chargeSetup.minimumPersonAllowed && parseInt(value) <= parseInt(formData.chargeSetup.minimumPersonAllowed)) {
+                        toast.error("Maximum Person Allowed must be greater than Minimum Person Allowed");
+                      }
+                      setFormData({
+                        ...formData,
+                        chargeSetup: {
+                          ...formData.chargeSetup,
+                          maximumPersonAllowed: value,
+                        },
+                      });
+                    }
+                  }}
+                  className="w-32"
+                  placeholder="1"
+                />
+              </div>
+              {
+                formData.isBookable && (
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm font-semibold whitespace-nowrap">Per slot charge</label>
+                    <TextField
+                      size="small"
+                      variant="outlined"
+                      value={formData.chargeSetup.perSlotCharge}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Allow only positive integers (no decimals, no negatives)
+                        if (value === '' || /^[1-9]\d*$/.test(value)) {
+                          setFormData({
+                            ...formData,
+                            chargeSetup: {
+                              ...formData.chargeSetup,
+                              perSlotCharge: value,
+                            },
+                          });
+                        }
+                      }}
+                      className="w-32"
+                      placeholder="1"
+                    />
+                  </div>
+                )
+              }
+            </div>
+
+            {/* Facility Duration Charges Table */}
+            {!formData.isBookable && (
+              <div className="mt-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-md font-semibold text-gray-800">Facility Duration Charges</h4>
+                  <Button
+                    onClick={() => {
+                      setFormData({
+                        ...formData,
+                        chargeSetup: {
+                          ...formData.chargeSetup,
+                          facilityDurationCharges: [
+                            ...formData.chargeSetup.facilityDurationCharges,
+                            { hours: "", price: "" }
+                          ]
+                        }
+                      });
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Row
+                  </Button>
+                </div>
+
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="w-full">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="border-b px-4 py-3 text-left font-semibold text-gray-700">Hours</th>
+                        <th className="border-b px-4 py-3 text-left font-semibold text-gray-700">Price</th>
+                        <th className="border-b px-4 py-3 text-center font-semibold text-gray-700">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {formData.chargeSetup.facilityDurationCharges.map((charge, index) => (
+                        <tr key={index} className="border-b hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <TextField
+                              size="small"
+                              variant="outlined"
+                              type="number"
+                              placeholder="Enter hours"
+                              value={charge.hours}
+                              onChange={(e) => {
+                                const newCharges = [...formData.chargeSetup.facilityDurationCharges];
+                                newCharges[index].hours = e.target.value;
+                                setFormData({
+                                  ...formData,
+                                  chargeSetup: {
+                                    ...formData.chargeSetup,
+                                    facilityDurationCharges: newCharges
+                                  }
+                                });
+                              }}
+                              inputProps={{
+                                step: "0.5",
+                                min: "0"
+                              }}
+                              className="w-full"
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <TextField
+                              size="small"
+                              variant="outlined"
+                              type="number"
+                              placeholder="Enter price"
+                              value={charge.price}
+                              onChange={(e) => {
+                                const newCharges = [...formData.chargeSetup.facilityDurationCharges];
+                                newCharges[index].price = e.target.value;
+                                setFormData({
+                                  ...formData,
+                                  chargeSetup: {
+                                    ...formData.chargeSetup,
+                                    facilityDurationCharges: newCharges
+                                  }
+                                });
+                              }}
+                              inputProps={{
+                                step: "0.01",
+                                min: "0"
+                              }}
+                              className="w-full"
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <button
+                              onClick={() => {
+                                const newCharges = formData.chargeSetup.facilityDurationCharges.filter((_, i) => i !== index);
+                                setFormData({
+                                  ...formData,
+                                  chargeSetup: {
+                                    ...formData.chargeSetup,
+                                    facilityDurationCharges: newCharges.length > 0 ? newCharges : [{ hours: "", price: "" }]
+                                  }
+                                });
+                              }}
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded transition-colors"
+                              title="Remove row"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
               <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
@@ -738,7 +1274,7 @@ export const AddBookingSetupPage = () => {
               </Button>
 
               {/* Slot Headers */}
-              <div className="grid grid-cols-7 gap-2 mb-2 text-sm font-medium text-gray-600">
+              <div className="grid grid-cols-8 gap-2 mb-2 text-sm font-medium text-gray-600">
                 <div>Start Time</div>
                 <div>Break Time Start</div>
                 <div>Break Time End</div>
@@ -746,11 +1282,12 @@ export const AddBookingSetupPage = () => {
                 <div>Concurrent Slots</div>
                 <div>Slot by</div>
                 <div>Wrap Time</div>
+                <div>Action</div>
               </div>
 
               {/* Slot Rows */}
               {formData.slots.map((slot, index) => (
-                <div key={index} className="grid grid-cols-7 gap-2 mb-2">
+                <div key={index} className="grid grid-cols-8 gap-2 mb-2">
                   <div className="flex gap-1">
                     <FormControl size="small">
                       <Select
@@ -920,9 +1457,13 @@ export const AddBookingSetupPage = () => {
                     size="small"
                     value={slot.concurrentSlots}
                     onChange={(e) => {
-                      const newSlots = [...formData.slots];
-                      newSlots[index].concurrentSlots = e.target.value;
-                      setFormData({ ...formData, slots: newSlots });
+                      const value = e.target.value;
+                      // Allow only positive integers (no decimals, no negatives)
+                      if (value === '' || /^[1-9]\d*$/.test(value)) {
+                        const newSlots = [...formData.slots];
+                        newSlots[index].concurrentSlots = value;
+                        setFormData({ ...formData, slots: newSlots });
+                      }
                     }}
                     variant="outlined"
                   />
@@ -941,6 +1482,12 @@ export const AddBookingSetupPage = () => {
                       <MenuItem value={45}>45 Minutes</MenuItem>
                       <MenuItem value={60}>1 hour</MenuItem>
                       <MenuItem value={90}>1 and a half hours</MenuItem>
+                      <MenuItem value={120}>2 hours</MenuItem>
+                      <MenuItem value={150}>2 and a half hours</MenuItem>
+                      <MenuItem value={180}>3 hours</MenuItem>
+                      <MenuItem value={210}>3 and a half hours</MenuItem>
+                      <MenuItem value={240}>4 hours</MenuItem>
+                      <MenuItem value={270}>4 and a half hours</MenuItem>
                     </Select>
                   </FormControl>
 
@@ -948,12 +1495,28 @@ export const AddBookingSetupPage = () => {
                     size="small"
                     value={slot.wrapTime}
                     onChange={(e) => {
-                      const newSlots = [...formData.slots];
-                      newSlots[index].wrapTime = e.target.value;
-                      setFormData({ ...formData, slots: newSlots });
+                      const value = e.target.value;
+                      // Allow only positive integers (no decimals, no negatives)
+                      if (value === '' || /^\d+$/.test(value)) {
+                        const newSlots = [...formData.slots];
+                        newSlots[index].wrapTime = value;
+                        setFormData({ ...formData, slots: newSlots });
+                      }
                     }}
                     variant="outlined"
                   />
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      const newSlots = formData.slots.filter((_, i) => i !== index);
+                      setFormData({ ...formData, slots: newSlots });
+                    }}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
               ))}
 
@@ -972,51 +1535,60 @@ export const AddBookingSetupPage = () => {
                       style={{ width: "80px" }}
                       variant="outlined"
                       value={formData.bookingAllowedBefore.day}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          bookingAllowedBefore: {
-                            ...formData.bookingAllowedBefore,
-                            day: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setFormData({
+                            ...formData,
+                            bookingAllowedBefore: {
+                              ...formData.bookingAllowedBefore,
+                              day: value,
+                            },
+                          });
+                        }
+                      }}
                     />
-                    <span>d</span>
+                    <span>DD</span>
                     <TextField
                       placeholder="Hour"
                       size="small"
                       style={{ width: "80px" }}
                       variant="outlined"
                       value={formData.bookingAllowedBefore.hour}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          bookingAllowedBefore: {
-                            ...formData.bookingAllowedBefore,
-                            hour: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setFormData({
+                            ...formData,
+                            bookingAllowedBefore: {
+                              ...formData.bookingAllowedBefore,
+                              hour: value,
+                            },
+                          });
+                        }
+                      }}
                     />
-                    <span>h</span>
+                    <span>HH</span>
                     <TextField
                       placeholder="Mins"
                       size="small"
                       style={{ width: "80px" }}
                       variant="outlined"
                       value={formData.bookingAllowedBefore.minute}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          bookingAllowedBefore: {
-                            ...formData.bookingAllowedBefore,
-                            minute: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setFormData({
+                            ...formData,
+                            bookingAllowedBefore: {
+                              ...formData.bookingAllowedBefore,
+                              minute: value,
+                            },
+                          });
+                        }
+                      }}
                     />
-                    <span>m</span>
+                    <span>MM</span>
                   </div>
                 </div>
                 <div>
@@ -1030,51 +1602,60 @@ export const AddBookingSetupPage = () => {
                       style={{ width: "80px" }}
                       variant="outlined"
                       value={formData.advanceBooking.day}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          advanceBooking: {
-                            ...formData.advanceBooking,
-                            day: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setFormData({
+                            ...formData,
+                            advanceBooking: {
+                              ...formData.advanceBooking,
+                              day: value,
+                            },
+                          });
+                        }
+                      }}
                     />
-                    <span>d</span>
+                    <span>DD</span>
                     <TextField
                       placeholder="Hour"
                       size="small"
                       style={{ width: "80px" }}
                       variant="outlined"
                       value={formData.advanceBooking.hour}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          advanceBooking: {
-                            ...formData.advanceBooking,
-                            hour: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setFormData({
+                            ...formData,
+                            advanceBooking: {
+                              ...formData.advanceBooking,
+                              hour: value,
+                            },
+                          });
+                        }
+                      }}
                     />
-                    <span>h</span>
+                    <span>HH</span>
                     <TextField
                       placeholder="Mins"
                       size="small"
                       style={{ width: "80px" }}
                       variant="outlined"
                       value={formData.advanceBooking.minute}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          advanceBooking: {
-                            ...formData.advanceBooking,
-                            minute: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setFormData({
+                            ...formData,
+                            advanceBooking: {
+                              ...formData.advanceBooking,
+                              minute: value,
+                            },
+                          });
+                        }
+                      }}
                     />
-                    <span>m</span>
+                    <span>MM</span>
                   </div>
                 </div>
                 <div>
@@ -1088,57 +1669,66 @@ export const AddBookingSetupPage = () => {
                       style={{ width: "80px" }}
                       variant="outlined"
                       value={formData.canCancelBefore.day}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          canCancelBefore: {
-                            ...formData.canCancelBefore,
-                            day: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setFormData({
+                            ...formData,
+                            canCancelBefore: {
+                              ...formData.canCancelBefore,
+                              day: value,
+                            },
+                          });
+                        }
+                      }}
                     />
-                    <span>d</span>
+                    <span>DD</span>
                     <TextField
                       placeholder="Hour"
                       size="small"
                       style={{ width: "80px" }}
                       variant="outlined"
                       value={formData.canCancelBefore.hour}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          canCancelBefore: {
-                            ...formData.canCancelBefore,
-                            hour: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setFormData({
+                            ...formData,
+                            canCancelBefore: {
+                              ...formData.canCancelBefore,
+                              hour: value,
+                            },
+                          });
+                        }
+                      }}
                     />
-                    <span>h</span>
+                    <span>HH</span>
                     <TextField
                       placeholder="Mins"
                       size="small"
                       style={{ width: "80px" }}
                       variant="outlined"
                       value={formData.canCancelBefore.minute}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          canCancelBefore: {
-                            ...formData.canCancelBefore,
-                            minute: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setFormData({
+                            ...formData,
+                            canCancelBefore: {
+                              ...formData.canCancelBefore,
+                              minute: value,
+                            },
+                          });
+                        }
+                      }}
                     />
-                    <span>m</span>
+                    <span>MM</span>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-4 flex items-center justify-between mt-4  ">
-                <div className="flex flex-col gap-5">
+                {/* <div className="flex flex-col gap-5">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="allowMultipleSlots"
@@ -1173,25 +1763,33 @@ export const AddBookingSetupPage = () => {
                       />
                     </div>
                   )}
-                </div>
+                </div> */}
 
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span>Facility can be booked</span>
-                  <TextField
-                    placeholder=""
-                    value={formData.facilityBookedTimes}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        facilityBookedTimes: e.target.value,
-                      })
-                    }
-                    variant="outlined"
-                    size="small"
-                    style={{ width: "80px" }}
-                  />
-                  <span>times per day by User</span>
-                </div>
+                {
+                  formData.isBookable && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <span>Facility can be booked</span>
+                      <TextField
+                        placeholder=""
+                        value={formData.facilityBookedTimes}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Allow only positive integers (no decimals, no negatives)
+                          if (value === '' || /^[1-9]\d*$/.test(value)) {
+                            setFormData({
+                              ...formData,
+                              facilityBookedTimes: value,
+                            });
+                          }
+                        }}
+                        variant="outlined"
+                        size="small"
+                        style={{ width: "80px" }}
+                      />
+                      <span>times per day by User</span>
+                    </div>
+                  )
+                }
               </div>
             </div>
           </div>
@@ -1206,74 +1804,104 @@ export const AddBookingSetupPage = () => {
 
             <div className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="postpaid"
-                    checked={formData.postpaid}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, postpaid: !!checked })
-                    }
-                  />
-                  <label htmlFor="postpaid">Postpaid</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="prepaid"
-                    checked={formData.prepaid}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, prepaid: !!checked })
-                    }
-                  />
-                  <label htmlFor="prepaid">Prepaid</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="payOnFacility"
-                    checked={formData.payOnFacility}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, payOnFacility: !!checked })
-                    }
-                  />
-                  <label htmlFor="payOnFacility">Pay on Facility</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="complimentary"
-                    checked={formData.complimentary}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, complimentary: !!checked })
-                    }
-                  />
-                  <label htmlFor="complimentary">Complimentary</label>
-                </div>
+                {/* Show Prepaid and Pay at Facility for Bookable */}
+                {formData.isBookable && (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="prepaid"
+                        checked={formData.prepaid}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, prepaid: !!checked })
+                        }
+                      />
+                      <label htmlFor="prepaid">Prepaid</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="payOnFacility"
+                        checked={formData.payOnFacility}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, payOnFacility: !!checked })
+                        }
+                      />
+                      <label htmlFor="payOnFacility">Pay at Facility</label>
+                    </div>
+                  </>
+                )}
+
+                {/* Show Complimentary and Bill to Company for Requestable */}
+                {!formData.isBookable && (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="complimentary"
+                        checked={formData.complimentary}
+                        onCheckedChange={(checked) =>
+                          setFormData({
+                            ...formData,
+                            complimentary: !!checked,
+                            billToCompany: !!checked ? false : formData.billToCompany
+                          })
+                        }
+                        disabled={formData.billToCompany}
+                      />
+                      <label htmlFor="complimentary" className={formData.billToCompany ? "text-gray-400" : ""}>Complimentary</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="billToCompany"
+                        checked={formData.billToCompany}
+                        onCheckedChange={(checked) =>
+                          setFormData({
+                            ...formData,
+                            billToCompany: !!checked,
+                            complimentary: !!checked ? false : formData.complimentary
+                          })
+                        }
+                        disabled={formData.complimentary}
+                      />
+                      <label htmlFor="billToCompany" className={formData.complimentary ? "text-gray-400" : ""}>Bill to Company</label>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <TextField
                   label="SGST(%)"
                   value={formData.sgstPercentage}
-                  onChange={(e) =>
-                    setFormData({ ...formData, sgstPercentage: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow only non-negative numbers with max 2 decimal places
+                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                      setFormData({ ...formData, sgstPercentage: value });
+                    }
+                  }}
                   variant="outlined"
                 />
                 <TextField
                   label="GST(%)"
                   value={formData.gstPercentage}
-                  onChange={(e) =>
-                    setFormData({ ...formData, gstPercentage: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                      setFormData({ ...formData, gstPercentage: value });
+                    }
+                  }}
                   variant="outlined"
                 />
+                {/* <TextField
+                  label="IGST(%)"
+                  value={formData.igstPercentage}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                      setFormData({ ...formData, igstPercentage: value });
+                    }
+                  }}
+                  variant="outlined"
+                /> */}
               </div>
-
-              <TextField
-                label="Per Slot Charge"
-                value={formData.perSlotCharge}
-                onChange={(e) =>
-                  setFormData({ ...formData, perSlotCharge: e.target.value })
-                }
-                variant="outlined"
-              />
             </div>
           </div>
 
@@ -1286,9 +1914,9 @@ export const AddBookingSetupPage = () => {
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">COVER IMAGE</h3>
               </div>
 
-              <div className="p-6" style={{ border: "1px solid #D9D9D9" }}>
+              <div className="p-6" style={{ border: "1px dashed #C72030" }}>
                 <div
-                  className="border-2 border-dashed border-[#C72030]/30 rounded-lg text-center p-6"
+                  className="rounded-lg text-center p-6"
                   onClick={triggerFileSelect}
                 >
                   <div className="text-[#C72030] mb-2">
@@ -1313,30 +1941,29 @@ export const AddBookingSetupPage = () => {
                   ref={coverImageRef}
                   hidden
                 />
-
-                {selectedFile.length > 0 && (
-                  <div className="mt-4 flex gap-2 flex-wrap">
-                    {selectedFile.map((file, index) => (
-                      <div key={index} className="relative">
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={`cover-preview-${index}`}
-                          className="h-[80px] w-20 rounded border border-gray-200"
-                        />
-                        <button
-                          onClick={() => removeCoverImage(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
+              {selectedFile.length > 0 && (
+                <div className="mt-4 flex gap-2 flex-wrap">
+                  {selectedFile.map((file, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`cover-preview-${index}`}
+                        className="h-[80px] w-20 rounded border border-gray-200"
+                      />
+                      <button
+                        onClick={() => removeCoverImage(index)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="bg-white rounded-lg border-2 p-6 space-y-6 w-full">
+            {/* <div className="bg-white rounded-lg border-2 p-6 space-y-6 w-full">
               <div className="flex items-center gap-3">
                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                   <Image className="w-4 h-4" />
@@ -1344,9 +1971,9 @@ export const AddBookingSetupPage = () => {
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Booking Summary Image</h3>
               </div>
 
-              <div className="p-6" style={{ border: "1px solid #D9D9D9" }}>
+              <div className="p-6" style={{ border: "1px dashed #C72030" }}>
                 <div
-                  className="border-2 border-dashed border-[#C72030]/30 rounded-lg text-center p-6"
+                  className="rounded-lg text-center p-6"
                   onClick={triggerBookingImgSelect}
                 >
                   <div className="text-[#C72030] mb-2">
@@ -1371,28 +1998,118 @@ export const AddBookingSetupPage = () => {
                   ref={bookingImageRef}
                   hidden
                 />
-
-                {selectedBookingFiles.length > 0 && (
-                  <div className="mt-4 flex gap-2 flex-wrap">
-                    {selectedBookingFiles.map((file, index) => (
-                      <div key={index} className="relative">
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={`booking-preview-${index}`}
-                          className="h-[80px] w-20 rounded border border-gray-200 bg-cover"
-                        />
-                        <button
-                          onClick={() => removeBookingImage(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
+              {selectedBookingFiles.length > 0 && (
+                <div className="mt-4 flex gap-2 flex-wrap">
+                  {selectedBookingFiles.map((file, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`booking-preview-${index}`}
+                        className="h-[80px] w-20 rounded border border-gray-200 bg-cover"
+                      />
+                      <button
+                        onClick={() => removeBookingImage(index)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div> */}
+          </div>
+
+          {/* Gallery Images Card */}
+          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                  <Image className="w-4 h-4" />
+                </div>
+                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                  GALLERY IMAGES [{selectedGalleryImages.length}]
+                </h3>
+              </div>
+              <Button
+                onClick={handleGalleryModalOpen}
+                className="bg-[#C72030] hover:bg-[#A01828] text-white"
+              >
+                + Add
+              </Button>
             </div>
+
+            {selectedGalleryImages.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-[#E5E0D3]">
+                      <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Image Name</th>
+                      <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Preview</th>
+                      <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Ratio</th>
+                      <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Enable to App</th>
+                      <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedGalleryImages.map((image: any, index) => (
+                      <tr key={index} className="border-b hover:bg-gray-50">
+                        <td className="border border-gray-300 px-4 py-3">
+                          <input
+                            type="text"
+                            value={image.name || `Image ${index + 1}`}
+                            onChange={(e) => {
+                              const newImages = [...selectedGalleryImages];
+                              newImages[index] = { ...newImages[index], name: e.target.value };
+                              setSelectedGalleryImages(newImages);
+                            }}
+                            className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#C72030]"
+                          />
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3">
+                          <div className="flex justify-center">
+                            <img
+                              src={image.preview}
+                              alt={`gallery-preview-${index}`}
+                              className="h-20 w-20 rounded border border-gray-200 object-cover"
+                            />
+                          </div>
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3 text-center">
+                          {image.ratio || '1:1'}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3 text-center">
+                          <div className="flex items-center justify-center">
+                            <Checkbox
+                              checked={image.enableToApp ?? true}
+                              onCheckedChange={(checked) => {
+                                const newImages = [...selectedGalleryImages];
+                                newImages[index] = { ...newImages[index], enableToApp: !!checked };
+                                setSelectedGalleryImages(newImages);
+                              }}
+                              className="w-5 h-5 mx-auto"
+                            />
+                          </div>
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3 text-center">
+                          <button
+                            onClick={() => {
+                              setSelectedGalleryImages(
+                                selectedGalleryImages.filter((_: any, i: number) => i !== index)
+                              );
+                            }}
+                            className="bg-[#C72030] text-white w-8 h-8 flex items-center justify-center rounded hover:bg-[#A01828] mx-auto"
+                          >
+                            ×
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
@@ -1416,7 +2133,7 @@ export const AddBookingSetupPage = () => {
           </div>
 
           {/* Terms & Conditions and Cancellation Text */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
             <div className="bg-white rounded-lg border-2 p-6 space-y-6">
               <div className="flex items-center gap-3">
                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
@@ -1440,7 +2157,7 @@ export const AddBookingSetupPage = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+            {/* <div className="bg-white rounded-lg border-2 p-6 space-y-6">
               <div className="flex items-center gap-3">
                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                   <MessageSquareX className="w-4 h-4" />
@@ -1461,7 +2178,7 @@ export const AddBookingSetupPage = () => {
                   className="min-h-[100px]"
                 />
               </div>
-            </div>
+            </div> */}
           </div>
 
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
@@ -1491,7 +2208,7 @@ export const AddBookingSetupPage = () => {
                   </div>
 
                   {/* Time Type & Value */}
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center">
                     {/* Day Input */}
                     <TextField
                       placeholder="Day"
@@ -1505,6 +2222,7 @@ export const AddBookingSetupPage = () => {
                         setCancellationRules(newRules);
                       }}
                     />
+                    <span>DD</span>
 
                     {/* Type: Hr or Day */}
                     <FormControl size="small" style={{ width: "80px" }}>
@@ -1516,26 +2234,7 @@ export const AddBookingSetupPage = () => {
                           setCancellationRules(newRules);
                         }}
                       >
-                        <MenuItem value="Hr">Hr</MenuItem>
-                        {Array.from({ length: 24 }, (_, i) => (
-                          <MenuItem key={i + 1} value={(i + 1).toString()}>
-                            {i + 1}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-
-                    {/* Value: 0 - 23 */}
-                    <FormControl size="small" style={{ width: "80px" }}>
-                      <Select
-                        value={rule.time.value}
-                        onChange={(e) => {
-                          const newRules = [...cancellationRules];
-                          newRules[index].time.value = e.target.value;
-                          setCancellationRules(newRules);
-                        }}
-                      >
-                        {Array.from({ length: 24 }, (_, i) => (
+                        {Array.from({ length: 25 }, (_, i) => (
                           <MenuItem
                             key={i}
                             value={i.toString().padStart(2, "0")}
@@ -1545,22 +2244,72 @@ export const AddBookingSetupPage = () => {
                         ))}
                       </Select>
                     </FormControl>
+                    <span>HH</span>
+
+                    {/* Value: 0 - 59 */}
+                    <FormControl size="small" style={{ width: "80px" }}>
+                      <Select
+                        value={rule.time.value}
+                        onChange={(e) => {
+                          const newRules = [...cancellationRules];
+                          newRules[index].time.value = e.target.value;
+                          setCancellationRules(newRules);
+                        }}
+                      >
+                        {Array.from({ length: 60 }, (_, i) => (
+                          <MenuItem
+                            key={i}
+                            value={i.toString().padStart(2, "0")}
+                          >
+                            {i.toString().padStart(2, "0")}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <span>MM</span>
                   </div>
 
                   {/* Percentage Input */}
-                  <TextField
-                    placeholder="%"
-                    size="small"
-                    variant="outlined"
-                    value={rule.deduction}
-                    onChange={(e) => {
-                      const newRules = [...cancellationRules];
-                      newRules[index].deduction = e.target.value;
-                      setCancellationRules(newRules);
-                    }}
-                  />
+                  <div className="flex items-center gap-1">
+                    <TextField
+                      placeholder="%"
+                      size="small"
+                      variant="outlined"
+                      value={rule.deduction}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Allow only non-negative numbers with max 2 decimal places and not more than 100
+                        if (
+                          value === '' ||
+                          (/^\d*\.?\d{0,2}$/.test(value) && Number(value) <= 100)
+                        ) {
+                          const newRules = [...cancellationRules];
+                          newRules[index].deduction = value;
+                          setCancellationRules(newRules);
+                        }
+                      }}
+                    />
+                    <span>%</span>
+                  </div>
                 </div>
               ))}
+            </div>
+
+            <div className="space-y-3">
+              <div className="font-medium text-gray-700">
+                Cancellation Policy <span>*</span>
+              </div>
+              <Textarea
+                placeholder="Enter cancellation text"
+                value={formData.cancellationText}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    cancellationText: e.target.value,
+                  })
+                }
+                className="min-h-[100px]"
+              />
             </div>
           </div>
 
@@ -1591,109 +2340,151 @@ export const AddBookingSetupPage = () => {
                   <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                     <Tv className="w-4 h-4" />
                   </div>
-                  <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CONFIGURE AMENITY INFO</h3>
+                  <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CONFIGURE ACCESSORIES</h3>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4" id="amenities">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="tv"
-                      checked={formData.amenities.tv}
-                      onCheckedChange={(checked) =>
-                        setFormData({
-                          ...formData,
-                          amenities: { ...formData.amenities, tv: !!checked },
-                        })
-                      }
-                    />
-                    <label htmlFor="tv">TV</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="whiteboard"
-                      checked={formData.amenities.whiteboard}
-                      onCheckedChange={(checked) =>
-                        setFormData({
-                          ...formData,
-                          amenities: {
-                            ...formData.amenities,
-                            whiteboard: !!checked,
-                          },
-                        })
-                      }
-                    />
-                    <label htmlFor="whiteboard">Whiteboard</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="casting"
-                      checked={formData.amenities.casting}
-                      onCheckedChange={(checked) =>
-                        setFormData({
-                          ...formData,
-                          amenities: {
-                            ...formData.amenities,
-                            casting: !!checked,
-                          },
-                        })
-                      }
-                    />
-                    <label htmlFor="casting">Casting</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="smartPenForTV"
-                      checked={formData.amenities.smartPenForTV}
-                      onCheckedChange={(checked) =>
-                        setFormData({
-                          ...formData,
-                          amenities: {
-                            ...formData.amenities,
-                            smartPenForTV: !!checked,
-                          },
-                        })
-                      }
-                    />
-                    <label htmlFor="smartPenForTV">Smart Pen for TV</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="wirelessCharging"
-                      checked={formData.amenities.wirelessCharging}
-                      onCheckedChange={(checked) =>
-                        setFormData({
-                          ...formData,
-                          amenities: {
-                            ...formData.amenities,
-                            wirelessCharging: !!checked,
-                          },
-                        })
-                      }
-                    />
-                    <label htmlFor="wirelessCharging">Wireless Charging</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="meetingRoomInventory"
-                      checked={formData.amenities.meetingRoomInventory}
-                      onCheckedChange={(checked) =>
-                        setFormData({
-                          ...formData,
-                          amenities: {
-                            ...formData.amenities,
-                            meetingRoomInventory: !!checked,
-                          },
-                        })
-                      }
-                    />
-                    <label htmlFor="meetingRoomInventory">
-                      Meeting Room Inventory
-                    </label>
-                  </div>
+                  {loadingInventories ? (
+                    <div className="col-span-full text-center text-gray-500">Loading inventories...</div>
+                  ) : inventories.length === 0 ? (
+                    <div className="col-span-full text-center text-gray-500">No inventories available</div>
+                  ) : (
+                    inventories.map((inventory) => (
+                      <div key={inventory.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`inventory-${inventory.id}`}
+                          checked={formData.amenities[inventory.id] || false}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              amenities: {
+                                ...formData.amenities,
+                                [inventory.id]: !!checked,
+                              },
+                            })
+                          }
+                        />
+                        <label htmlFor={`inventory-${inventory.id}`} className="cursor-pointer">
+                          {inventory.name}
+                        </label>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+              {
+                !formData.isBookable && (
+                  <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                        <Tv className="w-4 h-4" />
+                      </div>
+                      <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CONFIGURE AMENITY INFO</h3>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4" id="amenities">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="tv"
+                          checked={formData.staticAmenities.tv}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              staticAmenities: { ...formData.staticAmenities, tv: !!checked },
+                            })
+                          }
+                        />
+                        <label htmlFor="tv">TV</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="whiteboard"
+                          checked={formData.staticAmenities.whiteboard}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              staticAmenities: {
+                                ...formData.staticAmenities,
+                                whiteboard: !!checked,
+                              },
+                            })
+                          }
+                        />
+                        <label htmlFor="whiteboard">Whiteboard</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="casting"
+                          checked={formData.staticAmenities.casting}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              staticAmenities: {
+                                ...formData.staticAmenities,
+                                casting: !!checked,
+                              },
+                            })
+                          }
+                        />
+                        <label htmlFor="casting">Casting</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="smartPenForTV"
+                          checked={formData.staticAmenities.smartPenForTV}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              staticAmenities: {
+                                ...formData.staticAmenities,
+                                smartPenForTV: !!checked,
+                              },
+                            })
+                          }
+                        />
+                        <label htmlFor="smartPenForTV">Smart Pen for TV</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="wirelessCharging"
+                          checked={formData.staticAmenities.wirelessCharging}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              staticAmenities: {
+                                ...formData.staticAmenities,
+                                wirelessCharging: !!checked,
+                              },
+                            })
+                          }
+                        />
+                        <label htmlFor="wirelessCharging">Wireless Charging</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="meetingRoomInventory"
+                          checked={formData.staticAmenities.meetingRoomInventory}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              staticAmenities: {
+                                ...formData.staticAmenities,
+                                meetingRoomInventory: !!checked,
+                              },
+                            })
+                          }
+                        />
+                        <label htmlFor="meetingRoomInventory">
+                          Meeting Room Inventory
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+
+              {/* <div className="bg-white rounded-lg border-2 p-6 space-y-6">
                 <div className="flex items-center gap-3">
                   <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                     <Armchair className="w-4 h-4" />
@@ -1732,7 +2523,6 @@ export const AddBookingSetupPage = () => {
                 </div>
               </div>
 
-              {/* Floor Info */}
               <div className="bg-white rounded-lg border-2 p-6 space-y-6">
                 <div className="flex items-center gap-3">
                   <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
@@ -1813,7 +2603,7 @@ export const AddBookingSetupPage = () => {
                     variant="outlined"
                   />
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -1823,14 +2613,35 @@ export const AddBookingSetupPage = () => {
             </Button>
             <Button
               onClick={handleSave}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-purple-600 hover:bg-purple-700 text-white w-full"
               disabled={isSubmitting}
+              style={{ maxWidth: '90px' }}
             >
               Save
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Gallery Image Upload Modal */}
+      {galleryModalOpen && (
+        <GalleryImageUpload
+          showAsModal={galleryModalOpen}
+          onClose={handleGalleryModalClose}
+          onContinue={handleGalleryModalContinue}
+          label="Upload Gallery Images"
+          description="Upload images supporting multiple aspect ratios."
+          ratios={[
+            { label: '16:9', ratio: 16 / 9, width: 200, height: 112 },
+            { label: '9:16', ratio: 9 / 16, width: 120, height: 213 },
+            { label: '1:1', ratio: 1, width: 150, height: 150 },
+            { label: '3:2', ratio: 3 / 2, width: 180, height: 120 }
+          ]}
+          enableCropping={true}
+          initialImages={selectedGalleryImages}
+          onImagesChange={setSelectedGalleryImages}
+        />
+      )}
     </ThemeProvider >
   );
 };

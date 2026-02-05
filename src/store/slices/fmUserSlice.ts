@@ -30,11 +30,16 @@ export interface FMUser {
     status: string;
     active: boolean;
     id: string;
+    user_type?: string;
   };
   user_type?: string;
   lock_user_permission_status?: string;
   face_added?: boolean;
   app_downloaded?: string;
+  department?: {
+    id: number;
+    department_name: string;
+  };
 }
 
 export interface FMUserResponse {
@@ -110,11 +115,7 @@ export const getFMUsers = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to fetch fm users";
-      return rejectWithValue(message);
+      return rejectWithValue(error);
     }
   }
 );
@@ -210,9 +211,7 @@ export const createFmUser = createAsyncThunk(
       return response.data;
     } catch (error) {
       const message =
-        error.response?.data?.error ||
-        error.error ||
-        "Failed to create FM user";
+        error.response?.data || error.message || "Failed to create FM user";
       return rejectWithValue(message);
     }
   }

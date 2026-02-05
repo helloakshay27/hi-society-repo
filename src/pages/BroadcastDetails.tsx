@@ -3,13 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import axios from "axios";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
-import { ArrowLeft } from "lucide-react";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
 const BroadcastDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const baseURL = API_CONFIG.BASE_URL;
   
   const [broadcastData, setBroadcastData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,7 +18,7 @@ const BroadcastDetails = () => {
       
       try {
         setLoading(true);
-        const response = await axios.get(`${baseURL}/crm/admin/noticeboards/${id}.json`, {
+        const response = await axios.get(getFullUrl(`/crm/admin/noticeboards/${id}.json`), {
           headers: {
             Authorization: getAuthHeader(),
             "Content-Type": "application/json",
@@ -49,7 +47,7 @@ const BroadcastDetails = () => {
     };
 
     fetchBroadcastDetails();
-  }, [id, baseURL]);
+  }, [id]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FormControl, InputLabel, Select as MuiSelect, MenuItem, TextField } from '@mui/material';
+import { toast } from 'sonner';
 
 interface InvestigatorBlockProps {
     index: number;
@@ -28,6 +29,7 @@ export interface InvestigatorData {
         email: string;
         role: string;
         contactNo: string;
+        company?: string;
     };
 }
 
@@ -52,7 +54,8 @@ export const InvestigatorBlock: React.FC<InvestigatorBlockProps> = ({
         name: '',
         email: '',
         role: '',
-        contactNo: ''
+        contactNo: '',
+        company: ''
     });
     const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
@@ -87,7 +90,7 @@ export const InvestigatorBlock: React.FC<InvestigatorBlockProps> = ({
     const handleSubmit = () => {
         if (activeTab === 'internal') {
             if (!selectedInternalUser) {
-                alert('Please select an internal user');
+                toast.warning('Please select an internal user');
                 return;
             }
 
@@ -116,7 +119,7 @@ export const InvestigatorBlock: React.FC<InvestigatorBlockProps> = ({
                     }
                 };
                 onSubmit(data);
-                setExternalForm({ name: '', email: '', role: '', contactNo: '' });
+                setExternalForm({ name: '', email: '', role: '', contactNo: '', company: '' });
                 setValidationErrors({});
             }
         }
@@ -206,6 +209,14 @@ export const InvestigatorBlock: React.FC<InvestigatorBlockProps> = ({
                         placeholder="Role"
                         value={externalForm.role}
                         onChange={(e) => setExternalForm({ ...externalForm, role: e.target.value })}
+                        sx={{ backgroundColor: 'white' }}
+                    />
+                    <TextField
+                        fullWidth
+                        size="small"
+                        placeholder="Company"
+                        value={externalForm.company}
+                        onChange={(e) => setExternalForm({ ...externalForm, company: e.target.value })}
                         sx={{ backgroundColor: 'white' }}
                     />
                     <div>

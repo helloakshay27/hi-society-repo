@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { ChevronRight, ArrowLeft, Upload, X, FileText, Info } from "lucide-react";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
@@ -17,7 +17,6 @@ import {
 import { DeleteForeverRounded } from "@mui/icons-material";
 
 const PressReleasesCreate = () => {
-  const baseURL = API_CONFIG.BASE_URL;
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [showTooltip, setShowTooltip] = useState(false);
@@ -185,7 +184,7 @@ const PressReleasesCreate = () => {
         }
       });
 
-      await axios.post(`${baseURL}/press_releases.json`, sendData, {
+      await axios.post(getFullUrl('/press_releases.json'), sendData, {
         headers: {
           Authorization: getAuthHeader(),
           "Content-Type": "multipart/form-data",

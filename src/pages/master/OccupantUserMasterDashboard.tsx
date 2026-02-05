@@ -36,18 +36,20 @@ import {
 import { OccupantUsersFilterDialog } from "@/components/OccupantUsersFilterDialog";
 import { useAppSelector } from "@/store/hooks";
 import { debounce } from "lodash";
+import { getUser } from "@/utils/auth";
 
-const columns: ColumnConfig[] =  [
+const columns: ColumnConfig[] = [
   { key: "id", label: "ID", sortable: true, draggable: true },
   { key: "active", label: "Active", sortable: true, draggable: true },
   { key: "name", label: "User Name", sortable: true, draggable: true },
   { key: "gender", label: "Gender", sortable: true, draggable: true },
   { key: "mobile", label: "Mobile Number", sortable: true, draggable: true },
   { key: "email", label: "Email", sortable: true, draggable: true },
-  { key: "company", label: "Vendor Company Name", sortable: true, draggable: true },
+  // { key: "company", label: "Vendor Company Name", sortable: true, draggable: true },
+  { key: "departmentName", label: "Department", sortable: true, draggable: true },
   { key: "entity", label: "Entity Name", sortable: true, draggable: true },
   { key: "department", label: "Unit", sortable: true, draggable: true },
-  { key: "role", label: "Role", sortable: true, draggable: true },
+  // { key: "role", label: "Role", sortable: true, draggable: true },
   { key: "employeeId", label: "Employee ID", sortable: true, draggable: true },
   { key: "createdBy", label: "Created By", sortable: true, draggable: true },
   { key: "accessLevel", label: "Access Level", sortable: true, draggable: true },
@@ -60,6 +62,8 @@ const columns: ColumnConfig[] =  [
 export const OccupantUserMasterDashboard = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const user = getUser();
+  const isRestrictedUser = user?.email === 'karan.balsara@zycus.com';
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -156,6 +160,7 @@ export const OccupantUserMasterDashboard = () => {
         entity_id_eq: newFilters.entity,
         app_downloaded_eq: newFilters.downloaded,
         search_all_fields_cont: newFilters.search,
+        lock_user_permissions_user_type_eq: 'pms_occupant',
       })
     );
     toast.success("Filters applied successfully");
@@ -195,7 +200,7 @@ export const OccupantUserMasterDashboard = () => {
   const fetchUsers = () => {
     try {
       dispatch(
-        fetchOccupantUsers({ page: pagination.current_page, perPage: 10 })
+        fetchOccupantUsers({ page: pagination.current_page, perPage: 10, lock_user_permissions_user_type_eq: 'pms_occupant' })
       );
     } catch (error) {
       console.log(error);
@@ -203,9 +208,13 @@ export const OccupantUserMasterDashboard = () => {
   };
 
   useEffect(() => {
+    if (isRestrictedUser) {
+      navigate("/maintenance/asset");
+      return;
+    }
     setCurrentSection("Master");
     fetchUsers();
-    dispatch(fetchOccupantUserCounts());
+    dispatch(fetchOccupantUserCounts('occupant'));
   }, [setCurrentSection, dispatch]);
 
   const debouncedSearch = useCallback(
@@ -239,6 +248,7 @@ export const OccupantUserMasterDashboard = () => {
           entity_id_eq: filters.entity,
           app_downloaded_eq: filters.downloaded,
           search_all_fields_cont: searchTerm,
+          lock_user_permissions_user_type_eq: 'pms_occupant',
         })
       );
     } catch (error) {
@@ -366,7 +376,6 @@ export const OccupantUserMasterDashboard = () => {
   const handleToggleUserStatus = async (userId: string, isActive: boolean) => {
     const baseUrl = localStorage.getItem("baseUrl");
     const token = localStorage.getItem("token");
-    
     if (!baseUrl || !token) {
       toast.error("Missing authentication credentials");
       return;
@@ -461,7 +470,7 @@ export const OccupantUserMasterDashboard = () => {
         throw new Error("Failed to update user status");
       }
 
-      // Update local state
+      // Update both local states for immediate UI update
       setOccupantUser((prevUsers: any[]) =>
         prevUsers.map((user) =>
           user.id === selectedUser.id
@@ -473,8 +482,19 @@ export const OccupantUserMasterDashboard = () => {
         )
       );
 
+      setOccupantUsersState((prevUsers: any[]) =>
+        prevUsers.map((user) =>
+          user.id === selectedUser.id
+            ? {
+              ...user,
+              status: selectedStatus,
+            }
+            : user
+        )
+      );
+
       toast.success("User status updated successfully!");
-      dispatch(fetchOccupantUserCounts()); // Refresh counts
+      dispatch(fetchOccupantUserCounts('occupant')); // Refresh counts
       setStatusDialogOpen(false);
       setSelectedUser(null);
       setSelectedStatus("");
@@ -489,7 +509,7 @@ export const OccupantUserMasterDashboard = () => {
       case "active":
         return (
           <Switch
-            checked={user.active === "Yes" || user.active === true || user.active === "true"}
+            checked={user.active}
             onCheckedChange={(checked) =>
               handleToggleUserStatus(user.lockUserId ?? "", checked)
             }
@@ -530,6 +550,8 @@ export const OccupantUserMasterDashboard = () => {
         return user.accessLevel || "";
       case "department":
         return user.department || "";
+      case "departmentName":
+        return user.departmentName || "";
       case "entity":
         return user.entity || "";
       case "company":
@@ -550,6 +572,8 @@ export const OccupantUserMasterDashboard = () => {
       </Button>
     </>
   );
+
+  if (isRestrictedUser) return null;
 
   return (
     <div className="w-full p-4 sm:p-6 space-y-6">
@@ -746,7 +770,7 @@ export const OccupantUserMasterDashboard = () => {
         onClose={() => setIsImportModalOpen(false)}
         onRefresh={() => {
           fetchUsers();
-          dispatch(fetchOccupantUserCounts());
+          dispatch(fetchOccupantUserCounts('occupant'));
         }}
       />
     </div>

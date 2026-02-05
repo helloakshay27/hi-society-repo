@@ -10,6 +10,9 @@ interface AllocateToSectionProps {
   setAllocateTo: (value: string) => void;
   allocatedToId: number | null;
   setAllocatedToId: (value: number | null) => void;
+  type?: string; // Optional type parameter for API filtering
+  siteId?: number | null; // Optional site ID parameter for API filtering
+  prefillSelectedLabel?: string; // Optional display label when selected id isn't in fetched list
 }
 
 // Custom theme for MUI dropdowns (same as MovementToSection)
@@ -88,69 +91,106 @@ export const AllocateToSection: React.FC<AllocateToSectionProps> = ({
   setAllocateTo,
   allocatedToId,
   setAllocatedToId,
+  type,
+  siteId,
+  prefillSelectedLabel,
 }) => {
-  const { departments, users, loading } = useAllocationData();
+  const { departments, users, loading } = useAllocationData(type, siteId);
   return (
     <div className="mb-6">
       <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-4">Allocate To</h3>
       <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-8">
         <div className="flex-shrink-0">
-          <RadioGroup value={allocateTo} onValueChange={setAllocateTo} className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="department" id="department" />
+              <input
+                type="checkbox"
+                id="department"
+                checked={allocateTo === "department"}
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  if (isChecked) {
+                    setAllocateTo("department");
+                    setAllocatedToId(null); // Reset selection when switching
+                  } else {
+                    setAllocateTo("");
+                    setAllocatedToId(null);
+                  }
+                }}
+                className="w-4 h-4 text-[#C72030] border-gray-300"
+                style={{ accentColor: "#C72030" }}
+              />
               <Label htmlFor="department" className="text-sm">Department</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="user" id="user" />
+              <input
+                type="checkbox"
+                id="user"
+                checked={allocateTo === "user"}
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  if (isChecked) {
+                    setAllocateTo("user");
+                    setAllocatedToId(null); // Reset selection when switching
+                  } else {
+                    setAllocateTo("");
+                    setAllocatedToId(null);
+                  }
+                }}
+                className="w-4 h-4 text-[#C72030] border-gray-300"
+                style={{ accentColor: "#C72030" }}
+              />
               <Label htmlFor="user" className="text-sm">User</Label>
             </div>
-          </RadioGroup>
+          </div>
         </div>
-        <div className="flex-1 max-w-full lg:max-w-xs">
-          <ThemeProvider theme={dropdownTheme}>
-            <TextField
-              select
-              label={allocateTo === 'department' ? 'Department' : 'User'}
-              value={allocatedToId || ''}
-              onChange={(e) => setAllocatedToId(e.target.value ? Number(e.target.value) : null)}
-              variant="outlined"
-              size="small"
-              placeholder={allocateTo === 'department' ? 'Select Department' : 'Select User'}
-              disabled={loading.departments || loading.users}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              SelectProps={{
-                displayEmpty: true,
-                renderValue: (selected) => {
-                  if (!selected) {
-                    return <span style={{ color: '#9CA3AF' }}>{allocateTo === 'department' ? 'Select Department' : 'Select User'}</span>;
-                  }
-                  if (allocateTo === 'department') {
-                    const dept = departments.find(d => d.id === Number(selected));
-                    return dept?.department_name || 'Select Department';
-                  } else {
-                    const user = users.find(u => u.id === Number(selected));
-                    return user?.full_name || 'Select User';
-                  }
-                },
-              }}
-            >
-              {allocateTo === 'department' 
-                ? departments.map((dept) => (
+        {allocateTo && (
+          <div className="flex-1 max-w-full lg:max-w-xs">
+            <ThemeProvider theme={dropdownTheme}>
+              <TextField
+                select
+                label={allocateTo === 'department' ? 'Department' : 'User'}
+                value={allocatedToId || ''}
+                onChange={(e) => setAllocatedToId(e.target.value ? Number(e.target.value) : null)}
+                variant="outlined"
+                size="small"
+                placeholder={allocateTo === 'department' ? 'Select Department' : 'Select User'}
+                disabled={loading.departments || loading.users}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                SelectProps={{
+                  displayEmpty: true,
+                  renderValue: (selected) => {
+                    if (!selected) {
+                      return <span style={{ color: '#9CA3AF' }}>{allocateTo === 'department' ? 'Select Department' : 'Select User'}</span>;
+                    }
+                    if (allocateTo === 'department') {
+                      const dept = departments.find(d => d.id === Number(selected));
+                      return dept?.department_name || prefillSelectedLabel || 'Select Department';
+                    } else {
+                      const user = users.find(u => u.id === Number(selected));
+                      return user?.full_name || prefillSelectedLabel || 'Select User';
+                    }
+                  },
+                }}
+              >
+                {allocateTo === 'department'
+                  ? departments.map((dept) => (
                     <MenuItem key={dept.id} value={dept.id}>
                       {dept.department_name}
                     </MenuItem>
                   ))
-                : users.map((user) => (
+                  : users.map((user) => (
                     <MenuItem key={user.id} value={user.id}>
                       {user.full_name}
                     </MenuItem>
                   ))
-              }
-            </TextField>
-          </ThemeProvider>
-        </div>
+                }
+              </TextField>
+            </ThemeProvider>
+          </div>
+        )}
       </div>
     </div>
   );

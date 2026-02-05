@@ -27,14 +27,20 @@ interface EVConsumptionData {
 
 interface FilterData {
   dateRange?: DateRange | string;
+  transactionId?: string;
 }
 
 const UtilityEVConsumptionDashboard = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [evConsumptionData, setEvConsumptionData] = useState<EVConsumptionData[]>([]);
   const [appliedFilters, setAppliedFilters] = useState<FilterData>({});
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+  const [totalPages, setTotalPages] = useState(1);
   const { toast } = useToast();
 
   // Column visibility state - updated to match API response
@@ -140,19 +146,17 @@ const UtilityEVConsumptionDashboard = () => {
     }
   };
 
-  // Filter data based on search term
-  const filteredData = evConsumptionData.filter(item =>
-    item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.site_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.transaction_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.created_by_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   // Fetch EV consumption data from API
-  const fetchEVConsumptionData = useCallback(async (filters?: FilterData) => {
+  const fetchEVConsumptionData = useCallback(async (filters?: FilterData, search?: string, page: number = 1, size: number = 15) => {
     try {
-      setIsLoading(true);
-      console.log('🚀 Fetching EV consumption data from API with filters:', filters);
+      // Use different loading states based on whether it's a search operation
+      const isSearch = search !== undefined && search.trim() !== '';
+      if (isSearch) {
+        setSearchLoading(true);
+      } else {
+        setIsLoading(true);
+      }
+      console.log('🚀 Fetching EV consumption data from API with filters:', filters, 'search:', search, 'Page:', page, 'Size:', size);
       
       const url = getFullUrl('/ev_consumptions.json');
       const urlWithParams = new URL(url);
@@ -161,6 +165,16 @@ const UtilityEVConsumptionDashboard = () => {
       // Add access_token parameter if available
       if (API_CONFIG.TOKEN) {
         urlWithParams.searchParams.append('access_token', API_CONFIG.TOKEN);
+      }
+      
+      // Add pagination parameters
+      urlWithParams.searchParams.append('page', page.toString());
+      urlWithParams.searchParams.append('per_page', size.toString());
+      
+      // Add search parameter for transaction_id if provided
+      if (search && search.trim()) {
+        urlWithParams.searchParams.append('q[transaction_id_cont]', search.trim());
+        console.log('🔍 Adding search query for transaction_id:', search.trim());
       }
       
       // Add date range filter if provided
@@ -190,6 +204,12 @@ const UtilityEVConsumptionDashboard = () => {
         }
       }
       
+      // Add transaction ID filter if provided
+      if (filters?.transactionId) {
+        urlWithParams.searchParams.append('q[transaction_id_eq]', filters.transactionId);
+        console.log('🔍 Adding transaction ID filter:', filters.transactionId);
+      }
+      
       console.log('�📡 API URL with params:', urlWithParams.toString());
       console.log('🔑 Using token:', API_CONFIG.TOKEN ? 'Present' : 'Missing');
       
@@ -204,12 +224,32 @@ const UtilityEVConsumptionDashboard = () => {
       const data = await response.json();
       console.log('✅ EV consumption data fetched successfully:', data);
       
+      // Extract ev_consumptions array from the response
       if (data.ev_consumptions && Array.isArray(data.ev_consumptions)) {
         setEvConsumptionData(data.ev_consumptions);
         console.log('📊 Set EV consumption data:', data.ev_consumptions.length, 'records');
+        
+        // Extract pagination info from the response
+        if (data.pagination) {
+          setTotalRecords(data.pagination.total_entries);
+          setTotalPages(data.pagination.total_pages);
+          console.log('📄 Pagination info:', data.pagination);
+        } else if (data.total_count !== undefined) {
+          setTotalRecords(data.total_count);
+          setTotalPages(Math.ceil(data.total_count / size));
+        } else if (data.meta?.total !== undefined) {
+          setTotalRecords(data.meta.total);
+          setTotalPages(Math.ceil(data.meta.total / size));
+        } else {
+          // Fallback: use current page data length
+          setTotalRecords(data.ev_consumptions.length);
+          setTotalPages(1);
+        }
       } else {
         console.warn('⚠️ No ev_consumptions array found in response');
         setEvConsumptionData([]);
+        setTotalRecords(0);
+        setTotalPages(1);
       }
       
     } catch (error) {
@@ -220,27 +260,56 @@ const UtilityEVConsumptionDashboard = () => {
         variant: "destructive"
       });
       setEvConsumptionData([]);
+      setTotalRecords(0);
+      setTotalPages(1);
     } finally {
       setIsLoading(false);
+      setSearchLoading(false);
     }
-  }, [toast]);
+  }, [appliedFilters, toast]);
 
-  // Fetch data on component mount
+  // Fetch data on component mount and when page/pageSize changes
   useEffect(() => {
-    fetchEVConsumptionData();
-  }, [fetchEVConsumptionData]);
+    fetchEVConsumptionData(appliedFilters, searchTerm, currentPage, pageSize);
+  }, [currentPage, pageSize]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCurrentPage(1); // Reset to first page on search
+      if (searchTerm) {
+        fetchEVConsumptionData(appliedFilters, searchTerm, 1, pageSize);
+      } else {
+        fetchEVConsumptionData(appliedFilters, undefined, 1, pageSize);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Filter handler functions
   const handleApplyFilters = (filters: FilterData) => {
     console.log('Applying filters:', filters);
     setAppliedFilters(filters);
-    fetchEVConsumptionData(filters);
+    setCurrentPage(1); // Reset to first page when filters change
+    fetchEVConsumptionData(filters, searchTerm, 1, pageSize);
   };
 
   const handleResetFilters = () => {
     console.log('Resetting filters');
     setAppliedFilters({});
-    fetchEVConsumptionData({});
+    setCurrentPage(1); // Reset to first page when filters reset
+    fetchEVConsumptionData({}, searchTerm, 1, pageSize);
+  };
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1); // Reset to first page when page size changes
   };
 
   const handleExport = async () => {
@@ -283,6 +352,12 @@ const UtilityEVConsumptionDashboard = () => {
           urlWithParams.searchParams.append('q[date_range]', singleDate);
           console.log('📅 Adding single date filter to export:', singleDate);
         }
+      }
+      
+      // Add transaction ID filter to export if provided
+      if (appliedFilters?.transactionId) {
+        urlWithParams.searchParams.append('q[transaction_id_eq]', appliedFilters.transactionId);
+        console.log('🔍 Adding transaction ID filter to export:', appliedFilters.transactionId);
       }
       
       const options = getAuthenticatedFetchOptions();
@@ -342,7 +417,7 @@ const UtilityEVConsumptionDashboard = () => {
       </div>
 
       {/* Loading State */}
-      {isLoading ? (
+      {isLoading && !searchLoading ? (
         <div className="flex items-center justify-center p-8">
           <Loader2 className="h-8 w-8 animate-spin" />
           <span className="ml-2">Loading EV consumption data...</span>
@@ -351,7 +426,7 @@ const UtilityEVConsumptionDashboard = () => {
         /* Enhanced EV Consumption Table */
         <div>
           <EnhancedTable
-            data={filteredData}
+            data={evConsumptionData}
             columns={enhancedTableColumns}
             selectable={false}
             renderCell={renderCell}
@@ -361,31 +436,104 @@ const UtilityEVConsumptionDashboard = () => {
             exportFileName="ev-consumption-data"
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            searchPlaceholder="Search EV consumption records..."
-            pagination={true}
-            pageSize={10}
-            hideColumnsButton={true}
-            leftActions={
-              <div className="flex flex-wrap items-center gap-2 md:gap-4">
-                {/* Left actions can be used for other buttons if needed */}
-              </div>
-            }
-            rightActions={
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
-                  onClick={() => setIsFilterOpen(true)}
-                >
-                  <Filter className="w-4 h-4" />
-                </Button>
-                <ColumnVisibilityDropdown
-                  columns={dropdownColumns}
-                  onColumnToggle={handleColumnToggle}
-                />
-              </div>
-            }
+            searchPlaceholder="Search by Transaction ID..."
+            pagination={false}
+            hideColumnsButton={false}
+            onFilterClick={() => setIsFilterOpen(true)}
           />
+
+          {/* Custom Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center mt-6 px-4 py-3 bg-white border-t border-gray-200 animate-fade-in">
+              <div className="flex items-center space-x-1">
+                {/* Previous Button */}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1 || isLoading}
+                  className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                {/* Page Numbers */}
+                <div className="flex items-center space-x-1">
+                  {/* First page */}
+                  {currentPage > 3 && (
+                    <>
+                      <button
+                        onClick={() => setCurrentPage(1)}
+                        disabled={isLoading}
+                        className="w-8 h-8 flex items-center justify-center text-sm text-gray-700 hover:bg-gray-100 rounded disabled:opacity-50"
+                      >
+                        1
+                      </button>
+                      {currentPage > 4 && (
+                        <span className="px-2 text-gray-500">...</span>
+                      )}
+                    </>
+                  )}
+
+                  {/* Current page and surrounding pages */}
+                  {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (currentPage <= 2) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 1) {
+                      pageNum = totalPages - 2 + i;
+                    } else {
+                      pageNum = currentPage - 1 + i;
+                    }
+
+                    if (pageNum < 1 || pageNum > totalPages) return null;
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        disabled={isLoading}
+                        className={`w-8 h-8 flex items-center justify-center text-sm rounded disabled:opacity-50 ${
+                          currentPage === pageNum
+                            ? 'bg-[#C72030] text-white'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+
+                  {/* Last page */}
+                  {currentPage < totalPages - 2 && (
+                    <>
+                      {currentPage < totalPages - 3 && (
+                        <span className="px-2 text-gray-500">...</span>
+                      )}
+                      <button
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={isLoading}
+                        className="w-8 h-8 flex items-center justify-center text-sm text-gray-700 hover:bg-gray-100 rounded disabled:opacity-50"
+                      >
+                        {totalPages}
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Next Button */}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages || isLoading}
+                  className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

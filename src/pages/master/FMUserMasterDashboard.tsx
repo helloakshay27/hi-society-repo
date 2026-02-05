@@ -26,6 +26,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 import { toast } from "sonner";
 import debounce from "lodash/debounce";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
+import { getUser } from "@/utils/auth";
 
 // Define interfaces for data structures
 interface TransformedFMUser {
@@ -47,6 +48,7 @@ interface TransformedFMUser {
   appDownloaded: boolean;
   active: boolean;
   lockUserId: string | null;
+  department: string;
 }
 
 interface PaginationState {
@@ -88,8 +90,8 @@ const transformFMUserData = (apiUser: FMUser): TransformedFMUser => ({
   employeeId: apiUser.lock_user_permission?.employee_id ?? null,
   createdBy: apiUser.created_by_name,
   accessLevel: apiUser.lock_user_permission?.access_level ?? null,
-  type: apiUser.user_type
-    ? apiUser.user_type
+  type: apiUser.lock_user_permission?.user_type
+    ? apiUser.lock_user_permission.user_type
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ")
@@ -99,6 +101,7 @@ const transformFMUserData = (apiUser: FMUser): TransformedFMUser => ({
   appDownloaded: apiUser.app_downloaded === "Yes",
   active: apiUser.lock_user_permission?.active ?? false,
   lockUserId: apiUser.lock_user_permission?.id ?? null,
+  department: apiUser.department?.department_name ?? "",
 });
 
 const columns: ColumnConfig[] = [
@@ -120,6 +123,7 @@ const columns: ColumnConfig[] = [
     sortable: true,
     draggable: true,
   },
+  { key: "department", label: "Department", sortable: true, draggable: true },
   { key: "unit", label: "Unit", sortable: true, draggable: true },
   { key: "role", label: "Role", sortable: true, draggable: true },
   {
@@ -157,6 +161,8 @@ export const FMUserMasterDashboard = () => {
   const { setCurrentSection } = useLayout() as LayoutContext;
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const user = getUser();
+  const isRestrictedUser = user?.email === 'karan.balsara@zycus.com';
   const {
     loading,
     error,
@@ -203,7 +209,7 @@ export const FMUserMasterDashboard = () => {
       const response = await dispatch(
         getFMUsers({ baseUrl, token, perPage: 10, currentPage: page, ...filterParams })
       ).unwrap() as FMUserAPIResponse;
-      const transformedData = response.fm_users.map(transformFMUserData);
+      const transformedData = (response?.fm_users ?? []).map(transformFMUserData);
       setFmUsersData(transformedData);
       setFilteredFMUsersData(transformedData);
       setPagination({
@@ -247,9 +253,13 @@ export const FMUserMasterDashboard = () => {
   );
 
   useEffect(() => {
+    if (isRestrictedUser) {
+      navigate("/maintenance/asset");
+      return;
+    }
     setCurrentSection("Master");
     dispatch(fetchUserCounts());
-  }, [setCurrentSection, dispatch]);
+  }, [setCurrentSection, dispatch, isRestrictedUser, navigate]);
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
@@ -267,11 +277,19 @@ export const FMUserMasterDashboard = () => {
     fmUsersData.filter((user) => user.appDownloaded).length;
 
   const handleAddUser = () => {
-    navigate("/master/user/fm-users/add");
+    location.pathname.includes("/club-management/") ? (
+      navigate(`/club-management/users/fm-users/add`)
+    ) : (
+      navigate(`/master/user/fm-users/add`)
+    );
   };
 
   const handleViewUser = (id: string) => {
-    navigate(`/master/user/fm-users/view/${id}`);
+    location.pathname.includes("/club-management/") ? (
+      navigate(`/club-management/users/fm-users/view/${id}`)
+    ) : (
+      navigate(`/master/user/fm-users/view/${id}`)
+    );
   };
 
   const handleToggleUserStatus = async (userId: string, isActive: boolean) => {
@@ -486,16 +504,16 @@ export const FMUserMasterDashboard = () => {
     }
   };
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setFilters({
       name: "",
       email: "",
+      status: "",
+      downloaded: undefined,
     });
-    setFilteredFMUsersData(fmUsersData);
-    setPagination({
-      ...pagination,
-      current_page: 1,
-    });
+    setSearchTerm("");
+    await fetchUsers(1);
+    setFilterDialogOpen(false);
   };
 
   const handleFilterChange = (field: "name" | "email", value: string) => {
@@ -747,14 +765,10 @@ export const FMUserMasterDashboard = () => {
     );
   }
 
+  if (isRestrictedUser) return null;
+
   return (
     <div className="w-full p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-[#1a1a1a]">
-          FM User Master
-        </h1>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatsCard
           title="Total Users"
@@ -1005,7 +1019,7 @@ export const FMUserMasterDashboard = () => {
                         <em>Select User</em>
                       </MenuItem>
 
-                      {fmForClone.length > 0 ? (
+                      {fmForClone?.length > 0 ? (
                         fmForClone.map((user) => (
                           <MenuItem key={user.id} value={user.id}>
                             {user.full_name}
@@ -1033,7 +1047,7 @@ export const FMUserMasterDashboard = () => {
                         <em>Select User</em>
                       </MenuItem>
 
-                      {fmForClone.length > 0 ? (
+                      {fmForClone?.length > 0 ? (
                         fmForClone.map((user) => (
                           <MenuItem key={user.id} value={user.id}>
                             {user.full_name}
@@ -1064,7 +1078,7 @@ export const FMUserMasterDashboard = () => {
                         <em>Select User</em>
                       </MenuItem>
 
-                      {fmForClone.length > 0 ? (
+                      {fmForClone?.length > 0 ? (
                         fmForClone.map((user) => (
                           <MenuItem key={user.id} value={user.id}>
                             {user.full_name}
@@ -1092,7 +1106,7 @@ export const FMUserMasterDashboard = () => {
                         <em>Select User</em>
                       </MenuItem>
 
-                      {fmForClone.length > 0 ? (
+                      {fmForClone?.length > 0 ? (
                         fmForClone.map((user) => (
                           <MenuItem key={user.id} value={user.id}>
                             {user.full_name}

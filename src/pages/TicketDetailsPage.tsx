@@ -868,6 +868,12 @@ export const TicketDetailsPage = () => {
     }));
   };
 
+  // State to track if ticket details have been loaded
+  // This optimizes page load by ensuring ticket details API is called first
+  // before loading other secondary APIs (templates, modes, status, etc.)
+  const [ticketDetailsLoaded, setTicketDetailsLoaded] = useState(false);
+
+  // PRIORITY 1: Fetch ticket details first (main data)
   useEffect(() => {
     const fetchTicketDetails = async () => {
       if (!id) return;
@@ -876,6 +882,7 @@ export const TicketDetailsPage = () => {
         setLoading(true);
         const data = await ticketManagementAPI.getTicketDetails(id);
         setTicketData(data);
+        setTicketDetailsLoaded(true); // Mark details as loaded
       } catch (err) {
         console.error('Error fetching ticket details:', err);
         setError('Failed to fetch ticket details');
@@ -901,9 +908,9 @@ export const TicketDetailsPage = () => {
     }
   }, [id]);
 
-  // Fetch extra TAT timings (response & resolution) when ticket details are available
+  // PRIORITY 2: Fetch extra TAT timings (response & resolution) after ticket details are loaded
   useEffect(() => {
-    if (!ticketData?.id) return;
+    if (!ticketData?.id || !ticketDetailsLoaded) return;
 
     const fetchTatTimings = async () => {
       try {
@@ -935,11 +942,13 @@ export const TicketDetailsPage = () => {
     };
 
     fetchTatTimings();
-  }, [ticketData?.id, id]);
+  }, [ticketData?.id, id, ticketDetailsLoaded]);
  console.log("responce tat time ------------------",responseTatTimings)
   console.log("resolution  tat time ------------------",resolutionTatTimings)
-  // Fetch communication templates
+  // PRIORITY 3: Fetch communication templates after ticket details are loaded
   useEffect(() => {
+    if (!ticketDetailsLoaded) return;
+    
     const fetchCommunicationTemplates = async () => {
       try {
         setLoadingTemplates(true);
@@ -971,9 +980,12 @@ export const TicketDetailsPage = () => {
     };
 
     fetchCommunicationTemplates();
-  }, []);
+  }, [ticketDetailsLoaded]);
 
+  // PRIORITY 3: Fetch complaint modes after ticket details are loaded
   useEffect(() => {
+    if (!ticketDetailsLoaded) return;
+    
     const fetchComplaintModes = async () => {
       try {
         setLoadingComplaintModes(true);
@@ -1004,8 +1016,11 @@ export const TicketDetailsPage = () => {
     };
 
     fetchComplaintModes();
-  }, []);
+  }, [ticketDetailsLoaded]);
+  // PRIORITY 3: Fetch complaint status after ticket details are loaded
   useEffect(() => {
+    if (!ticketDetailsLoaded) return;
+    
     const fetchComplaintStatus = async () => {
       try {
         setLoadingComplaintStatus(true);
@@ -1036,10 +1051,12 @@ export const TicketDetailsPage = () => {
     };
 
     fetchComplaintStatus();
-  }, []);
+  }, [ticketDetailsLoaded]);
 
-  // Fetch responsible persons
+  // PRIORITY 3: Fetch responsible persons after ticket details are loaded
   useEffect(() => {
+    if (!ticketDetailsLoaded) return;
+    
     const fetchResponsiblePersons = async () => {
       try {
         setLoadingResponsiblePersons(true);
@@ -1070,15 +1087,17 @@ export const TicketDetailsPage = () => {
     };
 
     fetchResponsiblePersons();
-  }, []);
+  }, [ticketDetailsLoaded]);
 
   console.log("corrective:-------------------", communicationTemplates
     .filter(template => template.identifier === "Corrective Action" && template?.active === true)
     .map(t => ({ value: t.id, label: t.identifier_action })));
 
 
-  // Fetch suppliers
+  // PRIORITY 3: Fetch suppliers after ticket details are loaded
   useEffect(() => {
+    if (!ticketDetailsLoaded) return;
+    
     const fetchSuppliers = async () => {
       try {
         setLoadingSuppliers(true);
@@ -1110,7 +1129,7 @@ export const TicketDetailsPage = () => {
     };
 
     fetchSuppliers();
-  }, []);
+  }, [ticketDetailsLoaded]);
 
   // Fetch Assets for association functionality
   const fetchAssets = useCallback(async (shouldSetSelectedValue = true) => {
@@ -1211,8 +1230,10 @@ export const TicketDetailsPage = () => {
   const hasLoadedAssets = useRef(false);
   const hasLoadedServices = useRef(false);
 
-  // Initialize assets and services data on component mount
+  // PRIORITY 3: Initialize assets and services data after ticket details are loaded
   useEffect(() => {
+    if (!ticketDetailsLoaded) return;
+    
     // Only fetch if we haven't already loaded the data
     if (!hasLoadedAssets.current && assetOptions.length === 0 && !isLoadingAssets) {
       fetchAssets(false);
@@ -1222,7 +1243,7 @@ export const TicketDetailsPage = () => {
       fetchServices(false);
       hasLoadedServices.current = true;
     }
-  }, [assetOptions.length, serviceOptions.length, isLoadingAssets, isLoadingServices, fetchAssets, fetchServices]);
+  }, [ticketDetailsLoaded, assetOptions.length, serviceOptions.length, isLoadingAssets, isLoadingServices, fetchAssets, fetchServices]);
 
   // Handle association changes for the new formData (similar to UpdateTicketsPage)
   useEffect(() => {
@@ -1240,8 +1261,10 @@ export const TicketDetailsPage = () => {
     }
   }, [formData.associatedTo, assetOptions.length, serviceOptions.length, isLoadingAssets, isLoadingServices, fetchAssets, fetchServices]);
 
-  // Load location data
+  // PRIORITY 3: Load location data after ticket details are loaded
   useEffect(() => {
+    if (!ticketDetailsLoaded) return;
+    
     const loadLocationData = async () => {
       await Promise.all([
         loadBuildings(),
@@ -1253,7 +1276,7 @@ export const TicketDetailsPage = () => {
     };
 
     loadLocationData();
-  }, []);
+  }, [ticketDetailsLoaded]);
 
   // Initialize form data based on ticket data (runs once when ticket data and options are available)
   useEffect(() => {
@@ -1417,7 +1440,15 @@ export const TicketDetailsPage = () => {
 
 
   const handleBackToList = () => {
-    navigate(-1);
+        const currentPath = window.location.pathname;
+  
+ if (currentPath.includes("/club-management/helpdesk")) {
+      navigate(`/club-management/helpdesk`);
+    } else if (currentPath.includes("tickets")) {
+      navigate(`/tickets`);
+    } else {
+      navigate(`/maintenance/tickets`);
+    }
   };
 
   const handleFeeds = () => {
@@ -2729,6 +2760,10 @@ export const TicketDetailsPage = () => {
       const data = await response.json();
       console.log('✅ Ticket management updated successfully:', data);
 
+      // Refresh ticket data
+      const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
+      setTicketData(ticketDetails);
+
       // Show success message with Root Cause Analysis info if included
       let successMessage = 'Ticket management updated successfully';
       // if (ticketMgmtFormData.rca_template_ids && ticketMgmtFormData.rca_template_ids.length > 0) {
@@ -2740,10 +2775,6 @@ export const TicketDetailsPage = () => {
       // }
       
       toast.success(successMessage);
-
-      // Refresh ticket data
-      const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
-      setTicketData(ticketDetails);
 
       // Exit edit mode
       setIsEditingTicketMgmt(false);
@@ -2951,8 +2982,6 @@ export const TicketDetailsPage = () => {
       const data = await response.json();
       console.log('✅ Ticket closure updated successfully:', data);
 
-      toast.success('Ticket closure updated successfully');
-
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
       setTicketData(ticketDetails);
@@ -2970,6 +2999,8 @@ export const TicketDetailsPage = () => {
         setTicketClosureFormData(updatedFormData);
         console.log('🔄 Form data synchronized with updated ticket data:', updatedFormData);
       }
+
+      toast.success('Ticket closure updated successfully');
 
       // Exit edit mode
       setIsEditingTicketClosure(false);
@@ -3270,11 +3301,12 @@ export const TicketDetailsPage = () => {
 
       const data = await response.json();
       console.log('✅ Location updated successfully:', data);
-
-      toast.success('Location updated successfully!');
       
       // Refresh ticket data
       const ticketDetails = await ticketManagementAPI.getTicketDetails(id);
+      setTicketData(ticketDetails);
+
+      toast.success('Location updated successfully!');
       setTicketData(ticketDetails);
       
       // Close the edit form
@@ -3668,9 +3700,10 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
 
   if (loading) {
     return (
-      <div className="p-6 bg-white min-h-screen">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading ticket details...</div>
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C72030] mx-auto mb-4"></div>
+          <p>Loading ticket details...</p>
         </div>
       </div>
     );
@@ -3678,20 +3711,20 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
 
   if (error || !ticketData) {
     return (
-      <div className="p-6 bg-white min-h-screen">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg text-red-600">
-            {error || "Ticket not found"}
-          </div>
-        </div>
+      <div className="p-6 bg-white min-h-screen flex items-center justify-center">
+        <p className="text-red-600">{error || "Ticket not found"}</p>
       </div>
     );
   }
 
   console.log("ticketData:-", ticketData);
 
-  // Process complaint logs for table display
-  const complaintLogs = ticketData?.complaint_logs || [];
+  // Process complaint logs for table display - filter out logs with both null log_comment and log_status
+  const complaintLogs = (ticketData?.complaint_logs || []).filter((log: any) => {
+    const hasComment = log.log_comment && log.log_comment.trim() !== '';
+    const hasStatus = log.log_status && log.log_status.trim() !== '';
+    return hasComment || hasStatus;
+  });
 
   // Calculate balance TATs with exceeded check
   const responseBalanceTAT = calculateBalanceTAT(ticketData.response_tat_time, ticketData.balance_reponse_tat);
@@ -5385,11 +5418,19 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
                                     {loadingComplaintStatus ? 'Loading statuses...' : 'Select status'}
                                   </span>
                                 </MenuItem>
-                                {complaintStatus.map((status) => (
-                                  <MenuItem key={status.id} value={status.id.toString()}>
-                                    {status.name}
-                                  </MenuItem>
-                                ))}
+                                {complaintStatus
+                                  .filter((status) => {
+                                    // If reopen_status is false, don't show statuses with fixed_state === 'reopen'
+                                    if (ticketData?.reopen_status === false && status.fixed_state === 'reopen') {
+                                      return false;
+                                    }
+                                    return true;
+                                  })
+                                  .map((status) => (
+                                    <MenuItem key={status.id} value={status.id.toString()}>
+                                      {status.name}
+                                    </MenuItem>
+                                  ))}
                               </MuiSelect>
                             </FormControl>
 
@@ -7804,7 +7845,7 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
                                               {formatLogTime(log.created_at)}
                                             </span>
                                             <span className="font-semibold text-[#1A1A1A] text-[16px]">
-                                              {log.log_status === null || log.log_status === undefined || log.log_status === '' ? 'Status Changed' : log.log_status}
+                                              {log.log_status === null || log.log_status === undefined || log.log_status === '' ? 'Commented' : log.log_status}
                                             </span>
                                             {log.log_by && (
                                               <span className="text-[#1A1A1A] text-[16px]">
@@ -8478,11 +8519,19 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
                                     {loadingComplaintStatus ? 'Loading statuses...' : 'Select status'}
                                   </span>
                                 </MenuItem>
-                                {complaintStatus.map((status) => (
-                                  <MenuItem key={status.id} value={status.id.toString()}>
-                                    {status.name}
-                                  </MenuItem>
-                                ))}
+                                {complaintStatus
+                                  .filter((status) => {
+                                    // If reopen_status is false, don't show statuses with fixed_state === 'reopen'
+                                    if (ticketData?.reopen_status === false && status.fixed_state === 'reopen') {
+                                      return false;
+                                    }
+                                    return true;
+                                  })
+                                  .map((status) => (
+                                    <MenuItem key={status.id} value={status.id.toString()}>
+                                      {status.name}
+                                    </MenuItem>
+                                  ))}
                               </MuiSelect>
                             </FormControl>
 
@@ -10723,7 +10772,7 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
                                               {formatLogTime(log.created_at)}
                                             </span>
                                             <span className="font-semibold text-[#1A1A1A] text-[16px]">
-                                              {log.log_status === null || log.log_status === undefined || log.log_status === '' ? 'Status Changed' : log.log_status}
+                                              {log.log_status === null || log.log_status === undefined || log.log_status === '' ? 'Commented' : log.log_status}
                                             </span>
                                             {log.log_by && (
                                               <span className="text-[#1A1A1A] text-[16px]">

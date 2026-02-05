@@ -98,6 +98,7 @@ import { TicketAgingClosureFeedbackCard } from "@/components/helpdesk/TicketAgin
 import { TicketPerformanceMetricsCard } from "@/components/helpdesk/TicketPerformanceMetricsCard";
 import { CustomerExperienceFeedbackCard } from "@/components/helpdesk/CustomerExperienceFeedbackCard";
 import { CustomerRatingOverviewCard } from "@/components/helpdesk/CustomerRatingOverviewCard";
+import { AIAssistantWidget } from "@/components/AIAssistantWidget";
 import { HelpdeskAnalyticsCard } from "@/components/dashboard/HelpdeskAnalyticsCard";
 import MeetingRoomUtilizationCard from "@/components/meeting-room/MeetingRoomUtilizationCard";
 import { RevenueGenerationOverviewCard } from "@/components/meeting-room/RevenueGenerationOverviewCard";
@@ -122,21 +123,21 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 interface SelectedAnalytic {
   id: string;
   module:
-    | "tickets"
-    | "tasks"
-    | "schedule"
-    | "inventory"
-    | "amc"
-    | "assets"
-    | "meeting_room"
-    | "community"
-    | "helpdesk"
-    | "asset_management"
-    | "inventory_management"
-    | "parking_management"
-    | "visitor_management"
-    | "checklist_management"
-    | "surveys";
+  | "tickets"
+  | "tasks"
+  | "schedule"
+  | "inventory"
+  | "amc"
+  | "assets"
+  | "meeting_room"
+  | "community"
+  | "helpdesk"
+  | "asset_management"
+  | "inventory_management"
+  | "parking_management"
+  | "visitor_management"
+  | "checklist_management"
+  | "surveys";
   endpoint: string;
   title: string;
 }
@@ -248,9 +249,9 @@ const buildAssetDistributionChartData = (data: any) => {
   const chartData =
     itAssets + nonItAssets > 0
       ? [
-          { name: "IT Equipment", value: itAssets, color: "#C4B99D" },
-          { name: "Non-IT Equipment", value: nonItAssets, color: "#DAD6CA" },
-        ]
+        { name: "IT Equipment", value: itAssets, color: "#C4B99D" },
+        { name: "Non-IT Equipment", value: nonItAssets, color: "#DAD6CA" },
+      ]
       : [{ name: "No Data", value: 0, color: "#D5DBDB" }];
 
   const info = hasSiteNames
@@ -361,13 +362,13 @@ const SortableChartItem = ({
   // Handle pointer down to prevent drag on button/icon clicks
   const handlePointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
-    
+
     // Check if the click is on an element marked as non-draggable
     if (target.closest("[data-no-drag]")) {
       // Don't start dragging - just return without calling listeners
       return;
     }
-    
+
     // Check if the click is on a button, icon, or download element
     // Check for lucide-react Download icon or any clickable SVG/button
     if (
@@ -380,18 +381,18 @@ const SortableChartItem = ({
       // Don't start dragging - just return without calling listeners
       return;
     }
-    
+
     // Special handling for SVG icons - check if it's inside a clickable area
     if (target.tagName === "SVG" || target.closest("svg")) {
       const svg = target.tagName === "SVG" ? target : target.closest("svg");
       // Check if the SVG has a cursor-pointer class (indicating it's clickable)
-      if (svg?.classList.contains("cursor-pointer") || 
-          svg?.parentElement?.classList.contains("cursor-pointer")) {
+      if (svg?.classList.contains("cursor-pointer") ||
+        svg?.parentElement?.classList.contains("cursor-pointer")) {
         // Don't start dragging - just return without calling listeners
         return;
       }
     }
-    
+
     // For other elements, proceed with drag
     if (listeners?.onPointerDown) {
       listeners.onPointerDown(e);
@@ -404,15 +405,14 @@ const SortableChartItem = ({
       style={style}
       {...attributes}
       onPointerDown={handlePointerDown}
-      className={`cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-md group ${
-        className ?? ""
-      }`}
+      className={`cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-md group ${className ?? ""
+        }`}
     >
       {children}
     </div>
   );
 };
- 
+
 // Simple loader overlay to show on each section while data is loading
 const SectionLoader: React.FC<{
   loading: boolean;
@@ -420,10 +420,12 @@ const SectionLoader: React.FC<{
   className?: string;
 }> = ({ loading, children, className }) => {
   return (
-    <div className={`relative ${className ?? ""}`}>
-      {children}
+    <div className={`relative h-full flex flex-col ${className ?? ""}`}>
+      <div className="flex-1 overflow-auto">
+        {children}
+      </div>
       {loading && (
-        <div className="absolute inset-0 z-10 rounded-lg bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
+        <div className="absolute inset-0 z-10 rounded-lg bg-white/60 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
           <div className="h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-600 animate-spin" />
         </div>
       )}
@@ -434,11 +436,11 @@ const SectionLoader: React.FC<{
 export const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Determine if this is an executive dashboard to use separate storage
   const isExecutiveDashboard = location.pathname.includes('/dashboard-executive');
   const storagePrefix = isExecutiveDashboard ? 'executive' : 'regular';
-  
+
   const [selectedAnalytics, setSelectedAnalytics] = useState<
     SelectedAnalytic[]
   >([]);
@@ -487,9 +489,9 @@ export const Dashboard = () => {
   useEffect(() => {
     const savedLayout = localStorage.getItem(`${storagePrefix}DashboardGridLayout`);
     const savedAnalytics = localStorage.getItem(`${storagePrefix}DashboardSelectedAnalytics`);
-    
+
     console.log(`🔍 Loading ${storagePrefix} dashboard from localStorage:`, { savedLayout, savedAnalytics });
-    
+
     if (savedLayout) {
       try {
         const parsedLayout = JSON.parse(savedLayout);
@@ -499,7 +501,7 @@ export const Dashboard = () => {
         console.error("❌ Failed to parse saved layout", e);
       }
     }
-    
+
     if (savedAnalytics) {
       try {
         const parsedAnalytics = JSON.parse(savedAnalytics);
@@ -526,7 +528,7 @@ export const Dashboard = () => {
     } catch (e) {
       console.warn('Unable to persist URL site_id/access_token to localStorage', e);
     }
-    
+
     // Mark initial mount as complete
     isInitialMount.current = false;
   }, [storagePrefix]);
@@ -534,18 +536,18 @@ export const Dashboard = () => {
   // Update chart order and generate layout only for new cards when selected analytics change
   useEffect(() => {
     console.log("🔄 selectedAnalytics changed:", selectedAnalytics.length, "isInitialMount:", isInitialMount.current);
-    
+
     // Skip layout generation on initial mount - layouts are loaded from localStorage
     if (isInitialMount.current) {
       console.log("⏭️ Skipping layout generation on initial mount");
       setChartOrder(selectedAnalytics.map((analytic) => analytic.id));
       return;
     }
-    
+
     setChartOrder(selectedAnalytics.map((analytic) => analytic.id));
-    
+
     console.log("📐 Current layouts:", layouts);
-    
+
     // Only generate layouts for new cards that don't have existing layouts
     const newLayouts = selectedAnalytics.map((analytic, index) => {
       const existingLayout = layouts.find((l) => l.i === analytic.id);
@@ -553,9 +555,9 @@ export const Dashboard = () => {
         console.log("✅ Using existing layout for:", analytic.id, existingLayout);
         return existingLayout;
       }
-      
+
       console.log("🆕 Generating new layout for:", analytic.id);
-      
+
       // Cards that should use compact height (simple stat cards only)
       const compactCards = [
         'customer_experience_feedback',
@@ -564,18 +566,18 @@ export const Dashboard = () => {
         'amc_contract_summary',
         'engagement_metrics',
       ];
-      
+
       const isCompactCard = compactCards.includes(analytic.endpoint);
-      
+
       // Find the maximum y position to place new cards below existing ones
-      const maxY = layouts.length > 0 
+      const maxY = layouts.length > 0
         ? Math.max(...layouts.map(l => l.y + l.h))
         : 0;
-      
+
       // Full width layout for analytics cards: each card takes full width (12 columns)
       // Recent Updates sidebar is outside the grid system
       const row = index;
-      
+
       return {
         i: analytic.id,
         x: 0, // Start at column 0 for full width
@@ -586,11 +588,11 @@ export const Dashboard = () => {
         minH: isCompactCard ? 3 : 5,
       };
     });
-    
+
     // Remove layouts for cards that are no longer selected
     const selectedIds = selectedAnalytics.map(a => a.id);
     const filteredLayouts = newLayouts.filter(layout => selectedIds.includes(layout.i));
-    
+
     setLayouts(filteredLayouts);
   }, [selectedAnalytics]);
 
@@ -631,7 +633,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 // Use cached data to keep Promise order alignment and avoid network hit
@@ -644,7 +646,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -723,7 +725,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -735,7 +737,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -785,7 +787,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -797,7 +799,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -888,7 +890,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -900,7 +902,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -966,7 +968,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -978,7 +980,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -1020,7 +1022,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -1032,7 +1034,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -1089,7 +1091,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -1101,7 +1103,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -1152,7 +1154,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -1164,7 +1166,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -1194,7 +1196,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -1206,7 +1208,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -1251,7 +1253,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -1263,7 +1265,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -1337,7 +1339,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -1349,7 +1351,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -1391,7 +1393,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -1403,7 +1405,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -1428,7 +1430,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -1440,7 +1442,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -1465,7 +1467,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -1477,7 +1479,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -1512,7 +1514,7 @@ export const Dashboard = () => {
             for (const analytic of analytics) {
               const cachedOk =
                 (lastFetchedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 (dashboardData as any)?.[module]?.[analytic.endpoint] != null;
               if (cachedOk) {
                 promises.push(
@@ -1524,7 +1526,7 @@ export const Dashboard = () => {
               }
               const failedSameRange =
                 (lastFailedKey as any)?.[module]?.[analytic.endpoint] ===
-                  dateKey &&
+                dateKey &&
                 ((dashboardErrors as any)?.[module]?.[analytic.endpoint] ??
                   null) != null;
               if (failedSameRange) {
@@ -1706,16 +1708,16 @@ export const Dashboard = () => {
   // Handle grid layout changes and persist both layout and selected analytics
   const handleLayoutChange = (newLayout: GridLayout.Layout[]) => {
     console.log("📏 handleLayoutChange called, isInitialMount:", isInitialMount.current, "newLayout:", newLayout);
-    
+
     // Always update the state for UI responsiveness
     setLayouts(newLayout);
-    
+
     // Skip saving to localStorage during initial mount to prevent overwriting saved layouts
     if (isInitialMount.current) {
       console.log("⏭️ Skipping localStorage save during initial mount");
       return;
     }
-    
+
     // Save to localStorage only after initial mount (when user actually resizes/repositions)
     console.log(`💾 Saving ${storagePrefix} dashboard layout to localStorage:`, newLayout);
     localStorage.setItem(`${storagePrefix}DashboardGridLayout`, JSON.stringify(newLayout));
@@ -1910,13 +1912,13 @@ export const Dashboard = () => {
       case "tickets":
         // Handle individual ticket analytics components based on endpoint
         switch (analytic.endpoint) {
-          case "ticket_status":
+          case "ticket_status": {
             // Ticket Status Overview
             const statusData =
               data &&
-              typeof data === "object" &&
-              "open" in data &&
-              "closed" in data
+                typeof data === "object" &&
+                "open" in data &&
+                "closed" in data
                 ? data
                 : { open: 0, closed: 0, wip: 0 };
 
@@ -1926,8 +1928,9 @@ export const Dashboard = () => {
                 closedTickets={statusData.closed || 0}
               />
             );
+          }
 
-          case "tickets_proactive_reactive":
+          case "tickets_proactive_reactive": {
             // Proactive/Reactive tickets breakdown
             // The data has already been transformed by transformTicketData
             // It now has the flat structure: proactiveOpen, proactiveClosed, reactiveOpen, reactiveClosed
@@ -1940,11 +1943,11 @@ export const Dashboard = () => {
               data && typeof data === "object" && "proactiveOpen" in data
                 ? data
                 : {
-                    proactiveOpen: 0,
-                    proactiveClosed: 0,
-                    reactiveOpen: 0,
-                    reactiveClosed: 0,
-                  };
+                  proactiveOpen: 0,
+                  proactiveClosed: 0,
+                  reactiveOpen: 0,
+                  reactiveClosed: 0,
+                };
 
             console.log("🔍 tickets_proactive_reactive - Final values:", {
               proactiveOpen: proactiveReactiveData.proactiveOpen,
@@ -1967,8 +1970,9 @@ export const Dashboard = () => {
                 }
               />
             );
+          }
 
-          case "tickets_categorywise":
+          case "tickets_categorywise": {
             // Category-wise Proactive/Reactive
             const categoryData = Array.isArray(data) ? data : [];
 
@@ -1981,9 +1985,10 @@ export const Dashboard = () => {
                 }}
               />
             );
+          }
 
           case "tickets_unit_categorywise":
-          case "unit_categorywise":
+          case "unit_categorywise": {
             // Unit Category-wise tickets
             const unitCategoryData =
               data && typeof data === "object" ? data : null;
@@ -1997,8 +2002,9 @@ export const Dashboard = () => {
                 }}
               />
             );
+          }
 
-          case "ticket_aging_matrix":
+          case "ticket_aging_matrix": {
             // Ticket Aging Matrix - use rawData, not transformed data
             const agingRawData =
               rawData && typeof rawData === "object" ? rawData : null;
@@ -2006,41 +2012,41 @@ export const Dashboard = () => {
             // Transform API response to expected format - same as TicketDashboard
             const agingMatrixData = agingRawData?.response?.matrix
               ? Object.entries(agingRawData.response.matrix).map(
-                  ([priority, data]: [string, any]) => ({
-                    priority,
-                    T1: data.T1 || 0,
-                    T2: data.T2 || 0,
-                    T3: data.T3 || 0,
-                    T4: data.T4 || 0,
-                    T5: data.T5 || 0,
-                  })
-                )
+                ([priority, data]: [string, any]) => ({
+                  priority,
+                  T1: data.T1 || 0,
+                  T2: data.T2 || 0,
+                  T3: data.T3 || 0,
+                  T4: data.T4 || 0,
+                  T5: data.T5 || 0,
+                })
+              )
               : [
-                  {
-                    priority: "High",
-                    T1: 0,
-                    T2: 0,
-                    T3: 0,
-                    T4: 0,
-                    T5: 0,
-                  },
-                  {
-                    priority: "Medium",
-                    T1: 0,
-                    T2: 0,
-                    T3: 0,
-                    T4: 0,
-                    T5: 0,
-                  },
-                  {
-                    priority: "Low",
-                    T1: 0,
-                    T2: 0,
-                    T3: 0,
-                    T4: 0,
-                    T5: 0,
-                  },
-                ];
+                {
+                  priority: "High",
+                  T1: 0,
+                  T2: 0,
+                  T3: 0,
+                  T4: 0,
+                  T5: 0,
+                },
+                {
+                  priority: "Medium",
+                  T1: 0,
+                  T2: 0,
+                  T3: 0,
+                  T4: 0,
+                  T5: 0,
+                },
+                {
+                  priority: "Low",
+                  T1: 0,
+                  T2: 0,
+                  T3: 0,
+                  T4: 0,
+                  T5: 0,
+                },
+              ];
 
             return (
               <TicketAgingMatrixCard
@@ -2060,6 +2066,7 @@ export const Dashboard = () => {
                 }}
               />
             );
+          }
 
           case "tickets_response_tat":
           case "response_tat":
@@ -2097,20 +2104,25 @@ export const Dashboard = () => {
               />
             );
         }
-      case "tasks":
+      case "tasks": {
         // Map endpoint names to TaskAnalyticsCard type values
         const getTaskAnalyticsType = (endpoint: string) => {
           switch (endpoint) {
-            case "technical_checklist":
+            case "technical_checklist": {
               return "technical";
-            case "non_technical_checklist":
+            }
+            case "non_technical_checklist": {
               return "nonTechnical";
-            case "top_ten_checklist":
+            }
+            case "top_ten_checklist": {
               return "topTen";
-            case "site_wise_checklist":
+            }
+            case "site_wise_checklist": {
               return "siteWise";
-            default:
+            }
+            default: {
               return "technical";
+            }
           }
         };
 
@@ -2122,13 +2134,14 @@ export const Dashboard = () => {
             dateRange={
               dateRange
                 ? {
-                    startDate: dateRange.from!,
-                    endDate: dateRange.to!,
-                  }
+                  startDate: dateRange.from!,
+                  endDate: dateRange.to!,
+                }
                 : undefined
             }
           />
         );
+      }
       case "amc":
         // Handle individual AMC analytics components
         switch (analytic.endpoint) {
@@ -2272,7 +2285,7 @@ export const Dashboard = () => {
               </SortableChartItem>
             );
         }
-      case "inventory":
+      case "inventory": {
         // Map endpoint names to InventoryAnalyticsCard type values
         const getInventoryAnalyticsType = (endpoint: string) => {
           switch (endpoint) {
@@ -2301,13 +2314,14 @@ export const Dashboard = () => {
             dateRange={
               dateRange
                 ? {
-                    startDate: dateRange.from!,
-                    endDate: dateRange.to!,
-                  }
+                  startDate: dateRange.from!,
+                  endDate: dateRange.to!,
+                }
                 : undefined
             }
           />
         );
+      }
       case "schedule":
         return (
           <ScheduleAnalyticsCard
@@ -2344,36 +2358,36 @@ export const Dashboard = () => {
           case "asset_statistics": {
             const metricDownloads = assetDateRange
               ? {
-                  total_assets: downloadGuard(
-                    assetAnalyticsDownloadAPI.downloadCardTotalAssets
-                  ),
-                  assets_in_use: downloadGuard(
-                    assetAnalyticsDownloadAPI.downloadCardAssetsInUse
-                  ),
-                  assets_in_breakdown: downloadGuard(
-                    assetAnalyticsDownloadAPI.downloadCardAssetsInBreakdown
-                  ),
-                  critical_assets_breakdown: downloadGuard(
-                    assetAnalyticsDownloadAPI.downloadCardCriticalAssetsInBreakdown
-                  ),
-                  ppm_assets: downloadGuard(
-                    assetAnalyticsDownloadAPI.downloadCardPPMConductAssets
-                  ),
-                  amc_assets: downloadGuard(
-                    assetAnalyticsDownloadAPI.downloadCardAMCAssets
-                  ),
-                }
+                total_assets: downloadGuard(
+                  assetAnalyticsDownloadAPI.downloadCardTotalAssets
+                ),
+                assets_in_use: downloadGuard(
+                  assetAnalyticsDownloadAPI.downloadCardAssetsInUse
+                ),
+                assets_in_breakdown: downloadGuard(
+                  assetAnalyticsDownloadAPI.downloadCardAssetsInBreakdown
+                ),
+                critical_assets_breakdown: downloadGuard(
+                  assetAnalyticsDownloadAPI.downloadCardCriticalAssetsInBreakdown
+                ),
+                ppm_assets: downloadGuard(
+                  assetAnalyticsDownloadAPI.downloadCardPPMConductAssets
+                ),
+                amc_assets: downloadGuard(
+                  assetAnalyticsDownloadAPI.downloadCardAMCAssets
+                ),
+              }
               : undefined;
 
             const onDownloadAll =
               metricDownloads && Object.values(metricDownloads).some(Boolean)
                 ? async () => {
-                    for (const handler of Object.values(metricDownloads)) {
-                      if (handler) {
-                        await handler();
-                      }
+                  for (const handler of Object.values(metricDownloads)) {
+                    if (handler) {
+                      await handler();
                     }
                   }
+                }
                 : undefined;
 
             return (
@@ -2528,7 +2542,7 @@ export const Dashboard = () => {
           case "center_assets_downtime": {
             return (
               <SortableChartItem key={analytic.id} id={analytic.id}>
-                <CenterAssetsDowntimeMetricsCard 
+                <CenterAssetsDowntimeMetricsCard
                   data={rawData}
                   onDownload={async () => {
                     if (!dateRange?.from || !dateRange?.to) {
@@ -2551,7 +2565,7 @@ export const Dashboard = () => {
           case "highest_maintenance_assets": {
             return (
               <SortableChartItem key={analytic.id} id={analytic.id}>
-                <HighestMaintenanceAssetsCard 
+                <HighestMaintenanceAssetsCard
                   data={rawData}
                   onDownload={async () => {
                     if (!dateRange?.from || !dateRange?.to) {
@@ -2574,7 +2588,7 @@ export const Dashboard = () => {
           case "amc_contract_summary": {
             return (
               <SortableChartItem key={analytic.id} id={analytic.id}>
-                <AmcContractSummaryCard 
+                <AmcContractSummaryCard
                   data={rawData}
                   onDownload={async () => {
                     if (!dateRange?.from || !dateRange?.to) {
@@ -2597,7 +2611,7 @@ export const Dashboard = () => {
           case "amc_contract_expiry_90": {
             return (
               <SortableChartItem key={analytic.id} id={analytic.id}>
-                <AmcExpiringContractsCard 
+                <AmcExpiringContractsCard
                   data={rawData}
                   onDownload={async () => {
                     if (!dateRange?.from || !dateRange?.to) {
@@ -2639,7 +2653,7 @@ export const Dashboard = () => {
           case "inventory_overstock_top10": {
             return (
               <SortableChartItem key={analytic.id} id={analytic.id}>
-                <OverstockTop10ItemsCard 
+                <OverstockTop10ItemsCard
                   data={rawData}
                   onDownload={async () => {
                     if (!dateRange?.from || !dateRange?.to) {
@@ -2662,7 +2676,7 @@ export const Dashboard = () => {
           case "top_consumables_center":
             return (
               <SortableChartItem key={analytic.id} id={analytic.id}>
-                <TopConsumablesCenterOverviewCard 
+                <TopConsumablesCenterOverviewCard
                   data={rawData}
                   onDownload={async () => {
                     if (!dateRange?.from || !dateRange?.to) {
@@ -2849,7 +2863,7 @@ export const Dashboard = () => {
           case "ticket_performance_metrics": {
             return (
               <SortableChartItem key={analytic.id} id={analytic.id}>
-                <TicketPerformanceMetricsCard 
+                <TicketPerformanceMetricsCard
                   data={rawData}
                   onDownload={async () => {
                     if (!dateRange?.from || !dateRange?.to) {
@@ -2879,7 +2893,7 @@ export const Dashboard = () => {
           case "customer_rating_overview": {
             return (
               <SortableChartItem key={analytic.id} id={analytic.id}>
-                <CustomerRatingOverviewCard 
+                <CustomerRatingOverviewCard
                   data={rawData}
                   onDownload={async () => {
                     if (!dateRange?.from || !dateRange?.to) {
@@ -2909,9 +2923,9 @@ export const Dashboard = () => {
                   dateRange={
                     dateRange
                       ? {
-                          startDate: dateRange.from!,
-                          endDate: dateRange.to!,
-                        }
+                        startDate: dateRange.from!,
+                        endDate: dateRange.to!,
+                      }
                       : undefined
                   }
                   onDownload={async () => {
@@ -2942,9 +2956,9 @@ export const Dashboard = () => {
                   dateRange={
                     dateRange
                       ? {
-                          startDate: dateRange.from!,
-                          endDate: dateRange.to!,
-                        }
+                        startDate: dateRange.from!,
+                        endDate: dateRange.to!,
+                      }
                       : undefined
                   }
                   onDownload={async () => {
@@ -2977,9 +2991,9 @@ export const Dashboard = () => {
                   dateRange={
                     dateRange && dateRange.from && dateRange.to
                       ? {
-                          startDate: dateRange.from,
-                          endDate: dateRange.to,
-                        }
+                        startDate: dateRange.from,
+                        endDate: dateRange.to,
+                      }
                       : undefined
                   }
                 />
@@ -3046,9 +3060,9 @@ export const Dashboard = () => {
                   dateRange={
                     dateRange && dateRange.from && dateRange.to
                       ? {
-                          startDate: dateRange.from,
-                          endDate: dateRange.to,
-                        }
+                        startDate: dateRange.from,
+                        endDate: dateRange.to,
+                      }
                       : undefined
                   }
                 />
@@ -3113,10 +3127,10 @@ export const Dashboard = () => {
                     value:
                       Number(
                         item.response_count ||
-                          item.responses ||
-                          item.count ||
-                          item.value ||
-                          item.survey_count
+                        item.responses ||
+                        item.count ||
+                        item.value ||
+                        item.survey_count
                       ) || 0,
                     color: surveyColors[index % surveyColors.length],
                   }));
@@ -3147,9 +3161,9 @@ export const Dashboard = () => {
                   dateRange={
                     dateRange && dateRange.from && dateRange.to
                       ? {
-                          startDate: dateRange.from,
-                          endDate: dateRange.to,
-                        }
+                        startDate: dateRange.from,
+                        endDate: dateRange.to,
+                      }
                       : undefined
                   }
                 />
@@ -3164,89 +3178,140 @@ export const Dashboard = () => {
     }
   };
 
+  const effectiveLayouts = React.useMemo(() => {
+    try {
+      return (layouts || []).map((l) => {
+        const analytic = selectedAnalytics.find((a) => a.id === l.i);
+        if (analytic && /snapshot/i.test(analytic.endpoint)) {
+          return { ...l, h: 3, minH: 2 } as GridLayout.Layout;
+        }
+        return l;
+      });
+    } catch (e) {
+      return layouts;
+    }
+  }, [layouts, selectedAnalytics]);
+
   return (
     <>
       <style>
         {`
+          /* Grid Layout Item Styles */
+          .react-grid-layout {
+            background: transparent;
+          }
+          
+          .react-grid-item {
+            overflow: visible !important;
+            background: transparent !important;
+            border-radius: 0;
+            box-shadow: none;
+            padding: 0;
+            transition: box-shadow 0.3s ease;
+          }
+          
+          .react-grid-item > .react-resizable-handle {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            bottom: 0;
+            right: 0;
+            cursor: se-resize;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><polygon points="10 0 10 10 0 10" fill="%23999" opacity="0.5"/></svg>') no-repeat bottom right;
+            background-origin: content-box;
+            box-sizing: border-box;
+            padding: 0 8px 8px 0;
+          }
+          
+          .react-grid-item > .react-resizable-handle::after {
+            content: "";
+            position: absolute;
+            right: 3px;
+            bottom: 3px;
+            width: 5px;
+            height: 5px;
+            border-right: 2px solid #999;
+            border-bottom: 2px solid #999;
+            opacity: 0.5;
+          }
 
+          /* Card wrapper - allows resize to work properly */
+          .analytics-card-wrapper {
+            height: 100%;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background: white;
+            display: flex;
+            flex-direction: column;
+          }
+          
+          .analytics-card-wrapper:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+          }
 
+          /* Card content - scales with resize */
+          .analytics-card-content {
+            flex: 1;
+            overflow: auto;
+            min-height: 0;
+          }
+
+          /* Placeholder styling for resize */
+          .react-grid-placeholder {
+            background: #e5e7eb !important;
+            opacity: 0.5 !important;
+            border-radius: 8px;
+            border: 2px dashed #999 !important;
+            z-index: 2;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -o-user-select: none;
+            user-select: none;
+          }
+
+          /* Card specific styles */
           [data-lov-name="Card"].bg-card,
           .bg-card {
-            height: 400px !important;
-            box-shadow: 0px 4px 14.2px 0px #0000001A;
-
+            height: 100% !important;
+            box-shadow: none !important;
+            border-radius: 0;
           }
-            .bg-card.coverage-card {
-            height: auto !important;
-            box-shadow: 0px 4px 14.2px 0px #0000001A;
-            max-height: 750px !important;
+          
+          .bg-card.coverage-card {
+            height: 100% !important;
+            max-height: none !important;
+            box-shadow: none !important;
           }
 
           [data-lov-name="CardContent"].p-6.pt-0,
           .bg-card .p-6.pt-0 {
-            height: 300px !important;
+            height: auto !important;
             overflow-y: auto !important;
           }
-            .tracking-tight{
-            color: #000000;
-              font-weight: 600;
-              leading-trim: NONE;
           
-            
-            }
-             .bg-card   svg , .cursor-grab svg {
+          .tracking-tight {
+            color: #000000;
+            font-weight: 600;
+          }
+          
+          .bg-card svg,
+          .cursor-grab svg {
+            color: #000000 !important;
+          }
 
-                        color: #000000 !important;
-
-            }
-
-              .bg-card button{
+          .bg-card button {
             border: none !important;
-            }
+          }
 
+          .bg-card button svg {
+            color: #000000 !important;
+          }
 
-           .bg-card button svg{
-
-                        color: #000000 !important;
-
-            }
-
-            h1, h2, h3, h4, h5, h6 {
-                color: #000000 !important;
-            }
-
-            /* Grid Layout Item Styles */
-            .react-grid-item {
-              overflow: hidden;
-              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-              border-radius: 8px;
-              background: white;
-              transition: box-shadow 0.3s ease;
-            }
-            
-            .react-grid-item:hover {
-              box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            }
-            
-            .react-grid-item > div {
-              height: 100%;
-              overflow: hidden;
-            }
-
-            /* Placeholder styling for resize */
-            .react-grid-placeholder {
-              background: #e5e7eb !important;
-              opacity: 0.5 !important;
-              border-radius: 8px;
-              border: none !important;
-              z-index: 2;
-              -webkit-user-select: none;
-              -moz-user-select: none;
-              -ms-user-select: none;
-              -o-user-select: none;
-              user-select: none;
-            }
-
+          h1, h2, h3, h4, h5, h6 {
+            color: #000000 !important;
+          }
         `}
       </style>
       <div className="flex min-h-screen bg-analytics-background">
@@ -3345,15 +3410,17 @@ export const Dashboard = () => {
                   <div className="relative w-full">
                     <ResponsiveGridLayout
                       className="layout"
-                      layouts={{ lg: layouts }}
+                      layouts={{ lg: effectiveLayouts }}
                       onLayoutChange={(layout) => handleLayoutChange(layout)}
                       breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                       cols={{ lg: 12, md: 12, sm: 12, xs: 12, xxs: 12 }}
-                      rowHeight={60}
-                      margin={[20, 20]}
+                      rowHeight={48}
+                      margin={[12, 12]}
                       resizeHandles={["se"]}
                       containerPadding={[0, 0]}
                       compactType="vertical"
+                      isDraggable={true}
+                      isResizable={true}
                     >
                       {/* Analytics Cards */}
                       {chartOrder.map((chartId) => {
@@ -3365,22 +3432,11 @@ export const Dashboard = () => {
                         const perCardLoading =
                           !!loadingMap?.[analytic.module]?.[analytic.endpoint];
 
-                        // Cards that should use auto height (simple stat cards only)
-                        const compactCards = [
-                          'customer_experience_feedback',
-                          'customer_rating_overview',
-                          'helpdesk_snapshot',
-                        ];
-                        
-                        const isCompactCard = compactCards.includes(analytic.endpoint);
-
                         return (
-                          <div key={analytic.id} className="cursor-move">
-                            <SectionLoader loading={perCardLoading}>
-                              <div className={isCompactCard ? "h-auto" : "h-full flex flex-col"}>
-                                <div className={isCompactCard ? "" : "flex-1 overflow-auto"}>
-                                  {renderAnalyticsCard(analytic)}
-                                </div>
+                          <div key={analytic.id} className="analytics-card-wrapper">
+                            <SectionLoader loading={perCardLoading} className="flex-1">
+                              <div className="analytics-card-content">
+                                {renderAnalyticsCard(analytic)}
                               </div>
                             </SectionLoader>
                           </div>
@@ -3390,7 +3446,7 @@ export const Dashboard = () => {
                   </div>
                 )}
               </div>
-              
+
               {/* Recent Updates Sidebar - Always Visible */}
               <div className="w-[350px] flex-shrink-0">
                 <RecentUpdatedSidebar />
@@ -3399,6 +3455,9 @@ export const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* AI Assistant Widget */}
+      <AIAssistantWidget />
     </>
   );
 };

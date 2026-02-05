@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronRight, ArrowLeft, FileText, Calendar, Users, X, Plus, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info } from "lucide-react";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
@@ -22,7 +22,6 @@ import {
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 
 const EventCreate = () => {
-  const baseURL = API_CONFIG.BASE_URL;
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     event_type: "",
@@ -115,7 +114,7 @@ const EventCreate = () => {
   const fetchImageConfigurations = async () => {
     try {
       const response = await axios.get(
-        `${baseURL}/system_constants.json?q[description_eq]=ImagesConfiguration`,
+        getFullUrl('/system_constants.json?q[description_eq]=ImagesConfiguration'),
         {
           headers: {
             Authorization: getAuthHeader(),
@@ -856,7 +855,7 @@ const EventCreate = () => {
     }
 
     try {
-      const response = await axios.post(`${baseURL}/crm/admin/events.json`, formDataToSend, {
+      const response = await axios.post(getFullUrl('/crm/admin/events.json'), formDataToSend, {
         headers: {
                       Authorization: getAuthHeader(),
                       "Content-Type": "multipart/form-data",
@@ -942,7 +941,7 @@ const EventCreate = () => {
     const fetchUsers = async () => {
       try {
         const response = await axios.get(
-          `${baseURL}/usergroups/cp_members_list.json`,
+          getFullUrl('/usergroups/cp_members_list.json'),
           {
              headers: {
                       Authorization: getAuthHeader(),
@@ -963,9 +962,9 @@ const EventCreate = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        console.log("Fetching projects from:", `${baseURL}/projects_for_dropdown.json`);
+        console.log("Fetching projects from:", getFullUrl('/projects_for_dropdown.json'));
         const response = await axios.get(
-          `${baseURL}/projects_for_dropdown.json`,
+          getFullUrl('/projects_for_dropdown.json'),
           {
              headers: {
                           Authorization: getAuthHeader(),
@@ -995,7 +994,7 @@ const EventCreate = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get(`${baseURL}/crm/usergroups.json?q[group_type_eq]=cp`, {
+        const response = await axios.get(getFullUrl('/crm/usergroups.json?q[group_type_eq]=cp'), {
           headers: {
                    Authorization: getAuthHeader(),
                    "Content-Type": "multipart/form-data",
@@ -1019,7 +1018,7 @@ const EventCreate = () => {
   useEffect(() => {
     const fetchChannelPartners = async () => {
       try {
-        const response = await axios.get(`${baseURL}/channel_partners.json`, {
+        const response = await axios.get(getFullUrl('/channel_partners.json'), {
           headers: {
                    Authorization: getAuthHeader(),
                    "Content-Type": "multipart/form-data",

@@ -26,8 +26,14 @@ const navigationItems: NavigationItem[] = [
   {
     id: "bms",
     label: "BMS",
-    icon: <Home className="w-4 h-4" />,
-    path: "/maintenance/project-details-list",
+    icon: <SettingsIcon className="w-4 h-4" />,
+    path: "/bms/helpdesk",
+  },
+  {
+    id: "loyalty",
+    label: "Loyalty",
+    icon: <Gift className="w-4 h-4" />,
+    path: "/loyalty/dashboard",
   },
   {
     id: "loyalty",
@@ -39,7 +45,7 @@ const navigationItems: NavigationItem[] = [
     id: "cms",
     label: "CMS",
     icon: <SettingsIcon className="w-4 h-4" />,
-    path: "/cms/facility",
+    path: "/cms/facility-setup",
   },
   {
     id: "campaigns",
@@ -112,14 +118,34 @@ export const HiSocietyNavigation: React.FC = () => {
 
   // Filter navigation items based on domain
   const filteredNavigationItems = isCMSDomain
-  ? navigationItems.filter(
+    ? navigationItems.filter(
       (item) => item.id === "home" || item.id === "settings"
     )
-  : navigationItems; 
+    : isFitoutDomain
+      ? navigationItems.filter(
+        (item) => item.id === "fitout" || item.id === "settings"
+      )
+      : navigationItems; // Show all navigation items including Home, BMS, and Loyalty
+
   // Detect active navigation based on current path
   useEffect(() => {
     const path = location.pathname;
-    if (path.startsWith("/cms")) {
+    
+    // Check for Application Setup paths first - these should stay in settings
+    if (
+      path.startsWith("/campaigns/referral-setup") ||
+      path.startsWith("/fitout/setup") ||
+      path.startsWith("/accounting/tax-setup") ||
+      path.startsWith("/accounting/payment-terms") ||
+      path.startsWith("/accounting/vendors") ||
+      path.startsWith("/smartsecure/visitor-purpose") ||
+      path.startsWith("/smartsecure/vehicle-type") ||
+      path.startsWith("/smartsecure/material-type") ||
+      path.startsWith("/incidents/setup") ||
+      path.startsWith("/osr/setup")
+    ) {
+      setActiveNav("settings");
+    } else if (path.startsWith("/cms")) {
       setActiveNav("cms");
     } else if (path.startsWith("/campaigns")) {
       setActiveNav("campaigns");
@@ -143,14 +169,18 @@ export const HiSocietyNavigation: React.FC = () => {
       setActiveNav("loyalty");
     } else if (
       path.startsWith("/bms") ||
+      path.startsWith("/communication")
+    ) {
+      setActiveNav("bms");
+    } else if (
       path.startsWith("/maintenance") ||
       path.startsWith("/communication") ||
       path.startsWith("/setup-member") ||
       path.startsWith("/setup")
     ) {
-      setActiveNav(isCMSDomain ? "home" : "bms");
+      setActiveNav("home");
     } else {
-      setActiveNav(isCMSDomain ? "home" : "bms");
+      setActiveNav("home");
     }
   }, [location.pathname, isCMSDomain]);
 
@@ -174,11 +204,10 @@ export const HiSocietyNavigation: React.FC = () => {
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item)}
-                  className={`pb-3 text-sm transition-colors whitespace-nowrap flex items-center gap-2 flex-shrink-0 ${
-                    isActive
+                  className={`pb-3 text-sm transition-colors whitespace-nowrap flex items-center gap-2 flex-shrink-0 ${isActive
                       ? "text-[#C72030] border-b-2 border-[#C72030] font-medium"
                       : "text-[#1a1a1a] opacity-70 hover:opacity-100"
-                  }`}
+                    }`}
                 >
                   <span>{item.label}</span>
                 </button>

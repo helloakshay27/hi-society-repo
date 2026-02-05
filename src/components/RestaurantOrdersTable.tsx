@@ -124,13 +124,12 @@ export const RestaurantOrdersTable = ({ needPadding }: { needPadding?: boolean }
   const [orders, setOrders] = useState<RestaurantOrder[]>([]);
   const [restoId, setRestoId] = useState<number | undefined>();
   const [statusUpdating, setStatusUpdating] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({
     current_page: 1,
     total_count: 0,
     total_pages: 0,
   });
-  
   // Analytics date range state (default: last 7 days)
   const [analyticsDateRange, setAnalyticsDateRange] = useState(() => {
     const today = new Date();
@@ -146,13 +145,23 @@ export const RestaurantOrdersTable = ({ needPadding }: { needPadding?: boolean }
       if (needPadding) {
         try {
           const response = await dispatch(fetchRestaurants({ baseUrl, token })).unwrap();
-          setRestoId(response[0]?.id);
+          if (response && response.length > 0) {
+            setRestoId(response[0]?.id);
+          } else {
+            setRestoId(undefined);
+            setLoading(false);
+          }
         } catch (error) {
           console.error('Error fetching restaurants:', error);
           toast.error('Failed to fetch restaurants');
+          setLoading(false);
         }
       } else {
-        setRestoId(id ? Number(id) : undefined);
+        const newRestoId = id ? Number(id) : undefined;
+        setRestoId(newRestoId);
+        if (!newRestoId) {
+          setLoading(false);
+        }
       }
     };
 
@@ -161,8 +170,8 @@ export const RestaurantOrdersTable = ({ needPadding }: { needPadding?: boolean }
 
   useEffect(() => {
     const fetchOrders = async () => {
-      setLoading(true);
       if (restoId) {
+        setLoading(true);
         try {
           const params = needPadding
             ? {
@@ -181,15 +190,16 @@ export const RestaurantOrdersTable = ({ needPadding }: { needPadding?: boolean }
               currentPage: pagination.current_page,
             };
           const response = await dispatch(fetchRestaurantOrders(params)).unwrap();
-          setOrders(response.food_orders);
+          setOrders(response.food_orders || []);
           setPagination({
-            current_page: response.current_page,
-            total_count: response.total_records,
-            total_pages: response.total_pages
+            current_page: response.current_page || 1,
+            total_count: response.total_records || 0,
+            total_pages: response.total_pages || 0
           })
         } catch (error) {
           console.error('Error fetching orders:', error);
           toast.error('Failed to fetch orders');
+          setOrders([]);
         } finally {
           setLoading(false);
         }
@@ -256,9 +266,9 @@ export const RestaurantOrdersTable = ({ needPadding }: { needPadding?: boolean }
     try {
       const siteId = localStorage.getItem('selectedSiteId') || '0';
       const accessToken = token || '';
-      
+
       const exportUrl = `https://${baseUrl}/pms/admin/food_orders/food_and_booking.json?site_id=${siteId}&access_token=${encodeURIComponent(accessToken)}&export=total_orders`;
-      
+
       const response = await fetch(exportUrl, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -296,6 +306,7 @@ export const RestaurantOrdersTable = ({ needPadding }: { needPadding?: boolean }
       ...prev,
       current_page: page,
     }));
+    setLoading(true);
     try {
       const params = needPadding
         ? {
@@ -303,7 +314,7 @@ export const RestaurantOrdersTable = ({ needPadding }: { needPadding?: boolean }
           token,
           id: Number(restoId),
           pageSize: 10,
-          currentPage: pagination.current_page,
+          currentPage: page,
           all: true,
         }
         : {
@@ -311,12 +322,20 @@ export const RestaurantOrdersTable = ({ needPadding }: { needPadding?: boolean }
           token,
           id: Number(restoId),
           pageSize: 10,
-          currentPage: pagination.current_page,
+          currentPage: page,
         };
       const response = await dispatch(fetchRestaurantOrders(params)).unwrap();
-      setOrders(response.food_orders);
+      setOrders(response.food_orders || []);
+      setPagination({
+        current_page: response.current_page || page,
+        total_count: response.total_records || 0,
+        total_pages: response.total_pages || 0
+      });
     } catch (error) {
-      toast.error('Failed to fetch bookings');
+      toast.error('Failed to fetch orders');
+      setOrders([]);
+    } finally {
+      setLoading(false);
     }
   };
 

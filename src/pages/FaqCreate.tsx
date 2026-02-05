@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ArrowLeft, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import SelectBox from "@/components/ui/select-box";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import {
@@ -15,7 +15,6 @@ import {
 } from "@mui/material";
 
 const FaqCreate = () => {
-  const baseURL = API_CONFIG.BASE_URL;
 
   // Field styles for Material-UI components
   const fieldStyles = {
@@ -68,7 +67,7 @@ const FaqCreate = () => {
     const fetchCategories = async () => {
       try {
         setCategoriesLoading(true);
-        const res = await axios.get(`${baseURL}/faq_categories.json`, {
+        const res = await axios.get(getFullUrl('/faq_categories.json'), {
          headers: { Authorization: getAuthHeader() },
         });
 
@@ -95,7 +94,7 @@ const FaqCreate = () => {
       const fetchSubCategories = async () => {
         try {
           setSubCategoriesLoading(true);
-          const res = await axios.get(`${baseURL}/faq_sub_categories.json`, {
+          const res = await axios.get(getFullUrl('/faq_sub_categories.json'), {
             headers: { Authorization: getAuthHeader() },
           });
 
@@ -128,6 +127,35 @@ const FaqCreate = () => {
     }
   }, [formData.faq_category_id]);
 
+  // Fetch sites
+  useEffect(() => {
+    const fetchSites = async () => {
+      try {
+        setSitesLoading(true);
+        const res = await axios.get(getFullUrl('/sites.json'), {
+          headers: {
+                    Authorization: getAuthHeader(),
+                    "Content-Type": "multipart/form-data",
+                  },
+        });
+
+        const sitesData = res.data?.sites || res.data || [];
+        const formattedSites = sitesData.map((site) => ({
+          id: site?.id || "",
+          name: site?.name || "Unnamed Site",
+        }));
+
+        setSites(formattedSites);
+      } catch (err) {
+        console.error("Failed to fetch sites:", err);
+        toast.error("Failed to load sites");
+      } finally {
+        setSitesLoading(false);
+      }
+    };
+    fetchSites();
+  }, []);
+
   const handleCategoryChange = (value) => {
     setFormData((prev) => ({
       ...prev,
@@ -143,9 +171,22 @@ const FaqCreate = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+  const handleAddFaq = () => {
+    if (!question.trim()) {
+      toast.error("Question is required");
+      return;
+    }
+
+    if (!answer.trim()) {
+      toast.error("Answer is required");
+      return;
+    }
+
+     if (
+    (getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" ||
+      getFullUrl('') === "https://kalpataru.lockated.com" ||
+      getFullUrl('') === "https://rustomjee-live.lockated.com")
+  ) {
     if (!formData.faq_category_id) {
       toast.error("FAQ Category is required");
       return;
@@ -161,8 +202,58 @@ const FaqCreate = () => {
       return;
     }
 
-    if (!formData.answer.trim()) {
-      toast.error("Answer is required");
+    const newFaq = {
+      question: question.trim(),
+      answer: answer.trim(),
+      site_id: parseInt(selectedSiteId),
+      active: true,
+      faq_tag: faqTag.trim(),
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      faqs: [...prev.faqs, newFaq],
+    }));
+
+    // Clear input fields
+    setQuestion("");
+    setAnswer("");
+    setFaqTag("");
+    setSelectedSiteId("");
+
+    toast.success("FAQ added to list");
+  };
+
+  const handleDeleteFaq = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      faqs: prev.faqs.filter((_, i) => i !== index),
+    }));
+    toast.success("FAQ removed from list");
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // if (!formData.faq_category_id) {
+    //   toast.error("FAQ Category is required");
+    //   return;
+    // }
+    if (
+  (getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" || getFullUrl('') === "https://rustomjee-live.lockated.com") &&
+  !formData.faq_category_id
+) {
+  toast.error("FAQ Category is required");
+  return;
+}
+
+    // if (!formData.faq_sub_category_id) {
+    //   toast.error("FAQ Sub Category is required");
+    //   return;
+    // }
+
+    if (formData.faqs.length === 0) {
+      toast.error("At least one FAQ is required");
       return;
     }
 
@@ -177,7 +268,7 @@ const FaqCreate = () => {
         active: true,
       };
 
-      await axios.post(`${baseURL}/faqs.json`, payload, {
+      await axios.post(getFullUrl('/faqs.json'), payload, {
         headers: { Authorization: getAuthHeader() },
       });
 
@@ -226,8 +317,8 @@ const FaqCreate = () => {
             
             <div className="p-6" style={{ backgroundColor: "#AAB9C50D" }}>
               {/* Category and Subcategory Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <FormControl fullWidth variant="outlined">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <FormControl fullWidth variant="outlined" required={(getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" || getFullUrl('') === "https://kalpataru.lockated.com" || getFullUrl('') === "https://rustomjee-live.lockated.com")}>
                   <InputLabel shrink htmlFor="faq-category">
                     FAQ Category <span style={{ color: '#C72030' }}>*</span>
                   </InputLabel>
@@ -252,7 +343,7 @@ const FaqCreate = () => {
                   </MuiSelect>
                 </FormControl>
 
-                <FormControl fullWidth variant="outlined">
+                <FormControl fullWidth variant="outlined" required={(getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" || getFullUrl('') === "https://kalpataru.lockated.com" || getFullUrl('') === "https://rustomjee-live.lockated.com")}>
                   <InputLabel shrink htmlFor="faq-sub-category">
                     FAQ Sub Category <span style={{ color: '#C72030' }}>*</span>
                   </InputLabel>

@@ -63,6 +63,7 @@ export interface OccupantUser {
   appDownloaded: string;
   lockUserId?: string | null;
   entity?: string;
+  departmentName?: string;
 }
 
 interface Pagination {
@@ -99,6 +100,7 @@ export const fetchOccupantUsers = createAsyncThunk(
     entity_id_eq = "",
     app_downloaded_eq,
     search_all_fields_cont = "",
+    lock_user_permissions_user_type_eq = "",
   }: {
     page: number;
     perPage: number;
@@ -110,6 +112,7 @@ export const fetchOccupantUsers = createAsyncThunk(
     entity_id_eq?: string;
     app_downloaded_eq?: boolean;
     search_all_fields_cont?: string;
+    lock_user_permissions_user_type_eq?: string;
   }) => {
     const params = new URLSearchParams({
       "q[lock_user_permission_status_eq]": lock_user_permission_status_eq,
@@ -119,6 +122,7 @@ export const fetchOccupantUsers = createAsyncThunk(
       "q[email_cont]": email_cont,
       "q[entity_id_eq]": entity_id_eq,
       "q[search_all_fields_cont]": search_all_fields_cont,
+      "q[lock_user_permissions_user_type_eq]": lock_user_permissions_user_type_eq,
     });
     if (app_downloaded_eq !== undefined) {
       params.append("q[app_downloaded_eq]", String(app_downloaded_eq));
@@ -130,23 +134,24 @@ export const fetchOccupantUsers = createAsyncThunk(
     const transformedUsers: OccupantUser[] = response.data.occupant_users.map(
       (user) => ({
         id: user.id,
-        company: user.vendor_name ,
+        company: user.vendor_name,
         name: `${user.firstname} ${user.lastname}`,
         mobile: `${user.mobile}`,
         email: user.email,
         gender: user.gender,
-        department: user.unit_name ,
-        status: user.lock_user_permission.status,
+        department: user.department?.department_name,
+        status: user.lock_user_permission?.status,
         employeeId: user.lock_user_permission?.employee_id,
         accessLevel: user.lock_user_permission?.access_level,
         role: user.role_name,
         createdBy: user.created_by_name,
         type: user.user_type === "pms_occupant_admin" ? "Admin" : "Member",
-        active: user.department?.active ? "Yes" : "No",
+        active: user.lock_user_permission?.active,
         faceRecognition: user.face_added ? "Yes" : "No",
         appDownloaded: user.app_downloaded,
         lockUserId: user.lock_user_permission.id ?? null,
-        entity: user.entity_name
+        entity: user.entity_name,
+        departmentName: user.department?.department_name
       })
     );
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,7 +6,9 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { Upload } from 'lucide-react';
-import { TextField } from '@mui/material';
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import axios from 'axios';
+import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 
 const NotificationsPage = () => {
   const [formData, setFormData] = useState({
@@ -14,7 +16,79 @@ const NotificationsPage = () => {
     text: '',
     file: null as File | null,
     shareWith: 'all',
+    user_id: [] as number[],
+    group_id: [] as number[],
   });
+
+  const [users, setUsers] = useState([]);
+  const [groups, setGroups] = useState([]);
+
+  // Field styles for Material-UI components
+  const fieldStyles = {
+    height: '45px',
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    '& .MuiOutlinedInput-root': {
+      height: '45px',
+      '& fieldset': {
+        borderColor: '#ddd',
+      },
+      '&:hover fieldset': {
+        borderColor: '#C72030',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#C72030',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      '&.Mui-focused': {
+        color: '#C72030',
+      },
+    },
+  };
+
+  // Fetch Users
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get(
+          getFullUrl('/usergroups/cp_members_list.json'),
+          {
+            headers: {
+              Authorization: getAuthHeader(),
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        setUsers(response?.data || []);
+      } catch (error) {
+        console.error("Error fetching Users:", error);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  // Fetch Groups
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const response = await axios.get(getFullUrl('/crm/usergroups.json?q[group_type_eq]=cp'), {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        const groupsData = response.data.usergroups || [];
+        setGroups(groupsData);
+      } catch (error) {
+        console.error("Error fetching Groups:", error);
+      }
+    };
+
+    if (formData.shareWith === "groups" && groups.length === 0) {
+      fetchGroups();
+    }
+  }, [formData.shareWith]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -22,7 +96,7 @@ const NotificationsPage = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.title.trim()) {
@@ -35,16 +109,85 @@ const NotificationsPage = () => {
       return;
     }
 
-    // Here you would send the notification
-    toast.success('Notification sent successfully!');
+    // Validate shared with individual - require at least one user
+    if (formData.shareWith === "individuals" && (!formData.user_id || formData.user_id.length === 0)) {
+      toast.error('Please select at least one user when sharing with individuals.');
+      return;
+    }
     
-    // Reset form
-    setFormData({
-      title: '',
-      text: '',
-      file: null,
-      shareWith: 'all',
-    });
+    // Validate shared with group - require at least one group
+    if (formData.shareWith === "groups" && (!formData.group_id || formData.group_id.length === 0)) {
+      toast.error('Please select at least one group when sharing with groups.');
+      return;
+    }
+
+    try {
+      // Prepare FormData for multipart/form-data submission
+      const formDataToSend = new FormData();
+      
+      // Add title and text
+      formDataToSend.append('btitle', formData.title);
+      formDataToSend.append('btext', formData.text);
+      
+      // Add shared parameter (0 for all, 1 for individuals/groups)
+      if (formData.shareWith === 'all') {
+        formDataToSend.append('noticeboard[shared]', '0');
+      } else {
+        formDataToSend.append('noticeboard[shared]', '1');
+        
+        // Add individual users if selected
+        if (formData.shareWith === 'individuals' && formData.user_id.length > 0) {
+          formData.user_id.forEach((userId) => {
+            formDataToSend.append('noticeboard[swusers][]', userId.toString());
+          });
+        }
+        
+        // Add group users if selected
+        if (formData.shareWith === 'groups' && formData.group_id.length > 0) {
+          formData.group_id.forEach((groupId) => {
+            formDataToSend.append('noticeboard[swusers][]', groupId.toString());
+          });
+        }
+      }
+      
+      // Add file if present
+      if (formData.file) {
+        formDataToSend.append('bimage', formData.file);
+      }
+
+      // Send the notification
+      const response = await axios.post(
+        getFullUrl('/admin_push.json'),
+        formDataToSend,
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      toast.success('Notification sent successfully!');
+      
+      // Reset form
+      setFormData({
+        title: '',
+        text: '',
+        file: null,
+        shareWith: 'all',
+        user_id: [],
+        group_id: [],
+      });
+      
+      // Reset file input
+      const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
+    } catch (error: any) {
+      console.error('Error sending notification:', error);
+      toast.error(error.response?.data?.message || 'Failed to send notification. Please try again.');
+    }
   };
 
   return (
@@ -189,7 +332,12 @@ const NotificationsPage = () => {
               
               <RadioGroup
                 value={formData.shareWith}
-                onValueChange={(value) => setFormData({ ...formData, shareWith: value })}
+                onValueChange={(value) => setFormData({ 
+                  ...formData, 
+                  shareWith: value,
+                  user_id: value !== 'individuals' ? [] : formData.user_id,
+                  group_id: value !== 'groups' ? [] : formData.group_id,
+                })}
                 className="flex gap-8"
               >
                 <div className="flex items-center space-x-2">
@@ -211,6 +359,94 @@ const NotificationsPage = () => {
                   </Label>
                 </div>
               </RadioGroup>
+
+              {/* Individual Users Dropdown */}
+              {formData.shareWith === "individuals" && (
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  sx={{ '& .MuiInputBase-root': fieldStyles, mt: 2 }}
+                >
+                  <InputLabel shrink>Select Users</InputLabel>
+                  <MuiSelect
+                    multiple
+                    value={Array.isArray(formData.user_id) ? formData.user_id : []}
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        user_id: e.target.value as number[],
+                      }));
+                    }}
+                    label="Select Users"
+                    notched
+                    displayEmpty
+                    renderValue={(selected) => {
+                      if (!selected || selected.length === 0) {
+                        return <span style={{ color: '#999' }}>Select Users</span>;
+                      }
+                      return selected
+                        .map((id) => {
+                          const user = users.find((u: any) => u.id === id || u.id.toString() === id.toString());
+                          return user ? `${user.firstname} ${user.lastname}` : id;
+                        })
+                        .join(", ");
+                    }}
+                  >
+                    <MenuItem value="" disabled>
+                      Select Users
+                    </MenuItem>
+                    {users.map((user: any) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        {user.firstname} {user.lastname}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+              )}
+
+              {/* Groups Dropdown */}
+              {formData.shareWith === "groups" && (
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  sx={{ '& .MuiInputBase-root': fieldStyles, mt: 2 }}
+                >
+                  <InputLabel shrink>Select Groups</InputLabel>
+                  <MuiSelect
+                    multiple
+                    value={Array.isArray(formData.group_id) ? formData.group_id : []}
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        group_id: e.target.value as number[],
+                      }));
+                    }}
+                    label="Select Groups"
+                    notched
+                    displayEmpty
+                    renderValue={(selected) => {
+                      if (!selected || selected.length === 0) {
+                        return <span style={{ color: '#999' }}>Select Groups</span>;
+                      }
+                      return selected
+                        .map((id) => {
+                          const group = groups.find((g: any) => g.id === id || g.id.toString() === id.toString());
+                          return group ? group.name : id;
+                        })
+                        .join(", ");
+                    }}
+                  >
+                    <MenuItem value="" disabled>
+                      Select Groups
+                    </MenuItem>
+                    {groups.map((group: any) => (
+                      <MenuItem key={group.id} value={group.id}>
+                        {group.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
+              )}
             </div>
 
             {/* Submit Button */}

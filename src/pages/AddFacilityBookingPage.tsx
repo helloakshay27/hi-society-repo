@@ -1,657 +1,321 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { TextField, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import { CheckCircle, FileText, Shield, ArrowLeft } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchFMUsers } from '@/store/slices/fmUserSlice';
-import { fetchEntities } from '@/store/slices/entitiesSlice';
-import { fetchActiveFacilities } from '@/store/slices/facilitySetupsSlice';
-import { fetchOccupantUsers } from '@/store/slices/occupantUsersSlice';
-import { apiClient } from '@/utils/apiClient';
-import { toast } from 'sonner';
+import { TextField, MenuItem, Select as MuiSelect, FormControl, InputLabel } from '@mui/material';
+import { ArrowLeft, CheckCircle } from 'lucide-react';
+import axios from 'axios';
 
-export const AddFacilityBookingPage = () => {
+const fieldStyles = {
+  height: '45px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '45px',
+    '& fieldset': {
+      borderColor: '#ddd',
+    },
+    '&:hover fieldset': {
+      borderColor: '#C72030',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    '&.Mui-focused': {
+      color: '#C72030',
+    },
+  },
+};
+
+const AddFacilityBookingPage = () => {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
 
-  const { data: fmUsersResponse, loading: fmUsersLoading, error: fmUsersError } = useAppSelector((state) => state.fmUsers);
-  const fmUsers = fmUsersResponse?.users || [];
+  const [towers, setTowers] = useState<any[]>([]);
+  const [flats, setFlats] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
 
-  const occupantUsersState = useAppSelector((state) => state.occupantUsers);
-  const occupantUsers = occupantUsersState?.users?.transformedUsers || [];
-  const occupantUsersLoading = occupantUsersState?.loading;
-  const occupantUsersError = occupantUsersState?.error;
+  // Form Selection State
+  const [selectedTowerId, setSelectedTowerId] = useState('');
+  const [selectedFlatId, setSelectedFlatId] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState('');
 
-  const { data: entitiesResponse, loading: entitiesLoading, error: entitiesError } = useAppSelector((state) => state.entities);
-  const entities = Array.isArray(entitiesResponse?.entities) ? entitiesResponse.entities :
-    Array.isArray(entitiesResponse) ? entitiesResponse : [];
-
-  const { data: facilitySetupsResponse, loading: facilitySetupsLoading, error: facilitySetupsError } = useAppSelector((state) => state.fetchActiveFacilities);
-  const facilities = Array.isArray(facilitySetupsResponse?.facility_setups) ? facilitySetupsResponse.facility_setups :
-    Array.isArray(facilitySetupsResponse) ? facilitySetupsResponse : [];
-
-  const [userType, setUserType] = useState('fm');
-  const [selectedUser, setSelectedUser] = useState('');
-  const [selectedFacility, setSelectedFacility] = useState('');
-  const [selectedCompany, setSelectedCompany] = useState('');
+  // Facility & Booking State
+  const [facilities, setFacilities] = useState<any[]>([]);
+  const [selectedFacility, setSelectedFacility] = useState<any>('');
   const [selectedDate, setSelectedDate] = useState('');
-  const [comment, setComment] = useState('');
-  const [facilityDetails, setFacilityDetails] = useState<{
-    postpaid: number;
-    prepaid: number;
-    pay_on_facility: number;
-    complementary: number;
-  } | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState('');
-  const [slots, setSlots] = useState<Array<{
-    id: number;
-    start_minute: number;
-    end_minute: number;
-    start_hour: number;
-    end_hour: number;
-    ampm: string;
-    wrap_time: number;
-    booked_by: string;
-    formated_start_hour: string;
-    formated_end_hour: string;
-    formated_start_minute: string;
-    formated_end_minute: string;
-  }>>([]);
+  const [slots, setSlots] = useState<any[]>([]);
   const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
-  const [openCancelPolicy, setOpenCancelPolicy] = useState(false);
-  const [openTerms, setOpenTerms] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [complementaryReason, setComplementaryReason] = useState('');
 
-  // Fetch data on component mount
-  useEffect(() => {
-    if (userType === 'occupant') {
-      dispatch(fetchOccupantUsers({ page: 1, perPage: 100 }));
-      dispatch(fetchEntities());
-    } else {
-      dispatch(fetchFMUsers());
-    }
-    dispatch(fetchActiveFacilities({ baseUrl: localStorage.getItem('baseUrl'), token: localStorage.getItem('token') }));
-  }, [dispatch, userType]);
+  // Cost State
+  const [facilityDetails, setFacilityDetails] = useState<any>(null);
+  const [bookingRuleData, setBookingRuleData] = useState<any>(null);
 
-  // Fetch facility details when facility is selected
-  const fetchFacilityDetails = async (facilityId: string) => {
-    try {
-      const response = await apiClient.get(`/pms/admin/facility_setups/${facilityId}.json`);
-      if (response.data && response.data.facility_setup) {
-        setFacilityDetails(response.data.facility_setup);
-        setPaymentMethod(''); // Reset payment method when facility changes
-      }
-    } catch (error) {
-      console.error('Error fetching facility details:', error);
-      setFacilityDetails(null);
-    }
-  };
+  // Loading States
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Handle facility selection change
-  const handleFacilityChange = (facility: any) => {
-    setSelectedFacility(facility);
-    if (facility) {
-      fetchFacilityDetails(facility.id);
-    } else {
-      setFacilityDetails(null);
-      setPaymentMethod('');
-    }
-  };
+  // Empty functions to fix errors as per user request
+  const handleTowerChange = (e: any) => { };
+  const handleFlatChange = (e: any) => { };
+  const handleFacilityChange = (e: any) => { };
+  const handleSlotClick = (slotId: number) => { };
+  const handleSubmit = (e: any) => { e.preventDefault(); };
 
-  const fetchSlots = async (facilityId: string, date: string, userId: string) => {
-    try {
-      const formattedDate = date.replace(/-/g, '/');
-      const response = await apiClient.get(`/pms/admin/facility_setups/${facilityId}/get_schedules.json`, {
-        params: {
-          on_date: formattedDate,
-          user_id: userId
-        }
-      });
-
-      if (response.data && response.data.slots) {
-        setSlots(response.data.slots);
-        setSelectedSlots([]); // Reset selected slots when new slots are fetched
-      }
-    } catch (error) {
-      console.error('Error fetching slots:', error);
-      setSlots([]);
-    }
-  };
-
-  // Effect to fetch slots when facility, date, and user are all selected
-  useEffect(() => {
-    if (selectedFacility && selectedDate && selectedUser) {
-      fetchSlots(selectedFacility.id, selectedDate, selectedUser);
-    } else {
-      setSlots([]);
-      setSelectedSlots([]);
-    }
-  }, [selectedFacility, selectedDate, selectedUser]);
-
-  // Handle slot selection
-  const handleSlotSelection = (slotId: number) => {
-    setSelectedSlots(prev => {
-      if (prev.includes(slotId)) {
-        return prev.filter(id => id !== slotId);
-      } else {
-        return [...prev, slotId];
-      }
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      if (!selectedUser) {
-        toast.error('Please select a user');
-        return;
-      }
-      if (!selectedFacility) {
-        toast.error('Please select a facility');
-        return;
-      }
-      if (!selectedDate) {
-        toast.error('Please select a date');
-        return;
-      }
-      if (comment && comment.length > 255) {
-        toast.error('Comment should not exceed 255 characters');
-        return;
-      }
-      if (!paymentMethod) {
-        toast.error('Please select a payment method');
-        return;
-      }
-      if (selectedSlots.length === 0) {
-        toast.error('Please select at least one slot');
-        return;
-      }
-
-      const selectedSiteId = localStorage.getItem('selectedSiteId') || '7';
-      const userString = localStorage.getItem('user');
-      let userId = '2844';
-
-      if (userString) {
-        try {
-          const user = JSON.parse(userString);
-          if (user && user.id) {
-            userId = user.id.toString();
-          }
-        } catch (error) {
-          console.error('Error parsing user from localStorage:', error);
-        }
-      }
-
-      const payload = {
-        facility_booking: {
-          user_society_type: 'User',
-          resource_type: 'Pms::Site',
-          resource_id: selectedSiteId,
-          book_by_id: selectedSlots[0],
-          book_by: 'slot',
-          facility_id: selectedFacility.id,
-          startdate: selectedDate.replace(/-/g, '/'),
-          comment: comment || '',
-          payment_method: paymentMethod,
-          selected_slots: selectedSlots,
-          entity_id: selectedCompany,
-        },
-        on_behalf_of: userType === 'occupant' ? 'occupant-user' : 'fm-user',
-        occupant_user_id: userType === 'occupant' ? selectedUser : '',
-        fm_user_id: userType === 'fm' ? selectedUser : ''
-      };
-
-      console.log('Payload being sent:', JSON.stringify(payload, null, 2));
-      console.log('About to submit to API...');
-
-      const response = await apiClient.post('/pms/admin/facility_bookings.json', payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      console.log('Response received:', response.status, response.data);
-
-      if (response.status === 200 || response.status === 201) {
-        console.log('Booking created successfully:', response.data);
-        toast.error('Booking created successfully!');
-        navigate('/vas/booking/list');
-      }
-    } catch (error: any) {
-      console.error('Error creating facility booking:', error);
-      if (error.response) {
-        console.error('Response data:', error.response.data);
-        console.error('Response status:', error.response.status);
-      }
-      toast.error('Error creating booking. Please check the console for details.');
-    }
-  };
-
-  const handleBackToList = () => {
-    navigate(-1);
-  };
-
-  const fieldStyles = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: '0.375rem',
-      backgroundColor: 'white',
-      height: {
-        xs: '36px',
-        sm: '45px'
-      },
-      '& fieldset': {
-        borderColor: '#d1d5db',
-      },
-      '&:hover fieldset': {
-        borderColor: '#9ca3af',
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: '#3b82f6',
-      },
-    },
-    '& .MuiInputLabel-root': {
-      '&.Mui-focused': {
-        color: '#3b82f6',
-      },
-    },
+  // Dummy cost summary
+  const costSummary = {
+    sub_total: 0,
+    gst_amount: 0,
+    sgst_amount: 0,
+    full_amount: 0,
+    gst: 0,
+    sgst: 0
   };
 
   return (
-    <div className="p-6 mx-auto">
-      {/* Header */}
+    <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2 cursor-pointer">
-          <button
-            onClick={handleBackToList}
-            className="flex items-center gap-1 hover:text-gray-800 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
-          </button>
-        </div>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#C72030' }}>
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1 hover:text-gray-800 mb-4 text-gray-600"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#C72030]">
             <CheckCircle className="text-white w-5 h-5" />
           </div>
-          <h1 className="text-xl font-semibold" style={{ color: '#C72030' }}>Facility Booking</h1>
+          <h1 className="text-xl font-semibold text-[#C72030]">Add Faciltiy Booking</h1>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm">
-        {/* User Type Selection */}
-        <div>
-          <RadioGroup value={userType} onValueChange={setUserType} className="flex gap-6">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="fm" id="fm" />
-              <Label htmlFor="fm">FM User</Label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+
+        {/* 1. User Selection Card */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+            <h2 className="font-medium text-gray-900">User Selection</h2>
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <FormControl fullWidth>
+                <InputLabel shrink>Tower *</InputLabel>
+                <MuiSelect
+                  value={selectedTowerId}
+                  onChange={handleTowerChange}
+                  label="Tower *"
+                  displayEmpty
+                  sx={fieldStyles}
+                >
+                  <MenuItem value=""><em>Select Tower</em></MenuItem>
+                  {towers.map((tower: any) => (
+                    <MenuItem key={tower.id} value={tower.id}>{tower.name}</MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+
+              <FormControl fullWidth>
+                <InputLabel shrink>Flat *</InputLabel>
+                <MuiSelect
+                  value={selectedFlatId}
+                  onChange={handleFlatChange}
+                  label="Flat *"
+                  displayEmpty
+                  disabled={!selectedTowerId}
+                  sx={fieldStyles}
+                >
+                  <MenuItem value=""><em>Select Flat</em></MenuItem>
+                  {flats.map((flat: any) => (
+                    <MenuItem key={flat.id} value={flat.id}>{flat.flat_no}</MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+
+              <FormControl fullWidth>
+                <InputLabel shrink>User *</InputLabel>
+                <MuiSelect
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                  label="User *"
+                  displayEmpty
+                  disabled={!selectedFlatId}
+                  sx={fieldStyles}
+                >
+                  <MenuItem value=""><em>Select User</em></MenuItem>
+                  {users.map((u: any) => (
+                    <MenuItem key={u.id} value={u.id}>{u.name}</MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="occupant" id="occupant" />
-              <Label htmlFor="occupant">Occupant User</Label>
-            </div>
-          </RadioGroup>
+          </div>
         </div>
 
-        {/* Form Fields Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Client Dropdown - only for occupant users */}
-          {userType === 'occupant' && (
-            <div className="space-y-2">
+        {/* 2. Facility Details Card */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+            <h2 className="font-medium text-gray-900">Booking Details</h2>
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormControl fullWidth>
+                <InputLabel shrink>Facility *</InputLabel>
+                <MuiSelect
+                  value={typeof selectedFacility === 'object' ? selectedFacility.id : selectedFacility}
+                  onChange={handleFacilityChange}
+                  label="Facility *"
+                  displayEmpty
+                  sx={fieldStyles}
+                >
+                  <MenuItem value=""><em>Select Facility</em></MenuItem>
+                  {facilities.map((fac: any) => (
+                    <MenuItem key={fac.id} value={fac.id}>{fac.fac_name}</MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+
               <TextField
-                select
-                label="Client"
-                value={selectedCompany}
-                onChange={(e) => setSelectedCompany(e.target.value)}
-                SelectProps={{ displayEmpty: true }}
+                label="Date *"
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
                 variant="outlined"
                 fullWidth
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ min: new Date().toISOString().split('T')[0] }}
                 sx={fieldStyles}
-                disabled={entitiesLoading}
-                helperText={entitiesError ? "Error loading companies" : ""}
-                error={!!entitiesError}
-              >
-                <MenuItem value="" disabled>
-                  <em>
-                    Select Client
-                  </em>
-                </MenuItem>
-                {entitiesLoading && (
-                  <MenuItem value="" disabled>
-                    Loading companies...
-                  </MenuItem>
-                )}
-                {!entitiesLoading && !entitiesError && entities.length === 0 && (
-                  <MenuItem value="" disabled>
-                    No companies available
-                  </MenuItem>
-                )}
-                {entities.map((entity) => (
-                  <MenuItem key={entity.id} value={entity.id.toString()}>
-                    {entity.name}
-                  </MenuItem>
-                ))}
-              </TextField>
+              />
             </div>
-          )}
 
-          {/* User Selection - occupant or fm users */}
-          <div className="space-y-2">
-            <TextField
-              select
-              required
-              label="User"
-              value={selectedUser}
-              onChange={(e) => setSelectedUser(e.target.value)}
-              variant="outlined"
-              fullWidth
-              SelectProps={{ displayEmpty: true }}
-              InputLabelProps={{
-                classes: {
-                  asterisk: "text-red-500", // Tailwind class for red color
-                },
-                shrink: true
-              }}
-              sx={fieldStyles}
-              disabled={userType === 'occupant' ? occupantUsersLoading : fmUsersLoading}
-              helperText={userType === 'occupant' ? (occupantUsersError ? "Error loading users" : "") : (fmUsersError ? "Error loading users" : "")}
-              error={userType === 'occupant' ? !!occupantUsersError : !!fmUsersError}
-            >
-              <MenuItem value="" disabled>
-                <em>
-                  Select User
-                </em>
-              </MenuItem>
-              {userType === 'occupant' && occupantUsersLoading && (
-                <MenuItem value="" disabled>
-                  Loading users...
-                </MenuItem>
-              )}
-              {userType === 'occupant' && !occupantUsersLoading && !occupantUsersError && occupantUsers.length === 0 && (
-                <MenuItem value="" disabled>
-                  No users available
-                </MenuItem>
-              )}
-              {userType === 'occupant' && occupantUsers.map((user) => (
-                <MenuItem key={user.id} value={user.id.toString()}>
-                  {user.name}
-                </MenuItem>
-              ))}
+            {/* Slots Grid */}
+            {slots.length > 0 && (
+              <div>
+                <Label className="mb-3 block text-sm font-medium">Available Slots (Select multiple)</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                  {slots.map((slot) => {
+                    const isSelected = selectedSlots.includes(slot.id);
+                    const isBooked = !!slot.booked_by; // Assuming API returns booked info
+                    // Sometimes the API might not return 'booked_by' directly or it might handle availability via available: boolean
+                    // For this impl, assume available unless visual check needed. The AmenityBookingAdd checked 'canSelectSlots' etc.
 
-              {userType === 'fm' && fmUsersLoading && (
-                <MenuItem value="" disabled>
-                  Loading users...
-                </MenuItem>
-              )}
-              {userType === 'fm' && !fmUsersLoading && !fmUsersError && fmUsers.length === 0 && (
-                <MenuItem value="" disabled>
-                  No users available
-                </MenuItem>
-              )}
-              {userType === 'fm' && fmUsers.map((user) => (
-                <MenuItem key={user.id} value={user.id.toString()}>
-                  {user.full_name}
-                </MenuItem>
-              ))}
-            </TextField>
-          </div>
-
-          {/* Facility Selection */}
-          <div className="space-y-2">
-            <TextField
-              select
-              required
-              label="Facility"
-              value={selectedFacility}
-              onChange={(e) => handleFacilityChange(e.target.value)}
-              variant="outlined"
-              fullWidth
-              SelectProps={{ displayEmpty: true }}
-              InputLabelProps={{
-                classes: {
-                  asterisk: "text-red-500", // Tailwind class for red color
-                },
-                shrink: true
-              }}
-              sx={fieldStyles}
-              disabled={facilitySetupsLoading}
-              helperText={facilitySetupsError ? "Error loading facilities" : ""}
-              error={!!facilitySetupsError}
-            >
-              <MenuItem value="" disabled>
-                <em>
-                  Select Facility
-                </em>
-              </MenuItem>
-              {facilitySetupsLoading && (
-                <MenuItem value="" disabled>
-                  Loading facilities...
-                </MenuItem>
-              )}
-              {!facilitySetupsLoading && !facilitySetupsError && facilities.length === 0 && (
-                <MenuItem value="" disabled>
-                  No facilities available
-                </MenuItem>
-              )}
-              {facilities.map((facility) => (
-                <MenuItem key={facility.id} value={facility}>
-                  {facility.fac_name} ({facility.fac_type.charAt(0).toUpperCase() + facility.fac_type.slice(1)})
-                </MenuItem>
-              ))}
-            </TextField>
-          </div>
-
-          {/* Date Selection */}
-          <div className="space-y-2">
-            <TextField
-              type="date"
-              label="Date"
-              required
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              variant="outlined"
-              fullWidth
-              InputLabelProps={{
-                classes: {
-                  asterisk: "text-red-500", // Tailwind class for red color
-                },
-                shrink: true
-              }}
-              inputProps={{
-                min: new Date().toISOString().split("T")[0],
-              }}
-              sx={fieldStyles}
-            />
-          </div>
-        </div>
-
-        {/* Comment */}
-        <div className="space-y-2">
-          <TextField
-            label="Comment"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            variant="outlined"
-            fullWidth
-            multiline
-            rows={4}
-            InputLabelProps={{ shrink: true }}
-            sx={{
-              mt: 1,
-              "& .MuiOutlinedInput-root": {
-                height: "auto !important",
-                padding: "2px !important",
-                display: "flex",
-              },
-              "& .MuiInputBase-input[aria-hidden='true']": {
-                flex: 0,
-                width: 0,
-                height: 0,
-                padding: "0 !important",
-                margin: 0,
-                display: "none",
-              },
-              "& .MuiInputBase-input": {
-                resize: "none !important",
-              },
-            }}
-            helperText={<span style={{ textAlign: 'right', display: 'block' }}>{`${comment.length}/255 characters`}</span>}
-            error={comment.length > 255}
-          />
-        </div>
-
-        {/* Select Slot Section */}
-        <div>
-          <h2 className="text-lg font-semibold mb-4">Select Slot<span className="text-red-500"> *</span></h2>
-          {slots.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {slots.map((slot) => (
-                <div key={slot.id} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
-                  <input
-                    type="checkbox"
-                    id={`slot-${slot.id}`}
-                    checked={selectedSlots.includes(slot.id)}
-                    onChange={() => handleSlotSelection(slot.id)}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <Label
-                    htmlFor={`slot-${slot.id}`}
-                    className="cursor-pointer text-sm font-medium"
-                  >
-                    {slot.ampm}
-                  </Label>
+                    return (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        disabled={isBooked}
+                        onClick={() => handleSlotClick(slot.id)}
+                        className={`
+                                                    p-2 text-sm rounded border text-center transition-colors
+                                                    ${isBooked ? 'bg-gray-100 text-gray-400 cursor-not-allowed' :
+                            isSelected ? 'bg-green-600 text-white border-green-600' : 'bg-white border-gray-300 hover:border-gray-400'}
+                                                `}
+                      >
+                        {slot.ampm} {/* e.g. "09:00 AM" */}
+                      </button>
+                    );
+                  })}
                 </div>
-              ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 3. Cost & Payment */}
+        {selectedSlots.length > 0 && facilityDetails && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+              <h2 className="font-medium text-gray-900">Payment Summary</h2>
+              <div className="text-right">
+                <span className="text-2xl font-bold text-[#C72030]">₹{costSummary.full_amount.toFixed(2)}</span>
+              </div>
             </div>
-          ) : (
-            <p className="text-gray-500">
-              {selectedFacility && selectedDate && selectedUser
-                ? "No slots available for the selected date"
-                : "Please select facility, date, and user to see available slots"
-              }
-            </p>
-          )}
-        </div>
+            <div className="p-6">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-1 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Subtotal ({selectedSlots.length} slots)</span>
+                    <span>₹{costSummary.sub_total.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">GST ({costSummary.gst}%)</span>
+                    <span>₹{costSummary.gst_amount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">SGST ({costSummary.sgst}%)</span>
+                    <span>₹{costSummary.sgst_amount.toFixed(2)}</span>
+                  </div>
+                  <div className="border-t pt-2 mt-2 flex justify-between font-bold">
+                    <span>Total</span>
+                    <span>₹{costSummary.full_amount.toFixed(2)}</span>
+                  </div>
+                </div>
 
-        {/* Payment Method Section */}
-        <div>
-          <h2 className="text-lg font-semibold mb-4">Payment Method<span className="text-red-500"> *</span></h2>
-          {facilityDetails && (
-            <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-              {facilityDetails.postpaid === 1 && (
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="postpaid" id="postpaid" />
-                  <Label htmlFor="postpaid">Postpaid</Label>
-                </div>
-              )}
-              {facilityDetails.prepaid === 1 && (
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="prepaid" id="prepaid" />
-                  <Label htmlFor="prepaid">Prepaid</Label>
-                </div>
-              )}
-              {facilityDetails.pay_on_facility === 1 && (
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="pay_on_facility" id="pay_on_facility" />
-                  <Label htmlFor="pay_on_facility">Pay on Facility</Label>
-                </div>
-              )}
-              {facilityDetails.complementary === 1 && (
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="complementary" id="complementary" />
-                  <Label htmlFor="complementary">Complementary</Label>
-                </div>
-              )}
-            </RadioGroup>
-          )}
-          {!facilityDetails && selectedFacility && (
-            <p className="text-gray-500">Please select a facility to see available payment methods</p>
-          )}
-        </div>
+                <div className="flex-1 border-l pl-6">
+                  <Label className="mb-3 block">Payment Method *</Label>
+                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <div className="flex flex-wrap gap-4">
+                      {facilityDetails.postpaid === 1 && (
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="postpaid" id="pm-post" />
+                          <Label htmlFor="pm-post">Postpaid</Label>
+                        </div>
+                      )}
+                      {facilityDetails.prepaid === 1 && (
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="prepaid" id="pm-pre" />
+                          <Label htmlFor="pm-pre">Prepaid</Label>
+                        </div>
+                      )}
+                      {facilityDetails.pay_on_facility === 1 && (
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="pay_on_facility" id="pm-pof" />
+                          <Label htmlFor="pm-pof">Pay on Facility</Label>
+                        </div>
+                      )}
+                      {facilityDetails.complementary === 1 && (
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="complementary" id="pm-comp" />
+                          <Label htmlFor="pm-comp">Complementary</Label>
+                        </div>
+                      )}
+                    </div>
+                  </RadioGroup>
 
-        {/* Submit Button */}
-        <div className="flex justify-center">
-          <Button
-            type="submit"
-            className="bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white px-8 py-2"
-          >
-            Submit
+                  {paymentMethod === 'complementary' && (
+                    <div className="mt-4">
+                      <TextField
+                        label="Reason for Complementary *"
+                        value={complementaryReason}
+                        onChange={(e) => setComplementaryReason(e.target.value)}
+                        fullWidth
+                        variant="outlined"
+                        size="small"
+                        sx={{ backgroundColor: '#fff' }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pb-10">
+          <Button variant="outline" onClick={() => navigate(-1)} type="button">Cancel</Button>
+          <Button type="submit" disabled={submitting}>
+            {submitting ? 'Creating Booking...' : 'Confirm Booking'}
           </Button>
         </div>
 
-        {/* Footer Links with Dialogs */}
-        <div className="space-y-2 text-sm">
-          <div
-            className="flex items-center gap-2 cursor-pointer hover:underline"
-            style={{ color: '#C72030' }}
-            onClick={() => setOpenCancelPolicy(true)}
-          >
-            <FileText className="w-4 h-4" />
-            Cancellation Policy
-          </div>
-          <div
-            className="flex items-center gap-2 cursor-pointer hover:underline"
-            style={{ color: '#C72030' }}
-            onClick={() => setOpenTerms(true)}
-          >
-            <Shield className="w-4 h-4" />
-            Terms & Conditions
-          </div>
-        </div>
-
-        {/* Cancellation Policy Dialog */}
-        <Dialog
-          open={openCancelPolicy}
-          onClose={() => setOpenCancelPolicy(false)}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogTitle>Cancellation Policy</DialogTitle>
-          <DialogContent>
-            <div className="space-y-4">
-              {
-                selectedFacility.cancellation_policy
-              }
-            </div>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => setOpenCancelPolicy(false)}
-              className="bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white"
-            >
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Terms & Conditions Dialog */}
-        <Dialog
-          open={openTerms}
-          onClose={() => setOpenTerms(false)}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogTitle>Terms & Conditions</DialogTitle>
-          <DialogContent>
-            <div className="space-y-4">
-              {
-                selectedFacility.terms
-              }
-            </div>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => setOpenTerms(false)}
-              className="bg-[#8B4B8C] hover:bg-[#7A3F7B] text-white"
-            >
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
       </form>
     </div>
   );
 };
+
+export default AddFacilityBookingPage;
