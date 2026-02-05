@@ -1,373 +1,710 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Calendar, Clock, Plus, Trash2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { TextField, InputAdornment } from "@mui/material";
-import axios from 'axios';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { ArrowLeft, Calendar, Clock, Plus, X, Search } from 'lucide-react';
+  Box,
+  Typography,
+  TextField,
+  Paper,
+  Container,
+  InputAdornment,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Card,
+  IconButton,
+  Stack,
+  Alert,
+  Checkbox,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Chip,
+} from '@mui/material';
+import { Button } from '@/components/ui/button';
+import { useAppDispatch } from '@/store/hooks';
+import { fetchFMUsers } from '@/store/slices/fmUserSlice';
+import { fetchUserGroups } from '@/store/slices/userGroupSlice';
+import axios from 'axios';
 import { toast } from 'sonner';
-
-interface PollOption {
-  id: string;
-  value: string;
+interface User {
+  id: number;
+  name: string;
+  // add other fields if needed
 }
 
 const AddPollPage = () => {
+  const dispatch = useAppDispatch();
+  const token = localStorage.getItem('token');
+  const baseUrl = localStorage.getItem('baseUrl');
   const navigate = useNavigate();
-   const baseUrl = localStorage.getItem('baseUrl')
-  const token = localStorage.getItem('token')
-  
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
-  
   const [formData, setFormData] = useState({
     subject: '',
     startDate: '',
-    startTime: '03:00 PM',
     endDate: '',
-    endTime: '03:00 PM',
-    flat: '',
+    startTime: '04:00 AM',
+    endTime: '04:00 AM',
     shareWith: 'all',
+    options: ['', '']
   });
+  const [selectedShareWith, setSelectedShareWith] = useState('all');
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [selectedGroups, setSelectedGroups] = useState([]);
+  // const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [groups, setGroups] = useState([]);
 
-  const [options, setOptions] = useState<PollOption[]>([
-    { id: '1', value: '' },
-  ]);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get(
+          `https://${baseUrl}/usergroups/get_members_list.json`,
+          {
+            params: { token }
+          }
+        );
 
-  const handleAddOption = () => {
-    const newOption: PollOption = {
-      id: Date.now().toString(),
-      value: '',
+        console.log("Users API response+++++++:", res.data);
+
+        // ⚠️ adjust if API response structure differs
+        setUsers(res.data || []);
+
+      } catch (error) {
+        console.error("Failed to fetch users", error);
+      }
     };
-    setOptions([...options, newOption]);
+
+    // const fetchGroups = async () => {
+    //   try {
+    //     const response = await dispatch(fetchUserGroups({ token, baseUrl })).unwrap();
+    //     setGroups(response);
+    //   } catch (error) {
+    //     console.log(error);
+    //   }
+    // };
+
+
+    const fetchGroups = async () => {
+      try {
+        const res = await axios.get(
+          `https://${baseUrl}/crm/usergroups.json`,
+          {
+            params: { token }
+          }
+        );
+
+        console.log("groups API response+++++++:", res.data);
+
+        // ⚠️ adjust if API response structure differs
+        setGroups(res.data.usergroups || []);
+
+      } catch (error) {
+        console.error("Failed to fetch users", error);
+      }
+    };
+
+    fetchUsers();
+    fetchGroups();
+  }, [dispatch, token, baseUrl]);
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const handleRemoveOption = (id: string) => {
-    if (options.length > 1) {
-      setOptions(options.filter((option) => option.id !== id));
-    } else {
-      toast.error('Poll must have at least 1 option');
+  const handleOptionChange = (index, value) => {
+    const newOptions = [...formData.options];
+    newOptions[index] = value;
+    setFormData(prev => ({
+      ...prev,
+      options: newOptions
+    }));
+  };
+
+  const addOption = () => {
+    setFormData(prev => ({
+      ...prev,
+      options: [...prev.options, '']
+    }));
+  };
+
+  const removeOption = (index) => {
+    if (formData.options.length > 2) {
+      const newOptions = formData.options.filter((_, i) => i !== index);
+      setFormData(prev => ({
+        ...prev,
+        options: newOptions
+      }));
     }
   };
 
-  const handleOptionChange = (id: string, value: string) => {
-    setOptions(
-      options.map((option) =>
-        option.id === id ? { ...option, value } : option
-      )
+  const handleUserSelection = (userId) => {
+    setSelectedUsers(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
     );
   };
 
-  const combineDateTime = (date: string, time: string) => {
-  if (!date || !time) return "";
-  return `${date} ${time}:00`;
-};
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleGroupSelection = (groupId) => {
+    setSelectedGroups(prev =>
+      prev.includes(groupId)
+        ? prev.filter(id => id !== groupId)
+        : [...prev, groupId]
+    );
+  };
+
+  const handleShareWithChange = (value) => {
+    setSelectedShareWith(value);
+    if (value !== 'individual') {
+      setSelectedUsers([]);
+    }
+    if (value !== 'group') {
+      setSelectedGroups([]);
+    }
+  };
+
+  const toMinutes = (time: string) => {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const isNextDay = (start: string, end: string) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
+
+    return (endDate.getTime() - startDate.getTime()) === 24 * 60 * 60 * 1000;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const startMinutes = toMinutes(formData.startTime);
+    const endMinutes = toMinutes(formData.endTime);
 
-    // Validation
-    if (!formData.subject.trim()) {
-      toast.error('Please enter a subject');
+    const startDateObj = new Date(formData.startDate);
+    const endDateObj = new Date(formData.endDate);
+
+    // Normalize dates
+    startDateObj.setHours(0, 0, 0, 0);
+    endDateObj.setHours(0, 0, 0, 0);
+
+    // ❌ End date before start date
+    if (endDateObj < startDateObj) {
+      toast.error("End date cannot be before start date");
       return;
     }
 
-    if (!formData.startDate || !formData.endDate) {
-      toast.error('Please select start and end dates');
+    // ❌ More than 1 day difference
+    const diffDays =
+      (endDateObj.getTime() - startDateObj.getTime()) /
+      (1000 * 60 * 60 * 24);
+
+    // if (diffDays > 1) {
+    //   toast.error("Poll duration cannot exceed 1 day");
+    //   return;
+    // }
+
+    // ❌ Same day → end time must be greater
+    if (diffDays === 0 && endMinutes <= startMinutes) {
+      toast.error("End time must be greater than start time");
       return;
     }
 
-    const filledOptions = options.filter((opt) => opt.value.trim());
-    if (filledOptions.length < 1) {
-      toast.error('Please provide at least 1 option');
+    // ❌ Next day but invalid time logic
+    if (diffDays === 1 && endMinutes >= startMinutes) {
+      toast.error(
+        "For next day polls, end time must be earlier than start time"
+      );
       return;
     }
+    // Format dates and times for API
+    const formatDateTime = (date, time) => {
+      const [hours, minutes] = time.split(/[: ]/);
+      const period = time.includes('PM') ? 12 : 0;
+      const hour = parseInt(hours) % 12 + period;
+      const dateTime = new Date(date);
+      dateTime.setHours(hour, parseInt(minutes));
+      const year = dateTime.getFullYear();
+      const month = String(dateTime.getMonth() + 1).padStart(2, '0');
+      const day = String(dateTime.getDate()).padStart(2, '0');
+      const formattedHours = String(dateTime.getHours()).padStart(2, '0');
+      const formattedMinutes = String(dateTime.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${formattedHours}:${formattedMinutes}`;
+    };
 
-    // Submit poll
-    console.log('Poll Data:', { ...formData, options: filledOptions });
-    // toast.success('Poll created successfully!');
-    
-
-
+    // Prepare payload
     const payload = {
-    subject: formData.subject,
-    user_id: 12437, // 🔹 replace with logged-in user id
-    start: combineDateTime(formData.startDate, formData.startTime),
-    end: combineDateTime(formData.endDate, formData.endTime),
-    active: true,
-    multiple: 0,
-    publish: 1,
-    vote_limit: "One",
-    shared:
-      formData.shareWith === "all"
-        ? "All"
-        : formData.shareWith === "individual"
-        ? "Individual"
-        : "Group",
+      subject: formData.subject,
+      startdate: formData.startDate ? formData.startDate.replace(/-/g, '/') : '',
+      enddate: formData.endDate ? formData.endDate.replace(/-/g, '/') : '',
+      start: formData.startDate && formData.startTime ? formatDateTime(formData.startDate, formData.startTime) : '',
+      end: formData.endDate && formData.endTime ? formatDateTime(formData.endDate, formData.endTime) : '',
+      vote_limit: 'All',
+      options: formData.options.filter(opt => opt.trim() !== '').map(name => ({ name })),
+      shared: selectedShareWith.charAt(0).toUpperCase() + selectedShareWith.slice(1),
+      ...(selectedShareWith === 'individual' && { user_ids: selectedUsers }),
+      ...(selectedShareWith === 'group' && { group_ids: selectedGroups })
+    };
 
-    // 🔹 send only when Individual selected
-    // user_ids:
-    //   formData.shareWith === "individual"
-    //     ? [3792, 3810, 3825] // dummy user ids
-    //     : [],
+    // try {
+    //   const response = await fetch(`https://${baseUrl}/pms/polls.json`, {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //       'Authorization': `Bearer ${token}`
+    //     },
+    //     body: JSON.stringify(payload)
+    //   });
 
-    options: filledOptions.map(opt => ({
-      name: opt.value
-    }))
+    //   if (!response.ok) {
+    //     throw new Error('Failed to create poll');
+    //   }
+
+    //   navigate('/crm/polls');
+    // } catch (error) {
+    //   console.error('Error submitting poll:', error);
+    //   // You might want to add error handling UI here
+    // }
+
+    try {
+      const res = await axios.post(
+        `https://${baseUrl}/crm/admin/polls.json?token=${token}`,
+        payload,
+
+      );
+
+      console.log("API RESPONSE:", res.data);
+      toast.success("Poll created successfully!");
+
+      setTimeout(() => {
+        navigate("/communication/polls");
+      }, 1000);
+
+    } catch (error: any) {
+      console.error("Poll create error:", error);
+      toast.error("Failed to create poll");
+    }
+
   };
-
-  console.log("POST PAYLOAD:", payload);
-
-  /* ================= API CALL ================= */
-
-  try {
-    const res = await axios.post(
-      `https://${baseUrl}/crm/admin/polls.json?token=${token}`,
-      payload,
-      
-    );
-
-    console.log("API RESPONSE:", res.data);
-    toast.success("Poll created successfully!");
-
-    setTimeout(() => {
-      navigate("/communication/polls");
-    }, 1000);
-
-  } catch (error: any) {
-    console.error("Poll create error:", error);
-    toast.error("Failed to create poll");
-  }
-    // Navigate back to polls page
-    // setTimeout(() => {
-    //   navigate('/communication/polls');
-    // }, 1000);
-  };
+  const today = new Date().toISOString().split("T")[0];
 
   return (
-    <div className="min-h-screen bg-[#fafafa] px-0 py-6">
-      {/* Header */}
-      <div className="bg-[#f6f4ee] rounded-lg shadow-sm mb-6" >
-        <div className="px-6 py-4 flex items-center gap-4">
-          <button
-            onClick={() => navigate('/communication/polls')}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-2xl font-semibold text-gray-900" >Create New Poll</h1>
-        </div>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
+      <div className='px-6 pt-6 mx-auto'>
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/communication/polls")}
+          className='p-0'
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+        <h1 className="text-2xl font-bold mb-6">NEW POLL</h1>
       </div>
-
-      <form id="pollForm" onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
-          {/* Subject */}
-          <div className="md:col-span-1">
-            <TextField
-              label="Subject"
-              placeholder="Enter poll subject*"
-              value={formData.subject}
-              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-              variant="outlined"
-              fullWidth
-              required
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: { backgroundColor: '#fff', borderRadius: '6px' } }}
-            />
-          </div>
-
-          {/* Start Date (column 3) */}
-          <div className="md:col-span-1">
-            <TextField
-              label="Start Date"
-              type="date"
-              value={formData.startDate}
-              onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-              variant="outlined"
-              fullWidth
-              required
-              InputLabelProps={{ shrink: true }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Calendar size={18} className="text-gray-400" />
-                  </InputAdornment>
-                ),
-                sx: { backgroundColor: '#fff', borderRadius: '6px' }
-              }}
-            />
-          </div>
-
-          {/* End Date (column 3) */}
-          <div className="md:col-span-1">
-            <TextField
-              label="End Date"
-              type="date"
-              value={formData.endDate}
-              onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-              variant="outlined"
-              fullWidth
-              required
-              InputLabelProps={{ shrink: true }}
-              InputProps={{
-                startAdornment: (
-                  <span style={{ marginRight: 8 }}>
-                    <Calendar className="text-gray-400" />
-                  </span>
-                ),
-                sx: { backgroundColor: '#fff', borderRadius: '6px' }
-              }}
-            />
-          </div>
-
-          {/* Start Time (column 4) */}
-          <div className="md:col-span-1">
-            <TextField
-              label="Start Time"
-              type="time"
-              value={formData.startTime}
-              onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-              variant="outlined"
-              fullWidth
-              required
-              InputLabelProps={{ shrink: true }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Clock size={18} className="text-gray-400" />
-                  </InputAdornment>
-                ),
-                sx: { backgroundColor: '#fff', borderRadius: '6px' }
-              }}
-            />
-          </div>
-
-          {/* End Time */}
-          <div className="md:col-span-1">
-            <TextField
-              label="End Time"
-              type="time"
-              value={formData.endTime}
-              onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-              variant="outlined"
-              fullWidth
-              required
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: { backgroundColor: '#fff', borderRadius: '6px' } }}
-            />
-          </div>
-
-          {/* Flat select and description */}
-          {/* <div className="md:col-span-1">
-            <Select value={formData.flat} onValueChange={(value) => setFormData({ ...formData, flat: value })}
-              onOpenChange={(open) => setShowSearch(open)}
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Select Flat*" />
-              </SelectTrigger>
-              <SelectContent className="p-0">
-                {showSearch && (
-                  <div className="p-2 border-b">
-                    <div className="relative">
-                      <span className="absolute left-2.5 top-2.5 text-muted-foreground">🔍</span>
-                      <Input
-                        type="search"
-                        placeholder="SEARCH FLATS"
-                        className="w-full pl-8 uppercase"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
+      <Container maxWidth="lg">
+        <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
+          <Box component="form" onSubmit={handleSubmit}>
+            <Stack spacing={4}>
+              <TextField
+                label="Subject"
+                type="text"
+                value={formData.subject}
+                onChange={(e) => handleInputChange('subject', e.target.value)}
+                placeholder="Enter poll subject"
+                required
+                fullWidth
+                variant="outlined"
+                sx={{
+                  "& .MuiFormLabel-asterisk": {
+                    color: "red"
+                  }
+                }}
+              />
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' },
+                  gap: 3
+                }}
+              >
+                <TextField
+                  label="Start Date"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => handleInputChange('startDate', e.target.value)}
+                  required
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  // InputProps={{
+                  //   startAdornment: (
+                  //     <InputAdornment position="start">
+                  //       <Calendar size={20} />
+                  //     </InputAdornment>
+                  //   ),
+                  // }}
+                  inputProps={{
+                    min: today   // 🚫 blocks past dates
+                  }}
+                  sx={{
+                    "& .MuiFormLabel-asterisk": {
+                      color: "red"
+                    }
+                  }}
+                />
+                <TextField
+                  label="End Date"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => handleInputChange('endDate', e.target.value)}
+                  required
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  // InputProps={{
+                  //   startAdornment: (
+                  //     <InputAdornment position="start">
+                  //       <Calendar size={20} />
+                  //     </InputAdornment>
+                  //   ),
+                  // }}
+                  inputProps={{
+                    min: formData.startDate || today
+                  }}
+                  sx={{
+                    "& .MuiFormLabel-asterisk": {
+                      color: "red"
+                    }
+                  }}
+                />
+                <TextField
+                  label="Start Time"
+                  type="time"
+                  value={formData.startTime}
+                  onChange={(e) => handleInputChange('startTime', e.target.value)}
+                  required
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  // InputProps={{
+                  //   startAdornment: (
+                  //     <InputAdornment position="start">
+                  //       <Clock size={20} />
+                  //     </InputAdornment>
+                  //   ),
+                  // }}
+                  sx={{
+                    "& .MuiFormLabel-asterisk": {
+                      color: "red"
+                    }
+                  }}
+                />
+                <TextField
+                  label="End Time"
+                  type="time"
+                  value={formData.endTime}
+                  onChange={(e) => handleInputChange('endTime', e.target.value)}
+                  required
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  // InputProps={{
+                  //   startAdornment: (
+                  //     <InputAdornment position="start">
+                  //       <Clock size={20} />
+                  //     </InputAdornment>
+                  //   ),
+                  // }}
+                  sx={{
+                    "& .MuiFormLabel-asterisk": {
+                      color: "red"
+                    }
+                  }}
+                />
+              </Box>
+              <Card variant="outlined" sx={{ p: 3 }}>
+                <Typography variant="h6" component="h3" sx={{ mb: 3, fontWeight: 600 }}>
+                  Poll Options
+                </Typography>
+                <Stack spacing={2}>
+                  {formData.options.map((option, index) => (
+                    <Stack key={index} direction="row" alignItems="center" spacing={2}>
+                      <TextField
+                        type="text"
+                        value={option}
+                        onChange={(e) => handleOptionChange(index, e.target.value)}
+                        placeholder={`Option ${index + 1}`}
+                        required
+                        fullWidth
+                        size="small"
+                        sx={{
+                          "& .MuiFormLabel-asterisk": {
+                            color: "red"
+                          }
+                        }}
                       />
-                    </div>
-                  </div>
-                )}
-                <div className="max-h-[200px] overflow-y-auto">
-                  {["Flat 1", "Flat 2", "Flat 3", "Flat 4", "Flat 5"]
-                    .filter(flat => flat.toLowerCase().includes(searchTerm.toLowerCase()))
-                    .map(flat => (
-                      <SelectItem key={flat} value={flat.toLowerCase().replace(' ', '')}>
-                        {flat}
-                      </SelectItem>
-                    ))}
-                </div>
-              </SelectContent>
-            </Select>
-          </div> */}
-
-          <div className="md:col-span-3 flex items-center">
-            {/* <span className="text-sm text-gray-600">User can participate in the poll from a Flat.</span> */}
-          </div>
-
-          {/* Poll Options */}
-          <div className="md:col-span-1">
-            <div className="space-y-3">
-              {options.map((option, index) => (
-                <div key={option.id} className="flex items-center gap-3">
-                  <TextField
-                    label={`Option ${index + 1}`}
-                    placeholder={`Option ${index + 1}*`}
-                    value={option.value}
-                    onChange={(e) => handleOptionChange(option.id, e.target.value)}
-                    variant="outlined"
-                    fullWidth
-                    required
-                    InputLabelProps={{ shrink: true }}
-                    InputProps={{ sx: { backgroundColor: '#fff', borderRadius: '6px' } }}
+                      {formData.options.length > 2 && (
+                        <IconButton
+                          onClick={() => removeOption(index)}
+                          sx={{ color: 'error.main' }}
+                          size="small"
+                        >
+                          <Trash2 size={18} />
+                        </IconButton>
+                      )}
+                    </Stack>
+                  ))}
+                </Stack>
+                <Button
+                  type='button'
+                  size="lg"
+                  className="bg-[#C72030] hover:bg-[#C72030] text-white mt-4"
+                  onClick={addOption}
+                >
+                  Add Option
+                </Button>
+              </Card>
+              <Card
+                variant="outlined"
+                sx={{
+                  p: 3,
+                  bgcolor: 'rgba(199, 32, 48, 0.04)',
+                  borderColor: 'rgba(199, 32, 48, 0.12)'
+                }}
+              >
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    mb: 2,
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                    color: 'text.secondary'
+                  }}
+                >
+                  Share With
+                </Typography>
+                <RadioGroup
+                  row
+                  value={selectedShareWith}
+                  onChange={(e) => handleShareWithChange(e.target.value)}
+                  sx={{
+                    mb: 3,
+                    '& .MuiRadio-root': {
+                      color: 'rgba(199, 32, 48, 0.6)',
+                      '&.Mui-checked': {
+                        color: '#C72030'
+                      }
+                    }
+                  }}
+                >
+                  <FormControlLabel
+                    value="all"
+                    control={<Radio size="small" />}
+                    label="All"
                   />
-                  {options.length > 1 && (
-                    <button type="button" onClick={() => handleRemoveOption(option.id)} className="text-red-600 hover:text-red-800">
-                      <X className="w-5 h-5" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+                  <FormControlLabel
+                    value="individual"
+                    control={<Radio size="small" />}
+                    label="Individual"
+                  />
+                  <FormControlLabel
+                    value="group"
+                    control={<Radio size="small" />}
+                    label="Group"
+                  />
+                </RadioGroup>
+                {selectedShareWith === 'individual' && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
+                      Select Users ({selectedUsers.length} selected)
+                    </Typography>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        maxHeight: 200,
+                        overflow: 'auto',
+                        bgcolor: 'background.paper',
+                        zIndex: 10
+                      }}
+                    >
+                      <List dense>
+                        {users.map((user) => (
+                          <ListItem key={user.id} disablePadding>
+                            <ListItemButton
+                              onClick={() => handleUserSelection(user.id)}
+                              sx={{
+                                '&:hover': { bgcolor: 'rgba(199, 32, 48, 0.08)' }
+                              }}
+                            >
+                              <ListItemIcon>
+                                <Checkbox
+                                  edge="start"
+                                  checked={selectedUsers.includes(user.id)}
+                                  sx={{
+                                    '&.Mui-checked': {
+                                      color: '#C72030'
+                                    }
+                                  }}
+                                />
+                              </ListItemIcon>
 
-          <div className="md:col-span-1 flex items-center">
-            <Button type="button" onClick={handleAddOption}  className="border-[#C4B89D59] bg-[#C4B89D59] text-white hover:opacity-90 px-4 py-2">
-              <Plus className="w-4 h-4 mr-2" />
-              Add option
-            </Button>
-          </div>
+                              <ListItemText
+                                primary={`${user?.user?.firstname ?? ""} ${user?.user?.lastname ?? ""}`.trim()}
+                                secondary={user?.user?.email}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Paper>
+                    {selectedUsers.length > 0 && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ mb: 1, display: "block" }}
+                        >
+                          Selected Users:
+                        </Typography>
 
-          {/* Share With Section */}
-          <div className="space-y-4 pt-4 md:col-span-3">
-            <div className="bg-[#f6f4ee] px-4 py-2.5 rounded-md inline-block">
-              <span className="text-sm font-semibold text-gray-900 tracking-wide">SHARE WITH</span>
-            </div>
+                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                          {selectedUsers.map((userId) => {
+                            const selectedUser = users.find(
+                              (u) => u.id === userId
+                            );
 
-            <RadioGroup value={formData.shareWith} onValueChange={(value) => setFormData({ ...formData, shareWith: value })} className="flex gap-8">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="all" id="all" className="border-gray-400" />
-                <Label htmlFor="all" className="text-sm font-medium text-gray-900 cursor-pointer">All</Label>
+                            if (!selectedUser) return null;
+
+                            const fullName = `${selectedUser.user.firstname} ${selectedUser.user.lastname}`.trim();
+
+                            return (
+                              <Chip
+                                key={userId}
+                                label={fullName || selectedUser.user.email}
+                                size="small"
+                                onDelete={() => handleUserSelection(userId)}
+                                sx={{
+                                  bgcolor: "rgba(199, 32, 48, 0.1)",
+                                  color: "#C72030",
+                                  "& .MuiChip-deleteIcon": {
+                                    color: "#C72030"
+                                  }
+                                }}
+                              />
+                            );
+                          })}
+                        </Stack>
+                      </Box>
+                    )}
+
+                  </Box>
+                )}
+                {selectedShareWith === 'group' && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
+                      Select Groups ({selectedGroups.length} selected)
+                    </Typography>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        maxHeight: 200,
+                        overflow: 'auto',
+                        bgcolor: 'background.paper',
+                        zIndex: 10
+                      }}
+                    >
+                      <List dense>
+                        {groups.map((group) => (
+                          <ListItem key={group.id} disablePadding>
+                            <ListItemButton
+                              onClick={() => handleGroupSelection(group.id)}
+                              sx={{
+                                '&:hover': { bgcolor: 'rgba(199, 32, 48, 0.08)' }
+                              }}
+                            >
+                              <ListItemIcon>
+                                <Checkbox
+                                  edge="start"
+                                  checked={selectedGroups.includes(group.id)}
+                                  sx={{
+                                    '&.Mui-checked': {
+                                      color: '#C72030'
+                                    }
+                                  }}
+                                />
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={group.name || "-"}
+                                secondary={`${group.members_count} members`}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Paper>
+                    {selectedGroups.length > 0 && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                          Selected Groups:
+                        </Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                          {selectedGroups.map((groupId) => {
+                            const group = groups.find(g => g.id === groupId);
+                            return group ? (
+                              <Chip
+                                key={groupId}
+                                label={`${group.name} (${group.members_count} members)`}
+                                size="small"
+                                onDelete={() => handleGroupSelection(groupId)}
+                                sx={{
+                                  bgcolor: 'rgba(199, 32, 48, 0.1)',
+                                  color: '#C72030',
+                                  '& .MuiChip-deleteIcon': {
+                                    color: '#C72030'
+                                  }
+                                }}
+                              />
+                            ) : null;
+                          })}
+                        </Stack>
+                      </Box>
+                    )}
+                  </Box>
+                )}
+                {selectedShareWith === 'all' && (
+                  <Alert
+                    severity="info"
+                    sx={{
+                      mt: 2,
+                      bgcolor: 'rgba(199, 32, 48, 0.08)',
+                      borderColor: 'rgba(199, 32, 48, 0.2)',
+                      '& .MuiAlert-icon': {
+                        color: '#C72030'
+                      }
+                    }}
+                  >
+                    This poll will be shared with all users in the system.
+                  </Alert>
+                )}
+              </Card>
+              <div className='flex items-center justify-center'>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="bg-[#C72030] hover:bg-[#C72030] text-white"
+                >
+                  Submit Poll
+                </Button>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="individual" id="individual" className="border-gray-400" />
-                <Label htmlFor="individual" className="text-sm font-medium text-gray-900 cursor-pointer">Individual</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="group" id="group" className="border-gray-400" />
-                <Label htmlFor="group" className="text-sm font-medium text-gray-900 cursor-pointer">Group</Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-        </div>
-      </form>
-
-      <div className="flex justify-center mt-6">
-        <Button form="pollForm" type="submit" className="bg-green-600 hover:bg-green-700 text-white px-12 py-2.5 text-base font-medium">Submit</Button>
-      </div>
-    </div>
+            </Stack>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 

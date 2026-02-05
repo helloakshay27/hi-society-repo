@@ -1,117 +1,48 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
+import { Plus, Search, Filter, MoreHorizontal, Eye, Edit, Trash2, Calendar, Clock, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
-  Plus,
-  Search,
-  MoreHorizontal,
-  Calendar,
-  Clock,
-  Eye,
-  Edit,
-  Trash2,
+  Box,
+  Typography,
+  Button,
+  TextField,
+  Card,
+  CardContent,
+  Chip,
+  IconButton,
+  Menu,
+  MenuItem,
+  Container,
+  Paper,
+  InputAdornment,
+  Pagination,
+  Stack,
+  Divider,
+  List,
+  ListItem,
+  ListItemText
+} from '@mui/material';
+import axios from 'axios';
+import { format } from 'date-fns';
+import {
   ChevronRight,
   ChevronLeft,
   ChevronDown,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Chip,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  Stack
-} from "@mui/material";
-import { Button } from '@/components/ui/button';
 
-/* ================= TYPES ================= */
-
-interface PollOption {
-  name: string;
-  vote_count: number;
-}
-
-interface Poll {
-  id: number;
-  title: string;
-  status: "Active" | "Closed" | "Draft";
-  showcreated: string;
-  showstart: string;
-  showend: string;
-  sharedWith: string;
-  publishResults?: string;
-  total_votes: number;
-  poll_options: PollOption[];
-}
-
-const dummyPolls: Poll[] = [
-  {
-    id: 1,
-    title: "Which sports facility should be upgraded next?",
-    status: "Active",
-    showcreated: "10 Jan 2026",
-    showstart: "12 Jan 2026, 10:00 AM",
-    showend: "18 Jan 2026, 6:00 PM",
-    sharedWith: "All Members",
-    publishResults: "After Poll Ends",
-    total_votes: 120,
-    poll_options: [
-      { name: "Swimming Pool", vote_count: 45 },
-      { name: "Tennis Court", vote_count: 35 },
-      { name: "Gym Equipment", vote_count: 40 },
-    ],
-  },
-  {
-    id: 2,
-    title: "Preferred timing for Yoga classes?",
-    status: "Closed",
-    showcreated: "01 Jan 2026",
-    showstart: "03 Jan 2026, 7:00 AM",
-    showend: "05 Jan 2026, 9:00 PM",
-    sharedWith: "Active Members",
-    publishResults: "Immediately",
-    total_votes: 80,
-    poll_options: [
-      { name: "Morning (6–8 AM)", vote_count: 50 },
-      { name: "Evening (6–8 PM)", vote_count: 30 },
-    ],
-  },
-  {
-    id: 3,
-    title: "Should we host a New Year celebration event?",
-    status: "Draft",
-    showcreated: "28 Dec 2025",
-    showstart: "-",
-    showend: "-",
-    sharedWith: "Committee Members",
-    total_votes: 0,
-    poll_options: [],
-  },
-];
-
-
-/* ================= COMPONENT ================= */
 
 const PollsPage = () => {
-  const navigate = useNavigate();
-  const baseUrl = localStorage.getItem("baseUrl");
-  const token = localStorage.getItem("token");
+  const baseUrl = localStorage.getItem('baseUrl')
+  const token = localStorage.getItem('token')
 
-  const [polls, setPolls] = useState<Poll[]>([]);
-  // const [polls] = useState</Poll[]>(dummyPolls);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedPollId, setSelectedPollId] = useState<number | null>(null);
+  const [polls, setPolls] = useState([])
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
-
-  /* ================= API ================= */
   const formatDateTime = (dateString: string) => {
     if (!dateString) return "-";
 
@@ -130,334 +61,379 @@ const PollsPage = () => {
     return `${day}-${month}-${year}, ${hours}:${minutes} ${ampm}`;
   };
 
+
   useEffect(() => {
-    const fetchPolls = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get(
-          `https://${baseUrl}/crm/admin/polls.json`, {
-          params: {
-            token,
-            page: currentPage,
-          },
-        }
-          // {
+        const response = await axios.get(`https://${baseUrl}/crm/admin/polls.json`,
+          //   {
           //   headers: {
-          //     Authorization: `Bearer ${token}`,
-          //   },
+          //     'Authorization': `Bearer ${token}`
+          //   }
           // }
-        );
-        setPolls(res.data.polls);
-        setTotalPages(res.data.pagination.total_pages);
-        console.log("res.data:", res.data)
-      } catch (err) {
-        console.error("Failed to fetch polls", err);
+
+          {
+            params: {
+              token,
+              page: currentPage,
+            }
+          },
+
+        )
+
+        setPolls(response.data.polls)
+        setTotalPages(response.data.pagination.total_pages);
+
+      } catch (error) {
+        console.log(error)
       }
-    };
+    }
 
-    fetchPolls();
-  }, [baseUrl, token, currentPage]);
+    fetchData()
+  }, [])
 
-  /* ================= HELPERS ================= */
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, pollId: number) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedPollId(pollId);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedPollId(null);
+  };
+
+  // const polls = [
+  //   {
+  //     id: 1,
+  //     title: 'Hshsksk',
+  //     createdDate: '22-06-2022',
+  //     startTime: '06:30 AM',
+  //     endDate: '22-06-2022',
+  //     endTime: '06:30 AM',
+  //     sharedWith: 'Individual',
+  //     publishResults: 'Yes',
+  //     status: 'Closed',
+  //     votes: '0%',
+  //     options: [
+  //       { name: 'Joshi', votes: '0%' },
+  //       { name: 'Shashi', votes: '0%' },
+  //       { name: 'Joshi', votes: '0%' },
+  //       { name: 'Priya', votes: '0%' }
+  //     ]
+  //   },
+  //   {
+  //     id: 2,
+  //     title: 'Eyiey',
+  //     createdDate: '06-12-2024',
+  //     startTime: '3:32 PM',
+  //     endDate: '06-12-2024',
+  //     endTime: '11:30 PM',
+  //     sharedWith: 'All',
+  //     publishResults: 'Yes',
+  //     status: 'Closed',
+  //     votes: 'A',
+  //     options: []
+  //   },
+  //   {
+  //     id: 3,
+  //     title: 'Society event',
+  //     createdDate: '23-09-2024',
+  //     startTime: '6:31 PM',
+  //     endDate: '04-10-2024',
+  //     endTime: '6:31 PM',
+  //     sharedWith: 'All',
+  //     publishResults: 'Yes',
+  //     status: 'Closed',
+  //     votes: '3%',
+  //     options: [
+  //       { name: 'Yes', votes: '3%' },
+  //       { name: 'No', votes: '100%' },
+  //       { name: 'Not Sure', votes: '0%' }
+  //     ]
+  //   },
+  //   {
+  //     id: 4,
+  //     title: 'Test',
+  //     createdDate: '26-08-2024',
+  //     startTime: '7:32 PM',
+  //     endDate: '25-08-2024',
+  //     endTime: '6:34 PM',
+  //     sharedWith: 'Individual',
+  //     publishResults: 'Yes',
+  //     status: 'Closed',
+  //     votes: '100%',
+  //     options: [
+  //       { name: '1', votes: '0%' },
+  //       { name: '2', votes: '0%' },
+  //       { name: '3', votes: '0%' },
+  //       { name: '4', votes: '0%' }
+  //     ]
+  //   },
+  //   {
+  //     id: 5,
+  //     title: 'Vbb',
+  //     createdDate: '25-08-2024',
+  //     startTime: '5:37 PM',
+  //     endDate: '26-08-2024',
+  //     endTime: '6:34 PM',
+  //     sharedWith: 'Individual',
+  //     publishResults: 'Yes',
+  //     status: 'Closed',
+  //     votes: 'Voters',
+  //     options: [
+  //       { name: 'H', votes: '3%' },
+  //       { name: 'Hi', votes: '3%' },
+  //       { name: 'C', votes: '3%' },
+  //       { name: 'S', votes: '2%' }
+  //     ]
+  //   },
+  //   {
+  //     id: 6,
+  //     title: 'Test',
+  //     createdDate: '21-11-2023',
+  //     startTime: '10:29 PM',
+  //     endDate: '21-11-2023',
+  //     endTime: '2:30 PM',
+  //     sharedWith: 'Individual',
+  //     publishResults: 'Yes',
+  //     status: 'Closed',
+  //     votes: 'Voters',
+  //     options: [
+  //       { name: 'Demo', votes: '0%' }
+  //     ]
+  //   },
+  //   {
+  //     id: 7,
+  //     title: 'Demo Subject',
+  //     createdDate: '08-11-2023',
+  //     startTime: '6:30 PM',
+  //     endDate: '08-11-2023',
+  //     endTime: '6:30 PM',
+  //     sharedWith: 'Individual',
+  //     publishResults: 'Yes',
+  //     status: 'Closed',
+  //     votes: 'Voters',
+  //     options: [
+  //       { name: 'Opt 1', votes: '3%' },
+  //       { name: 'Opt 2', votes: '3%' }
+  //     ]
+  //   },
+  //   {
+  //     id: 8,
+  //     title: 'Demo Subject',
+  //     createdDate: '29-09-2023',
+  //     startTime: '3:35 PM',
+  //     endDate: '29-09-2023',
+  //     endTime: '6:02 PM',
+  //     sharedWith: 'Individual',
+  //     publishResults: 'Yes',
+  //     status: 'Closed',
+  //     votes: 'Voters',
+  //     options: [
+  //       { name: 'Option 1 Demo', votes: '3%' },
+  //       { name: 'Option 2 Name', votes: '3%' }
+  //     ]
+  //   },
+  //   {
+  //     id: 9,
+  //     title: 'Demo',
+  //     createdDate: '31-08-2023',
+  //     startTime: '3:34 PM',
+  //     endDate: '30-08-2023',
+  //     endTime: '10:00 AM',
+  //     sharedWith: 'Individual',
+  //     status: 'Closed',
+  //     votes: 'Voters',
+  //     options: [
+  //       { name: 'Option', votes: '0%' }
+  //     ]
+  //   },
+  //   {
+  //     id: 10,
+  //     title: 'Demo',
+  //     createdDate: '29-08-2023',
+  //     startTime: '4:04 PM',
+  //     endDate: '30-08-2023',
+  //     endTime: '6:00 PM',
+  //     sharedWith: 'Individual',
+  //     status: 'Closed',
+  //     votes: 'Voters',
+  //     options: [
+  //       { name: 'Demo Option 1', votes: '0%' }
+  //     ]
+  //   }
+  // ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Active":
-        return "bg-green-100 text-green-700";
-      case "Draft":
-        return "bg-yellow-100 text-yellow-700";
-      case "Closed":
-        return "bg-gray-200 text-gray-700";
+      case 'Active':
+        return 'success';
+      case 'Draft':
+        return 'warning';
+      case 'Closed':
+        return 'default';
       default:
-        return "bg-gray-200 text-gray-700";
+        return 'default';
     }
   };
 
-  const getPercentage = (votes: number, total: number) => {
-    if (!total) return "0%";
-    return `${((votes / total) * 100).toFixed(1)}%`;
-  };
-
-  // const filteredPolls = polls.filter((poll) =>
-  //   poll.title.toLowerCase().includes(searchTerm.toLowerCase())
-  // );
-
-  /* ================= UI ================= */
+  const filteredPolls = polls.filter(poll =>
+    poll.subject.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-semibold text-gray-900">Polls</h1>
-          {/* <p className="text-gray-500">Manage your polls and surveys</p> */}
-        </div>
-
-        {/* <button
-          onClick={() => navigate("/crm/polls/add")}
-          className="flex items-center gap-2 bg-[#C72030] hover:bg-[#B01E2A] text-white px-4 py-2 rounded-md font-semibold"
-        >
-          <Plus size={18} />
-          Add Poll
-        </button> */}
-
-        {/* <button
-          onClick={() => navigate("/crm/polls/add")}
-          className="flex items-center gap-2 bg-[#C72030] hover:bg-[#B01E2A] text-white px-4 py-2 rounded-md font-semibold"
-        >
-          <Plus size={18} />
-          Add Poll
-        </button> */}
-
-        <div className="flex items-center">
-          <Button
-            type="button"
-            onClick={() => navigate("/crm/polls/add")}
-            className="border-[#C4B89D59] bg-[#C4B89D59] text-white hover:opacity-90 px-4 py-2"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Poll
-          </Button>
-        </div>
-
-      </div>
-
-      {/* Search */}
-      {/* <div className="mb-6 flex items-center gap-3">
-        <div className="relative">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-          />
-          <input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search polls..."
-            className="pl-10 pr-4 py-2 border rounded-md w-72 focus:outline-none focus:ring-2 focus:ring-[#C72030]"
-          />
-        </div>
-      </div> */}
-
-      {/* Poll Cards */}
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredPolls.map((poll) => (
-          <div
-            key={poll.id}
-            className="bg-white rounded-xl border shadow-sm hover:shadow-lg transition"
-          > */}
-      {/* Card Header */}
-      {/* <div className="p-5 flex justify-between items-start">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">
-                  {poll.title}
-                </h2>
-
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <Calendar size={14} />
-                    Created: {poll.showcreated}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock size={14} />
-                    Duration: {poll.showstart} - {poll.showend}
-                  </div>
-                  <div>
-                    Shared with:{" "}
-                    <span className="font-medium">{poll.sharedWith}</span>
-                  </div>
-                  {poll.publishResults && (
-                    <div>
-                      Results:{" "}
-                      <span className="font-medium">
-                        {poll.publishResults}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col items-end gap-2 relative">
-                <button
-                  onClick={() =>
-                    setMenuOpenId(menuOpenId === poll.id ? null : poll.id)
-                  }
-                >
-                  <MoreHorizontal size={18} />
-                </button>
-
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                    poll.status
-                  )}`}
-                >
-                  {poll.status}
-                </span> */}
-
-      {/* Dropdown */}
-      {/* {menuOpenId === poll.id && (
-                  <div className="absolute right-0 top-8 bg-white border rounded-md shadow-lg w-40 z-10">
-                    <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-sm">
-                      <Eye size={14} /> View Results
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-sm">
-                      <Edit size={14} /> Edit Poll
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-sm text-red-600">
-                      <Trash2 size={14} /> Delete
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div> */}
-
-      {/* Divider */}
-      {/* <div className="border-t" /> */}
-
-      {/* Options */}
-      {/* <div className="p-5">
-              <h3 className="text-sm font-semibold mb-3">
-                Poll Options & Results
-              </h3>
-
-              {poll.poll_options.length > 0 ? (
-                <div className="space-y-2">
-                  {poll.poll_options.map((option, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between items-center text-sm"
-                    >
-                      <span>{option.name}</span>
-                      <span className="px-2 py-0.5 border rounded-md text-xs">
-                        {getPercentage(
-                          option.vote_count,
-                          poll.total_votes
-                        )}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 text-center">
-                  No options available
-                </p>
-              )}
-            </div> */}
-
-
-      {/* Poll Options & Results */}
-      {/* <div className="p-5">
-              <h3 className="text-sm font-semibold mb-4">
-                Poll Options & Results
-              </h3>
-
-              {poll.poll_options.length > 0 ? (
-                <ul className="space-y-2">
-                  {poll.poll_options.map((option, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center justify-between"
-                    >
-                      <span className="text-sm text-gray-900">
-                        {option.name}
-                      </span>
-
-                      <span className="text-xs px-2 py-0.5 min-w-[50px] text-center border border-gray-300 rounded-md text-gray-700">
-                        {poll.total_votes > 0
-                          ? `${(
-                            (option.vote_count / poll.total_votes) *
-                            100
-                          ).toFixed(1)}%`
-                          : "0%"}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="py-4 text-center">
-                  <p className="text-sm text-gray-500">
-                    No options available
-                  </p>
-                </div>
-              )}
-            </div>
-
-          </div>
-        ))}
-      </div> */}
-
-      {/* Empty State */}
-      {/* {filteredPolls.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          No polls available
-        </div>
-      )} */}
-
-
-
-      <Box sx={{}}>
-        {/* <Typography variant="h4" sx={{ fontWeight: 600, mb: 3 }}>
-          Polls
-        </Typography> */}
-
-        <Box
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+            Polls
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Manage your polls and surveys
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<Plus size={20} />}
+          onClick={() => navigate('/crm/polls/add')}
           sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-            gap: 3
+            bgcolor: '#C72030',
+            '&:hover': { bgcolor: '#B01E2A' },
+            textTransform: 'none',
+            fontWeight: 600,
+            px: 3,
+            py: 1.5,
+            borderRadius: 2
           }}
         >
-          {polls.map((poll) => (
-            <Card key={poll.id} elevation={2} sx={{ borderRadius: 3 }}>
+          Add Poll
+        </Button>
+      </Box>
+
+      {/* Search and Filter */}
+      <Paper elevation={1} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
+            All Polls
+          </Typography>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <TextField
+              placeholder="Search polls..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search size={20} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ width: 280 }}
+            />
+            <Button
+              variant="outlined"
+              startIcon={<Filter size={18} />}
+              sx={{ textTransform: 'none' }}
+            >
+              Filter
+            </Button>
+          </Stack>
+        </Box>
+
+        {/* Polls Grid */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 3 }}>
+          {filteredPolls.map((poll) => (
+            <Card
+              key={poll.id}
+              elevation={2}
+              sx={{
+                height: '100%',
+                borderRadius: 3,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
+                }
+              }}
+            >
               <CardContent sx={{ p: 3 }}>
-                {/* Header */}
-                <Stack direction="row" justifyContent="space-between" mb={2}>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                {/* Poll Header */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" component="h3" sx={{ fontWeight: 600, mb: 1.5 }}>
                       {poll.subject}
                     </Typography>
 
-                    <Typography variant="body2" color="text.secondary">
-                      Created On: {formatDateTime(poll.created_at)}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Start Date: {formatDateTime(poll.start)}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      End Date: {formatDateTime(poll.end)}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Share with: <strong>{poll.shared}</strong>
-                    </Typography>
+                    <Stack spacing={1}>
+                      <Typography variant="body2" color="text.secondary" className='flex items-center'>
+                        <Calendar size={14} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />
+                        Created On: {formatDateTime(poll.created_at)}
+
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" className='flex items-center'>
+                        <Clock size={14} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />
+                        Start Date: {formatDateTime(poll.start)}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" className='flex items-center'>
+                        <Clock size={14} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />
+                        End Date: {formatDateTime(poll.end)}
+                      </Typography>
+                      {/* <Typography variant="body2" color="text.secondary" className='flex items-center'>
+                        <Clock size={14} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />
+                        End Date: {formatDateTime(poll.end)}
+                      </Typography> */}
+                      {/* <Typography variant="body2" color="text.secondary">
+                         <Clock size={14} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />
+                        Start Date: {formatDateTime(poll.start)}
+                      </Typography> */}
+                      {/* <Typography variant="body2" color="text.secondary">
+                         <Clock size={14} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />
+                        End Date: {formatDateTime(poll.end)}
+                      </Typography> */}
+
+                      <Typography variant="body2" color="text.secondary" className='flex items-center'>
+                        <Users size={14} style={{ marginRight: 8, verticalAlign: 'text-bottom' }} />
+                        Shared with: <strong>{poll.shared}</strong>
+                      </Typography>
+
+                      {/* <Typography variant="body2" color="text.secondary">
+                        Shared with: <strong>{poll.shared}</strong>
+                      </Typography> */}
+                      {poll.publishResults && (
+                        <Typography variant="body2" color="text.secondary">
+                          Results: <strong>{poll.publishResults}</strong>
+                        </Typography>
+                      )}
+                    </Stack>
                   </Box>
 
-                  {/* <Chip
-                    label={poll.status}
-                    color={
-                      poll.status === "Active"
-                        ? "success"
-                        : poll.status === "Closed"
-                          ? "default"
-                          : "warning"
-                    }
-                    size="small"
-                  /> */}
+                  <Stack direction="column" alignItems="flex-end" spacing={1}>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleMenuClick(e, poll.id)}
+                      sx={{ ml: 1 }}
+                    >
+                      <MoreHorizontal size={18} />
+                    </IconButton>
 
-                  <Chip
-                    label={poll.active === 1 ? "Active" : "Inactive"}
-                    color={poll.active === 1 ? "success" : "default"}
-                    size="small"
-                  />
-
-                </Stack>
+                    <Chip
+                      label={poll.status}
+                      color={getStatusColor(poll.status) as any}
+                      size="small"
+                      sx={{
+                        fontWeight: 500,
+                        textTransform: 'capitalize'
+                      }}
+                    />
+                  </Stack>
+                </Box>
 
                 <Divider sx={{ my: 2 }} />
 
-                {/* ✅ EXACT SAME BOX YOU ASKED */}
+                {/* Poll Options */}
                 <Box>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ fontWeight: 600, mb: 1.5 }}
-                  >
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
                     Poll Options & Results
                   </Typography>
 
@@ -469,38 +445,32 @@ const PollsPage = () => {
                           sx={{
                             px: 0,
                             py: 0.5,
-                            display: "flex",
-                            justifyContent: "space-between"
+                            display: 'flex',
+                            justifyContent: 'space-between'
                           }}
                         >
                           <ListItemText
                             primary={option.name}
                             primaryTypographyProps={{
-                              variant: "body2",
-                              color: "text.primary"
+                              variant: 'body2',
+                              color: 'text.primary'
                             }}
                           />
                           <Chip
                             label={
-                              poll.votes_count > 0
-                                ? `${(
-                                  (option.vote_count / poll.total_votes) *
-                                  100
-                                ).toFixed(1)}%`
+                              poll.total_votes > 0
+                                ? `${((option.vote_count / poll.total_votes) * 100).toFixed(1)}%`
                                 : "0%"
                             }
                             size="small"
                             variant="outlined"
-                            sx={{
-                              minWidth: 50,
-                              textAlign: "center"
-                            }}
+                            sx={{ minWidth: 50, textAlign: "center" }}
                           />
                         </ListItem>
                       ))}
                     </List>
                   ) : (
-                    <Box sx={{ textAlign: "center", py: 2 }}>
+                    <Box sx={{ textAlign: 'center', py: 2 }}>
                       <Typography variant="body2" color="text.secondary">
                         No options available
                       </Typography>
@@ -511,54 +481,76 @@ const PollsPage = () => {
             </Card>
           ))}
         </Box>
-      </Box>
 
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-4 mt-10">
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-10">
-
-          {/* Left Arrow */}
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            className="text-gray-700 disabled:text-gray-300"
-          >
-            <ChevronLeft size={22} strokeWidth={1.5} />
-          </button>
-
-          {/* Page Numbers */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            {/* Left Arrow */}
             <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className="text-gray-700 disabled:text-gray-300"
+            >
+              <ChevronLeft size={22} strokeWidth={1.5} />
+            </button>
+
+            {/* Page Numbers */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`
           min-w-[36px] h-[36px] flex items-center justify-center text-sm font-medium
           ${currentPage === page
-                  ? "bg-[#C72030] text-white"
-                  : "text-gray-800 hover:text-[#C72030]"
-                }
+                    ? "bg-[#C72030] text-white"
+                    : "text-gray-800 hover:text-[#C72030]"
+                  }
         `}
+              >
+                {page}
+              </button>
+            ))}
+
+            {/* Right Arrow */}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="text-gray-700 disabled:text-gray-300"
             >
-              {page}
+              <ChevronRight size={22} strokeWidth={1.5} />
             </button>
-          ))}
 
-          {/* Right Arrow */}
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="text-gray-700 disabled:text-gray-300"
-          >
-            <ChevronRight size={22} strokeWidth={1.5} />
-          </button>
+          </div>
+        )}
 
-        </div>
-      )}
-    </div>
+
+        {/* Menu */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          PaperProps={{
+            elevation: 3,
+            sx: { borderRadius: 2, minWidth: 160 }
+          }}
+        >
+          <MenuItem onClick={handleMenuClose}>
+            <Eye size={16} style={{ marginRight: 12 }} />
+            View Results
+          </MenuItem>
+          <MenuItem onClick={handleMenuClose}>
+            <Edit size={16} style={{ marginRight: 12 }} />
+            Edit Poll
+          </MenuItem>
+          <MenuItem onClick={handleMenuClose} sx={{ color: 'error.main' }}>
+            <Trash2 size={16} style={{ marginRight: 12 }} />
+            Delete
+          </MenuItem>
+        </Menu>
+      </Paper>
+    </Container>
   );
 };
 
 export default PollsPage;
-
-
