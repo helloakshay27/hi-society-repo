@@ -371,7 +371,7 @@ const BookingDetailsPage = () => {
                 </Button>
               )}
               {
-                bookings.fac_type === "Request" && (
+                bookings?.fac_type === "Request" && (
                   <Button
                     variant="outline"
                     onClick={() => {
