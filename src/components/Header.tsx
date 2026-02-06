@@ -756,7 +756,7 @@ export const Header = () => {
 
         <div className="flex items-center gap-3">
           {/* Layout Mode Toggle Button - Only available on localhost for development */}
-          {(hostname.includes("localhost") || hostname.includes("dev-hisociety.lockated.com")) && (
+          {/* {(hostname.includes("localhost") || hostname.includes("dev-hisociety.lockated.com")) && ( */}
             <Button
               onClick={() => {
                 // Set base URL BEFORE toggling mode to ensure proper API routing
@@ -790,7 +790,7 @@ export const Header = () => {
                 </>
               )}
             </Button>
-          )}
+          {/* )} */}
 
           {/* Hi-Society Mode: Society Dropdown */}
           {layoutMode === 'hi-society' && (
