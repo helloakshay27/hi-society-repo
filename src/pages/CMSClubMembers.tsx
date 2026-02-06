@@ -4,7 +4,7 @@ import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
 import { ColumnConfig } from '@/hooks/useEnhancedTable'
 import { Switch } from '@mui/material';
 import axios from 'axios';
-import { Download, Edit, Plus, QrCode } from 'lucide-react';
+import { Download, Edit, Eye, Plus, QrCode, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -22,53 +22,36 @@ const columns: ColumnConfig[] = [
     draggable: true,
   },
   {
-    key: 'name',
-    label: 'Name',
+    key: 'members',
+    label: 'Members',
     sortable: true,
     draggable: true,
   },
   {
-    key: 'age',
-    label: 'Age',
+    key: 'member_names',
+    label: 'Member Names',
     sortable: true,
     draggable: true,
   },
   {
-    key: 'gender',
-    label: 'Gender',
+    key: 'emails',
+    label: 'Emails',
     sortable: true,
     draggable: true,
   },
   {
-    key: 'mobile',
-    label: 'Mobile',
+    key: 'mobiles',
+    label: 'Mobiles',
     sortable: true,
     draggable: true,
   },
   {
-    key: 'email',
-    label: 'Email',
+    key: 'membership_plan',
+    label: 'Membership Plan',
     sortable: true,
     draggable: true,
   },
-  {
-    key: 'relation_with_owner',
-    label: 'Relation With Owner',
-    sortable: true,
-    draggable: true,
-  },
-  {
-    key: 'resident_type',
-    label: 'Resident Type',
-    sortable: true,
-    draggable: true,
-  },
-  {
-    key: 'membership_number',
-    label: 'Member Number',
-    sortable: true,
-    draggable: true,
-  },
+
   {
     key: 'start_date',
     label: 'Start Date',
@@ -82,25 +65,13 @@ const columns: ColumnConfig[] = [
     draggable: true,
   },
   {
-    key: 'membership_status',
-    label: 'Membership Status',
+    key: 'status',
+    label: 'Status',
     sortable: true,
     draggable: true,
   },
   {
-    key: 'card_allocated',
-    label: 'Card Allocated',
-    sortable: true,
-    draggable: true,
-  },
-  {
-    key: 'access_card_id',
-    label: 'Access Card',
-    sortable: true,
-    draggable: true,
-  },
-  {
-    key: 'created_at',
+    key: 'created_on',
     label: 'Created On',
     sortable: true,
     draggable: true,
@@ -115,18 +86,23 @@ const CMSClubMembers = () => {
 
   const [members, setMembers] = useState([]);
   const [showActionPanel, setShowActionPanel] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
+  const [modalData, setModalData] = useState<{ isOpen: boolean, title: string, items: string[] }>({ isOpen: false, title: '', items: [] });
 
   const fetchMembers = async () => {
     try {
-      const response = await axios.get(`https://${baseUrl}/crm/admin/club_members.json`, {
+      setIsLoading(true)
+      const response = await axios.get(`https://${baseUrl}/club_member_allocations.json`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       })
 
-      setMembers(response.data.club_members);
+      setMembers(response.data.club_member_allocations);
     } catch (error) {
       console.log(error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -185,6 +161,14 @@ const CMSClubMembers = () => {
           size="sm"
           variant="ghost"
           className="p-1"
+          onClick={() => navigate(`view/${item.id}`)}
+        >
+          <Eye className="w-4 h-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="p-1"
           onClick={() => navigate(`edit/${item.id}`)}
         >
           <Edit className="w-4 h-4" />
@@ -204,35 +188,123 @@ const CMSClubMembers = () => {
 
   const renderCell = (item: any, columnKey: string) => {
     switch (columnKey) {
-      case "name":
-        return item.first_name + " " + item.last_name || "-";
-      case "tower":
-        return item.tower.name || "-";
       case "flat":
-        return item.flat.flat_no || "-";
-      case "card_allocated":
+        return item?.flat?.flat_no || "-";
+      case "tower":
+        return item?.tower?.name || "-";
+      case 'members':
         return (
-          <Switch
-            checked={item.card_allocated === true || item.card_allocated === 'true'}
-            size="small"
-            sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#04A231',
-              },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#04A231',
-              },
-              '& .MuiSwitch-switchBase:not(.Mui-checked)': {
-                color: '#C72030',
-              },
-              '& .MuiSwitch-switchBase:not(.Mui-checked) + .MuiSwitch-track': {
-                backgroundColor: 'rgba(199, 32, 48, 0.5)',
-              },
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-[#C72030]" />
+            <span className="font-medium">{item.club_members?.length || 0}</span>
+          </div>
         );
-      case "created_at":
-        return item.created_at ? item.created_at.split("T")[0] : "-";
+
+      case "member_names":
+        const names = item.club_members?.map(m => m.first_name + " " + m.last_name).filter(Boolean);
+        if (!names || names.length === 0) return <span className="text-gray-400">-</span>;
+
+        return (
+          <div className="flex flex-col gap-1">
+            {names.slice(0, 2).map((name, idx) => (
+              <span key={idx} className="text-sm">{name}</span>
+            ))}
+            {names.length > 2 && (
+              <span
+                className="text-xs text-blue-600 cursor-pointer hover:underline"
+                onClick={() => {
+                  setModalData({
+                    isOpen: true,
+                    title: 'Member Names',
+                    items: names
+                  });
+                }}
+              >
+                +{names.length - 2} more
+              </span>
+            )}
+          </div>
+        );
+
+      case "emails":
+        const emails = item.club_members?.map(m => m.email).filter(Boolean);
+        if (!emails || emails.length === 0) return <span className="text-gray-400">-</span>;
+
+        return (
+          <div className="flex flex-col gap-1">
+            {emails.slice(0, 2).map((email, idx) => (
+              <span key={idx} className="text-sm">{email}</span>
+            ))}
+            {emails.length > 2 && (
+              <span
+                className="text-xs text-blue-600 cursor-pointer hover:underline"
+                onClick={() => {
+                  setModalData({
+                    isOpen: true,
+                    title: 'Member Emails',
+                    items: emails
+                  });
+                }}
+              >
+                +{emails.length - 2} more
+              </span>
+            )}
+          </div>
+        );
+
+      case "mobiles":
+        const mobiles = item.club_members?.map(m => m.mobile).filter(Boolean);
+        if (!mobiles || mobiles.length === 0) return <span className="text-gray-400">-</span>;
+
+        return (
+          <div className="flex flex-col gap-1">
+            {mobiles.slice(0, 2).map((mobile, idx) => (
+              <span key={idx} className="text-sm">{mobile}</span>
+            ))}
+            {mobiles.length > 2 && (
+              <span
+                className="text-xs text-blue-600 cursor-pointer hover:underline"
+                onClick={() => {
+                  setModalData({
+                    isOpen: true,
+                    title: 'Member Mobiles',
+                    items: mobiles
+                  });
+                }}
+              >
+                +{mobiles.length - 2} more
+              </span>
+            )}
+          </div>
+        );
+
+      case "membership_plan":
+        return item?.membership_plan?.name || "-";
+
+      case "start_date":
+        if (!item?.start_date) return "-";
+        return new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }).format(new Date(item.start_date))
+
+      case "end_date":
+        if (!item?.end_date) return "-";
+        return new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }).format(new Date(item.end_date))
+
+      case "created_on":
+        if (!item?.created_at) return "-";
+        return new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }).format(new Date(item.created_at))
+
       default:
         return item[columnKey] || "-";
     }
@@ -266,6 +338,7 @@ const CMSClubMembers = () => {
         renderCell={renderCell}
         renderActions={renderActions}
         leftActions={leftActions}
+        loading={isLoading}
       />
     </div>
   )

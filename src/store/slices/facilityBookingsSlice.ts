@@ -26,6 +26,13 @@ export interface FacilityBookingDetails {
   facility_name: string;
   created_by_name: string;
   fac_type: string;
+  sub_facility_name?: string;
+  amount_full?: number;
+  amount_paid?: number;
+  transaction_id?: string;
+  pg_state?: string;
+  payment_mode?: string;
+  booked_members?: any[];
 }
 
 export interface FacilityBookingResponse {

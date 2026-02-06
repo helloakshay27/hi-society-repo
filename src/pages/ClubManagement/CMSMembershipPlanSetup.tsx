@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable"
 import { Button } from "@/components/ui/button"
 import { ColumnConfig } from "@/hooks/useEnhancedTable"
@@ -38,7 +38,7 @@ const columns: ColumnConfig[] = [
         draggable: true
     },
     {
-        key: 'type',
+        key: 'renewal_terms',
         label: 'Membership Type',
         sortable: true,
         draggable: true
@@ -77,12 +77,37 @@ const CMSMembershipPlanSetup = () => {
     const baseUrl = localStorage.getItem("baseUrl")
     const token = localStorage.getItem("token")
 
+    const [plans, setPlans] = useState([])
     const [open, setOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         price: '',
         type: ''
     });
+
+    const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+
+    const fetchPlans = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(`https://${baseUrl}/membership_plans.json`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+
+            setPlans(response.data.plans)
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchPlans()
+    }, [])
 
     const handleInputChange = (field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -91,7 +116,18 @@ const CMSMembershipPlanSetup = () => {
     const handleClose = () => {
         setOpen(false);
         setFormData({ name: '', price: '', type: '' });
+        setSelectedPlanId(null);
     };
+
+    const handleEdit = (plan: any) => {
+        setFormData({
+            name: plan.name,
+            price: plan.price,
+            type: plan.renewal_terms
+        });
+        setSelectedPlanId(plan.id);
+        setOpen(true);
+    }
 
     const handleSubmit = async () => {
         if (!formData.name || !formData.price || !formData.type) {
@@ -107,13 +143,23 @@ const CMSMembershipPlanSetup = () => {
         }
 
         try {
-            await axios.post(`https://${baseUrl}/membership_plans.json`, payload, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            })
-            toast.success("Membership plan created successfully")
+            if (selectedPlanId) {
+                await axios.put(`https://${baseUrl}/membership_plans/${selectedPlanId}.json`, payload, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+                toast.success("Membership plan updated successfully")
+            } else {
+                await axios.post(`https://${baseUrl}/membership_plans.json`, payload, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+                toast.success("Membership plan created successfully")
+            }
             handleClose();
+            fetchPlans()
         } catch (error) {
             console.log(error)
         }
@@ -123,6 +169,7 @@ const CMSMembershipPlanSetup = () => {
         <Button
             variant="ghost"
             size="sm"
+            onClick={() => handleEdit(item)}
         >
             <Edit className="w-4 h-4" />
         </Button>
@@ -139,13 +186,22 @@ const CMSMembershipPlanSetup = () => {
         </Button>
     )
 
+    const renderCell = (item: any, columnKey: string) => {
+        switch (columnKey) {
+            default:
+                return item[columnKey] || "-"
+        }
+    }
+
     return (
         <div className="p-6">
             <EnhancedTable
-                data={[]}
+                data={plans}
                 columns={columns}
+                renderCell={renderCell}
                 renderActions={renderActions}
                 leftActions={leftActions}
+                loading={loading}
             />
 
             <Dialog
@@ -154,10 +210,10 @@ const CMSMembershipPlanSetup = () => {
                 maxWidth="sm"
                 fullWidth
             >
-                <DialogTitle sx={{ fontWeight: 600 }}>Add Membership Plan</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 600 }}>{selectedPlanId ? 'Edit Membership Plan' : 'Add Membership Plan'}</DialogTitle>
                 <DialogContent>
                     <DialogContentText sx={{ mb: 3 }}>
-                        Create a new membership plan here. Click save when you're done.
+                        {selectedPlanId ? 'Edit the membership plan details below. Click save when you\'re done.' : 'Create a new membership plan here. Click save when you\'re done.'}
                     </DialogContentText>
                     <div className="flex flex-col gap-4">
                         <TextField

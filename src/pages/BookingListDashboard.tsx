@@ -1,35 +1,112 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Eye, Plus, Download, X, Loader2, Edit } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { TextField, MenuItem, createTheme, ThemeProvider, Dialog, DialogContent, FormControl, InputLabel, Select as MuiSelect } from '@mui/material';
-import { ExportByCentreModal } from '@/components/ExportByCentreModal';
-import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
-import type { ColumnConfig } from '@/hooks/useEnhancedTable';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { exportReport, fetchFacilityBookingsData, filterBookings } from '@/store/slices/facilityBookingsSlice';
-import type { BookingData } from '@/services/bookingService';
-import { toast } from 'sonner';
-import { format, parse } from 'date-fns';
-import { cn } from '@/lib/utils';
-import axios from 'axios';
-import { SelectionPanel } from '@/components/water-asset-details/PannelTab';
-import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from '@/components/ui/select';
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Eye, Plus, Download, X, Loader2, Edit } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  TextField,
+  MenuItem,
+  createTheme,
+  ThemeProvider,
+  Dialog,
+  DialogContent,
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+} from "@mui/material";
+import { ExportByCentreModal } from "@/components/ExportByCentreModal";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import type { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  exportReport,
+  fetchFacilityBookingsData,
+  filterBookings,
+} from "@/store/slices/facilityBookingsSlice";
+import type { BookingData } from "@/services/bookingService";
+import { toast } from "sonner";
+import { format, parse } from "date-fns";
+import { cn } from "@/lib/utils";
+import axios from "axios";
+import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
+import {
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+  SelectItem,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const enhancedTableColumns: ColumnConfig[] = [
-  { key: 'id', label: 'ID', sortable: true, draggable: true },
-  { key: 'bookedBy', label: 'Booked By', sortable: true, draggable: true },
-  { key: 'bookedFor', label: 'Booked For', sortable: true, draggable: true },
-  { key: 'companyName', label: 'Company Name', sortable: true, draggable: true },
-  { key: 'facility', label: 'Facility', sortable: true, draggable: true },
-  { key: 'facilityType', label: 'Facility Type', sortable: true, draggable: true },
-  { key: 'scheduledDate', label: 'Scheduled Date', sortable: true, draggable: true },
-  { key: 'scheduledTime', label: 'Scheduled Time', sortable: true, draggable: true },
-  { key: 'bookingStatus', label: 'Booking Status', sortable: true, draggable: true },
-  { key: 'createdOn', label: 'Created On', sortable: true, draggable: true },
-  { key: 'source', label: 'Source', sortable: true, draggable: true },
+  { key: "id", label: "ID", sortable: true, draggable: true },
+  { key: "bookedBy", label: "Booked By", sortable: true, draggable: true },
+  { key: "tower", label: "Tower", sortable: true, draggable: true },
+  { key: "flat", label: "Flat", sortable: true, draggable: true },
+  { key: "facility", label: "Facility Name", sortable: true, draggable: true },
+  {
+    key: "subFacilityName",
+    label: "Sub Facility Name",
+    sortable: true,
+    draggable: true,
+  },
+  {
+    key: "facilityType",
+    label: "Facility Type",
+    sortable: true,
+    draggable: true,
+  },
+  {
+    key: "scheduledDate",
+    label: "Scheduled Date",
+    sortable: true,
+    draggable: true,
+  },
+  {
+    key: "scheduledTime",
+    label: "Scheduled Time",
+    sortable: true,
+    draggable: true,
+  },
+  { key: "createdOn", label: "Booked On", sortable: true, draggable: true },
+  {
+    key: "totalAmount",
+    label: "Total Amount",
+    sortable: true,
+    draggable: true,
+  },
+  {
+    key: "refundableAmount",
+    label: "Refundable Amount",
+    sortable: true,
+    draggable: true,
+  },
+  { key: "gst", label: "GST", sortable: true, draggable: true },
+  { key: "amountPaid", label: "Amount Paid", sortable: true, draggable: true },
+  {
+    key: "paymentStatus",
+    label: "Payment Status",
+    sortable: true,
+    draggable: true,
+  },
+  {
+    key: "bookingStatus",
+    label: "Booking Status",
+    sortable: true,
+    draggable: true,
+  },
+  { key: "member", label: "Member", sortable: true, draggable: true },
+  { key: "nonMember", label: "Non Member", sortable: true, draggable: true },
+  { key: "guest", label: "Guest", sortable: true, draggable: true },
+  { key: "tenant", label: "Tenant", sortable: true, draggable: true },
 ];
 
 const muiTheme = createTheme({
@@ -37,33 +114,33 @@ const muiTheme = createTheme({
     MuiTextField: {
       styleOverrides: {
         root: {
-          '& .MuiOutlinedInput-root': {
-            borderRadius: '6px',
-            backgroundColor: '#FFFFFF',
-            height: { xs: '36px', sm: '45px' },
-            '& fieldset': {
-              borderColor: '#E0E0E0',
+          "& .MuiOutlinedInput-root": {
+            borderRadius: "6px",
+            backgroundColor: "#FFFFFF",
+            height: { xs: "36px", sm: "45px" },
+            "& fieldset": {
+              borderColor: "#E0E0E0",
             },
-            '&:hover fieldset': {
-              borderColor: '#1A1A1A',
+            "&:hover fieldset": {
+              borderColor: "#1A1A1A",
             },
-            '&.Mui-focused fieldset': {
-              borderColor: '#8B4B8C',
+            "&.Mui-focused fieldset": {
+              borderColor: "#8B4B8C",
               borderWidth: 2,
             },
           },
-          '& .MuiInputLabel-root': {
-            color: '#000000',
+          "& .MuiInputLabel-root": {
+            color: "#000000",
             fontWeight: 500,
-            fontSize: { xs: '12px', sm: '14px' },
+            fontSize: { xs: "12px", sm: "14px" },
           },
-          '& .MuiInputLabel-root.Mui-focused': {
-            color: '#8B4B8C',
+          "& .MuiInputLabel-root.Mui-focused": {
+            color: "#8B4B8C",
           },
-          '& .MuiInputLabel-shrink': {
-            transform: 'translate(14px, -9px) scale(0.75)',
-            backgroundColor: '#FFFFFF',
-            padding: '0 4px',
+          "& .MuiInputLabel-shrink": {
+            transform: "translate(14px, -9px) scale(0.75)",
+            backgroundColor: "#FFFFFF",
+            padding: "0 4px",
           },
         },
       },
@@ -71,17 +148,17 @@ const muiTheme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         input: {
-          color: '#1A1A1A',
-          fontSize: '14px',
+          color: "#1A1A1A",
+          fontSize: "14px",
           fontWeight: 400,
-          padding: '12px 14px',
-          '&::placeholder': {
-            color: '#1A1A1A',
+          padding: "12px 14px",
+          "&::placeholder": {
+            color: "#1A1A1A",
             opacity: 0.54,
           },
-          '@media (max-width: 768px)': {
-            fontSize: '12px',
-            padding: '8px 12px',
+          "@media (max-width: 768px)": {
+            fontSize: "12px",
+            padding: "8px 12px",
           },
         },
       },
@@ -91,46 +168,51 @@ const muiTheme = createTheme({
 
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
-    case 'Confirmed':
-      return 'success';
-    case 'Pending':
-      return 'warning';
-    case 'Cancelled':
-      return 'destructive';
-    case 'Completed':
-      return 'default';
+    case "Confirmed":
+      return "success";
+    case "Pending":
+      return "warning";
+    case "Cancelled":
+      return "destructive";
+    case "Completed":
+      return "default";
     default:
-      return 'default';
+      return "default";
   }
 };
 
 const BookingListDashboard = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const baseUrl = localStorage.getItem('baseUrl');
-  const token = localStorage.getItem('token');
+  const baseUrl = localStorage.getItem("baseUrl");
+  const token = localStorage.getItem("token");
 
-  const { data: bookings, loading, error } = useAppSelector((state) => state.facilityBookings);
+  const {
+    data: bookings,
+    loading,
+    error,
+  } = useAppSelector((state) => state.facilityBookings);
 
   const [bookingData, setBookingData] = useState([]);
   const [facilities, setFacilities] = useState([]);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [isExportByCentreModalOpen, setIsExportByCentreModalOpen] = useState(false);
+  const [isExportByCentreModalOpen, setIsExportByCentreModalOpen] =
+    useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [showActionPanel, setShowActionPanel] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState<number | null>(null);
   const [filters, setFilters] = useState({
-    facilityName: '',
-    status: '',
-    scheduledDateRange: '',
-    createdOnDateRange: '',
+    facilityName: "",
+    status: "",
+    scheduledDateRange: "",
+    createdOnDateRange: "",
   });
-  const [scheduledDateFrom, setScheduledDateFrom] = useState<string>('');
-  const [scheduledDateTo, setScheduledDateTo] = useState<string>('');
-  const [createdOnDateFrom, setCreatedOnDateFrom] = useState<string>('');
-  const [createdOnDateTo, setCreatedOnDateTo] = useState<string>('');
-  const [isFiltering, setIsFiltering] = useState(false)
+  const [scheduledDateFrom, setScheduledDateFrom] = useState<string>("");
+  const [scheduledDateTo, setScheduledDateTo] = useState<string>("");
+  const [createdOnDateFrom, setCreatedOnDateFrom] = useState<string>("");
+  const [createdOnDateTo, setCreatedOnDateTo] = useState<string>("");
+  const [isFiltering, setIsFiltering] = useState(false);
   const [pagination, setPagination] = useState({
     current_page: 1,
     total_count: 0,
@@ -140,15 +222,18 @@ const BookingListDashboard = () => {
   useEffect(() => {
     const fetchFacilities = async () => {
       try {
-        const response = await axios.get(`https://${baseUrl}/pms/admin/facility_setups.json`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          `https://${baseUrl}/crm/admin/facility_setups.json`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setFacilities(response.data.facility_setups);
       } catch (error) {
-        console.error('Error fetching facilities:', error);
-        toast.error('Failed to fetch facilities');
+        console.error("Error fetching facilities:", error);
+        toast.error("Failed to fetch facilities");
       }
     };
 
@@ -175,11 +260,18 @@ const BookingListDashboard = () => {
 
   useEffect(() => {
     setIsPageLoading(true);
-    dispatch(fetchFacilityBookingsData({ baseUrl, token, pageSize: 10, currentPage: pagination.current_page }))
+    dispatch(
+      fetchFacilityBookingsData({
+        baseUrl,
+        token,
+        pageSize: 10,
+        currentPage: pagination.current_page,
+      })
+    )
       .then(() => setIsPageLoading(false))
       .catch(() => {
         setIsPageLoading(false);
-        toast.error('Failed to fetch bookings');
+        toast.error("Failed to fetch bookings");
       });
   }, [dispatch, baseUrl, token]);
 
@@ -187,7 +279,7 @@ const BookingListDashboard = () => {
     setStatusUpdating(bookingId);
     try {
       await axios.patch(
-        `https://${baseUrl}/pms/admin/facility_bookings/${bookingId}.json`,
+        `https://${baseUrl}/crm/admin/facility_bookings/${bookingId}.json`,
         { current_status: newStatus.toLowerCase() },
         {
           headers: {
@@ -197,103 +289,125 @@ const BookingListDashboard = () => {
       );
       setBookingData((prevData) =>
         prevData.map((booking) =>
-          booking.id === bookingId ? { ...booking, bookingStatus: newStatus } : booking
+          booking.id === bookingId
+            ? { ...booking, bookingStatus: newStatus }
+            : booking
         )
       );
       toast.success(`Booking ${bookingId} status updated to ${newStatus}`);
     } catch (error) {
-      console.error('Error updating booking status:', error);
-      toast.error('Failed to update booking status');
+      console.error("Error updating booking status:", error);
+      toast.error("Failed to update booking status");
     } finally {
       setStatusUpdating(null);
     }
   };
 
-  const handleScheduledDateFromChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleScheduledDateFromChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const newValue = event.target.value;
     setScheduledDateFrom(newValue);
     if (newValue && scheduledDateTo) {
-      const fromDate = parse(newValue, 'yyyy-MM-dd', new Date());
-      const toDate = parse(scheduledDateTo, 'yyyy-MM-dd', new Date());
+      const fromDate = parse(newValue, "yyyy-MM-dd", new Date());
+      const toDate = parse(scheduledDateTo, "yyyy-MM-dd", new Date());
       if (fromDate > toDate) {
         setScheduledDateTo(newValue);
       }
-      const formattedRange = `${format(fromDate, 'dd/MM/yyyy')} - ${format(toDate, 'dd/MM/yyyy')}`;
-      handleFilterChange('scheduledDateRange', formattedRange);
+      const formattedRange = `${format(fromDate, "dd/MM/yyyy")} - ${format(toDate, "dd/MM/yyyy")}`;
+      handleFilterChange("scheduledDateRange", formattedRange);
     } else {
-      handleFilterChange('scheduledDateRange', '');
+      handleFilterChange("scheduledDateRange", "");
     }
   };
 
-  const handleScheduledDateToChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleScheduledDateToChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const newValue = event.target.value;
     setScheduledDateTo(newValue);
     if (scheduledDateFrom && newValue) {
-      const fromDate = parse(scheduledDateFrom, 'yyyy-MM-dd', new Date());
-      const toDate = parse(newValue, 'yyyy-MM-dd', new Date());
+      const fromDate = parse(scheduledDateFrom, "yyyy-MM-dd", new Date());
+      const toDate = parse(newValue, "yyyy-MM-dd", new Date());
       if (toDate < fromDate) {
         setScheduledDateFrom(newValue);
       }
-      const formattedRange = `${format(fromDate, 'dd/MM/yyyy')} - ${format(toDate, 'dd/MM/yyyy')}`;
-      handleFilterChange('scheduledDateRange', formattedRange);
+      const formattedRange = `${format(fromDate, "dd/MM/yyyy")} - ${format(toDate, "dd/MM/yyyy")}`;
+      handleFilterChange("scheduledDateRange", formattedRange);
     } else {
-      handleFilterChange('scheduledDateRange', '');
+      handleFilterChange("scheduledDateRange", "");
     }
   };
 
-  const handleCreatedOnDateFromChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCreatedOnDateFromChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const newValue = event.target.value;
     setCreatedOnDateFrom(newValue);
     if (newValue && createdOnDateTo) {
-      const fromDate = parse(newValue, 'yyyy-MM-dd', new Date());
-      const toDate = parse(createdOnDateTo, 'yyyy-MM-dd', new Date());
+      const fromDate = parse(newValue, "yyyy-MM-dd", new Date());
+      const toDate = parse(createdOnDateTo, "yyyy-MM-dd", new Date());
       if (fromDate > toDate) {
         setCreatedOnDateTo(newValue);
       }
-      const formattedRange = `${format(fromDate, 'dd/MM/yyyy')} - ${format(toDate, 'dd/MM/yyyy')}`;
-      handleFilterChange('createdOnDateRange', formattedRange);
+      const formattedRange = `${format(fromDate, "dd/MM/yyyy")} - ${format(toDate, "dd/MM/yyyy")}`;
+      handleFilterChange("createdOnDateRange", formattedRange);
     } else {
-      handleFilterChange('createdOnDateRange', '');
+      handleFilterChange("createdOnDateRange", "");
     }
   };
 
-  const handleCreatedOnDateToChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCreatedOnDateToChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const newValue = event.target.value;
     setCreatedOnDateTo(newValue);
     if (createdOnDateFrom && newValue) {
-      const fromDate = parse(createdOnDateFrom, 'yyyy-MM-dd', new Date());
-      const toDate = parse(newValue, 'yyyy-MM-dd', new Date());
+      const fromDate = parse(createdOnDateFrom, "yyyy-MM-dd", new Date());
+      const toDate = parse(newValue, "yyyy-MM-dd", new Date());
       if (toDate < fromDate) {
         setCreatedOnDateFrom(newValue);
       }
-      const formattedRange = `${format(fromDate, 'dd/MM/yyyy')} - ${format(toDate, 'dd/MM/yyyy')}`;
-      handleFilterChange('createdOnDateRange', formattedRange);
+      const formattedRange = `${format(fromDate, "dd/MM/yyyy")} - ${format(toDate, "dd/MM/yyyy")}`;
+      handleFilterChange("createdOnDateRange", formattedRange);
     } else {
-      handleFilterChange('createdOnDateRange', '');
+      handleFilterChange("createdOnDateRange", "");
     }
   };
 
   const handleApplyFilters = async () => {
-    const formatedScheduleStartDate = scheduledDateFrom ? format(parse(scheduledDateFrom, 'yyyy-MM-dd', new Date()), "MM/dd/yyyy") : null;
-    const formatedScheduleEndDate = scheduledDateTo ? format(parse(scheduledDateTo, 'yyyy-MM-dd', new Date()), "MM/dd/yyyy") : null;
-    const formatedCreatedStartDate = createdOnDateFrom ? format(parse(createdOnDateFrom, 'yyyy-MM-dd', new Date()), "MM/dd/yyyy") : null;
-    const formatedCreatedEndDate = createdOnDateTo ? format(parse(createdOnDateTo, 'yyyy-MM-dd', new Date()), "MM/dd/yyyy") : null;
+    const formatedScheduleStartDate = scheduledDateFrom
+      ? format(parse(scheduledDateFrom, "yyyy-MM-dd", new Date()), "MM/dd/yyyy")
+      : null;
+    const formatedScheduleEndDate = scheduledDateTo
+      ? format(parse(scheduledDateTo, "yyyy-MM-dd", new Date()), "MM/dd/yyyy")
+      : null;
+    const formatedCreatedStartDate = createdOnDateFrom
+      ? format(parse(createdOnDateFrom, "yyyy-MM-dd", new Date()), "MM/dd/yyyy")
+      : null;
+    const formatedCreatedEndDate = createdOnDateTo
+      ? format(parse(createdOnDateTo, "yyyy-MM-dd", new Date()), "MM/dd/yyyy")
+      : null;
 
     const filterParams = {
       "q[facility_id_in]": filters.facilityName,
       "q[current_status_cont]": filters.status,
-      ...(formatedCreatedStartDate && formatedCreatedEndDate && {
-        "q[date_range]": `${formatedCreatedStartDate} - ${formatedCreatedEndDate}`,
-      }),
-      ...(formatedScheduleStartDate && formatedScheduleEndDate && {
-        "q[date_range1]": `${formatedScheduleStartDate} - ${formatedScheduleEndDate}`,
-      }),
+      ...(formatedCreatedStartDate &&
+        formatedCreatedEndDate && {
+          "q[date_range]": `${formatedCreatedStartDate} - ${formatedCreatedEndDate}`,
+        }),
+      ...(formatedScheduleStartDate &&
+        formatedScheduleEndDate && {
+          "q[date_range1]": `${formatedScheduleStartDate} - ${formatedScheduleEndDate}`,
+        }),
     };
 
     const queryString = new URLSearchParams(filterParams).toString();
     setIsFiltering(true);
     try {
-      const response = await dispatch(filterBookings({ baseUrl, token, queryString })).unwrap();
+      const response = await dispatch(
+        filterBookings({ baseUrl, token, queryString })
+      ).unwrap();
       const updatedResponse = response.facility_bookings.map((item: any) => ({
         bookedBy: item.book_by,
         bookedFor: item.book_for || "-",
@@ -306,6 +420,16 @@ const BookingListDashboard = () => {
         scheduledDate: item.startdate.split("T")[0],
         scheduledTime: item.show_schedule_24_hour,
         source: item.source,
+        subFacilityName: item.sub_facility_name,
+        totalAmount: item.amount_full,
+        refundableAmount: item.refunded_amount,
+        gst: item.gst,
+        amountPaid: item.amount_paid,
+        paymentStatus: item.pg_state,
+        member: item.member_count,
+        nonMember: item.non_member_count,
+        guest: item.guest_count,
+        tenant: item.tenant_count,
       }));
       setBookingData(updatedResponse);
       setPagination({
@@ -314,10 +438,10 @@ const BookingListDashboard = () => {
         total_pages: response.pagination.total_pages || 0,
       });
       setIsFilterModalOpen(false);
-      toast.success('Filters applied successfully');
+      toast.success("Filters applied successfully");
     } catch (error) {
-      console.error('Error applying filters:', error);
-      toast.error('Failed to apply filters');
+      console.error("Error applying filters:", error);
+      toast.error("Failed to apply filters");
     } finally {
       setIsFiltering(false);
     }
@@ -325,24 +449,24 @@ const BookingListDashboard = () => {
 
   const handleResetFilters = () => {
     setFilters({
-      facilityName: '',
-      status: '',
-      scheduledDateRange: '',
-      createdOnDateRange: '',
+      facilityName: "",
+      status: "",
+      scheduledDateRange: "",
+      createdOnDateRange: "",
     });
-    setScheduledDateFrom('');
-    setScheduledDateTo('');
-    setCreatedOnDateFrom('');
-    setCreatedOnDateTo('');
+    setScheduledDateFrom("");
+    setScheduledDateTo("");
+    setCreatedOnDateFrom("");
+    setCreatedOnDateTo("");
     setPagination({
       ...pagination,
       current_page: 1,
     });
-    toast.info('Filters reset');
+    toast.info("Filters reset");
   };
 
   const handleAddBooking = () => {
-    navigate('/cms/facility-bookings/add');
+    navigate("/cms/facility-bookings/add");
   };
 
   const handlePageChange = async (page: number) => {
@@ -365,16 +489,28 @@ const BookingListDashboard = () => {
       if (areFiltersApplied) {
         // Format dates for filterBookings if needed
         const formatedScheduleStartDate = scheduledDateFrom
-          ? format(parse(scheduledDateFrom, 'yyyy-MM-dd', new Date()), 'MM/dd/yyyy')
+          ? format(
+              parse(scheduledDateFrom, "yyyy-MM-dd", new Date()),
+              "MM/dd/yyyy"
+            )
           : null;
         const formatedScheduleEndDate = scheduledDateTo
-          ? format(parse(scheduledDateTo, 'yyyy-MM-dd', new Date()), 'MM/dd/yyyy')
+          ? format(
+              parse(scheduledDateTo, "yyyy-MM-dd", new Date()),
+              "MM/dd/yyyy"
+            )
           : null;
         const formatedCreatedStartDate = createdOnDateFrom
-          ? format(parse(createdOnDateFrom, 'yyyy-MM-dd', new Date()), 'MM/dd/yyyy')
+          ? format(
+              parse(createdOnDateFrom, "yyyy-MM-dd", new Date()),
+              "MM/dd/yyyy"
+            )
           : null;
         const formatedCreatedEndDate = createdOnDateTo
-          ? format(parse(createdOnDateTo, 'yyyy-MM-dd', new Date()), 'MM/dd/yyyy')
+          ? format(
+              parse(createdOnDateTo, "yyyy-MM-dd", new Date()),
+              "MM/dd/yyyy"
+            )
           : null;
 
         // Construct filter parameters, including page for pagination
@@ -382,30 +518,44 @@ const BookingListDashboard = () => {
           page: page.toString(),
           "q[facility_id_in]": filters.facilityName,
           "q[current_status_cont]": filters.status,
-          ...(formatedCreatedStartDate && formatedCreatedEndDate && {
-            "q[date_range]": `${formatedCreatedStartDate} - ${formatedCreatedEndDate}`,
-          }),
-          ...(formatedScheduleStartDate && formatedScheduleEndDate && {
-            "q[date_range1]": `${formatedScheduleStartDate} - ${formatedScheduleEndDate}`,
-          }),
+          ...(formatedCreatedStartDate &&
+            formatedCreatedEndDate && {
+              "q[date_range]": `${formatedCreatedStartDate} - ${formatedCreatedEndDate}`,
+            }),
+          ...(formatedScheduleStartDate &&
+            formatedScheduleEndDate && {
+              "q[date_range1]": `${formatedScheduleStartDate} - ${formatedScheduleEndDate}`,
+            }),
         };
 
         const queryString = new URLSearchParams(filterParams).toString();
 
         // Call filterBookings with the constructed query string
-        const response = await dispatch(filterBookings({ baseUrl, token, queryString })).unwrap();
+        const response = await dispatch(
+          filterBookings({ baseUrl, token, queryString })
+        ).unwrap();
         const updatedResponse = response.facility_bookings.map((item: any) => ({
           bookedBy: item.book_by,
-          bookedFor: item.book_for || '-',
+          bookedFor: item.book_for || "-",
           bookingStatus: item.current_status,
           companyName: item.company_name,
-          createdOn: item.created_at.split(' ')[0],
+          createdOn: item.created_at.split(" ")[0],
           facility: item.facility_name,
           facilityType: item.fac_type,
           id: item.id,
-          scheduledDate: item.startdate.split('T')[0],
+          scheduledDate: item.startdate.split("T")[0],
           scheduledTime: item.show_schedule_24_hour,
           source: item.source,
+          subFacilityName: item.sub_facility_name,
+          totalAmount: item.amount_full,
+          refundableAmount: item.refunded_amount,
+          gst: item.gst,
+          amountPaid: item.amount_paid,
+          paymentStatus: item.pg_state,
+          member: item.member_count,
+          nonMember: item.non_member_count,
+          guest: item.guest_count,
+          tenant: item.tenant_count,
         }));
 
         setBookingData(updatedResponse);
@@ -416,11 +566,18 @@ const BookingListDashboard = () => {
         });
       } else {
         // Call fetchFacilityBookingsData if no filters are applied
-        await dispatch(fetchFacilityBookingsData({ baseUrl, token, pageSize: 10, currentPage: page })).unwrap();
+        await dispatch(
+          fetchFacilityBookingsData({
+            baseUrl,
+            token,
+            pageSize: 10,
+            currentPage: page,
+          })
+        ).unwrap();
       }
     } catch (error) {
-      console.error('Error fetching bookings for page change:', error);
-      toast.error('Failed to fetch bookings');
+      console.error("Error fetching bookings for page change:", error);
+      toast.error("Failed to fetch bookings");
     } finally {
       setIsPageLoading(false);
     }
@@ -437,7 +594,7 @@ const BookingListDashboard = () => {
 
     if (showEllipsis) {
       items.push(
-        <PaginationItem key={1} className='cursor-pointer'>
+        <PaginationItem key={1} className="cursor-pointer">
           <PaginationLink
             onClick={() => handlePageChange(1)}
             isActive={currentPage === 1}
@@ -450,14 +607,14 @@ const BookingListDashboard = () => {
 
       if (currentPage > 4) {
         items.push(
-          <PaginationItem key="ellipsis1" >
+          <PaginationItem key="ellipsis1">
             <PaginationEllipsis />
           </PaginationItem>
         );
       } else {
         for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
           items.push(
-            <PaginationItem key={i} className='cursor-pointer'>
+            <PaginationItem key={i} className="cursor-pointer">
               <PaginationLink
                 onClick={() => handlePageChange(i)}
                 isActive={currentPage === i}
@@ -473,7 +630,7 @@ const BookingListDashboard = () => {
       if (currentPage > 3 && currentPage < totalPages - 2) {
         for (let i = currentPage - 1; i <= currentPage + 1; i++) {
           items.push(
-            <PaginationItem key={i} className='cursor-pointer'>
+            <PaginationItem key={i} className="cursor-pointer">
               <PaginationLink
                 onClick={() => handlePageChange(i)}
                 isActive={currentPage === i}
@@ -496,7 +653,7 @@ const BookingListDashboard = () => {
         for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
           if (!items.find((item) => item.key === i.toString())) {
             items.push(
-              <PaginationItem key={i} className='cursor-pointer'>
+              <PaginationItem key={i} className="cursor-pointer">
                 <PaginationLink
                   onClick={() => handlePageChange(i)}
                   isActive={currentPage === i}
@@ -512,7 +669,7 @@ const BookingListDashboard = () => {
 
       if (totalPages > 1) {
         items.push(
-          <PaginationItem key={totalPages} className='cursor-pointer'>
+          <PaginationItem key={totalPages} className="cursor-pointer">
             <PaginationLink
               onClick={() => handlePageChange(totalPages)}
               isActive={currentPage === totalPages}
@@ -526,7 +683,7 @@ const BookingListDashboard = () => {
     } else {
       for (let i = 1; i <= totalPages; i++) {
         items.push(
-          <PaginationItem key={i} className='cursor-pointer'>
+          <PaginationItem key={i} className="cursor-pointer">
             <PaginationLink
               onClick={() => handlePageChange(i)}
               isActive={currentPage === i}
@@ -544,14 +701,16 @@ const BookingListDashboard = () => {
 
   const renderCell = (item: BookingData, columnKey: string) => {
     switch (columnKey) {
-      case 'bookingStatus':
+      case "bookingStatus":
         if (statusUpdating === item.id) {
           return <Loader2 className="w-4 h-4 animate-spin" />;
         }
         return (
           <Select
             value={item.bookingStatus}
-            onValueChange={(newStatus) => handleStatusChange(item.id, newStatus)}
+            onValueChange={(newStatus) =>
+              handleStatusChange(item.id, newStatus)
+            }
             disabled={statusUpdating === item.id}
           >
             <SelectTrigger className="w-[140px] border-none bg-transparent flex justify-center items-center [&>svg]:hidden">
@@ -559,10 +718,13 @@ const BookingListDashboard = () => {
                 <Badge
                   variant={getStatusBadgeVariant(item.bookingStatus)}
                   className={cn(
-                    'cursor-pointer',
-                    item.bookingStatus === 'Pending' && 'bg-[#F4C790] hover:bg-[#F4C790] text-black',
-                    item.bookingStatus === 'Confirmed' && 'bg-[#A3E4DB] hover:bg-[#8CDAD1] text-black',
-                    item.bookingStatus === 'Cancelled' && 'bg-[#E4626F] hover:bg-[#E4626F] text-white'
+                    "cursor-pointer",
+                    item.bookingStatus === "Pending" &&
+                      "bg-[#F4C790] hover:bg-[#F4C790] text-black",
+                    item.bookingStatus === "Confirmed" &&
+                      "bg-[#A3E4DB] hover:bg-[#8CDAD1] text-black",
+                    item.bookingStatus === "Cancelled" &&
+                      "bg-[#E4626F] hover:bg-[#E4626F] text-white"
                   )}
                 >
                   {item.bookingStatus}
@@ -602,33 +764,23 @@ const BookingListDashboard = () => {
   };
 
   const handleView = (id: number) => {
-    navigate(`/vas/bookings/details/${id}`);
+    navigate(`/cms/facility-bookings/${id}`);
   };
 
   const handleEdit = (id: number) => {
-    navigate(`/vas/booking/edit/${id}`);
+    navigate(`/cms/facility-bookings/edit/${id}`);
   };
 
   const renderActions = (item: BookingData) => (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => handleView(item.id)}
-      >
+      <Button variant="ghost" size="sm" onClick={() => handleView(item.id)}>
         <Eye className="w-4 h-4" />
       </Button>
-      {
-        item.facilityType === "Request" && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleEdit(item.id)}
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
-        )
-      }
+      {/* {item.facilityType === "Request" && (
+        <Button variant="ghost" size="sm" onClick={() => handleEdit(item.id)}>
+          <Edit className="w-4 h-4" />
+        </Button>
+      )} */}
     </>
   );
 
@@ -642,19 +794,21 @@ const BookingListDashboard = () => {
   const handleDownload = async () => {
     setExportLoading(true);
     try {
-      const response = await dispatch(exportReport({ baseUrl, token })).unwrap();
+      const response = await dispatch(
+        exportReport({ baseUrl, token })
+      ).unwrap();
       const url = window.URL.createObjectURL(new Blob([response]));
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.setAttribute('download', 'facility_bookings.xlsx');
+      link.setAttribute("download", "facility_bookings.xlsx");
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      toast.success('File downloaded successfully');
+      toast.success("File downloaded successfully");
     } catch (error) {
-      console.error('Download error:', error);
-      toast.error('Error downloading file');
+      console.error("Download error:", error);
+      toast.error("Error downloading file");
     } finally {
       setExportLoading(false);
     }
@@ -662,10 +816,10 @@ const BookingListDashboard = () => {
 
   const selectionActions = [
     {
-      label: 'Export',
+      label: "Export",
       icon: Download,
       onClick: handleDownload,
-      variant: 'outline' as const,
+      variant: "outline" as const,
       loading: exportLoading,
     },
   ];
@@ -676,13 +830,22 @@ const BookingListDashboard = () => {
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
           <p>Error loading bookings: {error}</p>
           <Button
-            onClick={() => dispatch(fetchFacilityBookingsData({ baseUrl, token, pageSize: 10, currentPage: 1 }))}
+            onClick={() =>
+              dispatch(
+                fetchFacilityBookingsData({
+                  baseUrl,
+                  token,
+                  pageSize: 10,
+                  currentPage: 1,
+                })
+              )
+            }
             variant="outline"
             size="sm"
             className="mt-2"
             disabled={loading}
           >
-            {loading ? 'Retrying...' : 'Retry'}
+            {loading ? "Retrying..." : "Retry"}
           </Button>
         </div>
       )}
@@ -703,7 +866,9 @@ const BookingListDashboard = () => {
         storageKey="booking-list-table"
         loading={loading || isPageLoading}
         onFilterClick={() => setIsFilterModalOpen(true)}
-        emptyMessage={loading || isPageLoading ? 'Loading bookings...' : 'No bookings found'}
+        emptyMessage={
+          loading || isPageLoading ? "Loading bookings..." : "No bookings found"
+        }
         leftActions={
           <div className="flex flex-wrap gap-2">
             <Button
@@ -722,22 +887,45 @@ const BookingListDashboard = () => {
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={() => handlePageChange(Math.max(1, pagination.current_page - 1))}
-                className={pagination.current_page === 1 || isPageLoading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                onClick={() =>
+                  handlePageChange(Math.max(1, pagination.current_page - 1))
+                }
+                className={
+                  pagination.current_page === 1 || isPageLoading
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
               />
             </PaginationItem>
             {renderPaginationItems()}
             <PaginationItem>
               <PaginationNext
-                onClick={() => handlePageChange(Math.min(pagination.total_pages, pagination.current_page + 1))}
-                className={pagination.current_page === pagination.total_pages || isPageLoading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                onClick={() =>
+                  handlePageChange(
+                    Math.min(
+                      pagination.total_pages,
+                      pagination.current_page + 1
+                    )
+                  )
+                }
+                className={
+                  pagination.current_page === pagination.total_pages ||
+                  isPageLoading
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
               />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
       </div>
 
-      <Dialog open={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogContent className="[&>button]:hidden">
           <ThemeProvider theme={muiTheme}>
             <div>
@@ -760,7 +948,9 @@ const BookingListDashboard = () => {
                     <MuiSelect
                       label="Facility Name"
                       value={filters.facilityName}
-                      onChange={(e) => handleFilterChange('facilityName', e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange("facilityName", e.target.value)
+                      }
                       displayEmpty
                       variant="outlined"
                       fullWidth
@@ -779,7 +969,9 @@ const BookingListDashboard = () => {
                     <MuiSelect
                       label="Status"
                       value={filters.status}
-                      onChange={(e) => handleFilterChange('status', e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange("status", e.target.value)
+                      }
                       displayEmpty
                       variant="outlined"
                       fullWidth
