@@ -80,10 +80,12 @@ const CMSMembershipPlanSetup = () => {
     const [plans, setPlans] = useState([])
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [paymentPlans, setPaymentPlans] = useState([])
     const [formData, setFormData] = useState({
         name: '',
         price: '',
-        type: ''
+        type: '',
+        payment_plan_id: ''
     });
 
     const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
@@ -105,8 +107,22 @@ const CMSMembershipPlanSetup = () => {
         }
     }
 
+    const fetchPaymentPlans = async () => {
+        try {
+            const response = await axios.get(`https://${baseUrl}/payment_plans.json`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            setPaymentPlans(response.data.plans)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     useEffect(() => {
         fetchPlans()
+        fetchPaymentPlans()
     }, [])
 
     const handleInputChange = (field: string, value: any) => {
@@ -115,7 +131,7 @@ const CMSMembershipPlanSetup = () => {
 
     const handleClose = () => {
         setOpen(false);
-        setFormData({ name: '', price: '', type: '' });
+        setFormData({ name: '', price: '', type: '', payment_plan_id: '' });
         setSelectedPlanId(null);
     };
 
@@ -123,7 +139,8 @@ const CMSMembershipPlanSetup = () => {
         setFormData({
             name: plan.name,
             price: plan.price,
-            type: plan.renewal_terms
+            type: plan.renewal_terms,
+            payment_plan_id: plan.payment_plan_id
         });
         setSelectedPlanId(plan.id);
         setOpen(true);
@@ -138,7 +155,8 @@ const CMSMembershipPlanSetup = () => {
             membership_plan: {
                 name: formData.name,
                 price: formData.price,
-                renewal_terms: formData.type
+                renewal_terms: formData.type,
+                payment_plan_id: formData.payment_plan_id
             }
         }
 
@@ -215,7 +233,7 @@ const CMSMembershipPlanSetup = () => {
                     <DialogContentText sx={{ mb: 3 }}>
                         {selectedPlanId ? 'Edit the membership plan details below. Click save when you\'re done.' : 'Create a new membership plan here. Click save when you\'re done.'}
                     </DialogContentText>
-                    <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                         <TextField
                             label="Plan Name"
                             fullWidth
@@ -244,6 +262,21 @@ const CMSMembershipPlanSetup = () => {
                                 {MEMBERSHIP_TYPE_OPTIONS.map((option) => (
                                     <MenuItem key={option.value} value={option.value}>
                                         {option.label}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <FormControl fullWidth size="small" sx={fieldStyles}>
+                            <InputLabel id="payment-plan-label">Payment Plan</InputLabel>
+                            <Select
+                                labelId="payment-plan-label"
+                                label="Payment Plan"
+                                value={formData.payment_plan_id}
+                                onChange={(e) => handleInputChange('payment_plan_id', e.target.value)}
+                            >
+                                {paymentPlans.map((option) => (
+                                    <MenuItem key={option.id} value={option.id}>
+                                        {option.name}
                                     </MenuItem>
                                 ))}
                             </Select>

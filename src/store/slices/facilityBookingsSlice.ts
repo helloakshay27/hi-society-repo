@@ -18,6 +18,7 @@ export interface FacilityBookingDetails {
   booked_by_name: string;
   startdate: string;
   show_schedule_24_hour: string;
+  can_refund: boolean;
   created_at: string;
   comment: string;
   sgst: number;
@@ -45,7 +46,6 @@ export const fetchFacilityBookingsData = createAsyncThunk(
   async ({ baseUrl, token, pageSize, currentPage, userId }: { baseUrl: string, token: string, pageSize: number, currentPage: number, userId?: number }, { rejectWithValue }) => {
     try {
       const data = await fetchFacilityBookings({ baseUrl, token, pageSize, currentPage, userId });
-      console.log(data)
       return data;
     } catch (error) {
       return rejectWithValue(
@@ -62,14 +62,14 @@ export const fetchBookingDetails = createAsyncThunk(
   async ({ baseUrl, token, id }: FetchBookingDetails, { rejectWithValue }) => {
     try {
       const response = await axios.get<FacilityBookingResponse>(
-        `https://${baseUrl}/pms/admin/facility_bookings/${id}.json`,
+        `https://${baseUrl}/crm/admin/facility_bookings/${id}.json`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      return response.data;
+      return response.data.facility_booking;
     } catch (error) {
       const message =
         error.response?.data?.message ||

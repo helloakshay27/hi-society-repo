@@ -89,7 +89,7 @@ export const HiSocietySidebar: React.FC = () => {
   // Determine active section based on route
   const getActiveSection = (): string => {
     const path = location.pathname;
-    
+
     // Check for Application Setup paths first - these should stay in settings
     if (
       path.startsWith("/campaigns/referral-setup") ||
@@ -105,7 +105,7 @@ export const HiSocietySidebar: React.FC = () => {
     ) {
       return "settings";
     }
-    
+
     if (path.startsWith("/cms")) return "cms";
     if (path.startsWith("/campaigns")) return "campaigns";
     if (path.startsWith("/fb")) return "fb";
@@ -218,6 +218,7 @@ export const HiSocietySidebar: React.FC = () => {
             { id: "facility-setup", label: "Facility Setup", icon: SettingsIcon, path: "/cms/facility-setup" },
             { id: "rules", label: "Rules", icon: FileText, path: "/cms/rules" },
             { id: "membership-plan-setup", label: "Membership Plan Setup", icon: FileText, path: "/cms/membership-plan-setup" },
+            { id: "payment-plan-setup", label: "Payment Plan Setup", icon: FileText, path: "/cms/payment-plan-setup" },
           ],
         },
         { id: "club-members", label: "Club Members", icon: Users, path: "/cms/club-members" },
@@ -307,7 +308,7 @@ export const HiSocietySidebar: React.FC = () => {
             { id: "material-report", label: "Material Report", icon: FileText, path: "/smartsecure/material-report" },
           ],
         },
-         {
+        {
           id: "patrolling",
           label: "Patrolling",
           icon: BarChart3,
@@ -520,9 +521,8 @@ export const HiSocietySidebar: React.FC = () => {
 
   return (
     <div
-      className={`${
-        isSidebarCollapsed ? "w-16" : "w-64"
-      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      className={`${isSidebarCollapsed ? "w-16" : "w-64"
+        } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
       style={{ top: "4rem", height: "calc(100% - 4rem)" }}
     >
       <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>

@@ -248,6 +248,9 @@ const BookingDetailsPage = lazy(() => import("@/pages/BookingDetailsPage"));
 const AddFacilityBookingPage = lazy(() => import("@/pages/AddFacilityBookingPage"));
 const CMSMembershipPlanSetup = lazy(() => import("@/pages/ClubManagement/CMSMembershipPlanSetup"));
 const CMSPayments = lazy(() => import("@/pages/CMSPayments"));
+const CMSPaymentPlanSetup = lazy(() => import("@/pages/CMSPaymentPlanSetup"));
+const CMSPaymentPlanSetupAdd = lazy(() => import("@/pages/CMSPaymentPlanSetupAdd"));
+const CMSPaymentPlanSetupDetails = lazy(() => import("@/pages/CMSPaymentPlanSetupDetails"));
 
 // Campaigns Pages
 const CampaignsReferrals = lazy(() => import("@/pages/CampaignsReferrals"));
@@ -1123,6 +1126,9 @@ export const setupMemberRoutes = (
     <Route path="/cms/facility-setup/edit/:id" Component={withSuspense(EditBookingSetupClubPage)} />
     <Route path="/cms/rules" Component={withSuspense(CMSRules)} />
     <Route path="/cms/membership-plan-setup" Component={withSuspense(CMSMembershipPlanSetup)} />
+    <Route path="/cms/payment-plan-setup" Component={withSuspense(CMSPaymentPlanSetup)} />
+    <Route path="/cms/payment-plan-setup/add" Component={withSuspense(CMSPaymentPlanSetupAdd)} />
+    <Route path="/cms/payment-plan-setup/:id" Component={withSuspense(CMSPaymentPlanSetupDetails)} />
     <Route path="/cms/club-members" Component={withSuspense(CMSClubMembers)} />
     <Route path="/cms/club-members/view/:id" Component={withSuspense(CMSClubMembersDetails)} />
     <Route path="/cms/club-members/add" Component={withSuspense(AddCMSClubMembers)} />

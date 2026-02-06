@@ -64,6 +64,18 @@ const BookingDetailsPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
+  const [refundFormData, setRefundFormData] = useState({
+    refundable_amount: "",
+    refund_mode: "",
+    transaction_number: "",
+    notes: "",
+  });
+  const [isEditStatusDialogOpen, setIsEditStatusDialogOpen] = useState(false);
+  const [editStatusFormData, setEditStatusFormData] = useState({
+    status: "",
+    reason: "",
+  });
 
   useEffect(() => {
     if (bookings) {
@@ -113,7 +125,7 @@ const BookingDetailsPage = () => {
     setStatusUpdating(id);
     try {
       await axios.patch(
-        `https://${baseUrl}/pms/admin/facility_bookings/${id}.json`,
+        `https://${baseUrl}/crm/admin/facility_bookings/${id}.json`,
         { current_status: newStatus.toLowerCase() },
         {
           headers: {
@@ -217,6 +229,102 @@ const BookingDetailsPage = () => {
     }
   };
 
+  const handleRefundSubmit = async () => {
+    if (!refundFormData.refundable_amount || !refundFormData.refund_mode) {
+      toast.error("Please fill in all mandatory fields");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await axios.post(
+        `https://${baseUrl}/crm/admin/facility_bookings/${id}/refund_payment.json`,
+        {
+          lock_payment: {
+            refunded_amount: refundFormData.refundable_amount,
+            refund_mode: refundFormData.refund_mode,
+            refund_transaction_no: refundFormData.transaction_number,
+            refund_note: refundFormData.notes,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast.success("Refund processed successfully");
+      setIsRefundDialogOpen(false);
+      setRefundFormData({
+        refundable_amount: "",
+        refund_mode: "",
+        transaction_number: "",
+        notes: "",
+      });
+      fetchDetails();
+      fetchLogs();
+    } catch (error) {
+      console.error("Error processing refund:", error);
+      toast.error("Failed to process refund");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRefundChange = (e: any) => {
+    const { name, value } = e.target;
+    setRefundFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditStatusChange = (e: any) => {
+    const { name, value } = e.target;
+    setEditStatusFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleStatusSubmit = async () => {
+    if (!editStatusFormData.status) {
+      toast.error("Please select a status");
+      return;
+    }
+
+    if (editStatusFormData.status === "cancelled" && !editStatusFormData.reason.trim()) {
+      toast.error("Please provide a reason for cancellation");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const payload: any = {
+        osr_log: {
+          about: "FacilityBooking",
+          about_id: id,
+          current_status: editStatusFormData.status,
+          comment: editStatusFormData.reason,
+        },
+      };
+
+      await axios.post(
+        `https://${baseUrl}/crm/create_osr_log.json`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast.success(`Booking status updated to ${editStatusFormData.status}`);
+      setIsEditStatusDialogOpen(false);
+      setEditStatusFormData({ status: "", reason: "" });
+      fetchDetails();
+      fetchLogs();
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update status");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleCaptureChange = (e: any) => {
     const { name, value } = e.target;
     setCaptureFormData((prev) => ({ ...prev, [name]: value }));
@@ -248,11 +356,36 @@ const BookingDetailsPage = () => {
                     Payment Request
                   </Button>
                 )}
-              {bookings?.fac_type === "Request" && (
-                <Button variant="outline" onClick={() => { }}>
-                  <Pencil size={16} />
+              {bookings?.can_refund && (
+                <Button
+                  onClick={() => {
+                    setRefundFormData((prev) => ({
+                      ...prev,
+                      refundable_amount: bookings?.amount_paid?.toString() || "",
+                    }));
+                    setIsRefundDialogOpen(true);
+                  }}
+                  className="bg-[#D92E14] hover:bg-[#b02510] text-white text-xs font-semibold px-4 py-2 h-auto"
+                >
+                  Refund
                 </Button>
               )}
+              {
+                bookings.fac_type === "Request" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setEditStatusFormData({
+                        status: bookings?.current_status || "",
+                        reason: "",
+                      });
+                      setIsEditStatusDialogOpen(true);
+                    }}
+                  >
+                    <Pencil size={16} />
+                  </Button>
+                )
+              }
             </div>
           </div>
 
@@ -314,7 +447,7 @@ const BookingDetailsPage = () => {
                     Scheduled Date:
                   </span>
                   <span className="text-gray-900 font-medium">
-                    {bookings?.startdate.split(" ")[0]}
+                    {bookings?.startdate?.split("T")[0]}
                   </span>
                 </div>
                 <div className="flex items-start text-sm">
@@ -330,7 +463,7 @@ const BookingDetailsPage = () => {
                     Booked On:
                   </span>
                   <span className="text-gray-900 font-medium">
-                    {bookings?.created_at.split(" ")[0]}
+                    {bookings?.created_at?.split("T")[0]}
                   </span>
                 </div>
                 <div className="flex items-start text-sm">
@@ -766,6 +899,215 @@ const BookingDetailsPage = () => {
             onClick={handleCancelSubmit}
             disabled={isSubmitting}
             className="bg-[#D92E14] hover:bg-[#b02510] text-white px-8 py-2 font-semibold"
+          >
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={isRefundDialogOpen}
+        onClose={() => setIsRefundDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          style: {
+            borderRadius: "8px",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            m: 0,
+            p: 2,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            bgcolor: "#f5f5f5",
+            position: "relative",
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold">
+            Refund Payment
+          </Typography>
+          <IconButton
+            aria-label="close"
+            onClick={() => setIsRefundDialogOpen(false)}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+              color: "red",
+            }}
+          >
+            <X size={20} />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
+          <Box className="space-y-4 pt-2">
+            <div>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Refundable Amount
+              </Typography>
+              <TextField
+                fullWidth
+                name="refundable_amount"
+                value={refundFormData.refundable_amount}
+                onChange={handleRefundChange}
+                variant="outlined"
+                size="small"
+              />
+            </div>
+            <div>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Refund Mode
+              </Typography>
+              <FormControl fullWidth size="small">
+                <MuiSelect
+                  name="refund_mode"
+                  value={refundFormData.refund_mode}
+                  onChange={handleRefundChange}
+                  displayEmpty
+                >
+                  <MenuItem value="" disabled>
+                    Select Mode
+                  </MenuItem>
+                  <MenuItem value="cash">Cash</MenuItem>
+                  <MenuItem value="cheque">Cheque</MenuItem>
+                  <MenuItem value="NEFT/RTGS">NEFT/RTGS</MenuItem>
+                </MuiSelect>
+              </FormControl>
+            </div>
+            <div>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Cheque/Transaction Number
+              </Typography>
+              <TextField
+                fullWidth
+                name="transaction_number"
+                value={refundFormData.transaction_number}
+                onChange={handleRefundChange}
+                variant="outlined"
+                size="small"
+              />
+            </div>
+            <div>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Notes
+              </Typography>
+              <TextareaAutosize
+                minRows={3}
+                name="notes"
+                value={refundFormData.notes}
+                onChange={handleRefundChange}
+                placeholder="Write note"
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                  fontFamily: "inherit",
+                  fontSize: "14px",
+                }}
+              />
+            </div>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
+          <Button
+            onClick={handleRefundSubmit}
+            disabled={isSubmitting}
+            className="bg-[#00A65A] hover:bg-[#008d4c] text-white px-8 py-2 font-semibold"
+          >
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={isEditStatusDialogOpen}
+        onClose={() => setIsEditStatusDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          style: {
+            borderRadius: "8px",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            m: 0,
+            p: 2,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            bgcolor: "#f5f5f5",
+            position: "relative",
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold">
+            Edit Status
+          </Typography>
+          <IconButton
+            aria-label="close"
+            onClick={() => setIsEditStatusDialogOpen(false)}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+              color: "red",
+            }}
+          >
+            <X size={20} />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
+          <Box className="space-y-6 pt-2">
+            <div>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Select Status
+              </Typography>
+              <FormControl fullWidth size="small">
+                <MuiSelect
+                  name="status"
+                  value={editStatusFormData.status}
+                  onChange={handleEditStatusChange}
+                  displayEmpty
+                >
+                  <MenuItem value="" disabled>
+                    Select Status
+                  </MenuItem>
+                  <MenuItem value="Confirmed">Confirmed</MenuItem>
+                  <MenuItem value="Rejected">Rejected</MenuItem>
+                </MuiSelect>
+              </FormControl>
+            </div>
+
+            <div className="space-y-4">
+              <TextareaAutosize
+                minRows={3}
+                name="reason"
+                value={editStatusFormData.reason}
+                onChange={handleEditStatusChange}
+                placeholder="Write Reason"
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                  fontFamily: "inherit",
+                  fontSize: "14px",
+                }}
+              />
+            </div>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
+          <Button
+            onClick={handleStatusSubmit}
+            disabled={isSubmitting}
+            className="bg-[#00A65A] hover:bg-[#008d4c] text-white px-8 py-2 font-semibold"
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
