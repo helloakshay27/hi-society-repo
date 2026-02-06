@@ -717,7 +717,7 @@ import { NewPasswordPage } from "@/pages/NewPasswordPage";
 import { LoginSuccessPage } from "@/pages/LoginSuccessPage";
 import { PasswordResetSuccessPage } from "@/pages/PasswordResetSuccessPage";
 import { isAuthenticated } from "@/utils/auth";
-import { BookingDetailsPage } from "./pages/BookingDetailsPage";
+import BookingDetailsPage  from "./pages/BookingDetailsPage";
 import { RestaurantOrdersTable } from "./components/RestaurantOrdersTable";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { useEffect, useState } from "react";

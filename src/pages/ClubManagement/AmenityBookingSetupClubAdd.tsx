@@ -3,7 +3,25 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, CalendarDays, CreditCard, DollarSign, FileImage, Image, LampFloor, MessageSquareX, NotepadText, ReceiptText, Settings, Share, Share2, Tv, Upload, User, X } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  CreditCard,
+  DollarSign,
+  FileImage,
+  Image,
+  LampFloor,
+  MessageSquareX,
+  NotepadText,
+  ReceiptText,
+  Settings,
+  Share,
+  Share2,
+  Tv,
+  Upload,
+  User,
+  X,
+} from "lucide-react";
 import {
   TextField,
   Select,
@@ -218,7 +236,10 @@ export const AddBookingSetupClubPage = () => {
     if (!formData.facilityName) {
       toast.error("Please enter Facility Name");
       return false;
-    } else if (formData.facilityBookings.length === 0 || !formData.facilityBookings.some(fb => fb.isChecked && fb.times)) {
+    } else if (
+      formData.facilityBookings.length === 0 ||
+      !formData.facilityBookings.some((fb) => fb.isChecked && fb.times)
+    ) {
       toast.error("Please add at least one facility booking rule");
       return false;
     } else if (!formData.termsConditions) {
@@ -270,10 +291,7 @@ export const AddBookingSetupClubPage = () => {
     }
 
     if (slot.breakTimeStart.hour !== "00") {
-      if (
-        slot.breakTimeEnd.hour === "00" ||
-        slot.endTime.hour === "00"
-      ) {
+      if (slot.breakTimeEnd.hour === "00" || slot.endTime.hour === "00") {
         toast.error(
           `Slot: Break Time End and End Time must be selected when Break Time Start is set`
         );
@@ -325,26 +343,20 @@ export const AddBookingSetupClubPage = () => {
         formData.isBookable ? "bookable" : "request"
       );
       formDataToSend.append("facility_setup[fac_name]", formData.facilityName);
-      formDataToSend.append(
-        "facility_setup[active]",
-        formData.active
-      );
-      formDataToSend.append(
-        "facility_setup[shareable]",
-        formData.shareable
-      )
+      formDataToSend.append("facility_setup[active]", formData.active);
+      formDataToSend.append("facility_setup[shareable]", formData.shareable);
       formDataToSend.append(
         "facility_setup[link_to_billing]",
         formData.linkToBilling
-      )
+      );
       formDataToSend.append(
         "facility_setup[min_guarantee]",
         formData.minGuarantee
-      )
+      );
       formDataToSend.append(
         "facility_setup[sub_facility_enabled]",
         formData.addSubFacility ? "1" : "0"
-      )
+      );
 
       // Charge Setup - Member charges and boolean
       formDataToSend.append(
@@ -352,14 +364,26 @@ export const AddBookingSetupClubPage = () => {
         formData.chargeSetup.member.selected ? "true" : "false"
       );
       if (formData.chargeSetup.member.selected) {
-        formDataToSend.append(
-          "facility_setup[facility_charge_attributes][adult_member_charge]",
-          formData.chargeSetup.member.adult || "0"
-        );
-        formDataToSend.append(
-          "facility_setup[facility_charge_attributes][child_member_charge]",
-          formData.chargeSetup.member.child || "0"
-        );
+        if (formData.chargeSetup.member.adult) {
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][adult_member]",
+            "true"
+          );
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][adult_member_charge]",
+            formData.chargeSetup.member.adult || "0"
+          );
+        }
+        if (formData.chargeSetup.member.child) {
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][child_member]",
+            "true"
+          );
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][child_member_charge]",
+            formData.chargeSetup.member.child || "0"
+          );
+        }
       }
 
       // Charge Setup - Guest charges and boolean
@@ -368,14 +392,26 @@ export const AddBookingSetupClubPage = () => {
         formData.chargeSetup.guest.selected ? "true" : "false"
       );
       if (formData.chargeSetup.guest.selected) {
-        formDataToSend.append(
-          "facility_setup[facility_charge_attributes][adult_guest_charge]",
-          formData.chargeSetup.guest.adult || "0"
-        );
-        formDataToSend.append(
-          "facility_setup[facility_charge_attributes][child_guest_charge]",
-          formData.chargeSetup.guest.child || "0"
-        );
+        if (formData.chargeSetup.guest.adult) {
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][adult_guest]",
+            "true"
+          );
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][adult_guest_charge]",
+            formData.chargeSetup.guest.adult || "0"
+          );
+        }
+        if (formData.chargeSetup.guest.child) {
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][child_guest]",
+            "true"
+          );
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][child_guest_charge]",
+            formData.chargeSetup.guest.child || "0"
+          );
+        }
       }
 
       // Charge Setup - Non-member charges and boolean
@@ -384,14 +420,26 @@ export const AddBookingSetupClubPage = () => {
         formData.chargeSetup.nonMember.selected ? "true" : "false"
       );
       if (formData.chargeSetup.nonMember.selected) {
-        formDataToSend.append(
-          "facility_setup[facility_charge_attributes][adult_non_member_charge]",
-          formData.chargeSetup.nonMember.adult || "0"
-        );
-        formDataToSend.append(
-          "facility_setup[facility_charge_attributes][child_non_member_charge]",
-          formData.chargeSetup.nonMember.child || "0"
-        );
+        if (formData.chargeSetup.nonMember.adult) {
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][adult_non_member]",
+            "true"
+          );
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][adult_non_member_charge]",
+            formData.chargeSetup.nonMember.adult || "0"
+          );
+        }
+        if (formData.chargeSetup.nonMember.child) {
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][child_non_member]",
+            "true"
+          );
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][child_non_member_charge]",
+            formData.chargeSetup.nonMember.child || "0"
+          );
+        }
       }
 
       // Charge Setup - Tenent charges and boolean
@@ -400,14 +448,26 @@ export const AddBookingSetupClubPage = () => {
         formData.chargeSetup.tenant.selected ? "true" : "false"
       );
       if (formData.chargeSetup.tenant.selected) {
-        formDataToSend.append(
-          "facility_setup[facility_charge_attributes][adult_tenant_charge]",
-          formData.chargeSetup.tenant.adult || "0"
-        );
-        formDataToSend.append(
-          "facility_setup[facility_charge_attributes][child_tenant_charge]",
-          formData.chargeSetup.tenant.child || "0"
-        );
+        if (formData.chargeSetup.tenant.adult) {
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][adult_tenant]",
+            "true"
+          );
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][adult_tenant_charge]",
+            formData.chargeSetup.tenant.adult || "0"
+          );
+        }
+        if (formData.chargeSetup.tenant.child) {
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][child_tenant]",
+            "true"
+          );
+          formDataToSend.append(
+            "facility_setup[facility_charge_attributes][child_tenant_charge]",
+            formData.chargeSetup.tenant.child || "0"
+          );
+        }
       }
       // Charge Setup - Person limits and GST
       formDataToSend.append(
@@ -423,7 +483,7 @@ export const AddBookingSetupClubPage = () => {
         formDataToSend.append(
           "facility_setup[deposit]",
           formData.chargeSetup.refundableDeposit
-        )
+        );
       }
 
       if (formData.addSubFacility) {
@@ -431,108 +491,153 @@ export const AddBookingSetupClubPage = () => {
           formDataToSend.append(
             `facility_setup[sub_facilities_attributes][${idx}][name]`,
             subFacility.name
-          )
+          );
 
           formDataToSend.append(
             `facility_setup[sub_facilities_attributes][${idx}][active]`,
             subFacility.status
-          )
+          );
 
           formDataToSend.append(
             `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][member]`,
             subFacility.chargeSetup.member.selected ? "true" : "false"
-          )
+          );
 
           if (subFacility.chargeSetup.member.selected) {
-            formDataToSend.append(
-              `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_member_charge]`,
-              subFacility.chargeSetup.member.adult
-            )
-            formDataToSend.append(
-              `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_member_charge]`,
-              subFacility.chargeSetup.member.child
-            )
+            if (subFacility.chargeSetup.member.adult) {
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_member]`,
+                "true"
+              );
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_member_charge]`,
+                subFacility.chargeSetup.member.adult
+              );
+            }
+            if (subFacility.chargeSetup.member.child) {
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_member]`,
+                "true"
+              );
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_member_charge]`,
+                subFacility.chargeSetup.member.child
+              );
+            }
           }
 
           formDataToSend.append(
             `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][guest]`,
             subFacility.chargeSetup.guest.selected ? "true" : "false"
-          )
+          );
 
           if (subFacility.chargeSetup.guest.selected) {
-            formDataToSend.append(
-              `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_guest_charge]`,
-              subFacility.chargeSetup.guest.adult
-            )
-            formDataToSend.append(
-              `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_guest_charge]`,
-              subFacility.chargeSetup.guest.child
-            )
+            if (subFacility.chargeSetup.guest.adult) {
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_guest]`,
+                "true"
+              );
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_guest_charge]`,
+                subFacility.chargeSetup.guest.adult
+              );
+            }
+            if (subFacility.chargeSetup.guest.child) {
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_guest]`,
+                "true"
+              );
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_guest_charge]`,
+                subFacility.chargeSetup.guest.child
+              );
+            }
           }
 
           formDataToSend.append(
             `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][non_member]`,
             subFacility.chargeSetup.nonMember.selected ? "true" : "false"
-          )
+          );
 
           if (subFacility.chargeSetup.nonMember.selected) {
-            formDataToSend.append(
-              `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_non_member_charge]`,
-              subFacility.chargeSetup.nonMember.adult
-            )
-            formDataToSend.append(
-              `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_non_member_charge]`,
-              subFacility.chargeSetup.nonMember.child
-            )
+            if (subFacility.chargeSetup.nonMember.adult) {
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_non_member]`,
+                "true"
+              );
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_non_member_charge]`,
+                subFacility.chargeSetup.nonMember.adult
+              );
+            }
+            if (subFacility.chargeSetup.nonMember.child) {
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_non_member]`,
+                "true"
+              );
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_non_member_charge]`,
+                subFacility.chargeSetup.nonMember.child
+              );
+            }
           }
 
           formDataToSend.append(
             `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][tenant]`,
             subFacility.chargeSetup.tenant.selected ? "true" : "false"
-          )
+          );
 
           if (subFacility.chargeSetup.tenant.selected) {
-            formDataToSend.append(
-              `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_tenant_charge]`,
-              subFacility.chargeSetup.tenant.adult
-            )
-            formDataToSend.append(
-              `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_tenant_charge]`,
-              subFacility.chargeSetup.tenant.child
-            )
+            if (subFacility.chargeSetup.tenant.adult) {
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_tenant]`,
+                "true"
+              );
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][adult_tenant_charge]`,
+                subFacility.chargeSetup.tenant.adult
+              );
+            }
+            if (subFacility.chargeSetup.tenant.child) {
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_tenant]`,
+                "true"
+              );
+              formDataToSend.append(
+                `facility_setup[sub_facilities_attributes][${idx}][facility_charge_attributes][child_tenant_charge]`,
+                subFacility.chargeSetup.tenant.child
+              );
+            }
           }
 
           formDataToSend.append(
             `facility_setup[sub_facilities_attributes][${idx}][min_people]`,
             subFacility.minimumPersonAllowed || "1"
-          )
+          );
           formDataToSend.append(
             `facility_setup[sub_facilities_attributes][${idx}][max_people]`,
             subFacility.maximumPersonAllowed || "1"
-          )
+          );
 
           if (formData.isBookable) {
             formDataToSend.append(
               `facility_setup[sub_facilities_attributes][${idx}][gst]`,
               subFacility.gst || "0.0"
-            )
+            );
           }
 
           if (formData.isRequest) {
             formDataToSend.append(
               `facility_setup[sub_facilities_attributes][${idx}][deposit]`,
               subFacility.refundableDeposit
-            )
+            );
           }
-        })
+        });
       }
 
       // Facility Slots
       const slot = formData.slots;
-      formDataToSend.append(
-        `facility_slots[][slot_no]`,
-        "1"
-      );
+      formDataToSend.append(`facility_slots[][slot_no]`, "1");
       formDataToSend.append(`facility_slots[][dayofweek]`, "");
       formDataToSend.append(
         `facility_slots[][start_hour]`,
@@ -558,14 +663,8 @@ export const AddBookingSetupClubPage = () => {
         `facility_slots[][break_end_min]`,
         slot.breakTimeEnd.minute
       );
-      formDataToSend.append(
-        `facility_slots[][end_hour]`,
-        slot.endTime.hour
-      );
-      formDataToSend.append(
-        `facility_slots[][end_min]`,
-        slot.endTime.minute
-      );
+      formDataToSend.append(`facility_slots[][end_hour]`, slot.endTime.hour);
+      formDataToSend.append(`facility_slots[][end_min]`, slot.endTime.minute);
       formDataToSend.append(
         `facility_slots[][max_bookings]`,
         slot.concurrentSlots || "1"
@@ -589,30 +688,30 @@ export const AddBookingSetupClubPage = () => {
           formDataToSend.append(
             `facility_request_slots[][slot_no]`,
             String(idx + 1)
-          )
+          );
 
           formDataToSend.append(
             `facility_request_slots[][start_hour]`,
             slot.startTime.hour
-          )
+          );
           formDataToSend.append(
             `facility_request_slots[][start_min]`,
             slot.startTime.minute
-          )
+          );
           formDataToSend.append(
             `facility_request_slots[][end_hour]`,
             slot.endTime.hour
-          )
+          );
           formDataToSend.append(
             `facility_request_slots[][end_min]`,
             slot.endTime.minute
-          )
+          );
 
           formDataToSend.append(
             `facility_request_slots[][tentative_price]`,
             slot.amount
-          )
-        })
+          );
+        });
       }
 
       // Booking Window Configs
@@ -628,10 +727,7 @@ export const AddBookingSetupClubPage = () => {
         "book_before_min",
         formData.bookingAllowedBefore.minute
       );
-      formDataToSend.append(
-        "advance_booking_day",
-        formData.advanceBooking.day
-      );
+      formDataToSend.append("advance_booking_day", formData.advanceBooking.day);
       formDataToSend.append(
         "advance_booking_hour",
         formData.advanceBooking.hour
@@ -640,24 +736,15 @@ export const AddBookingSetupClubPage = () => {
         "advance_booking_min",
         formData.advanceBooking.minute
       );
-      formDataToSend.append(
-        "cancel_day",
-        formData.canCancelBefore.day
-      );
-      formDataToSend.append(
-        "cancel_hour",
-        formData.canCancelBefore.hour
-      );
-      formDataToSend.append(
-        "cancel_min",
-        formData.canCancelBefore.minute
-      );
+      formDataToSend.append("cancel_day", formData.canCancelBefore.day);
+      formDataToSend.append("cancel_hour", formData.canCancelBefore.hour);
+      formDataToSend.append("cancel_min", formData.canCancelBefore.minute);
 
       formData.facilityBookings.forEach((fb, idx) => {
         formDataToSend.append(
           `facility_setup[facility_booking_rules_attributes][${idx}][user_society_id]`,
           localStorage.getItem("selectedUserSociety")
-        )
+        );
 
         formDataToSend.append(
           `facility_setup[facility_booking_rules_attributes][${idx}][active]`,
@@ -672,8 +759,8 @@ export const AddBookingSetupClubPage = () => {
         formDataToSend.append(
           `facility_setup[facility_booking_rules_attributes][${idx}][level]`,
           fb.unit
-        )
-      })
+        );
+      });
 
       formDataToSend.append(
         "facility_setup[postpaid]",
@@ -691,18 +778,9 @@ export const AddBookingSetupClubPage = () => {
         "facility_setup[complementary]",
         formData.complimentary ? "1" : "0"
       );
-      formDataToSend.append(
-        "facility_setup[gst]",
-        formData.gstPercentage
-      );
-      formDataToSend.append(
-        "facility_setup[sgst]",
-        formData.sgstPercentage
-      );
-      formDataToSend.append(
-        "facility_setup[igst]",
-        formData.igstPercentage
-      );
+      formDataToSend.append("facility_setup[gst]", formData.gstPercentage);
+      formDataToSend.append("facility_setup[sgst]", formData.sgstPercentage);
+      formDataToSend.append("facility_setup[igst]", formData.igstPercentage);
 
       selectedFile.forEach((file) => {
         formDataToSend.append(`cover_image`, file);
@@ -775,10 +853,7 @@ export const AddBookingSetupClubPage = () => {
         formData.cancellationText || ""
       );
 
-      formDataToSend.append(
-        "facility_setup[book_by]",
-        "slot"
-      );
+      formDataToSend.append("facility_setup[book_by]", "slot");
       formDataToSend.append(
         "facility_setup[create_by]",
         JSON.parse(localStorage.getItem("user")).id
@@ -901,7 +976,9 @@ export const AddBookingSetupClubPage = () => {
               <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                 <User className="w-4 h-4" />
               </div>
-              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">BASIC INFo</h3>
+              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                BASIC INFo
+              </h3>
             </div>
 
             <div className="space-y-6 py-2">
@@ -937,53 +1014,55 @@ export const AddBookingSetupClubPage = () => {
                     label="Shareable"
                     displayEmpty
                   >
-                    <MenuItem value="">
-                      Select
-                    </MenuItem>
+                    <MenuItem value="">Select</MenuItem>
                     <MenuItem value="Yes">Yes</MenuItem>
                     <MenuItem value="No">No</MenuItem>
                   </Select>
                 </FormControl>
 
                 <FormControl>
-                  <InputLabel className="bg-[#F6F7F7]">Link to billing</InputLabel>
+                  <InputLabel className="bg-[#F6F7F7]">
+                    Link to billing
+                  </InputLabel>
                   <Select
                     value={formData.linkToBilling}
                     onChange={(e) =>
-                      setFormData({ ...formData, linkToBilling: e.target.value })
+                      setFormData({
+                        ...formData,
+                        linkToBilling: e.target.value,
+                      })
                     }
                     label="Link to billing"
                     displayEmpty
                   >
-                    <MenuItem value="">
-                      Select
-                    </MenuItem>
+                    <MenuItem value="">Select</MenuItem>
                     <MenuItem value="Yes">Yes</MenuItem>
                     <MenuItem value="No">No</MenuItem>
                   </Select>
                 </FormControl>
 
-                {
-                  formData.isRequest && (
-                    <FormControl>
-                      <InputLabel className="bg-[#F6F7F7]">Min.guarantee</InputLabel>
-                      <Select
-                        value={formData.minGuarantee}
-                        onChange={(e) =>
-                          setFormData({ ...formData, minGuarantee: e.target.value })
-                        }
-                        label="Min.guarantee"
-                        displayEmpty
-                      >
-                        <MenuItem value="">
-                          Select
-                        </MenuItem>
-                        <MenuItem value="Yes">Yes</MenuItem>
-                        <MenuItem value="No">No</MenuItem>
-                      </Select>
-                    </FormControl>
-                  )
-                }
+                {formData.isRequest && (
+                  <FormControl>
+                    <InputLabel className="bg-[#F6F7F7]">
+                      Min.guarantee
+                    </InputLabel>
+                    <Select
+                      value={formData.minGuarantee}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          minGuarantee: e.target.value,
+                        })
+                      }
+                      label="Min.guarantee"
+                      displayEmpty
+                    >
+                      <MenuItem value="">Select</MenuItem>
+                      <MenuItem value="Yes">Yes</MenuItem>
+                      <MenuItem value="No">No</MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
               </div>
 
               <div className="flex gap-6 px-1">
@@ -1027,7 +1106,10 @@ export const AddBookingSetupClubPage = () => {
                     <Switch
                       checked={formData.addSubFacility}
                       onChange={(e) => {
-                        if (e.target.checked && formData.subFacilities.length === 0) {
+                        if (
+                          e.target.checked &&
+                          formData.subFacilities.length === 0
+                        ) {
                           // Create one default sub-facility when toggled on
                           const newSubFacility = {
                             id: Date.now().toString(),
@@ -1036,7 +1118,11 @@ export const AddBookingSetupClubPage = () => {
                             chargeSetup: {
                               member: { selected: false, adult: "", child: "" },
                               guest: { selected: false, adult: "", child: "" },
-                              nonMember: { selected: false, adult: "", child: "" },
+                              nonMember: {
+                                selected: false,
+                                adult: "",
+                                child: "",
+                              },
                               tenant: { selected: false, adult: "", child: "" },
                             },
                             minimumPersonAllowed: "1",
@@ -1050,111 +1136,128 @@ export const AddBookingSetupClubPage = () => {
                             subFacilities: [newSubFacility],
                           });
                         } else {
-                          setFormData({ ...formData, addSubFacility: e.target.checked });
+                          setFormData({
+                            ...formData,
+                            addSubFacility: e.target.checked,
+                          });
                         }
                       }}
                       // disabled={updatingStatus}
                       sx={{
-                        '& .MuiSwitch-switchBase': {
-                          color: '#ef4444',
-                          '&.Mui-checked': {
-                            color: '#22c55e',
+                        "& .MuiSwitch-switchBase": {
+                          color: "#ef4444",
+                          "&.Mui-checked": {
+                            color: "#22c55e",
                           },
-                          '&.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: '#22c55e',
+                          "&.Mui-checked + .MuiSwitch-track": {
+                            backgroundColor: "#22c55e",
                           },
                         },
-                        '& .MuiSwitch-track': {
-                          backgroundColor: '#ef4444',
+                        "& .MuiSwitch-track": {
+                          backgroundColor: "#ef4444",
                         },
                       }}
                     />
-                    <span className="text-sm font-medium text-gray-700">Add Sub-Facility</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Add Sub-Facility
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {
-            formData.addSubFacility ? (
-              <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                      <DollarSign className="w-4 h-4" />
-                    </div>
-                    <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Sub Facilities</h3>
+          {formData.addSubFacility ? (
+            <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                    <DollarSign className="w-4 h-4" />
                   </div>
-
-                  <Button onClick={addSubFacility} className="bg-[#C72030] hover:bg-[#A01828] text-white">
-                    + Add
-                  </Button>
+                  <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                    Sub Facilities
+                  </h3>
                 </div>
 
-                {/* Display all sub-facilities */}
-                {formData.subFacilities.map((subFacility) => (
-                  <div key={subFacility.id} className="border-b-2 pb-6 mb-6">
-                    {/* Header with delete button */}
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="text-md font-semibold text-[#1A1A1A]">Sub-Facility Form</h4>
-                      <button
-                        onClick={() => deleteSubFacility(subFacility.id)}
-                        className="bg-red-600 text-white w-8 h-8 flex items-center justify-center rounded hover:bg-red-700"
+                <Button
+                  onClick={addSubFacility}
+                  className="bg-[#C72030] hover:bg-[#A01828] text-white"
+                >
+                  + Add
+                </Button>
+              </div>
+
+              {/* Display all sub-facilities */}
+              {formData.subFacilities.map((subFacility) => (
+                <div key={subFacility.id} className="border-b-2 pb-6 mb-6">
+                  {/* Header with delete button */}
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-md font-semibold text-[#1A1A1A]">
+                      Sub-Facility Form
+                    </h4>
+                    <button
+                      onClick={() => deleteSubFacility(subFacility.id)}
+                      className="bg-red-600 text-white w-8 h-8 flex items-center justify-center rounded hover:bg-red-700"
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  {/* Sub-Facility Name and Status */}
+                  <div className="flex items-center gap-4 mb-6">
+                    <TextField
+                      label="Sub-Facility Name"
+                      placeholder="Enter Sub-Facility Name"
+                      value={subFacility.name}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Only allow letters and spaces, no numbers
+                        if (/^[a-zA-Z\s]*$/.test(value)) {
+                          updateSubFacility(subFacility.id, { name: value });
+                        }
+                      }}
+                      variant="outlined"
+                      required
+                      InputLabelProps={{
+                        classes: {
+                          asterisk: "text-red-500",
+                        },
+                        shrink: true,
+                      }}
+                    />
+                    <FormControl>
+                      <InputLabel className="bg-[#F6F7F7]">Active</InputLabel>
+                      <Select
+                        value={subFacility.status}
+                        onChange={(e) =>
+                          updateSubFacility(subFacility.id, {
+                            status: e.target.value,
+                          })
+                        }
+                        label="Active"
+                        displayEmpty
                       >
-                        ×
-                      </button>
-                    </div>
+                        <MenuItem value="">Select</MenuItem>
+                        <MenuItem value="true">Active</MenuItem>
+                        <MenuItem value="false">Inactive</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </div>
 
-                    {/* Sub-Facility Name and Status */}
-                    <div className="flex items-center gap-4 mb-6">
-                      <TextField
-                        label="Sub-Facility Name"
-                        placeholder="Enter Sub-Facility Name"
-                        value={subFacility.name}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          // Only allow letters and spaces, no numbers
-                          if (/^[a-zA-Z\s]*$/.test(value)) {
-                            updateSubFacility(subFacility.id, { name: value });
-                          }
-                        }}
-                        variant="outlined"
-                        required
-                        InputLabelProps={{
-                          classes: {
-                            asterisk: "text-red-500",
-                          },
-                          shrink: true,
-                        }}
-                      />
-                      <FormControl>
-                        <InputLabel className="bg-[#F6F7F7]">Active</InputLabel>
-                        <Select
-                          value={subFacility.status}
-                          onChange={(e) =>
-                            updateSubFacility(subFacility.id, { status: e.target.value })
-                          }
-                          label="Active"
-                          displayEmpty
-                        >
-                          <MenuItem value="">
-                            Select
-                          </MenuItem>
-                          <MenuItem value="true">Active</MenuItem>
-                          <MenuItem value="false">Inactive</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </div>
-
-                    {/* Charge Setup Table */}
+                  {formData.isBookable && (
                     <div className="overflow-x-auto mb-6">
                       <table className="w-full border">
                         <thead>
                           <tr className="bg-gray-50">
-                            <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Member Type</th>
-                            <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Adult</th>
-                            <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Child</th>
+                            <th className="border border-gray-300 px-4 py-3 text-left font-semibold">
+                              Member Type
+                            </th>
+                            <th className="border border-gray-300 px-4 py-3 text-center font-semibold">
+                              Adult
+                            </th>
+                            <th className="border border-gray-300 px-4 py-3 text-center font-semibold">
+                              Child
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1162,7 +1265,9 @@ export const AddBookingSetupClubPage = () => {
                             <td className="border border-gray-300 px-4 py-3">
                               <div className="flex items-center gap-2">
                                 <Checkbox
-                                  checked={subFacility.chargeSetup.member.selected}
+                                  checked={
+                                    subFacility.chargeSetup.member.selected
+                                  }
                                   onCheckedChange={(checked) =>
                                     updateSubFacility(subFacility.id, {
                                       chargeSetup: {
@@ -1181,7 +1286,9 @@ export const AddBookingSetupClubPage = () => {
                             <td className="border border-gray-300 px-4 py-3">
                               <div className="flex items-center justify-center gap-2">
                                 <Checkbox
-                                  checked={!!subFacility.chargeSetup.member.adult}
+                                  checked={
+                                    !!subFacility.chargeSetup.member.adult
+                                  }
                                   onCheckedChange={(checked) => {
                                     if (!checked) {
                                       updateSubFacility(subFacility.id, {
@@ -1202,7 +1309,10 @@ export const AddBookingSetupClubPage = () => {
                                   value={subFacility.chargeSetup.member.adult}
                                   onChange={(e) => {
                                     const value = e.target.value;
-                                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                    if (
+                                      value === "" ||
+                                      /^\d*\.?\d{0,2}$/.test(value)
+                                    ) {
                                       updateSubFacility(subFacility.id, {
                                         chargeSetup: {
                                           ...subFacility.chargeSetup,
@@ -1221,14 +1331,19 @@ export const AddBookingSetupClubPage = () => {
                             <td className="border border-gray-300 px-4 py-3">
                               <div className="flex items-center justify-center gap-2">
                                 <Checkbox
-                                  checked={!!subFacility.chargeSetup.member.child}
+                                  checked={
+                                    !!subFacility.chargeSetup.member.child
+                                  }
                                   onCheckedChange={(checked) => {
                                     updateSubFacility(subFacility.id, {
                                       chargeSetup: {
                                         ...subFacility.chargeSetup,
                                         member: {
                                           ...subFacility.chargeSetup.member,
-                                          child: checked ? subFacility.chargeSetup.member.child || "" : "",
+                                          child: checked
+                                            ? subFacility.chargeSetup.member
+                                                .child || ""
+                                            : "",
                                         },
                                       },
                                     });
@@ -1240,7 +1355,10 @@ export const AddBookingSetupClubPage = () => {
                                   value={subFacility.chargeSetup.member.child}
                                   onChange={(e) => {
                                     const value = e.target.value;
-                                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                    if (
+                                      value === "" ||
+                                      /^\d*\.?\d{0,2}$/.test(value)
+                                    ) {
                                       updateSubFacility(subFacility.id, {
                                         chargeSetup: {
                                           ...subFacility.chargeSetup,
@@ -1261,7 +1379,9 @@ export const AddBookingSetupClubPage = () => {
                             <td className="border border-gray-300 px-4 py-3">
                               <div className="flex items-center gap-2">
                                 <Checkbox
-                                  checked={subFacility.chargeSetup.guest.selected}
+                                  checked={
+                                    subFacility.chargeSetup.guest.selected
+                                  }
                                   onCheckedChange={(checked) =>
                                     updateSubFacility(subFacility.id, {
                                       chargeSetup: {
@@ -1280,7 +1400,9 @@ export const AddBookingSetupClubPage = () => {
                             <td className="border border-gray-300 px-4 py-3">
                               <div className="flex items-center justify-center gap-2">
                                 <Checkbox
-                                  checked={!!subFacility.chargeSetup.guest.adult}
+                                  checked={
+                                    !!subFacility.chargeSetup.guest.adult
+                                  }
                                   onCheckedChange={(checked) => {
                                     if (!checked) {
                                       updateSubFacility(subFacility.id, {
@@ -1301,7 +1423,10 @@ export const AddBookingSetupClubPage = () => {
                                   value={subFacility.chargeSetup.guest.adult}
                                   onChange={(e) => {
                                     const value = e.target.value;
-                                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                    if (
+                                      value === "" ||
+                                      /^\d*\.?\d{0,2}$/.test(value)
+                                    ) {
                                       updateSubFacility(subFacility.id, {
                                         chargeSetup: {
                                           ...subFacility.chargeSetup,
@@ -1320,14 +1445,19 @@ export const AddBookingSetupClubPage = () => {
                             <td className="border border-gray-300 px-4 py-3">
                               <div className="flex items-center justify-center gap-2">
                                 <Checkbox
-                                  checked={!!subFacility.chargeSetup.guest.child}
+                                  checked={
+                                    !!subFacility.chargeSetup.guest.child
+                                  }
                                   onCheckedChange={(checked) => {
                                     updateSubFacility(subFacility.id, {
                                       chargeSetup: {
                                         ...subFacility.chargeSetup,
                                         guest: {
                                           ...subFacility.chargeSetup.guest,
-                                          child: checked ? subFacility.chargeSetup.guest.child || "" : "",
+                                          child: checked
+                                            ? subFacility.chargeSetup.guest
+                                                .child || ""
+                                            : "",
                                         },
                                       },
                                     });
@@ -1339,7 +1469,10 @@ export const AddBookingSetupClubPage = () => {
                                   value={subFacility.chargeSetup.guest.child}
                                   onChange={(e) => {
                                     const value = e.target.value;
-                                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                    if (
+                                      value === "" ||
+                                      /^\d*\.?\d{0,2}$/.test(value)
+                                    ) {
                                       updateSubFacility(subFacility.id, {
                                         chargeSetup: {
                                           ...subFacility.chargeSetup,
@@ -1360,7 +1493,9 @@ export const AddBookingSetupClubPage = () => {
                             <td className="border border-gray-300 px-4 py-3">
                               <div className="flex items-center gap-2">
                                 <Checkbox
-                                  checked={subFacility.chargeSetup.nonMember.selected}
+                                  checked={
+                                    subFacility.chargeSetup.nonMember.selected
+                                  }
                                   onCheckedChange={(checked) =>
                                     updateSubFacility(subFacility.id, {
                                       chargeSetup: {
@@ -1379,14 +1514,17 @@ export const AddBookingSetupClubPage = () => {
                             <td className="border border-gray-300 px-4 py-3">
                               <div className="flex items-center justify-center gap-2">
                                 <Checkbox
-                                  checked={!!subFacility.chargeSetup.nonMember.adult}
+                                  checked={
+                                    !!subFacility.chargeSetup.nonMember.adult
+                                  }
                                   onCheckedChange={(checked) => {
                                     if (!checked) {
                                       updateSubFacility(subFacility.id, {
                                         chargeSetup: {
                                           ...subFacility.chargeSetup,
                                           nonMember: {
-                                            ...subFacility.chargeSetup.nonMember,
+                                            ...subFacility.chargeSetup
+                                              .nonMember,
                                             adult: "",
                                           },
                                         },
@@ -1397,15 +1535,21 @@ export const AddBookingSetupClubPage = () => {
                                 <TextField
                                   size="small"
                                   variant="outlined"
-                                  value={subFacility.chargeSetup.nonMember.adult}
+                                  value={
+                                    subFacility.chargeSetup.nonMember.adult
+                                  }
                                   onChange={(e) => {
                                     const value = e.target.value;
-                                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                    if (
+                                      value === "" ||
+                                      /^\d*\.?\d{0,2}$/.test(value)
+                                    ) {
                                       updateSubFacility(subFacility.id, {
                                         chargeSetup: {
                                           ...subFacility.chargeSetup,
                                           nonMember: {
-                                            ...subFacility.chargeSetup.nonMember,
+                                            ...subFacility.chargeSetup
+                                              .nonMember,
                                             adult: value,
                                           },
                                         },
@@ -1419,14 +1563,19 @@ export const AddBookingSetupClubPage = () => {
                             <td className="border border-gray-300 px-4 py-3">
                               <div className="flex items-center justify-center gap-2">
                                 <Checkbox
-                                  checked={!!subFacility.chargeSetup.nonMember.child}
+                                  checked={
+                                    !!subFacility.chargeSetup.nonMember.child
+                                  }
                                   onCheckedChange={(checked) => {
                                     updateSubFacility(subFacility.id, {
                                       chargeSetup: {
                                         ...subFacility.chargeSetup,
                                         nonMember: {
                                           ...subFacility.chargeSetup.nonMember,
-                                          child: checked ? subFacility.chargeSetup.nonMember.child || "" : "",
+                                          child: checked
+                                            ? subFacility.chargeSetup.nonMember
+                                                .child || ""
+                                            : "",
                                         },
                                       },
                                     });
@@ -1435,15 +1584,21 @@ export const AddBookingSetupClubPage = () => {
                                 <TextField
                                   size="small"
                                   variant="outlined"
-                                  value={subFacility.chargeSetup.nonMember.child}
+                                  value={
+                                    subFacility.chargeSetup.nonMember.child
+                                  }
                                   onChange={(e) => {
                                     const value = e.target.value;
-                                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                    if (
+                                      value === "" ||
+                                      /^\d*\.?\d{0,2}$/.test(value)
+                                    ) {
                                       updateSubFacility(subFacility.id, {
                                         chargeSetup: {
                                           ...subFacility.chargeSetup,
                                           nonMember: {
-                                            ...subFacility.chargeSetup.nonMember,
+                                            ...subFacility.chargeSetup
+                                              .nonMember,
                                             child: value,
                                           },
                                         },
@@ -1459,7 +1614,9 @@ export const AddBookingSetupClubPage = () => {
                             <td className="border border-gray-300 px-4 py-3">
                               <div className="flex items-center gap-2">
                                 <Checkbox
-                                  checked={subFacility.chargeSetup.tenant.selected}
+                                  checked={
+                                    subFacility.chargeSetup.tenant.selected
+                                  }
                                   onCheckedChange={(checked) =>
                                     updateSubFacility(subFacility.id, {
                                       chargeSetup: {
@@ -1478,7 +1635,9 @@ export const AddBookingSetupClubPage = () => {
                             <td className="border border-gray-300 px-4 py-3">
                               <div className="flex items-center justify-center gap-2">
                                 <Checkbox
-                                  checked={!!subFacility.chargeSetup.tenant.adult}
+                                  checked={
+                                    !!subFacility.chargeSetup.tenant.adult
+                                  }
                                   onCheckedChange={(checked) => {
                                     if (!checked) {
                                       updateSubFacility(subFacility.id, {
@@ -1499,7 +1658,10 @@ export const AddBookingSetupClubPage = () => {
                                   value={subFacility.chargeSetup.tenant.adult}
                                   onChange={(e) => {
                                     const value = e.target.value;
-                                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                    if (
+                                      value === "" ||
+                                      /^\d*\.?\d{0,2}$/.test(value)
+                                    ) {
                                       updateSubFacility(subFacility.id, {
                                         chargeSetup: {
                                           ...subFacility.chargeSetup,
@@ -1518,14 +1680,19 @@ export const AddBookingSetupClubPage = () => {
                             <td className="border border-gray-300 px-4 py-3">
                               <div className="flex items-center justify-center gap-2">
                                 <Checkbox
-                                  checked={!!subFacility.chargeSetup.tenant.child}
+                                  checked={
+                                    !!subFacility.chargeSetup.tenant.child
+                                  }
                                   onCheckedChange={(checked) => {
                                     updateSubFacility(subFacility.id, {
                                       chargeSetup: {
                                         ...subFacility.chargeSetup,
                                         tenant: {
                                           ...subFacility.chargeSetup.tenant,
-                                          child: checked ? subFacility.chargeSetup.tenant.child || "" : "",
+                                          child: checked
+                                            ? subFacility.chargeSetup.tenant
+                                                .child || ""
+                                            : "",
                                         },
                                       },
                                     });
@@ -1537,7 +1704,10 @@ export const AddBookingSetupClubPage = () => {
                                   value={subFacility.chargeSetup.tenant.child}
                                   onChange={(e) => {
                                     const value = e.target.value;
-                                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                    if (
+                                      value === "" ||
+                                      /^\d*\.?\d{0,2}$/.test(value)
+                                    ) {
                                       updateSubFacility(subFacility.id, {
                                         chargeSetup: {
                                           ...subFacility.chargeSetup,
@@ -1557,113 +1727,140 @@ export const AddBookingSetupClubPage = () => {
                         </tbody>
                       </table>
                     </div>
+                  )}
 
-                    {/* Min/Max Person Allowed */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="flex items-center gap-3">
-                        <label className="text-sm font-semibold whitespace-nowrap">Minimum Person Allowed</label>
-                        <TextField
-                          size="small"
-                          variant="outlined"
-                          value={subFacility.minimumPersonAllowed}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === '' || /^[1-9]\d*$/.test(value)) {
-                              updateSubFacility(subFacility.id, {
-                                minimumPersonAllowed: value,
-                              });
-                              if (subFacility.maximumPersonAllowed && parseInt(subFacility.maximumPersonAllowed) <= parseInt(value)) {
-                                toast.error("Maximum Person Allowed must be greater than Minimum Person Allowed");
-                              }
+                  {/* Min/Max Person Allowed */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="flex items-center gap-3">
+                      <label className="text-sm font-semibold whitespace-nowrap">
+                        Minimum Person Allowed
+                      </label>
+                      <TextField
+                        size="small"
+                        variant="outlined"
+                        value={subFacility.minimumPersonAllowed}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "" || /^[1-9]\d*$/.test(value)) {
+                            updateSubFacility(subFacility.id, {
+                              minimumPersonAllowed: value,
+                            });
+                            if (
+                              subFacility.maximumPersonAllowed &&
+                              parseInt(subFacility.maximumPersonAllowed) <=
+                                parseInt(value)
+                            ) {
+                              toast.error(
+                                "Maximum Person Allowed must be greater than Minimum Person Allowed"
+                              );
                             }
-                          }}
-                          className="w-32"
-                          placeholder="1"
-                        />
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <label className="text-sm font-semibold whitespace-nowrap">Maximum Person Allowed</label>
-                        <TextField
-                          size="small"
-                          variant="outlined"
-                          value={subFacility.maximumPersonAllowed}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === '' || /^[1-9]\d*$/.test(value)) {
-                              if (subFacility.minimumPersonAllowed && parseInt(value) <= parseInt(subFacility.minimumPersonAllowed)) {
-                                toast.error("Maximum Person Allowed must be greater than Minimum Person Allowed");
-                              }
-                              updateSubFacility(subFacility.id, {
-                                maximumPersonAllowed: value,
-                              });
-                            }
-                          }}
-                          className="w-32"
-                          placeholder="1"
-                        />
-                      </div>
-                      {
-                        formData.isBookable ? (
-                          <div className="flex items-center gap-3">
-                            <label className="text-sm font-semibold whitespace-nowrap">GST</label>
-                            <TextField
-                              size="small"
-                              variant="outlined"
-                              value={subFacility.gst}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                  updateSubFacility(subFacility.id, {
-                                    gst: value,
-                                  });
-                                }
-                              }}
-                              className="w-32"
-                              placeholder="0.0"
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-3">
-                            <label className="text-sm font-semibold whitespace-nowrap">Refundable Deposit</label>
-                            <TextField
-                              size="small"
-                              variant="outlined"
-                              value={subFacility.refundableDeposit}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                  updateSubFacility(subFacility.id, {
-                                    refundableDeposit: value,
-                                  });
-                                }
-                              }}
-                              className="w-32"
-                              placeholder="0.0"
-                            />
-                          </div>
-                        )
-                      }
-
+                          }
+                        }}
+                        className="w-32"
+                        placeholder="1"
+                      />
                     </div>
+                    <div className="flex items-center gap-3">
+                      <label className="text-sm font-semibold whitespace-nowrap">
+                        Maximum Person Allowed
+                      </label>
+                      <TextField
+                        size="small"
+                        variant="outlined"
+                        value={subFacility.maximumPersonAllowed}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "" || /^[1-9]\d*$/.test(value)) {
+                            if (
+                              subFacility.minimumPersonAllowed &&
+                              parseInt(value) <=
+                                parseInt(subFacility.minimumPersonAllowed)
+                            ) {
+                              toast.error(
+                                "Maximum Person Allowed must be greater than Minimum Person Allowed"
+                              );
+                            }
+                            updateSubFacility(subFacility.id, {
+                              maximumPersonAllowed: value,
+                            });
+                          }
+                        }}
+                        className="w-32"
+                        placeholder="1"
+                      />
+                    </div>
+                    {formData.isBookable ? (
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-semibold whitespace-nowrap">
+                          GST
+                        </label>
+                        <TextField
+                          size="small"
+                          variant="outlined"
+                          value={subFacility.gst}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
+                              updateSubFacility(subFacility.id, {
+                                gst: value,
+                              });
+                            }
+                          }}
+                          className="w-32"
+                          placeholder="0.0"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-semibold whitespace-nowrap">
+                          Refundable Deposit
+                        </label>
+                        <TextField
+                          size="small"
+                          variant="outlined"
+                          value={subFacility.refundableDeposit}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
+                              updateSubFacility(subFacility.id, {
+                                refundableDeposit: value,
+                              });
+                            }
+                          }}
+                          className="w-32"
+                          placeholder="0.0"
+                        />
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                    <DollarSign className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CHARGE SETUP</h3>
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                  <DollarSign className="w-4 h-4" />
+                </div>
+                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                  CHARGE SETUP
+                </h3>
+              </div>
 
+              {formData.isBookable && (
                 <div className="overflow-x-auto">
                   <table className="w-full border">
                     <thead>
                       <tr className="bg-gray-50">
-                        <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Member Type</th>
-                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Adult</th>
-                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Child</th>
+                        <th className="border border-gray-300 px-4 py-3 text-left font-semibold">
+                          Member Type
+                        </th>
+                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">
+                          Adult
+                        </th>
+                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">
+                          Child
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1714,7 +1911,10 @@ export const AddBookingSetupClubPage = () => {
                               onChange={(e) => {
                                 const value = e.target.value;
                                 // Allow only positive numbers with max 2 decimal places
-                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                if (
+                                  value === "" ||
+                                  /^\d*\.?\d{0,2}$/.test(value)
+                                ) {
                                   setFormData({
                                     ...formData,
                                     chargeSetup: {
@@ -1742,7 +1942,10 @@ export const AddBookingSetupClubPage = () => {
                                     ...formData.chargeSetup,
                                     member: {
                                       ...formData.chargeSetup.member,
-                                      child: checked ? formData.chargeSetup.member.child || "" : "",
+                                      child: checked
+                                        ? formData.chargeSetup.member.child ||
+                                          ""
+                                        : "",
                                     },
                                   },
                                 });
@@ -1755,7 +1958,10 @@ export const AddBookingSetupClubPage = () => {
                               onChange={(e) => {
                                 const value = e.target.value;
                                 // Allow only positive numbers with max 2 decimal places
-                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                if (
+                                  value === "" ||
+                                  /^\d*\.?\d{0,2}$/.test(value)
+                                ) {
                                   setFormData({
                                     ...formData,
                                     chargeSetup: {
@@ -1820,7 +2026,10 @@ export const AddBookingSetupClubPage = () => {
                               onChange={(e) => {
                                 const value = e.target.value;
                                 // Allow only positive numbers with max 2 decimal places
-                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                if (
+                                  value === "" ||
+                                  /^\d*\.?\d{0,2}$/.test(value)
+                                ) {
                                   setFormData({
                                     ...formData,
                                     chargeSetup: {
@@ -1848,7 +2057,9 @@ export const AddBookingSetupClubPage = () => {
                                     ...formData.chargeSetup,
                                     guest: {
                                       ...formData.chargeSetup.guest,
-                                      child: checked ? formData.chargeSetup.guest.child || "" : "",
+                                      child: checked
+                                        ? formData.chargeSetup.guest.child || ""
+                                        : "",
                                     },
                                   },
                                 });
@@ -1861,7 +2072,10 @@ export const AddBookingSetupClubPage = () => {
                               onChange={(e) => {
                                 const value = e.target.value;
                                 // Allow only positive numbers with max 2 decimal places
-                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                if (
+                                  value === "" ||
+                                  /^\d*\.?\d{0,2}$/.test(value)
+                                ) {
                                   setFormData({
                                     ...formData,
                                     chargeSetup: {
@@ -1926,7 +2140,10 @@ export const AddBookingSetupClubPage = () => {
                               onChange={(e) => {
                                 const value = e.target.value;
                                 // Allow only positive numbers with max 2 decimal places
-                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                if (
+                                  value === "" ||
+                                  /^\d*\.?\d{0,2}$/.test(value)
+                                ) {
                                   setFormData({
                                     ...formData,
                                     chargeSetup: {
@@ -1954,7 +2171,10 @@ export const AddBookingSetupClubPage = () => {
                                     ...formData.chargeSetup,
                                     nonMember: {
                                       ...formData.chargeSetup.nonMember,
-                                      child: checked ? formData.chargeSetup.nonMember.child || "" : "",
+                                      child: checked
+                                        ? formData.chargeSetup.nonMember
+                                            .child || ""
+                                        : "",
                                     },
                                   },
                                 });
@@ -1967,7 +2187,10 @@ export const AddBookingSetupClubPage = () => {
                               onChange={(e) => {
                                 const value = e.target.value;
                                 // Allow only positive numbers with max 2 decimal places
-                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                if (
+                                  value === "" ||
+                                  /^\d*\.?\d{0,2}$/.test(value)
+                                ) {
                                   setFormData({
                                     ...formData,
                                     chargeSetup: {
@@ -2032,7 +2255,10 @@ export const AddBookingSetupClubPage = () => {
                               onChange={(e) => {
                                 const value = e.target.value;
                                 // Allow only positive numbers with max 2 decimal places
-                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                if (
+                                  value === "" ||
+                                  /^\d*\.?\d{0,2}$/.test(value)
+                                ) {
                                   setFormData({
                                     ...formData,
                                     chargeSetup: {
@@ -2060,7 +2286,10 @@ export const AddBookingSetupClubPage = () => {
                                     ...formData.chargeSetup,
                                     tenant: {
                                       ...formData.chargeSetup.tenant,
-                                      child: checked ? formData.chargeSetup.tenant.child || "" : "",
+                                      child: checked
+                                        ? formData.chargeSetup.tenant.child ||
+                                          ""
+                                        : "",
                                     },
                                   },
                                 });
@@ -2073,7 +2302,10 @@ export const AddBookingSetupClubPage = () => {
                               onChange={(e) => {
                                 const value = e.target.value;
                                 // Allow only positive numbers with max 2 decimal places
-                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                if (
+                                  value === "" ||
+                                  /^\d*\.?\d{0,2}$/.test(value)
+                                ) {
                                   setFormData({
                                     ...formData,
                                     chargeSetup: {
@@ -2094,93 +2326,108 @@ export const AddBookingSetupClubPage = () => {
                     </tbody>
                   </table>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                  <div className="flex items-center gap-3">
-                    <label className="text-sm font-semibold whitespace-nowrap">Minimum Person Allowed</label>
-                    <TextField
-                      size="small"
-                      variant="outlined"
-                      value={formData.chargeSetup.minimumPersonAllowed}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        // Allow only positive integers (no decimals, no negatives)
-                        if (value === '' || /^[1-9]\d*$/.test(value)) {
-                          setFormData({
-                            ...formData,
-                            chargeSetup: {
-                              ...formData.chargeSetup,
-                              minimumPersonAllowed: value,
-                            },
-                          });
-                          // Check if maximum is valid after updating minimum
-                          if (formData.chargeSetup.maximumPersonAllowed && parseInt(formData.chargeSetup.maximumPersonAllowed) <= parseInt(value)) {
-                            toast.error("Maximum Person Allowed must be greater than Minimum Person Allowed");
-                          }
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-semibold whitespace-nowrap">
+                    Minimum Person Allowed
+                  </label>
+                  <TextField
+                    size="small"
+                    variant="outlined"
+                    value={formData.chargeSetup.minimumPersonAllowed}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow only positive integers (no decimals, no negatives)
+                      if (value === "" || /^[1-9]\d*$/.test(value)) {
+                        setFormData({
+                          ...formData,
+                          chargeSetup: {
+                            ...formData.chargeSetup,
+                            minimumPersonAllowed: value,
+                          },
+                        });
+                        // Check if maximum is valid after updating minimum
+                        if (
+                          formData.chargeSetup.maximumPersonAllowed &&
+                          parseInt(formData.chargeSetup.maximumPersonAllowed) <=
+                            parseInt(value)
+                        ) {
+                          toast.error(
+                            "Maximum Person Allowed must be greater than Minimum Person Allowed"
+                          );
                         }
-                      }}
-                      className="w-32"
-                      placeholder="1"
-                    />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <label className="text-sm font-semibold whitespace-nowrap">Maximum Person Allowed</label>
-                    <TextField
-                      size="small"
-                      variant="outlined"
-                      value={formData.chargeSetup.maximumPersonAllowed}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        // Allow only positive integers (no decimals, no negatives)
-                        if (value === '' || /^[1-9]\d*$/.test(value)) {
-                          // Check if value is greater than minimum
-                          if (formData.chargeSetup.minimumPersonAllowed && parseInt(value) <= parseInt(formData.chargeSetup.minimumPersonAllowed)) {
-                            toast.error("Maximum Person Allowed must be greater than Minimum Person Allowed");
-                          }
-                          setFormData({
-                            ...formData,
-                            chargeSetup: {
-                              ...formData.chargeSetup,
-                              maximumPersonAllowed: value,
-                            },
-                          });
-                        }
-                      }}
-                      className="w-32"
-                      placeholder="1"
-                    />
-                  </div>
-
-                  {
-                    formData.isRequest && (
-                      <div className="flex items-center gap-3">
-                        <label className="text-sm font-semibold whitespace-nowrap">Refundable Deposit</label>
-                        <TextField
-                          size="small"
-                          variant="outlined"
-                          value={formData.chargeSetup.refundableDeposit}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                              setFormData({
-                                ...formData,
-                                chargeSetup: {
-                                  ...formData.chargeSetup,
-                                  refundableDeposit: value,
-                                },
-                              });
-                            }
-                          }}
-                          className="w-32"
-                          placeholder="0.0"
-                        />
-                      </div>
-                    )
-                  }
+                      }
+                    }}
+                    className="w-32"
+                    placeholder="1"
+                  />
                 </div>
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-semibold whitespace-nowrap">
+                    Maximum Person Allowed
+                  </label>
+                  <TextField
+                    size="small"
+                    variant="outlined"
+                    value={formData.chargeSetup.maximumPersonAllowed}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow only positive integers (no decimals, no negatives)
+                      if (value === "" || /^[1-9]\d*$/.test(value)) {
+                        // Check if value is greater than minimum
+                        if (
+                          formData.chargeSetup.minimumPersonAllowed &&
+                          parseInt(value) <=
+                            parseInt(formData.chargeSetup.minimumPersonAllowed)
+                        ) {
+                          toast.error(
+                            "Maximum Person Allowed must be greater than Minimum Person Allowed"
+                          );
+                        }
+                        setFormData({
+                          ...formData,
+                          chargeSetup: {
+                            ...formData.chargeSetup,
+                            maximumPersonAllowed: value,
+                          },
+                        });
+                      }
+                    }}
+                    className="w-32"
+                    placeholder="1"
+                  />
+                </div>
+
+                {formData.isRequest && (
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm font-semibold whitespace-nowrap">
+                      Refundable Deposit
+                    </label>
+                    <TextField
+                      size="small"
+                      variant="outlined"
+                      value={formData.chargeSetup.refundableDeposit}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
+                          setFormData({
+                            ...formData,
+                            chargeSetup: {
+                              ...formData.chargeSetup,
+                              refundableDeposit: value,
+                            },
+                          });
+                        }
+                      }}
+                      className="w-32"
+                      placeholder="0.0"
+                    />
+                  </div>
+                )}
               </div>
-            )
-          }
+            </div>
+          )}
 
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center justify-between">
@@ -2188,486 +2435,488 @@ export const AddBookingSetupClubPage = () => {
                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                   <CalendarDays className="w-4 h-4" />
                 </div>
-                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CONFIGURE SLOT</h3>
+                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                  CONFIGURE SLOT
+                </h3>
               </div>
-              {
-                formData.isRequest && (
-                  <Button
-                    onClick={() => {
-                      setFormData({
-                        ...formData,
-                        customSlots: [
-                          ...formData.customSlots,
-                          {
-                            startTime: { hour: "00", minute: "00" },
-                            endTime: { hour: "00", minute: "00" },
-                            amount: "",
-                          },
-                        ],
-                      });
-                    }}
-                    className="bg-purple-600 hover:bg-purple-700 mb-4"
-                  >
-                    Add
-                  </Button>
-                )
-              }
+              {formData.isRequest && (
+                <Button
+                  onClick={() => {
+                    setFormData({
+                      ...formData,
+                      customSlots: [
+                        ...formData.customSlots,
+                        {
+                          startTime: { hour: "00", minute: "00" },
+                          endTime: { hour: "00", minute: "00" },
+                          amount: "",
+                        },
+                      ],
+                    });
+                  }}
+                  className="bg-purple-600 hover:bg-purple-700 mb-4"
+                >
+                  Add
+                </Button>
+              )}
             </div>
 
             <div>
-              {
-                formData.isBookable ? (
-                  <>
-                    <div className="grid grid-cols-8 gap-2 mb-2 text-sm font-medium text-gray-600">
-                      <div>Start Time</div>
-                      <div>Break Time Start</div>
-                      <div>Break Time End</div>
-                      <div>End Time</div>
-                      <div>Concurrent Slots</div>
-                      <div>Slot by</div>
-                      <div>Wrap Time</div>
-                      <div>Consecutive Slots Allowed</div>
-                    </div>
+              {formData.isBookable ? (
+                <>
+                  <div className="grid grid-cols-8 gap-2 mb-2 text-sm font-medium text-gray-600">
+                    <div>Start Time</div>
+                    <div>Break Time Start</div>
+                    <div>Break Time End</div>
+                    <div>End Time</div>
+                    <div>Concurrent Slots</div>
+                    <div>Slot by</div>
+                    <div>Wrap Time</div>
+                    <div>Consecutive Slots Allowed</div>
+                  </div>
 
-                    {/* Slot Rows */}
-                    <div className="grid grid-cols-8 gap-2 mb-2">
-                      <div className="flex gap-1">
-                        <FormControl size="small">
-                          <Select
-                            value={formData.slots.startTime.hour}
-                            onChange={(e) => {
-                              setFormData({
-                                ...formData,
-                                slots: {
-                                  ...formData.slots,
-                                  startTime: {
-                                    ...formData.slots.startTime,
-                                    hour: e.target.value,
-                                  },
-                                },
-                              });
-                            }}
-                          >
-                            {Array.from({ length: 24 }, (_, i) => (
-                              <MenuItem
-                                key={i}
-                                value={i.toString().padStart(2, "0")}
-                              >
-                                {i.toString().padStart(2, "0")}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        <FormControl size="small">
-                          <Select
-                            value={formData.slots.startTime.minute}
-                            onChange={(e) => {
-                              setFormData({
-                                ...formData,
-                                slots: {
-                                  ...formData.slots,
-                                  startTime: {
-                                    ...formData.slots.startTime,
-                                    minute: e.target.value,
-                                  },
-                                },
-                              });
-                            }}
-                          >
-                            {Array.from({ length: 60 }, (_, i) => (
-                              <MenuItem
-                                key={i}
-                                value={i.toString().padStart(2, "0")}
-                              >
-                                {i.toString().padStart(2, "0")}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </div>
-
-                      <div className="flex gap-1">
-                        <FormControl size="small">
-                          <Select
-                            value={formData.slots.breakTimeStart.hour}
-                            onChange={(e) => {
-                              setFormData({
-                                ...formData,
-                                slots: {
-                                  ...formData.slots,
-                                  breakTimeStart: {
-                                    ...formData.slots.breakTimeStart,
-                                    hour: e.target.value,
-                                  },
-                                },
-                              });
-                            }}
-                          >
-                            {Array.from({ length: 24 }, (_, i) => (
-                              <MenuItem
-                                key={i}
-                                value={i.toString().padStart(2, "0")}
-                              >
-                                {i.toString().padStart(2, "0")}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        <FormControl size="small">
-                          <Select
-                            value={formData.slots.breakTimeStart.minute}
-                            onChange={(e) => {
-                              setFormData({
-                                ...formData,
-                                slots: {
-                                  ...formData.slots,
-                                  breakTimeStart: {
-                                    ...formData.slots.breakTimeStart,
-                                    minute: e.target.value,
-                                  },
-                                },
-                              });
-                            }}
-                          >
-                            {Array.from({ length: 60 }, (_, i) => (
-                              <MenuItem
-                                key={i}
-                                value={i.toString().padStart(2, "0")}
-                              >
-                                {i.toString().padStart(2, "0")}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </div>
-
-                      <div className="flex gap-1">
-                        <FormControl size="small">
-                          <Select
-                            value={formData.slots.breakTimeEnd.hour}
-                            onChange={(e) => {
-                              setFormData({
-                                ...formData,
-                                slots: {
-                                  ...formData.slots,
-                                  breakTimeEnd: {
-                                    ...formData.slots.breakTimeEnd,
-                                    hour: e.target.value,
-                                  },
-                                },
-                              });
-                            }}
-                          >
-                            {Array.from({ length: 24 }, (_, i) => (
-                              <MenuItem
-                                key={i}
-                                value={i.toString().padStart(2, "0")}
-                              >
-                                {i.toString().padStart(2, "0")}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        <FormControl size="small">
-                          <Select
-                            value={formData.slots.breakTimeEnd.minute}
-                            onChange={(e) => {
-                              setFormData({
-                                ...formData,
-                                slots: {
-                                  ...formData.slots,
-                                  breakTimeEnd: {
-                                    ...formData.slots.breakTimeEnd,
-                                    minute: e.target.value,
-                                  },
-                                },
-                              });
-                            }}
-                          >
-                            {Array.from({ length: 60 }, (_, i) => (
-                              <MenuItem
-                                key={i}
-                                value={i.toString().padStart(2, "0")}
-                              >
-                                {i.toString().padStart(2, "0")}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </div>
-
-                      <div className="flex gap-1">
-                        <FormControl size="small">
-                          <Select
-                            value={formData.slots.endTime.hour}
-                            onChange={(e) => {
-                              setFormData({
-                                ...formData,
-                                slots: {
-                                  ...formData.slots,
-                                  endTime: {
-                                    ...formData.slots.endTime,
-                                    hour: e.target.value,
-                                  },
-                                },
-                              });
-                            }}
-                          >
-                            {Array.from({ length: 24 }, (_, i) => (
-                              <MenuItem
-                                key={i}
-                                value={i.toString().padStart(2, "0")}
-                              >
-                                {i.toString().padStart(2, "0")}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        <FormControl size="small">
-                          <Select
-                            value={formData.slots.endTime.minute}
-                            onChange={(e) => {
-                              setFormData({
-                                ...formData,
-                                slots: {
-                                  ...formData.slots,
-                                  endTime: {
-                                    ...formData.slots.endTime,
-                                    minute: e.target.value,
-                                  },
-                                },
-                              });
-                            }}
-                          >
-                            {Array.from({ length: 60 }, (_, i) => (
-                              <MenuItem
-                                key={i}
-                                value={i.toString().padStart(2, "0")}
-                              >
-                                {i.toString().padStart(2, "0")}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </div>
-
-                      <TextField
-                        size="small"
-                        value={formData.slots.concurrentSlots}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value === '' || /^[1-9]\d*$/.test(value)) {
-                            setFormData({
-                              ...formData,
-                              slots: {
-                                ...formData.slots,
-                                concurrentSlots: value,
-                              },
-                            });
-                          }
-                        }}
-                        variant="outlined"
-                      />
-
+                  {/* Slot Rows */}
+                  <div className="grid grid-cols-8 gap-2 mb-2">
+                    <div className="flex gap-1">
                       <FormControl size="small">
                         <Select
-                          value={formData.slots.slotBy}
+                          value={formData.slots.startTime.hour}
                           onChange={(e) => {
                             setFormData({
                               ...formData,
                               slots: {
                                 ...formData.slots,
-                                slotBy: e.target.value,
+                                startTime: {
+                                  ...formData.slots.startTime,
+                                  hour: e.target.value,
+                                },
                               },
                             });
                           }}
                         >
-                          <MenuItem value={15}>15 Minutes</MenuItem>
-                          <MenuItem value={30}>Half hour</MenuItem>
-                          <MenuItem value={45}>45 Minutes</MenuItem>
-                          <MenuItem value={60}>1 hour</MenuItem>
-                          <MenuItem value={90}>1 and a half hours</MenuItem>
-                          <MenuItem value={120}>2 hours</MenuItem>
-                          <MenuItem value={150}>2 and a half hours</MenuItem>
-                          <MenuItem value={180}>3 hours</MenuItem>
-                          <MenuItem value={210}>3 and a half hours</MenuItem>
-                          <MenuItem value={240}>4 hours</MenuItem>
-                          <MenuItem value={270}>4 and a half hours</MenuItem>
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <MenuItem
+                              key={i}
+                              value={i.toString().padStart(2, "0")}
+                            >
+                              {i.toString().padStart(2, "0")}
+                            </MenuItem>
+                          ))}
                         </Select>
                       </FormControl>
-
-                      <TextField
-                        size="small"
-                        value={formData.slots.wrapTime}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value === '' || /^\d+$/.test(value)) {
+                      <FormControl size="small">
+                        <Select
+                          value={formData.slots.startTime.minute}
+                          onChange={(e) => {
                             setFormData({
                               ...formData,
                               slots: {
                                 ...formData.slots,
-                                wrapTime: value,
+                                startTime: {
+                                  ...formData.slots.startTime,
+                                  minute: e.target.value,
+                                },
                               },
                             });
-                          }
-                        }}
-                        variant="outlined"
-                      />
+                          }}
+                        >
+                          {Array.from({ length: 60 }, (_, i) => (
+                            <MenuItem
+                              key={i}
+                              value={i.toString().padStart(2, "0")}
+                            >
+                              {i.toString().padStart(2, "0")}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </div>
 
-                      <Switch
-                        checked={formData.slots.consecutiveSlotsAllowed}
+                    <div className="flex gap-1">
+                      <FormControl size="small">
+                        <Select
+                          value={formData.slots.breakTimeStart.hour}
+                          onChange={(e) => {
+                            setFormData({
+                              ...formData,
+                              slots: {
+                                ...formData.slots,
+                                breakTimeStart: {
+                                  ...formData.slots.breakTimeStart,
+                                  hour: e.target.value,
+                                },
+                              },
+                            });
+                          }}
+                        >
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <MenuItem
+                              key={i}
+                              value={i.toString().padStart(2, "0")}
+                            >
+                              {i.toString().padStart(2, "0")}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <FormControl size="small">
+                        <Select
+                          value={formData.slots.breakTimeStart.minute}
+                          onChange={(e) => {
+                            setFormData({
+                              ...formData,
+                              slots: {
+                                ...formData.slots,
+                                breakTimeStart: {
+                                  ...formData.slots.breakTimeStart,
+                                  minute: e.target.value,
+                                },
+                              },
+                            });
+                          }}
+                        >
+                          {Array.from({ length: 60 }, (_, i) => (
+                            <MenuItem
+                              key={i}
+                              value={i.toString().padStart(2, "0")}
+                            >
+                              {i.toString().padStart(2, "0")}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </div>
+
+                    <div className="flex gap-1">
+                      <FormControl size="small">
+                        <Select
+                          value={formData.slots.breakTimeEnd.hour}
+                          onChange={(e) => {
+                            setFormData({
+                              ...formData,
+                              slots: {
+                                ...formData.slots,
+                                breakTimeEnd: {
+                                  ...formData.slots.breakTimeEnd,
+                                  hour: e.target.value,
+                                },
+                              },
+                            });
+                          }}
+                        >
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <MenuItem
+                              key={i}
+                              value={i.toString().padStart(2, "0")}
+                            >
+                              {i.toString().padStart(2, "0")}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <FormControl size="small">
+                        <Select
+                          value={formData.slots.breakTimeEnd.minute}
+                          onChange={(e) => {
+                            setFormData({
+                              ...formData,
+                              slots: {
+                                ...formData.slots,
+                                breakTimeEnd: {
+                                  ...formData.slots.breakTimeEnd,
+                                  minute: e.target.value,
+                                },
+                              },
+                            });
+                          }}
+                        >
+                          {Array.from({ length: 60 }, (_, i) => (
+                            <MenuItem
+                              key={i}
+                              value={i.toString().padStart(2, "0")}
+                            >
+                              {i.toString().padStart(2, "0")}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </div>
+
+                    <div className="flex gap-1">
+                      <FormControl size="small">
+                        <Select
+                          value={formData.slots.endTime.hour}
+                          onChange={(e) => {
+                            setFormData({
+                              ...formData,
+                              slots: {
+                                ...formData.slots,
+                                endTime: {
+                                  ...formData.slots.endTime,
+                                  hour: e.target.value,
+                                },
+                              },
+                            });
+                          }}
+                        >
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <MenuItem
+                              key={i}
+                              value={i.toString().padStart(2, "0")}
+                            >
+                              {i.toString().padStart(2, "0")}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <FormControl size="small">
+                        <Select
+                          value={formData.slots.endTime.minute}
+                          onChange={(e) => {
+                            setFormData({
+                              ...formData,
+                              slots: {
+                                ...formData.slots,
+                                endTime: {
+                                  ...formData.slots.endTime,
+                                  minute: e.target.value,
+                                },
+                              },
+                            });
+                          }}
+                        >
+                          {Array.from({ length: 60 }, (_, i) => (
+                            <MenuItem
+                              key={i}
+                              value={i.toString().padStart(2, "0")}
+                            >
+                              {i.toString().padStart(2, "0")}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </div>
+
+                    <TextField
+                      size="small"
+                      value={formData.slots.concurrentSlots}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || /^[1-9]\d*$/.test(value)) {
+                          setFormData({
+                            ...formData,
+                            slots: {
+                              ...formData.slots,
+                              concurrentSlots: value,
+                            },
+                          });
+                        }
+                      }}
+                      variant="outlined"
+                    />
+
+                    <FormControl size="small">
+                      <Select
+                        value={formData.slots.slotBy}
                         onChange={(e) => {
                           setFormData({
                             ...formData,
                             slots: {
                               ...formData.slots,
-                              consecutiveSlotsAllowed: e.target.checked,
+                              slotBy: e.target.value,
                             },
                           });
                         }}
-                        sx={{
-                          '& .MuiSwitch-switchBase': {
-                            color: '#ef4444',
-                            '&.Mui-checked': {
-                              color: '#22c55e',
+                      >
+                        <MenuItem value={15}>15 Minutes</MenuItem>
+                        <MenuItem value={30}>Half hour</MenuItem>
+                        <MenuItem value={45}>45 Minutes</MenuItem>
+                        <MenuItem value={60}>1 hour</MenuItem>
+                        <MenuItem value={90}>1 and a half hours</MenuItem>
+                        <MenuItem value={120}>2 hours</MenuItem>
+                        <MenuItem value={150}>2 and a half hours</MenuItem>
+                        <MenuItem value={180}>3 hours</MenuItem>
+                        <MenuItem value={210}>3 and a half hours</MenuItem>
+                        <MenuItem value={240}>4 hours</MenuItem>
+                        <MenuItem value={270}>4 and a half hours</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <TextField
+                      size="small"
+                      value={formData.slots.wrapTime}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || /^\d+$/.test(value)) {
+                          setFormData({
+                            ...formData,
+                            slots: {
+                              ...formData.slots,
+                              wrapTime: value,
                             },
-                            '&.Mui-checked + .MuiSwitch-track': {
-                              backgroundColor: '#22c55e',
-                            },
+                          });
+                        }
+                      }}
+                      variant="outlined"
+                    />
+
+                    <Switch
+                      checked={formData.slots.consecutiveSlotsAllowed}
+                      onChange={(e) => {
+                        setFormData({
+                          ...formData,
+                          slots: {
+                            ...formData.slots,
+                            consecutiveSlotsAllowed: e.target.checked,
                           },
-                          '& .MuiSwitch-track': {
-                            backgroundColor: '#ef4444',
+                        });
+                      }}
+                      sx={{
+                        "& .MuiSwitch-switchBase": {
+                          color: "#ef4444",
+                          "&.Mui-checked": {
+                            color: "#22c55e",
                           },
-                        }}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-3 gap-2 mb-2 text-sm font-medium text-gray-600">
-                      <div>Start Time</div>
-                      <div>End Time</div>
-                      <div>Payable Amount</div>
-                    </div>
+                          "&.Mui-checked + .MuiSwitch-track": {
+                            backgroundColor: "#22c55e",
+                          },
+                        },
+                        "& .MuiSwitch-track": {
+                          backgroundColor: "#ef4444",
+                        },
+                      }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-2 mb-2 text-sm font-medium text-gray-600">
+                    <div>Start Time</div>
+                    <div>End Time</div>
+                    <div>Payable Amount</div>
+                  </div>
 
-                    {formData.customSlots.map((slot, index) => (
-                      <div key={index} className="grid grid-cols-3 gap-2 mb-2">
-                        <div className="flex gap-1">
-                          <FormControl size="small">
-                            <Select
-                              value={slot.startTime.hour}
-                              onChange={(e) => {
-                                const newCustomSlots = [...formData.customSlots];
-                                newCustomSlots[index].startTime.hour = e.target.value;
-                                setFormData({
-                                  ...formData,
-                                  customSlots: newCustomSlots,
-                                });
-                              }}
-                            >
-                              {Array.from({ length: 24 }, (_, i) => (
-                                <MenuItem
-                                  key={i}
-                                  value={i.toString().padStart(2, "0")}
-                                >
-                                  {i.toString().padStart(2, "0")}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                          <FormControl size="small">
-                            <Select
-                              value={slot.startTime.minute}
-                              onChange={(e) => {
-                                const newCustomSlots = [...formData.customSlots];
-                                newCustomSlots[index].startTime.minute = e.target.value;
-                                setFormData({
-                                  ...formData,
-                                  customSlots: newCustomSlots,
-                                });
-                              }}
-                            >
-                              {Array.from({ length: 60 }, (_, i) => (
-                                <MenuItem
-                                  key={i}
-                                  value={i.toString().padStart(2, "0")}
-                                >
-                                  {i.toString().padStart(2, "0")}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        </div>
-
-                        <div className="flex gap-1">
-                          <FormControl size="small">
-                            <Select
-                              value={slot.endTime.hour}
-                              onChange={(e) => {
-                                const newCustomSlots = [...formData.customSlots];
-                                newCustomSlots[index].endTime.hour = e.target.value;
-                                setFormData({
-                                  ...formData,
-                                  customSlots: newCustomSlots,
-                                });
-                              }}
-                            >
-                              {Array.from({ length: 24 }, (_, i) => (
-                                <MenuItem
-                                  key={i}
-                                  value={i.toString().padStart(2, "0")}
-                                >
-                                  {i.toString().padStart(2, "0")}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                          <FormControl size="small">
-                            <Select
-                              value={slot.endTime.minute}
-                              onChange={(e) => {
-                                const newCustomSlots = [...formData.customSlots];
-                                newCustomSlots[index].endTime.minute = e.target.value;
-                                setFormData({
-                                  ...formData,
-                                  customSlots: newCustomSlots,
-                                });
-                              }}
-                            >
-                              {Array.from({ length: 60 }, (_, i) => (
-                                <MenuItem
-                                  key={i}
-                                  value={i.toString().padStart(2, "0")}
-                                >
-                                  {i.toString().padStart(2, "0")}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        </div>
-
-                        <div className="flex gap-1">
-                          <TextField
-                            size="small"
-                            variant="outlined"
-                            className="w-32"
-                            placeholder="1"
-                            value={slot.amount}
+                  {formData.customSlots.map((slot, index) => (
+                    <div key={index} className="grid grid-cols-3 gap-2 mb-2">
+                      <div className="flex gap-1">
+                        <FormControl size="small">
+                          <Select
+                            value={slot.startTime.hour}
                             onChange={(e) => {
                               const newCustomSlots = [...formData.customSlots];
-                              newCustomSlots[index].amount = e.target.value;
+                              newCustomSlots[index].startTime.hour =
+                                e.target.value;
                               setFormData({
                                 ...formData,
                                 customSlots: newCustomSlots,
                               });
                             }}
-                          />
-                        </div>
+                          >
+                            {Array.from({ length: 24 }, (_, i) => (
+                              <MenuItem
+                                key={i}
+                                value={i.toString().padStart(2, "0")}
+                              >
+                                {i.toString().padStart(2, "0")}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        <FormControl size="small">
+                          <Select
+                            value={slot.startTime.minute}
+                            onChange={(e) => {
+                              const newCustomSlots = [...formData.customSlots];
+                              newCustomSlots[index].startTime.minute =
+                                e.target.value;
+                              setFormData({
+                                ...formData,
+                                customSlots: newCustomSlots,
+                              });
+                            }}
+                          >
+                            {Array.from({ length: 60 }, (_, i) => (
+                              <MenuItem
+                                key={i}
+                                value={i.toString().padStart(2, "0")}
+                              >
+                                {i.toString().padStart(2, "0")}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
                       </div>
-                    ))}
-                  </>
-                )
-              }
+
+                      <div className="flex gap-1">
+                        <FormControl size="small">
+                          <Select
+                            value={slot.endTime.hour}
+                            onChange={(e) => {
+                              const newCustomSlots = [...formData.customSlots];
+                              newCustomSlots[index].endTime.hour =
+                                e.target.value;
+                              setFormData({
+                                ...formData,
+                                customSlots: newCustomSlots,
+                              });
+                            }}
+                          >
+                            {Array.from({ length: 24 }, (_, i) => (
+                              <MenuItem
+                                key={i}
+                                value={i.toString().padStart(2, "0")}
+                              >
+                                {i.toString().padStart(2, "0")}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        <FormControl size="small">
+                          <Select
+                            value={slot.endTime.minute}
+                            onChange={(e) => {
+                              const newCustomSlots = [...formData.customSlots];
+                              newCustomSlots[index].endTime.minute =
+                                e.target.value;
+                              setFormData({
+                                ...formData,
+                                customSlots: newCustomSlots,
+                              });
+                            }}
+                          >
+                            {Array.from({ length: 60 }, (_, i) => (
+                              <MenuItem
+                                key={i}
+                                value={i.toString().padStart(2, "0")}
+                              >
+                                {i.toString().padStart(2, "0")}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </div>
+
+                      <div className="flex gap-1">
+                        <TextField
+                          size="small"
+                          variant="outlined"
+                          className="w-32"
+                          placeholder="1"
+                          value={slot.amount}
+                          onChange={(e) => {
+                            const newCustomSlots = [...formData.customSlots];
+                            newCustomSlots[index].amount = e.target.value;
+                            setFormData({
+                              ...formData,
+                              customSlots: newCustomSlots,
+                            });
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
 
               <div className="space-y-4 mt-4">
                 <div>
@@ -2686,7 +2935,7 @@ export const AddBookingSetupClubPage = () => {
                       value={formData.bookingAllowedBefore.day}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value === '' || /^\d+$/.test(value)) {
+                        if (value === "" || /^\d+$/.test(value)) {
                           setFormData({
                             ...formData,
                             bookingAllowedBefore: {
@@ -2706,7 +2955,7 @@ export const AddBookingSetupClubPage = () => {
                       value={formData.bookingAllowedBefore.hour}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value === '' || /^\d+$/.test(value)) {
+                        if (value === "" || /^\d+$/.test(value)) {
                           setFormData({
                             ...formData,
                             bookingAllowedBefore: {
@@ -2726,7 +2975,7 @@ export const AddBookingSetupClubPage = () => {
                       value={formData.bookingAllowedBefore.minute}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value === '' || /^\d+$/.test(value)) {
+                        if (value === "" || /^\d+$/.test(value)) {
                           setFormData({
                             ...formData,
                             bookingAllowedBefore: {
@@ -2753,7 +3002,7 @@ export const AddBookingSetupClubPage = () => {
                       value={formData.advanceBooking.day}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value === '' || /^\d+$/.test(value)) {
+                        if (value === "" || /^\d+$/.test(value)) {
                           setFormData({
                             ...formData,
                             advanceBooking: {
@@ -2773,7 +3022,7 @@ export const AddBookingSetupClubPage = () => {
                       value={formData.advanceBooking.hour}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value === '' || /^\d+$/.test(value)) {
+                        if (value === "" || /^\d+$/.test(value)) {
                           setFormData({
                             ...formData,
                             advanceBooking: {
@@ -2793,7 +3042,7 @@ export const AddBookingSetupClubPage = () => {
                       value={formData.advanceBooking.minute}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value === '' || /^\d+$/.test(value)) {
+                        if (value === "" || /^\d+$/.test(value)) {
                           setFormData({
                             ...formData,
                             advanceBooking: {
@@ -2820,7 +3069,7 @@ export const AddBookingSetupClubPage = () => {
                       value={formData.canCancelBefore.day}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value === '' || /^\d+$/.test(value)) {
+                        if (value === "" || /^\d+$/.test(value)) {
                           setFormData({
                             ...formData,
                             canCancelBefore: {
@@ -2840,7 +3089,7 @@ export const AddBookingSetupClubPage = () => {
                       value={formData.canCancelBefore.hour}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value === '' || /^\d+$/.test(value)) {
+                        if (value === "" || /^\d+$/.test(value)) {
                           setFormData({
                             ...formData,
                             canCancelBefore: {
@@ -2860,7 +3109,7 @@ export const AddBookingSetupClubPage = () => {
                       value={formData.canCancelBefore.minute}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value === '' || /^\d+$/.test(value)) {
+                        if (value === "" || /^\d+$/.test(value)) {
                           setFormData({
                             ...formData,
                             canCancelBefore: {
@@ -2878,11 +3127,16 @@ export const AddBookingSetupClubPage = () => {
 
               <div className="space-y-4 flex flex-col gap-4 mt-4">
                 {formData.facilityBookings.map((booking) => (
-                  <div key={booking.id} className="flex items-center gap-2 text-sm text-gray-600">
+                  <div
+                    key={booking.id}
+                    className="flex items-center gap-2 text-sm text-gray-600"
+                  >
                     <Checkbox
                       checked={booking.isChecked}
                       onCheckedChange={(checked) =>
-                        updateFacilityBooking(booking.id, { isChecked: !!checked })
+                        updateFacilityBooking(booking.id, {
+                          isChecked: !!checked,
+                        })
                       }
                     />
                     <span>Facility can be booked</span>
@@ -2891,7 +3145,7 @@ export const AddBookingSetupClubPage = () => {
                       value={booking.times}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value === '' || /^[1-9]\d*$/.test(value)) {
+                        if (value === "" || /^[1-9]\d*$/.test(value)) {
                           updateFacilityBooking(booking.id, { times: value });
                         }
                       }}
@@ -2903,7 +3157,9 @@ export const AddBookingSetupClubPage = () => {
                     <Select
                       value={booking.unit}
                       onChange={(e) =>
-                        updateFacilityBooking(booking.id, { unit: e.target.value })
+                        updateFacilityBooking(booking.id, {
+                          unit: e.target.value,
+                        })
                       }
                       displayEmpty
                       size="small"
@@ -2941,7 +3197,9 @@ export const AddBookingSetupClubPage = () => {
               <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                 <CreditCard className="w-4 h-4" />
               </div>
-              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CONFIGURE PAYMENT</h3>
+              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                CONFIGURE PAYMENT
+              </h3>
             </div>
 
             <div className="space-y-6">
@@ -2994,7 +3252,7 @@ export const AddBookingSetupClubPage = () => {
                   onChange={(e) => {
                     const value = e.target.value;
                     // Allow only non-negative numbers with max 2 decimal places
-                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                    if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
                       setFormData({ ...formData, sgstPercentage: value });
                     }
                   }}
@@ -3005,7 +3263,7 @@ export const AddBookingSetupClubPage = () => {
                   value={formData.gstPercentage}
                   onChange={(e) => {
                     const value = e.target.value;
-                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                    if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
                       setFormData({ ...formData, gstPercentage: value });
                     }
                   }}
@@ -3016,7 +3274,7 @@ export const AddBookingSetupClubPage = () => {
                   value={formData.igstPercentage}
                   onChange={(e) => {
                     const value = e.target.value;
-                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                    if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
                       setFormData({ ...formData, igstPercentage: value });
                     }
                   }}
@@ -3032,7 +3290,9 @@ export const AddBookingSetupClubPage = () => {
                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                   <FileImage className="w-4 h-4" />
                 </div>
-                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">COVER IMAGE</h3>
+                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                  COVER IMAGE
+                </h3>
               </div>
 
               <div className="p-6" style={{ border: "1px dashed #C72030" }}>
@@ -3089,7 +3349,9 @@ export const AddBookingSetupClubPage = () => {
                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                   <Image className="w-4 h-4" />
                 </div>
-                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Booking Summary Image</h3>
+                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                  Booking Summary Image
+                </h3>
               </div>
 
               <div className="p-6" style={{ border: "1px dashed #C72030" }}>
@@ -3238,7 +3500,9 @@ export const AddBookingSetupClubPage = () => {
               <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                 <NotepadText className="w-4 h-4" />
               </div>
-              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">DESCRIPTION</h3>
+              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                DESCRIPTION
+              </h3>
             </div>
 
             <div>
@@ -3260,7 +3524,9 @@ export const AddBookingSetupClubPage = () => {
                 <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                   <ReceiptText className="w-4 h-4" />
                 </div>
-                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">TERMS & CONDITIONS*</h3>
+                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                  TERMS & CONDITIONS*
+                </h3>
               </div>
 
               <div>
@@ -3284,7 +3550,9 @@ export const AddBookingSetupClubPage = () => {
               <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
                 <Settings className="w-4 h-4" />
               </div>
-              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">RULE SETUP</h3>
+              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                RULE SETUP
+              </h3>
             </div>
 
             <div>
@@ -3377,7 +3645,7 @@ export const AddBookingSetupClubPage = () => {
                       const value = e.target.value;
                       // Allow only non-negative numbers with max 2 decimal places and not more than 100
                       if (
-                        value === '' ||
+                        value === "" ||
                         (/^\d*\.?\d{0,2}$/.test(value) && Number(value) <= 100)
                       ) {
                         const newRules = [...cancellationRules];
@@ -3416,7 +3684,7 @@ export const AddBookingSetupClubPage = () => {
               onClick={handleSave}
               className="bg-purple-600 hover:bg-purple-700 text-white w-full"
               disabled={isSubmitting}
-              style={{ maxWidth: '90px' }}
+              style={{ maxWidth: "90px" }}
             >
               Save
             </Button>
@@ -3443,6 +3711,6 @@ export const AddBookingSetupClubPage = () => {
           onImagesChange={setSelectedGalleryImages}
         />
       )} */}
-    </ThemeProvider >
+    </ThemeProvider>
   );
 };

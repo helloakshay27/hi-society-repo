@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Plus, Edit, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
 import {
   Select,
   SelectContent,
@@ -13,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import axios from "axios";
 
 interface Category {
   id: string;
@@ -25,63 +25,77 @@ interface SubCategory {
   name: string;
 }
 
+const categoryColumns = [
+  { key: "actions", label: "Actions", sortable: false },
+  { key: "name", label: "Category", sortable: true },
+];
+
+const subCategoryColumns = [
+  { key: "actions", label: "Actions", sortable: false },
+  { key: "category", label: "Category", sortable: true },
+  { key: "name", label: "Sub Category", sortable: true },
+];
+
 const BMSBusinessDirectorySetup: React.FC = () => {
+  const baseUrl = localStorage.getItem("baseUrl")
+  const token = localStorage.getItem("token")
+
   const [activeTab, setActiveTab] = useState("category");
   const [categoryInput, setCategoryInput] = useState("");
   const [subCategoryInput, setSubCategoryInput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [categories, setCategories] = useState([])
+  const [subCategories, setSubCategories] = useState([])
 
-  // Mock data queries
-  const { data: categoriesData, refetch: refetchCategories } = useQuery({
-    queryKey: ["business-categories"],
-    queryFn: async () => {
-      const mockData: Category[] = [
-        { id: "1", name: "Interior Painting" },
-        { id: "2", name: "Laundry Services" },
-        { id: "3", name: "Milk Supply" },
-        { id: "4", name: "Grocery Supplier" },
-        { id: "5", name: "News Paper" },
-      ];
-      return mockData;
-    },
-  });
-
-  const { data: subCategoriesData, refetch: refetchSubCategories } = useQuery({
-    queryKey: ["business-subcategories"],
-    queryFn: async () => {
-      const mockData: SubCategory[] = [
-        { id: "1", category: "Interior Painting", name: "All Types Of Painting Work" },
-        { id: "2", category: "Laundry Services", name: "Laundry Services" },
-        { id: "3", category: "Milk Supply", name: "Milk Product Supplier" },
-        { id: "4", category: "Grocery Supplier", name: "Grocery Store" },
-        { id: "5", category: "News Paper", name: "Daily News Letter" },
-      ];
-      return mockData;
-    },
-  });
-
-  const categories: Category[] = categoriesData || [];
-  const subCategories: SubCategory[] = subCategoriesData || [];
-
-  const categoryColumns = [
-    { key: "actions", label: "Actions", sortable: false },
-    { key: "name", label: "Category", sortable: true },
-  ];
-
-  const subCategoryColumns = [
-    { key: "actions", label: "Actions", sortable: false },
-    { key: "category", label: "Category", sortable: true },
-    { key: "name", label: "Sub Category", sortable: true },
-  ];
-
-  const handleAddCategory = () => {
-    if (!categoryInput.trim()) {
-      toast.error("Please enter a category name");
-      return;
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`https://${baseUrl}/crm/admin/bd_categories.json`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      setCategories(response.data.bd_categories)
+    } catch (error) {
+      console.log(error)
     }
-    toast.success(`Category "${categoryInput}" added`);
-    setCategoryInput("");
-    refetchCategories();
+  }
+
+  const fetchSubCategories = async () => {
+    try {
+      const response = await axios.get(`https://${baseUrl}/`)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
+  const handleAddCategory = async () => {
+    try {
+      if (!categoryInput.trim()) {
+        toast.error("Please enter a category name");
+        return;
+      }
+
+      const payload = {
+        bd_category: {
+          name: categoryInput,
+        }
+      }
+
+      await axios.post(`https://${baseUrl}/crm/admin/bd_categories.json`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      toast.success(`Category added successfully`);
+      setCategoryInput("");
+      fetchCategories()
+    } catch (error) {
+      console.log(error)
+    }
   };
 
   const handleAddSubCategory = () => {
@@ -95,7 +109,6 @@ const BMSBusinessDirectorySetup: React.FC = () => {
     }
     toast.success(`Sub Category "${subCategoryInput}" added`);
     setSubCategoryInput("");
-    refetchSubCategories();
   };
 
   const handleEditCategory = (item: Category) => {
@@ -169,9 +182,9 @@ const BMSBusinessDirectorySetup: React.FC = () => {
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="category">Category</TabsTrigger>
-          <TabsTrigger value="subcategory">Sub Category</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 mb-6 bg-white border">
+          <TabsTrigger value="category" className="data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none">Category</TabsTrigger>
+          <TabsTrigger value="subcategory" className="data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none">Sub Category</TabsTrigger>
         </TabsList>
 
         <TabsContent value="category" className="space-y-6">
@@ -202,9 +215,6 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             pagination={false}
             storageKey="business-categories-table"
           />
-          <div className="text-sm text-gray-500">
-            Showing 1 to {categories.length} of {categories.length} rows
-          </div>
         </TabsContent>
 
         <TabsContent value="subcategory" className="space-y-6">
@@ -249,9 +259,6 @@ const BMSBusinessDirectorySetup: React.FC = () => {
             pagination={false}
             storageKey="business-subcategories-table"
           />
-          <div className="text-sm text-gray-500">
-            Showing 1 to {subCategories.length} of {subCategories.length} rows
-          </div>
         </TabsContent>
       </Tabs>
     </div>

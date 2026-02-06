@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -34,6 +34,24 @@ interface MemberForm {
     residentPhoto: File | null;
 }
 
+const fieldStyles = {
+    backgroundColor: "#fff",
+    borderRadius: "4px",
+    "& .MuiOutlinedInput-root": {
+        "& fieldset": {
+            borderColor: "#ddd",
+        },
+        "&.Mui-focused fieldset": {
+            borderColor: "#C72030",
+        },
+    },
+    "& .MuiInputLabel-root": {
+        "&.Mui-focused": {
+            color: "#C72030",
+        },
+    },
+};
+
 const AddCMSClubMembers = () => {
     const navigate = useNavigate();
 
@@ -41,15 +59,19 @@ const AddCMSClubMembers = () => {
     const token = localStorage.getItem("token");
     const societyId = localStorage.getItem("selectedUserSociety");
 
-    const [towers, setTowers] = useState([])
+    const [towers, setTowers] = useState([]);
     const [flats, setFlats] = useState([]);
     const [flatUsers, setFlatUsers] = useState([]);
+    const [membershipPlans, setMembershipPlans] = useState([]);
     const [tower, setTower] = useState("");
     const [flat, setFlat] = useState("");
 
     // Global Date State
     const [globalStartDate, setGlobalStartDate] = useState("");
     const [globalEndDate, setGlobalEndDate] = useState("");
+    const [globalMembershipPlanId, setGlobalMembershipPlanId] = useState("");
+    const [globalMembershipType, setGlobalMembershipType] = useState("paid");
+    const [remark, setRemark] = useState("");
 
     const [members, setMembers] = useState<MemberForm[]>([
         {
@@ -72,60 +94,86 @@ const AddCMSClubMembers = () => {
 
     const fetchTowers = async () => {
         try {
-            const response = await axios.get(`https://${baseUrl}/crm/admin/society_blocks.json?society_id=${societyId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
+            const response = await axios.get(
+                `https://${baseUrl}/crm/admin/society_blocks.json?society_id=${societyId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
                 }
-            })
+            );
 
-            setTowers(response.data.society_blocks)
+            setTowers(response.data.society_blocks);
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
-    }
+    };
+
+    const fetchMembershipPlans = async () => {
+        try {
+            const response = await axios.get(
+                `https://${baseUrl}/membership_plans.json`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            setMembershipPlans(response.data.plans);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     const fetchFlats = async () => {
         try {
-            const response = await axios.get(`https://${baseUrl}/crm/admin/society_blocks/${tower}/flats.json?q[active_eq]=true`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
+            const response = await axios.get(
+                `https://${baseUrl}/crm/admin/society_blocks/${tower}/flats.json?q[active_eq]=true`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
                 }
-            })
-            setFlats(response.data)
+            );
+            setFlats(response.data);
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
-    }
+    };
 
     const fetchUsers = async () => {
         try {
-            const response = await axios.get(`https://${baseUrl}/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${flat}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
+            const response = await axios.get(
+                `https://${baseUrl}/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${flat}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
                 }
-            })
+            );
 
-            setFlatUsers(response.data)
+            setFlatUsers(response.data);
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
-    }
+    };
 
     useEffect(() => {
-        fetchTowers()
-    }, [])
+        fetchTowers();
+        fetchMembershipPlans();
+    }, []);
 
     useEffect(() => {
         if (tower) {
-            fetchFlats()
+            fetchFlats();
         }
-    }, [tower])
+    }, [tower]);
 
     useEffect(() => {
         if (flat) {
-            fetchUsers()
+            fetchUsers();
         }
-    }, [flat])
+    }, [flat]);
 
     const addMember = () => {
         setMembers([
@@ -167,37 +215,68 @@ const AddCMSClubMembers = () => {
         try {
             const formData = new FormData();
 
-            formData.append("club_member_allocation[society_id]", societyId)
-            formData.append("club_member_allocation[society_flat_id]", flat)
-            formData.append("club_member_allocation[status]", 'active')
+            formData.append("club_member_allocation[society_id]", societyId);
+            formData.append("club_member_allocation[society_flat_id]", flat);
+            formData.append("club_member_allocation[status]", "active");
+            formData.append(`club_member_allocation[start_date]`, globalStartDate);
+            formData.append(`club_member_allocation[end_date]`, globalEndDate);
+            formData.append(
+                `club_member_allocation[membership_plan_id]`,
+                globalMembershipPlanId
+            );
+            formData.append(
+                `club_member_allocation[membership_type]`,
+                globalMembershipType
+            );
+            formData.append(`club_member_allocation[remark]`, remark);
             members.forEach((member, idx) => {
-                formData.append(`members[${idx}][user_society_id]`, member.selectedUser)
-                formData.append(`members[${idx}][first_name]`, member.firstName)
-                formData.append(`members[${idx}][last_name]`, member.lastName)
-                formData.append(`members[${idx}][email]`, member.email)
-                formData.append(`members[${idx}][mobile]`, member.mobile)
-                formData.append(`members[${idx}][resident_type]`, member.residentType)
-                formData.append(`members[${idx}][club_member_check]`, member.isClubMembership ? "true" : "false")
-                formData.append(`members[${idx}][membership_number]`, member.membershipNumber)
-                formData.append(`members[${idx}][start_date]`, globalStartDate)
-                formData.append(`members[${idx}][end_date]`, globalEndDate)
-                formData.append(`members[${idx}][access_card_check]`, member.isAccessCardAllocated ? "true" : "false")
-                formData.append(`members[${idx}][access_card_id]`, member.accessCardId)
-                formData.append(`members[${idx}][identification_image_attributes][document]`, member.idCard)
-                formData.append(`members[${idx}][profile_image_attributes][document]`, member.residentPhoto)
-            })
+                formData.append(
+                    `members[${idx}][user_society_id]`,
+                    member.selectedUser
+                );
+                formData.append(`members[${idx}][first_name]`, member.firstName);
+                formData.append(`members[${idx}][last_name]`, member.lastName);
+                formData.append(`members[${idx}][email]`, member.email);
+                formData.append(`members[${idx}][mobile]`, member.mobile);
+                formData.append(`members[${idx}][resident_type]`, member.residentType);
+                formData.append(
+                    `members[${idx}][club_member_check]`,
+                    member.isClubMembership ? "true" : "false"
+                );
+                formData.append(
+                    `members[${idx}][membership_number]`,
+                    member.membershipNumber
+                );
+                formData.append(
+                    `members[${idx}][access_card_check]`,
+                    member.isAccessCardAllocated ? "true" : "false"
+                );
+                formData.append(`members[${idx}][access_card_id]`, member.accessCardId);
+                formData.append(
+                    `members[${idx}][identification_image_attributes][document]`,
+                    member.idCard
+                );
+                formData.append(
+                    `members[${idx}][profile_image_attributes][document]`,
+                    member.residentPhoto
+                );
+            });
 
-            await axios.post(`https://${baseUrl}/club_member_allocations.json`, formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data',
+            await axios.post(
+                `https://${baseUrl}/club_member_allocations.json`,
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "multipart/form-data",
+                    },
                 }
-            })
+            );
 
             toast.success("Club members added successfully!");
             navigate(-1);
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
     };
 
@@ -215,68 +294,102 @@ const AddCMSClubMembers = () => {
 
             <div className="space-y-6">
                 {/* Main Container */}
-                <div className="bg-white rounded-lg space-y-6">
-
-                    {/* Header / Global Details */}
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormControl required>
-                                <InputLabel className="bg-white px-1">Tower</InputLabel>
-                                <Select
-                                    value={tower}
-                                    onChange={(e) => setTower(e.target.value)}
-                                    label="Tower"
-                                    displayEmpty
-                                >
-                                    <MenuItem value="" disabled>Select Tower</MenuItem>
-                                    {
-                                        towers.map((tower: any) => (
-                                            <MenuItem key={tower.id} value={tower.id}>{tower.name}</MenuItem>
-                                        ))
-                                    }
-                                </Select>
-                            </FormControl>
-
-                            <FormControl required>
-                                <InputLabel className="bg-white px-1">Flat</InputLabel>
-                                <Select
-                                    value={flat}
-                                    onChange={(e) => setFlat(e.target.value)}
-                                    label="Flat"
-                                    displayEmpty
-                                >
-                                    <MenuItem value="" disabled>Select Flat</MenuItem>
-                                    {/* Placeholder items */}
-                                    {
-                                        flats.map((flat: any) => (
-                                            <MenuItem key={flat.id} value={flat.id}>{flat.flat_no}</MenuItem>
-                                        ))
-                                    }
-                                </Select>
-                            </FormControl>
-                        </div>
-
-                        {/* Global Dates */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <TextField
-                                required
-                                type="date"
-                                label="Start Date (Applies to all)"
-                                value={globalStartDate}
-                                onChange={(e) => setGlobalStartDate(e.target.value)}
-                                InputLabelProps={{ shrink: true }}
-                            />
-                            <TextField
-                                required
-                                type="date"
-                                label="End Date (Applies to all)"
-                                value={globalEndDate}
-                                onChange={(e) => setGlobalEndDate(e.target.value)}
-                                InputLabelProps={{ shrink: true }}
-                            />
-                        </div>
-                    </div>
-
+                <div className="space-y-6">
+                    <Card>
+                        <CardContent className="mt-8">
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <FormControl required sx={fieldStyles}>
+                                        <InputLabel className="bg-white px-1">Tower</InputLabel>
+                                        <Select
+                                            value={tower}
+                                            onChange={(e) => setTower(e.target.value)}
+                                            label="Tower"
+                                            displayEmpty
+                                        >
+                                            <MenuItem value="" disabled>
+                                                Select Tower
+                                            </MenuItem>
+                                            {towers.map((tower: any) => (
+                                                <MenuItem key={tower.id} value={tower.id}>
+                                                    {tower.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                    <FormControl required sx={fieldStyles}>
+                                        <InputLabel className="bg-white px-1">Flat</InputLabel>
+                                        <Select
+                                            value={flat}
+                                            onChange={(e) => setFlat(e.target.value)}
+                                            label="Flat"
+                                            displayEmpty
+                                        >
+                                            <MenuItem value="" disabled>
+                                                Select Flat
+                                            </MenuItem>
+                                            {flats.map((flat: any) => (
+                                                <MenuItem key={flat.id} value={flat.id}>
+                                                    {flat.flat_no}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                    <FormControl fullWidth sx={fieldStyles}>
+                                        <InputLabel className="bg-white px-1">
+                                            Membership Plan
+                                        </InputLabel>
+                                        <Select
+                                            value={globalMembershipPlanId}
+                                            onChange={(e) =>
+                                                setGlobalMembershipPlanId(e.target.value)
+                                            }
+                                            label="Membership Plan"
+                                            displayEmpty
+                                        >
+                                            <MenuItem value="">Select Membership Plan</MenuItem>
+                                            {membershipPlans.map((plan: any) => (
+                                                <MenuItem key={plan.id} value={plan.id}>
+                                                    {plan.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                    <TextField
+                                        required
+                                        type="date"
+                                        label="Start Date (Applies to all)"
+                                        value={globalStartDate}
+                                        onChange={(e) => setGlobalStartDate(e.target.value)}
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={fieldStyles}
+                                    />
+                                    <TextField
+                                        required
+                                        type="date"
+                                        label="End Date (Applies to all)"
+                                        value={globalEndDate}
+                                        onChange={(e) => setGlobalEndDate(e.target.value)}
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={fieldStyles}
+                                    />
+                                    <FormControl fullWidth sx={fieldStyles}>
+                                        <InputLabel className="bg-white px-1">
+                                            Membership Type
+                                        </InputLabel>
+                                        <Select
+                                            value={globalMembershipType}
+                                            onChange={(e) => setGlobalMembershipType(e.target.value)}
+                                            label="Membership Type"
+                                        >
+                                            <MenuItem value="paid">Paid</MenuItem>
+                                            <MenuItem value="free">Free</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
 
                     {/* Dynamic Member Forms */}
                     {members.map((member, index) => (
@@ -300,35 +413,56 @@ const AddCMSClubMembers = () => {
                                     <RadioGroup
                                         row
                                         value={member.userSelectionType}
-                                        onChange={(e) => updateMember(member.id, "userSelectionType", e.target.value)}
+                                        onChange={(e) =>
+                                            updateMember(
+                                                member.id,
+                                                "userSelectionType",
+                                                e.target.value
+                                            )
+                                        }
                                         className="mb-4"
                                     >
-                                        <FormControlLabel value="select" control={<Radio />} label="Select User" className="mr-8" />
-                                        <FormControlLabel value="enter" control={<Radio />} label="Enter User Details" />
+                                        <FormControlLabel
+                                            value="select"
+                                            control={<Radio />}
+                                            label="Select User"
+                                            className="mr-8"
+                                        />
+                                        <FormControlLabel
+                                            value="enter"
+                                            control={<Radio />}
+                                            label="Enter User Details"
+                                        />
                                     </RadioGroup>
 
                                     {/* User Input Section */}
                                     {member.userSelectionType === "select" ? (
                                         <div className="grid grid-cols-1 gap-4">
-                                            <FormControl required fullWidth>
+                                            <FormControl required fullWidth sx={fieldStyles}>
                                                 <InputLabel className="bg-white px-1">User</InputLabel>
                                                 <Select
                                                     value={member.selectedUser}
-                                                    onChange={(e) => updateMember(member.id, "selectedUser", e.target.value)}
+                                                    onChange={(e) =>
+                                                        updateMember(
+                                                            member.id,
+                                                            "selectedUser",
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     label="User"
                                                     displayEmpty
                                                 >
-                                                    <MenuItem value="" disabled>Select User</MenuItem>
-                                                    {
-                                                        flatUsers.map((user: any) => {
-                                                            const [username, id] = user;
-                                                            return (
-                                                                <MenuItem key={id} value={id}>
-                                                                    {username}
-                                                                </MenuItem>
-                                                            )
-                                                        })
-                                                    }
+                                                    <MenuItem value="" disabled>
+                                                        Select User
+                                                    </MenuItem>
+                                                    {flatUsers.map((user: any) => {
+                                                        const [username, id] = user;
+                                                        return (
+                                                            <MenuItem key={id} value={id}>
+                                                                {username}
+                                                            </MenuItem>
+                                                        );
+                                                    })}
                                                 </Select>
                                             </FormControl>
                                         </div>
@@ -339,37 +473,57 @@ const AddCMSClubMembers = () => {
                                                 label="First Name"
                                                 placeholder="Enter First Name"
                                                 value={member.firstName}
-                                                onChange={(e) => updateMember(member.id, "firstName", e.target.value)}
+                                                onChange={(e) =>
+                                                    updateMember(member.id, "firstName", e.target.value)
+                                                }
+                                                sx={fieldStyles}
                                             />
                                             <TextField
                                                 required
                                                 label="Last Name"
                                                 placeholder="Enter Last Name"
                                                 value={member.lastName}
-                                                onChange={(e) => updateMember(member.id, "lastName", e.target.value)}
+                                                onChange={(e) =>
+                                                    updateMember(member.id, "lastName", e.target.value)
+                                                }
+                                                sx={fieldStyles}
                                             />
                                             <TextField
                                                 label="Email"
                                                 placeholder="Enter Email"
                                                 value={member.email}
-                                                onChange={(e) => updateMember(member.id, "email", e.target.value)}
+                                                onChange={(e) =>
+                                                    updateMember(member.id, "email", e.target.value)
+                                                }
+                                                sx={fieldStyles}
                                             />
                                             <TextField
                                                 label="Mobile"
                                                 placeholder="Enter Mobile"
                                                 value={member.mobile}
-                                                onChange={(e) => updateMember(member.id, "mobile", e.target.value)}
+                                                onChange={(e) =>
+                                                    updateMember(member.id, "mobile", e.target.value)
+                                                }
+                                                sx={fieldStyles}
                                             />
                                         </div>
                                     )}
 
                                     {/* Resident Type */}
                                     <div className="grid grid-cols-1 gap-4">
-                                        <FormControl fullWidth>
-                                            <InputLabel className="bg-white px-1">Resident Type</InputLabel>
+                                        <FormControl fullWidth sx={fieldStyles}>
+                                            <InputLabel className="bg-white px-1">
+                                                Resident Type
+                                            </InputLabel>
                                             <Select
                                                 value={member.residentType}
-                                                onChange={(e) => updateMember(member.id, "residentType", e.target.value)}
+                                                onChange={(e) =>
+                                                    updateMember(
+                                                        member.id,
+                                                        "residentType",
+                                                        e.target.value
+                                                    )
+                                                }
                                                 label="Resident Type"
                                             >
                                                 <MenuItem value="Owner">Owner</MenuItem>
@@ -384,7 +538,9 @@ const AddCMSClubMembers = () => {
                                             <Checkbox
                                                 id={`club-membership-${member.id}`}
                                                 checked={member.isClubMembership}
-                                                onCheckedChange={(checked) => updateMember(member.id, "isClubMembership", checked)}
+                                                onCheckedChange={(checked) =>
+                                                    updateMember(member.id, "isClubMembership", checked)
+                                                }
                                             />
                                             <label
                                                 htmlFor={`club-membership-${member.id}`}
@@ -394,15 +550,24 @@ const AddCMSClubMembers = () => {
                                             </label>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                                            <TextField
-                                                required
-                                                label="Membership Number"
-                                                placeholder="Enter Number"
-                                                value={member.membershipNumber}
-                                                onChange={(e) => updateMember(member.id, "membershipNumber", e.target.value)}
-                                            />
-                                        </div>
+                                        {member.isClubMembership && (
+                                            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                                                <TextField
+                                                    required
+                                                    label="Membership Number"
+                                                    placeholder="Enter Number"
+                                                    value={member.membershipNumber}
+                                                    onChange={(e) =>
+                                                        updateMember(
+                                                            member.id,
+                                                            "membershipNumber",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    sx={fieldStyles}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Access Card Section */}
@@ -411,7 +576,13 @@ const AddCMSClubMembers = () => {
                                             <Checkbox
                                                 id={`access-card-${member.id}`}
                                                 checked={member.isAccessCardAllocated}
-                                                onCheckedChange={(checked) => updateMember(member.id, "isAccessCardAllocated", checked)}
+                                                onCheckedChange={(checked) =>
+                                                    updateMember(
+                                                        member.id,
+                                                        "isAccessCardAllocated",
+                                                        checked
+                                                    )
+                                                }
                                             />
                                             <label
                                                 htmlFor={`access-card-${member.id}`}
@@ -421,20 +592,31 @@ const AddCMSClubMembers = () => {
                                             </label>
                                         </div>
 
-                                        <TextField
-                                            label="Access Card ID"
-                                            placeholder="Enter Access Card ID"
-                                            value={member.accessCardId}
-                                            onChange={(e) => updateMember(member.id, "accessCardId", e.target.value)}
-                                            className="w-full"
-                                        />
+                                        {member.isAccessCardAllocated && (
+                                            <TextField
+                                                label="Access Card ID"
+                                                placeholder="Enter Access Card ID"
+                                                value={member.accessCardId}
+                                                onChange={(e) =>
+                                                    updateMember(
+                                                        member.id,
+                                                        "accessCardId",
+                                                        e.target.value
+                                                    )
+                                                }
+                                                className="w-full"
+                                                sx={fieldStyles}
+                                            />
+                                        )}
                                     </div>
 
                                     {/* File Uploads */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {/* ID Card */}
                                         <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-700">ID Card</label>
+                                            <label className="text-sm font-medium text-gray-700">
+                                                ID Card
+                                            </label>
                                             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer relative group">
                                                 <input
                                                     type="file"
@@ -458,7 +640,9 @@ const AddCMSClubMembers = () => {
                                                         <div className="w-12 h-12 mb-2 text-gray-400">
                                                             <Upload className="w-full h-full" />
                                                         </div>
-                                                        <span className="text-xl font-medium text-gray-400">Upload</span>
+                                                        <span className="text-xl font-medium text-gray-400">
+                                                            Upload
+                                                        </span>
                                                     </>
                                                 )}
                                             </div>
@@ -466,7 +650,9 @@ const AddCMSClubMembers = () => {
 
                                         {/* Resident's Photo */}
                                         <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-700">Resident's Photo</label>
+                                            <label className="text-sm font-medium text-gray-700">
+                                                Resident's Photo
+                                            </label>
                                             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer relative group">
                                                 <input
                                                     type="file"
@@ -474,7 +660,8 @@ const AddCMSClubMembers = () => {
                                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                                     onChange={(e) => {
                                                         const file = e.target.files?.[0];
-                                                        if (file) updateMember(member.id, "residentPhoto", file);
+                                                        if (file)
+                                                            updateMember(member.id, "residentPhoto", file);
                                                     }}
                                                 />
                                                 {member.residentPhoto ? (
@@ -490,13 +677,14 @@ const AddCMSClubMembers = () => {
                                                         <div className="w-12 h-12 mb-2 text-gray-400">
                                                             <Upload className="w-full h-full" />
                                                         </div>
-                                                        <span className="text-xl font-medium text-gray-400">Upload</span>
+                                                        <span className="text-xl font-medium text-gray-400">
+                                                            Upload
+                                                        </span>
                                                     </>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
-
                                 </div>
                             </CardContent>
                         </Card>
@@ -520,7 +708,6 @@ const AddCMSClubMembers = () => {
                             Submit
                         </Button>
                     </div>
-
                 </div>
             </div>
         </div>

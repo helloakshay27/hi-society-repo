@@ -232,9 +232,11 @@ const BMSCommunicationTemplate = lazy(
 const CMSFacility = lazy(() => import("@/pages/CMSFacility"));
 const CMSRules = lazy(() => import("@/pages/CMSRules"));
 const CMSClubMembers = lazy(() => import("@/pages/CMSClubMembers"));
+const CMSClubMembersDetails = lazy(() => import("@/pages/CMSClubMembersDetails"));
 const AddCMSClubMembers = lazy(() => import("@/pages/AddCMSClubMembers"));
 const EditCMSClubMembers = lazy(() => import("@/pages/EditCMSClubMembers"));
 const CMSFacilityBookings = lazy(() => import("@/pages/CMSFacilityBookings"));
+const BookingDetailsPage = lazy(() => import("@/pages/BookingDetailsPage"));
 const AddFacilityBookingPage = lazy(() => import("@/pages/AddFacilityBookingPage"));
 const CMSMembershipPlanSetup = lazy(() => import("@/pages/ClubManagement/CMSMembershipPlanSetup"));
 const CMSPayments = lazy(() => import("@/pages/CMSPayments"));
@@ -1107,11 +1109,16 @@ export const setupMemberRoutes = (
     <Route path="/cms/rules" Component={withSuspense(CMSRules)} />
     <Route path="/cms/membership-plan-setup" Component={withSuspense(CMSMembershipPlanSetup)} />
     <Route path="/cms/club-members" Component={withSuspense(CMSClubMembers)} />
+    <Route path="/cms/club-members/view/:id" Component={withSuspense(CMSClubMembersDetails)} />
     <Route path="/cms/club-members/add" Component={withSuspense(AddCMSClubMembers)} />
     <Route path="/cms/club-members/edit/:id" Component={withSuspense(EditCMSClubMembers)} />
     <Route
       path="/cms/facility-bookings"
       Component={withSuspense(CMSFacilityBookings)}
+    />
+    <Route
+      path="/cms/facility-bookings/:id"
+      Component={withSuspense(BookingDetailsPage)}
     />
     <Route
       path="/cms/facility-bookings/add"
