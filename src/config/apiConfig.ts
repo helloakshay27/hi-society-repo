@@ -35,8 +35,8 @@ const getApiConfig = () => {
   const savedToken = getToken();
   const savedBaseUrl = getBaseUrl();
 
-  // Always use dynamic base URL from localStorage only
-  const finalBaseUrl = savedBaseUrl;
+  // Use saved base URL or fallback to UAT Hi-Society
+  const finalBaseUrl = savedBaseUrl || 'https://uat-hi-society.lockated.com';
 
   console.log("API Config Debug:", {
     savedToken: savedToken ? "Present" : "Missing",

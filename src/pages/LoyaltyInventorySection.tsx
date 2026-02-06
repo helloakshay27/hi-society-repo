@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, X } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/select";
 
 export const LoyaltyInventorySection = () => {
+    const navigate = useNavigate();
     // const baseURL = API_CONFIG.BASE_URL;
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -208,6 +210,12 @@ export const LoyaltyInventorySection = () => {
         </Button>
     );
 
+    // Row click handler for navigation
+    const handleRowClick = (row: any) => {
+        // Use SKU as unique id for navigation (change to row.id if you have a numeric id)
+        navigate(`/loyalty/inventory-details/${row.sku}`);
+    };
+
     return (
         <div className="p-6 space-y-6 bg-white min-h-screen">
             {/* Header */}
@@ -303,6 +311,8 @@ export const LoyaltyInventorySection = () => {
                     loading={loading}
                     loadingMessage="Loading inventory..."
                     emptyMessage="No inventory items found"
+                    onRowClick={handleRowClick}
+                    rowClickable
                 />
             </div>
 

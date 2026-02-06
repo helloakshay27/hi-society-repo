@@ -20,7 +20,7 @@ import {
   Avatar,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
+import { getFullUrl } from "@/config/apiConfig";
 
 // Styled Components
 const SectionCard = styled(Paper)(({ theme }) => ({
@@ -120,8 +120,15 @@ const CameraButton = styled(IconButton)(({ theme }) => ({
   },
 }));
 
-const CREATE_API = `${HI_SOCIETY_CONFIG.BASE_URL}/crm/admin/user_societies.json?token=${HI_SOCIETY_CONFIG.TOKEN}`;
-const EDIT_API = (id: string) => `${HI_SOCIETY_CONFIG.BASE_URL}/crm/admin/user_societies/${id}.json?token=${HI_SOCIETY_CONFIG.TOKEN}`;
+const getCreateApiUrl = () => {
+  const token = localStorage.getItem('token') || '';
+  return getFullUrl(`/crm/admin/user_societies.json?token=${token}`);
+};
+
+const getEditApiUrl = (id: string) => {
+  const token = localStorage.getItem('token') || '';
+  return getFullUrl(`/crm/admin/user_societies/${id}.json?token=${token}`);
+};
 
 const mapFormDataToApiPayload = (formData: any) => ({
   email: formData.email,
@@ -205,14 +212,58 @@ const AddUserPage = () => {
   const isEdit = Boolean(userId);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState(defaultFormData);
+  const [towerOptions, setTowerOptions] = useState<{ id: number; name: string }[]>([]);
+  const [flatOptions, setFlatOptions] = useState<{ id: number; flat_no: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch user data if editing
+  // Get society_id from localStorage (set by header)
+  const getSocietyId = () => {
+    return localStorage.getItem('selectedUserSociety') || '';
+  };
+
+  // Fetch flats when tower changes
+  const fetchFlats = async (blockId: number) => {
+    try {
+      const societyId = getSocietyId();
+      const token = localStorage.getItem('token') || '';
+      if (!societyId || !token) {
+        setFlatOptions([]);
+        return;
+      }
+      const url = getFullUrl(`/get_society_flats.json?token=${token}&society_id=${societyId}&society_block_id=${blockId}`);
+      const res = await fetch(url);
+      const data = await res.json();
+      setFlatOptions(Array.isArray(data.society_flats) ? data.society_flats : []);
+    } catch (e) {
+      setFlatOptions([]);
+    }
+  };
+
+  // Fetch user data if editing and fetch tower options always
   useEffect(() => {
+    // Fetch towers (blocks)
+    const fetchTowers = async () => {
+      try {
+        const societyId = getSocietyId();
+        const token = localStorage.getItem('token') || '';
+        if (!societyId || !token) {
+          setTowerOptions([]);
+          return;
+        }
+        const url = getFullUrl(`/get_society_blocks.json?token=${token}&society_id=${societyId}`);
+        const res = await fetch(url);
+        const data = await res.json();
+        setTowerOptions(Array.isArray(data.society_blocks) ? data.society_blocks : []);
+      } catch (e) {
+        setTowerOptions([]);
+      }
+    };
+    fetchTowers();
+
     if (isEdit && userId) {
       setLoading(true);
-      fetch(EDIT_API(userId), { method: "GET" })
+      fetch(getEditApiUrl(userId), { method: "GET" })
         .then(res => res.json())
         .then(data => {
           // Map API response to formData shape
@@ -269,7 +320,7 @@ const AddUserPage = () => {
     setError(null);
     const payload = mapFormDataToApiPayload(formData);
     try {
-      const res = await fetch(isEdit && userId ? EDIT_API(userId) : CREATE_API, {
+      const res = await fetch(isEdit && userId ? getEditApiUrl(userId) : getCreateApiUrl(), {
         method: isEdit ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -481,9 +532,9 @@ const AddUserPage = () => {
                     label="Select Phase"
                     onChange={(e) => handleInputChange("phase", e.target.value)}
                   >
-                    <MenuItem value="Phase 1">Phase 1</MenuItem>
-                    <MenuItem value="Phase 2">Phase 2</MenuItem>
-                    <MenuItem value="Phase 3">Phase 3</MenuItem>
+                    <MenuItem value="">Select Phase</MenuItem>
+                    <MenuItem value="Pre Sales">Post Sales</MenuItem>
+                    <MenuItem value="Post Sales">Post Possession</MenuItem>
                   </Select>
                 </FormControl>
 
@@ -506,11 +557,21 @@ const AddUserPage = () => {
                   <Select
                     value={formData.tower}
                     label="Select Tower"
-                    onChange={(e) => handleInputChange("tower", e.target.value)}
+                    onChange={(e) => {
+                      const selectedTower = towerOptions.find(t => t.name === e.target.value);
+                      handleInputChange("tower", e.target.value);
+                      handleInputChange("flat", ""); // Reset flat when tower changes
+                      if (selectedTower) {
+                        fetchFlats(selectedTower.id);
+                      } else {
+                        setFlatOptions([]);
+                      }
+                    }}
                   >
-                    <MenuItem value="Tower A">Tower A</MenuItem>
-                    <MenuItem value="Tower B">Tower B</MenuItem>
-                    <MenuItem value="Tower C">Tower C</MenuItem>
+                    <MenuItem value="">Select Tower</MenuItem>
+                    {towerOptions.map((block) => (
+                      <MenuItem key={block.id} value={block.name}>{block.name}</MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
 
@@ -522,9 +583,10 @@ const AddUserPage = () => {
                     label="Select Flat"
                     onChange={(e) => handleInputChange("flat", e.target.value)}
                   >
-                    <MenuItem value="101">101</MenuItem>
-                    <MenuItem value="102">102</MenuItem>
-                    <MenuItem value="103">103</MenuItem>
+                    <MenuItem value="">Select Flat</MenuItem>
+                    {flatOptions.map((flat) => (
+                      <MenuItem key={flat.id} value={flat.flat_no}>{flat.flat_no}</MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
 
