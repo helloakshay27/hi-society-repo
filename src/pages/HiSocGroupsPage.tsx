@@ -59,7 +59,7 @@ const columns: ColumnConfig[] = [
   },
 ];
 
-const HiSocGroupsPage = () => {
+export const HiSocGroupsPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const baseUrl = localStorage.getItem("baseUrl");

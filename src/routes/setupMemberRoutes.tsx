@@ -16,13 +16,13 @@ import { LoyaltyInventorySection } from "@/pages/LoyaltyInventorySection";
 import { TicketDashboard } from "@/TicketDashboardbackup";
 import CRMGroupsPage from "@/pages/CRMGroupsPage";
 import { VisitorsDashboard } from "@/pages/VisitorsDashboard";
-import HiSocGroupsPage from "@/pages/HiSocGroupsPage";
+// import { HiSocGroupsPage } from "@/pages/HiSocGroupsPage";
 import HiSocGroupDetailsPage from "@/pages/HiSocGroupDetailsPage";
 import { PatrollingDashboard } from "@/pages/PatrollingDashboard";
 import { PatrollingResponsePage } from "@/pages/PatrollingResponsePage";
 import { StaffsDashboard } from "@/pages/StaffsDashboard";
 
-
+const HiSocGroupsPage = lazy(() => import("@/pages/HiSocGroupsPage"));
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
 const NewTier = lazy(() => import("@/pages/NewTier"));

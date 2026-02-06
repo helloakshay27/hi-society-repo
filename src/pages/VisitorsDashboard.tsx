@@ -1978,3 +1978,5 @@ export const VisitorsDashboard = () => {
     </div>
   );
 };
+
+export default VisitorsDashboard;

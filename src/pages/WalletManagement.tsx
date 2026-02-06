@@ -26,7 +26,7 @@ interface WalletTransaction {
   created_at?: string;
 }
 
-const WalletManagement: React.FC = () => {
+export const WalletManagement = () => {
   const [timeRange, setTimeRange] = useState("10");
   const [loading, setLoading] = useState(false);
   const [cardsData, setCardsData] = useState<any>([]);
