@@ -21,6 +21,13 @@ import HiSocGroupDetailsPage from "@/pages/HiSocGroupDetailsPage";
 import { PatrollingDashboard } from "@/pages/PatrollingDashboard";
 import { PatrollingResponsePage } from "@/pages/PatrollingResponsePage";
 import { StaffsDashboard } from "@/pages/StaffsDashboard";
+import HiSocEventCreate from "@/pages/HiSocEventCreate";
+import HiSocEventEdit from "@/pages/HiSocEventEdit";
+import HiSocEventList from "@/pages/HiSocEventList";
+import HiSocEventDetails from "@/pages/HiSocEventDetails";
+import HiSocNoticeList from "@/pages/HiSocNoticeList";
+import HiSocNoticeCreate from "@/pages/HiSocNoticeCreate";
+import HiSocNoticeDetails from "@/pages/HiSocNoticeDetails";
 
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
@@ -232,11 +239,9 @@ const BMSCommunicationTemplate = lazy(
 const CMSFacility = lazy(() => import("@/pages/CMSFacility"));
 const CMSRules = lazy(() => import("@/pages/CMSRules"));
 const CMSClubMembers = lazy(() => import("@/pages/CMSClubMembers"));
-const CMSClubMembersDetails = lazy(() => import("@/pages/CMSClubMembersDetails"));
 const AddCMSClubMembers = lazy(() => import("@/pages/AddCMSClubMembers"));
 const EditCMSClubMembers = lazy(() => import("@/pages/EditCMSClubMembers"));
 const CMSFacilityBookings = lazy(() => import("@/pages/CMSFacilityBookings"));
-const BookingDetailsPage = lazy(() => import("@/pages/BookingDetailsPage"));
 const AddFacilityBookingPage = lazy(() => import("@/pages/AddFacilityBookingPage"));
 const CMSMembershipPlanSetup = lazy(() => import("@/pages/ClubManagement/CMSMembershipPlanSetup"));
 const CMSPayments = lazy(() => import("@/pages/CMSPayments"));
@@ -1070,6 +1075,13 @@ export const setupMemberRoutes = (
     <Route path="/bms/parking" Component={withSuspense(BMSParking)} />
     <Route path="/bms/groups" Component={withSuspense(HiSocGroupsPage)} />
     <Route path="/bms/groups/details/:id" element={<HiSocGroupDetailsPage />} />
+    <Route path="/bms/hisoc-event-list" element={<HiSocEventList />} />
+    <Route path="/bms/hisoc-event-create" element={<HiSocEventCreate />} />
+    <Route path="/bms/hisoc-event-edit/:id" element={<HiSocEventEdit />} />
+    <Route path="/bms/hisoc-event-details/:id" element={<HiSocEventDetails />} />
+    <Route path="/bms/hisoc-notice-list" element={<HiSocNoticeList />} />
+    <Route path="/bms/hisoc-notice-create" element={<HiSocNoticeCreate />} />
+    <Route path="/bms/hisoc-notice-details/:id" element={<HiSocNoticeDetails />} />
     <Route
       path="/bms/quarantine-tracker"
       Component={withSuspense(BMSQuarantineTracker)}
@@ -1109,16 +1121,11 @@ export const setupMemberRoutes = (
     <Route path="/cms/rules" Component={withSuspense(CMSRules)} />
     <Route path="/cms/membership-plan-setup" Component={withSuspense(CMSMembershipPlanSetup)} />
     <Route path="/cms/club-members" Component={withSuspense(CMSClubMembers)} />
-    <Route path="/cms/club-members/view/:id" Component={withSuspense(CMSClubMembersDetails)} />
     <Route path="/cms/club-members/add" Component={withSuspense(AddCMSClubMembers)} />
     <Route path="/cms/club-members/edit/:id" Component={withSuspense(EditCMSClubMembers)} />
     <Route
       path="/cms/facility-bookings"
       Component={withSuspense(CMSFacilityBookings)}
-    />
-    <Route
-      path="/cms/facility-bookings/:id"
-      Component={withSuspense(BookingDetailsPage)}
     />
     <Route
       path="/cms/facility-bookings/add"
@@ -1293,7 +1300,7 @@ export const setupMemberRoutes = (
     {/* SmartSecure Routes */}
     <Route
       path="/smartsecure/visitor-in"
-      Component={withSuspense(VisitorsDashboard)}
+      Component={withSuspense(SmartSecureVisitorIn)}
     />
     <Route
       path="/smartsecure/visitor-out"
@@ -1301,7 +1308,7 @@ export const setupMemberRoutes = (
     />
     <Route
       path="/smartsecure/visitor-history"
-      Component={withSuspense(SmartSecureVisitorHistory)}
+      Component={withSuspense(VisitorsDashboard)}
     />
     <Route
       path="/smartsecure/staffs/all"
