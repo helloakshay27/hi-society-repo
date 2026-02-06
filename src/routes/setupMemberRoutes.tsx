@@ -9,7 +9,7 @@ import { BookingSetupDetailClubPage } from "@/pages/ClubManagement/AmenityBookin
 import { EditBookingSetupClubPage } from "@/pages/ClubManagement/AmenityBookingSetupClubEdit";
 
 import { LoyaltyDashboard } from "@/pages/LoyaltyDashboard";
-import { WalletManagement } from "@/pages/WalletManagement";
+import WalletManagement from "@/pages/WalletManagement";
 import { LoyaltyCustomers } from "@/pages/LoyaltyCustomers";
 import { LoyaltyCustomerDetails } from "@/pages/LoyaltyCustomerDetails";
 import { LoyaltyInventorySection } from "@/pages/LoyaltyInventorySection";
@@ -1363,7 +1363,7 @@ export const setupMemberRoutes = (
       path="/smartsecure/patrolling"
       Component={withSuspense(SmartSecurePatrolling)}
     /> */}
-     {/* <Route
+    {/* <Route
       path="/smartsecure/patrolling"
       Component={withSuspense(PatrollingDashboard)}
     /> */}
@@ -1371,7 +1371,7 @@ export const setupMemberRoutes = (
       path="/smartsecure/patrolling-info"
       element={<PatrollingDashboard />}
     />
-     <Route
+    <Route
       path="/smartsecure/response"
       element={<PatrollingResponsePage />}
     />
