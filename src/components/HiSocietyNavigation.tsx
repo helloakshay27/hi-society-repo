@@ -115,16 +115,16 @@ export const HiSocietyNavigation: React.FC = () => {
     ? navigationItems.filter(
       (item) => item.id === "home" || item.id === "settings"
     )
-    : isFitoutDomain
-      ? navigationItems.filter(
-        (item) => item.id === "fitout" || item.id === "settings"
-      )
-      : navigationItems; // Show all navigation items including Home, BMS, and Loyalty
+    // : isFitoutDomain
+    //   ? navigationItems.filter(
+    //     (item) => item.id === "fitout" || item.id === "settings"
+    //   )
+    : navigationItems; // Show all navigation items including Home, BMS, and Loyalty
 
   // Detect active navigation based on current path
   useEffect(() => {
     const path = location.pathname;
-    
+
     // Check for Application Setup paths first - these should stay in settings
     if (
       path.startsWith("/campaigns/referral-setup") ||
@@ -199,8 +199,8 @@ export const HiSocietyNavigation: React.FC = () => {
                   key={item.id}
                   onClick={() => handleNavClick(item)}
                   className={`pb-3 text-sm transition-colors whitespace-nowrap flex items-center gap-2 flex-shrink-0 ${isActive
-                      ? "text-[#C72030] border-b-2 border-[#C72030] font-medium"
-                      : "text-[#1a1a1a] opacity-70 hover:opacity-100"
+                    ? "text-[#C72030] border-b-2 border-[#C72030] font-medium"
+                    : "text-[#1a1a1a] opacity-70 hover:opacity-100"
                     }`}
                 >
                   <span>{item.label}</span>
