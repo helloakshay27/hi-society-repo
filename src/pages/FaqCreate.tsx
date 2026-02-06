@@ -222,7 +222,7 @@ const FaqCreate = () => {
     setSelectedSiteId("");
 
     toast.success("FAQ added to list");
-  };
+  }}
 
   const handleDeleteFaq = (index) => {
     setFormData((prev) => ({
@@ -430,6 +430,6 @@ const FaqCreate = () => {
       </div>
     </div>
   );
-};
+}
 
 export default FaqCreate;
