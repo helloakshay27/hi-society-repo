@@ -119,9 +119,12 @@ export const Header = () => {
   const isWebSite = hostname.includes("web.gophygital.work");
 
   const isClubSite = hostname === "club.lockated.com";
+  const org_id = localStorage.getItem("org_id");
+
   const isPulseSite =
     hostname === "pulse.lockated.com" ||
-    hostname.includes("pulse-uat.panchshil.com");
+    hostname.includes("pulse-uat.panchshil.com") ||
+    org_id === "90";
 
   const isLocalhost =
     hostname.includes("localhost") ||
@@ -146,7 +149,8 @@ export const Header = () => {
     email: "",
   };
   const userId = user.id;
-  const isRestrictedUser = user?.email === "karan.balsara@zycus.com";
+  const isRestrictedUser =
+    user?.email === "karan.balsara@zycus.com" || org_id === "90"; // Example condition for restricted user
 
   const assetSuggestions = [
     "sdcdsc",

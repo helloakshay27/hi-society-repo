@@ -144,12 +144,17 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
     const [showCommentsForPost, setShowCommentsForPost] = useState<number | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);
     const [isEditMode, setIsEditMode] = useState(false);
+    interface PollOptionInput {
+        id?: number;
+        name: string;
+    }
+
     const [editingPost, setEditingPost] = useState<Post | null>(null);
     const [existingAttachments, setExistingAttachments] = useState<Attachment[]>([]);
-    const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
+    const [pollOptions, setPollOptions] = useState<PollOptionInput[]>([{ name: '' }, { name: '' }]);
     const [isToggling, setIsToggling] = useState<number | null>(null)
     const [isActive, setIsActive] = useState(true);
-    const [deleteConfirmation, setDeleteConfirmation] = useState<{ open: boolean; type: 'post' | 'comment' | 'document' | null; id: number | null }>({ open: false, type: null, id: null });
+    const [deleteConfirmation, setDeleteConfirmation] = useState<{ open: boolean; type: 'post' | 'comment' | 'document' | 'notice' | 'event' | null; id: number | null }>({ open: false, type: null, id: null });
     const [carouselOpen, setCarouselOpen] = useState(false);
     const [carouselAttachments, setCarouselAttachments] = useState<Attachment[]>([]);
     const [carouselStartIndex, setCarouselStartIndex] = useState(0);
@@ -286,12 +291,31 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                     "Authorization": `Bearer ${token}`
                 }
             })
-            const posts = response.data.posts.map(post => ({
-                ...post,
-                type: 'post'
-            }))
-            const events = response.data.events.map(transformedEvent)
-            const notices = response.data.notices ? response.data.notices.map(transformedNotice) : []
+
+            // Transform posts based on shared_from_type
+            const posts = response.data.posts.map((post: any) => {
+                let transformedPost: any = {
+                    ...post,
+                    type: 'post' // default type
+                };
+
+                // Check if this is a shared event or notice
+                if (post.shared_from_type === 'Event' && post.event) {
+                    transformedPost = {
+                        ...post,
+                        ...transformedEvent(post.event),
+                        type: 'event'
+                    };
+                } else if (post.shared_from_type === 'Noticeboard' && post.notice) {
+                    transformedPost = {
+                        ...post,
+                        ...transformedNotice(post.notice),
+                        type: 'notice'
+                    };
+                }
+
+                return transformedPost;
+            });
 
             // Fetch documents
             let documents = [];
@@ -307,7 +331,7 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                 console.log('Error fetching documents:', docError);
             }
 
-            const combined = [...posts, ...events, ...notices, ...documents].sort(
+            const combined = [...posts, ...documents].sort(
                 (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
             );
 
@@ -318,9 +342,6 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
             setIsLoadingPosts(false);
         }
     }
-
-
-    console.log(posts)
 
     const confirmDelete = async () => {
         if (!deleteConfirmation.id) return;
@@ -368,6 +389,50 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                     }
                 );
                 toast.success('Document deleted successfully');
+                await fetchPosts();
+            } else if (deleteConfirmation.type === 'notice') {
+                // Fetch notice data to get community_ids
+                const noticeResponse = await axios.get(
+                    `https://${baseUrl}/pms/admin/noticeboards/${deleteConfirmation.id}.json`,
+                    {
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+
+                const noticeData = noticeResponse.data;
+                const currentCommunityIds = noticeData.community_ids || [];
+
+                // Filter out current communityId from the array
+                const filteredCommunityIds = currentCommunityIds.filter(
+                    (cId: string | number) => String(cId) !== String(communityId)
+                );
+
+                // Update notice with filtered community_ids
+                await axios.put(
+                    `https://${baseUrl}/pms/admin/noticeboards/${deleteConfirmation.id}.json`,
+                    { noticeboard: { community_ids: filteredCommunityIds } },
+                    {
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+                toast.success('Notice deleted successfully');
+                await fetchPosts();
+            } else if (deleteConfirmation.type === 'event') {
+                // Update the community to remove this event
+                await axios.put(
+                    `https://${baseUrl}/communities/${communityId}.json`,
+                    { community: { event_ids: [deleteConfirmation.id] } },
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }
+                );
+                toast.success('Event deleted successfully');
                 await fetchPosts();
             }
         } catch (error) {
@@ -431,7 +496,7 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
         // Check if post has poll options
         if (post.poll_options && post.poll_options.length > 0) {
             // Open poll modal for poll posts
-            setPollOptions(post.poll_options.map(opt => opt.name));
+            setPollOptions(post.poll_options.map(opt => ({ id: opt.id, name: opt.name })));
             setCreatePollOpen(true);
         } else {
             // Open regular post modal for normal posts
@@ -440,7 +505,17 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
     };
 
     const handleDeletePost = (postId: number, postType?: string) => {
-        setDeleteConfirmation({ open: true, type: postType === 'document' ? 'document' : 'post', id: postId });
+        let deleteType: 'post' | 'comment' | 'document' | 'notice' | 'event' | null = 'post';
+
+        if (postType === 'document') {
+            deleteType = 'document';
+        } else if (postType === 'notice') {
+            deleteType = 'notice';
+        } else if (postType === 'event') {
+            deleteType = 'event';
+        }
+
+        setDeleteConfirmation({ open: true, type: deleteType, id: postId });
     };
 
     const handleCreatePost = async () => {
@@ -549,7 +624,7 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
 
     // Poll option handlers
     const handleAddPollOption = () => {
-        setPollOptions(prev => [...prev, '']);
+        setPollOptions(prev => [...prev, { name: '' }]);
     };
 
     const handleRemovePollOption = (index: number) => {
@@ -561,7 +636,7 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
     const handlePollOptionChange = (index: number, value: string) => {
         setPollOptions(prev => {
             const newOptions = [...prev];
-            newOptions[index] = value;
+            newOptions[index] = { ...newOptions[index], name: value };
             return newOptions;
         });
     };
@@ -573,7 +648,7 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
         }
 
         // Validate poll options - at least 2 non-empty options
-        const validOptions = pollOptions.filter(opt => opt.trim() !== '');
+        const validOptions = pollOptions.filter(opt => opt.name.trim() !== '');
         if (validOptions.length < 2) {
             toast.error('Please provide at least 2 poll options');
             return;
@@ -585,17 +660,32 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
             formData.append('resource_id', communityId || '');
             formData.append('resource_type', 'Community');
 
-            // Add poll options
-            validOptions.forEach((option, index) => {
-                if (isEditMode) {
-                    // only send id while editing
-                    formData.append(
-                        `poll_options_attributes[${index}][id]`,
-                        editingPost?.poll_options ? editingPost.poll_options[index]?.id.toString() || '' : ''
-                    );
+            // Calculate removed options if in edit mode
+            let removedOptions: PollOption[] = [];
+            if (isEditMode && editingPost?.poll_options) {
+                const currentIds = pollOptions.map(o => o.id).filter(Boolean);
+                removedOptions = editingPost.poll_options.filter(o => !currentIds.includes(o.id));
+            }
+
+            let formIndex = 0;
+
+            // Add current options (New + Updates)
+            validOptions.forEach((option) => {
+                formData.append(`poll_options_attributes[${formIndex}][name]`, option.name);
+                if (option.id) {
+                    formData.append(`poll_options_attributes[${formIndex}][id]`, option.id.toString());
                 }
-                formData.append(`poll_options_attributes[${index}][name]`, option);
+                formIndex++;
             });
+
+            // Add removed options (Deletes)
+            if (isEditMode && removedOptions.length > 0) {
+                removedOptions.forEach((option) => {
+                    formData.append(`poll_options_attributes[${formIndex}][id]`, option.id.toString());
+                    formData.append(`poll_options_attributes[${formIndex}][_destroy]`, 'true');
+                    formIndex++;
+                });
+            }
 
             // Add attachments if any
             if (selectedFiles.length > 0) {
@@ -632,7 +722,7 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                 setCreatePollOpen(false);
                 setPostContent("");
                 setSelectedFiles([]);
-                setPollOptions(['', '']);
+                setPollOptions([{ name: '' }, { name: '' }]);
                 setRemovedAttachmentIds([]);
                 setIsEditMode(false);
                 setEditingPost(null);
@@ -723,6 +813,15 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
             clap: { icon: "👏", hoverClass: "hover:text-yellow-600" },
         };
 
+        const REACTION_ORDER = [
+            "thumbs_up",
+            "heart",
+            "laugh",
+            "clap",
+            "angry",
+        ];
+
+
         return (
             <div className="bg-white rounded-[10px] border border-gray-200 p-6 mb-4 w-[80%]">
                 {/* Post Header */}
@@ -762,7 +861,7 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                                 onClick={() => handleDeletePost(post.id, post.type)}
                                 className="text-red-600 focus:text-red-600"
                             >
-                                Delete {post.type === 'document' ? 'Document' : 'Post'}
+                                Delete {post.type === 'document' ? 'Document' : post.type === 'notice' ? 'Notice' : post.type === 'event' ? 'Event' : 'Post'}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -854,7 +953,7 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                                     {post.attachments.map((attachment, index) => {
                                         const isImage = attachment?.document_content_type?.startsWith('image/');
                                         const isVideo = attachment.document_content_type?.startsWith('video/');
-                                        const shouldShowMore = post.attachments.length > 4 && index === 3;
+                                        const shouldShowMore = post.attachments.length > 3 && index === 2;
 
                                         return (
                                             <div
@@ -887,17 +986,19 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                                                     />
                                                 ) : isVideo ? (
                                                     <video
-                                                        src={attachment.url}
+                                                        // src={attachment.url}
                                                         controls
-                                                        className="w-full h-full object-cover"
-                                                    />
+                                                        className="w-full h-full object-contain"
+                                                    >
+                                                        <source src={attachment.url} type="video/mp4" />
+                                                    </video>
                                                 ) : null}
 
                                                 {/* Show count overlay for 5+ images */}
                                                 {shouldShowMore && (
                                                     <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center hover:bg-opacity-70 transition-opacity">
                                                         <span className="text-white text-3xl font-semibold">
-                                                            +{post.attachments.length - 4}
+                                                            +{post.attachments.length - 2}
                                                         </span>
                                                     </div>
                                                 )}
@@ -913,7 +1014,7 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                                                 )}
                                             </div>
                                         );
-                                    }).slice(0, 4)}
+                                    }).slice(0, 3)}
                                 </div>
                             )}
                         </>
@@ -937,8 +1038,17 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                             {/* Document Info */}
                             <div className="flex-grow min-w-0">
                                 <h3 className="font-semibold text-gray-900 text-base mb-1 truncate">{post.title}</h3>
-                                {post.attachment?.file_size && <span className="text-sm text-gray-600">{post.attachment.file_size}</span>}
-                                <p className="text-gray-600 text-sm mt-1 truncate">Created: {post.created_at && new Date(post.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                                {post.attachment?.file_size && <span className="text-sm font-[500] text-gray-600">{post.attachment.file_size}</span>}
+                                <p className="text-gray-600 text-sm font-[500] mt-1 truncate">
+                                    Created:{" "}
+                                    {post.created_at &&
+                                        new Date(post.created_at).toLocaleDateString("en-GB", {
+                                            day: "2-digit",
+                                            month: "short",
+                                            year: "numeric",
+                                        })}
+                                </p>
+
                             </div>
                         </div>
                     </div>
@@ -948,27 +1058,26 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                 {
                     post.type === "post" && (
                         <div className="flex items-center gap-3 border-t border-b border-gray-200 py-3">
-                            {Object.entries(post.likes_with_emoji || {}).map(
-                                ([emojiKey, count]) => {
-                                    const emoji = EMOJI_MAP[emojiKey];
+                            {REACTION_ORDER.map((emojiKey) => {
+                                const count = post.likes_with_emoji?.[emojiKey];
+                                const emoji = EMOJI_MAP[emojiKey];
 
-                                    if (!emoji || count === 0) return null;
+                                if (!emoji || !count || count === 0) return null;
 
-                                    return (
-                                        <button
-                                            key={emojiKey}
-                                            onClick={() => {
-                                                setReactionsModalData(post.likes_with_user_names);
-                                                setReactionsModalOpen(true);
-                                            }}
-                                            className={`flex items-center gap-1 text-gray-600 transition-colors cursor-pointer hover:opacity-75 ${emoji.hoverClass}`}
-                                        >
-                                            <span>{emoji.icon}</span>
-                                            <span className="text-sm font-medium">{count}</span>
-                                        </button>
-                                    );
-                                }
-                            )}
+                                return (
+                                    <button
+                                        key={emojiKey}
+                                        onClick={() => {
+                                            setReactionsModalData(post.likes_with_user_names);
+                                            setReactionsModalOpen(true);
+                                        }}
+                                        className={`flex items-center gap-1 text-gray-600 transition-colors cursor-pointer hover:opacity-75 ${emoji.hoverClass}`}
+                                    >
+                                        <span>{emoji.icon}</span>
+                                        <span className="text-sm font-medium">{count}</span>
+                                    </button>
+                                );
+                            })}
                             <button
                                 className="flex items-center gap-1 text-gray-500 hover:text-gray-900 transition-colors"
                                 onClick={() => setShowCommentsForPost(showCommentsForPost === post.id ? null : post.id)}
@@ -1014,10 +1123,10 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
 
                                 <div className="flex items-center justify-between border-t border-gray-200 w-[75%] pt-2">
                                     <div className="flex items-center gap-4">
-                                        <button className="flex items-center gap-1 text-gray-600 hover:text-red-600 transition-colors">
+                                        {/* <button className="flex items-center gap-1 text-gray-600 hover:text-red-600 transition-colors">
                                             <Heart size={16} />
                                             <span className="text-sm font-medium">0</span>
-                                        </button>
+                                        </button> */}
                                     </div>
                                     <Button
                                         variant="ghost"
@@ -1090,10 +1199,10 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="min-w-[9.1rem]">
-                        <DropdownMenuItem className="font-medium" onClick={() => setCreatePostOpen(true)}>
+                        <DropdownMenuItem className="font-medium justify-center" onClick={() => setCreatePostOpen(true)}>
                             Create Post
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="font-medium" onClick={() => setCreatePollOpen(true)}>
+                        <DropdownMenuItem className="font-medium justify-center" onClick={() => setCreatePollOpen(true)}>
                             Create Poll
                         </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -1299,7 +1408,7 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                     // Reset poll state when closing
                     setPostContent("");
                     setSelectedFiles([]);
-                    setPollOptions(['', '']);
+                    setPollOptions([{ name: '' }, { name: '' }]);
                     setExistingAttachments([]);
                     setRemovedAttachmentIds([]);
                     setIsEditMode(false);
@@ -1451,7 +1560,7 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                                     <div key={index} className="flex items-center gap-2">
                                         <Input
                                             placeholder={`Option ${index + 1}`}
-                                            value={option}
+                                            value={option.name}
                                             onChange={(e) => handlePollOptionChange(index, e.target.value)}
                                             className="bg-white border-[#E5E5E5] placeholder:text-[#9CA3AF] rounded-[8px] flex-1"
                                         />
@@ -1484,7 +1593,7 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                                     setCreatePollOpen(false);
                                     setPostContent("");
                                     setSelectedFiles([]);
-                                    setPollOptions(['', '']);
+                                    setPollOptions([{ name: '' }, { name: '' }]);
                                     setExistingAttachments([]);
                                     setRemovedAttachmentIds([]);
                                     setIsEditMode(false);
@@ -1512,7 +1621,7 @@ const CommunityFeedTab = ({ communityId, communityName, communityImg }: Communit
                 <DialogContent className="max-w-sm bg-white rounded-lg p-0 flex flex-col border-0 shadow-lg">
                     <div className="bg-white pt-12 text-center flex flex-col">
                         <h2 className="text-base font-semibold text-gray-900 mb-12 leading-tight">
-                            Are you sure you want to Delete<br />this {deleteConfirmation.type === 'post' ? 'Community Post' : deleteConfirmation.type === 'document' ? 'Document' : 'Comment'} ?
+                            Are you sure you want to Delete<br />this {deleteConfirmation.type === 'post' ? 'Community Post' : deleteConfirmation.type === 'document' ? 'Document' : deleteConfirmation.type === 'notice' ? 'Notice' : deleteConfirmation.type === 'event' ? 'Event' : 'Comment'} ?
                         </h2>
                         <div className="flex mt-auto">
                             <button

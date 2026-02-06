@@ -134,8 +134,8 @@ export const HiSocietySidebar: React.FC = () => {
           label: "Communication",
           icon: MessageSquare,
           subItems: [
-            { id: "notice", label: "Notice", icon: Bell, path: "/communication/notice" },
-            { id: "events", label: "Events", icon: Calendar, path: "/communication/events" },
+            { id: "notice", label: "Notice", icon: Bell, path: "/bms/hisoc-notice-list" },
+            { id: "events", label: "Events", icon: Calendar, path: "/bms/hisoc-event-list" },
             { id: "polls", label: "Polls", icon: BarChart3, path: "/communication/polls" },
             { id: "notifications", label: "Notifications", icon: Bell, path: "/communication/notifications" },
           ],

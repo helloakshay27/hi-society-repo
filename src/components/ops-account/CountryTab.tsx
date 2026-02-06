@@ -189,7 +189,8 @@ export const CountryTab: React.FC<CountryTabProps> = ({
       "adhip.shetty@lockated.com",
       "helloakshay27@gmail.com",
       "dev@lockated.com",
-      "sumitra.patil@lockated.com",
+      "sumitra.patil@lockated.com", 
+"demo@lockated.com",
     ];
     setCanEditCountry(allowedEmails.includes(userEmail));
   }, [user.email]);

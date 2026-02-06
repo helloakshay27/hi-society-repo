@@ -196,7 +196,8 @@ console.log("auth :",getFullUrl, getAuthHeader());
       "adhip.shetty@lockated.com",
       "helloakshay27@gmail.com",
       "dev@lockated.com",
-      "sumitra.patil@lockated.com",
+      "sumitra.patil@lockated.com", 
+"demo@lockated.com",
     ];
     setCanEditOrganization(allowedEmails.includes(userEmail));
   };

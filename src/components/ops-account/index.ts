@@ -6,3 +6,4 @@ export { ZoneTab } from './ZoneTab';
 export { SiteTab } from './SiteTab';
 export { EntityTab } from './EntityTab';
 export { UserCategoryTab } from './UserCategoryTab';
+export { SocietyTab } from './SocietyTab';

@@ -406,6 +406,8 @@ import { AddPermitPage } from "./pages/AddPermitPage";
 
 // Import Operational Audit pages
 import { OperationalAuditScheduledDashboard } from "./pages/OperationalAuditScheduledDashboard";
+import { ViewOperationalAuditSchedulePage } from "./pages/ViewOperationalAuditSchedulePage";
+import { ViewOperationalAuditSchedulePerformancePage } from "./pages/ViewOperationalAuditSchedulePerformancePage";
 import { AddOperationalAuditSchedulePage } from "./pages/AddOperationalAuditSchedulePage";
 import { OperationalAuditConductedDashboard } from "./pages/OperationalAuditConductedDashboard";
 import { OperationalAuditMasterChecklistsDashboard } from "./pages/OperationalAuditMasterChecklistsDashboard";
@@ -416,6 +418,14 @@ import { VendorAuditConductedDashboard } from "./pages/VendorAuditConductedDashb
 import { AddVendorAuditSchedulePage } from "./pages/AddVendorAuditSchedulePage";
 import { AddVendorAuditPage } from "./pages/AddVendorAuditPage";
 import { ViewVendorAuditPage } from "./pages/ViewVendorAuditPage";
+import { ViewVendorAuditSchedulePerformancePage } from "./pages/ViewVendorAuditSchedulePerformancePage";
+
+// Import Training Audit pages
+import { TrainingScheduledDashboard } from "./pages/TrainingScheduledDashboard";
+import { ViewTrainingSchedule } from "./pages/ViewTraningSchedule";
+import ViewTrainingPerformancePage from "./ViewTrainingPerformance";
+import { AddTrainingSchedulePage } from "./pages/AddTrainingSchedulePage";
+import { TrainingConductedDashboard } from "./pages/TrainingConductedDashboard";
 
 // Import Asset Audit pages
 import { AssetAuditDashboard } from "./pages/AssetAuditDashboard";
@@ -442,6 +452,9 @@ import { ViewFMUserPage } from "./pages/master/ViewFMUserPage";
 
 // Import Material Master page
 import { MaterialMasterPage } from "./pages/MaterialMasterPage";
+
+// Import Plant Detail Setup page
+import { PlantDetailSetupPage } from "./pages/PlantDetailSetupPage";
 
 // Import RVehiclesInDashboard and RVehiclesOutDashboard
 import { RVehiclesInDashboard } from "./pages/RVehiclesInDashboard";
@@ -969,6 +982,17 @@ import PollsPageList from "./pages/communication/PollsPageList";
 import NoticeboardList from "./pages/NoticeboardList";
 import IssuesListPage from "./pages/IssuesListPage";
 import IssueDetailsPage from "./pages/IssueDetailsPage";
+import TaskDetailsMobile from "./pages/TaskDetailsMobile";
+import TasksMobileView from "./pages/TasksMobileView";
+import IssueDetailsMobile from "./pages/IssueDetailsMobile";
+import AddIssueMobileView from "./pages/AddIssueMobileView";
+import IssuesMobileView from "./pages/IssuesMobileView";
+import AccessoriesSetup from "./pages/AccessoriesSetup";
+import AccessoriesDetailsPage from "./pages/AccessoriesDetailsPage";
+import EditFacilityBookingPage from "./pages/EditFacilityBookingPage";
+import { CommunityNoticeDetails } from "./pages/CommunityNoticeDetails";
+import { CommunityEventDetails } from "./pages/CommunityEvenetDetails";
+import CommunityDocumentDetails from "./pages/CommunityDocumentDetails";
 // import RouteLogger from "./components/RouteLogger";
 
 const queryClient = new QueryClient();
@@ -2881,6 +2905,10 @@ function App() {
                       path="/master/finance"
                       element={<FinanceMasterPage />}
                     />
+                    <Route
+                      path="/master/plant-detail"
+                      element={<PlantDetailSetupPage />}
+                    />
 
                     {/* CRM Routes */}
                     <Route path="/crm/campaign" element={<CRMCampaignPage />} />
@@ -3310,8 +3338,38 @@ function App() {
                       element={<AddOperationalAuditSchedulePage />}
                     />
                     <Route
+                      path="/maintenance/audit/operational/scheduled/view/:id"
+                      element={<ViewOperationalAuditSchedulePage />}
+                    />
+                    <Route
+                      path="/maintenance/audit/operational/scheduled/performance/:id"
+                      element={<ViewOperationalAuditSchedulePerformancePage />}
+                    />
+                    <Route
                       path="/maintenance/audit/operational/conducted"
                       element={<OperationalAuditConductedDashboard />}
+                    />
+
+                    {/* Training Audit Routes */}
+                    <Route
+                      path="/maintenance/audit/training/scheduled"
+                      element={<TrainingScheduledDashboard />}
+                    />
+                    <Route
+                      path="/maintenance/audit/training/scheduled/add"
+                      element={<AddTrainingSchedulePage />}
+                    />
+                    <Route
+                      path="/maintenance/audit/training/scheduled/view/:id"
+                      element={<ViewTrainingSchedule />}
+                    />
+                    <Route
+                      path="/maintenance/audit/training/scheduled/performance/:id"
+                      element={<ViewTrainingPerformancePage />}
+                    />
+                    <Route
+                      path="/maintenance/audit/training/conducted"
+                      element={<TrainingConductedDashboard />}
                     />
                     <Route
                       path="/maintenance/audit/operational/master-checklists"
@@ -3338,6 +3396,10 @@ function App() {
                     <Route
                       path="/maintenance/audit/vendor/scheduled/view/:id"
                       element={<ViewVendorAuditPage />}
+                    />
+                    <Route
+                      path="/maintenance/audit/vendor/scheduled/performance/:id"
+                      element={<ViewVendorAuditSchedulePerformancePage />}
                     />
                     <Route
                       path="/maintenance/audit/vendor/conducted"
@@ -4228,6 +4290,10 @@ function App() {
                       element={<PatrollingDetailPage />}
                     />
                     <Route
+                      path="/security/staff"
+                      element={<StaffsDashboard />}
+                    />
+                    <Route
                       path="/security/staff/details/:id"
                       element={<StaffDetailsPage />}
                     />
@@ -4669,6 +4735,10 @@ function App() {
                       element={<AddFacilityBookingPage />}
                     />
                     <Route
+                      path="/vas/booking/edit/:id"
+                      element={<EditFacilityBookingPage />}
+                    />
+                    <Route
                       path="/vas/bookings/details/:id"
                       element={<BookingDetailsPage />}
                     />
@@ -5015,6 +5085,18 @@ function App() {
                       path="/pulse/community/:communityId/reports/details/:id"
                       element={<ReportsDetailsPage />}
                     />
+                    <Route
+                      path="/pulse/community/notice/:id"
+                      element={<CommunityNoticeDetails />}
+                    />
+                    <Route
+                      path="/pulse/community/event/:id"
+                      element={<CommunityEventDetails />}
+                    />
+                    <Route
+                      path="/pulse/community/document/:id"
+                      element={<CommunityDocumentDetails />}
+                    />
 
                     <Route
                       path="/pulse/visitor"
@@ -5249,6 +5331,14 @@ function App() {
                     <Route
                       path="/settings/vas/booking/category-setup"
                       element={<AmenityCategorySetup />}
+                    />
+                    <Route
+                      path="/settings/vas/booking/accessories-setup"
+                      element={<AccessoriesSetup />}
+                    />
+                    <Route
+                      path="/settings/accessories/:id"
+                      element={<AccessoriesDetailsPage />}
                     />
                     <Route
                       path="/settings/vas/booking/setup/add"

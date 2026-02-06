@@ -57,10 +57,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const currentUser = getUser();
   const userEmail = currentUser?.email || "No email";
+  const org_id = localStorage.getItem("org_id");
   const hostname = window.location.hostname;
 
   // Detect Club Management routes
-  const isClubManagementRoute = hostname === "club.lockated.com" || location.pathname.startsWith("/club-management");
+  const isClubManagementRoute = hostname === "club.lockated.com";
 
   // Debug layoutMode state and localStorage sync
   useEffect(() => {
@@ -130,7 +131,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Get current domain for backward compatibility
   const isOmanSite = hostname.includes("oig.gophygital.work");
 
-  const isFMSite = hostname === "fm-matrix.lockated.com" || hostname === "web.gophygital.work" || hostname === "lockated.gophygital.work" || hostname === "localhost";
+  const isFMSite =
+    hostname === "fm-matrix.lockated.com" ||
+    hostname === "web.gophygital.work" ||
+    hostname === "lockated.gophygital.work";
 
   const isLockatedSite =
     hostname.includes("lockated.gophygital.work") ||
@@ -153,7 +157,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     hostname.includes("localhost") ||
     hostname.includes("lockated.gophygital.work") ||
     hostname.includes("fm-matrix.lockated.com") ||
-    userEmail === "ubaid.hashmat@lockated.com";
+    userEmail === "ubaid.hashmat@lockated.com" ||
+    userEmail === "besis69240@azeriom.com" ||
+    userEmail === "megipow156@aixind.com";
 
   // Layout behavior:
   // - Company ID 189 (Lockated HO): Default layout (Sidebar + DynamicHeader)
@@ -180,7 +186,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           selectedCompany?.id === 300 ||
           selectedCompany?.id === 295 ||
           selectedCompany?.id === 298 ||
-          selectedCompany?.id === 199
+          selectedCompany?.id === 199 ||
+          org_id === "90" ||
+          userEmail === "ubaid.hashmat@lockated.com" ||
+          userEmail === "besis69240@azeriom.com" ||
+          userEmail === "megipow156@aixind.com"
         ) {
           return <EmployeeSidebar />;
         }
@@ -207,23 +217,26 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       selectedCompany?.id === 295 ||
       selectedCompany?.id === 298 ||
       selectedCompany?.id === 199 ||
-      userEmail === "ubaid.hashmat@lockated.com"
+      selectedCompany?.id === 307 ||
+      org_id === "90" ||
+      userEmail === "ubaid.hashmat@lockated.com" ||
+      userEmail === "besis69240@azeriom.com" ||
+      userEmail === "megipow156@aixind.com"
     ) {
+      console.log("✅ Rendering ActionSidebar (company-specific)");
       return <ActionSidebar />;
     }
 
     // Domain-based logic takes precedence for backward compatibility
     if (isOmanSite) {
+      console.log("✅ Rendering OmanSidebar");
       return <OmanSidebar />;
     }
 
     // Check for VI site with token parameter or stored token
     if (isViSite && hasToken) {
+      console.log("✅ Rendering ViSidebarWithToken");
       return <ViSidebarWithToken />;
-    }
-
-    if (isViSite) {
-      return <ViSidebar />;
     }
 
     // Company-specific logic (Admin layout)
@@ -277,21 +290,22 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       selectedCompany?.id === 295 ||
       selectedCompany?.id === 298 ||
       selectedCompany?.id === 199 ||
-      userEmail === "ubaid.hashmat@lockated.com"
+      selectedCompany?.id === 307 ||
+      org_id === "90" ||
+      userEmail === "ubaid.hashmat@lockated.com" ||
+      userEmail === "besis69240@azeriom.com" ||
+      userEmail === "megipow156@aixind.com"
     ) {
       return <ActionHeader />;
     }
 
     if (isFMSite) {
-      return <StaticDynamicHeader />
+      return <StaticDynamicHeader />;
     }
 
     // Domain-based logic takes precedence for backward compatibility
     if (isOmanSite) {
       return <OmanDynamicHeader />;
-    }
-    if (isViSite) {
-      return <ViDynamicHeader />;
     }
 
     // Company-specific logic (Admin layout)

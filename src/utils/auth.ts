@@ -285,7 +285,7 @@ export const getOrganizationsByEmail = async (
 
   // Default fallback for other sites
   const response = await fetch(
-    `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+    `https://uat-hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
   );
   if (!response.ok) {
     throw new Error("Failed to fetch organizations");
@@ -616,7 +616,7 @@ export const getOrganizationsByEmailAndAutoSelect = async (
     apiUrl = `https://pulse-uat-api.panchshil.com/api/users/get_organizations_by_email.json?email=${email}`;
   } else {
     // Default fallback
-    apiUrl = `https://uat-api.lockated.com/api/users/get_organizations_by_email.json?email=${email}`;
+    apiUrl = `https://live-api.gophygital.work/api/users/get_organizations_by_email.json?email=${email}`;
   }
 
   const response = await fetch(apiUrl);

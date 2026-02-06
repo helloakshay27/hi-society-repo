@@ -21,6 +21,13 @@ import HiSocGroupDetailsPage from "@/pages/HiSocGroupDetailsPage";
 import { PatrollingDashboard } from "@/pages/PatrollingDashboard";
 import { PatrollingResponsePage } from "@/pages/PatrollingResponsePage";
 import { StaffsDashboard } from "@/pages/StaffsDashboard";
+import HiSocEventCreate from "@/pages/HiSocEventCreate";
+import HiSocEventEdit from "@/pages/HiSocEventEdit";
+import HiSocEventList from "@/pages/HiSocEventList";
+import HiSocEventDetails from "@/pages/HiSocEventDetails";
+import HiSocNoticeList from "@/pages/HiSocNoticeList";
+import HiSocNoticeCreate from "@/pages/HiSocNoticeCreate";
+import HiSocNoticeDetails from "@/pages/HiSocNoticeDetails";
 
 const VisitorsDashboard = lazy(() => import("@/pages/VisitorsDashboard"));
 const HiSocGroupsPage = lazy(() => import("@/pages/HiSocGroupsPage"));
@@ -1071,6 +1078,13 @@ export const setupMemberRoutes = (
     <Route path="/bms/parking" Component={withSuspense(BMSParking)} />
     <Route path="/bms/groups" Component={withSuspense(HiSocGroupsPage)} />
     <Route path="/bms/groups/details/:id" element={<HiSocGroupDetailsPage />} />
+    <Route path="/bms/hisoc-event-list" element={<HiSocEventList />} />
+    <Route path="/bms/hisoc-event-create" element={<HiSocEventCreate />} />
+    <Route path="/bms/hisoc-event-edit/:id" element={<HiSocEventEdit />} />
+    <Route path="/bms/hisoc-event-details/:id" element={<HiSocEventDetails />} />
+    <Route path="/bms/hisoc-notice-list" element={<HiSocNoticeList />} />
+    <Route path="/bms/hisoc-notice-create" element={<HiSocNoticeCreate />} />
+    <Route path="/bms/hisoc-notice-details/:id" element={<HiSocNoticeDetails />} />
     <Route
       path="/bms/quarantine-tracker"
       Component={withSuspense(BMSQuarantineTracker)}
@@ -1294,7 +1308,7 @@ export const setupMemberRoutes = (
     {/* SmartSecure Routes */}
     <Route
       path="/smartsecure/visitor-in"
-      Component={withSuspense(VisitorsDashboard)}
+      Component={withSuspense(SmartSecureVisitorIn)}
     />
     <Route
       path="/smartsecure/visitor-out"
@@ -1302,7 +1316,7 @@ export const setupMemberRoutes = (
     />
     <Route
       path="/smartsecure/visitor-history"
-      Component={withSuspense(SmartSecureVisitorHistory)}
+      Component={withSuspense(VisitorsDashboard)}
     />
     <Route
       path="/smartsecure/staffs/all"

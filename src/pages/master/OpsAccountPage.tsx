@@ -8,7 +8,8 @@ import {
   ZoneTab, 
   SiteTab, 
   EntityTab, 
-  UserCategoryTab 
+  UserCategoryTab,
+  SocietyTab
 } from '@/components/ops-account';
 
 export const OpsAccountPage = () => {
@@ -23,11 +24,12 @@ export const OpsAccountPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-8 mb-6">
+        <TabsList className="grid w-full grid-cols-9 mb-6">
           <TabsTrigger value="organization">Organization</TabsTrigger>
           <TabsTrigger value="company">Company</TabsTrigger>
           <TabsTrigger value="country">Country</TabsTrigger>
           <TabsTrigger value="region">Region</TabsTrigger>
+          <TabsTrigger value="society">Society</TabsTrigger>
           {/* <TabsTrigger value="zone">Zone</TabsTrigger> */}
           <TabsTrigger value="site">Site</TabsTrigger>
           {/* <TabsTrigger value="entity">Entity</TabsTrigger>
@@ -69,7 +71,16 @@ export const OpsAccountPage = () => {
             setEntriesPerPage={setEntriesPerPage}
           />
         </TabsContent>
+<TabsContent value="society" className="space-y-4">
+          <SocietyTab
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            entriesPerPage={entriesPerPage}
+            setEntriesPerPage={setEntriesPerPage}
+          />
+        </TabsContent>
 
+        
         {/* <TabsContent value="zone" className="space-y-4">
           <ZoneTab
             searchQuery={searchQuery}
