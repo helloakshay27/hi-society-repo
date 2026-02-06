@@ -969,7 +969,6 @@ import PollsPageList from "./pages/communication/PollsPageList";
 import NoticeboardList from "./pages/NoticeboardList";
 import IssuesListPage from "./pages/IssuesListPage";
 import IssueDetailsPage from "./pages/IssueDetailsPage";
-import ManageUsersPage from "./pages/ManageUsersPage";
 // import RouteLogger from "./components/RouteLogger";
 
 const queryClient = new QueryClient();
