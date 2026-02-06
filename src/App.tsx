@@ -330,7 +330,6 @@ import { AddFMUserDashboard } from "./pages/setup/AddFMUserDashboard";
 import { OccupantUsersDashboard } from "./pages/setup/OccupantUsersDashboard";
 import { AddOccupantUserDashboard } from "./pages/setup/AddOccupantUserDashboard";
 // import { AddUserPage } from "./pages/AddUserPage";
-import { ManageUsersPage } from "./pages/ManageUsersPage";
 import { ViewManageUserPage } from "./pages/setup/ViewManageUserPage";
 import { ManageFlatsPage } from "./pages/setup/ManageFlatsPage";
 import EditFlatPage from "./pages/setup/EditFlatPage";
