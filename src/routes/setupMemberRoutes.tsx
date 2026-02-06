@@ -1478,5 +1478,6 @@ export const setupMemberRoutes = (
     />
     <Route path="/settings/manage-users"
     Component={withSuspense(ManageUsersPage)}
+    />
   </>
 );
