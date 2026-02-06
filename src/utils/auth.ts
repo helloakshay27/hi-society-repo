@@ -167,7 +167,7 @@ const isOmanSite = hostname.includes("oig.gophygital.work");
 const isViSite =
   hostname === "web.hisociety.lockated.com" ||
   hostname.includes("web.gophygital.work") ||
-  hostname.includes("lockated.gophygital.work") || hostname.includes("community.gophygital.work") || hostname === "localhost";
+  hostname.includes("lockated.gophygital.work") || hostname.includes("community.gophygital.work");
 
 const isFmSite =
   hostname === "fm-uat.gophygital.work" || hostname === "fm.gophygital.work" || hostname === "fm-matrix.lockated.com";
@@ -181,7 +181,7 @@ const isPanchshilUatSite = hostname === "pulse-uat.panchshil.com";
 const isClubSite =
   hostname.includes("club.lockated.com");
 
-const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
+const isLocalhost =  hostname.includes("127.0.0.1");
 
 const isHiSocietySite = isLocalhost || hostname.includes("ui-hisociety.lockated.com") || hostname.includes("web.hisociety.lockated.com");
 
@@ -313,7 +313,7 @@ export const getOrganizationsByEmail = async (
 
   // Default fallback for other sitess
   const response = await fetch(
-    `https://hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
+    `https://uat-hi-society.lockated.com/api/users/get_organizations_by_email.json?email=${email}`
   );
 
   if (!response.ok) {

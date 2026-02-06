@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  Dialog as MuiDialog,
-  DialogTitle as MuiDialogTitle,
-  DialogContent as MuiDialogContent,
-  DialogActions as MuiDialogActions,
   TextField,
   FormControl,
   InputLabel,
@@ -16,11 +12,13 @@ import {
   Divider,
 } from "@mui/material";
 import { Button as MuiButton } from "@mui/material";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useApiConfig } from "@/hooks/useApiConfig";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import { SocietyFormData, EstateBuilder, Headquarter, Region, Zone } from "@/types/society";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 interface EditSocietyModalProps {
   isOpen: boolean;
@@ -112,6 +110,7 @@ export const EditSocietyModal: React.FC<EditSocietyModalProps> = ({
     description: "",
     IsDelete: 0,
     company_id: undefined,
+    super_society_id: undefined,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -190,6 +189,7 @@ export const EditSocietyModal: React.FC<EditSocietyModalProps> = ({
         description: data.description || "",
         IsDelete: data.IsDelete || 0,
         company_id: data.company_id,
+        super_society_id: data.super_society_id,
       });
     } catch (error) {
       console.error("Error fetching society details:", error);
@@ -316,357 +316,511 @@ export const EditSocietyModal: React.FC<EditSocietyModalProps> = ({
 
   if (isLoading) {
     return (
-      <MuiDialog open={isOpen} onClose={onClose} maxWidth="lg" fullWidth>
-        <MuiDialogContent sx={{ p: 4, display: "flex", justifyContent: "center", alignItems: "center" }}>
-          <Loader2 className="w-8 h-8 animate-spin text-[#c72030]" />
-        </MuiDialogContent>
-      </MuiDialog>
+      <Dialog open={isOpen} onOpenChange={onClose} modal={false}>
+        <DialogContent className="max-w-4xl bg-white z-50">
+          <div className="p-4 flex justify-center items-center">
+            <Loader2 className="w-8 h-8 animate-spin text-[#c72030]" />
+          </div>
+        </DialogContent>
+      </Dialog>
     );
   }
 
   return (
-    <MuiDialog
-      open={isOpen}
-      onClose={onClose}
-      maxWidth="lg"
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          maxHeight: "90vh",
-          zIndex: 9999,
-        },
-      }}
-      sx={{
-        zIndex: 9999,
-      }}
-    >
-      <MuiDialogTitle
-        sx={{
-          bgcolor: "#F6F4EE",
-          color: "#1a1a1a",
-          fontWeight: "bold",
-          borderBottom: "1px solid #e2e8f0",
-        }}
-      >
-        Edit Society
-      </MuiDialogTitle>
+    <Dialog open={isOpen} onOpenChange={onClose} modal={false}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white z-50">
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <DialogTitle className="text-lg font-semibold text-gray-900">
+            EDIT SOCIETY
+          </DialogTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-6 w-6 p-0 hover:bg-gray-100"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </DialogHeader>
 
-      <MuiDialogContent sx={{ p: 3, mt: 2 }}>
-        <Grid container spacing={2}>
-          {/* Society Name */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Society Name *"
-              fullWidth
-              value={formData.building_name}
-              onChange={(e) => handleChange("building_name", e.target.value)}
-              error={Boolean(errors.building_name)}
-              helperText={errors.building_name}
-              sx={fieldStyles}
-            />
-          </Grid>
+        <div className="space-y-6 py-4">
+          {/* Basic Information Section */}
+          <div>
+            <h3 className="text-sm font-medium text-[#C72030] mb-4">
+              Basic Information
+            </h3>
+            <div className="grid grid-cols-2 gap-6">
+              <TextField
+                label="Society Name"
+                placeholder="Enter society name"
+                value={formData.building_name}
+                onChange={(e) => handleChange("building_name", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{
+                  shrink: true,
+                  required: true,
+                  sx: { "& .MuiFormLabel-asterisk": { color: "#C72030" } },
+                }}
+                InputProps={{ sx: fieldStyles }}
+                required
+                error={Boolean(errors.building_name)}
+                helperText={errors.building_name}
+              />
+              <TextField
+                label="Bill To"
+                placeholder="Enter bill to"
+                value={formData.bill_to}
+                onChange={(e) => handleChange("bill_to", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Real Estate Client</InputLabel>
+                <MuiSelect
+                  value={formData.builder_id || ""}
+                  onChange={(e) => handleChange("builder_id", e.target.value)}
+                  label="Real Estate Client"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                >
+                  <MenuItem value=""><em>Select Real Estate Client</em></MenuItem>
+                  {estateBuilders.map((builder) => (
+                    <MenuItem key={builder.id} value={builder.id}>
+                      {builder.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+              <TextField
+                label="Registration"
+                placeholder="Enter registration"
+                value={formData.registration}
+                onChange={(e) => handleChange("registration", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Project Type</InputLabel>
+                <MuiSelect
+                  value={formData.project_type || ""}
+                  onChange={(e) => handleChange("project_type", e.target.value)}
+                  label="Project Type"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                >
+                  <MenuItem value=""><em>Select Project Type</em></MenuItem>
+                  <MenuItem value="Residential">Residential</MenuItem>
+                  <MenuItem value="Commercial">Commercial</MenuItem>
+                </MuiSelect>
+              </FormControl>
+              <TextField
+                label="App ID"
+                placeholder="Enter app ID"
+                value={formData.app_id}
+                onChange={(e) => handleChange("app_id", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+            <div className="mt-6">
+              <TextField
+                label="Description"
+                placeholder="Enter society description"
+                value={formData.description}
+                onChange={(e) => handleChange("description", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+                multiline
+                rows={3}
+              />
+            </div>
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mt-6">
+              <div className="space-y-1">
+                <span className="text-sm font-medium">Status</span>
+                <p className="text-xs text-gray-600">
+                  Set whether this society is active or inactive
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.active}
+                      onChange={(e) => handleChange("active", e.target.checked)}
+                    />
+                  }
+                  label={formData.active ? "Active" : "Inactive"}
+                />
+              </div>
+            </div>
+          </div>
 
-          {/* Bill To */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Bill To"
-              fullWidth
-              value={formData.bill_to}
-              onChange={(e) => handleChange("bill_to", e.target.value)}
-              sx={fieldStyles}
-            />
-          </Grid>
+          {/* Location Section */}
+          <div>
+            <h3 className="text-sm font-medium text-[#C72030] mb-4">
+              Location & Hierarchy
+            </h3>
+            <div className="grid grid-cols-2 gap-6">
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Headquarter (Country)</InputLabel>
+                <MuiSelect
+                  value={formData.headquarter_id || ""}
+                  onChange={(e) => handleChange("headquarter_id", e.target.value)}
+                  label="Headquarter (Country)"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                >
+                  <MenuItem value=""><em>Select Headquarter</em></MenuItem>
+                  {headquarters.map((hq) => (
+                    <MenuItem key={hq.id} value={hq.id}>
+                      {hq.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Region (State)</InputLabel>
+                <MuiSelect
+                  value={formData.region_id || ""}
+                  onChange={(e) => handleChange("region_id", e.target.value)}
+                  label="Region (State)"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                  disabled={!formData.headquarter_id}
+                >
+                  <MenuItem value=""><em>Select Region</em></MenuItem>
+                  {regions.map((region) => (
+                    <MenuItem key={region.id} value={region.id}>
+                      {region.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+            </div>
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Zone (City)</InputLabel>
+                <MuiSelect
+                  value={formData.zone_id || ""}
+                  onChange={(e) => handleChange("zone_id", e.target.value)}
+                  label="Zone (City)"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                  disabled={!formData.region_id}
+                >
+                  <MenuItem value=""><em>Select Zone</em></MenuItem>
+                  {zones.map((zone) => (
+                    <MenuItem key={zone.id} value={zone.id}>
+                      {zone.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+              <TextField
+                label="URL"
+                placeholder="Enter URL"
+                value={formData.url}
+                onChange={(e) => handleChange("url", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+          </div>
 
-          {/* Real Estate Client */}
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Real Estate Client</InputLabel>
-              <MuiSelect
-                value={formData.builder_id || ""}
-                onChange={(e) => handleChange("builder_id", e.target.value)}
-                label="Real Estate Client"
-                MenuProps={selectMenuProps}
-                sx={fieldStyles}
-              >
-                <MenuItem value="">Select Real Estate Client</MenuItem>
-                {estateBuilders.map((builder) => (
-                  <MenuItem key={builder.id} value={builder.id}>
-                    {builder.name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-          </Grid>
+          {/* Address Information Section */}
+          <div>
+            <h3 className="text-sm font-medium text-[#C72030] mb-4">
+              Address Information
+            </h3>
+            <div className="grid grid-cols-2 gap-6">
+              <TextField
+                label="Address Line 1"
+                placeholder="Enter address line 1"
+                value={formData.address1}
+                onChange={(e) => handleChange("address1", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="Address Line 2"
+                placeholder="Enter address line 2"
+                value={formData.address2}
+                onChange={(e) => handleChange("address2", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <TextField
+                label="Area"
+                placeholder="Enter area"
+                value={formData.area}
+                onChange={(e) => handleChange("area", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="Postcode"
+                placeholder="Enter postcode"
+                type="number"
+                value={formData.postcode || ""}
+                onChange={(e) => handleChange("postcode", parseInt(e.target.value) || undefined)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <TextField
+                label="City"
+                placeholder="Enter city"
+                value={formData.city}
+                onChange={(e) => handleChange("city", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="State"
+                placeholder="Enter state"
+                value={formData.state}
+                onChange={(e) => handleChange("state", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-6 mt-6">
+              <TextField
+                label="Country"
+                placeholder="Enter country"
+                value={formData.country}
+                onChange={(e) => handleChange("country", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="Latitude"
+                placeholder="Enter latitude"
+                value={formData.latitude}
+                onChange={(e) => handleChange("latitude", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="Longitude"
+                placeholder="Enter longitude"
+                value={formData.longitude}
+                onChange={(e) => handleChange("longitude", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+          </div>
 
-          {/* Headquarter (Country) */}
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Headquarter (Country)</InputLabel>
-              <MuiSelect
-                value={formData.headquarter_id || ""}
-                onChange={(e) => handleChange("headquarter_id", e.target.value)}
-                label="Headquarter (Country)"
-                MenuProps={selectMenuProps}
-                sx={fieldStyles}
-              >
-                <MenuItem value="">Select Headquarter</MenuItem>
-                {headquarters.map((hq) => (
-                  <MenuItem key={hq.id} value={hq.id}>
-                    {hq.name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-          </Grid>
+          {/* Device & Billing Section */}
+          <div>
+            <h3 className="text-sm font-medium text-[#C72030] mb-4">
+              Device & Billing Information
+            </h3>
+            <div className="grid grid-cols-3 gap-6">
+              <TextField
+                label="No. of Devices"
+                placeholder="Enter number"
+                type="number"
+                value={formData.no_of_devices || ""}
+                onChange={(e) => handleChange("no_of_devices", parseInt(e.target.value) || undefined)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink>Device Rental Type</InputLabel>
+                <MuiSelect
+                  value={formData.device_rental_type || ""}
+                  onChange={(e) => handleChange("device_rental_type", e.target.value)}
+                  label="Device Rental Type"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                >
+                  <MenuItem value=""><em>Select Type</em></MenuItem>
+                  <MenuItem value="Monthly">Monthly</MenuItem>
+                  <MenuItem value="Yearly">Yearly</MenuItem>
+                </MuiSelect>
+              </FormControl>
+              <TextField
+                label="Rental Rate"
+                placeholder="Enter rate"
+                type="number"
+                value={formData.device_rental_rate || ""}
+                onChange={(e) => handleChange("device_rental_rate", parseFloat(e.target.value) || undefined)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-6 mt-6">
+              <TextField
+                label="Billing Term"
+                placeholder="Enter billing term"
+                value={formData.billing_term}
+                onChange={(e) => handleChange("billing_term", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="Billing Rate"
+                placeholder="Enter rate"
+                type="number"
+                value={formData.billing_rate || ""}
+                onChange={(e) => handleChange("billing_rate", parseFloat(e.target.value) || undefined)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="Billing Cycle"
+                placeholder="Enter cycle"
+                value={formData.billing_cycle}
+                onChange={(e) => handleChange("billing_cycle", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <TextField
+                label="Start Date"
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => handleChange("start_date", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="End Date"
+                type="date"
+                value={formData.end_date}
+                onChange={(e) => handleChange("end_date", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+          </div>
 
-          {/* Region */}
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth disabled={!formData.headquarter_id}>
-              <InputLabel>Region</InputLabel>
-              <MuiSelect
-                value={formData.region_id || ""}
-                onChange={(e) => handleChange("region_id", e.target.value)}
-                label="Region"
-                MenuProps={selectMenuProps}
-                sx={fieldStyles}
-              >
-                <MenuItem value="">Select Region</MenuItem>
-                {regions.map((region) => (
-                  <MenuItem key={region.id} value={region.id}>
-                    {region.name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-          </Grid>
-
-          {/* Zone */}
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth disabled={!formData.region_id}>
-              <InputLabel>Zone</InputLabel>
-              <MuiSelect
-                value={formData.zone_id || ""}
-                onChange={(e) => handleChange("zone_id", e.target.value)}
-                label="Zone"
-                MenuProps={selectMenuProps}
-                sx={fieldStyles}
-              >
-                <MenuItem value="">Select Zone</MenuItem>
-                {zones.map((zone) => (
-                  <MenuItem key={zone.id} value={zone.id}>
-                    {zone.name}
-                  </MenuItem>
-                ))}
-              </MuiSelect>
-            </FormControl>
-          </Grid>
-
-          {/* App ID */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="App ID"
-              fullWidth
-              value={formData.app_id}
-              onChange={(e) => handleChange("app_id", e.target.value)}
-              sx={fieldStyles}
-            />
-          </Grid>
-
-          {/* URL */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="URL"
-              fullWidth
-              value={formData.url}
-              onChange={(e) => handleChange("url", e.target.value)}
-              sx={fieldStyles}
-            />
-          </Grid>
-
-          {/* No. of Devices */}
-          <Grid item xs={12} md={4}>
-            <TextField
-              label="No. of Devices"
-              type="number"
-              fullWidth
-              value={formData.no_of_devices || ""}
-              onChange={(e) => handleChange("no_of_devices", parseInt(e.target.value) || undefined)}
-              sx={fieldStyles}
-            />
-          </Grid>
-
-          {/* Device Rental */}
-          <Grid item xs={12} md={4}>
-            <FormControl fullWidth>
-              <InputLabel>Device Rental</InputLabel>
-              <MuiSelect
-                value={formData.device_rental_type || ""}
-                onChange={(e) => handleChange("device_rental_type", e.target.value)}
-                label="Device Rental"
-                MenuProps={selectMenuProps}
-                sx={fieldStyles}
-              >
-                <MenuItem value="">Select Type</MenuItem>
-                <MenuItem value="Rental">Rental</MenuItem>
-                <MenuItem value="Fixed">Fixed</MenuItem>
-              </MuiSelect>
-            </FormControl>
-          </Grid>
-
-          {/* Rental Rate */}
-          <Grid item xs={12} md={4}>
-            <TextField
-              label="Rental Rate"
-              type="number"
-              fullWidth
-              value={formData.device_rental_rate || ""}
-              onChange={(e) => handleChange("device_rental_rate", parseFloat(e.target.value) || undefined)}
-              sx={fieldStyles}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }}>
-              <Typography variant="body2" color="textSecondary">
-                Address Information
-              </Typography>
-            </Divider>
-          </Grid>
-
-          {/* Address fields... (similar structure as Add modal) */}
-          <Grid item xs={12} md={6}>
-            <TextField label="Address Line 1" fullWidth value={formData.address1} onChange={(e) => handleChange("address1", e.target.value)} sx={fieldStyles} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField label="Address Line 2" fullWidth value={formData.address2} onChange={(e) => handleChange("address2", e.target.value)} sx={fieldStyles} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField label="Area" fullWidth value={formData.area} onChange={(e) => handleChange("area", e.target.value)} sx={fieldStyles} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField label="Postcode" type="number" fullWidth value={formData.postcode || ""} onChange={(e) => handleChange("postcode", parseInt(e.target.value) || undefined)} sx={fieldStyles} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField label="City" fullWidth value={formData.city} onChange={(e) => handleChange("city", e.target.value)} sx={fieldStyles} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField label="State" fullWidth value={formData.state} onChange={(e) => handleChange("state", e.target.value)} sx={fieldStyles} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField label="Country" fullWidth value={formData.country} disabled sx={fieldStyles} />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField label="Latitude" fullWidth value={formData.latitude} onChange={(e) => handleChange("latitude", e.target.value)} sx={fieldStyles} />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField label="Longitude" fullWidth value={formData.longitude} onChange={(e) => handleChange("longitude", e.target.value)} sx={fieldStyles} />
-          </Grid>
-
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }}>
-              <Typography variant="body2" color="textSecondary">
-                Billing Information
-              </Typography>
-            </Divider>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <FormControl fullWidth>
-              <InputLabel>Billing Term</InputLabel>
-              <MuiSelect value={formData.billing_term || ""} onChange={(e) => handleChange("billing_term", e.target.value)} label="Billing Term" MenuProps={selectMenuProps} sx={fieldStyles}>
-                <MenuItem value="">Select Billing Term</MenuItem>
-                <MenuItem value="Fixed">Fixed</MenuItem>
-                <MenuItem value="Per Site">Per Site</MenuItem>
-                <MenuItem value="Per User">Per User</MenuItem>
-              </MuiSelect>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <TextField label="Rate Of Billing" type="number" fullWidth value={formData.billing_rate || ""} onChange={(e) => handleChange("billing_rate", parseFloat(e.target.value) || undefined)} sx={fieldStyles} />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <FormControl fullWidth>
-              <InputLabel>Billing Cycle</InputLabel>
-              <MuiSelect value={formData.billing_cycle || ""} onChange={(e) => handleChange("billing_cycle", e.target.value)} label="Billing Cycle" MenuProps={selectMenuProps} sx={fieldStyles}>
-                <MenuItem value="">Select Billing Cycle</MenuItem>
-                <MenuItem value="Monthly">Monthly</MenuItem>
-                <MenuItem value="Quarterly">Quarterly</MenuItem>
-                <MenuItem value="Half-Yearly">Half-Yearly</MenuItem>
-                <MenuItem value="Yearly">Yearly</MenuItem>
-              </MuiSelect>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField label="Start Date" type="date" fullWidth value={formData.start_date} onChange={(e) => handleChange("start_date", e.target.value)} InputLabelProps={{ shrink: true }} sx={fieldStyles} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField label="End Date" type="date" fullWidth value={formData.end_date} onChange={(e) => handleChange("end_date", e.target.value)} InputLabelProps={{ shrink: true }} sx={fieldStyles} />
-          </Grid>
-
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }}>
-              <Typography variant="body2" color="textSecondary">
-                Additional Information
-              </Typography>
-            </Divider>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField label="Registration" fullWidth value={formData.registration} onChange={(e) => handleChange("registration", e.target.value)} sx={fieldStyles} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Project Type</InputLabel>
-              <MuiSelect value={formData.project_type || ""} onChange={(e) => handleChange("project_type", e.target.value)} label="Project Type" MenuProps={selectMenuProps} sx={fieldStyles}>
-                <MenuItem value="">Select Project Type</MenuItem>
-                <MenuItem value="Residential">Residential</MenuItem>
-                <MenuItem value="Commercial">Commercial</MenuItem>
-              </MuiSelect>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField label="Approve" fullWidth value={formData.approve} onChange={(e) => handleChange("approve", e.target.value)} sx={fieldStyles} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField label="Comment" fullWidth value={formData.comment} onChange={(e) => handleChange("comment", e.target.value)} sx={fieldStyles} />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField label="Description" fullWidth multiline rows={3} value={formData.description} onChange={(e) => handleChange("description", e.target.value)} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <FormControlLabel control={<Checkbox checked={formData.allow_view_toggle} onChange={(e) => handleChange("allow_view_toggle", e.target.checked)} />} label="Allow View Toggle" />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <FormControlLabel control={<Checkbox checked={formData.active} onChange={(e) => handleChange("active", e.target.checked)} />} label="Active" />
-          </Grid>
-        </Grid>
-      </MuiDialogContent>
-
-      <MuiDialogActions sx={{ p: 2, bgcolor: "#f9fafb", borderTop: "1px solid #e2e8f0" }}>
-        <MuiButton onClick={onClose} disabled={isSubmitting} sx={{ color: "#64748b" }}>
-          Cancel
-        </MuiButton>
-        <MuiButton
-          onClick={handleSubmit}
-          disabled={isSubmitting || !canEdit}
-          variant="contained"
-          sx={{
-            bgcolor: "#c72030",
-            "&:hover": { bgcolor: "#a01828" },
-            "&:disabled": { bgcolor: "#e2e8f0" },
-          }}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Updating...
-            </>
-          ) : (
-            "Update Society"
-          )}
-        </MuiButton>
-      </MuiDialogActions>
-    </MuiDialog>
+          {/* Additional Information Section */}
+          <div>
+            <h3 className="text-sm font-medium text-[#C72030] mb-4">
+              Additional Information
+            </h3>
+            <div className="grid grid-cols-2 gap-6">
+              <TextField
+                label="Approve"
+                placeholder="Enter approval"
+                value={formData.approve}
+                onChange={(e) => handleChange("approve", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+              <TextField
+                label="Comment"
+                placeholder="Enter comment"
+                value={formData.comment}
+                onChange={(e) => handleChange("comment", e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+            </div>
+            <div className="mt-6">
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.allow_view_toggle}
+                    onChange={(e) => handleChange("allow_view_toggle", e.target.checked)}
+                  />
+                }
+                label="Allow View Toggle"
+              />
+            </div>
+          </div>
+        
+        <div className="flex justify-end gap-3 pt-6 border-t">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting || !canEdit}
+            className="bg-[#c72030] hover:bg-[#a01828]"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              "Update Society"
+            )}
+          </Button>
+        </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
