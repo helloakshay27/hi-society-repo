@@ -20,6 +20,11 @@ import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import { SocietyFormData, EstateBuilder, Headquarter, Region, Zone } from "@/types/society";
 import { Loader2, X } from "lucide-react";
 
+interface Company {
+  id: number;
+  name: string;
+}
+
 interface EditSocietyModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -70,6 +75,7 @@ export const EditSocietyModal: React.FC<EditSocietyModalProps> = ({
   }, [isOpen, societyId, canEdit]);
 
   // Dropdowns
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [estateBuilders, setEstateBuilders] = useState<EstateBuilder[]>([]);
   const [headquarters, setHeadquarters] = useState<Headquarter[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
@@ -119,6 +125,7 @@ export const EditSocietyModal: React.FC<EditSocietyModalProps> = ({
   useEffect(() => {
     if (isOpen && societyId) {
       fetchSocietyDetails();
+      fetchCompanies();
       fetchEstateBuilders();
       fetchHeadquarters();
     }
@@ -196,6 +203,26 @@ export const EditSocietyModal: React.FC<EditSocietyModalProps> = ({
       toast.error("Failed to load society details");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchCompanies = async () => {
+    try {
+      const url = getFullUrl("/pms/company_setups/company_index.json?per_page=1000");
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
+      });
+      if (!response.ok) throw new Error("Failed to fetch companies");
+      const result = await response.json();
+      const companiesData = result.data || result.companies || result || [];
+      setCompanies(companiesData);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      toast.error("Failed to load companies");
     }
   };
 
@@ -377,6 +404,27 @@ export const EditSocietyModal: React.FC<EditSocietyModalProps> = ({
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
               />
+            </div>
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink required sx={{ "& .MuiFormLabel-asterisk": { color: "#C72030" } }}>Company</InputLabel>
+                <MuiSelect
+                  value={formData.company_id || ""}
+                  onChange={(e) => handleChange("company_id", e.target.value)}
+                  label="Company"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                  required
+                >
+                  <MenuItem value=""><em>Select Company</em></MenuItem>
+                  {companies.map((company) => (
+                    <MenuItem key={company.id} value={company.id}>
+                      {company.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
             </div>
             <div className="grid grid-cols-2 gap-6 mt-6">
               <FormControl fullWidth variant="outlined">
