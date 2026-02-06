@@ -22,8 +22,9 @@ import HiSocGroupDetailsPage from "@/pages/HiSocGroupDetailsPage";
 import { PatrollingDashboard } from "@/pages/PatrollingDashboard";
 import { PatrollingResponsePage } from "@/pages/PatrollingResponsePage";
 import { StaffsDashboard } from "@/pages/StaffsDashboard";
+// import { ManageUsersPage } from "@/pages/ManageUsersPage";
 
-
+const ManageUsersPage = lazy(() => import("@/pages/ManageUsersPage"));
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
 const NewTier = lazy(() => import("@/pages/NewTier"));
@@ -1475,5 +1476,7 @@ export const setupMemberRoutes = (
       path="/settings/template/view/:id"
       Component={withSuspense(TemplateView)}
     />
+    <Route path="/settings/manage-users"
+    Component={withSuspense(ManageUsersPage)}
   </>
 );

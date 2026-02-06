@@ -1367,10 +1367,10 @@ function App() {
                   />
 
                   {/* Setup - Manage Users Route */}
-                  <Route
+                  {/* <Route
                     path="/settings/manage-users"
                     element={<ManageUsersPage />}
-                  />
+                  /> */}
 
                   <Route
                     path="/settings/manage-users/view-user/:id"

@@ -362,7 +362,7 @@ const sampleUsers = [
   },
 ];
 
-export const ManageUsersPage = () => {
+const ManageUsersPage = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState(sampleUsers);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -764,3 +764,5 @@ export const ManageUsersPage = () => {
     </div>
   );
 };
+
+export default ManageUsersPage;
