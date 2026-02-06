@@ -194,7 +194,7 @@ const BookingCalenderView = () => {
 
     const fetchBookingsForDate = async (date, facilityId) => {
         try {
-            const response = await axios.get(`https://${baseUrl}/crm/facility_bookings/slots_status.json?facility_id=${facilityId}&date=${date}`, {
+            const response = await axios.get(`https://${baseUrl}/crm/admin/facility_bookings/slots_status.json?facility_id=${facilityId}&date=${date}`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -237,7 +237,7 @@ const BookingCalenderView = () => {
             // Redirect to booking details page
             const currentPath = window.location.pathname;
             if (currentPath.includes("bookings")) {
-                navigate(`/bookings/${facilityBookingId}`);
+                navigate(`/cms/facility-bookings/${facilityBookingId}`);
             } else if (currentPath.includes("club-management")) {
                 navigate(`/club-management/amenities-booking/${facilityBookingId}`);
             } else {
@@ -437,7 +437,7 @@ const BookingCalenderView = () => {
                             <div key={facility.id} className="flex">
                                 <div className="w-32 flex-shrink-0 border border-gray-300 sticky left-0 z-10 bg-white">
                                     <div className="relative h-16">
-                                        <img src={facility.cover_image?.document} alt={facility.fac_name} className="w-full h-full object-cover" />
+                                        <img src={facility.cover_image?.url} alt={facility.fac_name} className="w-full h-full object-cover" />
                                         <span className="text-xs font-medium whitespace-nowrap absolute bottom-0 text-white backdrop-blur-md bg-white/40 px-2 w-full">
                                             {facility.fac_name}
                                         </span>

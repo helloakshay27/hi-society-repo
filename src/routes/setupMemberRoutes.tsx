@@ -9,11 +9,10 @@ import { BookingSetupDetailClubPage } from "@/pages/ClubManagement/AmenityBookin
 import { EditBookingSetupClubPage } from "@/pages/ClubManagement/AmenityBookingSetupClubEdit";
 
 import { LoyaltyDashboard } from "@/pages/LoyaltyDashboard";
-import WalletManagement from "@/pages/WalletManagement";
+import { WalletManagement } from "@/pages/WalletManagement";
 import { LoyaltyCustomers } from "@/pages/LoyaltyCustomers";
 import { LoyaltyCustomerDetails } from "@/pages/LoyaltyCustomerDetails";
 import { LoyaltyInventorySection } from "@/pages/LoyaltyInventorySection";
-import LoyaltyInventoryDetails from "@/pages/LoyaltyInventoryDetails";
 import { TicketDashboard } from "@/TicketDashboardbackup";
 import CRMGroupsPage from "@/pages/CRMGroupsPage";
 import { VisitorsDashboard } from "@/pages/VisitorsDashboard";
@@ -22,9 +21,8 @@ import HiSocGroupDetailsPage from "@/pages/HiSocGroupDetailsPage";
 import { PatrollingDashboard } from "@/pages/PatrollingDashboard";
 import { PatrollingResponsePage } from "@/pages/PatrollingResponsePage";
 import { StaffsDashboard } from "@/pages/StaffsDashboard";
-// import { ManageUsersPage } from "@/pages/ManageUsersPage";
 
-const ManageUsersPage = lazy(() => import("@/pages/ManageUsersPage"));
+
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
 const NewTier = lazy(() => import("@/pages/NewTier"));
@@ -187,9 +185,6 @@ const UserList = lazy(() => import("@/pages/UserList"));
 const PressReleasesCreate = lazy(() => import("@/pages/PressReleasesCreate"));
 const PressReleasesEdit = lazy(() => import("@/pages/PressReleasesEdit"));
 const PressReleasesList = lazy(() => import("@/pages/PressReleasesList"));
-const SettingsGenericPage = lazy(() => import("@/pages/SettingsGenericPage"));
-const PricingRuleList = lazy(() => import("@/pages/PricingRuleList"));
-const PricingRuleCreate = lazy(() => import("@/pages/PricingRuleCreate"));
 
 // Add lazy imports for loyalty pages
 const LoyaltyMembersList = lazy(() => import("@/pages/LoyaltyMembersList"));
@@ -200,11 +195,6 @@ const HomeLoanRequestsList = lazy(() => import("@/pages/HomeLoanRequestsList"));
 const DemandNotesList = lazy(() => import("@/pages/DemandNotesList"));
 const OrdersList = lazy(() => import("@/pages/OrdersList"));
 const EncashList = lazy(() => import("@/pages/EncashList"));
-const AggregatorInventorySection = lazy(() => import("@/pages/AggregatorInventorySection"));
-const OrderDetails = lazy(() => import("@/pages/OrderDetails"));
-const RedemptionReport = lazy(() => import("@/pages/RedemptionReport"));
-const BillingInvoices = lazy(() => import("@/pages/BillingInvoices"));
-
 
 // Add missing lazy imports
 const ProjectConfiguration = lazy(() => import("@/pages/ProjectConfiguraion"));
@@ -242,9 +232,11 @@ const BMSCommunicationTemplate = lazy(
 const CMSFacility = lazy(() => import("@/pages/CMSFacility"));
 const CMSRules = lazy(() => import("@/pages/CMSRules"));
 const CMSClubMembers = lazy(() => import("@/pages/CMSClubMembers"));
+const CMSClubMembersDetails = lazy(() => import("@/pages/CMSClubMembersDetails"));
 const AddCMSClubMembers = lazy(() => import("@/pages/AddCMSClubMembers"));
 const EditCMSClubMembers = lazy(() => import("@/pages/EditCMSClubMembers"));
 const CMSFacilityBookings = lazy(() => import("@/pages/CMSFacilityBookings"));
+const BookingDetailsPage = lazy(() => import("@/pages/BookingDetailsPage"));
 const AddFacilityBookingPage = lazy(() => import("@/pages/AddFacilityBookingPage"));
 const CMSMembershipPlanSetup = lazy(() => import("@/pages/ClubManagement/CMSMembershipPlanSetup"));
 const CMSPayments = lazy(() => import("@/pages/CMSPayments"));
@@ -429,13 +421,6 @@ const withSuspense = (Component: React.LazyExoticComponent<any>) => {
 
 export const setupMemberRoutes = (
   <>
-    {/* Generic Settings Route */}
-    <Route path="/settings/generic" Component={withSuspense(SettingsGenericPage)} />
-
-    {/* Pricing Rule Routes */}
-    <Route path="/settings/pricing-rule-list" Component={withSuspense(PricingRuleList)} />
-    <Route path="/settings/pricing-rule-create" Component={withSuspense(PricingRuleCreate)} />
-
     {/* Amenities Routes */}
     <Route
       path="/loyalty/dashboard"
@@ -456,10 +441,6 @@ export const setupMemberRoutes = (
     <Route
       path="/loyalty/inventory-section"
       element={<LoyaltyInventorySection />}
-    />
-    <Route
-      path="/loyalty/inventory-details/:id"
-      element={<LoyaltyInventoryDetails />}
     />
     <Route path="/settings/amenities" Component={withSuspense(Amenities)} />
     <Route
@@ -599,16 +580,16 @@ export const setupMemberRoutes = (
 
     {/* Event Routes */}
     <Route
-      path="/loyalty/event-create"
+      path="/maintenance/event-create"
       Component={withSuspense(EventCreate)}
     />
-    {/* <Route path="/loyalty/event-details/:id" element={<EventDetails />} /> */}
-    <Route path="/loyalty/event-details/:id" element={<EventDetails />} />
+    {/* <Route path="/maintenance/event-details/:id" element={<EventDetails />} /> */}
+    <Route path="/maintenance/event-details/:id" element={<EventDetails />} />
     <Route
-      path="/loyalty/event-edit/:id"
+      path="/maintenance/event-edit/:id"
       Component={withSuspense(EventEdit)}
     />
-    <Route path="/loyalty/events" Component={withSuspense(EventList)} />
+    <Route path="/maintenance/event-list" Component={withSuspense(EventList)} />
 
     <Route
       path="/maintenance/offers-list"
@@ -1054,14 +1035,7 @@ export const setupMemberRoutes = (
     />
     <Route path="/loyalty/orders-list" Component={withSuspense(OrdersList)} />
     <Route path="/loyalty/encash-list" Component={withSuspense(EncashList)} />
-    <Route
-      path="/loyalty/aggregator-inventory-section"
-      Component={withSuspense(AggregatorInventorySection)}
-    />
 
-    <Route path="/loyalty/orders/:id" Component={withSuspense(OrderDetails)} />
-    <Route path="/loyalty/redemption-report" Component={withSuspense(RedemptionReport)} />
-    <Route path="/loyalty/billing-invoices" Component={withSuspense(BillingInvoices)} />
     {/* Project Configuration Routes */}
     <Route
       path="/settings/project-configuration"
@@ -1135,11 +1109,16 @@ export const setupMemberRoutes = (
     <Route path="/cms/rules" Component={withSuspense(CMSRules)} />
     <Route path="/cms/membership-plan-setup" Component={withSuspense(CMSMembershipPlanSetup)} />
     <Route path="/cms/club-members" Component={withSuspense(CMSClubMembers)} />
+    <Route path="/cms/club-members/view/:id" Component={withSuspense(CMSClubMembersDetails)} />
     <Route path="/cms/club-members/add" Component={withSuspense(AddCMSClubMembers)} />
     <Route path="/cms/club-members/edit/:id" Component={withSuspense(EditCMSClubMembers)} />
     <Route
       path="/cms/facility-bookings"
       Component={withSuspense(CMSFacilityBookings)}
+    />
+    <Route
+      path="/cms/facility-bookings/:id"
+      Component={withSuspense(BookingDetailsPage)}
     />
     <Route
       path="/cms/facility-bookings/add"
@@ -1445,10 +1424,9 @@ export const setupMemberRoutes = (
 
     {/* Offers Routes */}
     <Route path="/offers/add" Component={withSuspense(AddOffersPage)} />
-    <Route path="/loyalty/offers" Component={withSuspense(OffersList)} />
-    <Route path="/loyalty/offer-create" Component={withSuspense(AddOfferPage)} />
-    <Route path="/loyalty/offer-edit/:id" Component={withSuspense(AddOfferPage)} />
-    <Route path="/loyalty/offer-view/:id" Component={withSuspense(OfferViewPage)} />
+    <Route path="/offer/add" Component={withSuspense(AddOfferPage)} />
+    <Route path="/offer/add/:id" Component={withSuspense(AddOfferPage)} />
+    <Route path="/offer/view/:id" Component={withSuspense(OfferViewPage)} />
     <Route
       path="/business-directory/add"
       Component={withSuspense(AddBusinessDirectoryPage)}
@@ -1475,9 +1453,6 @@ export const setupMemberRoutes = (
     <Route
       path="/settings/template/view/:id"
       Component={withSuspense(TemplateView)}
-    />
-    <Route path="/settings/manage-users"
-    Component={withSuspense(ManageUsersPage)}
     />
   </>
 );

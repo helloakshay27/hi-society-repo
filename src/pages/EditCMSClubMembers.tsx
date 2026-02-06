@@ -1,8 +1,9 @@
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Upload, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, Upload, X, Loader2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
     TextField,
@@ -18,7 +19,8 @@ import axios from "axios";
 import { toast } from "sonner";
 
 interface MemberForm {
-    id: string; // This is the ID of the record being edited
+    id: string; // Front-end ID (timestamp) or Backend ID
+    backendId?: string; // Actual ID from DB if exists
     userSelectionType: "select" | "enter";
     selectedUser: string;
     firstName: string;
@@ -28,20 +30,37 @@ interface MemberForm {
     residentType: string;
     isClubMembership: boolean;
     membershipNumber: string;
-    startDate: string;
-    endDate: string;
     isAccessCardAllocated: boolean;
     accessCardId: string;
     idCard: File | null;
     residentPhoto: File | null;
-    // For previewing existing images
+    // For previews
     idCardUrl?: string | null;
     residentPhotoUrl?: string | null;
+    _destroy?: boolean;
 }
+
+const fieldStyles = {
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    '& .MuiOutlinedInput-root': {
+        '& fieldset': {
+            borderColor: '#ddd',
+        },
+        '&.Mui-focused fieldset': {
+            borderColor: '#C72030',
+        },
+    },
+    '& .MuiInputLabel-root': {
+        '&.Mui-focused': {
+            color: '#C72030',
+        },
+    },
+};
 
 const EditCMSClubMembers = () => {
     const navigate = useNavigate();
-    const { id } = useParams<{ id: string }>();
+    const { id } = useParams<{ id: string }>(); // This is the Allocation ID
 
     const baseUrl = localStorage.getItem("baseUrl");
     const token = localStorage.getItem("token");
@@ -50,114 +69,109 @@ const EditCMSClubMembers = () => {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
-    // Tower and Flat state
-    const [towers, setTowers] = useState([]);
+    const [towers, setTowers] = useState([])
     const [flats, setFlats] = useState([]);
     const [flatUsers, setFlatUsers] = useState([]);
+    const [membershipPlans, setMembershipPlans] = useState([]);
+
+    // Global Config State
     const [tower, setTower] = useState("");
     const [flat, setFlat] = useState("");
+    const [globalStartDate, setGlobalStartDate] = useState("");
+    const [globalEndDate, setGlobalEndDate] = useState("");
+    const [globalMembershipPlanId, setGlobalMembershipPlanId] = useState("");
+    const [globalMembershipType, setGlobalMembershipType] = useState("paid");
 
-    const [member, setMember] = useState<MemberForm>({
-        id: "",
-        userSelectionType: "select", // Default to enter for edit
-        selectedUser: "",
-        firstName: "",
-        lastName: "",
-        email: "",
-        mobile: "",
-        residentType: "Owner",
-        isClubMembership: false,
-        membershipNumber: "",
-        startDate: "",
-        endDate: "",
-        isAccessCardAllocated: false,
-        accessCardId: "",
-        idCard: null,
-        residentPhoto: null,
-    });
+    const [members, setMembers] = useState<MemberForm[]>([]);
 
-    // Fetch Towers
     const fetchTowers = async () => {
         try {
             const response = await axios.get(`https://${baseUrl}/crm/admin/society_blocks.json?society_id=${societyId}`, {
                 headers: { Authorization: `Bearer ${token}` }
-            });
-            setTowers(response.data.society_blocks);
+            })
+            setTowers(response.data.society_blocks)
         } catch (error) {
-            console.error("Error fetching towers:", error);
+            console.log(error)
         }
-    };
+    }
 
-    // Fetch Flats (dependent on Tower)
+    const fetchMembershipPlans = async () => {
+        try {
+            const response = await axios.get(`https://${baseUrl}/membership_plans.json`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            setMembershipPlans(response.data.plans)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     const fetchFlats = async (towerId: string) => {
         if (!towerId) return;
         try {
             const response = await axios.get(`https://${baseUrl}/crm/admin/society_blocks/${towerId}/flats.json?q[active_eq]=true`, {
                 headers: { Authorization: `Bearer ${token}` }
-            });
-            setFlats(response.data);
+            })
+            setFlats(response.data)
         } catch (error) {
-            console.error("Error fetching flats:", error);
+            console.log(error)
         }
-    };
+    }
 
-    // Fetch Users (dependent on Flat)
     const fetchUsers = async (flatId: string) => {
         if (!flatId) return;
         try {
             const response = await axios.get(`https://${baseUrl}/crm/admin/flat_users.json?q[user_flat_society_flat_id_eq]=${flatId}`, {
                 headers: { Authorization: `Bearer ${token}` }
-            });
-            setFlatUsers(response.data);
+            })
+            setFlatUsers(response.data || [])
         } catch (error) {
-            console.error("Error fetching users:", error);
+            console.log(error)
         }
-    };
+    }
 
-    // Fetch Member Details
-    const fetchMemberDetails = async () => {
+    const fetchAllocationDetails = async () => {
         if (!id) return;
         setLoading(true);
         try {
-            const response = await axios.get(`https://${baseUrl}/crm/admin/club_members/${id}.json`, {
+            const response = await axios.get(`https://${baseUrl}/club_member_allocations/${id}.json`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
             const data = response.data;
 
-            setTower(data.tower.id)
-            setFlat(data.flat.id)
+            setTower(data.tower?.id?.toString() || "");
+            setFlat(data.flat?.id?.toString() || "");
+            setGlobalStartDate(data.start_date.split("T")[0] || "");
+            setGlobalEndDate(data.end_date.split("T")[0] || "");
+            setGlobalMembershipPlanId(data.membership_plan_id?.toString() || "");
+            setGlobalMembershipType(data.membership_type || "paid");
 
-            setMember(prev => ({
-                ...prev,
-                id: data.id,
-                userSelectionType: data.user_society_id ? "select" : "enter",
-                selectedUser: data.user_society_id,
-                firstName: data.first_name || "",
-                lastName: data.last_name || "",
-                email: data.email || "",
-                mobile: data.mobile || "",
-
-                residentType: data.resident_type || "Owner",
-
-                isClubMembership: data.club_member_enabled ?? data.club_member_check ?? false,
-                membershipNumber: data.membership_number || "",
-                startDate: data.start_date || "",
-                endDate: data.end_date || "",
-
-                isAccessCardAllocated: data.access_card_enabled ?? data.access_card_check ?? false,
-                accessCardId: data.access_card_id || "",
-
-                idCard: null,
-                residentPhoto: null,
-
-                idCardUrl: data.identification_image.url,
-                residentPhotoUrl: data.profile_image.url,
-            }));
+            if (data.club_members && Array.isArray(data.club_members)) {
+                const mappedMembers: MemberForm[] = data.club_members.map((m: any) => ({
+                    id: m.id,
+                    userSelectionType: m.user_society_id ? "select" : "enter",
+                    selectedUser: m.user_society_id?.toString() || "",
+                    firstName: m.first_name || "",
+                    lastName: m.last_name || "",
+                    email: m.email || "",
+                    mobile: m.mobile || "",
+                    residentType: m.resident_type || "Owner",
+                    isClubMembership: m.club_member_enabled ?? m.club_member_check ?? false,
+                    membershipNumber: m.membership_number || "",
+                    isAccessCardAllocated: m.access_card_enabled ?? m.access_card_check ?? false,
+                    accessCardId: m.access_card_id || "",
+                    idCard: null,
+                    residentPhoto: null,
+                    idCardUrl: m.identification_image?.url, // API usually returns URL string or obj
+                    residentPhotoUrl: m.profile_image?.url,
+                }));
+                setMembers(mappedMembers);
+            }
 
         } catch (error) {
-            console.error("Error fetching member details:", error);
-            toast.error("Failed to load member details");
+            console.error("Error fetching allocation details:", error);
+            toast.error("Failed to load allocation details");
         } finally {
             setLoading(false);
         }
@@ -165,10 +179,10 @@ const EditCMSClubMembers = () => {
 
     useEffect(() => {
         fetchTowers();
-        fetchMemberDetails();
+        fetchMembershipPlans();
+        fetchAllocationDetails();
     }, []);
 
-    // Effect to handle Tower selection -> Fetch Flats
     useEffect(() => {
         if (tower) {
             fetchFlats(tower);
@@ -177,7 +191,6 @@ const EditCMSClubMembers = () => {
         }
     }, [tower]);
 
-    // Effect to handle Flat selection -> Fetch Users
     useEffect(() => {
         if (flat) {
             fetchUsers(flat);
@@ -186,8 +199,44 @@ const EditCMSClubMembers = () => {
         }
     }, [flat]);
 
-    const updateMemberField = (field: keyof MemberForm, value: any) => {
-        setMember(prev => ({ ...prev, [field]: value }));
+    const addMember = () => {
+        setMembers([
+            ...members,
+            {
+                id: Date.now().toString(),
+                userSelectionType: "select",
+                selectedUser: "",
+                firstName: "",
+                lastName: "",
+                email: "",
+                mobile: "",
+                residentType: "Owner",
+                isClubMembership: false,
+                membershipNumber: "",
+                isAccessCardAllocated: false,
+                accessCardId: "",
+                idCard: null,
+                residentPhoto: null,
+            },
+        ]);
+    };
+
+    const removeMember = (id: string) => {
+        if (members.filter(m => !m._destroy).length > 1) {
+            setMembers(members.map(member =>
+                member.id === id ? { ...member, _destroy: true } : member
+            ));
+        } else {
+            toast.warning("At least one member is required.");
+        }
+    };
+
+    const updateMember = (id: string, field: keyof MemberForm, value: any) => {
+        setMembers(
+            members.map((member) =>
+                member.id === id ? { ...member, [field]: value } : member
+            )
+        );
     };
 
     const handleSubmit = async () => {
@@ -195,64 +244,58 @@ const EditCMSClubMembers = () => {
         try {
             const formData = new FormData();
 
-            // Edit payload typically uses nested attributes under the resource key (club_member)
-            formData.append("club_member[society_id]", societyId)
-            formData.append("club_member[society_flat_id]", flat)
-            formData.append(`club_member[user_society_id]`, member.selectedUser)
-            if (!member.selectedUser) {
-                formData.append("club_member[first_name]", member.firstName);
-                formData.append("club_member[last_name]", member.lastName);
-                formData.append("club_member[email]", member.email);
-                formData.append("club_member[mobile]", member.mobile);
-            }
-            formData.append("club_member[resident_type]", member.residentType);
-            formData.append("club_member[club_member_check]", member.isClubMembership ? "true" : "false");
-            formData.append("club_member[club_member_enabled]", member.isClubMembership ? "true" : "false");
+            formData.append("club_member_allocation[society_id]", societyId!)
+            formData.append("club_member_allocation[society_flat_id]", flat)
+            formData.append(`club_member_allocation[start_date]`, globalStartDate)
+            formData.append(`club_member_allocation[end_date]`, globalEndDate)
+            formData.append(`club_member_allocation[membership_plan_id]`, globalMembershipPlanId)
+            formData.append(`club_member_allocation[membership_type]`, globalMembershipType)
 
-            formData.append("club_member[membership_number]", member.membershipNumber);
-            formData.append("club_member[start_date]", member.startDate);
-            formData.append("club_member[end_date]", member.endDate);
+            members.forEach((member, idx) => {
+                formData.append(`members[${idx}][id]`, member.id)
 
-            formData.append("club_member[access_card_check]", member.isAccessCardAllocated ? "true" : "false");
-            formData.append("club_member[access_card_enabled]", member.isAccessCardAllocated ? "true" : "false");
+                if (member._destroy) {
+                    formData.append(`members[${idx}][_destroy]`, 'true')
+                    return;
+                }
+                formData.append(`members[${idx}][user_society_id]`, member.selectedUser)
+                formData.append(`members[${idx}][first_name]`, member.firstName)
+                formData.append(`members[${idx}][last_name]`, member.lastName)
+                formData.append(`members[${idx}][email]`, member.email)
+                formData.append(`members[${idx}][mobile]`, member.mobile)
+                formData.append(`members[${idx}][resident_type]`, member.residentType)
 
-            formData.append("club_member[access_card_id]", member.accessCardId);
+                formData.append(`members[${idx}][club_member_check]`, member.isClubMembership ? "true" : "false")
+                formData.append(`members[${idx}][membership_number]`, member.membershipNumber)
 
-            if (member.idCard) {
-                formData.append("club_member[identification_image_attributes][document]", member.idCard);
-            }
-            if (member.residentPhoto) {
-                formData.append("club_member[profile_image_attributes][document]", member.residentPhoto);
-            }
+                formData.append(`members[${idx}][access_card_check]`, member.isAccessCardAllocated ? "true" : "false")
+                formData.append(`members[${idx}][access_card_id]`, member.accessCardId)
 
-            await axios.put(`https://${baseUrl}/crm/admin/club_members/${id}.json`, formData, {
+                if (member.idCard) {
+                    formData.append(`members[${idx}][identification_image_attributes][document]`, member.idCard)
+                }
+                if (member.residentPhoto) {
+                    formData.append(`members[${idx}][profile_image_attributes][document]`, member.residentPhoto)
+                }
+            })
+
+            // PUT request to allocation
+            await axios.patch(`https://${baseUrl}/club_member_allocations/${id}.json`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data',
                 }
-            });
+            })
 
-            toast.success("Club member updated successfully!");
+            toast.success("Allocation updated successfully!");
             navigate(-1);
         } catch (error) {
-            console.error("Error updating member:", error);
-            toast.error("Failed to update member");
+            console.error('Error updating allocation:', error)
+            toast.error("Failed to update allocation");
         } finally {
             setSubmitting(false);
         }
     };
-
-    // const getPreviewUrl = (file: File | null, existingUrl?: string | null) => {
-    //     if (file) return URL.createObjectURL(file);
-    //     if (existingUrl) {
-    //         if (existingUrl.startsWith('%2F') || existingUrl.startsWith('/')) {
-    //             const cleanPath = existingUrl.startsWith('%2F') ? decodeURIComponent(existingUrl) : existingUrl;
-    //             return `https://${baseUrl}${cleanPath}`;
-    //         }
-    //         return existingUrl;
-    //     }
-    //     return null;
-    // };
 
     if (loading) {
         return (
@@ -275,300 +318,373 @@ const EditCMSClubMembers = () => {
             </div>
 
             <div className="space-y-6">
-                {/* Main Container - Same structure as Add page */}
-                <div className="bg-white rounded-lg space-y-6">
-                    <h2 className="text-2xl font-semibold px-1">Edit Club Members</h2>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Global Configuration</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <FormControl required sx={fieldStyles}>
+                                    <InputLabel className="bg-white px-1">Tower</InputLabel>
+                                    <Select
+                                        value={tower}
+                                        onChange={(e) => setTower(e.target.value)}
+                                        label="Tower"
+                                        displayEmpty
+                                    >
+                                        <MenuItem value="" disabled>Select Tower</MenuItem>
+                                        {
+                                            towers.map((tower: any) => (
+                                                <MenuItem key={tower.id} value={tower.id}>{tower.name}</MenuItem>
+                                            ))
+                                        }
+                                    </Select>
+                                </FormControl>
+                                <FormControl required sx={fieldStyles}>
+                                    <InputLabel className="bg-white px-1">Flat</InputLabel>
+                                    <Select
+                                        value={flat}
+                                        onChange={(e) => setFlat(e.target.value)}
+                                        label="Flat"
+                                        displayEmpty
+                                    >
+                                        <MenuItem value="" disabled>Select Flat</MenuItem>
+                                        {
+                                            flats.map((flat: any) => (
+                                                <MenuItem key={flat.id} value={flat.id}>{flat.flat_no}</MenuItem>
+                                            ))
+                                        }
+                                    </Select>
+                                </FormControl>
+                                <FormControl fullWidth sx={fieldStyles}>
+                                    <InputLabel className="bg-white px-1">Membership Plan</InputLabel>
+                                    <Select
+                                        value={globalMembershipPlanId}
+                                        onChange={(e) => setGlobalMembershipPlanId(e.target.value)}
+                                        label="Membership Plan"
+                                        displayEmpty
+                                    >
+                                        <MenuItem value="">Select Membership Plan</MenuItem>
+                                        {membershipPlans.map((plan: any) => (
+                                            <MenuItem key={plan.id} value={plan.id}>
+                                                {plan.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                                <TextField
+                                    required
+                                    type="date"
+                                    label="Start Date (Applies to all)"
+                                    value={globalStartDate}
+                                    onChange={(e) => setGlobalStartDate(e.target.value)}
+                                    InputLabelProps={{ shrink: true }}
+                                    sx={fieldStyles}
+                                />
+                                <TextField
+                                    required
+                                    type="date"
+                                    label="End Date (Applies to all)"
+                                    value={globalEndDate}
+                                    onChange={(e) => setGlobalEndDate(e.target.value)}
+                                    InputLabelProps={{ shrink: true }}
+                                    sx={fieldStyles}
+                                />
+                                <FormControl fullWidth sx={fieldStyles}>
+                                    <InputLabel className="bg-white px-1">Membership Type</InputLabel>
+                                    <Select
+                                        value={globalMembershipType}
+                                        onChange={(e) => setGlobalMembershipType(e.target.value)}
+                                        label="Membership Type"
+                                    >
+                                        <MenuItem value="paid">Paid</MenuItem>
+                                        <MenuItem value="free">Free</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
 
-                    {/* Header / Tower & Flat Selection */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <FormControl required>
-                            <InputLabel className="bg-white px-1">Tower</InputLabel>
-                            <Select
-                                value={tower}
-                                onChange={(e) => setTower(e.target.value)}
-                                label="Tower"
-                                displayEmpty
-                            >
-                                <MenuItem value="" disabled>Select Tower</MenuItem>
-                                {
-                                    towers.map((tower: any) => (
-                                        <MenuItem key={tower.id} value={tower.id}>{tower.name}</MenuItem>
-                                    ))
-                                }
-                            </Select>
-                        </FormControl>
 
-                        <FormControl required>
-                            <InputLabel className="bg-white px-1">Flat</InputLabel>
-                            <Select
-                                value={flat}
-                                onChange={(e) => setFlat(e.target.value)}
-                                label="Flat"
-                                displayEmpty
-                            >
-                                <MenuItem value="" disabled>Select Flat</MenuItem>
-                                {
-                                    flats.map((flat: any) => (
-                                        <MenuItem key={flat.id} value={flat.id}>{flat.flat_no}</MenuItem>
-                                    ))
-                                }
-                            </Select>
-                        </FormControl>
-                    </div>
-
-                    {/* Member Form - Single Card */}
-                    <Card className="border shadow-sm">
-                        <CardContent className="pt-6">
-                            <div className="space-y-6">
-                                {/* User Selection Radio - Kept for UI consistency, but defaulting to 'enter' logic mostly */}
-                                <RadioGroup
-                                    row
-                                    value={member.userSelectionType}
-                                    onChange={(e) => updateMemberField("userSelectionType", e.target.value as any)}
-                                    className="mb-4"
-                                >
-                                    <FormControlLabel value="select" control={<Radio />} label="Select User" className="mr-8" />
-                                    <FormControlLabel value="enter" control={<Radio />} label="Enter User Details" />
-                                </RadioGroup>
-
-                                {/* User Input Section */}
-                                {member.userSelectionType === "select" ? (
-                                    <div className="grid grid-cols-1 gap-4">
-                                        <FormControl required fullWidth>
-                                            <InputLabel className="bg-white px-1">User</InputLabel>
-                                            <Select
-                                                value={member.selectedUser}
-                                                onChange={(e) => updateMemberField("selectedUser", e.target.value)}
-                                                label="User"
-                                                displayEmpty
-                                            >
-                                                <MenuItem value="" disabled>Select User</MenuItem>
-                                                {
-                                                    flatUsers.map((user: any) => {
-                                                        const [username, id] = user;
-                                                        return (
-                                                            <MenuItem key={id} value={id}>
-                                                                {username}
-                                                            </MenuItem>
-                                                        )
-                                                    })
-                                                }
-                                            </Select>
-                                        </FormControl>
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                        <TextField
-                                            required
-                                            label="First Name"
-                                            placeholder="Enter First Name"
-                                            value={member.firstName}
-                                            onChange={(e) => updateMemberField("firstName", e.target.value)}
-                                        />
-                                        <TextField
-                                            required
-                                            label="Last Name"
-                                            placeholder="Enter Last Name"
-                                            value={member.lastName}
-                                            onChange={(e) => updateMemberField("lastName", e.target.value)}
-                                        />
-                                        <TextField
-                                            label="Email"
-                                            placeholder="Enter Email"
-                                            value={member.email}
-                                            onChange={(e) => updateMemberField("email", e.target.value)}
-                                        />
-                                        <TextField
-                                            label="Mobile"
-                                            placeholder="Enter Mobile"
-                                            value={member.mobile}
-                                            onChange={(e) => updateMemberField("mobile", e.target.value)}
-                                        />
+                {/* Dynamic Member Forms */}
+                {members.map((member, index) => {
+                    if (member._destroy) return null;
+                    return (
+                        <Card key={member.id} className="border shadow-sm">
+                            <CardContent className="pt-6">
+                                {index >= 0 && (
+                                    <div className="flex justify-end mb-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => removeMember(member.id)}
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                        >
+                                            <X className="w-4 h-4 mr-1" /> Remove Member
+                                        </Button>
                                     </div>
                                 )}
 
-                                {/* Resident Type */}
-                                <div className="grid grid-cols-1 gap-4">
-                                    <FormControl fullWidth>
-                                        <InputLabel className="bg-white px-1">Resident Type</InputLabel>
-                                        <Select
-                                            value={member.residentType}
-                                            onChange={(e) => updateMemberField("residentType", e.target.value)}
-                                            label="Resident Type"
-                                        >
-                                            <MenuItem value="Owner">Owner</MenuItem>
-                                            <MenuItem value="Tenant">Tenant</MenuItem>
-                                        </Select>
-                                    </FormControl>
-                                </div>
+                                <div className="space-y-6">
+                                    {/* User Selection Radio */}
+                                    <RadioGroup
+                                        row
+                                        value={member.userSelectionType}
+                                        onChange={(e) => updateMember(member.id, "userSelectionType", e.target.value)}
+                                        className="mb-4"
+                                    >
+                                        <FormControlLabel value="select" control={<Radio />} label="Select User" className="mr-8" />
+                                        <FormControlLabel value="enter" control={<Radio />} label="Enter User Details" />
+                                    </RadioGroup>
 
-                                {/* Club Membership Section */}
-                                <div className="space-y-8">
-                                    <div className="flex items-center gap-2">
-                                        <Checkbox
-                                            id="club-membership"
-                                            checked={member.isClubMembership}
-                                            onCheckedChange={(checked) => updateMemberField("isClubMembership", checked)}
-                                        />
-                                        <label
-                                            htmlFor="club-membership"
-                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                        >
-                                            Club Membership
-                                        </label>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <TextField
-                                            required
-                                            label="Membership Number"
-                                            placeholder="Enter Number"
-                                            value={member.membershipNumber}
-                                            onChange={(e) => updateMemberField("membershipNumber", e.target.value)}
-                                        />
-                                        <TextField
-                                            required
-                                            type="date"
-                                            label="Start Date"
-                                            value={member.startDate}
-                                            onChange={(e) => updateMemberField("startDate", e.target.value)}
-                                            InputLabelProps={{ shrink: true }}
-                                        />
-                                        <TextField
-                                            required
-                                            type="date"
-                                            label="End Date"
-                                            value={member.endDate}
-                                            onChange={(e) => updateMemberField("endDate", e.target.value)}
-                                            InputLabelProps={{ shrink: true }}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Access Card Section */}
-                                <div className="space-y-8">
-                                    <div className="flex items-center gap-2">
-                                        <Checkbox
-                                            id="access-card"
-                                            checked={member.isAccessCardAllocated}
-                                            onCheckedChange={(checked) => updateMemberField("isAccessCardAllocated", checked)}
-                                        />
-                                        <label
-                                            htmlFor="access-card"
-                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                        >
-                                            Access Card Allocated
-                                        </label>
-                                    </div>
-
-                                    <TextField
-                                        label="Access Card ID"
-                                        placeholder="Enter Access Card ID"
-                                        value={member.accessCardId}
-                                        onChange={(e) => updateMemberField("accessCardId", e.target.value)}
-                                        className="w-full"
-                                    />
-                                </div>
-
-                                {/* File Uploads */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* ID Card */}
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-700">ID Card</label>
-                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer relative group">
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                onChange={(e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (file) updateMemberField("idCard", file);
-                                                }}
+                                    {/* User Input Section */}
+                                    {member.userSelectionType === "select" ? (
+                                        <div className="grid grid-cols-1 gap-4">
+                                            <FormControl required fullWidth sx={fieldStyles}>
+                                                <InputLabel className="bg-white px-1">User</InputLabel>
+                                                <Select
+                                                    value={member.selectedUser}
+                                                    onChange={(e) => updateMember(member.id, "selectedUser", e.target.value)}
+                                                    label="User"
+                                                    displayEmpty
+                                                >
+                                                    <MenuItem value="" disabled>Select User</MenuItem>
+                                                    {
+                                                        (flatUsers || []).map((user: any) => {
+                                                            const [username, id] = user;
+                                                            return (
+                                                                <MenuItem key={id} value={id}>
+                                                                    {username}
+                                                                </MenuItem>
+                                                            )
+                                                        })
+                                                    }
+                                                </Select>
+                                            </FormControl>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                            <TextField
+                                                required
+                                                label="First Name"
+                                                placeholder="Enter First Name"
+                                                value={member.firstName}
+                                                onChange={(e) => updateMember(member.id, "firstName", e.target.value)}
+                                                sx={fieldStyles}
                                             />
-                                            {member.idCard ? (
-                                                <div className="w-full h-48 flex items-center justify-center">
-                                                    <img
-                                                        src={URL.createObjectURL(member.idCard)}
-                                                        alt="ID Card Preview"
-                                                        className="max-w-full max-h-full object-contain rounded"
+                                            <TextField
+                                                required
+                                                label="Last Name"
+                                                placeholder="Enter Last Name"
+                                                value={member.lastName}
+                                                onChange={(e) => updateMember(member.id, "lastName", e.target.value)}
+                                                sx={fieldStyles}
+                                            />
+                                            <TextField
+                                                label="Email"
+                                                placeholder="Enter Email"
+                                                value={member.email}
+                                                onChange={(e) => updateMember(member.id, "email", e.target.value)}
+                                                sx={fieldStyles}
+                                            />
+                                            <TextField
+                                                label="Mobile"
+                                                placeholder="Enter Mobile"
+                                                value={member.mobile}
+                                                onChange={(e) => updateMember(member.id, "mobile", e.target.value)}
+                                                sx={fieldStyles}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Resident Type */}
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <FormControl fullWidth sx={fieldStyles}>
+                                            <InputLabel className="bg-white px-1">Resident Type</InputLabel>
+                                            <Select
+                                                value={member.residentType}
+                                                onChange={(e) => updateMember(member.id, "residentType", e.target.value)}
+                                                label="Resident Type"
+                                            >
+                                                <MenuItem value="Owner">Owner</MenuItem>
+                                                <MenuItem value="Tenant">Tenant</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </div>
+
+                                    {/* Club Membership Section */}
+                                    <div className="space-y-8">
+                                        <div className="flex items-center gap-2">
+                                            <Checkbox
+                                                id={`club-membership-${member.id}`}
+                                                checked={member.isClubMembership}
+                                                onCheckedChange={(checked) => updateMember(member.id, "isClubMembership", checked)}
+                                            />
+                                            <label
+                                                htmlFor={`club-membership-${member.id}`}
+                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                            >
+                                                Club Membership
+                                            </label>
+                                        </div>
+
+                                        {
+                                            member.isClubMembership && (
+                                                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                                                    <TextField
+                                                        required
+                                                        label="Membership Number"
+                                                        placeholder="Enter Number"
+                                                        value={member.membershipNumber}
+                                                        onChange={(e) => updateMember(member.id, "membershipNumber", e.target.value)}
+                                                        sx={fieldStyles}
                                                     />
                                                 </div>
-                                            ) : member.idCardUrl ? (
-                                                <div className="w-full h-48 flex items-center justify-center">
-                                                    <img
-                                                        src={member.idCardUrl}
-                                                        alt="ID Card Preview"
-                                                        className="max-w-full max-h-full object-contain rounded"
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <div className="w-12 h-12 mb-2 text-gray-400">
-                                                        <Upload className="w-full h-full" />
+                                            )
+                                        }
+                                    </div>
+
+                                    {/* Access Card Section */}
+                                    <div className="space-y-8">
+                                        <div className="flex items-center gap-2">
+                                            <Checkbox
+                                                id={`access-card-${member.id}`}
+                                                checked={member.isAccessCardAllocated}
+                                                onCheckedChange={(checked) => updateMember(member.id, "isAccessCardAllocated", checked)}
+                                            />
+                                            <label
+                                                htmlFor={`access-card-${member.id}`}
+                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                            >
+                                                Access Card Allocated / Face Base
+                                            </label>
+                                        </div>
+
+                                        {
+                                            member.isAccessCardAllocated && (
+                                                <TextField
+                                                    label="Access Card ID"
+                                                    placeholder="Enter Access Card ID"
+                                                    value={member.accessCardId}
+                                                    onChange={(e) => updateMember(member.id, "accessCardId", e.target.value)}
+                                                    className="w-full"
+                                                    sx={fieldStyles}
+                                                />
+                                            )
+                                        }
+                                    </div>
+
+                                    {/* File Uploads */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* ID Card */}
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-700">ID Card</label>
+                                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer relative group">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) updateMember(member.id, "idCard", file);
+                                                    }}
+                                                />
+                                                {member.idCard ? (
+                                                    <div className="w-full h-48 flex items-center justify-center">
+                                                        <img
+                                                            src={URL.createObjectURL(member.idCard)}
+                                                            alt="ID Card Preview"
+                                                            className="max-w-full max-h-full object-contain rounded"
+                                                        />
                                                     </div>
-                                                    <span className="text-xl font-medium text-gray-400">Upload</span>
-                                                </>
-                                            )}
+                                                ) : member.idCardUrl ? (
+                                                    <div className="w-full h-48 flex items-center justify-center">
+                                                        <img
+                                                            src={member.idCardUrl}
+                                                            alt="ID Card Preview"
+                                                            className="max-w-full max-h-full object-contain rounded"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <div className="w-12 h-12 mb-2 text-gray-400">
+                                                            <Upload className="w-full h-full" />
+                                                        </div>
+                                                        <span className="text-xl font-medium text-gray-400">Upload</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Resident's Photo */}
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-700">Resident's Photo</label>
+                                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer relative group">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) updateMember(member.id, "residentPhoto", file);
+                                                    }}
+                                                />
+                                                {member.residentPhoto ? (
+                                                    <div className="w-full h-48 flex items-center justify-center">
+                                                        <img
+                                                            src={URL.createObjectURL(member.residentPhoto)}
+                                                            alt="Resident Photo Preview"
+                                                            className="max-w-full max-h-full object-contain rounded"
+                                                        />
+                                                    </div>
+                                                ) : (member.residentPhotoUrl && !member.residentPhotoUrl.includes('profile.png')) ? (
+                                                    <div className="w-full h-48 flex items-center justify-center">
+                                                        <img
+                                                            src={member.residentPhotoUrl}
+                                                            alt="Resident Photo Preview"
+                                                            className="max-w-full max-h-full object-contain rounded"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <div className="w-12 h-12 mb-2 text-gray-400">
+                                                            <Upload className="w-full h-full" />
+                                                        </div>
+                                                        <span className="text-xl font-medium text-gray-400">Upload</span>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Resident's Photo */}
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-700">Resident's Photo</label>
-                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer relative group">
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                onChange={(e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (file) updateMemberField("residentPhoto", file);
-                                                }}
-                                            />
-                                            {member.residentPhoto ? (
-                                                <div className="w-full h-48 flex items-center justify-center">
-                                                    <img
-                                                        src={URL.createObjectURL(member.residentPhoto)}
-                                                        alt="Resident Photo Preview"
-                                                        className="max-w-full max-h-full object-contain rounded"
-                                                    />
-                                                </div>
-                                            ) : member.residentPhotoUrl ? (
-                                                <div className="w-full h-48 flex items-center justify-center">
-                                                    <img
-                                                        src={member.residentPhotoUrl}
-                                                        alt="Resident Photo Preview"
-                                                        className="max-w-full max-h-full object-contain rounded"
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <div className="w-12 h-12 mb-2 text-gray-400">
-                                                        <Upload className="w-full h-full" />
-                                                    </div>
-                                                    <span className="text-xl font-medium text-gray-400">Upload</span>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    )
+                })}
 
-                    {/* Action Buttons */}
-                    <div className="flex justify-center gap-4 pt-4">
-                        <Button
-                            variant="default"
-                            className="bg-green-600 hover:bg-green-700 text-white min-w-[120px]"
-                            onClick={handleSubmit}
-                            disabled={submitting}
-                        >
-                            {submitting ? "Updating..." : "Update"}
-                        </Button>
-                    </div>
-
+                {/* Action Buttons */}
+                <div className="flex justify-center gap-4 pt-4">
+                    <Button
+                        variant="outline"
+                        className="border-green-600 text-green-600 hover:bg-green-50 min-w-[120px]"
+                        onClick={addMember}
+                        disabled={members.filter(m => !m._destroy).length === 8}
+                    >
+                        Add Member
+                    </Button>
+                    <Button
+                        variant="default"
+                        className="bg-green-600 hover:bg-green-700 text-white min-w-[120px]"
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                    >
+                        {submitting ? "Updating..." : "Update"}
+                    </Button>
                 </div>
+
             </div>
         </div>
     );

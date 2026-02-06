@@ -10,19 +10,33 @@ export interface FacilityBookingResponse {
   id: number;
   created_by_name: string;
   booked_by_name?: string;
+  tower?: string;
+  flat?: string;
   facility_name: string;
   fac_type: string;
   startdate: string;
-  show_schedule_24_hour: string;
+  show_schedule: string;
   current_status: string;
   created_at: string;
   company_name: string;
   source: string;
+  amount_full: string;
+  refunded_amount: string;
+  gst: string;
+  amount_paid: string;
+  pg_state: string;
+  member_count: string;
+  non_member_count: string;
+  guest_count: string;
+  tenant_count: string;
+  sub_facility_name: string;
 }
 
 export interface BookingData {
   id: number;
   bookedBy: string;
+  tower: string;
+  flat: string;
   bookedFor: string;
   companyName: string;
   facility: string;
@@ -32,6 +46,16 @@ export interface BookingData {
   bookingStatus: 'Confirmed' | 'Pending' | 'Cancelled';
   createdOn: string;
   source: string;
+  subFacilityName: string;
+  totalAmount: string;
+  refundableAmount: string;
+  gst: string;
+  amountPaid: string;
+  paymentStatus: string;
+  member: string;
+  nonMember: string;
+  guest: string;
+  tenant: string;
 }
 
 export interface FacilityBookingsResponse {
@@ -60,23 +84,34 @@ const formatDate = (dateString: string): string => {
 
 // Helper function to safely get value or return "-"
 const safeValue = (value: any): string => {
-  return value && value.toString().trim() ? value.toString() : '-';
+  if (value === 0) return "0";
+  return value?.toString().trim() ? value.toString() : "-";
 };
 
 // Transform API response to BookingData format
 const transformBookingData = (apiData: FacilityBookingResponse): BookingData => {
   return {
     id: apiData.id,
-    bookedBy: safeValue(apiData.created_by_name),
+    bookedBy: safeValue(apiData.booked_by_name),
+    tower: safeValue(apiData.tower),
+    flat: safeValue(apiData.flat),
     bookedFor: safeValue(apiData.booked_by_name),
-    companyName: safeValue(apiData.company_name),
     facility: safeValue(apiData.facility_name),
+    subFacilityName: safeValue(apiData.sub_facility_name),
     facilityType: safeValue(apiData.fac_type),
     scheduledDate: formatDate(apiData.startdate),
-    scheduledTime: safeValue(apiData.show_schedule_24_hour),
-    bookingStatus: (apiData.current_status as 'Confirmed' | 'Pending' | 'Cancelled') || 'Pending',
+    scheduledTime: safeValue(apiData.show_schedule),
     createdOn: formatDate(apiData.created_at),
-    source: safeValue(apiData.source)
+    totalAmount: safeValue(apiData.amount_full),
+    refundableAmount: safeValue(apiData.refunded_amount),
+    gst: safeValue(apiData.gst),
+    amountPaid: safeValue(apiData.amount_paid),
+    paymentStatus: safeValue(apiData.pg_state),
+    bookingStatus: (apiData.current_status as 'Confirmed' | 'Pending' | 'Cancelled') || 'Pending',
+    member: safeValue(apiData.member_count),
+    nonMember: safeValue(apiData.non_member_count),
+    guest: safeValue(apiData.guest_count),
+    tenant: safeValue(apiData.tenant_count),
   };
 };
 
@@ -92,7 +127,7 @@ export const fetchFacilityBookings = async ({ baseUrl, token, pageSize, currentP
     }
 
     const response = await axios.get(
-      `https://${baseUrl}/pms/admin/facility_bookings.json?${params.toString()}`,
+      `https://${baseUrl}/crm/admin/facility_bookings.json?${params.toString()}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -104,8 +139,8 @@ export const fetchFacilityBookings = async ({ baseUrl, token, pageSize, currentP
 
     const data = response.data;
 
-    const bookingsRaw = data.facility_bookings || [];
-    const pagination = data.pagination || {
+    const bookingsRaw = data.data || [];
+    const pagination = data.meta || {
       current_page: 1,
       total_count: bookingsRaw.length,
       total_pages: 1,

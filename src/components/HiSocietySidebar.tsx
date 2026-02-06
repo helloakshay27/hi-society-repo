@@ -216,8 +216,8 @@ export const HiSocietySidebar: React.FC = () => {
           icon: SettingsIcon,
           subItems: [
             { id: "facility-setup", label: "Facility Setup", icon: SettingsIcon, path: "/cms/facility-setup" },
-            { id: "operational-days", label: "Operational Days", icon: Calendar, path: "/cms/operational-days" },
-            { id: "club-info", label: "Club Info", icon: Building2, path: "/cms/club-info" },
+            { id: "rules", label: "Rules", icon: FileText, path: "/cms/rules" },
+            { id: "membership-plan-setup", label: "Membership Plan Setup", icon: FileText, path: "/cms/membership-plan-setup" },
           ],
         },
         { id: "club-members", label: "Club Members", icon: Users, path: "/cms/club-members" },
