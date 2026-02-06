@@ -205,7 +205,7 @@ const defaultFormData = {
   agreementExpireDate: "",
 };
 
-const AddUserPage = () => {
+export const AddUserPage = () => {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId?: string }>();
   const location = useLocation();
@@ -313,9 +313,68 @@ const AddUserPage = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (error) setError(null);
+  };
+
+  const validateForm = (): string | null => {
+    if (!formData.title) {
+      return "Please select a title";
+    }
+    if (!formData.firstName.trim()) {
+      return "First name is required";
+    }
+    if (!formData.lastName.trim()) {
+      return "Last name is required";
+    }
+    if (!formData.email.trim()) {
+      return "Email is required";
+    }
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      return "Please enter a valid email address";
+    }
+    if (!formData.mobile.trim()) {
+      return "Mobile number is required";
+    }
+    // Mobile number validation (10 digits)
+    const mobileRegex = /^\d{10}$/;
+    if (!mobileRegex.test(formData.mobile)) {
+      return "Please enter a valid 10-digit mobile number";
+    }
+    if (!isEdit && !formData.password.trim()) {
+      return "Password is required";
+    }
+    if (!isEdit && formData.password.length < 6) {
+      return "Password must be at least 6 characters";
+    }
+    if (!formData.phase) {
+      return "Please select a phase";
+    }
+    if (!formData.status) {
+      return "Please select a status";
+    }
+    if (!formData.tower) {
+      return "Please select a tower";
+    }
+    if (!formData.flat) {
+      return "Please select a flat";
+    }
+    if (!formData.category) {
+      return "Please select a category";
+    }
+    return null;
   };
 
   const handleSubmit = async () => {
+    // Validate form before submission
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     const payload = mapFormDataToApiPayload(formData);
@@ -416,8 +475,8 @@ const AddUserPage = () => {
                     id="profile-upload"
                     onChange={handleImageUpload}
                   />
-                  <label htmlFor="profile-upload">
-                    <CameraButton component="span">
+                  <label htmlFor="profile-upload" style={{ cursor: 'pointer' }}>
+                    <CameraButton>
                       <Camera size={16} />
                     </CameraButton>
                   </label>

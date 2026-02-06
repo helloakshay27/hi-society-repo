@@ -24,7 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl } from "@/config/apiConfig";
 
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
@@ -233,11 +233,19 @@ interface FlatType {
 
 export const ManageFlatsPage = () => {
   const navigate = useNavigate();
-  const baseURL = API_CONFIG.BASE_URL;
   const [flats, setFlats] = useState(sampleFlats);
   const [loading, setLoading] = useState(false);
-  // Get society_id from localStorage or use default
-  const societyId = localStorage.getItem('current_society_id') || '3876';
+  
+  // Get society_id from localStorage (set by header)
+  const getSocietyId = () => {
+    return localStorage.getItem('selectedUserSociety') || '';
+  };
+  
+  // API-fetched tower options for dropdowns
+  const [towerOptions, setTowerOptions] = useState<{ id: number; name: string }[]>([]);
+  // API-fetched flat type options for dropdowns
+  const [flatTypeOptions, setFlatTypeOptions] = useState<{ id: number; name: string }[]>([]);
+  
   const [selectedFlats, setSelectedFlats] = useState<string[]>([]);
   const [showActionPanel, setShowActionPanel] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -307,6 +315,46 @@ export const ManageFlatsPage = () => {
     setShowAddFlatDialog(true);
     setShowActionPanel(false);
   };
+
+  // Fetch towers and flat types from API on mount
+  useEffect(() => {
+    const fetchTowers = async () => {
+      try {
+        const societyId = getSocietyId();
+        const token = localStorage.getItem('token') || '';
+        if (!societyId || !token) {
+          setTowerOptions([]);
+          return;
+        }
+        const url = getFullUrl(`/get_society_blocks.json?token=${token}&society_id=${societyId}`);
+        const res = await fetch(url);
+        const data = await res.json();
+        setTowerOptions(Array.isArray(data.society_blocks) ? data.society_blocks : []);
+      } catch (e) {
+        setTowerOptions([]);
+      }
+    };
+
+    const fetchFlatTypes = async () => {
+      try {
+        const societyId = getSocietyId();
+        const token = localStorage.getItem('token') || '';
+        if (!societyId || !token) {
+          setFlatTypeOptions([]);
+          return;
+        }
+        const url = getFullUrl(`/crm/admin/society_flat_types.json?token=${token}&society_id=${societyId}`);
+        const res = await fetch(url);
+        const data = await res.json();
+        setFlatTypeOptions(Array.isArray(data.society_flat_types) ? data.society_flat_types : []);
+      } catch (e) {
+        setFlatTypeOptions([]);
+      }
+    };
+
+    fetchTowers();
+    fetchFlatTypes();
+  }, []);
   
   const handleAddFlatInputChange = (field: string, value: string | boolean) => {
     setAddFlatFormData(prev => ({ ...prev, [field]: value }));
@@ -322,6 +370,7 @@ export const ManageFlatsPage = () => {
     setLoading(true);
     try {
       // Prepare API payload mapping form data to API schema
+      const societyId = getSocietyId();
       const payload = {
         society_flat: {
           flat_no: addFlatFormData.flat,
@@ -338,16 +387,16 @@ export const ManageFlatsPage = () => {
           date_of_possession: addFlatFormData.dateOfPossession || null,
           possession: addFlatFormData.possession ? 1 : 0,
         },
-        society_id: parseInt(societyId),
+        society_id: societyId ? parseInt(societyId) : null,
       };
 
       // Make API call to add flat
+      const token = localStorage.getItem('token') || '';
       const response = await axios.post(
-        `${baseURL}/crm/admin/society_flats.json`,
+        getFullUrl(`/crm/admin/society_flats.json?token=${token}`),
         payload,
         {
           headers: {
-            Authorization: getAuthHeader(),
             "Content-Type": "application/json",
           },
         }
@@ -923,10 +972,9 @@ export const ManageFlatsPage = () => {
                       <SelectValue placeholder="Select Tower" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="FM">FM</SelectItem>
-                      <SelectItem value="MLCP1">MLCP1</SelectItem>
-                      <SelectItem value="Tower A">Tower A</SelectItem>
-                      <SelectItem value="Tower B">Tower B</SelectItem>
+                      {towerOptions.map((tower) => (
+                        <SelectItem key={tower.id} value={tower.id.toString()}>{tower.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -982,10 +1030,9 @@ export const ManageFlatsPage = () => {
                       <SelectValue placeholder="Select Flat Type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1 BHK - Apartment">1 BHK - Apartment</SelectItem>
-                      <SelectItem value="2 BHK - Apartment">2 BHK - Apartment</SelectItem>
-                      <SelectItem value="3 BHK - Apartment">3 BHK - Apartment</SelectItem>
-                      <SelectItem value="3 BHK Luxe-Deck - Apartment">3 BHK Luxe-Deck - Apartment</SelectItem>
+                      {flatTypeOptions.map((flatType) => (
+                        <SelectItem key={flatType.id} value={flatType.id.toString()}>{flatType.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
