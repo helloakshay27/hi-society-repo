@@ -20,6 +20,11 @@ import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import { SocietyFormData, EstateBuilder, Headquarter, Region, Zone } from "@/types/society";
 import { Loader2, X } from "lucide-react";
 
+interface Company {
+  id: number;
+  name: string;
+}
+
 interface AddSocietyModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -68,6 +73,7 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
   }, [isOpen]);
 
   // Dropdowns
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [estateBuilders, setEstateBuilders] = useState<EstateBuilder[]>([]);
   const [headquarters, setHeadquarters] = useState<Headquarter[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
@@ -116,6 +122,7 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
   // Fetch estate builders on mount
   useEffect(() => {
     if (isOpen) {
+      fetchCompanies();
       fetchEstateBuilders();
       fetchHeadquarters();
     }
@@ -140,6 +147,26 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
     }
   }, [formData.region_id]);
 
+  const fetchCompanies = async () => {
+    try {
+      const url = getFullUrl("/pms/company_setups/company_index.json?per_page=1000");
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
+        },
+      });
+      if (!response.ok) throw new Error("Failed to fetch companies");
+      const result = await response.json();
+      const companiesData = result.data || result.companies || result || [];
+      setCompanies(companiesData);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      toast.error("Failed to load companies");
+    }
+  };
+
   const fetchEstateBuilders = async () => {
     try {
       setIsLoadingDropdowns(true);
@@ -160,11 +187,12 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
 
   const fetchHeadquarters = async () => {
     try {
-      const url = getFullUrl("/pms/headquarters.json");
-      const response = await fetch(url, { headers: getAuthHeader() });
+      const url = getFullUrl("/headquarters.json");
+      const response = await fetch(url, { headers: { Authorization: getAuthHeader() } });
       if (!response.ok) throw new Error("Failed to fetch headquarters");
       const data = await response.json();
-      setHeadquarters(data.headquarters || []);
+      const headquartersData = data.headquarters || data || [];
+      setHeadquarters(headquartersData);
     } catch (error) {
       console.error("Error fetching headquarters:", error);
       toast.error("Failed to load headquarters");
@@ -174,7 +202,7 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
   const fetchRegions = async (headquarterId: number) => {
     try {
       const url = getFullUrl(`/pms/headquarters/${headquarterId}/regions.json`);
-      const response = await fetch(url, { headers: getAuthHeader() });
+      const response = await fetch(url, { headers: { Authorization: getAuthHeader() } });
       if (!response.ok) throw new Error("Failed to fetch regions");
       const data = await response.json();
       setRegions(data.regions || []);
@@ -187,7 +215,7 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
   const fetchZones = async (regionId: number) => {
     try {
       const url = getFullUrl(`/pms/regions/${regionId}/zones.json`);
-      const response = await fetch(url, { headers: getAuthHeader() });
+      const response = await fetch(url, { headers: { Authorization: getAuthHeader() } });
       if (!response.ok) throw new Error("Failed to fetch zones");
       const data = await response.json();
       setZones(data.zones || []);
@@ -356,6 +384,27 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
                 InputLabelProps={{ shrink: true }}
                 InputProps={{ sx: fieldStyles }}
               />
+            </div>
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink required sx={{ "& .MuiFormLabel-asterisk": { color: "#C72030" } }}>Company</InputLabel>
+                <MuiSelect
+                  value={formData.company_id || ""}
+                  onChange={(e) => handleChange("company_id", e.target.value)}
+                  label="Company"
+                  displayEmpty
+                  MenuProps={selectMenuProps}
+                  sx={fieldStyles}
+                  required
+                >
+                  <MenuItem value=""><em>Select Company</em></MenuItem>
+                  {companies.map((company) => (
+                    <MenuItem key={company.id} value={company.id}>
+                      {company.name}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
             </div>
             <div className="grid grid-cols-2 gap-6 mt-6">
               <FormControl fullWidth variant="outlined">
