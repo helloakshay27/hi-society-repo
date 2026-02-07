@@ -101,8 +101,8 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   const isHiSocietySite = hostname === "web.hisociety.lockated.com";
   // Check if it's Runwal site
   const isRunwalSite = hostname === "runwal-cp.lockated.com";
-  console.log("domain is runwal",isRunwalSite, hostname);
-  
+  console.log("domain is runwal", isRunwalSite, hostname);
+
   // Check URL for email and orgId parameters on component mount
   React.useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -303,7 +303,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       if (isRunwalSite) {
         baseUrl = 'runwal-cp-api.lockated.com';
       } else if (isHiSocietySite) {
-        baseUrl = 'hi-society.lockated.com';
+        baseUrl = localStorage.getItem("baseUrl") || "";
       } else {
         // Use HI_SOCIETY_CONFIG for other environments
         baseUrl = HI_SOCIETY_CONFIG.BASE_URL.replace(/^https?:\/\//, '');
