@@ -242,11 +242,12 @@ export const EditSocietyModal: React.FC<EditSocietyModalProps> = ({
 
   const fetchHeadquarters = async () => {
     try {
-      const url = getFullUrl("/pms/headquarters.json");
-      const response = await fetch(url, { headers: getAuthHeader() });
+      const url = getFullUrl("/headquarters.json");
+      const response = await fetch(url, { headers: { Authorization: getAuthHeader() } });
       if (!response.ok) throw new Error("Failed to fetch headquarters");
       const data = await response.json();
-      setHeadquarters(data.headquarters || []);
+      const headquartersData = data.headquarters || data || [];
+      setHeadquarters(headquartersData);
     } catch (error) {
       console.error("Error fetching headquarters:", error);
     }
@@ -255,7 +256,7 @@ export const EditSocietyModal: React.FC<EditSocietyModalProps> = ({
   const fetchRegions = async (headquarterId: number) => {
     try {
       const url = getFullUrl(`/pms/headquarters/${headquarterId}/regions.json`);
-      const response = await fetch(url, { headers: getAuthHeader() });
+      const response = await fetch(url, { headers: { Authorization: getAuthHeader() } });
       if (!response.ok) throw new Error("Failed to fetch regions");
       const data = await response.json();
       setRegions(data.regions || []);
@@ -267,7 +268,7 @@ export const EditSocietyModal: React.FC<EditSocietyModalProps> = ({
   const fetchZones = async (regionId: number) => {
     try {
       const url = getFullUrl(`/pms/regions/${regionId}/zones.json`);
-      const response = await fetch(url, { headers: getAuthHeader() });
+      const response = await fetch(url, { headers: { Authorization: getAuthHeader() } });
       if (!response.ok) throw new Error("Failed to fetch zones");
       const data = await response.json();
       setZones(data.zones || []);
