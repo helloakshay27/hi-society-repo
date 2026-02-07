@@ -1471,415 +1471,419 @@ export const EditBookingSetupClubPage = () => {
                                         </div>
 
                                         {/* Charge Setup Table */}
-                                        <div className="overflow-x-auto mb-6">
-                                            <table className="w-full border">
-                                                <thead>
-                                                    <tr className="bg-gray-50">
-                                                        <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Member Type</th>
-                                                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Adult</th>
-                                                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Child</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <Checkbox
-                                                                    checked={subFacility.chargeSetup.member.selected}
-                                                                    onCheckedChange={(checked) =>
-                                                                        updateSubFacility(subFacility.id, {
-                                                                            chargeSetup: {
-                                                                                ...subFacility.chargeSetup,
-                                                                                member: {
-                                                                                    ...subFacility.chargeSetup.member,
-                                                                                    selected: !!checked,
-                                                                                },
-                                                                            },
-                                                                        })
-                                                                    }
-                                                                />
-                                                                <span>Member</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!subFacility.chargeSetup.member.adult}
-                                                                    onCheckedChange={(checked) => {
-                                                                        if (!checked) {
-                                                                            updateSubFacility(subFacility.id, {
-                                                                                chargeSetup: {
-                                                                                    ...subFacility.chargeSetup,
-                                                                                    member: {
-                                                                                        ...subFacility.chargeSetup.member,
-                                                                                        adult: "",
+                                        {
+                                            formData.isBookable && (
+                                                <div className="overflow-x-auto mb-6">
+                                                    <table className="w-full border">
+                                                        <thead>
+                                                            <tr className="bg-gray-50">
+                                                                <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Member Type</th>
+                                                                <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Adult</th>
+                                                                <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Child</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td className="border border-gray-300 px-4 py-3">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Checkbox
+                                                                            checked={subFacility.chargeSetup.member.selected}
+                                                                            onCheckedChange={(checked) =>
+                                                                                updateSubFacility(subFacility.id, {
+                                                                                    chargeSetup: {
+                                                                                        ...subFacility.chargeSetup,
+                                                                                        member: {
+                                                                                            ...subFacility.chargeSetup.member,
+                                                                                            selected: !!checked,
+                                                                                        },
                                                                                     },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={subFacility.chargeSetup.member.adult}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            updateSubFacility(subFacility.id, {
-                                                                                chargeSetup: {
-                                                                                    ...subFacility.chargeSetup,
-                                                                                    member: {
-                                                                                        ...subFacility.chargeSetup.member,
-                                                                                        adult: value,
+                                                                                })
+                                                                            }
+                                                                        />
+                                                                        <span>Member</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="border border-gray-300 px-4 py-3">
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <Checkbox
+                                                                            checked={!!subFacility.chargeSetup.member.adult}
+                                                                            onCheckedChange={(checked) => {
+                                                                                if (!checked) {
+                                                                                    updateSubFacility(subFacility.id, {
+                                                                                        chargeSetup: {
+                                                                                            ...subFacility.chargeSetup,
+                                                                                            member: {
+                                                                                                ...subFacility.chargeSetup.member,
+                                                                                                adult: "",
+                                                                                            },
+                                                                                        },
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                        <TextField
+                                                                            size="small"
+                                                                            variant="outlined"
+                                                                            value={subFacility.chargeSetup.member.adult}
+                                                                            onChange={(e) => {
+                                                                                const value = e.target.value;
+                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                                    updateSubFacility(subFacility.id, {
+                                                                                        chargeSetup: {
+                                                                                            ...subFacility.chargeSetup,
+                                                                                            member: {
+                                                                                                ...subFacility.chargeSetup.member,
+                                                                                                adult: value,
+                                                                                            },
+                                                                                        },
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                            className="w-full max-w-[200px]"
+                                                                        />
+                                                                    </div>
+                                                                </td>
+                                                                <td className="border border-gray-300 px-4 py-3">
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <Checkbox
+                                                                            checked={!!subFacility.chargeSetup.member.child}
+                                                                            onCheckedChange={(checked) => {
+                                                                                updateSubFacility(subFacility.id, {
+                                                                                    chargeSetup: {
+                                                                                        ...subFacility.chargeSetup,
+                                                                                        member: {
+                                                                                            ...subFacility.chargeSetup.member,
+                                                                                            child: checked ? subFacility.chargeSetup.member.child || "" : "",
+                                                                                        },
                                                                                     },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!subFacility.chargeSetup.member.child}
-                                                                    onCheckedChange={(checked) => {
-                                                                        updateSubFacility(subFacility.id, {
-                                                                            chargeSetup: {
-                                                                                ...subFacility.chargeSetup,
-                                                                                member: {
-                                                                                    ...subFacility.chargeSetup.member,
-                                                                                    child: checked ? subFacility.chargeSetup.member.child || "" : "",
-                                                                                },
-                                                                            },
-                                                                        });
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={subFacility.chargeSetup.member.child}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            updateSubFacility(subFacility.id, {
-                                                                                chargeSetup: {
-                                                                                    ...subFacility.chargeSetup,
-                                                                                    member: {
-                                                                                        ...subFacility.chargeSetup.member,
-                                                                                        child: value,
+                                                                                });
+                                                                            }}
+                                                                        />
+                                                                        <TextField
+                                                                            size="small"
+                                                                            variant="outlined"
+                                                                            value={subFacility.chargeSetup.member.child}
+                                                                            onChange={(e) => {
+                                                                                const value = e.target.value;
+                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                                    updateSubFacility(subFacility.id, {
+                                                                                        chargeSetup: {
+                                                                                            ...subFacility.chargeSetup,
+                                                                                            member: {
+                                                                                                ...subFacility.chargeSetup.member,
+                                                                                                child: value,
+                                                                                            },
+                                                                                        },
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                            className="w-full max-w-[200px]"
+                                                                        />
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td className="border border-gray-300 px-4 py-3">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Checkbox
+                                                                            checked={subFacility.chargeSetup.guest.selected}
+                                                                            onCheckedChange={(checked) =>
+                                                                                updateSubFacility(subFacility.id, {
+                                                                                    chargeSetup: {
+                                                                                        ...subFacility.chargeSetup,
+                                                                                        guest: {
+                                                                                            ...subFacility.chargeSetup.guest,
+                                                                                            selected: !!checked,
+                                                                                        },
                                                                                     },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <Checkbox
-                                                                    checked={subFacility.chargeSetup.guest.selected}
-                                                                    onCheckedChange={(checked) =>
-                                                                        updateSubFacility(subFacility.id, {
-                                                                            chargeSetup: {
-                                                                                ...subFacility.chargeSetup,
-                                                                                guest: {
-                                                                                    ...subFacility.chargeSetup.guest,
-                                                                                    selected: !!checked,
-                                                                                },
-                                                                            },
-                                                                        })
-                                                                    }
-                                                                />
-                                                                <span>Guest</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!subFacility.chargeSetup.guest.adult}
-                                                                    onCheckedChange={(checked) => {
-                                                                        if (!checked) {
-                                                                            updateSubFacility(subFacility.id, {
-                                                                                chargeSetup: {
-                                                                                    ...subFacility.chargeSetup,
-                                                                                    guest: {
-                                                                                        ...subFacility.chargeSetup.guest,
-                                                                                        adult: "",
+                                                                                })
+                                                                            }
+                                                                        />
+                                                                        <span>Guest</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="border border-gray-300 px-4 py-3">
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <Checkbox
+                                                                            checked={!!subFacility.chargeSetup.guest.adult}
+                                                                            onCheckedChange={(checked) => {
+                                                                                if (!checked) {
+                                                                                    updateSubFacility(subFacility.id, {
+                                                                                        chargeSetup: {
+                                                                                            ...subFacility.chargeSetup,
+                                                                                            guest: {
+                                                                                                ...subFacility.chargeSetup.guest,
+                                                                                                adult: "",
+                                                                                            },
+                                                                                        },
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                        <TextField
+                                                                            size="small"
+                                                                            variant="outlined"
+                                                                            value={subFacility.chargeSetup.guest.adult}
+                                                                            onChange={(e) => {
+                                                                                const value = e.target.value;
+                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                                    updateSubFacility(subFacility.id, {
+                                                                                        chargeSetup: {
+                                                                                            ...subFacility.chargeSetup,
+                                                                                            guest: {
+                                                                                                ...subFacility.chargeSetup.guest,
+                                                                                                adult: value,
+                                                                                            },
+                                                                                        },
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                            className="w-full max-w-[200px]"
+                                                                        />
+                                                                    </div>
+                                                                </td>
+                                                                <td className="border border-gray-300 px-4 py-3">
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <Checkbox
+                                                                            checked={!!subFacility.chargeSetup.guest.child}
+                                                                            onCheckedChange={(checked) => {
+                                                                                updateSubFacility(subFacility.id, {
+                                                                                    chargeSetup: {
+                                                                                        ...subFacility.chargeSetup,
+                                                                                        guest: {
+                                                                                            ...subFacility.chargeSetup.guest,
+                                                                                            child: checked ? subFacility.chargeSetup.guest.child || "" : "",
+                                                                                        },
                                                                                     },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={subFacility.chargeSetup.guest.adult}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            updateSubFacility(subFacility.id, {
-                                                                                chargeSetup: {
-                                                                                    ...subFacility.chargeSetup,
-                                                                                    guest: {
-                                                                                        ...subFacility.chargeSetup.guest,
-                                                                                        adult: value,
+                                                                                });
+                                                                            }}
+                                                                        />
+                                                                        <TextField
+                                                                            size="small"
+                                                                            variant="outlined"
+                                                                            value={subFacility.chargeSetup.guest.child}
+                                                                            onChange={(e) => {
+                                                                                const value = e.target.value;
+                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                                    updateSubFacility(subFacility.id, {
+                                                                                        chargeSetup: {
+                                                                                            ...subFacility.chargeSetup,
+                                                                                            guest: {
+                                                                                                ...subFacility.chargeSetup.guest,
+                                                                                                child: value,
+                                                                                            },
+                                                                                        },
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                            className="w-full max-w-[200px]"
+                                                                        />
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td className="border border-gray-300 px-4 py-3">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Checkbox
+                                                                            checked={subFacility.chargeSetup.nonMember.selected}
+                                                                            onCheckedChange={(checked) =>
+                                                                                updateSubFacility(subFacility.id, {
+                                                                                    chargeSetup: {
+                                                                                        ...subFacility.chargeSetup,
+                                                                                        nonMember: {
+                                                                                            ...subFacility.chargeSetup.nonMember,
+                                                                                            selected: !!checked,
+                                                                                        },
                                                                                     },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!subFacility.chargeSetup.guest.child}
-                                                                    onCheckedChange={(checked) => {
-                                                                        updateSubFacility(subFacility.id, {
-                                                                            chargeSetup: {
-                                                                                ...subFacility.chargeSetup,
-                                                                                guest: {
-                                                                                    ...subFacility.chargeSetup.guest,
-                                                                                    child: checked ? subFacility.chargeSetup.guest.child || "" : "",
-                                                                                },
-                                                                            },
-                                                                        });
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={subFacility.chargeSetup.guest.child}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            updateSubFacility(subFacility.id, {
-                                                                                chargeSetup: {
-                                                                                    ...subFacility.chargeSetup,
-                                                                                    guest: {
-                                                                                        ...subFacility.chargeSetup.guest,
-                                                                                        child: value,
+                                                                                })
+                                                                            }
+                                                                        />
+                                                                        <span>Non-Member</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="border border-gray-300 px-4 py-3">
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <Checkbox
+                                                                            checked={!!subFacility.chargeSetup.nonMember.adult}
+                                                                            onCheckedChange={(checked) => {
+                                                                                if (!checked) {
+                                                                                    updateSubFacility(subFacility.id, {
+                                                                                        chargeSetup: {
+                                                                                            ...subFacility.chargeSetup,
+                                                                                            nonMember: {
+                                                                                                ...subFacility.chargeSetup.nonMember,
+                                                                                                adult: "",
+                                                                                            },
+                                                                                        },
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                        <TextField
+                                                                            size="small"
+                                                                            variant="outlined"
+                                                                            value={subFacility.chargeSetup.nonMember.adult}
+                                                                            onChange={(e) => {
+                                                                                const value = e.target.value;
+                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                                    updateSubFacility(subFacility.id, {
+                                                                                        chargeSetup: {
+                                                                                            ...subFacility.chargeSetup,
+                                                                                            nonMember: {
+                                                                                                ...subFacility.chargeSetup.nonMember,
+                                                                                                adult: value,
+                                                                                            },
+                                                                                        },
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                            className="w-full max-w-[200px]"
+                                                                        />
+                                                                    </div>
+                                                                </td>
+                                                                <td className="border border-gray-300 px-4 py-3">
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <Checkbox
+                                                                            checked={!!subFacility.chargeSetup.nonMember.child}
+                                                                            onCheckedChange={(checked) => {
+                                                                                updateSubFacility(subFacility.id, {
+                                                                                    chargeSetup: {
+                                                                                        ...subFacility.chargeSetup,
+                                                                                        nonMember: {
+                                                                                            ...subFacility.chargeSetup.nonMember,
+                                                                                            child: checked ? subFacility.chargeSetup.nonMember.child || "" : "",
+                                                                                        },
                                                                                     },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <Checkbox
-                                                                    checked={subFacility.chargeSetup.nonMember.selected}
-                                                                    onCheckedChange={(checked) =>
-                                                                        updateSubFacility(subFacility.id, {
-                                                                            chargeSetup: {
-                                                                                ...subFacility.chargeSetup,
-                                                                                nonMember: {
-                                                                                    ...subFacility.chargeSetup.nonMember,
-                                                                                    selected: !!checked,
-                                                                                },
-                                                                            },
-                                                                        })
-                                                                    }
-                                                                />
-                                                                <span>Non-Member</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!subFacility.chargeSetup.nonMember.adult}
-                                                                    onCheckedChange={(checked) => {
-                                                                        if (!checked) {
-                                                                            updateSubFacility(subFacility.id, {
-                                                                                chargeSetup: {
-                                                                                    ...subFacility.chargeSetup,
-                                                                                    nonMember: {
-                                                                                        ...subFacility.chargeSetup.nonMember,
-                                                                                        adult: "",
+                                                                                });
+                                                                            }}
+                                                                        />
+                                                                        <TextField
+                                                                            size="small"
+                                                                            variant="outlined"
+                                                                            value={subFacility.chargeSetup.nonMember.child}
+                                                                            onChange={(e) => {
+                                                                                const value = e.target.value;
+                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                                    updateSubFacility(subFacility.id, {
+                                                                                        chargeSetup: {
+                                                                                            ...subFacility.chargeSetup,
+                                                                                            nonMember: {
+                                                                                                ...subFacility.chargeSetup.nonMember,
+                                                                                                child: value,
+                                                                                            },
+                                                                                        },
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                            className="w-full max-w-[200px]"
+                                                                        />
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td className="border border-gray-300 px-4 py-3">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Checkbox
+                                                                            checked={subFacility.chargeSetup.tenant.selected}
+                                                                            onCheckedChange={(checked) =>
+                                                                                updateSubFacility(subFacility.id, {
+                                                                                    chargeSetup: {
+                                                                                        ...subFacility.chargeSetup,
+                                                                                        tenant: {
+                                                                                            ...subFacility.chargeSetup.tenant,
+                                                                                            selected: !!checked,
+                                                                                        },
                                                                                     },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={subFacility.chargeSetup.nonMember.adult}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            updateSubFacility(subFacility.id, {
-                                                                                chargeSetup: {
-                                                                                    ...subFacility.chargeSetup,
-                                                                                    nonMember: {
-                                                                                        ...subFacility.chargeSetup.nonMember,
-                                                                                        adult: value,
+                                                                                })
+                                                                            }
+                                                                        />
+                                                                        <span>Tenant</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="border border-gray-300 px-4 py-3">
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <Checkbox
+                                                                            checked={!!subFacility.chargeSetup.tenant.adult}
+                                                                            onCheckedChange={(checked) => {
+                                                                                if (!checked) {
+                                                                                    updateSubFacility(subFacility.id, {
+                                                                                        chargeSetup: {
+                                                                                            ...subFacility.chargeSetup,
+                                                                                            tenant: {
+                                                                                                ...subFacility.chargeSetup.tenant,
+                                                                                                adult: "",
+                                                                                            },
+                                                                                        },
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                        <TextField
+                                                                            size="small"
+                                                                            variant="outlined"
+                                                                            value={subFacility.chargeSetup.tenant.adult}
+                                                                            onChange={(e) => {
+                                                                                const value = e.target.value;
+                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                                    updateSubFacility(subFacility.id, {
+                                                                                        chargeSetup: {
+                                                                                            ...subFacility.chargeSetup,
+                                                                                            tenant: {
+                                                                                                ...subFacility.chargeSetup.tenant,
+                                                                                                adult: value,
+                                                                                            },
+                                                                                        },
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                            className="w-full max-w-[200px]"
+                                                                        />
+                                                                    </div>
+                                                                </td>
+                                                                <td className="border border-gray-300 px-4 py-3">
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <Checkbox
+                                                                            checked={!!subFacility.chargeSetup.tenant.child}
+                                                                            onCheckedChange={(checked) => {
+                                                                                updateSubFacility(subFacility.id, {
+                                                                                    chargeSetup: {
+                                                                                        ...subFacility.chargeSetup,
+                                                                                        tenant: {
+                                                                                            ...subFacility.chargeSetup.tenant,
+                                                                                            child: checked ? subFacility.chargeSetup.tenant.child || "" : "",
+                                                                                        },
                                                                                     },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!subFacility.chargeSetup.nonMember.child}
-                                                                    onCheckedChange={(checked) => {
-                                                                        updateSubFacility(subFacility.id, {
-                                                                            chargeSetup: {
-                                                                                ...subFacility.chargeSetup,
-                                                                                nonMember: {
-                                                                                    ...subFacility.chargeSetup.nonMember,
-                                                                                    child: checked ? subFacility.chargeSetup.nonMember.child || "" : "",
-                                                                                },
-                                                                            },
-                                                                        });
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={subFacility.chargeSetup.nonMember.child}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            updateSubFacility(subFacility.id, {
-                                                                                chargeSetup: {
-                                                                                    ...subFacility.chargeSetup,
-                                                                                    nonMember: {
-                                                                                        ...subFacility.chargeSetup.nonMember,
-                                                                                        child: value,
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <Checkbox
-                                                                    checked={subFacility.chargeSetup.tenant.selected}
-                                                                    onCheckedChange={(checked) =>
-                                                                        updateSubFacility(subFacility.id, {
-                                                                            chargeSetup: {
-                                                                                ...subFacility.chargeSetup,
-                                                                                tenant: {
-                                                                                    ...subFacility.chargeSetup.tenant,
-                                                                                    selected: !!checked,
-                                                                                },
-                                                                            },
-                                                                        })
-                                                                    }
-                                                                />
-                                                                <span>Tenant</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!subFacility.chargeSetup.tenant.adult}
-                                                                    onCheckedChange={(checked) => {
-                                                                        if (!checked) {
-                                                                            updateSubFacility(subFacility.id, {
-                                                                                chargeSetup: {
-                                                                                    ...subFacility.chargeSetup,
-                                                                                    tenant: {
-                                                                                        ...subFacility.chargeSetup.tenant,
-                                                                                        adult: "",
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={subFacility.chargeSetup.tenant.adult}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            updateSubFacility(subFacility.id, {
-                                                                                chargeSetup: {
-                                                                                    ...subFacility.chargeSetup,
-                                                                                    tenant: {
-                                                                                        ...subFacility.chargeSetup.tenant,
-                                                                                        adult: value,
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-300 px-4 py-3">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <Checkbox
-                                                                    checked={!!subFacility.chargeSetup.tenant.child}
-                                                                    onCheckedChange={(checked) => {
-                                                                        updateSubFacility(subFacility.id, {
-                                                                            chargeSetup: {
-                                                                                ...subFacility.chargeSetup,
-                                                                                tenant: {
-                                                                                    ...subFacility.chargeSetup.tenant,
-                                                                                    child: checked ? subFacility.chargeSetup.tenant.child || "" : "",
-                                                                                },
-                                                                            },
-                                                                        });
-                                                                    }}
-                                                                />
-                                                                <TextField
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    value={subFacility.chargeSetup.tenant.child}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                            updateSubFacility(subFacility.id, {
-                                                                                chargeSetup: {
-                                                                                    ...subFacility.chargeSetup,
-                                                                                    tenant: {
-                                                                                        ...subFacility.chargeSetup.tenant,
-                                                                                        child: value,
-                                                                                    },
-                                                                                },
-                                                                            });
-                                                                        }
-                                                                    }}
-                                                                    className="w-full max-w-[200px]"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                                                });
+                                                                            }}
+                                                                        />
+                                                                        <TextField
+                                                                            size="small"
+                                                                            variant="outlined"
+                                                                            value={subFacility.chargeSetup.tenant.child}
+                                                                            onChange={(e) => {
+                                                                                const value = e.target.value;
+                                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                                    updateSubFacility(subFacility.id, {
+                                                                                        chargeSetup: {
+                                                                                            ...subFacility.chargeSetup,
+                                                                                            tenant: {
+                                                                                                ...subFacility.chargeSetup.tenant,
+                                                                                                child: value,
+                                                                                            },
+                                                                                        },
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                            className="w-full max-w-[200px]"
+                                                                        />
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )
+                                        }
 
                                         {/* Min/Max Person Allowed */}
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1980,443 +1984,447 @@ export const EditBookingSetupClubPage = () => {
                                     <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CHARGE SETUP</h3>
                                 </div>
 
-                                <div className="overflow-x-auto">
-                                    <table className="w-full border">
-                                        <thead>
-                                            <tr className="bg-gray-50">
-                                                <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Member Type</th>
-                                                <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Adult</th>
-                                                <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Child</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td className="border border-gray-300 px-4 py-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <Checkbox
-                                                            checked={formData.chargeSetup.member.selected}
-                                                            onCheckedChange={(checked) =>
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    chargeSetup: {
-                                                                        ...formData.chargeSetup,
-                                                                        member: {
-                                                                            ...formData.chargeSetup.member,
-                                                                            selected: !!checked,
-                                                                        },
-                                                                    },
-                                                                })
-                                                            }
-                                                        />
-                                                        <span>Member</span>
-                                                    </div>
-                                                </td>
-                                                <td className="border border-gray-300 px-4 py-3">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <Checkbox
-                                                            checked={!!formData.chargeSetup.member.adult}
-                                                            onCheckedChange={(checked) => {
-                                                                if (!checked) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        chargeSetup: {
-                                                                            ...formData.chargeSetup,
-                                                                            member: {
-                                                                                ...formData.chargeSetup.member,
-                                                                                adult: "",
+                                {
+                                    formData.isBookable && (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full border">
+                                                <thead>
+                                                    <tr className="bg-gray-50">
+                                                        <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Member Type</th>
+                                                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Adult</th>
+                                                        <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Child</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <Checkbox
+                                                                    checked={formData.chargeSetup.member.selected}
+                                                                    onCheckedChange={(checked) =>
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            chargeSetup: {
+                                                                                ...formData.chargeSetup,
+                                                                                member: {
+                                                                                    ...formData.chargeSetup.member,
+                                                                                    selected: !!checked,
+                                                                                },
                                                                             },
-                                                                        },
-                                                                    });
-                                                                }
-                                                            }}
-                                                        />
-                                                        <TextField
-                                                            size="small"
-                                                            variant="outlined"
-                                                            value={formData.chargeSetup.member.adult}
-                                                            onChange={(e) => {
-                                                                const value = e.target.value;
-                                                                // Allow only positive numbers with max 2 decimal places
-                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        chargeSetup: {
-                                                                            ...formData.chargeSetup,
-                                                                            member: {
-                                                                                ...formData.chargeSetup.member,
-                                                                                adult: value,
+                                                                        })
+                                                                    }
+                                                                />
+                                                                <span>Member</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={!!formData.chargeSetup.member.adult}
+                                                                    onCheckedChange={(checked) => {
+                                                                        if (!checked) {
+                                                                            setFormData({
+                                                                                ...formData,
+                                                                                chargeSetup: {
+                                                                                    ...formData.chargeSetup,
+                                                                                    member: {
+                                                                                        ...formData.chargeSetup.member,
+                                                                                        adult: "",
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={formData.chargeSetup.member.adult}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        // Allow only positive numbers with max 2 decimal places
+                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                            setFormData({
+                                                                                ...formData,
+                                                                                chargeSetup: {
+                                                                                    ...formData.chargeSetup,
+                                                                                    member: {
+                                                                                        ...formData.chargeSetup.member,
+                                                                                        adult: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={!!formData.chargeSetup.member.child}
+                                                                    onCheckedChange={(checked) => {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            chargeSetup: {
+                                                                                ...formData.chargeSetup,
+                                                                                member: {
+                                                                                    ...formData.chargeSetup.member,
+                                                                                    child: checked ? formData.chargeSetup.member.child || "" : "",
+                                                                                },
                                                                             },
-                                                                        },
-                                                                    });
-                                                                }
-                                                            }}
-                                                            className="w-full max-w-[200px]"
-                                                        />
-                                                    </div>
-                                                </td>
-                                                <td className="border border-gray-300 px-4 py-3">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <Checkbox
-                                                            checked={!!formData.chargeSetup.member.child}
-                                                            onCheckedChange={(checked) => {
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    chargeSetup: {
-                                                                        ...formData.chargeSetup,
-                                                                        member: {
-                                                                            ...formData.chargeSetup.member,
-                                                                            child: checked ? formData.chargeSetup.member.child || "" : "",
-                                                                        },
-                                                                    },
-                                                                });
-                                                            }}
-                                                        />
-                                                        <TextField
-                                                            size="small"
-                                                            variant="outlined"
-                                                            value={formData.chargeSetup.member.child}
-                                                            onChange={(e) => {
-                                                                const value = e.target.value;
-                                                                // Allow only positive numbers with max 2 decimal places
-                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        chargeSetup: {
-                                                                            ...formData.chargeSetup,
-                                                                            member: {
-                                                                                ...formData.chargeSetup.member,
-                                                                                child: value,
+                                                                        });
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={formData.chargeSetup.member.child}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        // Allow only positive numbers with max 2 decimal places
+                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                            setFormData({
+                                                                                ...formData,
+                                                                                chargeSetup: {
+                                                                                    ...formData.chargeSetup,
+                                                                                    member: {
+                                                                                        ...formData.chargeSetup.member,
+                                                                                        child: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <Checkbox
+                                                                    checked={formData.chargeSetup.guest.selected}
+                                                                    onCheckedChange={(checked) =>
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            chargeSetup: {
+                                                                                ...formData.chargeSetup,
+                                                                                guest: {
+                                                                                    ...formData.chargeSetup.guest,
+                                                                                    selected: !!checked,
+                                                                                },
                                                                             },
-                                                                        },
-                                                                    });
-                                                                }
-                                                            }}
-                                                            className="w-full max-w-[200px]"
-                                                        />
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border border-gray-300 px-4 py-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <Checkbox
-                                                            checked={formData.chargeSetup.guest.selected}
-                                                            onCheckedChange={(checked) =>
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    chargeSetup: {
-                                                                        ...formData.chargeSetup,
-                                                                        guest: {
-                                                                            ...formData.chargeSetup.guest,
-                                                                            selected: !!checked,
-                                                                        },
-                                                                    },
-                                                                })
-                                                            }
-                                                        />
-                                                        <span>Guest</span>
-                                                    </div>
-                                                </td>
-                                                <td className="border border-gray-300 px-4 py-3">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <Checkbox
-                                                            checked={!!formData.chargeSetup.guest.adult}
-                                                            onCheckedChange={(checked) => {
-                                                                if (!checked) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        chargeSetup: {
-                                                                            ...formData.chargeSetup,
-                                                                            guest: {
-                                                                                ...formData.chargeSetup.guest,
-                                                                                adult: "",
+                                                                        })
+                                                                    }
+                                                                />
+                                                                <span>Guest</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={!!formData.chargeSetup.guest.adult}
+                                                                    onCheckedChange={(checked) => {
+                                                                        if (!checked) {
+                                                                            setFormData({
+                                                                                ...formData,
+                                                                                chargeSetup: {
+                                                                                    ...formData.chargeSetup,
+                                                                                    guest: {
+                                                                                        ...formData.chargeSetup.guest,
+                                                                                        adult: "",
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={formData.chargeSetup.guest.adult}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        // Allow only positive numbers with max 2 decimal places
+                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                            setFormData({
+                                                                                ...formData,
+                                                                                chargeSetup: {
+                                                                                    ...formData.chargeSetup,
+                                                                                    guest: {
+                                                                                        ...formData.chargeSetup.guest,
+                                                                                        adult: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={!!formData.chargeSetup.guest.child}
+                                                                    onCheckedChange={(checked) => {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            chargeSetup: {
+                                                                                ...formData.chargeSetup,
+                                                                                guest: {
+                                                                                    ...formData.chargeSetup.guest,
+                                                                                    child: checked ? formData.chargeSetup.guest.child || "" : "",
+                                                                                },
                                                                             },
-                                                                        },
-                                                                    });
-                                                                }
-                                                            }}
-                                                        />
-                                                        <TextField
-                                                            size="small"
-                                                            variant="outlined"
-                                                            value={formData.chargeSetup.guest.adult}
-                                                            onChange={(e) => {
-                                                                const value = e.target.value;
-                                                                // Allow only positive numbers with max 2 decimal places
-                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        chargeSetup: {
-                                                                            ...formData.chargeSetup,
-                                                                            guest: {
-                                                                                ...formData.chargeSetup.guest,
-                                                                                adult: value,
+                                                                        });
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={formData.chargeSetup.guest.child}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        // Allow only positive numbers with max 2 decimal places
+                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                            setFormData({
+                                                                                ...formData,
+                                                                                chargeSetup: {
+                                                                                    ...formData.chargeSetup,
+                                                                                    guest: {
+                                                                                        ...formData.chargeSetup.guest,
+                                                                                        child: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <Checkbox
+                                                                    checked={formData.chargeSetup.nonMember.selected}
+                                                                    onCheckedChange={(checked) =>
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            chargeSetup: {
+                                                                                ...formData.chargeSetup,
+                                                                                nonMember: {
+                                                                                    ...formData.chargeSetup.nonMember,
+                                                                                    selected: !!checked,
+                                                                                },
                                                                             },
-                                                                        },
-                                                                    });
-                                                                }
-                                                            }}
-                                                            className="w-full max-w-[200px]"
-                                                        />
-                                                    </div>
-                                                </td>
-                                                <td className="border border-gray-300 px-4 py-3">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <Checkbox
-                                                            checked={!!formData.chargeSetup.guest.child}
-                                                            onCheckedChange={(checked) => {
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    chargeSetup: {
-                                                                        ...formData.chargeSetup,
-                                                                        guest: {
-                                                                            ...formData.chargeSetup.guest,
-                                                                            child: checked ? formData.chargeSetup.guest.child || "" : "",
-                                                                        },
-                                                                    },
-                                                                });
-                                                            }}
-                                                        />
-                                                        <TextField
-                                                            size="small"
-                                                            variant="outlined"
-                                                            value={formData.chargeSetup.guest.child}
-                                                            onChange={(e) => {
-                                                                const value = e.target.value;
-                                                                // Allow only positive numbers with max 2 decimal places
-                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        chargeSetup: {
-                                                                            ...formData.chargeSetup,
-                                                                            guest: {
-                                                                                ...formData.chargeSetup.guest,
-                                                                                child: value,
+                                                                        })
+                                                                    }
+                                                                />
+                                                                <span>Non-Member</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={!!formData.chargeSetup.nonMember.adult}
+                                                                    onCheckedChange={(checked) => {
+                                                                        if (!checked) {
+                                                                            setFormData({
+                                                                                ...formData,
+                                                                                chargeSetup: {
+                                                                                    ...formData.chargeSetup,
+                                                                                    nonMember: {
+                                                                                        ...formData.chargeSetup.nonMember,
+                                                                                        adult: "",
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={formData.chargeSetup.nonMember.adult}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        // Allow only positive numbers with max 2 decimal places
+                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                            setFormData({
+                                                                                ...formData,
+                                                                                chargeSetup: {
+                                                                                    ...formData.chargeSetup,
+                                                                                    nonMember: {
+                                                                                        ...formData.chargeSetup.nonMember,
+                                                                                        adult: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={!!formData.chargeSetup.nonMember.child}
+                                                                    onCheckedChange={(checked) => {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            chargeSetup: {
+                                                                                ...formData.chargeSetup,
+                                                                                nonMember: {
+                                                                                    ...formData.chargeSetup.nonMember,
+                                                                                    child: checked ? formData.chargeSetup.nonMember.child || "" : "",
+                                                                                },
                                                                             },
-                                                                        },
-                                                                    });
-                                                                }
-                                                            }}
-                                                            className="w-full max-w-[200px]"
-                                                        />
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border border-gray-300 px-4 py-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <Checkbox
-                                                            checked={formData.chargeSetup.nonMember.selected}
-                                                            onCheckedChange={(checked) =>
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    chargeSetup: {
-                                                                        ...formData.chargeSetup,
-                                                                        nonMember: {
-                                                                            ...formData.chargeSetup.nonMember,
-                                                                            selected: !!checked,
-                                                                        },
-                                                                    },
-                                                                })
-                                                            }
-                                                        />
-                                                        <span>Non-Member</span>
-                                                    </div>
-                                                </td>
-                                                <td className="border border-gray-300 px-4 py-3">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <Checkbox
-                                                            checked={!!formData.chargeSetup.nonMember.adult}
-                                                            onCheckedChange={(checked) => {
-                                                                if (!checked) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        chargeSetup: {
-                                                                            ...formData.chargeSetup,
-                                                                            nonMember: {
-                                                                                ...formData.chargeSetup.nonMember,
-                                                                                adult: "",
+                                                                        });
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={formData.chargeSetup.nonMember.child}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        // Allow only positive numbers with max 2 decimal places
+                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                            setFormData({
+                                                                                ...formData,
+                                                                                chargeSetup: {
+                                                                                    ...formData.chargeSetup,
+                                                                                    nonMember: {
+                                                                                        ...formData.chargeSetup.nonMember,
+                                                                                        child: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <Checkbox
+                                                                    checked={formData.chargeSetup.tenant.selected}
+                                                                    onCheckedChange={(checked) =>
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            chargeSetup: {
+                                                                                ...formData.chargeSetup,
+                                                                                tenant: {
+                                                                                    ...formData.chargeSetup.tenant,
+                                                                                    selected: !!checked,
+                                                                                },
                                                                             },
-                                                                        },
-                                                                    });
-                                                                }
-                                                            }}
-                                                        />
-                                                        <TextField
-                                                            size="small"
-                                                            variant="outlined"
-                                                            value={formData.chargeSetup.nonMember.adult}
-                                                            onChange={(e) => {
-                                                                const value = e.target.value;
-                                                                // Allow only positive numbers with max 2 decimal places
-                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        chargeSetup: {
-                                                                            ...formData.chargeSetup,
-                                                                            nonMember: {
-                                                                                ...formData.chargeSetup.nonMember,
-                                                                                adult: value,
+                                                                        })
+                                                                    }
+                                                                />
+                                                                <span>Tenant</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={!!formData.chargeSetup.tenant.adult}
+                                                                    onCheckedChange={(checked) => {
+                                                                        if (!checked) {
+                                                                            setFormData({
+                                                                                ...formData,
+                                                                                chargeSetup: {
+                                                                                    ...formData.chargeSetup,
+                                                                                    tenant: {
+                                                                                        ...formData.chargeSetup.tenant,
+                                                                                        adult: "",
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={formData.chargeSetup.tenant.adult}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        // Allow only positive numbers with max 2 decimal places
+                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                            setFormData({
+                                                                                ...formData,
+                                                                                chargeSetup: {
+                                                                                    ...formData.chargeSetup,
+                                                                                    tenant: {
+                                                                                        ...formData.chargeSetup.tenant,
+                                                                                        adult: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td className="border border-gray-300 px-4 py-3">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Checkbox
+                                                                    checked={!!formData.chargeSetup.tenant.child}
+                                                                    onCheckedChange={(checked) => {
+                                                                        setFormData({
+                                                                            ...formData,
+                                                                            chargeSetup: {
+                                                                                ...formData.chargeSetup,
+                                                                                tenant: {
+                                                                                    ...formData.chargeSetup.tenant,
+                                                                                    child: checked ? formData.chargeSetup.tenant.child || "" : "",
+                                                                                },
                                                                             },
-                                                                        },
-                                                                    });
-                                                                }
-                                                            }}
-                                                            className="w-full max-w-[200px]"
-                                                        />
-                                                    </div>
-                                                </td>
-                                                <td className="border border-gray-300 px-4 py-3">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <Checkbox
-                                                            checked={!!formData.chargeSetup.nonMember.child}
-                                                            onCheckedChange={(checked) => {
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    chargeSetup: {
-                                                                        ...formData.chargeSetup,
-                                                                        nonMember: {
-                                                                            ...formData.chargeSetup.nonMember,
-                                                                            child: checked ? formData.chargeSetup.nonMember.child || "" : "",
-                                                                        },
-                                                                    },
-                                                                });
-                                                            }}
-                                                        />
-                                                        <TextField
-                                                            size="small"
-                                                            variant="outlined"
-                                                            value={formData.chargeSetup.nonMember.child}
-                                                            onChange={(e) => {
-                                                                const value = e.target.value;
-                                                                // Allow only positive numbers with max 2 decimal places
-                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        chargeSetup: {
-                                                                            ...formData.chargeSetup,
-                                                                            nonMember: {
-                                                                                ...formData.chargeSetup.nonMember,
-                                                                                child: value,
-                                                                            },
-                                                                        },
-                                                                    });
-                                                                }
-                                                            }}
-                                                            className="w-full max-w-[200px]"
-                                                        />
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border border-gray-300 px-4 py-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <Checkbox
-                                                            checked={formData.chargeSetup.tenant.selected}
-                                                            onCheckedChange={(checked) =>
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    chargeSetup: {
-                                                                        ...formData.chargeSetup,
-                                                                        tenant: {
-                                                                            ...formData.chargeSetup.tenant,
-                                                                            selected: !!checked,
-                                                                        },
-                                                                    },
-                                                                })
-                                                            }
-                                                        />
-                                                        <span>Tenant</span>
-                                                    </div>
-                                                </td>
-                                                <td className="border border-gray-300 px-4 py-3">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <Checkbox
-                                                            checked={!!formData.chargeSetup.tenant.adult}
-                                                            onCheckedChange={(checked) => {
-                                                                if (!checked) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        chargeSetup: {
-                                                                            ...formData.chargeSetup,
-                                                                            tenant: {
-                                                                                ...formData.chargeSetup.tenant,
-                                                                                adult: "",
-                                                                            },
-                                                                        },
-                                                                    });
-                                                                }
-                                                            }}
-                                                        />
-                                                        <TextField
-                                                            size="small"
-                                                            variant="outlined"
-                                                            value={formData.chargeSetup.tenant.adult}
-                                                            onChange={(e) => {
-                                                                const value = e.target.value;
-                                                                // Allow only positive numbers with max 2 decimal places
-                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        chargeSetup: {
-                                                                            ...formData.chargeSetup,
-                                                                            tenant: {
-                                                                                ...formData.chargeSetup.tenant,
-                                                                                adult: value,
-                                                                            },
-                                                                        },
-                                                                    });
-                                                                }
-                                                            }}
-                                                            className="w-full max-w-[200px]"
-                                                        />
-                                                    </div>
-                                                </td>
-                                                <td className="border border-gray-300 px-4 py-3">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <Checkbox
-                                                            checked={!!formData.chargeSetup.tenant.child}
-                                                            onCheckedChange={(checked) => {
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    chargeSetup: {
-                                                                        ...formData.chargeSetup,
-                                                                        tenant: {
-                                                                            ...formData.chargeSetup.tenant,
-                                                                            child: checked ? formData.chargeSetup.tenant.child || "" : "",
-                                                                        },
-                                                                    },
-                                                                });
-                                                            }}
-                                                        />
-                                                        <TextField
-                                                            size="small"
-                                                            variant="outlined"
-                                                            value={formData.chargeSetup.tenant.child}
-                                                            onChange={(e) => {
-                                                                const value = e.target.value;
-                                                                // Allow only positive numbers with max 2 decimal places
-                                                                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        chargeSetup: {
-                                                                            ...formData.chargeSetup,
-                                                                            tenant: {
-                                                                                ...formData.chargeSetup.tenant,
-                                                                                child: value,
-                                                                            },
-                                                                        },
-                                                                    });
-                                                                }
-                                                            }}
-                                                            className="w-full max-w-[200px]"
-                                                        />
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                                        });
+                                                                    }}
+                                                                />
+                                                                <TextField
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    value={formData.chargeSetup.tenant.child}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        // Allow only positive numbers with max 2 decimal places
+                                                                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                                                                            setFormData({
+                                                                                ...formData,
+                                                                                chargeSetup: {
+                                                                                    ...formData.chargeSetup,
+                                                                                    tenant: {
+                                                                                        ...formData.chargeSetup.tenant,
+                                                                                        child: value,
+                                                                                    },
+                                                                                },
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full max-w-[200px]"
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )
+                                }
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
                                     <div className="flex items-center gap-3">

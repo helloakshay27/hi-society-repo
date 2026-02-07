@@ -455,22 +455,22 @@ export const BookingSetupDetailClubPage = () => {
           status: subFac.sub_facility.active || "true",
           chargeSetup: {
             member: {
-              selected: subFac.sub_facility.facility_charge?.member === "true" || subFac.facility_charge?.member === true,
+              selected: subFac.sub_facility.facility_charge?.member,
               adult: subFac.sub_facility.facility_charge?.adult_member_charge || "",
               child: subFac.sub_facility.facility_charge?.child_member_charge || "",
             },
             guest: {
-              selected: subFac.sub_facility.facility_charge?.guest === "true" || subFac.facility_charge?.guest === true,
+              selected: subFac.sub_facility.facility_charge?.guest,
               adult: subFac.sub_facility.facility_charge?.adult_guest_charge || "",
               child: subFac.sub_facility.facility_charge?.child_guest_charge || "",
             },
             nonMember: {
-              selected: subFac.sub_facility.facility_charge?.non_member === "true" || subFac.facility_charge?.non_member === true,
+              selected: subFac.sub_facility.facility_charge?.non_member,
               adult: subFac.sub_facility.facility_charge?.adult_non_member_charge || "",
               child: subFac.sub_facility.facility_charge?.child_non_member_charge || "",
             },
             tenant: {
-              selected: subFac.sub_facility.facility_charge?.tenant === "true" || subFac.facility_charge?.tenant === true,
+              selected: subFac.sub_facility.facility_charge?.tenant,
               adult: subFac.sub_facility.facility_charge?.adult_tenant_charge || "",
               child: subFac.sub_facility.facility_charge?.child_tenant_charge || "",
             },
@@ -883,67 +883,71 @@ export const BookingSetupDetailClubPage = () => {
                       )}
                     </div>
 
-                    <div className="border-t pt-4">
-                      <h5 className="text-sm font-semibold text-gray-700 mb-3">Charge Setup</h5>
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {subFacility.chargeSetup.member.selected && (
-                          <>
-                            <div className="flex items-start">
-                              <span className="text-gray-500 min-w-[140px]">Member Adult</span>
-                              <span className="text-gray-500 mx-2">:</span>
-                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.member.adult || "-"}</span>
-                            </div>
-                            <div className="flex items-start">
-                              <span className="text-gray-500 min-w-[140px]">Member Child</span>
-                              <span className="text-gray-500 mx-2">:</span>
-                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.member.child || "-"}</span>
-                            </div>
-                          </>
-                        )}
-                        {subFacility.chargeSetup.guest.selected && (
-                          <>
-                            <div className="flex items-start">
-                              <span className="text-gray-500 min-w-[140px]">Guest Adult</span>
-                              <span className="text-gray-500 mx-2">:</span>
-                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.guest.adult || "-"}</span>
-                            </div>
-                            <div className="flex items-start">
-                              <span className="text-gray-500 min-w-[140px]">Guest Child</span>
-                              <span className="text-gray-500 mx-2">:</span>
-                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.guest.child || "-"}</span>
-                            </div>
-                          </>
-                        )}
-                        {subFacility.chargeSetup.nonMember.selected && (
-                          <>
-                            <div className="flex items-start">
-                              <span className="text-gray-500 min-w-[140px]">Non-Member Adult</span>
-                              <span className="text-gray-500 mx-2">:</span>
-                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.nonMember.adult || "-"}</span>
-                            </div>
-                            <div className="flex items-start">
-                              <span className="text-gray-500 min-w-[140px]">Non-Member Child</span>
-                              <span className="text-gray-500 mx-2">:</span>
-                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.nonMember.child || "-"}</span>
-                            </div>
-                          </>
-                        )}
-                        {subFacility.chargeSetup.tenant.selected && (
-                          <>
-                            <div className="flex items-start">
-                              <span className="text-gray-500 min-w-[140px]">Tenant Adult</span>
-                              <span className="text-gray-500 mx-2">:</span>
-                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.tenant.adult || "-"}</span>
-                            </div>
-                            <div className="flex items-start">
-                              <span className="text-gray-500 min-w-[140px]">Tenant Child</span>
-                              <span className="text-gray-500 mx-2">:</span>
-                              <span className="text-gray-900 font-medium">{subFacility.chargeSetup.tenant.child || "-"}</span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
+                    {
+                      formData.isBookable && (
+                        <div className="border-t pt-4">
+                          <h5 className="text-sm font-semibold text-gray-700 mb-3">Charge Setup</h5>
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            {subFacility.chargeSetup.member.selected && (
+                              <>
+                                <div className="flex items-start">
+                                  <span className="text-gray-500 min-w-[140px]">Member Adult</span>
+                                  <span className="text-gray-500 mx-2">:</span>
+                                  <span className="text-gray-900 font-medium">{subFacility.chargeSetup.member.adult || "-"}</span>
+                                </div>
+                                <div className="flex items-start">
+                                  <span className="text-gray-500 min-w-[140px]">Member Child</span>
+                                  <span className="text-gray-500 mx-2">:</span>
+                                  <span className="text-gray-900 font-medium">{subFacility.chargeSetup.member.child || "-"}</span>
+                                </div>
+                              </>
+                            )}
+                            {subFacility.chargeSetup.guest.selected && (
+                              <>
+                                <div className="flex items-start">
+                                  <span className="text-gray-500 min-w-[140px]">Guest Adult</span>
+                                  <span className="text-gray-500 mx-2">:</span>
+                                  <span className="text-gray-900 font-medium">{subFacility.chargeSetup.guest.adult || "-"}</span>
+                                </div>
+                                <div className="flex items-start">
+                                  <span className="text-gray-500 min-w-[140px]">Guest Child</span>
+                                  <span className="text-gray-500 mx-2">:</span>
+                                  <span className="text-gray-900 font-medium">{subFacility.chargeSetup.guest.child || "-"}</span>
+                                </div>
+                              </>
+                            )}
+                            {subFacility.chargeSetup.nonMember.selected && (
+                              <>
+                                <div className="flex items-start">
+                                  <span className="text-gray-500 min-w-[140px]">Non-Member Adult</span>
+                                  <span className="text-gray-500 mx-2">:</span>
+                                  <span className="text-gray-900 font-medium">{subFacility.chargeSetup.nonMember.adult || "-"}</span>
+                                </div>
+                                <div className="flex items-start">
+                                  <span className="text-gray-500 min-w-[140px]">Non-Member Child</span>
+                                  <span className="text-gray-500 mx-2">:</span>
+                                  <span className="text-gray-900 font-medium">{subFacility.chargeSetup.nonMember.child || "-"}</span>
+                                </div>
+                              </>
+                            )}
+                            {subFacility.chargeSetup.tenant.selected && (
+                              <>
+                                <div className="flex items-start">
+                                  <span className="text-gray-500 min-w-[140px]">Tenant Adult</span>
+                                  <span className="text-gray-500 mx-2">:</span>
+                                  <span className="text-gray-900 font-medium">{subFacility.chargeSetup.tenant.adult || "-"}</span>
+                                </div>
+                                <div className="flex items-start">
+                                  <span className="text-gray-500 min-w-[140px]">Tenant Child</span>
+                                  <span className="text-gray-500 mx-2">:</span>
+                                  <span className="text-gray-900 font-medium">{subFacility.chargeSetup.tenant.child || "-"}</span>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    }
                   </div>
                 ))}
               </div>
@@ -1523,65 +1527,6 @@ export const BookingSetupDetailClubPage = () => {
             </div>
           </div>
 
-          {/* Gallery Images */}
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                  <Image className="w-4 h-4" />
-                </div>
-                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-                  GALLERY IMAGES [{galleryImages.length}]
-                </h3>
-              </div>
-            </div>
-
-            {galleryImages.length > 0 && (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-[#E5E0D3]">
-                      <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Image Name</th>
-                      <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Preview</th>
-                      <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Ratio</th>
-                      <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Enable to App</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {galleryImages.map((image: any, index: number) => (
-                      <tr key={index} className="border-b hover:bg-gray-50">
-                        <td className="border border-gray-300 px-4 py-3">
-                          <span className="text-gray-900">{image.name || `Image ${index + 1}`}</span>
-                        </td>
-                        <td className="border border-gray-300 px-4 py-3">
-                          <div className="flex justify-center">
-                            <img
-                              src={image.preview}
-                              alt={`gallery-preview-${index}`}
-                              className="h-20 w-20 rounded border border-gray-200 object-cover"
-                            />
-                          </div>
-                        </td>
-                        <td className="border border-gray-300 px-4 py-3 text-center">
-                          {image.ratio || '1:1'}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-3 text-center">
-                          <div className="flex items-center justify-center">
-                            <Checkbox
-                              checked={image.enableToApp ?? true}
-                              disabled
-                              className="w-5 h-5 mx-auto"
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
           {/* Description */}
           <div className="bg-white rounded-lg border-2 p-6 space-y-6">
             <div className="flex items-center gap-3">
@@ -1717,167 +1662,6 @@ export const BookingSetupDetailClubPage = () => {
                 disabled
                 className="min-h-[100px]"
               />
-            </div>
-          </div>
-
-          {/* /* Additional Setup */}
-          <div className={`bg-white rounded-lg border-2 p-6 space-y-6 overflow-hidden ${additionalOpen ? "h-auto" : "h-[6rem]"}`}>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                  <FileCog className="w-4 h-4" />
-                </div>
-                <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">ADDITIONAL SETUP</h3>
-              </div>
-              {additionalOpen ? (
-                <ChevronUp
-                  onClick={handleAdditionalOpen}
-                  className="cursor-pointer"
-                />
-              ) : (
-                <ChevronDown
-                  onClick={handleAdditionalOpen}
-                  className="cursor-pointer"
-                />
-              )}
-            </div>
-            <div className="space-y-4" id="additional">
-              <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                    <Tv className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CONFIGURE ACCESSORIES</h3>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4" id="amenities">
-                  {loadingInventories ? (
-                    <div className="col-span-full text-center text-gray-500">Loading inventories...</div>
-                  ) : inventories.length === 0 ? (
-                    <div className="col-span-full text-center text-gray-500">No inventories available</div>
-                  ) : (
-                    inventories.map((inventory) => {
-                      const isSelected = formData.amenities[inventory.id] || false;
-                      return (
-                        <div key={inventory.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`inventory-${inventory.id}`}
-                            checked={isSelected}
-                            disabled
-                          />
-                          <label htmlFor={`inventory-${inventory.id}`}>
-                            {inventory.name}
-                          </label>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-
-              {/* <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                    <Armchair className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">SEATER INFO</h3>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 my-2">
-                  <FormControl>
-                    <InputLabel sx={{ backgroundColor: '#F6F7F7', paddingRight: "5px" }}>Seater Info</InputLabel>
-                    <Select
-                      value={formData.seaterInfo}
-                      label="Seater Info"
-                      disabled
-                    >
-                      <MenuItem value="Select a seater">Select a seater</MenuItem>
-                      <MenuItem value="1 Seater">1 Seater</MenuItem>
-                      <MenuItem value="2 Seater">2 Seater</MenuItem>
-                      <MenuItem value="3 Seater">3 Seater</MenuItem>
-                      <MenuItem value="4 Seater">4 Seater</MenuItem>
-                      <MenuItem value="5 Seater">5 Seater</MenuItem>
-                      <MenuItem value="6 Seater">6 Seater</MenuItem>
-                      <MenuItem value="7 Seater">7 Seater</MenuItem>
-                      <MenuItem value="8 Seater">8 Seater</MenuItem>
-                      <MenuItem value="9 Seater">9 Seater</MenuItem>
-                      <MenuItem value="10 Seater">10 Seater</MenuItem>
-                      <MenuItem value="11 Seater">11 Seater</MenuItem>
-                      <MenuItem value="12 Seater">12 Seater</MenuItem>
-                      <MenuItem value="13 Seater">13 Seater</MenuItem>
-                      <MenuItem value="14 Seater">14 Seater</MenuItem>
-                      <MenuItem value="15 Seater">15 Seater</MenuItem>
-                    </Select>
-                  </FormControl>
-                </div>
-              </div> */}
-
-              {/* <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                    <LampFloor className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">FLOOR INFO</h3>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 my-2">
-                  <FormControl>
-                    <InputLabel sx={{ backgroundColor: '#F6F7F7', paddingRight: "5px" }}>Floor Info</InputLabel>
-                    <Select
-                      value={formData.floorInfo}
-                      label="Floor Info"
-                      disabled
-                    >
-                      <MenuItem value="Select a floor">Select a floor</MenuItem>
-                      <MenuItem value="1st Floor">1st Floor</MenuItem>
-                      <MenuItem value="2nd Floor">2nd Floor</MenuItem>
-                      <MenuItem value="3rd Floor">3rd Floor</MenuItem>
-                      <MenuItem value="4th Floor">4th Floor</MenuItem>
-                      <MenuItem value="5th Floor">5th Floor</MenuItem>
-                      <MenuItem value="6th Floor">6th Floor</MenuItem>
-                      <MenuItem value="7th Floor">7th Floor</MenuItem>
-                      <MenuItem value="8th Floor">8th Floor</MenuItem>
-                      <MenuItem value="9th Floor">9th Floor</MenuItem>
-                      <MenuItem value="10th Floor">10th Floor</MenuItem>
-                      <MenuItem value="11th Floor">11th Floor</MenuItem>
-                      <MenuItem value="12th Floor">12th Floor</MenuItem>
-                      <MenuItem value="13th Floor">13th Floor</MenuItem>
-                      <MenuItem value="14th Floor">14th Floor</MenuItem>
-                      <MenuItem value="15th Floor">15th Floor</MenuItem>
-                    </Select>
-                  </FormControl>
-                </div>
-              </div> */}
-              {/* <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                    <Share2 className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">Shared Content Info</h3>
-                </div>
-                <div>
-                  <Textarea
-                    value={formData.sharedContentInfo}
-                    className="min-h-[100px]"
-                    readOnly
-                  />
-                </div>
-              </div> */}
-              {/* <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                    <BookKey className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">CONFIGURE APP KEY</h3>
-                </div>
-                <div className="my-2" id="appKey">
-                  <TextField
-                    label="App Key"
-                    value={formData.appKey}
-                    variant="outlined"
-                    InputProps={{ readOnly: true }}
-                  />
-                </div>
-              </div> */}
             </div>
           </div>
         </div>

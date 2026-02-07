@@ -15,6 +15,7 @@ interface FetchBookingDetails {
 export interface FacilityBookingDetails {
   id: number;
   current_status: string;
+  can_cancel: boolean;
   booked_by_name: string;
   startdate: string;
   show_schedule_24_hour: string;

@@ -187,28 +187,24 @@ const CMSPayments = () => {
 
   const fetchItems = async (flatId: string, type: string) => {
     try {
-      let url = ""
-      if (type === "FacilityBooking") {
-        url = `https://${baseUrl}/crm/admin/facility_bookings.json?q[user_flat_society_flat_id_eq]=${flatId}`
-      } else {
-        url = `https://${baseUrl}/crm/admin/club_memberships.json?q[user_flat_society_flat_id_eq]=${flatId}`
-      }
-
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(
+        `https://${baseUrl}/crm/admin/facility_bookings/get_club_details.json?society_flat_id=${flatId}&payment_type=${type}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (type === "FacilityBooking") {
-        setItems(response.data.facility_bookings.map((b: any) => ({
+        setItems(response.data.details.map((b: any) => ({
           id: b.id,
-          label: `${b.facility_name} - ${b.id} (${b.current_status})`
+          label: b.formatted_user_name
         })))
       } else {
-        setItems(response.data.club_memberships.map((m: any) => ({
+        setItems(response.data.details.map((m: any) => ({
           id: m.id,
-          label: `${m.name} - ${m.id} (${m.membership_type})`
+          label: m.formatted_user_name
         })))
       }
     } catch (error) {
@@ -254,6 +250,7 @@ const CMSPayments = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.log(error)
+      toast.error("Failed to export payments")
     }
   }
 
@@ -283,7 +280,7 @@ const CMSPayments = () => {
     setSelectedPayment(item)
     // Try to pre-fill if data is available
     setEditFormData({
-      type: item.payment_type === "Facility Booking" ? "FacilityBooking" : "ClubMember",
+      type: item.payment_type === "FacilityBooking" ? "FacilityBooking" : "ClubMember",
       tower_id: "",
       flat_id: "",
       item_id: item.lockable_id || "",
@@ -300,11 +297,13 @@ const CMSPayments = () => {
     setIsSubmitting(true)
     try {
       await axios.put(
-        `https://${baseUrl}/crm/admin/facility_bookings/update_payment_record.json`,
+        `https://${baseUrl}/crm/admin/facility_bookings/update_payment_details.json`,
         {
-          id: selectedPayment.id,
-          lockable_id: editFormData.item_id,
-          lockable_type: editFormData.type
+          payid: selectedPayment.id,
+          payment_type: editFormData.type,
+          lock_payment: {
+            payment_of_id: editFormData.item_id,
+          }
         },
         {
           headers: {

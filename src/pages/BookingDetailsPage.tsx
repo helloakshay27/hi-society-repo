@@ -678,12 +678,16 @@ const BookingDetailsPage = () => {
           <h1 className="text-[24px] font-semibold text-[#1a1a1a]">
             {bookings.facility_name}
           </h1>
-          <Button
-            variant="outline"
-            onClick={() => setIsCancelDialogOpen(true)}
-          >
-            Cancel Booking
-          </Button>
+          {
+            bookings.can_cancel && (
+              <Button
+                variant="outline"
+                onClick={() => setIsCancelDialogOpen(true)}
+              >
+                Cancel Booking
+              </Button>
+            )
+          }
         </div>
 
         <div className="bg-white rounded-lg border-2 border-gray-200">
