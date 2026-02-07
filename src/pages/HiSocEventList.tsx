@@ -286,7 +286,9 @@ const HiSocEventList = () => {
     { key: "active", label: "Status", sortable: false },
   ];
 
-  const renderCell = (item: Event, columnKey: string, index: number) => {
+  const renderCell = (item: Event, columnKey: string, rowIndex?: number) => {
+    const index = rowIndex ?? events.findIndex(e => e.id === item.id);
+    
     switch (columnKey) {
       case "actions":
         return (

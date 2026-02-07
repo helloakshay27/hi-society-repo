@@ -208,9 +208,11 @@ const HiSocNoticeList = () => {
       [key: string]: any;
     },
     columnKey: string,
-    index: number
+    rowIndex?: number
   ) => {
     /* eslint-enable @typescript-eslint/no-explicit-any */
+    const index = rowIndex ?? noticeboards.findIndex((n: any) => n.id === item.id);
+    
     switch (columnKey) {
       case "actions":
         return (
