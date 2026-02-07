@@ -228,14 +228,22 @@ export const TicketDashboard = () => {
     fetchAnalyticsData(startDate, endDate);
   }, []);
 
-  // Use ticket summary data from API
-  const openTickets = statusAnalyticsData?.overall.total_open || ticketSummary.open_tickets;
-  const inProgressTickets = statusAnalyticsData?.overall.total_wip || ticketSummary.in_progress_tickets;
-  const closedTickets = statusAnalyticsData?.overall.total_closed || ticketSummary.closed_tickets;
+  // Use ticket summary data from API, with safe access
+  const openTickets = statusAnalyticsData && statusAnalyticsData.overall && typeof statusAnalyticsData.overall.total_open === 'number'
+    ? statusAnalyticsData.overall.total_open
+    : ticketSummary.open_tickets;
+  const inProgressTickets = statusAnalyticsData && statusAnalyticsData.overall && typeof statusAnalyticsData.overall.total_wip === 'number'
+    ? statusAnalyticsData.overall.total_wip
+    : ticketSummary.in_progress_tickets;
+  const closedTickets = statusAnalyticsData && statusAnalyticsData.overall && typeof statusAnalyticsData.overall.total_closed === 'number'
+    ? statusAnalyticsData.overall.total_closed
+    : ticketSummary.closed_tickets;
+  const pendingTickets = statusAnalyticsData && statusAnalyticsData.overall && typeof statusAnalyticsData.overall.total_pending === 'number'
+    ? statusAnalyticsData.overall.total_pending
+    : ticketSummary.pending_tickets;
   const totalSummaryTickets = (openTickets + inProgressTickets + closedTickets) || ticketSummary.total_tickets;
-  const pendingTickets = statusAnalyticsData?.overall.total_pending || ticketSummary.pending_tickets;
   const totalTicketsCount = initialTotalTickets || totalSummaryTickets;
-   const displayTotalTickets = totalTicketsCount.toLocaleString();
+  const displayTotalTickets = typeof totalTicketsCount === 'number' ? totalTicketsCount.toLocaleString() : '0';
 
 
   // Analytics data with updated colors matching design using real API data

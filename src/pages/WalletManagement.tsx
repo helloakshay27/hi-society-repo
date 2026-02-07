@@ -82,6 +82,7 @@ export const WalletManagement = () => {
   }, [activeTab]);
 
   // Table columns for API data
+  // Show all columns in the API transactions table
   const apiColumns = [
     { key: "id", label: "Transaction ID" },
     { key: "transaction_type", label: "Type" },
@@ -92,10 +93,23 @@ export const WalletManagement = () => {
 
   const renderApiCell = (item: WalletTransaction, columnKey: string) => {
     switch (columnKey) {
-    case "created_at":
-      return item.created_at ? new Date(item.created_at).toLocaleString() : "";
-    default:
-      return item[columnKey as keyof WalletTransaction] ?? "";
+      case "transaction_type": {
+        const type = item.transaction_type || "";
+        let color = "";
+        if (type === "DR") color = "text-red-600 font-bold";
+        if (type === "CR") color = "text-green-600 font-bold";
+        return <span className={color}>{type}</span>;
+      }
+      case "created_at":
+        return item.created_at ? new Date(item.created_at).toLocaleString() : "";
+      case "amount":
+        return item.amount !== undefined ? item.amount.toLocaleString() : "";
+      case "id":
+        return item.id;
+      case "remarks":
+        return item.remarks || "";
+      default:
+        return item[columnKey as keyof WalletTransaction] ?? "";
     }
   };
 

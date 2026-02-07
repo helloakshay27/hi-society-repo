@@ -383,6 +383,7 @@ export const HiSocietySidebar: React.FC = () => {
             { id: "faq-subcategory-list", label: "FAQ SubCategory", icon: HelpCircle, path: "/settings/faq-subcategory-list" },
             { id: "image-configuration-list", label: "Image Configuration", icon: HelpCircle, path: "/settings/image-config-list" },
             { id: "pricing-rule-list", label: "Pricing Rules", icon: Tag, path: "/settings/pricing-rule-list" },
+            { id: "customer-pricing-rule-list", label: "Customer Pricing Rules", icon: Tag, path: "/settings/customer-pricing-rule-list" },
           ],
         },
         {

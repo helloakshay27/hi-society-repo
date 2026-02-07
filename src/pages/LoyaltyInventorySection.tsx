@@ -57,8 +57,7 @@ export const LoyaltyInventorySection = () => {
 
     // Define columns for EnhancedTable
     const columns = [
-        { key: "checkbox", label: "", sortable: false },
-        { key: "view", label: "", sortable: false },
+        { key: "actions", label: "Actions", sortable: true },
         { key: "status", label: "Status", sortable: true },
         { key: "category", label: "Category", sortable: true },
         { key: "brand", label: "Brand", sortable: true },
@@ -69,7 +68,6 @@ export const LoyaltyInventorySection = () => {
         { key: "final_price", label: "Client Price", sortable: true },
         { key: "customer_discount", label: "Customer Discount", sortable: true },
         { key: "customer_price", label: "Customer Price", sortable: true },
-        { key: "actions", label: "", sortable: false },
     ];
 
     // Fetch inventory and categories data
@@ -122,33 +120,34 @@ export const LoyaltyInventorySection = () => {
         const isSelected = selectedRows.includes(item.id);
         
         switch (columnKey) {
-            case "checkbox":
+            case "actions":
                 return (
-                    <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={(e) => {
-                            e.stopPropagation();
-                            if (isSelected) {
-                                setSelectedRows(selectedRows.filter(id => id !== item.id));
-                            } else {
-                                setSelectedRows([...selectedRows, item.id]);
-                            }
-                        }}
-                        className="w-4 h-4 cursor-pointer"
-                    />
-                );
-            case "view":
-                return (
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/loyalty/inventory-details/${item.sku}`);
-                        }}
-                        className="text-gray-600 hover:text-[#C72030]"
-                    >
-                        <Eye className="w-4 h-4" />
-                    </button>
+                    <div className="flex gap-2 items-center">
+                        <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                                e.stopPropagation();
+                                if (isSelected) {
+                                    setSelectedRows(selectedRows.filter(id => id !== item.id));
+                                } else {
+                                    setSelectedRows([...selectedRows, item.id]);
+                                }
+                            }}
+                            className="w-4 h-4 cursor-pointer"
+                        />
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                // Use id if SKU is missing, fallback to id
+                                const sku = item.sku || item.id;
+                                navigate(`/loyalty/inventory-details/${sku}`);
+                            }}
+                            className="text-gray-600 hover:text-[#C72030]"
+                        >
+                            <Eye className="w-4 h-4" />
+                        </button>
+                    </div>
                 );
             case "status":
                 const statusColors = {
@@ -180,29 +179,7 @@ export const LoyaltyInventorySection = () => {
                 return <span className="text-sm">{item.customer_discount || "10%"}</span>;
             case "customer_price":
                 return <span className="text-sm">₹ {parseFloat(item.customer_price || item.final_price || item.base_price || 0).toFixed(0)}</span>;
-            case "actions":
-                return (
-                    <div className="flex gap-2">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                // Handle edit
-                            }}
-                            className="text-gray-600 hover:text-[#C72030]"
-                        >
-                            <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                // Handle delete
-                            }}
-                            className="text-gray-600 hover:text-red-600"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
-                    </div>
-                );
+
             default:
                 return null;
         }

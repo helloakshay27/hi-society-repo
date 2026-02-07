@@ -13,6 +13,8 @@ import WalletManagement from "@/pages/WalletManagement";
 import { LoyaltyCustomers } from "@/pages/LoyaltyCustomers";
 import { LoyaltyCustomerDetails } from "@/pages/LoyaltyCustomerDetails";
 import { LoyaltyInventorySection } from "@/pages/LoyaltyInventorySection";
+import { LoyaltyInventoryDetails } from "@/pages/LoyaltyInventoryDetails";
+import { CustomerPricingRuleList } from "@/pages/CustomerPricingRuleList";
 import { TicketDashboard } from "@/TicketDashboardbackup";
 import CRMGroupsPage from "@/pages/CRMGroupsPage";
 // import { VisitorsDashboard } from "@/pages/VisitorsDashboard";
@@ -445,6 +447,10 @@ export const setupMemberRoutes = (
       element={<LoyaltyDashboard />}
     />
     <Route
+      path="/settings/customer-pricing-rule-list"
+      element={<CustomerPricingRuleList />}
+    />
+    <Route
       path="/loyalty/wallet-management"
       element={<WalletManagement />}
     />
@@ -460,6 +466,10 @@ export const setupMemberRoutes = (
       path="/loyalty/inventory-section"
       element={<LoyaltyInventorySection />}
     />
+    <Route
+  path="/loyalty/inventory-details/:sku"
+  element={<LoyaltyInventoryDetails />}
+/>
     <Route path="/settings/amenities" Component={withSuspense(Amenities)} />
     <Route
       path="/settings/amenities-list"

@@ -1,6 +1,6 @@
 import React from "react";
 
-const LoyaltyInventoryDetails = () => {
+export const LoyaltyInventoryDetails = () => {
   // Demo data (replace with actual API data)
   const item = {
     name: "BOSE QUIETCOMFORT HEADPHONES",

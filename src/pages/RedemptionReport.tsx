@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import TextField from "@mui/material/TextField";
 import { StatsCard } from "@/components/StatsCard";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Eye, Filter, Grid3x3 } from "lucide-react";
@@ -126,35 +127,65 @@ const RedemptionReport = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // Custom filter/search bar UI matching the screenshot
+  // Use MUI TextField for date pickers
+  const fieldStyles = {
+    minWidth: 180,
+    marginRight: 2,
+    background: 'transparent',
+    borderRadius: 0,
+    fontSize: 14,
+    height: 44,
+    '& .MuiInputBase-root': {
+      height: 44,
+      fontSize: 14,
+    },
+    '& .MuiOutlinedInput-input': {
+      padding: '10.5px 14px',
+    },
+    '& .MuiInputLabel-root': {
+      fontSize: 13,
+    },
+  };
   const renderCustomActions = () => (
-    <div className="flex flex-wrap items-center gap-2 w-full">
-      <input
-        className="border px-2 py-1 rounded text-xs min-w-[120px]"
-        placeholder="Start Date"
+    <div className="flex items-center justify-start w-full py-2">
+      <TextField
+        label="Start Date"
+        type="date"
         value={startDate}
-        onChange={e => setStartDate(e.target.value)}
-        type="text"
+        onChange={(e) => setStartDate(e.target.value)}
+        InputLabelProps={{ shrink: true }}
+        variant="outlined"
+        size="small"
+        sx={fieldStyles}
+        placeholder="DD/MM/YYYY"
+        inputProps={{ placeholder: 'DD/MM/YYYY' }}
       />
-      <input
-        className="border px-2 py-1 rounded text-xs min-w-[120px]"
-        placeholder="End Date"
+      <TextField
+        label="End Date"
+        type="date"
         value={endDate}
-        onChange={e => setEndDate(e.target.value)}
-        type="text"
+        onChange={(e) => setEndDate(e.target.value)}
+        InputLabelProps={{ shrink: true }}
+        variant="outlined"
+        size="small"
+        sx={fieldStyles}
+        placeholder="DD/MM/YYYY"
+        inputProps={{ placeholder: 'DD/MM/YYYY' }}
       />
       <Button
-        className="bg-[#C72030] text-white px-3 py-1 rounded text-xs h-8"
+        className="bg-[#C72030] text-white px-5 text-xs h-11 font-medium"
+        style={{ minWidth: 60 }}
         onClick={() => {/* handle filter */}}
       >
         Go!
       </Button>
       <Button
         variant="outline"
-        className="border-[#C72030] text-[#C72030] px-3 py-1 rounded text-xs h-8 ml-2"
+        className="border-[#C72030] text-[#C72030] px-5 text-xs h-11 font-medium ml-2"
+        style={{ minWidth: 90 }}
         onClick={() => {/* handle report download */}}
       >
-        Report
+        <span className="hidden sm:inline">Report</span>
       </Button>
     </div>
   );
@@ -174,7 +205,7 @@ const RedemptionReport = () => {
           />
         ))}
       </div>
-      <div className="w-full bg-white rounded-lg shadow-sm border">
+      <div className="w-full">
         <EnhancedTable
           data={data}
           columns={columns}

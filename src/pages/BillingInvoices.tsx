@@ -242,7 +242,7 @@ export default function BillingInvoices() {
       </div>
 
       {/* Invoices Table */}
-      <div className="bg-white rounded-lg border border-gray-200">
+      <div className="">
         <EnhancedTable
           data={invoices}
           columns={columns}

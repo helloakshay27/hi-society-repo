@@ -135,7 +135,7 @@ const LoyaltyMembersList = () => {
     { key: 'current_loyalty_points', label: 'Current Balance', sortable: true },
     { key: 'last_activity_date', label: 'Last Activity', sortable: true },
     { key: 'tier_validity', label: 'Tier Validity', sortable: true },
-    { key: 'actions', label: 'View', sortable: false },
+    // { key: 'actions', label: 'View', sortable: false },
   ];
 
   const renderCell = (item: LoyaltyMember, columnKey: string) => {

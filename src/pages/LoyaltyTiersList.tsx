@@ -56,11 +56,10 @@ const LoyaltyTiersList = () => {
     setIsSearching(!!search);
     const storedValue = sessionStorage.getItem('selectedId');
     try {
-      // const response = await fetch(getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=1`), {
+      // Use only the token in the base URL, no Authorization header
       const response = await fetch("https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ", {
         method: 'GET',
         headers: {
-          'Authorization': getAuthHeader(),
           'Content-Type': 'application/json',
         },
       });
@@ -152,11 +151,10 @@ const LoyaltyTiersList = () => {
   const handleFormSubmit = async (values: any) => {
     if (selectedTier) {
       try {
-        // const response = await fetch(getFullUrl(`/loyalty/tiers/${selectedTier.id}.json`), {
+        // Use only the token in the base URL, no Authorization header
         const response = await fetch(`https://runwal-api.lockated.com/loyalty/tiers/${selectedTier.id}.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`, {
           method: 'PUT',
           headers: {
-            'Authorization': getAuthHeader(),
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ loyalty_tier: values }),

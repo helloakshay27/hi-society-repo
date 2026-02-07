@@ -1,46 +1,48 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, Edit } from "lucide-react";
-import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Plus, Edit } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { getFullUrl } from "@/config/apiConfig";
 
-interface PricingRule {
-  id: number;
-  organization_id?: number;
-  generic_category_id?: number;
-  margin_type?: string;
-  margin_value?: number;
-  created_at?: string;
-}
+const API_URL = "https://runwal-api.lockated.com/pricing_rules.json?type=customer&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
 
-const PricingRuleList: React.FC = () => {
-  const navigate = useNavigate();
-  const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
+const columns = [
+    { key: "actions", label: "Actions", sortable: true },
+  { key: "id", label: "Sr No", sortable: true },
+  { key: "organization_id", label: "Organization", sortable: true },
+  { key: "generic_category_id", label: "Category", sortable: true },
+  { key: "margin_type", label: "Margin Type", sortable: true },
+  { key: "margin_value", label: "Margin Value", sortable: true },
+  { key: "created_at", label: "Created At", sortable: true },
+];
+
+export const CustomerPricingRuleList = () => {
+    const handleAdd = () => {
+      setEditId(null);
+      setEditOrgId("");
+      setEditCatId("");
+      setEditMarginType("percentage");
+      setEditMarginValue("");
+      setEditOpen(true);
+    };
+  const [pricingRules, setPricingRules] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [organizations, setOrganizations] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loadingOrgs, setLoadingOrgs] = useState(true);
   const [loadingCats, setLoadingCats] = useState(true);
-  // Fetch organizations and categories on mount
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [editOrgId, setEditOrgId] = useState("");
+  const [editCatId, setEditCatId] = useState("");
+  const [editMarginType, setEditMarginType] = useState("percentage");
+  const [editMarginValue, setEditMarginValue] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
   useEffect(() => {
     setLoadingOrgs(true);
     fetch("https://runwal-api.lockated.com/organizations.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
@@ -55,60 +57,25 @@ const PricingRuleList: React.FC = () => {
       .then((data) => setCategories(data.categories || []))
       .catch(() => setCategories([]))
       .finally(() => setLoadingCats(false));
+    fetchPricingRules();
   }, []);
 
-  const fetchPricingRules = useCallback(async () => {
+  const fetchPricingRules = async () => {
     setLoading(true);
     try {
-      const url = "https://runwal-api.lockated.com/pricing_rules";
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Failed to fetch pricing rules");
-      }
+      const response = await fetch(API_URL);
+      if (!response.ok) throw new Error("Failed to fetch rules");
       const data = await response.json();
-      let allRules = data || [];
-      // Client-side search
-      if (searchTerm.trim()) {
-        const query = searchTerm.toLowerCase();
-        allRules = allRules.filter((rule: any) =>
-          rule.organization_id?.toString().includes(query) ||
-          rule.generic_category_id?.toString().includes(query) ||
-          rule.margin_type?.toLowerCase().includes(query)
-        );
-      }
-      setPricingRules(allRules);
+      setPricingRules(Array.isArray(data) ? data : data.pricing_rules || []);
     } catch (error) {
-      toast.error("Failed to load pricing rules", {
-        description: String(error),
-      });
+      toast.error("Failed to load pricing rules");
       setPricingRules([]);
     } finally {
       setLoading(false);
     }
-  }, [searchTerm]);
-
-  useEffect(() => {
-    fetchPricingRules();
-  }, [fetchPricingRules]);
-
-  const handleGlobalSearch = (term: string) => {
-    setSearchTerm(term);
   };
 
-  const handleAdd = () => {
-    navigate("/settings/pricing-rule-create");
-  };
-
-  // Modal state
-  const [editOpen, setEditOpen] = useState(false);
-  const [editId, setEditId] = useState<number | null>(null);
-  const [editOrgId, setEditOrgId] = useState<string | number>("");
-  const [editCatId, setEditCatId] = useState<string | number>("");
-  const [editMarginType, setEditMarginType] = useState<string>("percentage");
-  const [editMarginValue, setEditMarginValue] = useState<string>("");
-  const [editLoading, setEditLoading] = useState(false);
-
-  const handleEdit = (id: number) => {
+  const handleEdit = (id) => {
     const rule = pricingRules.find(r => r.id === id);
     setEditId(id);
     setEditOrgId(rule?.organization_id ?? "");
@@ -128,7 +95,6 @@ const PricingRuleList: React.FC = () => {
   };
 
   const handleEditSubmit = async () => {
-    if (!editId) return;
     if (
       editOrgId === '' || editOrgId === null || editOrgId === undefined ||
       editCatId === '' || editCatId === null || editCatId === undefined ||
@@ -139,48 +105,55 @@ const PricingRuleList: React.FC = () => {
     }
     setEditLoading(true);
     try {
-      const url = `https://runwal-api.lockated.com/pricing_rules/${editId}`;
-      const payload = {
+      let url, method;
+      let payload = {
         pricing_rule: {
           organization_id: typeof editOrgId === 'string' ? parseInt(editOrgId) : editOrgId,
           generic_category_id: typeof editCatId === 'string' ? parseInt(editCatId) : editCatId,
           margin_type: editMarginType,
           margin_value: parseFloat(editMarginValue),
+          type: 'customer',
         },
       };
+      if (editId) {
+        url = `https://runwal-api.lockated.com/pricing_rules/${editId}`;
+        method = "PATCH";
+      } else {
+        url = "https://runwal-api.lockated.com/pricing_rules.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+        method = "POST";
+      }
       const response = await fetch(url, {
-        method: "PATCH",
+        method,
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
       if (!response.ok) {
-        throw new Error("Failed to update pricing rule");
+        throw new Error(editId ? "Failed to update pricing rule" : "Failed to add pricing rule");
       }
-      toast.success("Pricing rule updated successfully!");
+      toast.success(editId ? "Pricing rule updated successfully!" : "Pricing rule added successfully!");
       handleEditClose();
       fetchPricingRules();
     } catch (error) {
-      toast.error("Failed to update pricing rule", {
+      toast.error(editId ? "Failed to update pricing rule" : "Failed to add pricing rule", {
         description: String(error),
       });
     } finally {
       setEditLoading(false);
     }
   };
+  const renderCustomActions = () => (
+    <Button
+      onClick={handleAdd}
+      className="bg-[#C72030] hover:bg-[#A01828] text-white"
+    >
+      <Plus className="h-4 w-4 mr-2" />
+      Add Pricing Rule
+    </Button>
+  );
 
-  const columns = [
-    { key: "id", label: "Sr No", sortable: false },
-    { key: "organization_id", label: "Organization", sortable: true },
-    { key: "generic_category_id", label: "Category", sortable: true },
-    { key: "margin_type", label: "Margin Type", sortable: true },
-    { key: "margin_value", label: "Margin Value", sortable: true },
-    { key: "created_at", label: "Created At", sortable: true },
-    { key: "actions", label: "", sortable: false },
-  ];
-
-  const renderCell = (item: any, columnKey: string) => {
+  const renderCell = (item, columnKey) => {
     const index = pricingRules.findIndex(r => r.id === item.id);
     switch (columnKey) {
       case "id":
@@ -220,44 +193,36 @@ const PricingRuleList: React.FC = () => {
     }
   };
 
-  const renderCustomActions = () => (
-    <>
-      <Button
-        onClick={handleAdd}
-        className="bg-[#C72030] hover:bg-[#A01828] text-white"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Pricing Rule
-      </Button>
-    </>
-  );
-
   return (
-    <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
-      <div className="space-y-6">
-        <EnhancedTable
-          data={pricingRules}
-          columns={columns}
-          renderCell={renderCell}
-          enableExport={false}
-          enableGlobalSearch={true}
-          onGlobalSearch={handleGlobalSearch}
-          leftActions={renderCustomActions()}
-          loading={loading}
-          loadingMessage="Loading pricing rules..."
-        />
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-semibold">Customer Pricing Rules</h1>
+        <Button className="bg-[#C72030] text-white" onClick={() => setEditOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" /> Add Rule
+        </Button>
       </div>
+      <EnhancedTable
+        data={pricingRules}
+        columns={columns}
+        renderCell={renderCell}
+        loading={loading}
+        loadingMessage="Loading pricing rules..."
+        emptyMessage="No pricing rules found"
+        enableExport={true}
+        exportFileName="customer-pricing-rules"
+        storageKey="customer-pricing-rules-table"
+        leftActions={renderCustomActions()}
+      />
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex justify-between items-start">
               <div>
                 <DialogTitle className="text-xl font-semibold text-[#1A1A1A]">
-                  Edit Pricing Rule
+                  {editId ? "Edit Pricing Rule" : "Add Pricing Rule"}
                 </DialogTitle>
                 <DialogDescription className="text-sm text-gray-500 mt-1">
-                  Update pricing rule details below
+                  {editId ? "Update pricing rule details below" : "Add new pricing rule details below"}
                 </DialogDescription>
               </div>
             </div>
@@ -356,4 +321,4 @@ const PricingRuleList: React.FC = () => {
   );
 };
 
-export default PricingRuleList;
+export default CustomerPricingRuleList;

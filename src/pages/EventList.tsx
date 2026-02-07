@@ -174,11 +174,11 @@ const Eventlist = () => {
     }
   };
 
-  const handleAddEvent = () => navigate("/loyalty/event-create");
+  const handleAddEvent = () => navigate("/maintenance/event-create");
   const handleEditEvent = (id: number) =>
-    navigate(`/loyalty/event-edit/${id}`);
+    navigate(`/maintenance/event-edit/${id}`);
   const handleViewEvent = (id: number) =>
-    navigate(`/loyalty/event-details/${id}`);
+    navigate(`/maintenance/event-details/${id}`);
   const handleClearSelection = () => {
     setShowActionPanel(false);
   };
