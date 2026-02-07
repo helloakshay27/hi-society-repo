@@ -12,7 +12,7 @@ const CMSFacilityBookings = () => {
   const tabFromUrl = searchParams.get("view")
   const activeTab = ALLOWED_TABS.includes(tabFromUrl || "")
     ? tabFromUrl!
-    : "calender"
+    : "list"
 
   // 🔁 Update URL on tab change
   const handleTabChange = (tab: string) => {
@@ -28,17 +28,16 @@ const CMSFacilityBookings = () => {
       >
         <TabsList className="w-full bg-white border border-gray-200">
           <TabsTrigger
-            value="calender"
-            className="w-full font-semibold data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030]"
-          >
-            Calendar View
-          </TabsTrigger>
-
-          <TabsTrigger
             value="list"
             className="w-full font-semibold data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030]"
           >
             List
+          </TabsTrigger>
+          <TabsTrigger
+            value="calender"
+            className="w-full font-semibold data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030]"
+          >
+            Calendar View
           </TabsTrigger>
         </TabsList>
 
