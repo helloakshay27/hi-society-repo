@@ -196,6 +196,7 @@ export const HiSocietySidebar: React.FC = () => {
         { id: "wallet-management", label: "Wallet Management", icon: Database, path: "/loyalty/wallet-management" },
         { id: "loyalty-customers", label: "Customers", icon: Users, path: "/loyalty/customers" },
         { id: "loyalty-inventory", label: "Inventory Section", icon: Database, path: "/loyalty/inventory-section" },
+        { id: "aggregator-inventory", label: "Aggregator Inventory", icon: Database, path: "/loyalty/aggregator-inventory" },
         { id: "loyalty-members", label: "Members", icon: Users, path: "/loyalty/loyalty-members-list" },
         { id: "loyalty-tiers", label: "Tiers", icon: Award, path: "/loyalty/loyalty-tiers-list" },
         { id: "rule-engine", label: "Rule Engine", icon: SettingsIcon, path: "/loyalty/rule-engine-list" },
@@ -205,6 +206,8 @@ export const HiSocietySidebar: React.FC = () => {
         { id: "demand-notes", label: "Demand Notes", icon: FileText, path: "/loyalty/demand-notes-list" },
         { id: "orders", label: "Orders", icon: Briefcase, path: "/loyalty/orders-list" },
         { id: "encash", label: "Encash", icon: Gift, path: "/loyalty/encash-list" },
+        { id: "billing-invoices", label: "Billing Invoices", icon: Receipt, path: "/loyalty/billing-invoices" },
+        { id: "redemption-report", label: "Redemption Report", icon: BarChart3, path: "/loyalty/redemption-report" },
       ],
     },
     cms: {
@@ -379,6 +382,7 @@ export const HiSocietySidebar: React.FC = () => {
             { id: "faq-category-list", label: "FAQ Category", icon: HelpCircle, path: "/settings/faq-category-list" },
             { id: "faq-subcategory-list", label: "FAQ SubCategory", icon: HelpCircle, path: "/settings/faq-subcategory-list" },
             { id: "image-configuration-list", label: "Image Configuration", icon: HelpCircle, path: "/settings/image-config-list" },
+            { id: "pricing-rule-list", label: "Pricing Rules", icon: Tag, path: "/settings/pricing-rule-list" },
           ],
         },
         {

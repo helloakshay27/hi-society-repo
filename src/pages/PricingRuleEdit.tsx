@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { getFullUrl, getAuthenticatedFetchOptions } from "@/config/apiConfig";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import {
@@ -14,6 +13,7 @@ import {
   FormControl,
   InputLabel,
   InputAdornment,
+  CircularProgress,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
@@ -103,77 +103,67 @@ const fieldStyles = {
   },
 };
 
-interface PricingRuleForm {
-  organization_id: string;
-  generic_category_id: string;
+const disabledFieldStyles = {
+  ...fieldStyles,
+  "& .MuiOutlinedInput-root": {
+    ...fieldStyles["& .MuiOutlinedInput-root"],
+    backgroundColor: "#f5f5f5",
+  },
+};
+
+interface PricingRule {
+  id: number;
+  organization_id: number;
+  generic_category_id: number;
   margin_type: string;
-  margin_value: string;
+  margin_value: number;
 }
 
-
-const PricingRuleCreate: React.FC = () => {
+const PricingRuleEdit: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState<PricingRuleForm>({
-    organization_id: "",
-    generic_category_id: "",
-    margin_type: "percentage",
-    margin_value: "",
-  });
-  const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
-  const [loadingOrgs, setLoadingOrgs] = useState(true);
-  const [loadingCats, setLoadingCats] = useState(true);
+  const [pricingRule, setPricingRule] = useState<PricingRule | null>(null);
+  const [marginType, setMarginType] = useState<string>("percentage");
+  const [marginValue, setMarginValue] = useState<string>("");
 
   useEffect(() => {
-    // Fetch organizations
-    setLoadingOrgs(true);
-    fetch("https://runwal-api.lockated.com/organizations.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
-      .then((res) => res.json())
-      .then((data) => {
-        setOrganizations(data.organizations || []);
-      })
-      .catch(() => setOrganizations([]))
-      .finally(() => setLoadingOrgs(false));
+    fetchPricingRule();
+  }, [id]);
 
-    // Fetch categories
-    setLoadingCats(true);
-    fetch("https://runwal-api.lockated.com/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
-      .then((res) => res.json())
-      .then((data) => {
-        setCategories(data.categories || []);
-      })
-      .catch(() => setCategories([]))
-      .finally(() => setLoadingCats(false));
-  }, []);
-
-  const handleInputChange = (name: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const fetchPricingRule = async () => {
+    setLoading(true);
+    try {
+      const url = `https://runwal-api.lockated.com/pricing_rules/${id}`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch pricing rule");
+      }
+      
+      const data = await response.json();
+      setPricingRule(data);
+      setMarginType(data.margin_type || "percentage");
+      setMarginValue(data.margin_value?.toString() || "");
+    } catch (error) {
+      toast.error("Failed to load pricing rule", {
+        description: String(error),
+      });
+      navigate("/settings/pricing-rule-list");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const validateForm = (): boolean => {
-    // Accept both string and number for IDs
-    if (
-      formData.organization_id === '' ||
-      formData.organization_id === null ||
-      formData.organization_id === undefined
-    ) {
-      toast.error("Please select organization");
-      return false;
-    }
-    if (
-      formData.generic_category_id === '' ||
-      formData.generic_category_id === null ||
-      formData.generic_category_id === undefined
-    ) {
-      toast.error("Please select category");
-      return false;
-    }
-    if (!String(formData.margin_value).trim()) {
+    if (!marginValue.trim()) {
       toast.error("Please enter margin value");
+      return false;
+    }
+    const value = parseFloat(marginValue);
+    if (isNaN(value) || value < 0) {
+      toast.error("Please enter a valid margin value");
       return false;
     }
     return true;
@@ -186,18 +176,16 @@ const PricingRuleCreate: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const url = "https://runwal-api.lockated.com/pricing_rules";
+      const url = `https://runwal-api.lockated.com/pricing_rules/${id}`;
       const payload = {
         pricing_rule: {
-          organization_id: parseInt(formData.organization_id),
-          generic_category_id: parseInt(formData.generic_category_id),
-          margin_type: formData.margin_type,
-          margin_value: parseFloat(formData.margin_value),
+          margin_type: marginType,
+          margin_value: parseFloat(marginValue),
         },
       };
       
       const response = await fetch(url, {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -205,15 +193,15 @@ const PricingRuleCreate: React.FC = () => {
       });
       
       if (!response.ok) {
-        throw new Error("Failed to create pricing rule");
+        throw new Error("Failed to update pricing rule");
       }
       
-      toast.success("Pricing rule created successfully!");
+      toast.success("Pricing rule updated successfully!");
       setTimeout(() => {
         navigate("/settings/pricing-rule-list");
       }, 1000);
     } catch (error) {
-      toast.error("Failed to create pricing rule", {
+      toast.error("Failed to update pricing rule", {
         description: String(error),
       });
     } finally {
@@ -225,6 +213,25 @@ const PricingRuleCreate: React.FC = () => {
     navigate("/settings/pricing-rule-list");
   };
 
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          backgroundColor: "#f5f5f5",
+        }}
+      >
+        <CircularProgress sx={{ color: "#C72030" }} />
+      </Box>
+    );
+  }
+
+  if (!pricingRule) {
+    return null;
+  }
 
   return (
     <Box
@@ -241,7 +248,7 @@ const PricingRuleCreate: React.FC = () => {
         variant="body2"
         sx={{ mb: 3, color: "#666", fontFamily: "Work Sans, sans-serif" }}
       >
-        Pricing Rules &gt; Create
+        Pricing Rules &gt; Edit
       </Typography>
 
       {/* Pricing Rule Form */}
@@ -270,7 +277,7 @@ const PricingRuleCreate: React.FC = () => {
                 fontSize: "18px",
               }}
             >
-              Pricing Rule
+              Edit Pricing Rule
             </Typography>
           </Box>
         </SectionHeader>
@@ -282,63 +289,35 @@ const PricingRuleCreate: React.FC = () => {
               gap: 3,
             }}
           >
-            <FormControl fullWidth sx={fieldStyles} required>
-              <InputLabel id="org-label">Organization</InputLabel>
-              <Select
-                labelId="org-label"
-                value={formData.organization_id}
-                label="Organization"
-                onChange={(e) => handleInputChange("organization_id", e.target.value)}
-                disabled={loadingOrgs}
-              >
-                {loadingOrgs ? (
-                  <MenuItem value="">
-                    Loading...
-                  </MenuItem>
-                ) : organizations.length === 0 ? (
-                  <MenuItem value="">
-                    No organizations found
-                  </MenuItem>
-                ) : (
-                  organizations.map((org) => (
-                    <MenuItem key={org.id} value={org.id}>{org.name}</MenuItem>
-                  ))
-                )}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth sx={fieldStyles} required>
-              <InputLabel id="cat-label">Category</InputLabel>
-              <Select
-                labelId="cat-label"
-                value={formData.generic_category_id}
-                label="Category"
-                onChange={(e) => handleInputChange("generic_category_id", e.target.value)}
-                disabled={loadingCats}
-              >
-                {loadingCats ? (
-                  <MenuItem value="">
-                    Loading...
-                  </MenuItem>
-                ) : categories.length === 0 ? (
-                  <MenuItem value="">
-                    No categories found
-                  </MenuItem>
-                ) : (
-                  categories.map((cat) => (
-                    <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
-                  ))
-                )}
-              </Select>
-            </FormControl>
+            <TextField
+              label="Organization ID"
+              value={pricingRule.organization_id}
+              sx={disabledFieldStyles}
+              fullWidth
+              disabled
+              InputProps={{
+                readOnly: true,
+              }}
+            />
+            
+            <TextField
+              label="Generic Category ID"
+              value={pricingRule.generic_category_id}
+              sx={disabledFieldStyles}
+              fullWidth
+              disabled
+              InputProps={{
+                readOnly: true,
+              }}
+            />
 
             <FormControl fullWidth sx={fieldStyles}>
               <InputLabel id="margin-type-label">Margin Type</InputLabel>
               <Select
                 labelId="margin-type-label"
-                value={formData.margin_type}
+                value={marginType}
                 label="Margin Type"
-                onChange={(e) => handleInputChange("margin_type", e.target.value)}
+                onChange={(e) => setMarginType(e.target.value)}
               >
                 <MenuItem value="percentage">Percentage</MenuItem>
                 <MenuItem value="flat">Flat</MenuItem>
@@ -349,14 +328,14 @@ const PricingRuleCreate: React.FC = () => {
               label="Margin Value"
               required
               type="number"
-              value={formData.margin_value}
-              onChange={(e) => handleInputChange("margin_value", e.target.value)}
+              value={marginValue}
+              onChange={(e) => setMarginValue(e.target.value)}
               placeholder="e.g., 10"
               sx={fieldStyles}
               fullWidth
               inputProps={{ min: 0, step: 0.01 }}
               InputProps={{
-                endAdornment: formData.margin_type === "percentage" ? (
+                endAdornment: marginType === "percentage" ? (
                   <InputAdornment position="end">%</InputAdornment>
                 ) : undefined,
               }}
@@ -368,7 +347,7 @@ const PricingRuleCreate: React.FC = () => {
       {/* Action Buttons */}
       <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 4 }}>
         <RedButton onClick={handleSubmit} disabled={submitting}>
-          {submitting ? "Submitting..." : "Submit"}
+          {submitting ? "Updating..." : "Update"}
         </RedButton>
         <CancelButton onClick={handleCancel} disabled={submitting}>
           Cancel
@@ -378,4 +357,4 @@ const PricingRuleCreate: React.FC = () => {
   );
 };
 
-export default PricingRuleCreate;
+export default PricingRuleEdit;

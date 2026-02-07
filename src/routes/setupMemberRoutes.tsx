@@ -54,6 +54,8 @@ const ConnectivityTypeEdit = lazy(() => import("@/pages/ConnectivityTypeEdit"));
 
 // Lazy load all setup member pages
 const AddMISPage = lazy(() => import("@/pages/AddMISPage"));
+const PricingRuleList = lazy(() => import("@/pages/PricingRuleList"));
+const AddPricingRulePage = lazy(() => import("@/pages/PricingRuleCreate"));
 const AddUserPage = lazy(() => import("@/pages/AddUserPage"));
 const AddQuarantinePage = lazy(() => import("@/pages/AddQuarantinePage"));
 const AddOfferPage = lazy(() => import("@/pages/AddOfferPage"));
@@ -203,6 +205,11 @@ const HomeLoanRequestsList = lazy(() => import("@/pages/HomeLoanRequestsList"));
 const DemandNotesList = lazy(() => import("@/pages/DemandNotesList"));
 const OrdersList = lazy(() => import("@/pages/OrdersList"));
 const EncashList = lazy(() => import("@/pages/EncashList"));
+
+// Add lazy imports for Billing, Redemption, Aggregator pages
+const BillingInvoices = lazy(() => import("@/pages/BillingInvoices"));
+const RedemptionReport = lazy(() => import("@/pages/RedemptionReport"));
+const AggregatorInventorySection = lazy(() => import("@/pages/AggregatorInventorySection"));
 
 // Add missing lazy imports
 const ProjectConfiguration = lazy(() => import("@/pages/ProjectConfiguraion"));
@@ -495,7 +502,8 @@ export const setupMemberRoutes = (
       path="/settings/bank-details-list"
       Component={withSuspense(BankDetailsList)}
     />
-
+  <Route path="/settings/pricing-rule-list" Component={withSuspense(PricingRuleList)} />
+  <Route path="/settings/pricing-rule-create" Component={withSuspense(AddPricingRulePage)} />
     {/* Banks Routes */}
     <Route path="/settings/banks/:bankId?" Component={withSuspense(Banks)} />
     <Route path="/settings/banks-list" Component={withSuspense(BanksList)} />
@@ -1046,6 +1054,9 @@ export const setupMemberRoutes = (
     />
     <Route path="/loyalty/orders-list" Component={withSuspense(OrdersList)} />
     <Route path="/loyalty/encash-list" Component={withSuspense(EncashList)} />
+    <Route path="/loyalty/billing-invoices" Component={withSuspense(BillingInvoices)} />
+    <Route path="/loyalty/redemption-report" Component={withSuspense(RedemptionReport)} />
+    <Route path="/loyalty/aggregator-inventory" Component={withSuspense(AggregatorInventorySection)} />
 
     {/* Project Configuration Routes */}
     <Route

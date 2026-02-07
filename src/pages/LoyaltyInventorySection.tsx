@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Eye, Edit, Trash2, Package, CheckCircle, AlertCircle } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,11 @@ export const LoyaltyInventorySection = () => {
         outOfStock: "0",
     });
     
+    // Filter states
+    const [selectedCategory, setSelectedCategory] = useState<string>("");
+    const [selectedDiscount, setSelectedDiscount] = useState<string>("");
+    const [selectedRows, setSelectedRows] = useState<number[]>([]);
+    
     // Add Item Form States
     const [isActive, setIsActive] = useState(true);
     const [category, setCategory] = useState("");
@@ -52,12 +57,19 @@ export const LoyaltyInventorySection = () => {
 
     // Define columns for EnhancedTable
     const columns = [
-        { key: "brand", label: "Brand" },
-        { key: "sku", label: "SKU Code" },
-        { key: "name", label: "Name" },
-        { key: "base_price", label: "MRP" },
-        { key: "final_price", label: "Client Price" },
-        { key: "stock_quantity", label: "Stock Quantity" },
+        { key: "checkbox", label: "", sortable: false },
+        { key: "view", label: "", sortable: false },
+        { key: "status", label: "Status", sortable: true },
+        { key: "category", label: "Category", sortable: true },
+        { key: "brand", label: "Brand", sortable: true },
+        { key: "name", label: "#Kitchen Items", sortable: true },
+        { key: "base_price", label: "MRP", sortable: true },
+        { key: "discount", label: "Discount", sortable: true },
+        { key: "client_discount", label: "Client Discount", sortable: true },
+        { key: "final_price", label: "Client Price", sortable: true },
+        { key: "customer_discount", label: "Customer Discount", sortable: true },
+        { key: "customer_price", label: "Customer Price", sortable: true },
+        { key: "actions", label: "", sortable: false },
     ];
 
     // Fetch inventory and categories data
@@ -107,22 +119,89 @@ export const LoyaltyInventorySection = () => {
     };
 
     const renderCell = (item: any, columnKey: string) => {
+        const isSelected = selectedRows.includes(item.id);
+        
         switch (columnKey) {
-            case "brand":
-                return <span>{item.brand || "-"}</span>;
-            case "sku":
-                return <span>{item.sku || "-"}</span>;
-            case "name":
-                return <span>{item.name || "-"}</span>;
-            case "base_price":
-                return <span>₹{parseFloat(item.base_price || 0).toFixed(2)}</span>;
-            case "final_price":
-                return <span>₹{parseFloat(item.final_price || 0).toFixed(2)}</span>;
-            case "stock_quantity":
+            case "checkbox":
                 return (
-                    <span className={item.stock_quantity > 0 ? "text-green-600" : "text-red-600"}>
-                        {item.stock_quantity || 0}
+                    <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                            e.stopPropagation();
+                            if (isSelected) {
+                                setSelectedRows(selectedRows.filter(id => id !== item.id));
+                            } else {
+                                setSelectedRows([...selectedRows, item.id]);
+                            }
+                        }}
+                        className="w-4 h-4 cursor-pointer"
+                    />
+                );
+            case "view":
+                return (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/loyalty/inventory-details/${item.sku}`);
+                        }}
+                        className="text-gray-600 hover:text-[#C72030]"
+                    >
+                        <Eye className="w-4 h-4" />
+                    </button>
+                );
+            case "status":
+                const statusColors = {
+                    active: "bg-green-100 text-green-800",
+                    pending: "bg-yellow-100 text-yellow-800",
+                    inactive: "bg-red-100 text-red-800",
+                };
+                const status = item.status || (item.stock_quantity > 0 ? "active" : "inactive");
+                return (
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${statusColors[status.toLowerCase()] || statusColors.active}`}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
                     </span>
+                );
+            case "category":
+                return <span className="text-sm">{item.category || "Electronics"}</span>;
+            case "brand":
+                return <span className="text-sm">{item.brand || "Designer Sunglasses"}</span>;
+            case "name":
+                return <span className="text-sm">{item.name || "-"}</span>;
+            case "base_price":
+                return <span className="text-sm">₹ {parseFloat(item.base_price || 0).toFixed(0)}</span>;
+            case "discount":
+                return <span className="text-sm">{item.discount || "10%"}</span>;
+            case "client_discount":
+                return <span className="text-sm">{item.client_discount || "10%"}</span>;
+            case "final_price":
+                return <span className="text-sm">₹ {parseFloat(item.final_price || item.base_price || 0).toFixed(0)}</span>;
+            case "customer_discount":
+                return <span className="text-sm">{item.customer_discount || "10%"}</span>;
+            case "customer_price":
+                return <span className="text-sm">₹ {parseFloat(item.customer_price || item.final_price || item.base_price || 0).toFixed(0)}</span>;
+            case "actions":
+                return (
+                    <div className="flex gap-2">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                // Handle edit
+                            }}
+                            className="text-gray-600 hover:text-[#C72030]"
+                        >
+                            <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                // Handle delete
+                            }}
+                            className="text-gray-600 hover:text-red-600"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                    </div>
                 );
             default:
                 return null;
@@ -201,100 +280,84 @@ export const LoyaltyInventorySection = () => {
     };
 
     const renderLeftActions = () => (
-        <Button
-            onClick={handleAddItem}
-            className="bg-[#C72030] hover:bg-[#A01828] text-white"
-        >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Item
-        </Button>
+        <div className="flex items-center gap-3">
+            <Button
+                onClick={handleAddItem}
+                className="bg-[#C72030] hover:bg-[#A01828] text-white"
+            >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Item
+            </Button>
+            
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-[140px] bg-white border-gray-300">
+                    <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="gadgets">Gadgets</SelectItem>
+                    <SelectItem value="fashion">Fashion</SelectItem>
+                    <SelectItem value="electronics">Electronics</SelectItem>
+                </SelectContent>
+            </Select>
+            
+            <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
+                <SelectTrigger className="w-[140px] bg-white border-gray-300">
+                    <SelectValue placeholder="Discount" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Discounts</SelectItem>
+                    <SelectItem value="5">5%</SelectItem>
+                    <SelectItem value="10">10%</SelectItem>
+                    <SelectItem value="15">15%</SelectItem>
+                    <SelectItem value="20">20%</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
     );
 
-    // Row click handler for navigation
-    const handleRowClick = (row: any) => {
-        // Use SKU as unique id for navigation (change to row.id if you have a numeric id)
-        navigate(`/loyalty/inventory-details/${row.sku}`);
-    };
-
     return (
-        <div className="p-6 space-y-6 bg-white min-h-screen">
+        <div className="p-6 space-y-6 bg-[#FAFAFA] min-h-screen">
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-semibold text-[#1A1A1A]">
-                        INVENTORY SECTION
+                    <h1 className="text-xl font-semibold text-[#1A1A1A]">
+                        Redemption Store
                     </h1>
                 </div>
             </div>
 
             {/* Stats Cards - 3 Column Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <StatsCard
-                    title="Total Items"
-                    value={stats.totalItems}
-                    icon={
-                        <svg
-                            className="w-6 h-6 text-[#C72030]"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                            />
-                        </svg>
-                    }
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    iconRounded={true}
-                    valueColor="text-[#C72030]"
-                />
-                <StatsCard
-                    title="In Stock"
-                    value={stats.inStock}
-                    icon={
-                        <svg
-                            className="w-6 h-6 text-[#C72030]"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                        </svg>
-                    }
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    iconRounded={true}
-                    valueColor="text-[#C72030]"
-                />
-                <StatsCard
-                    title="Out of Stock"
-                    value={stats.outOfStock}
-                    icon={
-                        <svg
-                            className="w-6 h-6 text-[#C72030]"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                        </svg>
-                    }
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    iconRounded={true}
-                    valueColor="text-[#C72030]"
-                />
+                <div className="bg-white p-4 rounded-lg border border-gray-200 flex items-center gap-4">
+                    <div className="w-12 h-12 bg-[#FEE2E2] rounded flex items-center justify-center">
+                        <Package className="w-6 h-6 text-[#C72030]" />
+                    </div>
+                    <div>
+                        <div className="text-2xl font-bold text-[#1A1A1A]">{stats.totalItems}</div>
+                        <div className="text-sm text-gray-600">Total Items</div>
+                    </div>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border border-gray-200 flex items-center gap-4">
+                    <div className="w-12 h-12 bg-[#D1FAE5] rounded flex items-center justify-center">
+                        <CheckCircle className="w-6 h-6 text-[#059669]" />
+                    </div>
+                    <div>
+                        <div className="text-2xl font-bold text-[#1A1A1A]">{stats.inStock}</div>
+                        <div className="text-sm text-gray-600">In Stock</div>
+                    </div>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border border-gray-200 flex items-center gap-4">
+                    <div className="w-12 h-12 bg-[#FEF3C7] rounded flex items-center justify-center">
+                        <AlertCircle className="w-6 h-6 text-[#F59E0B]" />
+                    </div>
+                    <div>
+                        <div className="text-2xl font-bold text-[#1A1A1A]">{stats.outOfStock}</div>
+                        <div className="text-sm text-gray-600">Out of Stock</div>
+                    </div>
+                </div>
             </div>
 
             {/* Inventory Table */}
@@ -311,8 +374,6 @@ export const LoyaltyInventorySection = () => {
                     loading={loading}
                     loadingMessage="Loading inventory..."
                     emptyMessage="No inventory items found"
-                    onRowClick={handleRowClick}
-                    rowClickable
                 />
             </div>
 
