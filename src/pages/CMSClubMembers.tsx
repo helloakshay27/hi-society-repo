@@ -7,6 +7,7 @@ import axios from 'axios';
 import { Download, Edit, Eye, Plus, QrCode, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CMSClubMembersFilterModal } from '@/components/CMSClubMembersFilterModal';
 
 const columns: ColumnConfig[] = [
   {
@@ -78,6 +79,16 @@ const columns: ColumnConfig[] = [
   },
 ]
 
+interface MemberFilters {
+  search?: string;
+  towerId?: string;
+  flatId?: string;
+  residentType?: string;
+  status?: string;
+  cardAllocated?: string;
+  expired?: string;
+}
+
 const CMSClubMembers = () => {
   const navigate = useNavigate();
 
@@ -88,11 +99,40 @@ const CMSClubMembers = () => {
   const [showActionPanel, setShowActionPanel] = useState(false);
   const [isLoading, setIsLoading] = useState(false)
   const [modalData, setModalData] = useState<{ isOpen: boolean, title: string, items: string[] }>({ isOpen: false, title: '', items: [] });
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState<MemberFilters>({});
 
-  const fetchMembers = async () => {
+  const fetchMembers = async (filters: MemberFilters = appliedFilters) => {
     try {
       setIsLoading(true)
-      const response = await axios.get(`https://${baseUrl}/club_member_allocations.json`, {
+      const params = new URLSearchParams();
+
+      if (filters.search) {
+        params.append('q[email_or_mobile_or_first_name_or_last_name_cont]', filters.search);
+      }
+      if (filters.towerId) {
+        params.append('q[society_flat_society_block_id_eq]', filters.towerId);
+      }
+      if (filters.flatId) {
+        params.append('q[society_flat_id_in]', filters.flatId);
+      }
+      if (filters.residentType) {
+        params.append('q[resident_type_in]', filters.residentType);
+      }
+      if (filters.status) {
+        params.append('q[club_member_check_eq]', filters.status);
+      }
+      if (filters.cardAllocated) {
+        params.append('q[access_card_check_eq]', filters.cardAllocated);
+      }
+      if (filters.expired) {
+        params.append('q[end_date]', filters.expired);
+      }
+
+      const queryString = params.toString();
+      const url = `https://${baseUrl}/club_member_allocations.json${queryString ? `?${queryString}` : ''}`;
+
+      const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -105,6 +145,11 @@ const CMSClubMembers = () => {
       setIsLoading(false)
     }
   }
+
+  const handleFilterApply = (filters: any) => {
+    setAppliedFilters(filters);
+    fetchMembers(filters);
+  };
 
   useEffect(() => {
     fetchMembers();
@@ -339,6 +384,13 @@ const CMSClubMembers = () => {
         renderActions={renderActions}
         leftActions={leftActions}
         loading={isLoading}
+        onFilterClick={() => setIsFilterModalOpen(true)}
+      />
+
+      <CMSClubMembersFilterModal
+        open={isFilterModalOpen}
+        onOpenChange={setIsFilterModalOpen}
+        onApply={handleFilterApply}
       />
     </div>
   )

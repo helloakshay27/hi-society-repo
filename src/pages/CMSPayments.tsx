@@ -20,6 +20,8 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { CMSPaymentsFilterModal } from "@/components/CMSPaymentsFilterModal";
+import { format, parse } from "date-fns";
 
 const columns: ColumnConfig[] = [
   {
@@ -135,18 +137,42 @@ const CMSPayments = () => {
   const [flats, setFlats] = useState([])
   const [items, setItems] = useState([]) // Bookings or Members
 
-  const fetchPayments = async () => {
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({
+    status: '',
+    fromDate: '',
+    toDate: '',
+  });
+
+  const fetchPayments = async (filters = appliedFilters) => {
     try {
+      const params: any = {};
+
+      if (filters.status) {
+        params["q[payment_status_in]"] = filters.status;
+      }
+      if (filters.fromDate && filters.toDate) {
+        const fromDate = format(parse(filters.fromDate, "yyyy-MM-dd", new Date()), "MM/dd/yyyy");
+        const toDate = format(parse(filters.toDate, "yyyy-MM-dd", new Date()), "MM/dd/yyyy");
+        params["q[date_range]"] = `${fromDate} - ${toDate}`;
+      }
+
       const response = await axios.get(`https://${baseUrl}/crm/admin/facility_bookings/payment_details.json`, {
         headers: {
           Authorization: `Bearer ${token}`
-        }
+        },
+        params
       })
       setPayments(response.data.payments)
     } catch (error) {
       console.log(error)
     }
   }
+
+  const handleFilterApply = (filters: any) => {
+    setAppliedFilters(filters);
+    fetchPayments(filters);
+  };
 
   useEffect(() => {
     fetchPayments()
@@ -367,6 +393,13 @@ const CMSPayments = () => {
         renderCell={renderCell}
         enableExport
         handleExport={handleExport}
+        onFilterClick={() => setIsFilterModalOpen(true)}
+      />
+
+      <CMSPaymentsFilterModal
+        open={isFilterModalOpen}
+        onOpenChange={setIsFilterModalOpen}
+        onApply={handleFilterApply}
       />
 
       <Dialog

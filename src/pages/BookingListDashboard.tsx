@@ -230,7 +230,7 @@ const BookingListDashboard = () => {
             },
           }
         );
-        setFacilities(response.data.facility_setups);
+        setFacilities(response.data.data);
       } catch (error) {
         console.error("Error fetching facilities:", error);
         toast.error("Failed to fetch facilities");
@@ -394,12 +394,12 @@ const BookingListDashboard = () => {
       "q[current_status_cont]": filters.status,
       ...(formatedCreatedStartDate &&
         formatedCreatedEndDate && {
-          "q[date_range]": `${formatedCreatedStartDate} - ${formatedCreatedEndDate}`,
-        }),
+        "q[date_range]": `${formatedCreatedStartDate} - ${formatedCreatedEndDate}`,
+      }),
       ...(formatedScheduleStartDate &&
         formatedScheduleEndDate && {
-          "q[date_range1]": `${formatedScheduleStartDate} - ${formatedScheduleEndDate}`,
-        }),
+        "q[date_range1]": `${formatedScheduleStartDate} - ${formatedScheduleEndDate}`,
+      }),
     };
 
     const queryString = new URLSearchParams(filterParams).toString();
@@ -490,27 +490,27 @@ const BookingListDashboard = () => {
         // Format dates for filterBookings if needed
         const formatedScheduleStartDate = scheduledDateFrom
           ? format(
-              parse(scheduledDateFrom, "yyyy-MM-dd", new Date()),
-              "MM/dd/yyyy"
-            )
+            parse(scheduledDateFrom, "yyyy-MM-dd", new Date()),
+            "MM/dd/yyyy"
+          )
           : null;
         const formatedScheduleEndDate = scheduledDateTo
           ? format(
-              parse(scheduledDateTo, "yyyy-MM-dd", new Date()),
-              "MM/dd/yyyy"
-            )
+            parse(scheduledDateTo, "yyyy-MM-dd", new Date()),
+            "MM/dd/yyyy"
+          )
           : null;
         const formatedCreatedStartDate = createdOnDateFrom
           ? format(
-              parse(createdOnDateFrom, "yyyy-MM-dd", new Date()),
-              "MM/dd/yyyy"
-            )
+            parse(createdOnDateFrom, "yyyy-MM-dd", new Date()),
+            "MM/dd/yyyy"
+          )
           : null;
         const formatedCreatedEndDate = createdOnDateTo
           ? format(
-              parse(createdOnDateTo, "yyyy-MM-dd", new Date()),
-              "MM/dd/yyyy"
-            )
+            parse(createdOnDateTo, "yyyy-MM-dd", new Date()),
+            "MM/dd/yyyy"
+          )
           : null;
 
         // Construct filter parameters, including page for pagination
@@ -520,12 +520,12 @@ const BookingListDashboard = () => {
           "q[current_status_cont]": filters.status,
           ...(formatedCreatedStartDate &&
             formatedCreatedEndDate && {
-              "q[date_range]": `${formatedCreatedStartDate} - ${formatedCreatedEndDate}`,
-            }),
+            "q[date_range]": `${formatedCreatedStartDate} - ${formatedCreatedEndDate}`,
+          }),
           ...(formatedScheduleStartDate &&
             formatedScheduleEndDate && {
-              "q[date_range1]": `${formatedScheduleStartDate} - ${formatedScheduleEndDate}`,
-            }),
+            "q[date_range1]": `${formatedScheduleStartDate} - ${formatedScheduleEndDate}`,
+          }),
         };
 
         const queryString = new URLSearchParams(filterParams).toString();
@@ -720,11 +720,11 @@ const BookingListDashboard = () => {
                   className={cn(
                     "cursor-pointer",
                     item.bookingStatus === "Pending" &&
-                      "bg-[#F4C790] hover:bg-[#F4C790] text-black",
+                    "bg-[#F4C790] hover:bg-[#F4C790] text-black",
                     item.bookingStatus === "Confirmed" &&
-                      "bg-[#A3E4DB] hover:bg-[#8CDAD1] text-black",
+                    "bg-[#A3E4DB] hover:bg-[#8CDAD1] text-black",
                     item.bookingStatus === "Cancelled" &&
-                      "bg-[#E4626F] hover:bg-[#E4626F] text-white"
+                    "bg-[#E4626F] hover:bg-[#E4626F] text-white"
                   )}
                 >
                   {item.bookingStatus}
@@ -910,7 +910,7 @@ const BookingListDashboard = () => {
                 }
                 className={
                   pagination.current_page === pagination.total_pages ||
-                  isPageLoading
+                    isPageLoading
                     ? "pointer-events-none opacity-50"
                     : "cursor-pointer"
                 }
@@ -977,10 +977,11 @@ const BookingListDashboard = () => {
                       fullWidth
                     >
                       <MenuItem value="">Select Status</MenuItem>
-                      <MenuItem value="confirmed">Confirmed</MenuItem>
-                      <MenuItem value="pending">Pending</MenuItem>
-                      <MenuItem value="cancelled">Cancelled</MenuItem>
-                      <MenuItem value="completed">Completed</MenuItem>
+                      <MenuItem value="Confirmed">Confirmed</MenuItem>
+                      <MenuItem value="Cancelled">Cancelled</MenuItem>
+                      <MenuItem value="Pending">Pending</MenuItem>
+                      <MenuItem value="Rejected">Rejected</MenuItem>
+                      <MenuItem value="Closed">Closed</MenuItem>
                     </MuiSelect>
                   </FormControl>
                 </div>
@@ -988,7 +989,7 @@ const BookingListDashboard = () => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <TextField
-                      label="Booked Scheduled Date From"
+                      label="Booked On Date From"
                       type="date"
                       value={scheduledDateFrom}
                       onChange={handleScheduledDateFromChange}
@@ -998,7 +999,7 @@ const BookingListDashboard = () => {
                     />
                     <span className="text-gray-500">–</span>
                     <TextField
-                      label="Booked Scheduled Date To"
+                      label="Booked On Date To"
                       type="date"
                       value={scheduledDateTo}
                       onChange={handleScheduledDateToChange}
@@ -1010,7 +1011,7 @@ const BookingListDashboard = () => {
 
                   <div className="flex items-center gap-3">
                     <TextField
-                      label="Created On From"
+                      label="Scheduled On From"
                       type="date"
                       value={createdOnDateFrom}
                       onChange={handleCreatedOnDateFromChange}
@@ -1020,7 +1021,7 @@ const BookingListDashboard = () => {
                     />
                     <span className="text-gray-500">–</span>
                     <TextField
-                      label="Created On To"
+                      label="Scheduled On To"
                       type="date"
                       value={createdOnDateTo}
                       onChange={handleCreatedOnDateToChange}

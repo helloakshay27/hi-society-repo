@@ -78,6 +78,12 @@ export const BookingSetupClubDashboard = () => {
   const token = localStorage.getItem("token");
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({
+    fromDate: '',
+    toDate: '',
+    facilityType: '',
+  });
+
   const [bookingSetupData, setBookingSetupData] = useState<BookingSetup[]>([]);
   const [loading, setLoading] = useState(true);
   const [showActionPanel, setShowActionPanel] = useState(false);
@@ -90,6 +96,9 @@ export const BookingSetupClubDashboard = () => {
 
   const handleFilterApply = (filters: any) => {
     console.log("Applied booking setup filters:", filters);
+    setAppliedFilters(filters);
+    setPagination(prev => ({ ...prev, current_page: 1 }));
+    fetchBookingSetupData(1, filters);
   };
 
   // Format dhm object to string like "0D • 0H • 4M"
@@ -115,14 +124,26 @@ export const BookingSetupClubDashboard = () => {
   };
 
   // Fetch booking setup data from API
-  const fetchBookingSetupData = async (page: number = 1) => {
+  const fetchBookingSetupData = async (page: number = 1, currentFilters = appliedFilters) => {
     try {
       setLoading(true);
+      const params: any = {
+        page,
+        per_page: pageSize,
+      };
+
+      if (currentFilters.facilityType) {
+        params["q[fac_type_eq]"] = currentFilters.facilityType;
+      }
+      if (currentFilters.fromDate) {
+        params["q[created_at_gteq]"] = currentFilters.fromDate;
+      }
+      if (currentFilters.toDate) {
+        params["q[created_at_lteq]"] = currentFilters.toDate;
+      }
+
       const response = await apiClient.get("/crm/admin/facility_setups.json", {
-        params: {
-          page,
-          per_page: pageSize,
-        }
+        params
       });
       if (response.data && response.data.data) {
         const formattedData = response.data.data.map(
@@ -447,7 +468,7 @@ export const BookingSetupClubDashboard = () => {
           emptyMessage={loading ? "Loading booking data..." : "No booking data found"}
           leftActions={leftActions}
           enableSearch={true}
-          // onFilterClick={() => setIsFilterOpen(true)}
+          onFilterClick={() => setIsFilterOpen(true)}
           enableSelection={false}
           hideTableExport={true}
         />
