@@ -300,24 +300,6 @@ export const HiSocietySidebar: React.FC = () => {
     loyalty: {
       title: "Loyalty",
       items: [
-<<<<<<< Updated upstream
-        { id: "loyalty-dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/loyalty/dashboard" },
-        { id: "wallet-management", label: "Wallet Management", icon: Database, path: "/loyalty/wallet-management" },
-        { id: "loyalty-customers", label: "Customers", icon: Users, path: "/loyalty/customers" },
-        { id: "loyalty-inventory", label: "Inventory Section", icon: Database, path: "/loyalty/inventory-section" },
-        { id: "aggregator-inventory", label: "Aggregator Inventory", icon: Database, path: "/loyalty/aggregator-inventory" },
-        { id: "loyalty-members", label: "Members", icon: Users, path: "/loyalty/loyalty-members-list" },
-        { id: "loyalty-tiers", label: "Tiers", icon: Award, path: "/loyalty/loyalty-tiers-list" },
-        { id: "rule-engine", label: "Rule Engine", icon: SettingsIcon, path: "/loyalty/rule-engine-list" },
-        { id: "loyalty-referral", label: "Referrals", icon: UserCheck, path: "/loyalty/referral-list" },
-        { id: "lock-payments", label: "Lock Payments", icon: Shield, path: "/loyalty/lock-payments-list" },
-        { id: "home-loan-requests", label: "Home Loan Requests", icon: Home, path: "/loyalty/home-loan-requests-list" },
-        { id: "demand-notes", label: "Demand Notes", icon: FileText, path: "/loyalty/demand-notes-list" },
-        { id: "orders", label: "Orders", icon: Briefcase, path: "/loyalty/orders-list" },
-        { id: "encash", label: "Encash", icon: Gift, path: "/loyalty/encash-list" },
-        { id: "billing-invoices", label: "Billing Invoices", icon: Receipt, path: "/loyalty/billing-invoices" },
-        { id: "redemption-report", label: "Redemption Report", icon: BarChart3, path: "/loyalty/redemption-report" },
-=======
         {
           id: "loyalty-dashboard",
           label: "Dashboard",
@@ -341,6 +323,12 @@ export const HiSocietySidebar: React.FC = () => {
           label: "Inventory Section",
           icon: Database,
           path: "/loyalty/inventory-section",
+        },
+        {
+          id: "aggregator-inventory",
+          label: "Aggregator Inventory",
+          icon: Database,
+          path: "/loyalty/aggregator-inventory",
         },
         {
           id: "loyalty-members",
@@ -396,7 +384,18 @@ export const HiSocietySidebar: React.FC = () => {
           icon: Gift,
           path: "/loyalty/encash-list",
         },
->>>>>>> Stashed changes
+        {
+          id: "billing-invoices",
+          label: "Billing Invoices",
+          icon: Receipt,
+          path: "/loyalty/billing-invoices",
+        },
+        {
+          id: "redemption-report",
+          label: "Redemption Report",
+          icon: BarChart3,
+          path: "/loyalty/redemption-report",
+        },
       ],
     },
     cms: {
@@ -821,21 +820,6 @@ export const HiSocietySidebar: React.FC = () => {
           label: "Setup Member",
           icon: Users,
           subItems: [
-<<<<<<< Updated upstream
-            { id: "template-list", label: "Template", icon: FileText, path: "/settings/template-list" },
-            { id: "groups", label: "Groups", icon: Users, path: "/settings/groups-list" },
-            { id: "property-type-list", label: "Property Types", icon: Home, path: "/settings/property-type-list" },
-            { id: "project-building-type-list", label: "Project Building", icon: Building2, path: "/settings/project-building-type-list" },
-            { id: "construction-status-list", label: "Construction Status", icon: BarChart3, path: "/settings/construction-status-list" },
-            { id: "project-configuration-list", label: "Project Config", icon: SettingsIcon, path: "/settings/project-configuration-list" },
-            { id: "amenities-list", label: "Amenities", icon: Gift, path: "/settings/amenities-list" },
-            { id: "connectivity-type-list", label: "Connectivity Type", icon: Calendar, path: "/settings/connectivity-type-list" },
-            { id: "faq-category-list", label: "FAQ Category", icon: HelpCircle, path: "/settings/faq-category-list" },
-            { id: "faq-subcategory-list", label: "FAQ SubCategory", icon: HelpCircle, path: "/settings/faq-subcategory-list" },
-            { id: "image-configuration-list", label: "Image Configuration", icon: HelpCircle, path: "/settings/image-config-list" },
-            { id: "pricing-rule-list", label: "Pricing Rules", icon: Tag, path: "/settings/pricing-rule-list" },
-            { id: "customer-pricing-rule-list", label: "Customer Pricing Rules", icon: Tag, path: "/settings/customer-pricing-rule-list" },
-=======
             {
               id: "template-list",
               label: "Template",
@@ -902,7 +886,18 @@ export const HiSocietySidebar: React.FC = () => {
               icon: HelpCircle,
               path: "/settings/image-config-list",
             },
->>>>>>> Stashed changes
+            {
+              id: "pricing-rule-list",
+              label: "Pricing Rules",
+              icon: Tag,
+              path: "/settings/pricing-rule-list",
+            },
+            {
+              id: "customer-pricing-rule-list",
+              label: "Customer Pricing Rules",
+              icon: Tag,
+              path: "/settings/customer-pricing-rule-list",
+            },
           ],
         },
         {

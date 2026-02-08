@@ -215,7 +215,6 @@ const OrderDetails = lazy(() => import("@/pages/OrderDetails"));
 // Add lazy imports for Billing, Redemption, Aggregator pages
 const BillingInvoices = lazy(() => import("@/pages/BillingInvoices"));
 const RedemptionReport = lazy(() => import("@/pages/RedemptionReport"));
-const AggregatorInventorySection = lazy(() => import("@/pages/AggregatorInventorySection"));
 
 // Add missing lazy imports
 const ProjectConfiguration = lazy(() => import("@/pages/ProjectConfiguraion"));
@@ -471,41 +470,22 @@ const withSuspense = (Component: React.LazyExoticComponent<any>) => {
 export const setupMemberRoutes = (
   <>
     {/* Amenities Routes */}
-<<<<<<< Updated upstream
-    <Route
-      path="/loyalty/dashboard"
-      element={<LoyaltyDashboard />}
-    />
+    <Route path="/loyalty/dashboard" element={<LoyaltyDashboard />} />
     <Route
       path="/settings/customer-pricing-rule-list"
       element={<CustomerPricingRuleList />}
     />
-    <Route
-      path="/loyalty/wallet-management"
-      element={<WalletManagement />}
-    />
-    <Route
-      path="/loyalty/customers"
-      element={<LoyaltyCustomers />}
-    />
-    <Route
-      path="/loyalty/customers/:id"
-      element={<LoyaltyCustomerDetails />}
-    />
-=======
-    <Route path="/loyalty/dashboard" element={<LoyaltyDashboard />} />
     <Route path="/loyalty/wallet-management" element={<WalletManagement />} />
     <Route path="/loyalty/customers" element={<LoyaltyCustomers />} />
     <Route path="/loyalty/customers/:id" element={<LoyaltyCustomerDetails />} />
->>>>>>> Stashed changes
     <Route
       path="/loyalty/inventory-section"
       element={<LoyaltyInventorySection />}
     />
     <Route
-  path="/loyalty/inventory-details/:sku"
-  element={<LoyaltyInventoryDetails />}
-/>
+      path="/loyalty/inventory-details/:sku"
+      element={<LoyaltyInventoryDetails />}
+    />
     <Route path="/settings/amenities" Component={withSuspense(Amenities)} />
     <Route
       path="/settings/amenities-list"
@@ -548,8 +528,14 @@ export const setupMemberRoutes = (
       path="/settings/bank-details-list"
       Component={withSuspense(BankDetailsList)}
     />
-  <Route path="/settings/pricing-rule-list" Component={withSuspense(PricingRuleList)} />
-  <Route path="/settings/pricing-rule-create" Component={withSuspense(AddPricingRulePage)} />
+    <Route
+      path="/settings/pricing-rule-list"
+      Component={withSuspense(PricingRuleList)}
+    />
+    <Route
+      path="/settings/pricing-rule-create"
+      Component={withSuspense(AddPricingRulePage)}
+    />
     {/* Banks Routes */}
     <Route path="/settings/banks/:bankId?" Component={withSuspense(Banks)} />
     <Route path="/settings/banks-list" Component={withSuspense(BanksList)} />
@@ -1100,9 +1086,18 @@ export const setupMemberRoutes = (
     />
     <Route path="/loyalty/orders-list" Component={withSuspense(OrdersList)} />
     <Route path="/loyalty/encash-list" Component={withSuspense(EncashList)} />
-    <Route path="/loyalty/billing-invoices" Component={withSuspense(BillingInvoices)} />
-    <Route path="/loyalty/redemption-report" Component={withSuspense(RedemptionReport)} />
-    <Route path="/loyalty/aggregator-inventory" Component={withSuspense(AggregatorInventorySection)} />
+    <Route
+      path="/loyalty/billing-invoices"
+      Component={withSuspense(BillingInvoices)}
+    />
+    <Route
+      path="/loyalty/redemption-report"
+      Component={withSuspense(RedemptionReport)}
+    />
+    <Route
+      path="/loyalty/aggregator-inventory"
+      Component={withSuspense(AggregatorInventorySection)}
+    />
 
     {/* Project Configuration Routes */}
     <Route
