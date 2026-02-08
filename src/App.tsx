@@ -5593,15 +5593,6 @@ function App() {
 
                   {/* Mail Inbound Routes */}
 
-                  <Route path="/contests" element={<ContestListPage />} />
-                  <Route
-                    path="/contests/create"
-                    element={<CreateContestPage />}
-                  />
-                  <Route
-                    path="/contests/:id"
-                    element={<ContestDetailsPage />}
-                  />
                   {/* Contest & Promotion Routes */}
                   <Route
                     path="/contest-promotion"

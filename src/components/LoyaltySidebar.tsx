@@ -78,6 +78,12 @@ export const LoyaltySidebar: React.FC = () => {
       path: "/loyalty/demand-notes-list",
     },
     {
+      id: "demand-notes",
+      label: "Demand Notes",
+      icon: FileText,
+      path: "/loyalty/demand-notes-list",
+    },
+    {
       id: "orders",
       label: "Orders",
       icon: Briefcase,
@@ -155,9 +161,7 @@ export const LoyaltySidebar: React.FC = () => {
                   )}
 
                   {/* Icon */}
-                  <Icon
-                    className={`w-5 h-5 flex-shrink-0 text-[#1a1a1a]`}
-                  />
+                  <Icon className={`w-5 h-5 flex-shrink-0 text-[#1a1a1a]`} />
 
                   {/* Label */}
                   {!isSidebarCollapsed && (

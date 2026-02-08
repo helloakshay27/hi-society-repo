@@ -28,7 +28,9 @@ import HiSocEventDetails from "@/pages/HiSocEventDetails";
 import HiSocNoticeList from "@/pages/HiSocNoticeList";
 import HiSocNoticeCreate from "@/pages/HiSocNoticeCreate";
 import HiSocNoticeDetails from "@/pages/HiSocNoticeDetails";
-
+import ContestListPage from "@/pages/ContestListPage";
+import CreateContestPage from "@/pages/CreateContestPage";
+import ContestDetailsPage from "@/pages/ContestDetailsPage";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
@@ -242,8 +244,12 @@ const CMSClubMembers = lazy(() => import("@/pages/CMSClubMembers"));
 const AddCMSClubMembers = lazy(() => import("@/pages/AddCMSClubMembers"));
 const EditCMSClubMembers = lazy(() => import("@/pages/EditCMSClubMembers"));
 const CMSFacilityBookings = lazy(() => import("@/pages/CMSFacilityBookings"));
-const AddFacilityBookingPage = lazy(() => import("@/pages/AddFacilityBookingPage"));
-const CMSMembershipPlanSetup = lazy(() => import("@/pages/ClubManagement/CMSMembershipPlanSetup"));
+const AddFacilityBookingPage = lazy(
+  () => import("@/pages/AddFacilityBookingPage")
+);
+const CMSMembershipPlanSetup = lazy(
+  () => import("@/pages/ClubManagement/CMSMembershipPlanSetup")
+);
 const CMSPayments = lazy(() => import("@/pages/CMSPayments"));
 
 // Campaigns Pages
@@ -427,22 +433,10 @@ const withSuspense = (Component: React.LazyExoticComponent<any>) => {
 export const setupMemberRoutes = (
   <>
     {/* Amenities Routes */}
-    <Route
-      path="/loyalty/dashboard"
-      element={<LoyaltyDashboard />}
-    />
-    <Route
-      path="/loyalty/wallet-management"
-      element={<WalletManagement />}
-    />
-    <Route
-      path="/loyalty/customers"
-      element={<LoyaltyCustomers />}
-    />
-    <Route
-      path="/loyalty/customers/:id"
-      element={<LoyaltyCustomerDetails />}
-    />
+    <Route path="/loyalty/dashboard" element={<LoyaltyDashboard />} />
+    <Route path="/loyalty/wallet-management" element={<WalletManagement />} />
+    <Route path="/loyalty/customers" element={<LoyaltyCustomers />} />
+    <Route path="/loyalty/customers/:id" element={<LoyaltyCustomerDetails />} />
     <Route
       path="/loyalty/inventory-section"
       element={<LoyaltyInventorySection />}
@@ -1017,6 +1011,9 @@ export const setupMemberRoutes = (
       path="/loyalty/loyalty-members-list"
       Component={withSuspense(LoyaltyMembersList)}
     />
+    <Route path="/contests" element={<ContestListPage />} />
+    <Route path="/contests/create" element={<CreateContestPage />} />
+    <Route path="/contests/:id" element={<ContestDetailsPage />} />
     <Route
       path="/loyalty/loyalty-tiers-list"
       Component={withSuspense(LoyaltyTiersList)}
@@ -1078,10 +1075,16 @@ export const setupMemberRoutes = (
     <Route path="/bms/hisoc-event-list" element={<HiSocEventList />} />
     <Route path="/bms/hisoc-event-create" element={<HiSocEventCreate />} />
     <Route path="/bms/hisoc-event-edit/:id" element={<HiSocEventEdit />} />
-    <Route path="/bms/hisoc-event-details/:id" element={<HiSocEventDetails />} />
+    <Route
+      path="/bms/hisoc-event-details/:id"
+      element={<HiSocEventDetails />}
+    />
     <Route path="/bms/hisoc-notice-list" element={<HiSocNoticeList />} />
     <Route path="/bms/hisoc-notice-create" element={<HiSocNoticeCreate />} />
-    <Route path="/bms/hisoc-notice-details/:id" element={<HiSocNoticeDetails />} />
+    <Route
+      path="/bms/hisoc-notice-details/:id"
+      element={<HiSocNoticeDetails />}
+    />
     <Route
       path="/bms/quarantine-tracker"
       Component={withSuspense(BMSQuarantineTracker)}
@@ -1114,15 +1117,36 @@ export const setupMemberRoutes = (
     />
 
     {/* CMS Routes */}
-    <Route path="/cms/facility-setup" Component={withSuspense(BookingSetupClubDashboard)} />
-    <Route path="/cms/facility-setup/add" Component={withSuspense(AddBookingSetupClubPage)} />
-    <Route path="/cms/facility-setup/:id" Component={withSuspense(BookingSetupDetailClubPage)} />
-    <Route path="/cms/facility-setup/edit/:id" Component={withSuspense(EditBookingSetupClubPage)} />
+    <Route
+      path="/cms/facility-setup"
+      Component={withSuspense(BookingSetupClubDashboard)}
+    />
+    <Route
+      path="/cms/facility-setup/add"
+      Component={withSuspense(AddBookingSetupClubPage)}
+    />
+    <Route
+      path="/cms/facility-setup/:id"
+      Component={withSuspense(BookingSetupDetailClubPage)}
+    />
+    <Route
+      path="/cms/facility-setup/edit/:id"
+      Component={withSuspense(EditBookingSetupClubPage)}
+    />
     <Route path="/cms/rules" Component={withSuspense(CMSRules)} />
-    <Route path="/cms/membership-plan-setup" Component={withSuspense(CMSMembershipPlanSetup)} />
+    <Route
+      path="/cms/membership-plan-setup"
+      Component={withSuspense(CMSMembershipPlanSetup)}
+    />
     <Route path="/cms/club-members" Component={withSuspense(CMSClubMembers)} />
-    <Route path="/cms/club-members/add" Component={withSuspense(AddCMSClubMembers)} />
-    <Route path="/cms/club-members/edit/:id" Component={withSuspense(EditCMSClubMembers)} />
+    <Route
+      path="/cms/club-members/add"
+      Component={withSuspense(AddCMSClubMembers)}
+    />
+    <Route
+      path="/cms/club-members/edit/:id"
+      Component={withSuspense(EditCMSClubMembers)}
+    />
     <Route
       path="/cms/facility-bookings"
       Component={withSuspense(CMSFacilityBookings)}
@@ -1314,10 +1338,7 @@ export const setupMemberRoutes = (
       path="/smartsecure/staffs/all"
       Component={withSuspense(SmartSecureStaffsAll)}
     />
-    <Route
-      path="/smartsecure/staff-in"
-      element={<StaffsDashboard />}
-    />
+    <Route path="/smartsecure/staff-in" element={<StaffsDashboard />} />
     <Route
       path="/smartsecure/staffs/in"
       Component={withSuspense(SmartSecureStaffsIn)}
@@ -1370,7 +1391,7 @@ export const setupMemberRoutes = (
       path="/smartsecure/patrolling"
       Component={withSuspense(SmartSecurePatrolling)}
     /> */}
-     {/* <Route
+    {/* <Route
       path="/smartsecure/patrolling"
       Component={withSuspense(PatrollingDashboard)}
     /> */}
@@ -1378,10 +1399,7 @@ export const setupMemberRoutes = (
       path="/smartsecure/patrolling-info"
       element={<PatrollingDashboard />}
     />
-     <Route
-      path="/smartsecure/response"
-      element={<PatrollingResponsePage />}
-    />
+    <Route path="/smartsecure/response" element={<PatrollingResponsePage />} />
     <Route
       path="/smartsecure/setup/general"
       Component={withSuspense(SmartSecureSetupGeneral)}
