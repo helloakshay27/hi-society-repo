@@ -124,7 +124,38 @@ export const HiSocietyNavigation: React.FC = () => {
   // Detect active navigation based on current path
   useEffect(() => {
     const path = location.pathname;
+    
+    // Define child routes for each section (routes without parent prefix)
+    const loyaltyChildRoutes = [
+      "contests",
+      "wallet-management",
+      "customers",
+      "inventory-section",
+      "members",
+      "tiers",
+      "rule-engine",
+      "referrals",
+      "lock-payments",
+      "home-loan-requests",
+      "demand-notes",
+      "orders",
+      "encash",
+    ];
 
+    const homeChildRoutes = [
+      "project",
+      "banner",
+      "event",
+      "offers",
+      "broadcast",
+      "press-releases",
+      "faq",
+    ];
+
+    // Extract first segment from path
+    const segments = path.split('/').filter(Boolean);
+    const firstSegment = segments[0];
+    
     // Check for Application Setup paths first - these should stay in settings
     if (
       path.startsWith("/campaigns/referral-setup") ||
@@ -159,7 +190,7 @@ export const HiSocietyNavigation: React.FC = () => {
       setActiveNav("Appointmentz");
     } else if (path.startsWith("/settings")) {
       setActiveNav("settings");
-    } else if (path.startsWith("/loyalty")) {
+    } else if (path.startsWith("/loyalty") || loyaltyChildRoutes.includes(firstSegment)) {
       setActiveNav("loyalty");
     } else if (
       path.startsWith("/bms") ||
@@ -170,7 +201,8 @@ export const HiSocietyNavigation: React.FC = () => {
       path.startsWith("/maintenance") ||
       path.startsWith("/communication") ||
       path.startsWith("/setup-member") ||
-      path.startsWith("/setup")
+      path.startsWith("/setup") ||
+      homeChildRoutes.includes(firstSegment)
     ) {
       setActiveNav("home");
     } else {

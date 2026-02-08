@@ -10,6 +10,12 @@ import { useLocation } from "react-router-dom";
 import { RootState } from "@/store/store";
 import { LayoutConfig, getCompanyLayout } from "@/config/companyLayouts";
 
+interface SectionRouteConfig {
+  section: string;
+  prefixes: string[]; // Route prefixes that belong to this section (e.g., ["/loyalty", "/contests"])
+  childRoutes?: string[]; // Standalone child routes without parent prefix (e.g., ["contests", "wallet-management"])
+}
+
 interface LayoutContextType {
   currentSection: string;
   setCurrentSection: (section: string) => void;
@@ -37,6 +43,132 @@ interface LayoutProviderProps {
 export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
   const [currentSection, setCurrentSection] = useState<string>("");
   const location = useLocation();
+
+  // Section configurations with dynamic route detection
+  // Define sections and their associated route patterns
+  const sectionConfigs: SectionRouteConfig[] = [
+    {
+      section: "Dashboard",
+      prefixes: ["/dashboard"],
+    },
+    {
+      section: "Utility",
+      prefixes: ["/utility"],
+    },
+    {
+      section: "Transitioning",
+      prefixes: ["/transitioning"],
+    },
+    {
+      section: "Security",
+      prefixes: ["/security"],
+    },
+    {
+      section: "Value Added Services",
+      prefixes: ["/vas"],
+    },
+    {
+      section: "Finance",
+      prefixes: ["/finance"],
+    },
+    {
+      section: "Maintenance",
+      prefixes: ["/maintenance"],
+    },
+    {
+      section: "Safety",
+      prefixes: ["/safety"],
+    },
+    {
+      section: "CRM",
+      prefixes: ["/crm"],
+    },
+    {
+      section: "Market Place",
+      prefixes: ["/market-place"],
+    },
+    {
+      section: "Club Management",
+      prefixes: ["/club-management"],
+    },
+    {
+      section: "Master",
+      prefixes: ["/master"],
+    },
+    {
+      section: "Settings",
+      prefixes: [
+        "/settings",
+        "/master/communication-template",
+        "/master/template",
+      ],
+    },
+    {
+      section: "Pulse Privilege",
+      prefixes: ["/pulse"],
+    },
+    {
+      section: "Loyalty",
+      prefixes: ["/loyalty"],
+      // Standalone child routes that belong to Loyalty (without /loyalty prefix)
+      childRoutes: [
+        "contests",
+        "wallet-management",
+        "customers",
+        "inventory-section",
+        "members",
+        "tiers",
+        "rule-engine",
+        "referrals",
+        "lock-payments",
+        "home-loan-requests",
+        "demand-notes",
+        "orders",
+        "encash",
+      ],
+    },
+    {
+      section: "Home",
+      prefixes: ["/home"],
+      childRoutes: [
+        "project",
+        "banner",
+        "event",
+        "offers",
+        "broadcast",
+        "press-releases",
+        "faq",
+      ],
+    },
+  ];
+
+  // Dynamic route detection - automatically finds parent section
+  const detectSectionFromRoute = (pathname: string): string => {
+    // First pass: Check direct prefix matches (e.g., /loyalty/contests)
+    for (const config of sectionConfigs) {
+      for (const prefix of config.prefixes) {
+        if (pathname === prefix || pathname.startsWith(prefix + "/")) {
+          return config.section;
+        }
+      }
+    }
+
+    // Second pass: Check standalone child routes (e.g., /contests → Loyalty)
+    // Extract first segment after initial slash
+    const segments = pathname.split('/').filter(Boolean);
+    const firstSegment = segments[0];
+
+    if (firstSegment) {
+      for (const config of sectionConfigs) {
+        if (config.childRoutes?.includes(firstSegment)) {
+          return config.section;
+        }
+      }
+    }
+
+    // Default to Dashboard if no match found
+    return "Dashboard";
+  };
 
   // Get initial collapsed state from localStorage, default to false if not set
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
@@ -95,11 +227,10 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
   // Automatic section detection based on current route
   useEffect(() => {
     const path = location.pathname;
-    let newSection = "";
-
-    // Force admin mode - disable employee detection
-    const userType = localStorage.getItem("userType") || "admin";
-    const isEmployeeUser = false; // Always use admin view
+    
+    // Check if user is in employee mode
+    const userType = localStorage.getItem("userType");
+    const isEmployeeUser = userType === "pms_occupant";
 
     console.log(
       `📍 Route changed to: ${path}, Current section: ${currentSection}`
@@ -115,17 +246,6 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
       hostname.includes("pulse.gophygital.work") ||
       hostname.includes("pulse-uat.panchshil.com");
 
-    // Template routes should be treated as Settings
-    const templatePaths = [
-      "/master/communication-template",
-      "/master/template/root-cause-analysis",
-      "/master/template/preventive-action",
-      "/master/template/short-term-impact",
-      "/master/template/long-term-impact",
-      "/master/template/corrective-action",
-    ];
-    const isTemplatePath = templatePaths.some((t) => path.startsWith(t));
-
     // For employee users, don't auto-detect section changes
     // They manually select modules via EmployeeHeader
     if ((isEmployeeUser && isLocalhost) || isPulseSite) {
@@ -133,57 +253,29 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
         `👤 Employee mode: Skipping auto-detection, keeping section: ${currentSection}`
       );
 
-      if (path.startsWith("/settings")) {
-        newSection = "Settings";
-      } else if (path.startsWith("/master")) {
-        newSection = "Master";
-      } else {
-        return;
+      // Only update for specific routes
+      if (path.startsWith("/settings") || path.startsWith("/master")) {
+        const newSection = detectSectionFromRoute(path);
+        if (newSection !== currentSection) {
+          console.log(
+            `🔄 Section change: ${currentSection} → ${newSection} (path: ${path})`
+          );
+          setCurrentSection(newSection);
+        }
       }
+      return;
     }
 
-    // Define route patterns and their corresponding sections
-    // Keep this in sync with the sidebar logic
-    if (isTemplatePath) {
-      newSection = "Settings";
-    } else if (path.startsWith("/utility")) {
-      newSection = "Utility";
-    } else if (path.startsWith("/transitioning")) {
-      newSection = "Transitioning";
-    } else if (path.startsWith("/security")) {
-      newSection = "Security";
-    } else if (path.startsWith("/vas")) {
-      newSection = "Value Added Services";
-    } else if (path.startsWith("/finance")) {
-      newSection = "Finance";
-    } else if (path.startsWith("/maintenance")) {
-      newSection = "Maintenance";
-    } else if (path.startsWith("/safety")) {
-      newSection = "Safety";
-    } else if (path.startsWith("/crm")) {
-      newSection = "CRM";
-    } else if (path.startsWith("/market-place")) {
-      newSection = "Market Place";
-    } else if (path.startsWith("/club-management")) {
-      newSection = "Club Management";
-    } else if (path.startsWith("/master")) {
-      newSection = "Master";
-    } else if (path.startsWith("/settings")) {
-      newSection = "Settings";
-    } else if (path.startsWith("/dashboard")) {
-      newSection = "Dashboard";
-    } else if (path.startsWith("/pulse")) {
-      newSection = "Pulse Privilege";
-    } else {
-      // For any other route, default to Dashboard
-      newSection = "Dashboard";
-    }
-
+    // Use route detection logic for all other cases
+    const newSection = detectSectionFromRoute(path);
+    
     // Always update the section when route changes
-    console.log(
-      `🔄 Section change: ${currentSection} → ${newSection} (path: ${path})`
-    );
-    setCurrentSection(newSection);
+    if (newSection !== currentSection) {
+      console.log(
+        `🔄 Section change: ${currentSection} → ${newSection} (path: ${path})`
+      );
+      setCurrentSection(newSection);
+    }
   }, [location.pathname]);
 
   // Save sidebar collapsed state to localStorage whenever it changes

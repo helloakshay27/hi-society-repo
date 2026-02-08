@@ -30,9 +30,10 @@ import HiSocEventDetails from "@/pages/HiSocEventDetails";
 import HiSocNoticeList from "@/pages/HiSocNoticeList";
 import HiSocNoticeCreate from "@/pages/HiSocNoticeCreate";
 import HiSocNoticeDetails from "@/pages/HiSocNoticeDetails";
+import ContestListPage from "@/pages/ContestListPage";
+import CreateContestPage from "@/pages/CreateContestPage";
+import ContestDetailsPage from "@/pages/ContestDetailsPage";
 
-const VisitorsDashboard = lazy(() => import("@/pages/VisitorsDashboard"));
-const HiSocGroupsPage = lazy(() => import("@/pages/HiSocGroupsPage"));
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
 const NewTier = lazy(() => import("@/pages/NewTier"));
@@ -258,7 +259,6 @@ const CMSClubMembersDetails = lazy(
 const AddCMSClubMembers = lazy(() => import("@/pages/AddCMSClubMembers"));
 const EditCMSClubMembers = lazy(() => import("@/pages/EditCMSClubMembers"));
 const CMSFacilityBookings = lazy(() => import("@/pages/CMSFacilityBookings"));
-const BookingDetailsPage = lazy(() => import("@/pages/BookingDetailsPage"));
 const AddFacilityBookingPage = lazy(
   () => import("@/pages/AddFacilityBookingPage")
 );
@@ -471,10 +471,6 @@ export const setupMemberRoutes = (
   <>
     {/* Amenities Routes */}
     <Route path="/loyalty/dashboard" element={<LoyaltyDashboard />} />
-    <Route
-      path="/settings/customer-pricing-rule-list"
-      element={<CustomerPricingRuleList />}
-    />
     <Route path="/loyalty/wallet-management" element={<WalletManagement />} />
     <Route path="/loyalty/customers" element={<LoyaltyCustomers />} />
     <Route path="/loyalty/customers/:id" element={<LoyaltyCustomerDetails />} />
@@ -1063,6 +1059,9 @@ export const setupMemberRoutes = (
       path="/loyalty/loyalty-members-list"
       Component={withSuspense(LoyaltyMembersList)}
     />
+    <Route path="/contests" element={<ContestListPage />} />
+    <Route path="/contests/create" element={<CreateContestPage />} />
+    <Route path="/contests/:id" element={<ContestDetailsPage />} />
     <Route
       path="/loyalty/loyalty-tiers-list"
       Component={withSuspense(LoyaltyTiersList)}
@@ -1199,23 +1198,7 @@ export const setupMemberRoutes = (
       path="/cms/membership-plan-setup"
       Component={withSuspense(CMSMembershipPlanSetup)}
     />
-    <Route
-      path="/cms/payment-plan-setup"
-      Component={withSuspense(CMSPaymentPlanSetup)}
-    />
-    <Route
-      path="/cms/payment-plan-setup/add"
-      Component={withSuspense(CMSPaymentPlanSetupAdd)}
-    />
-    <Route
-      path="/cms/payment-plan-setup/:id"
-      Component={withSuspense(CMSPaymentPlanSetupDetails)}
-    />
     <Route path="/cms/club-members" Component={withSuspense(CMSClubMembers)} />
-    <Route
-      path="/cms/club-members/view/:id"
-      Component={withSuspense(CMSClubMembersDetails)}
-    />
     <Route
       path="/cms/club-members/add"
       Component={withSuspense(AddCMSClubMembers)}

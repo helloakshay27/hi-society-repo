@@ -93,6 +93,37 @@ export const HiSocietySidebar: React.FC = () => {
   const getActiveSection = (): string => {
     const path = location.pathname;
 
+    // Define child routes for each section (routes without parent prefix)
+    const loyaltyChildRoutes = [
+      "contests",
+      "wallet-management",
+      "customers",
+      "inventory-section",
+      "members",
+      "tiers",
+      "rule-engine",
+      "referrals",
+      "lock-payments",
+      "home-loan-requests",
+      "demand-notes",
+      "orders",
+      "encash",
+    ];
+
+    const homeChildRoutes = [
+      "project",
+      "banner",
+      "event",
+      "offers",
+      "broadcast",
+      "press-releases",
+      "faq",
+    ];
+
+    // Extract first segment from path
+    const segments = path.split('/').filter(Boolean);
+    const firstSegment = segments[0];
+
     // Check for Application Setup paths first - these should stay in settings
     if (
       path.startsWith("/fitout/setup") ||
@@ -118,10 +149,10 @@ export const HiSocietySidebar: React.FC = () => {
     if (path.startsWith("/incidents")) return "incidents";
     if (path.startsWith("/appointmentz")) return "appointmentz";
     if (path.startsWith("/settings")) return "settings";
-    if (path.startsWith("/loyalty")) return "loyalty";
+    if (path.startsWith("/loyalty") || loyaltyChildRoutes.includes(firstSegment)) return "loyalty";
     if (path.startsWith("/bms") || path.startsWith("/communication"))
       return "bms";
-    if (path.startsWith("/maintenance")) return "home";
+    if (path.startsWith("/maintenance") || homeChildRoutes.includes(firstSegment)) return "home";
     return "home";
   };
 
@@ -325,12 +356,6 @@ export const HiSocietySidebar: React.FC = () => {
           path: "/loyalty/inventory-section",
         },
         {
-          id: "aggregator-inventory",
-          label: "Aggregator Inventory",
-          icon: Database,
-          path: "/loyalty/aggregator-inventory",
-        },
-        {
           id: "loyalty-members",
           label: "Members",
           icon: Users,
@@ -379,22 +404,17 @@ export const HiSocietySidebar: React.FC = () => {
           path: "/loyalty/orders-list",
         },
         {
+          id: "Contest",
+          label: "Contest",
+          icon: Briefcase,
+          path: "/contests",
+        },
+
+        {
           id: "encash",
           label: "Encash",
           icon: Gift,
           path: "/loyalty/encash-list",
-        },
-        {
-          id: "billing-invoices",
-          label: "Billing Invoices",
-          icon: Receipt,
-          path: "/loyalty/billing-invoices",
-        },
-        {
-          id: "redemption-report",
-          label: "Redemption Report",
-          icon: BarChart3,
-          path: "/loyalty/redemption-report",
         },
       ],
     },
@@ -418,12 +438,6 @@ export const HiSocietySidebar: React.FC = () => {
               label: "Membership Plan Setup",
               icon: FileText,
               path: "/cms/membership-plan-setup",
-            },
-            {
-              id: "payment-plan-setup",
-              label: "Payment Plan Setup",
-              icon: FileText,
-              path: "/cms/payment-plan-setup",
             },
           ],
         },
@@ -455,12 +469,6 @@ export const HiSocietySidebar: React.FC = () => {
           label: "Referrals",
           icon: Gift,
           path: "/campaigns/referrals",
-        },
-        {
-          id: "referral-setup",
-          label: "Referral Setup",
-          icon: Settings,
-          path: "/campaigns/referral-setup",
         },
         {
           id: "other-project",
@@ -885,18 +893,6 @@ export const HiSocietySidebar: React.FC = () => {
               label: "Image Configuration",
               icon: HelpCircle,
               path: "/settings/image-config-list",
-            },
-            {
-              id: "pricing-rule-list",
-              label: "Pricing Rules",
-              icon: Tag,
-              path: "/settings/pricing-rule-list",
-            },
-            {
-              id: "customer-pricing-rule-list",
-              label: "Customer Pricing Rules",
-              icon: Tag,
-              path: "/settings/customer-pricing-rule-list",
             },
           ],
         },
