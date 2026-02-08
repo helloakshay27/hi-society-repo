@@ -161,7 +161,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     hostname.includes("fm-matrix.lockated.com") ||
     userEmail === "ubaid.hashmat@lockated.com" ||
     userEmail === "besis69240@azeriom.com" ||
-    userEmail === "megipow156@aixind.com";
+    userEmail === "megipow156@aixind.com" ||
+    userEmail === "jevosak839@cimario.com";
 
   // Layout behavior:
   // - Company ID 189 (Lockated HO): Default layout (Sidebar + DynamicHeader)
@@ -190,9 +191,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           selectedCompany?.id === 298 ||
           selectedCompany?.id === 199 ||
           org_id === "90" ||
+          org_id === "84" ||
           userEmail === "ubaid.hashmat@lockated.com" ||
           userEmail === "besis69240@azeriom.com" ||
-          userEmail === "megipow156@aixind.com"
+          userEmail === "megipow156@aixind.com" ||
+          userEmail === "jevosak839@cimario.com"
         ) {
           return <EmployeeSidebar />;
         }
@@ -208,6 +211,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       return <HiSocietySidebar />;
     }
 
+    if (selectedCompany?.id === 189) {
+      return <ZxSidebar />;
+    }
+
     // Check for token-based VI access first
     const urlParams = new URLSearchParams(window.location.search);
     const hasTokenParam = urlParams.has("access_token");
@@ -221,9 +228,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       selectedCompany?.id === 199 ||
       selectedCompany?.id === 307 ||
       org_id === "90" ||
+      org_id === "84" ||
       userEmail === "ubaid.hashmat@lockated.com" ||
       userEmail === "besis69240@azeriom.com" ||
-      userEmail === "megipow156@aixind.com"
+      userEmail === "megipow156@aixind.com" ||
+      userEmail === "jevosak839@cimario.com"
     ) {
       console.log("✅ Rendering ActionSidebar (company-specific)");
       return <ActionSidebar />;
@@ -242,9 +251,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
 
     // Company-specific logic (Admin layout)
-    if (selectedCompany?.id === 189) {
-      return <ZxSidebar />;
-    }
 
     if (selectedCompany?.id === 294) {
       return <ZycusSidebar />;
@@ -287,6 +293,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       return null; // No dynamic header for Hi Society dashboard
     }
 
+    // Company-specific logic (Admin layout)
+
     if (
       selectedCompany?.id === 300 ||
       selectedCompany?.id === 295 ||
@@ -294,11 +302,17 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       selectedCompany?.id === 199 ||
       selectedCompany?.id === 307 ||
       org_id === "90" ||
+      org_id === "84" ||
       userEmail === "ubaid.hashmat@lockated.com" ||
       userEmail === "besis69240@azeriom.com" ||
-      userEmail === "megipow156@aixind.com"
+      userEmail === "megipow156@aixind.com" ||
+      userEmail === "jevosak839@cimario.com"
     ) {
       return <ActionHeader />;
+    }
+
+    if (selectedCompany?.id === 189) {
+      return <ZxDynamicHeader />;
     }
 
     if (isFMSite) {
@@ -308,11 +322,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     // Domain-based logic takes precedence for backward compatibility
     if (isOmanSite) {
       return <OmanDynamicHeader />;
-    }
-
-    // Company-specific logic (Admin layout)
-    if (selectedCompany?.id === 189) {
-      return <ZxDynamicHeader />;
     }
 
     if (selectedCompany?.id === 294) {
