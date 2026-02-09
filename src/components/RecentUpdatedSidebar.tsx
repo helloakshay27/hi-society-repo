@@ -285,7 +285,7 @@ export const RecentUpdatedSidebar: React.FC<RecentTicketsSidebarProps> = ({
 
       // Make API call
       await apiClient.post(
-        `/pms/admin/complaints/mark_as_flagged.json?ids=[${ticketId}]`
+        `/crm/admin/complaints/mark_as_flagged.json?ids=[${ticketId}]`
       );
 
       toast({
@@ -348,7 +348,7 @@ export const RecentUpdatedSidebar: React.FC<RecentTicketsSidebarProps> = ({
 
       // Make API call
       await apiClient.post(
-        `/pms/admin/complaints/mark_as_golden_ticket.json?ids=[${ticketId}]`
+        `/crm/admin/complaints/mark_as_golden_ticket.json?ids=[${ticketId}]`
       );
 
       toast({

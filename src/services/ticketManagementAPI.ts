@@ -1003,13 +1003,13 @@ export const ticketManagementAPI = {
   // New methods for ticket actions
   async markAsGoldenTicket(ticketIds: number[]) {
     const idsParam = ticketIds.join(',');
-    const response = await apiClient.post(`/pms/admin/complaints/mark_as_golden_ticket.json?ids=[${idsParam}]`);
+    const response = await apiClient.post(`/crm/admin/complaints/mark_as_golden_ticket.json?ids=[${idsParam}]`);
     return response.data;
   },
 
   async markAsFlagged(ticketIds: number[]) {
     const idsParam = ticketIds.join(',');
-    const response = await apiClient.post(`/pms/admin/complaints/mark_as_flagged.json?ids=[${idsParam}]`);
+    const response = await apiClient.post(`/crm/admin/complaints/mark_as_flagged.json?ids=[${idsParam}]`);
     return response.data;
   },
 
