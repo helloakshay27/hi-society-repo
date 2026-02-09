@@ -527,13 +527,13 @@ export const BookingSetupDetailClubPage = () => {
 
       setCancellationRules([...transformedRules]);
 
-      const slots = response.facility_slots.map(slot => (
-        slot?.facility_slot?.slot_times.map(time => ({
-          id: time.slot_time.id,
-          isPremium: time.slot_time.is_premium,
-          premium_percentage: time.slot_time.premium_percentage || 0,
-          startTime: { hour: time.slot_time.start_hour, minute: time.slot_time.start_minute },
-          endTime: { hour: time.slot_time.end_hour, minute: time.slot_time.end_minute },
+      const slots = response.facility_slots?.map(slot => (
+        slot?.facility_slot?.setup_slot_times?.map(time => ({
+          id: time.setup_slot_time.id,
+          isPremium: time.setup_slot_time.is_premium,
+          premium_percentage: time.setup_slot_time.premium_percentage || 0,
+          startTime: { hour: time.setup_slot_time.start_hour, minute: time.setup_slot_time.start_minute },
+          endTime: { hour: time.setup_slot_time.end_hour, minute: time.setup_slot_time.end_minute },
         }))
       ));
       setSlotsConfigured(slots);
@@ -552,70 +552,9 @@ export const BookingSetupDetailClubPage = () => {
       // setCancellationRules(response.cancellation_rules)
       setSelectedFile(response?.cover_image?.document);
       setSelectedBookingFiles(
-        response?.documents.map((doc) => doc.document.document)
+        response?.documents.map((doc) => doc?.document?.document)
       );
       setQrUrl(response?.qr_code.document);
-
-      // Setup gallery images
-      const allGalleryImages: any[] = [];
-
-      // 1:1 images
-      if (response?.gallery_image_1_by_1 && Array.isArray(response.gallery_image_1_by_1)) {
-        response.gallery_image_1_by_1.forEach((item: any) => {
-          if (item.gallery_image_1_by_1?.document) {
-            allGalleryImages.push({
-              name: `Image ${allGalleryImages.length + 1}`,
-              preview: item.gallery_image_1_by_1.document,
-              ratio: '1:1',
-              enableToApp: true
-            });
-          }
-        });
-      }
-
-      // 16:9 images
-      if (response?.gallery_image_16_by_9 && Array.isArray(response.gallery_image_16_by_9)) {
-        response.gallery_image_16_by_9.forEach((item: any) => {
-          if (item.gallery_image_16_by_9?.document) {
-            allGalleryImages.push({
-              name: `Image ${allGalleryImages.length + 1}`,
-              preview: item.gallery_image_16_by_9.document,
-              ratio: '16:9',
-              enableToApp: true
-            });
-          }
-        });
-      }
-
-      // 9:16 images
-      if (response?.gallery_image_9_by_16 && Array.isArray(response.gallery_image_9_by_16)) {
-        response.gallery_image_9_by_16.forEach((item: any) => {
-          if (item.gallery_image_9_by_16?.document) {
-            allGalleryImages.push({
-              name: `Image ${allGalleryImages.length + 1}`,
-              preview: item.gallery_image_9_by_16.document,
-              ratio: '9:16',
-              enableToApp: true
-            });
-          }
-        });
-      }
-
-      // 3:2 images
-      if (response?.gallery_image_3_by_2 && Array.isArray(response.gallery_image_3_by_2)) {
-        response.gallery_image_3_by_2.forEach((item: any) => {
-          if (item.gallery_image_3_by_2?.document) {
-            allGalleryImages.push({
-              name: `Image ${allGalleryImages.length + 1}`,
-              preview: item.gallery_image_3_by_2.document,
-              ratio: '3:2',
-              enableToApp: true
-            });
-          }
-        });
-      }
-
-      setGalleryImages(allGalleryImages);
     } catch (error) {
       console.error("Error fetching facility details:", error);
       console.error("Error details:", error?.response?.data || error.message);
@@ -1203,107 +1142,119 @@ export const BookingSetupDetailClubPage = () => {
               {slotsConfigured[0]?.map((slot, idx) => {
                 const slotKey = `${slot.id}-${idx}`;
                 return (
-                  <Popover key={idx} open={popoverOpen[slotKey]} onOpenChange={(open) => {
-                    if (selectedSlots[slotKey]) {
-                      setPopoverOpen(prev => ({
-                        ...prev,
-                        [slotKey]: open
-                      }));
-                    }
-                  }}>
-                    <PopoverTrigger asChild>
-                      <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={isPremiumSlots[slotKey] || false}
-                          onChange={() => {
-                            handleSlotCheckboxChange(slotKey);
-                            if (isPremiumSlots[slotKey]) {
-                              // Unchecking: close modal
-                              setPopoverOpen(prev => ({ ...prev, [slotKey]: false }));
-                            } else {
-                              // Checking: open modal
-                              setPopoverOpen(prev => ({ ...prev, [slotKey]: true }));
-                            }
-                          }}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                        />
-                        <Label
-                          className="cursor-pointer text-sm font-medium"
-                        >
-                          {slot.startTime.hour}:{slot.startTime.minute} - {slot.endTime.hour}:{slot.endTime.minute}
-                          {isPremiumSlots[slotKey] && premiumPercentage[slotKey] && (
-                            <span className="ml-2 text-xs text-gray-600">
-                              ({premiumPercentage[slotKey]}%)
-                            </span>
-                          )}
-                        </Label>
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80">
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <h4 className="font-medium text-sm">Set Premium Percentage</h4>
-                          <p className="text-xs text-gray-500">
-                            {slot.startTime.hour}:{slot.startTime.minute} - {slot.endTime.hour}:{slot.endTime.minute}
-                          </p>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor={`premium-${slotKey}`} className="text-sm">
-                            Premium Percentage (%)
-                          </Label>
-                          <TextField
-                            id={`premium-${slotKey}`}
-                            type="number"
-                            placeholder="Enter percentage"
-                            value={premiumPercentage[slotKey] || ""}
-                            onKeyDown={(e) => {
-                              if (e.key === "-" || e.key === "Subtract") {
-                                e.preventDefault();
-                              }
-                            }}
-                            onChange={(e) => {
-                              let val = e.target.value;
-                              // Block any input that starts with a dash
-                              if (val.startsWith("-")) return;
-                              // Remove all dashes explicitly (for cases like --4555)
-                              val = val.replace(/-/g, "");
-                              // Only allow numbers and dot, no other chars
-                              val = val.replace(/[^\d.]/g, "");
-                              // Prevent multiple dots
-                              val = val.replace(/(\..*)\./g, '$1');
-                              // If empty, set as is
-                              if (val === "") {
-                                setPremiumPercentage(prev => ({ ...prev, [slotKey]: "" }));
-                                return;
-                              }
-                              // If not a valid number, do not update
-                              if (isNaN(Number(val))) return;
-                              // Restrict to 0-100 and clamp immediately
-                              let num = parseFloat(val);
-                              if (num < 0) num = 0;
-                              if (num > 100) num = 100;
-                              // Only allow up to 100 in the UI
-                              setPremiumPercentage(prev => ({
-                                ...prev,
-                                [slotKey]: num.toString()
-                              }));
-                            }}
-                            variant="outlined"
-                            size="small"
-                            fullWidth
-                            inputProps={{ min: "0", max: "100", step: "0.01" }}
-                          />
-                        </div>
-                        <Button
-                          onClick={() => handleSendData(slotKey)}
-                          className="w-full bg-[#C72030] hover:bg-[#C72030]/90 text-white"
-                        >
-                          Save
-                        </Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <Label
+                      className="cursor-pointer text-sm font-medium"
+                    >
+                      {slot.startTime.hour}:{slot.startTime.minute} - {slot.endTime.hour}:{slot.endTime.minute}
+                      {isPremiumSlots[slotKey] && premiumPercentage[slotKey] && (
+                        <span className="ml-2 text-xs text-gray-600">
+                          ({premiumPercentage[slotKey]}%)
+                        </span>
+                      )}
+                    </Label>
+                  </div>
+                  // <Popover key={idx} open={popoverOpen[slotKey]} onOpenChange={(open) => {
+                  //   if (selectedSlots[slotKey]) {
+                  //     setPopoverOpen(prev => ({
+                  //       ...prev,
+                  //       [slotKey]: open
+                  //     }));
+                  //   }
+                  // }}>
+                  //   <PopoverTrigger asChild>
+                  //     <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                  //       <input
+                  //         type="checkbox"
+                  //         checked={isPremiumSlots[slotKey] || false}
+                  //         onChange={() => {
+                  //           handleSlotCheckboxChange(slotKey);
+                  //           if (isPremiumSlots[slotKey]) {
+                  //             // Unchecking: close modal
+                  //             setPopoverOpen(prev => ({ ...prev, [slotKey]: false }));
+                  //           } else {
+                  //             // Checking: open modal
+                  //             setPopoverOpen(prev => ({ ...prev, [slotKey]: true }));
+                  //           }
+                  //         }}
+                  //         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                  //       />
+                  //       <Label
+                  //         className="cursor-pointer text-sm font-medium"
+                  //       >
+                  //         {slot.startTime.hour}:{slot.startTime.minute} - {slot.endTime.hour}:{slot.endTime.minute}
+                  //         {isPremiumSlots[slotKey] && premiumPercentage[slotKey] && (
+                  //           <span className="ml-2 text-xs text-gray-600">
+                  //             ({premiumPercentage[slotKey]}%)
+                  //           </span>
+                  //         )}
+                  //       </Label>
+                  //     </div>
+                  //   </PopoverTrigger>
+                  //   <PopoverContent className="w-80">
+                  //     <div className="space-y-4">
+                  //       <div className="space-y-2">
+                  //         <h4 className="font-medium text-sm">Set Premium Percentage</h4>
+                  //         <p className="text-xs text-gray-500">
+                  //           {slot.startTime.hour}:{slot.startTime.minute} - {slot.endTime.hour}:{slot.endTime.minute}
+                  //         </p>
+                  //       </div>
+                  //       <div className="space-y-2">
+                  //         <Label htmlFor={`premium-${slotKey}`} className="text-sm">
+                  //           Premium Percentage (%)
+                  //         </Label>
+                  //         <TextField
+                  //           id={`premium-${slotKey}`}
+                  //           type="number"
+                  //           placeholder="Enter percentage"
+                  //           value={premiumPercentage[slotKey] || ""}
+                  //           onKeyDown={(e) => {
+                  //             if (e.key === "-" || e.key === "Subtract") {
+                  //               e.preventDefault();
+                  //             }
+                  //           }}
+                  //           onChange={(e) => {
+                  //             let val = e.target.value;
+                  //             // Block any input that starts with a dash
+                  //             if (val.startsWith("-")) return;
+                  //             // Remove all dashes explicitly (for cases like --4555)
+                  //             val = val.replace(/-/g, "");
+                  //             // Only allow numbers and dot, no other chars
+                  //             val = val.replace(/[^\d.]/g, "");
+                  //             // Prevent multiple dots
+                  //             val = val.replace(/(\..*)\./g, '$1');
+                  //             // If empty, set as is
+                  //             if (val === "") {
+                  //               setPremiumPercentage(prev => ({ ...prev, [slotKey]: "" }));
+                  //               return;
+                  //             }
+                  //             // If not a valid number, do not update
+                  //             if (isNaN(Number(val))) return;
+                  //             // Restrict to 0-100 and clamp immediately
+                  //             let num = parseFloat(val);
+                  //             if (num < 0) num = 0;
+                  //             if (num > 100) num = 100;
+                  //             // Only allow up to 100 in the UI
+                  //             setPremiumPercentage(prev => ({
+                  //               ...prev,
+                  //               [slotKey]: num.toString()
+                  //             }));
+                  //           }}
+                  //           variant="outlined"
+                  //           size="small"
+                  //           fullWidth
+                  //           inputProps={{ min: "0", max: "100", step: "0.01" }}
+                  //         />
+                  //       </div>
+                  //       <Button
+                  //         onClick={() => handleSendData(slotKey)}
+                  //         className="w-full bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+                  //       >
+                  //         Save
+                  //       </Button>
+                  //     </div>
+                  //   </PopoverContent>
+                  // </Popover>
                 );
               })}
             </div>

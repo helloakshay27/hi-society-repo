@@ -269,7 +269,7 @@ const AddFacilityBookingPage = () => {
   const fetchFacilityDetails = async () => {
     try {
       const response = await axios.get(
-        `https://${baseUrl}/pms/admin/facility_setups/${selectedFacilitySetup}.json`,
+        `https://${baseUrl}/crm/admin/facility_setups/${selectedFacilitySetup}.json`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -599,11 +599,10 @@ const AddFacilityBookingPage = () => {
                         {availableSlots.map((slot: any) => (
                           <div
                             key={slot.id}
-                            className={`flex items-center space-x-3 p-4 border rounded-lg transition-all cursor-pointer ${
-                              selectedSlotIds.includes(slot.id.toString())
+                            className={`flex items-center space-x-3 p-4 border rounded-lg transition-all cursor-pointer ${selectedSlotIds.includes(slot.id.toString())
                                 ? "border-[#C72030] bg-[#C72030]/5 shadow-sm"
                                 : "border-gray-100 bg-white hover:border-gray-200"
-                            }`}
+                              }`}
                             onClick={() => {
                               const slotIdStr = slot.id.toString();
                               setSelectedSlotIds((prev) =>
@@ -618,7 +617,7 @@ const AddFacilityBookingPage = () => {
                               checked={selectedSlotIds.includes(
                                 slot.id.toString()
                               )}
-                              onChange={() => {}} // Handled by div click
+                              onChange={() => { }} // Handled by div click
                               className="w-4 h-4 text-[#C72030] rounded border-gray-300 focus:ring-[#C72030]"
                             />
                             <span className="text-sm font-medium text-gray-800">
@@ -748,7 +747,7 @@ const AddFacilityBookingPage = () => {
                                           <span className="text-[16px] font-bold text-gray-900 w-4">
                                             {
                                               memberCounts[
-                                                `adult${row.key}` as keyof typeof memberCounts
+                                              `adult${row.key}` as keyof typeof memberCounts
                                               ]
                                             }
                                           </span>
@@ -792,7 +791,7 @@ const AddFacilityBookingPage = () => {
                                           <span className="text-[16px] font-bold text-gray-900 w-4">
                                             {
                                               memberCounts[
-                                                `child${row.key}` as keyof typeof memberCounts
+                                              `child${row.key}` as keyof typeof memberCounts
                                               ]
                                             }
                                           </span>
@@ -926,22 +925,20 @@ const AddFacilityBookingPage = () => {
                           onClick={() => setPaymentMethod(method.key)}
                         >
                           <div
-                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
-                              paymentMethod === method.key
+                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${paymentMethod === method.key
                                 ? "border-[#C72030]"
                                 : "border-gray-300 group-hover:border-gray-400"
-                            }`}
+                              }`}
                           >
                             {paymentMethod === method.key && (
                               <div className="w-2 h-2 rounded-full bg-[#C72030]" />
                             )}
                           </div>
                           <span
-                            className={`text-[16px] transition-all ${
-                              paymentMethod === method.key
+                            className={`text-[16px] transition-all ${paymentMethod === method.key
                                 ? "text-gray-900"
                                 : "text-gray-900"
-                            }`}
+                              }`}
                           >
                             {method.label}
                           </span>

@@ -113,7 +113,7 @@ export const facilityBookingSetupDetails = createAsyncThunk(
   async ({ baseUrl, token, id }: FetchBookingDetails, { rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `https://${baseUrl}/pms/admin/facility_setups/${id}.json`,
+        `https://${baseUrl}/crm/admin/facility_setups/${id}.json`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
