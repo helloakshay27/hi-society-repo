@@ -387,6 +387,15 @@ const AddCMSClubMembers = () => {
                                         </Select>
                                     </FormControl>
                                 </div>
+                                <TextField
+                                    required
+                                    label="Remark"
+                                    placeholder="Enter Remark"
+                                    value={remark}
+                                    onChange={(e) => setRemark(e.target.value)}
+                                    sx={fieldStyles}
+                                    fullWidth
+                                />
                             </div>
                         </CardContent>
                     </Card>
