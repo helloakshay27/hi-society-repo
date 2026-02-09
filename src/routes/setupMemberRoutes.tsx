@@ -211,9 +211,7 @@ const HomeLoanRequestsList = lazy(() => import("@/pages/HomeLoanRequestsList"));
 const DemandNotesList = lazy(() => import("@/pages/DemandNotesList"));
 const OrdersList = lazy(() => import("@/pages/OrdersList"));
 const EncashList = lazy(() => import("@/pages/EncashList"));
-const AggregatorInventorySection = lazy(
-  () => import("@/pages/AggregatorInventorySection")
-);
+const AggregatorInventorySection = lazy(() => import("@/pages/AggregatorInventorySection"));
 const OrderDetails = lazy(() => import("@/pages/OrderDetails"));
 
 // Add lazy imports for Billing, Redemption, Aggregator pages
@@ -454,6 +452,9 @@ const AppointmentzBlockDaysConfig = lazy(
   () => import("@/pages/AppointmentzBlockDaysConfig")
 );
 
+// Wallet Topup Page
+const WalletTopup = lazy(() => import("@/pages/WalletTopup"));
+
 // Loading fallback component
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -475,6 +476,7 @@ export const setupMemberRoutes = (
     {/* Amenities Routes */}
     <Route path="/loyalty/dashboard" element={<LoyaltyDashboard />} />
     <Route path="/loyalty/wallet-management" element={<WalletManagement />} />
+    <Route path="/settings/wallet-topup" element={<WalletTopup />} />
     <Route path="/loyalty/customers" element={<LoyaltyCustomers />} />
     <Route path="/loyalty/customers/:id" element={<LoyaltyCustomerDetails />} />
     <Route
@@ -1101,6 +1103,11 @@ export const setupMemberRoutes = (
       Component={withSuspense(AggregatorInventorySection)}
     />
 
+    <Route
+      path="/loyalty/orders/:id"
+      Component={withSuspense(OrderDetails)}
+    />
+
     {/* Project Configuration Routes */}
     <Route
       path="/settings/project-configuration"
@@ -1566,6 +1573,10 @@ export const setupMemberRoutes = (
     <Route
       path="/settings/template/view/:id"
       Component={withSuspense(TemplateView)}
+    />
+    <Route
+      path="/settings/customer-pricing-rule-list"
+      Component={withSuspense(CustomerPricingRuleList)}
     />
   </>
 );

@@ -171,13 +171,13 @@ const PricingRuleList: React.FC = () => {
   };
 
   const columns = [
+    { key: "actions", label: "Actions", sortable: false },
     { key: "id", label: "Sr No", sortable: false },
     { key: "organization_id", label: "Organization", sortable: true },
     { key: "generic_category_id", label: "Category", sortable: true },
     { key: "margin_type", label: "Margin Type", sortable: true },
     { key: "margin_value", label: "Margin Value", sortable: true },
     { key: "created_at", label: "Created At", sortable: true },
-    { key: "actions", label: "", sortable: false },
   ];
 
   const renderCell = (item: any, columnKey: string) => {

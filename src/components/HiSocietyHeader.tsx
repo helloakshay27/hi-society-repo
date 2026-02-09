@@ -203,6 +203,9 @@ export const HiSocietyHeader = () => {
           if (selected) {
             setSelectedSociety(selected);
             setSelectedFlat(selected);
+            // Store the id_society for use in other components
+            localStorage.setItem("selectedSocietyId", selected.id_society);
+            sessionStorage.setItem("selectedSocietyId", selected.id_society);
           }
         }
       }
@@ -229,6 +232,11 @@ export const HiSocietyHeader = () => {
           if (selected) {
             setSelectedSociety(selected);
             setSelectedFlat(selected);
+            // Ensure id_society is stored
+            if (selected.id_society) {
+              localStorage.setItem("selectedSocietyId", selected.id_society);
+              sessionStorage.setItem("selectedSocietyId", selected.id_society);
+            }
           }
         }
       }
@@ -246,6 +254,18 @@ export const HiSocietyHeader = () => {
   const handleSearch = (searchTerm: string) => {
     console.log("Search term:", searchTerm);
   };
+
+  // Get unique societies for dropdown (avoid duplicates)
+  const uniqueSocieties = React.useMemo(() => {
+    const seen = new Set<string>();
+    return hiSocietySocieties.filter(society => {
+      if (seen.has(society.id_society)) {
+        return false;
+      }
+      seen.add(society.id_society);
+      return true;
+    });
+  }, [hiSocietySocieties]);
 
   // Get available flats for selected society
   const availableFlats = selectedSociety
@@ -289,7 +309,9 @@ export const HiSocietyHeader = () => {
         setSelectedSociety(selected);
         setSelectedFlat(selected);
         localStorage.setItem("selectedUserSociety", societyId.toString());
+        localStorage.setItem("selectedSocietyId", selected.id_society);
         sessionStorage.setItem("selectedUserSociety", societyId.toString());
+        sessionStorage.setItem("selectedSocietyId", selected.id_society);
       }
 
       // Reload page to reflect changes
@@ -546,19 +568,23 @@ export const HiSocietyHeader = () => {
               <ChevronDown className="w-3 h-3" />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
-              {hiSocietySocieties.map((society) => (
-                <DropdownMenuItem
-                  key={society.id}
-                  onClick={() => handleSocietyChange(society.id)}
-                  className={
-                    selectedSociety?.id === society.id
-                      ? "bg-[#f6f4ee] text-[#C72030]"
-                      : ""
-                  }
-                >
-                  {society.society.building_name}
-                </DropdownMenuItem>
-              ))}
+              {uniqueSocieties.length === 0 ? (
+                <DropdownMenuItem disabled>No societies available</DropdownMenuItem>
+              ) : (
+                uniqueSocieties.map((society) => (
+                  <DropdownMenuItem
+                    key={society.id}
+                    onClick={() => handleSocietyChange(society.id)}
+                    className={
+                      selectedSociety?.id === society.id
+                        ? "bg-[#f6f4ee] text-[#C72030]"
+                        : ""
+                    }
+                  >
+                    {society.society.building_name}
+                  </DropdownMenuItem>
+                ))
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
 

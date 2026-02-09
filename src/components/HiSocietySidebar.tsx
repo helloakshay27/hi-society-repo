@@ -356,6 +356,12 @@ export const HiSocietySidebar: React.FC = () => {
           path: "/loyalty/inventory-section",
         },
         {
+          id: "aggregator-inventory",
+          label: "Aggregator Inventory",
+          icon: Database,
+          path: "/loyalty/aggregator-inventory",
+        },
+        {
           id: "loyalty-members",
           label: "Members",
           icon: Users,
@@ -894,6 +900,24 @@ export const HiSocietySidebar: React.FC = () => {
               icon: HelpCircle,
               path: "/settings/image-config-list",
             },
+            {
+              id: "pricing-rule-list",
+              label: "Pricing Rules",
+              icon: Tag,
+              path: "/settings/pricing-rule-list",
+            },
+            {
+              id: "customer-pricing-rule-list",
+              label: "Customer Pricing Rules",
+              icon: Tag,
+              path: "/settings/customer-pricing-rule-list",
+            },
+            {
+              id: "wallet-topup",
+              label: "Wallet Top-up",
+              icon: CreditCard,
+              path: "/settings/wallet-topup",
+            },
           ],
         },
         {
@@ -1099,9 +1123,8 @@ export const HiSocietySidebar: React.FC = () => {
 
   return (
     <div
-      className={`${
-        isSidebarCollapsed ? "w-16" : "w-64"
-      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      className={`${isSidebarCollapsed ? "w-16" : "w-64"
+        } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
       style={{ top: "4rem", height: "calc(100% - 4rem)" }}
     >
       <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>

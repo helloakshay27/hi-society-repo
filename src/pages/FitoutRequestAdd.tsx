@@ -179,21 +179,11 @@ const FitoutRequestAdd: React.FC = () => {
 
   const fetchDropdownData = async () => {
     try {
-      // Get user_society.id from localStorage
-      const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
-      
-      // First, get the selected user society to extract id_society for API calls
-      let idSociety = '';
-      if (selectedUserSocietyId) {
-        const selectedSocietyResponse = await apiClient.get(`/crm/admin/user_societies.json`);
-        const userSocieties = selectedSocietyResponse.data || [];
-        const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
-        idSociety = selectedSociety?.id_society || '';
-        console.log('Extracted id_society:', idSociety);
-      }
+      // Get society_id directly from localStorage (stored by HiSocietyHeader)
+      const idSociety = localStorage.getItem('selectedSocietyId') || '';
       
       if (!idSociety) {
-        console.error('No id_society found. Please ensure selectedUserSociety is set in localStorage.');
+        console.error('No selectedSocietyId found in localStorage. Please select a society from the header.');
         toast.error('Society information not found. Please select a society.', {
           position: 'top-right',
           duration: 3000,
@@ -245,6 +235,7 @@ const FitoutRequestAdd: React.FC = () => {
       setFitoutTypes(['Move In', 'Fitout']);
       
       // Set user_society.id in formData for user_society_id parameter
+      const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
       setFormData(prev => ({ ...prev, user_society_id: selectedUserSocietyId }));
     } catch (error) {
       console.error('Error fetching dropdown data:', error);
@@ -267,15 +258,12 @@ const FitoutRequestAdd: React.FC = () => {
     
     if (siteId) {
       try {
-        // Get id_society from localStorage selected user society
-        const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
-        let idSociety = '';
+        // Get id_society directly from localStorage (stored by HiSocietyHeader)
+        const idSociety = localStorage.getItem('selectedSocietyId') || '';
         
-        if (selectedUserSocietyId) {
-          const selectedSocietyResponse = await apiClient.get(`/crm/admin/user_societies.json`);
-          const userSocieties = selectedSocietyResponse.data || [];
-          const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
-          idSociety = selectedSociety?.id_society || '';
+        if (!idSociety) {
+          console.error('No selectedSocietyId found. Please select a society.');
+          return;
         }
         
         const response = await apiClient.get(`/get_society_flats.json?society_block_id=${siteId}&society_id=${idSociety}`);

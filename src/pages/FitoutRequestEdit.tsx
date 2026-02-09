@@ -189,21 +189,11 @@ const FitoutRequestEdit: React.FC = () => {
 
   const fetchDropdownData = async () => {
     try {
-      // Get society_id from localStorage (this is the user_society.id)
-      const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
-      
-      // First, get the selected user society to extract id_society
-      let idSociety = '';
-      if (selectedUserSocietyId) {
-        const selectedSocietyResponse = await apiClient.get(`/crm/admin/user_societies.json`);
-        const userSocieties = selectedSocietyResponse.data || [];
-        const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
-        idSociety = selectedSociety?.id_society || '';
-        console.log('Extracted id_society:', idSociety);
-      }
+      // Get society_id directly from localStorage (stored by HiSocietyHeader)
+      const idSociety = localStorage.getItem('selectedSocietyId') || '';
       
       if (!idSociety) {
-        console.error('No id_society found. Please ensure selectedUserSociety is set in localStorage.');
+        console.error('No selectedSocietyId found in localStorage. Please select a society from the header.');
         return;
       }
       
@@ -258,15 +248,12 @@ const FitoutRequestEdit: React.FC = () => {
     
     if (towerId) {
       try {
-        // Get id_society from localStorage selected user society
-        const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
-        let idSociety = '';
+        // Get id_society directly from localStorage (stored by HiSocietyHeader)
+        const idSociety = localStorage.getItem('selectedSocietyId') || '';
         
-        if (selectedUserSocietyId) {
-          const selectedSocietyResponse = await apiClient.get(`/crm/admin/user_societies.json`);
-          const userSocieties = selectedSocietyResponse.data || [];
-          const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
-          idSociety = selectedSociety?.id_society || '';
+        if (!idSociety) {
+          console.error('No selectedSocietyId found. Please select a society.');
+          return;
         }
         
         const response = await apiClient.get(`/get_society_flats.json?society_block_id=${towerId}&society_id=${idSociety}`);
@@ -398,14 +385,12 @@ const FitoutRequestEdit: React.FC = () => {
       // Load flats for the selected tower
       if (towerId) {
         try {
-          const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
-          let idSociety = '';
+          // Get id_society directly from localStorage (stored by HiSocietyHeader)
+          const idSociety = localStorage.getItem('selectedSocietyId') || '';
           
-          if (selectedUserSocietyId) {
-            const selectedSocietyResponse = await apiClient.get(`/crm/admin/user_societies.json`);
-            const userSocieties = selectedSocietyResponse.data || [];
-            const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
-            idSociety = selectedSociety?.id_society || '';
+          if (!idSociety) {
+            console.error('No selectedSocietyId found. Please select a society.');
+            return;
           }
           
           const flatsResponse = await apiClient.get(`/get_society_flats.json?society_block_id=${towerId}&society_id=${idSociety}`);
