@@ -249,6 +249,9 @@ const BMSHelpdesk = lazy(() => import("@/pages/BMSHelpdesk"));
 const BMSCommunicationTemplate = lazy(
   () => import("@/pages/BMSCommunicationTemplate")
 );
+const BusinessDirectoryDetailsPage = lazy(
+  () => import("@/pages/BusinessDirectoryDetailsPage")
+);
 
 // CMS Pages
 const CMSFacility = lazy(() => import("@/pages/CMSFacility"));
@@ -1175,6 +1178,10 @@ export const setupMemberRoutes = (
     <Route
       path="/bms/business-directory/list"
       Component={withSuspense(BMSBusinessDirectoryList)}
+    />
+    <Route
+      path="/business-directory/view/:id"
+      Component={withSuspense(BusinessDirectoryDetailsPage)}
     />
     <Route path="/bms/mis" Component={withSuspense(BMSMIS)} />
     <Route

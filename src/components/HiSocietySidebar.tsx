@@ -477,6 +477,12 @@ export const HiSocietySidebar: React.FC = () => {
           path: "/campaigns/referrals",
         },
         {
+          id: "referral-setup",
+          label: "Referral Setup",
+          icon: SettingsIcon,
+          path: "/campaigns/referral-setup",
+        },
+        {
           id: "other-project",
           label: "Other Project",
           icon: FolderKanban,

@@ -654,27 +654,27 @@ export const EditBookingSetupClubPage = () => {
                 // Include ID only if it exists (existing block day from API)
                 if (blockDay.id) {
                     formDataToSend.append(
-                        `facility_blockings_attributes[][id]`,
+                        `facility_setup[facility_blockings_attributes][][id]`,
                         blockDay.id.toString()
                     );
                 }
 
                 if (blockDay.startDate) {
                     formDataToSend.append(
-                        `facility_blockings_attributes[][ondate]`,
+                        `facility_setup[facility_blockings_attributes][][ondate]`,
                         blockDay.startDate
                     );
                 }
 
                 formDataToSend.append(
-                    `facility_blockings_attributes[][reason]`,
+                    `facility_setup[reason]`,
                     blockDay.blockReason
                 );
 
                 if (blockDay.dayType === "selectedSlots" && blockDay.selectedSlots && blockDay.selectedSlots.length > 0) {
                     blockDay.selectedSlots.forEach((slotId) => {
                         formDataToSend.append(
-                            `facility_blockings_attributes[][block_slot][]`,
+                            `facility_setup[block_slot][]`,
                             slotId.toString()
                         );
                     });
@@ -1159,7 +1159,7 @@ export const EditBookingSetupClubPage = () => {
         try {
             const formattedDate = date.replace(/-/g, '/');
             const response = await axios.get(
-                `https://${baseUrl}/crm/admin/facility_setups/${facilityId}/all_schedules_for_facility_setup.json`,
+                `https://${baseUrl}/pms/admin/facility_setups/${facilityId}/all_schedules_for_facility_setup.json`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
