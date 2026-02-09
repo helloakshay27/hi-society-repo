@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { 
   ticketManagementAPI, 
   TicketFilters, 
@@ -33,6 +34,32 @@ const priorityOptions = [
   { value: 'p5', label: 'P5 - Low' }
 ];
 
+const ticketTypeOptions = [
+  { value: 'request', label: 'Request' },
+  { value: 'complaint', label: 'Complaint' },
+  { value: 'suggestion', label: 'Suggestion' }
+];
+
+interface TowerOption {
+  id: number;
+  name: string;
+}
+
+interface FlatOption {
+  id: number;
+  flat_no: string;
+}
+
+interface IssueTypeOption {
+  id: number;
+  name: string;
+}
+
+interface ComplaintModeOption {
+  id: number;
+  name: string;
+}
+
 export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: TicketsFilterDialogProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -40,14 +67,23 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
   // Filter state
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [ticketNumber, setTicketNumber] = useState('');
+  const [issueType, setIssueType] = useState('');
   const [category, setCategory] = useState('');
   const [subCategory, setSubCategory] = useState('');
+  const [assignedUser, setAssignedUser] = useState('');
+  const [tower, setTower] = useState('');
+  const [flat, setFlat] = useState('');
+  const [complaintMode, setComplaintMode] = useState('');
+  const [ticketType, setTicketType] = useState('');
+  const [issueRelatedTo, setIssueRelatedTo] = useState('');
+  const [status, setStatus] = useState('');
+  const [priority, setPriority] = useState('');
+  const [escalation, setEscalation] = useState('');
+  const [rating, setRating] = useState('');
   const [department, setDepartment] = useState('');
   const [site, setSite] = useState('');
   const [unit, setUnit] = useState('');
-  const [status, setStatus] = useState('');
-  const [priority, setPriority] = useState('');
-  const [assignedUser, setAssignedUser] = useState('');
   const [userSearch, setUserSearch] = useState('');
   
   // State to track if filters are already cleared (for double-click behavior)
@@ -61,6 +97,10 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
   const [units, setUnits] = useState<UnitOption[]>([]);
   const [statuses, setStatuses] = useState<StatusOption[]>([]);
   const [users, setUsers] = useState<UserOption[]>([]);
+  const [towers, setTowers] = useState<TowerOption[]>([]);
+  const [flats, setFlats] = useState<FlatOption[]>([]);
+  const [issueTypes, setIssueTypes] = useState<IssueTypeOption[]>([]);
+  const [complaintModes, setComplaintModes] = useState<ComplaintModeOption[]>([]);
 
   // Common field styles
   const commonFieldStyles = "h-10 rounded-md border border-[hsl(var(--analytics-border))] bg-white";
@@ -75,16 +115,18 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
   // Check if all filters are empty to determine cleared state
   useEffect(() => {
-    const allFiltersEmpty = !dateFrom && !dateTo && !category && !subCategory && 
+    const allFiltersEmpty = !dateFrom && !dateTo && !ticketNumber && !issueType && 
+                           !category && !subCategory && !assignedUser && !tower && 
+                           !flat && !complaintMode && !ticketType && !issueRelatedTo &&
                            !department && !site && !unit && !status && 
-                           !priority && !assignedUser && !userSearch;
+                           !priority && !escalation && !rating && !userSearch;
     
     if (allFiltersEmpty) {
       setFiltersCleared(true);
     } else {
       setFiltersCleared(false);
     }
-  }, [dateFrom, dateTo, category, subCategory, department, site, unit, status, priority, assignedUser, userSearch]);
+  }, [dateFrom, dateTo, ticketNumber, issueType, category, subCategory, assignedUser, tower, flat, complaintMode, ticketType, issueRelatedTo, department, site, unit, status, priority, escalation, rating, userSearch]);
 
   // Add effect to load subcategories when category changes
   useEffect(() => {
@@ -114,6 +156,16 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
 
     loadSubCategories();
   }, [category]);
+
+  // Add effect to load flats when tower changes
+  useEffect(() => {
+    if (tower) {
+      loadFlats(tower);
+    } else {
+      setFlats([]);
+      setFlat('');
+    }
+  }, [tower]);
 
   const loadFilterData = async () => {
     try {
@@ -163,6 +215,11 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
       setUnits(unitsData);
       setStatuses(statusesData);
       setUsers(usersData);
+
+      // Load additional data for new filters
+      loadTowers();
+      loadIssueTypes();
+      loadComplaintModes();
     } catch (error) {
       console.error('❌ Error loading filter data:', error);
       console.error('❌ Detailed error:', {
@@ -174,6 +231,73 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
         description: "Failed to load filter options.",
         variant: "destructive",
       });
+    }
+  };
+
+  const loadTowers = async () => {
+    try {
+      const response = await fetch(getFullUrl('/crm/admin/society_blocks.json'), {
+        headers: getAuthHeader()
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTowers(data.society_blocks || []);
+      }
+    } catch (error) {
+      console.error('Error loading towers:', error);
+    }
+  };
+
+  const loadFlats = async (towerId: string) => {
+    try {
+      const response = await fetch(getFullUrl(`/crm/admin/society_flats.json?q[society_block_id_eq]=${towerId}`), {
+        headers: getAuthHeader()
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setFlats(data.society_flats || []);
+      }
+    } catch (error) {
+      console.error('Error loading flats:', error);
+    }
+  };
+
+  const loadIssueTypes = async () => {
+    try {
+      const userData = localStorage.getItem('user');
+      let societyId = '';
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        societyId = parsedUser.society?.id || parsedUser.selected_user_society || parsedUser.site_id;
+      }
+      
+      const url = societyId 
+        ? getFullUrl(`/user/issue_type.json?society_id=${societyId}`)
+        : getFullUrl('/user/issue_type.json');
+      
+      const response = await fetch(url, {
+        headers: getAuthHeader()
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setIssueTypes(data.data || data || []);
+      }
+    } catch (error) {
+      console.error('Error loading issue types:', error);
+    }
+  };
+
+  const loadComplaintModes = async () => {
+    try {
+      const response = await fetch(getFullUrl('/crm/admin/complaint_modes.json'), {
+        headers: getAuthHeader()
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setComplaintModes(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Error loading complaint modes:', error);
     }
   };
 
@@ -254,14 +378,23 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
     // First click - clear all filters and show all records
     setDateFrom('');
     setDateTo('');
+    setTicketNumber('');
+    setIssueType('');
     setCategory('');
     setSubCategory('');
+    setAssignedUser('');
+    setTower('');
+    setFlat('');
+    setComplaintMode('');
+    setTicketType('');
+    setIssueRelatedTo('');
     setDepartment('');
     setSite('');
     setUnit('');
     setStatus('');
     setPriority('');
-    setAssignedUser('');
+    setEscalation('');
+    setRating('');
     setUserSearch('');
     
     // Apply empty filters to show all records
@@ -318,7 +451,36 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
           {/* Filter Options Section */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-[hsl(var(--analytics-text))]">Filter Options</h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              {/* Ticket Number */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Ticket Number</Label>
+                <Input
+                  type="text"
+                  placeholder="Select Ticket"
+                  value={ticketNumber}
+                  onChange={(e) => setTicketNumber(e.target.value)}
+                  className={commonFieldStyles}
+                />
+              </div>
+
+              {/* Issue Type */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Issue Type</Label>
+                <Select value={issueType} onValueChange={setIssueType}>
+                  <SelectTrigger className={commonFieldStyles}>
+                    <SelectValue placeholder="Select Issue Type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
+                    {issueTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Category */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Category</Label>
@@ -339,56 +501,22 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
                 </Select>
               </div>
 
-              {/* Sub Category */}
+              {/* Assign to */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Sub Category</Label>
-                <Select value={subCategory} onValueChange={setSubCategory} disabled={!category}>
+                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Assign to</Label>
+                <Select value={assignedUser} onValueChange={setAssignedUser}>
                   <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Sub Category" />
+                    <SelectValue placeholder="Select Assignee" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {subcategories.map((subcat) => (
-                      <SelectItem key={subcat.id} value={subcat.id.toString()}>
-                        {subcat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Department */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Department</Label>
-                <Select value={department} onValueChange={setDepartment}>
-                  <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Department" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id.toString()}>
-                        {dept.department_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Site */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Site</Label>
-                <Select value={site} onValueChange={setSite}>
-                  <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Site" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {sites.length === 0 ? (
-                      <SelectItem value="no-sites" disabled>
-                        No sites available
+                    {users.length === 0 ? (
+                      <SelectItem value="no-users" disabled>
+                        No users available
                       </SelectItem>
                     ) : (
-                      sites.map((siteItem) => (
-                        <SelectItem key={siteItem.id} value={siteItem.id.toString()}>
-                          {siteItem.name || siteItem.site_name || `Site ${siteItem.id}`}
+                      users.map((user) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.name}
                         </SelectItem>
                       ))
                     )}
@@ -396,21 +524,106 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
                 </Select>
               </div>
 
-              {/* Unit */}
+              {/* Tower */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Unit</Label>
-                <Select value={unit} onValueChange={setUnit}>
+                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Tower</Label>
+                <Select value={tower} onValueChange={(value) => {
+                  setTower(value);
+                  setFlat(''); // Reset flat when tower changes
+                }}>
                   <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Unit" />
+                    <SelectValue placeholder="Select Tower" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {units.map((unitItem) => (
-                      <SelectItem key={unitItem.id} value={unitItem.id.toString()}>
-                        {unitItem.unit_name}
+                    {towers.map((towerItem) => (
+                      <SelectItem key={towerItem.id} value={towerItem.id.toString()}>
+                        {towerItem.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Flat */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Flat</Label>
+                <Select value={flat} onValueChange={setFlat} disabled={!tower}>
+                  <SelectTrigger className={commonFieldStyles}>
+                    <SelectValue placeholder="Select Flat" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
+                    {flats.map((flatItem) => (
+                      <SelectItem key={flatItem.id} value={flatItem.id.toString()}>
+                        {flatItem.flat_no}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Complaint Mode */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Complaint Mode</Label>
+                <Select value={complaintMode} onValueChange={setComplaintMode}>
+                  <SelectTrigger className={commonFieldStyles}>
+                    <SelectValue placeholder="Select Complaint Mode" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
+                    {complaintModes.map((mode) => (
+                      <SelectItem key={mode.id} value={mode.id.toString()}>
+                        {mode.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Ticket Type */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Ticket Type</Label>
+                <Select value={ticketType} onValueChange={setTicketType}>
+                  <SelectTrigger className={commonFieldStyles}>
+                    <SelectValue placeholder="Select Ticket Type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
+                    {ticketTypeOptions.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Issue Related To */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Issue Related To</Label>
+                <Select value={issueRelatedTo} onValueChange={setIssueRelatedTo}>
+                  <SelectTrigger className={commonFieldStyles}>
+                    <SelectValue placeholder="Select Issue Related To" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
+                    <SelectItem value="fm">FM</SelectItem>
+                    <SelectItem value="project">Project</SelectItem>
+                    {issueTypes.map((type) => (
+                      <SelectItem key={`related-${type.id}`} value={type.id.toString()}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Date Range */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Date Range</Label>
+                <Input
+                  type="text"
+                  placeholder="Select Date Range"
+                  value={dateFrom && dateTo ? `${dateFrom} to ${dateTo}` : ''}
+                  readOnly
+                  className={commonFieldStyles}
+                />
               </div>
 
               {/* Status */}
@@ -447,40 +660,26 @@ export const TicketsFilterDialog = ({ isOpen, onClose, onApplyFilters }: Tickets
                 </Select>
               </div>
 
-              {/* Assigned User */}
+              {/* Escalation */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Assigned User</Label>
-                <Select value={assignedUser} onValueChange={setAssignedUser}>
-                  <SelectTrigger className={commonFieldStyles}>
-                    <SelectValue placeholder="Select Assigned User" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
-                    {users.length === 0 ? (
-                      <SelectItem value="no-users" disabled>
-                        No users available
-                      </SelectItem>
-                    ) : (
-                      users.map((user) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Escalation</Label>
+                <Input
+                  type="text"
+                  placeholder="Escalation"
+                  value={escalation}
+                  onChange={(e) => setEscalation(e.target.value)}
+                  className={commonFieldStyles}
+                />
               </div>
 
-              {/* User Search */}
+              {/* Rating */}
               <div className="space-y-2">
-                <Label htmlFor="userSearch" className="text-sm font-medium text-[hsl(var(--analytics-text))]">
-                  Search User
-                </Label>
+                <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Rating</Label>
                 <Input
-                  id="userSearch"
                   type="text"
-                  placeholder="Search by user name"
-                  value={userSearch}
-                  onChange={(e) => setUserSearch(e.target.value)}
+                  placeholder="Rating"
+                  value={rating}
+                  onChange={(e) => setRating(e.target.value)}
                   className={commonFieldStyles}
                 />
               </div>

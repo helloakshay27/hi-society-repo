@@ -91,7 +91,7 @@ export const EditStatusDialog = ({
       if (!complaintId) return;
       
       try {
-        const response = await apiClient.get(`/pms/admin/complaints/${complaintId}.json`);
+        const response = await apiClient.get(`/crm/admin/complaints/${complaintId}.json`);
         const data = response.data;
         setTicketData(data);
         

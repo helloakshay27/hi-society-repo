@@ -137,7 +137,7 @@ export const API_CONFIG = {
     GET_HOLIDAY: "/pms/admin/holiday_calendars", // Base path, will append /:id.json
     UPDATE_HOLIDAY: "/pms/admin/holiday_calendars", // Base path, will append /:id.json
     // New endpoints for ticket creation
-    CREATE_TICKET: "/pms/admin/complaints.json",
+    CREATE_TICKET: "/crm/admin/complaints.json",
     GET_SUBCATEGORIES: "/pms/admin/get_sub_categories",
     ACCOUNT_DETAILS: "/api/users/account.json",
     OCCUPANT_USERS: "/pms/account_setups/occupant_users.json",

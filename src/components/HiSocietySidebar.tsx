@@ -42,6 +42,7 @@ import {
   ChevronRight,
   ChevronLeft,
   Settings,
+  DollarSign,
 } from "lucide-react";
 
 interface MenuItem {
@@ -968,6 +969,56 @@ export const HiSocietySidebar: React.FC = () => {
               icon: Calendar,
               path: "/osr/setup",
             },
+            {
+              id: "ticket-management",
+              label: "Ticket Management",
+              icon: Headset,
+              subItems: [
+                {
+                  id: "ticket-setup",
+                  label: "Setup",
+                  icon: SettingsIcon,
+                  path: "/settings/ticket-management/setup",
+                },
+                {
+                  id: "escalation-matrix",
+                  label: "Escalation Matrix",
+                  icon: AlertTriangle,
+                  path: "/settings/ticket-management/escalation-matrix",
+                },
+                {
+                  id: "cost-approval",
+                  label: "Cost Approval",
+                  icon: DollarSign,
+                  path: "/settings/ticket-management/cost-approval",
+                },
+              ],
+            },
+          ],
+        },
+        {
+         id: "ticket-management",
+          label: "Ticket Management",
+          icon: SettingsIcon,
+          subItems: [
+            {
+              id: "ticket-setup",
+              label: "Ticket Setup",
+              icon: AlertTriangle,
+              path: "/settings/ticket-management/setup",
+            },
+            {
+              id: "escalation-matrix",
+              label: "Escalation Matrix",
+              icon: AlertTriangle,
+              path: "/settings/ticket-management/escalation-matrix",
+            },
+            {
+              id: "cost-approval",
+              label: "Cost Approval",
+              icon: DollarSign,
+              path: "/settings/ticket-management/cost-approval",
+            },          
           ],
         },
       ],

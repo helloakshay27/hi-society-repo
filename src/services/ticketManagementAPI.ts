@@ -199,11 +199,13 @@ export interface TicketListResponse {
 export interface CreateTicketFormData {
   of_phase: string;
   site_id: number;
+  id_society?: number;
   id_user?: number;
   sel_id_user?: number;
   on_behalf_of: string;
   complaint_type: string;
   category_type_id: number;
+  issue_type_id?: number;
   priority: string;
   severity?: string;
   society_staff_type: string;
@@ -218,6 +220,14 @@ export interface CreateTicketFormData {
   wing_id?: number;
   floor_id?: number;
   room_id?: number;
+  society_block_id?: number;
+  society_flat_id?: number;
+  flat_number?: number;
+  supplier_id?: number | string;
+  vendor?: number | string;
+  active?: number;
+  action?: boolean;
+  IsDelete?: boolean;
   is_golden_ticket?: boolean;
   is_flagged?: boolean;
 }
@@ -231,6 +241,19 @@ export interface UserAccountResponse {
   mobile: string;
   site_id: number;
   company_id: number;
+  society?: {
+    id: number;
+    building_name: string;
+    builder_id: number;
+    vcall_enabled: number;
+    vcall_token: string;
+    vcall_vendor_key: string;
+    vcall_sign_key: string;
+    osr_subscription: string;
+    url: string;
+    visitor_approval_required: boolean;
+    leave_at_gate_enabled: boolean;
+  };
 }
 
 export interface OccupantUserResponse {
@@ -631,7 +654,7 @@ export const ticketManagementAPI = {
       });
     }
 
-    const url = `/pms/admin/complaints.json?${queryParams.toString()}`;
+    const url = `/crm/admin/complaints.json?${queryParams.toString()}`;
     console.log('🔵 Final API URL:', url);
     console.log('🔵 Query parameters object:', Object.fromEntries(queryParams.entries()));
     const response = await apiClient.get(url);
@@ -652,11 +675,37 @@ export const ticketManagementAPI = {
     formData.append('complaint[complaint_type]', ticketData.complaint_type);
     formData.append('complaint[category_type_id]', ticketData.category_type_id.toString());
     formData.append('complaint[priority]', ticketData.priority);
-    formData.append('complaint[supplier_id]', ticketData.supplier_id.toString());
     formData.append('complaint[society_staff_type]', ticketData.society_staff_type);
     formData.append('complaint[proactive_reactive]', ticketData.proactive_reactive);
     formData.append('complaint[heading]', ticketData.heading);
     formData.append('complaint[complaint_mode_id]', ticketData.complaint_mode_id.toString());
+    
+    // Add society_id if provided
+    if (ticketData.id_society) {
+      formData.append('complaint[id_society]', ticketData.id_society.toString());
+    }
+
+    // Add issue_type_id if provided
+    if (ticketData.issue_type_id) {
+      formData.append('complaint[issue_type_id]', ticketData.issue_type_id.toString());
+    }
+
+    // Add flat_number if provided
+    if (ticketData.flat_number !== undefined) {
+      formData.append('complaint[flat_number]', ticketData.flat_number.toString());
+    }
+
+    // Add active, action, IsDelete flags
+    if (ticketData.active !== undefined) {
+      formData.append('complaint[active]', ticketData.active.toString());
+    }
+    if (ticketData.action !== undefined) {
+      formData.append('complaint[action]', ticketData.action.toString());
+    }
+    if (ticketData.IsDelete !== undefined) {
+      formData.append('complaint[IsDelete]', ticketData.IsDelete.toString());
+    }
+    
     // Add vendor as complaint[supplier_id] if present (support both vendor and supplier_id)
     if ('vendor' in ticketData && ticketData.vendor) {
       formData.append('complaint[supplier_id]', String(ticketData.vendor));
@@ -701,6 +750,14 @@ export const ticketManagementAPI = {
     }
     if (ticketData.room_id) {
       formData.append('complaint[room_id]', ticketData.room_id.toString());
+    }
+
+    // Add CRM-specific location parameters
+    if (ticketData.society_block_id) {
+      formData.append('complaint[society_block_id]', ticketData.society_block_id.toString());
+    }
+    if (ticketData.society_flat_id) {
+      formData.append('complaint[society_flat_id]', ticketData.society_flat_id.toString());
     }
 
     // Add golden ticket and flagged parameters
@@ -980,7 +1037,7 @@ export const ticketManagementAPI = {
         params.append('complaint[comment]', updateData.comment);
       }
 
-      const response = await apiClient.patch(`/pms/admin/complaints/${ticketId}.json`, params, {
+      const response = await apiClient.patch(`/crm/admin/complaints/${ticketId}.json`, params, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -995,7 +1052,7 @@ export const ticketManagementAPI = {
   // Get ticket details by ID
   async getTicketDetails(ticketId: string) {
     try {
-      const response = await apiClient.get(`/pms/admin/complaints/${ticketId}.json`);
+      const response = await apiClient.get(`/crm/admin/complaints/${ticketId}.json`);
       return response.data;
     } catch (error) {
       console.error('Error fetching ticket details:', error);
@@ -1595,7 +1652,7 @@ export const ticketManagementAPI = {
   // Fetch tickets by task occurrence ID
   async getTicketsByTaskOccurrenceId(taskOccurrenceId: string): Promise<any> {
     try {
-      const response = await apiClient.get(`/pms/admin/complaints.json?q[pms_asset_task_occurrence_id_eq]=${taskOccurrenceId}`);
+      const response = await apiClient.get(`/crm/admin/complaints.json?q[pms_asset_task_occurrence_id_eq]=${taskOccurrenceId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching tickets by task occurrence ID:', error);
