@@ -33,6 +33,9 @@ import HiSocNoticeDetails from "@/pages/HiSocNoticeDetails";
 import ContestListPage from "@/pages/ContestListPage";
 import CreateContestPage from "@/pages/CreateContestPage";
 import ContestDetailsPage from "@/pages/ContestDetailsPage";
+import HiSocGroupsPage from "@/pages/HiSocGroupsPage";
+import BookingDetailsPage from "@/pages/BookingDetailsPage";
+import VisitorsDashboard from "@/pages/VisitorsDashboard";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
