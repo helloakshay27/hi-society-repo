@@ -387,7 +387,7 @@ const CMSPayments = () => {
   return (
     <div className="p-6">
       <EnhancedTable
-        data={payments}
+        data={payments || []}
         columns={columns}
         renderActions={renderActions}
         renderCell={renderCell}
@@ -473,7 +473,7 @@ const CMSPayments = () => {
                   <MenuItem value="" disabled>
                     Select Tower
                   </MenuItem>
-                  {towers.map((tower: any) => (
+                  {towers?.map((tower: any) => (
                     <MenuItem key={tower.id} value={tower.id}>
                       {tower.name}
                     </MenuItem>

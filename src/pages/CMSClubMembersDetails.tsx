@@ -293,7 +293,7 @@ export const CMSClubMembersDetails = () => {
 
             // baseUrl already includes protocol (https://)
             const url = new URL(`https://${baseUrl}/club_member_allocations/${id}.json`);
-            url.searchParams.append('access_token', token || '');
+            url.searchParams.append('token', token || '');
 
             const response = await fetch(url.toString(), {
                 method: 'GET',
@@ -600,7 +600,7 @@ export const CMSClubMembersDetails = () => {
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-4">
                             <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
-                             Membership #{membershipData.id}
+                                Membership #{membershipData.id}
                             </h1>
                             {/* {renderStatusBadge()} */}
                         </div>

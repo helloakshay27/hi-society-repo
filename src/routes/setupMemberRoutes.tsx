@@ -1202,6 +1202,7 @@ export const setupMemberRoutes = (
       Component={withSuspense(CMSMembershipPlanSetup)}
     />
     <Route path="/cms/club-members" Component={withSuspense(CMSClubMembers)} />
+    <Route path="/cms/club-members/view/:id" Component={withSuspense(CMSClubMembersDetails)} />
     <Route
       path="/cms/club-members/add"
       Component={withSuspense(AddCMSClubMembers)}

@@ -138,7 +138,7 @@ const CMSClubMembers = () => {
         }
       })
 
-      setMembers(response.data.club_member_allocations);
+      setMembers(response.data?.club_member_allocations);
     } catch (error) {
       console.log(error)
     } finally {
@@ -378,7 +378,7 @@ const CMSClubMembers = () => {
         />
       )}
       <EnhancedTable
-        data={members}
+        data={members || []}
         columns={columns}
         renderCell={renderCell}
         renderActions={renderActions}

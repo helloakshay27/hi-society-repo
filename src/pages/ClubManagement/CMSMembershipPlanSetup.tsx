@@ -99,7 +99,7 @@ const CMSMembershipPlanSetup = () => {
                 }
             })
 
-            setPlans(response.data.plans)
+            setPlans(response.data?.plans)
         } catch (error) {
             console.log(error)
         } finally {
@@ -214,7 +214,7 @@ const CMSMembershipPlanSetup = () => {
     return (
         <div className="p-6">
             <EnhancedTable
-                data={plans}
+                data={plans || []}
                 columns={columns}
                 renderCell={renderCell}
                 renderActions={renderActions}
@@ -274,7 +274,7 @@ const CMSMembershipPlanSetup = () => {
                                 value={formData.payment_plan_id}
                                 onChange={(e) => handleInputChange('payment_plan_id', e.target.value)}
                             >
-                                {paymentPlans.map((option) => (
+                                {paymentPlans?.map((option) => (
                                     <MenuItem key={option.id} value={option.id}>
                                         {option.name}
                                     </MenuItem>
