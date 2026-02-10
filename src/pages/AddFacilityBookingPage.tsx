@@ -171,6 +171,39 @@ const AddFacilityBookingPage = () => {
     setSubFacilityDetails(null);
   };
 
+  // Helper function to check if slots are consecutive
+  const areConsecutiveSlots = (currentSlotIds: string[], newSlotId: string): boolean => {
+    if (currentSlotIds.length === 0) return true; // First slot is always valid
+
+    // Find the slot objects for validation
+    const allSlotIds = [...currentSlotIds, newSlotId].map(id => parseInt(id));
+    allSlotIds.sort((a, b) => a - b);
+
+    // Check if all IDs are consecutive numbers
+    for (let i = 1; i < allSlotIds.length; i++) {
+      if (allSlotIds[i] !== allSlotIds[i - 1] + 1) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  // Helper function to check if a slot should be enabled
+  const isSlotEnabled = (slotId: string): boolean => {
+    // If consecutive slots not required, all slots are enabled
+    if (!facilityDetails?.consecutive_slot) return true;
+
+    // If slot is already selected, it's enabled (for deselection)
+    if (selectedSlotIds.includes(slotId)) return true;
+
+    // If no slots selected yet, all slots are enabled
+    if (selectedSlotIds.length === 0) return true;
+
+    // Check if adding this slot would maintain consecutiveness
+    return areConsecutiveSlots(selectedSlotIds, slotId);
+  };
+
   // Fetch Towers
   const fetchTowers = async () => {
     try {
@@ -592,40 +625,81 @@ const AddFacilityBookingPage = () => {
                           (Loading...)
                         </span>
                       )}
+                      {facilityDetails?.consecutive_slot && (
+                        <span className="ml-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-md">
+                          Consecutive slots only
+                        </span>
+                      )}
                     </h3>
 
                     {availableSlots.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {availableSlots.map((slot: any) => (
-                          <div
-                            key={slot.id}
-                            className={`flex items-center space-x-3 p-4 border rounded-lg transition-all cursor-pointer ${selectedSlotIds.includes(slot.id.toString())
-                                ? "border-[#C72030] bg-[#C72030]/5 shadow-sm"
-                                : "border-gray-100 bg-white hover:border-gray-200"
-                              }`}
-                            onClick={() => {
-                              const slotIdStr = slot.id.toString();
-                              setSelectedSlotIds((prev) =>
-                                prev.includes(slotIdStr)
-                                  ? prev.filter((id) => id !== slotIdStr)
-                                  : [...prev, slotIdStr]
-                              );
-                            }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedSlotIds.includes(
-                                slot.id.toString()
-                              )}
-                              onChange={() => { }} // Handled by div click
-                              className="w-4 h-4 text-[#C72030] rounded border-gray-300 focus:ring-[#C72030]"
-                            />
-                            <span className="text-sm font-medium text-gray-800">
-                              {slot.ampm ||
-                                `${slot.start_time} to ${slot.end_time}`}
-                            </span>
-                          </div>
-                        ))}
+                        {availableSlots.map((slot: any) => {
+                          const slotIdStr = slot.id.toString();
+                          const isEnabled = isSlotEnabled(slotIdStr);
+                          const isSelected = selectedSlotIds.includes(slotIdStr);
+
+                          return (
+                            <div
+                              key={slot.id}
+                              className={`flex items-center space-x-3 p-4 border rounded-lg transition-all ${isEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                                } ${isSelected
+                                  ? "border-[#C72030] bg-[#C72030]/5 shadow-sm"
+                                  : isEnabled
+                                    ? "border-gray-100 bg-white hover:border-gray-200"
+                                    : "border-gray-100 bg-gray-50"
+                                }`}
+                              onClick={() => {
+                                if (!isEnabled) return;
+
+                                // Check if we're deselecting
+                                if (isSelected) {
+                                  // If consecutive slots are required, check if remaining slots would still be consecutive
+                                  if (facilityDetails?.consecutive_slot && selectedSlotIds.length > 1) {
+                                    const remainingSlots = selectedSlotIds.filter((id) => id !== slotIdStr);
+
+                                    // Check if remaining slots are consecutive
+                                    if (remainingSlots.length > 1) {
+                                      const sortedIds = remainingSlots.map(id => parseInt(id)).sort((a, b) => a - b);
+                                      let isConsecutive = true;
+
+                                      for (let i = 1; i < sortedIds.length; i++) {
+                                        if (sortedIds[i] !== sortedIds[i - 1] + 1) {
+                                          isConsecutive = false;
+                                          break;
+                                        }
+                                      }
+
+                                      if (!isConsecutive) {
+                                        toast.error("Cannot deselect this slot - remaining slots must be consecutive");
+                                        return;
+                                      }
+                                    }
+                                  }
+
+                                  setSelectedSlotIds((prev) => prev.filter((id) => id !== slotIdStr));
+                                  return;
+                                }
+
+                                // Add the slot
+                                setSelectedSlotIds((prev) => [...prev, slotIdStr]);
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                disabled={!isEnabled}
+                                onChange={() => { }} // Handled by div click
+                                className="w-4 h-4 text-[#C72030] rounded border-gray-300 focus:ring-[#C72030] disabled:opacity-50"
+                              />
+                              <span className={`text-sm font-medium ${isEnabled ? 'text-gray-800' : 'text-gray-400'
+                                }`}>
+                                {slot.ampm ||
+                                  `${slot.start_time} to ${slot.end_time}`}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       !loadingSlots && (
@@ -926,8 +1000,8 @@ const AddFacilityBookingPage = () => {
                         >
                           <div
                             className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${paymentMethod === method.key
-                                ? "border-[#C72030]"
-                                : "border-gray-300 group-hover:border-gray-400"
+                              ? "border-[#C72030]"
+                              : "border-gray-300 group-hover:border-gray-400"
                               }`}
                           >
                             {paymentMethod === method.key && (
@@ -936,8 +1010,8 @@ const AddFacilityBookingPage = () => {
                           </div>
                           <span
                             className={`text-[16px] transition-all ${paymentMethod === method.key
-                                ? "text-gray-900"
-                                : "text-gray-900"
+                              ? "text-gray-900"
+                              : "text-gray-900"
                               }`}
                           >
                             {method.label}
