@@ -29,6 +29,8 @@ import { fetchFMUsers } from '@/store/slices/fmUserSlice';
 import { fetchUserGroups } from '@/store/slices/userGroupSlice';
 import axios from 'axios';
 import { toast } from 'sonner';
+import CircularProgress from "@mui/material/CircularProgress";
+
 interface User {
   id: number;
   name: string;
@@ -55,6 +57,8 @@ const AddPollPage = () => {
   // const [users, setUsers] = useState([]);
   const [users, setUsers] = useState<User[]>([]);
   const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(false);
+
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -185,6 +189,7 @@ const AddPollPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     const startMinutes = toMinutes(formData.startTime);
     const endMinutes = toMinutes(formData.endTime);
 
@@ -290,6 +295,8 @@ const AddPollPage = () => {
     } catch (error: any) {
       console.error("Poll create error:", error);
       toast.error("Failed to create poll");
+    } finally {
+      setLoading(false);   // ✅ stop loader
     }
 
   };
@@ -441,6 +448,7 @@ const AddPollPage = () => {
                         fullWidth
                         size="small"
                         sx={{
+                          //  width: "50%",
                           "& .MuiFormLabel-asterisk": {
                             color: "red"
                           }
@@ -691,7 +699,7 @@ const AddPollPage = () => {
                   </Alert>
                 )}
               </Card>
-              <div className='flex items-center justify-center'>
+              {/* <div className='flex items-center justify-center'>
                 <Button
                   type="submit"
                   size="lg"
@@ -699,7 +707,23 @@ const AddPollPage = () => {
                 >
                   Submit Poll
                 </Button>
+              </div> */}
+
+              <div className="flex items-center justify-center">
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={loading}
+                  className="bg-[#C72030] hover:bg-[#C72030] text-white min-w-[160px]"
+                >
+                  {loading ? (
+                    <CircularProgress size={18} sx={{ color: "#fff" }} />
+                  ) : (
+                    "Submit Poll"
+                  )}
+                </Button>
               </div>
+
             </Stack>
           </Box>
         </Paper>
