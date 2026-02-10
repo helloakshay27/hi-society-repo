@@ -50,7 +50,7 @@ const categoryColumns = [
 
 const subCategoryColumns = [
   { key: "actions", label: "Actions", sortable: false },
-  { key: "category", label: "Category", sortable: true },
+  { key: "bd_category_name", label: "Category", sortable: true },
   { key: "name", label: "Sub Category", sortable: true },
 ];
 

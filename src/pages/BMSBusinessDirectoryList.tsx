@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import Switch from "@mui/material/Switch";
 import axios from "axios";
+import { BMSBusinessDirectoryFilterModal } from "@/components/BMSBusinessDirectoryFilterModal";
 
 interface BusinessDirectory {
   id: string;
@@ -35,14 +36,33 @@ const BMSBusinessDirectoryList: React.FC = () => {
   const navigate = useNavigate();
   const [directories, setDirectories] = useState<BusinessDirectory[]>([]);
   const [loading, setLoading] = useState(false)
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({
+    category: '',
+    subCategory: '',
+    status: '',
+  });
 
-  const fetchDirectories = async () => {
+  const fetchDirectories = async (filters = appliedFilters) => {
     try {
       setLoading(true)
+      const params: any = {};
+
+      if (filters.category) {
+        params["q[business_directory_category_id_eq]"] = filters.category;
+      }
+      if (filters.subCategory) {
+        params["q[business_directory_sub_category_id_eq]"] = filters.subCategory;
+      }
+      if (filters.status !== '') {
+        params["q[active_eq]"] = filters.status;
+      }
+
       const response = await axios.get(`https://${baseUrl}/crm/admin/business_directories.json`, {
         headers: {
           Authorization: `Bearer ${token}`
-        }
+        },
+        params
       })
       setDirectories(response.data.business_directories)
     } catch (error) {
@@ -62,7 +82,12 @@ const BMSBusinessDirectoryList: React.FC = () => {
   };
 
   const handleFilters = () => {
-    toast.info("Filters coming soon");
+    setIsFilterModalOpen(true);
+  };
+
+  const handleFilterApply = (filters: any) => {
+    setAppliedFilters(filters);
+    fetchDirectories(filters);
   };
 
   const handleView = (item: BusinessDirectory) => {
@@ -165,6 +190,12 @@ const BMSBusinessDirectoryList: React.FC = () => {
         emptyMessage="No businesses found"
         pagination={true}
         pageSize={10}
+      />
+
+      <BMSBusinessDirectoryFilterModal
+        open={isFilterModalOpen}
+        onOpenChange={setIsFilterModalOpen}
+        onApply={handleFilterApply}
       />
     </div>
   );

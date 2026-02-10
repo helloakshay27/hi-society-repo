@@ -120,45 +120,41 @@ const AddBusinessDirectoryPage: React.FC = () => {
     }
 
     try {
-      const payload = {
-        business_directory: {
-          company_name: form.companyName,
-          contact_name: form.contactPerson,
-          mobile: form.mobile,
-          landline_1: form.landline1,
-          landline_2: form.landline2,
-          extension: form.extIntercom,
-          primary_email: form.primaryEmail,
-          secondary_email: form.secondaryEmail,
-          website: form.website,
-          category_id: parseInt(form.category),
-          sub_category_id: form.subCategory ? parseInt(form.subCategory) : null,
-          key_offering: form.keyOffering,
-          description: form.description,
-          profile: form.profile,
-          active: true,
-          address: form.address,
-        },
-      };
+      const formData = new FormData();
+      formData.append("business_directory[company_name]", form.companyName);
+      formData.append("business_directory[contact_name]", form.contactPerson);
+      formData.append("business_directory[mobile]", form.mobile);
+      formData.append("business_directory[landline_1]", form.landline1);
+      formData.append("business_directory[landline_2]", form.landline2);
+      formData.append("business_directory[extension]", form.extIntercom);
+      formData.append("business_directory[primary_email]", form.primaryEmail);
+      formData.append("business_directory[secondary_email]", form.secondaryEmail);
+      formData.append("business_directory[website]", form.website);
+      formData.append("business_directory[category_id]", form.category);
+      formData.append("business_directory[sub_category_id]", form.subCategory);
+      formData.append("business_directory[key_offering]", form.keyOffering);
+      formData.append("business_directory[description]", form.description);
+      formData.append("business_directory[profile]", form.profile);
+      formData.append("business_directory[active]", "true");
+      formData.append("business_directory[address]", form.address);
+      if (logo) {
+        formData.append("business_directory[image]", logo);
+      }
+      if (gallery.length > 0) {
+        gallery.forEach((file, index) => {
+          formData.append(`business_directory[gallery_images]`, file);
+        });
+      }
 
       await axios.post(
         `https://${baseUrl}/crm/admin/business_directories.json`,
-        payload,
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
         }
       );
-
-      // Upload Logo if exists
-      // Note: The curl example was JSON only, but typically file uploads require FormData or separate calls.
-      // Assuming standard JSON payload for data first as per user request.
-      // If image upload is needed, it might be a separate call or multipart/form-data.
-      // Given the user request specifically asked for the JSON payload structure, I will stick to that first.
-      // However, usually "company_logo" would be part of the payload if supported, or a separate upload.
-      // For now, I'll assume the JSON payload is the primary goal and warn/comment about images.
 
       toast.success("Business directory added successfully");
       navigate(-1);

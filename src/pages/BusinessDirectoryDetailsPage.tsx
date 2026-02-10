@@ -30,7 +30,7 @@ interface BusinessDirectoryDetails {
     address: string;
     active: boolean;
     documents?: any[];
-    company_logo?: any;
+    image?: string;
 }
 
 const BusinessDirectoryDetailsPage: React.FC = () => {
@@ -302,9 +302,9 @@ const BusinessDirectoryDetailsPage: React.FC = () => {
                             </CardHeader>
                             <CardContent className="p-6 flex justify-center">
                                 <div className="h-40 w-40 rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-50 flex items-center justify-center">
-                                    {data.company_logo?.url ? (
+                                    {data.image ? (
                                         <img
-                                            src={data.company_logo.url}
+                                            src={data.image}
                                             alt="Company Logo"
                                             className="h-full w-full object-cover"
                                         />
