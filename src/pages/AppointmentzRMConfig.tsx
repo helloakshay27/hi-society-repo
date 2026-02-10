@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@mui/material";
@@ -20,7 +20,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
+import {
+  getRMUsers,
+  createRMUser,
+  updateRMUser,
+  RMUserData as APIRMUser,
+} from "@/services/appointmentzService";
 
 interface RMUser {
   id: number;
@@ -33,71 +38,8 @@ interface RMUser {
   status: boolean;
 }
 
-const MOCK_DATA: RMUser[] = [
-  {
-    id: 250,
-    name: "Abhishek Sharma",
-    email: "abhishek.sharma@runwalgroup.in",
-    mobile: "1893749821",
-    userType: "Cs User",
-    section: "Phase 1",
-    createdOn: "18/08/2024",
-    status: true,
-  },
-  {
-    id: 249,
-    name: "Vishwas Pratham",
-    email: "vishwas.pratham@runwalgroup.in",
-    mobile: "1119735509",
-    userType: "Cs User",
-    section: "Phase 1",
-    createdOn: "18/08/2024",
-    status: true,
-  },
-  {
-    id: 234,
-    name: "Akhil Raj",
-    email: "akhil.raj@runwalgroup.in",
-    mobile: "2269315808",
-    userType: "Rm User",
-    section: "Phase 2",
-    createdOn: "09/07/2024",
-    status: true,
-  },
-  {
-    id: 228,
-    name: "Anand Shah",
-    email: "anand.shah@runwalgroup.in",
-    mobile: "8097499915",
-    userType: "Cs User",
-    section: "Phase 2",
-    createdOn: "09/07/2024",
-    status: true,
-  },
-  {
-    id: 176,
-    name: "Rakesh Shah",
-    email: "rakesh.shah@runwal.com",
-    mobile: "9833857240",
-    userType: "Cs User",
-    section: "Phase 3",
-    createdOn: "25/01/2023",
-    status: true,
-  },
-  {
-    id: 141,
-    name: "Shriniwas Dalvi",
-    email: "shriniwas.dalvi@runwalgroup.in",
-    mobile: "9833050775",
-    userType: "Cs User",
-    section: "Phase 3",
-    createdOn: "13/12/2022",
-    status: true,
-  },
-];
-
 const AppointmentzRMConfig = () => {
-  const [data, setData] = useState<RMUser[]>(MOCK_DATA);
+  const [data, setData] = useState<RMUser[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -115,6 +57,37 @@ const AppointmentzRMConfig = () => {
     section: "",
   });
 
+  // Fetch RM users on component mount
+  const fetchRMUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await getRMUsers();
+      // Transform API data to component format
+      const transformedData: RMUser[] = response.data.map((user) => ({
+        id: user.id,
+        name: `User ID: ${user.user_id}`, // Using user_id as identifier
+        email: "N/A",
+        mobile: "N/A",
+        userType: user.admin ? "Admin" : "RM User",
+        section: `Society: ${user.society_id}`,
+        createdOn: new Date(user.created_at).toLocaleDateString("en-GB"),
+        status: user.active,
+      }));
+      setData(transformedData);
+    } catch (error) {
+      console.error("Error fetching RM users:", error);
+      setTimeout(() => {
+        toast.error("Failed to fetch RM users");
+      }, 0);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRMUsers();
+  }, [fetchRMUsers]);
+
   const columns = [
     { key: "actions", label: "Actions", sortable: false },
     { key: "id", label: "ID", sortable: true },
@@ -129,28 +102,32 @@ const AppointmentzRMConfig = () => {
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
-    if (!term) {
-      setData(MOCK_DATA);
-      return;
-    }
-    const lowerTerm = term.toLowerCase();
-    const filtered = MOCK_DATA.filter(
-      (item) =>
-        item.name.toLowerCase().includes(lowerTerm) ||
-        item.email.toLowerCase().includes(lowerTerm) ||
-        item.mobile.includes(term) ||
-        (item.section && item.section.toLowerCase().includes(lowerTerm))
-    );
-    setData(filtered);
+    // Search is handled by filtering the already-fetched data
+    // For server-side search, you would call the API with search params
   };
 
-  const handleToggleStatus = (id: number, currentStatus: boolean) => {
-    setData((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: !currentStatus } : item
-      )
-    );
-    toast.success("Status updated successfully!");
+  const handleToggleStatus = async (id: number, currentStatus: boolean) => {
+    try {
+      await updateRMUser(id, {
+        user: {
+          active: !currentStatus,
+        },
+      });
+      // Update local state
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, status: !currentStatus } : item
+        )
+      );
+      setTimeout(() => {
+        toast.success("Status updated successfully!");
+      }, 0);
+    } catch (error) {
+      console.error("Error updating status:", error);
+      setTimeout(() => {
+        toast.error("Failed to update status");
+      }, 0);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -193,7 +170,7 @@ const AppointmentzRMConfig = () => {
     setIsAddModalOpen(true);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (
       !formData.firstName ||
       !formData.lastName ||
@@ -203,41 +180,51 @@ const AppointmentzRMConfig = () => {
       !formData.userType ||
       !formData.section
     ) {
-      toast.error("Please fill all required fields");
+      setTimeout(() => {
+        toast.error("Please fill all required fields");
+      }, 0);
       return;
     }
 
-    if (isEditMode && selectedId) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === selectedId
-            ? {
-                ...item,
-                name: `${formData.firstName} ${formData.lastName}`,
-                email: formData.email,
-                mobile: formData.mobile,
-                userType: formData.userType === "cs" ? "Cs User" : "Rm User",
-                section: formData.section,
-              }
-            : item
-        )
-      );
-      toast.success("User updated successfully!");
-    } else {
-      const newUser: RMUser = {
-        id: Math.floor(Math.random() * 1000),
-        name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
-        mobile: formData.mobile,
-        userType: formData.userType === "cs" ? "Cs User" : "Rm User",
-        section: formData.section,
-        createdOn: new Date().toLocaleDateString("en-GB"),
-        status: true,
-      };
-      setData((prev) => [newUser, ...prev]);
-      toast.success("User added successfully!");
+    try {
+      if (isEditMode && selectedId) {
+        await updateRMUser(selectedId, {
+          user: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            mobile: formData.mobile,
+            user_type: formData.userType,
+            section: formData.section,
+          },
+        });
+        setTimeout(() => {
+          toast.success("User updated successfully!");
+        }, 0);
+      } else {
+        const response = await createRMUser({
+          user: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            email: formData.email,
+            mobile: formData.mobile,
+            password: formData.password,
+            user_type: formData.userType,
+            section: formData.section,
+          },
+        });
+        setTimeout(() => {
+          toast.success(response.message || "User added successfully!");
+        }, 0);
+      }
+      // Refresh the list
+      await fetchRMUsers();
+      setIsAddModalOpen(false);
+    } catch (error) {
+      console.error("Error saving user:", error);
+      setTimeout(() => {
+        toast.error("Failed to save user");
+      }, 0);
     }
-    setIsAddModalOpen(false);
   };
 
   const renderCell = (item: RMUser, columnKey: string) => {
@@ -276,8 +263,6 @@ const AppointmentzRMConfig = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <Toaster position="top-right" richColors />
-
       <EnhancedTable
         data={data}
         columns={columns}

@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit } from "lucide-react";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { Switch } from "@mui/material";
 import {
   Dialog,
@@ -21,29 +20,84 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  getBlockDays,
+  createBlockDay,
+  updateBlockDay,
+  BlockDay as APIBlockDay,
+  getRMUsers,
+} from "@/services/appointmentzService";
 
 interface BlockDayConfig {
   id: number;
   rmUser: string;
+  rmUserId: number;
   blockedDate: string;
   createdOn: string;
   status: boolean;
 }
 
-// Empty initial data to match image
-const MOCK_DATA: BlockDayConfig[] = [];
-
 const AppointmentzBlockDaysConfig = () => {
-  const [data, setData] = useState<BlockDayConfig[]>(MOCK_DATA);
+  const [data, setData] = useState<BlockDayConfig[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [rmUsers, setRmUsers] = useState<{ id: number; name: string }[]>([]);
 
   // Form Data State
   const [formData, setFormData] = useState({
     rmUser: "",
+    rmUserId: 0,
     blockDate: "",
   });
+
+  // Fetch block days and RM users on component mount
+  const fetchBlockDays = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await getBlockDays();
+
+      // Transform API data to component format
+      const transformedData: BlockDayConfig[] = response.data.map(
+        (blockDay) => ({
+          id: blockDay.id,
+          rmUser: blockDay.rm_user.name,
+          rmUserId: blockDay.rm_user.id,
+          blockedDate: blockDay.blocked_date,
+          createdOn: blockDay.created_on,
+          status: blockDay.active,
+        })
+      );
+      setData(transformedData);
+    } catch (error) {
+      console.error("Error fetching block days:", error);
+      setTimeout(() => {
+        toast.error("Failed to fetch block days");
+      }, 0);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchRMUsers = useCallback(async () => {
+    try {
+      const response = await getRMUsers();
+      const users = response.data.map((user) => ({
+        id: user.id,
+        name: `User ID: ${user.user_id}`,
+      }));
+      setRmUsers(users);
+    } catch (error) {
+      console.error("Error fetching RM users:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBlockDays();
+    fetchRMUsers();
+  }, [fetchBlockDays, fetchRMUsers]);
 
   const columns = [
     { key: "actions", label: "Actions", sortable: false },
@@ -55,21 +109,21 @@ const AppointmentzBlockDaysConfig = () => {
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
-    // Simple client-side search mock
-    if (term) {
-      const lowerTerm = term.toLowerCase();
-      // Since data is empty initially, this won't show much, but logic stands
-      const filtered = MOCK_DATA.filter((item) =>
-        item.rmUser.toLowerCase().includes(lowerTerm)
-      );
-      setData(filtered);
-    } else {
-      setData(MOCK_DATA);
-    }
+    // Search is handled by filtering the already-fetched data
+    // For server-side search, you would call the API with search params
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "rmUser") {
+      const selectedUser = rmUsers.find((u) => u.id.toString() === value);
+      setFormData((prev) => ({
+        ...prev,
+        rmUser: selectedUser?.name || "",
+        rmUserId: selectedUser?.id || 0,
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,25 +131,60 @@ const AppointmentzBlockDaysConfig = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Basic validation
-    if (!formData.rmUser || !formData.blockDate) {
-      toast.error("Please fill all required fields");
+    if (!formData.rmUserId || !formData.blockDate) {
+      setTimeout(() => {
+        toast.error("Please fill all required fields");
+      }, 0);
       return;
     }
 
-    const newBlockDay: BlockDayConfig = {
-      id: Math.floor(Math.random() * 1000),
-      rmUser: formData.rmUser,
-      blockedDate: new Date(formData.blockDate).toLocaleDateString("en-GB"),
-      createdOn: new Date().toLocaleDateString("en-GB"),
-      status: true,
-    };
+    try {
+      const response = await createBlockDay({
+        block_day: {
+          rm_user_id: formData.rmUserId,
+          blocked_date: formData.blockDate,
+        },
+      });
 
-    setData([newBlockDay, ...data]);
-    setIsAddModalOpen(false);
-    setFormData({ rmUser: "", blockDate: "" });
-    toast.success("Block Day added successfully!");
+      // Refresh the list
+      await fetchBlockDays();
+      setIsAddModalOpen(false);
+      setFormData({ rmUser: "", rmUserId: 0, blockDate: "" });
+      setTimeout(() => {
+        toast.success(response.message || "Block Day added successfully!");
+      }, 0);
+    } catch (error) {
+      console.error("Error creating block day:", error);
+      setTimeout(() => {
+        toast.error("Failed to create block day");
+      }, 0);
+    }
+  };
+
+  const handleToggleStatus = async (id: number, currentStatus: boolean) => {
+    try {
+      const response = await updateBlockDay(id, {
+        block_day: {
+          active: !currentStatus,
+        },
+      });
+      // Update local state
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, status: !currentStatus } : item
+        )
+      );
+      setTimeout(() => {
+        toast.success(response.message || "Status updated successfully!");
+      }, 0);
+    } catch (error) {
+      console.error("Error updating status:", error);
+      setTimeout(() => {
+        toast.error("Failed to update status");
+      }, 0);
+    }
   };
 
   const renderCell = (item: BlockDayConfig, columnKey: string) => {
@@ -115,13 +204,7 @@ const AppointmentzBlockDaysConfig = () => {
         return (
           <Switch
             checked={item.status}
-            onChange={() => {
-              const updatedData = data.map((d) =>
-                d.id === item.id ? { ...d, status: !d.status } : d
-              );
-              setData(updatedData);
-              toast.success("Status updated");
-            }}
+            onChange={() => handleToggleStatus(item.id, item.status)}
             sx={{
               "& .MuiSwitch-switchBase.Mui-checked": {
                 color: "#65C466",
@@ -139,8 +222,6 @@ const AppointmentzBlockDaysConfig = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <Toaster position="top-right" richColors />
-
       <EnhancedTable
         data={data}
         columns={columns}
@@ -178,15 +259,17 @@ const AppointmentzBlockDaysConfig = () => {
                 </label>
                 <Select
                   onValueChange={(val) => handleSelectChange("rmUser", val)}
+                  value={formData.rmUserId.toString()}
                 >
                   <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
                     <SelectValue placeholder="Select Rm User" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Sudhakar Nair">Sudhakar Nair</SelectItem>
-                    <SelectItem value="Vishwas Pratham">
-                      Vishwas Pratham
-                    </SelectItem>
+                    {rmUsers.map((user) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        {user.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
