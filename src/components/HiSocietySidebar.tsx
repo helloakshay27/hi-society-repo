@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, startTransition } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLayout } from "../contexts/LayoutContext";
 import {
@@ -429,13 +429,12 @@ export const HiSocietySidebar: React.FC = () => {
           icon: Briefcase,
           path: "/contests",
         },
-
-        {
-          id: "encash",
-          label: "Encash",
-          icon: Gift,
-          path: "/loyalty/encash-list",
-        },
+        // {
+        //   id: "encash",
+        //   label: "Encash",
+        //   icon: Gift,
+        //   path: "/loyalty/encash-list",
+        // },
       ],
     },
     cms: {
@@ -1092,7 +1091,9 @@ export const HiSocietySidebar: React.FC = () => {
 
   // Handle navigation
   const handleNavigation = (path: string) => {
-    navigate(path);
+    startTransition(() => {
+      navigate(path);
+    });
   };
 
   // Render menu item

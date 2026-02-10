@@ -128,15 +128,14 @@ export const LoyaltyInventoryDetails = () => {
                 <span className="text-sm font-semibold text-gray-700">{item.sku || "-"}</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className={`flex items-center gap-2 ${isActive ? 'bg-green-500' : 'bg-red-500'} text-white px-3 py-1 rounded-full`}>
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  <span className="text-xs font-medium uppercase">{isActive ? "Active" : "Inactive"}</span>
-                </div>
                 <Switch
                   checked={isActive}
                   onCheckedChange={setIsActive}
                   className="data-[state=checked]:bg-green-500"
                 />
+                <div className={`flex items-center gap-2 ${isActive ? 'bg-green-300' : 'bg-red-500'} text-white px-3 py-1 rounded-lg`}>
+                  <span className="text-xs font-medium uppercase">{isActive ? 'Active' : 'Inactive'}</span>
+                </div>
               </div>
             </div>
 
@@ -169,10 +168,10 @@ export const LoyaltyInventoryDetails = () => {
               <div className="border-l-4 border-gray-300 pl-4 py-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Maximum Retail Price (MRP)</div>
+                    <div className="text-xs text-gray-500 mb-1">Base Price</div>
                     <div className="text-2xl font-bold text-gray-900">₹ {parseFloat(item.base_price || 0).toLocaleString('en-IN')}</div>
                   </div>
-                  <div className="text-right">
+                  {/* <div className="text-right">
                     <div className="text-xs text-gray-500 mb-1">Channel Discount</div>
                     <div className="text-base font-semibold text-[#C72030]">
                       {item.discount || (
@@ -181,7 +180,7 @@ export const LoyaltyInventoryDetails = () => {
                           : '0% OFF'
                       )}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -189,11 +188,11 @@ export const LoyaltyInventoryDetails = () => {
               <div className="border-l-4 border-green-400 bg-green-50 pl-4 py-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <div className="text-xs text-gray-600 mb-1">Client Purchase Price</div>
+                    <div className="text-xs text-gray-600 mb-1">Client Price</div>
                     <div className="text-2xl font-bold text-gray-900">₹ {parseFloat(item.sale_price || 0).toLocaleString('en-IN')}</div>
                     <div className="text-xs text-green-600 mt-1">After channel discount</div>
                   </div>
-                  <div className="text-right">
+                  {/* <div className="text-right">
                     <div className="text-xs text-gray-600 mb-1">Client Discount</div>
                     <div className="text-base font-semibold text-[#C72030]">
                       {item.discount || (
@@ -202,7 +201,7 @@ export const LoyaltyInventoryDetails = () => {
                           : '0% OFF'
                       )}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -210,11 +209,11 @@ export const LoyaltyInventoryDetails = () => {
               <div className="border-l-4 border-[#C72030] pl-4 py-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Final Customer Price</div>
+                    <div className="text-xs text-gray-500 mb-1">Customer Price</div>
                     <div className="text-2xl font-bold text-[#C72030]">₹ {parseFloat(item.final_price || item.sale_price || 0).toLocaleString('en-IN')}</div>
                     <div className="text-xs text-[#C72030] mt-1">Best price for end customer</div>
                   </div>
-                  <div className="text-right">
+                  {/* <div className="text-right">
                     <div className="text-xs text-gray-500 mb-1">Customer Discount</div>
                     <div className="text-base font-semibold text-[#C72030]">
                       {item.base_price && item.final_price
@@ -222,7 +221,7 @@ export const LoyaltyInventoryDetails = () => {
                         : '0% OFF'
                       }
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

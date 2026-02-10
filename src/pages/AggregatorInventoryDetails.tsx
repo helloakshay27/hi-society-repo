@@ -187,15 +187,14 @@ export const AggregatorInventoryDetails = () => {
                                 <span className="text-sm font-semibold text-gray-700">{product.sku}</span>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className={`flex items-center gap-2 ${isActive ? 'bg-green-500' : 'bg-red-500'} text-white px-3 py-1 rounded-full`}>
-                                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                                    <span className="text-xs font-medium uppercase">{isActive ? 'Active' : 'Inactive'}</span>
-                                </div>
                                 <Switch
                                     checked={isActive}
                                     onCheckedChange={setIsActive}
                                     className="data-[state=checked]:bg-green-500"
                                 />
+                                <div className={`flex items-center gap-2 ${isActive ? 'bg-green-300' : 'bg-red-500'} px-3 py-1 rounded-lg`}>
+                                    <span className="text-xs font-medium uppercase">{isActive ? 'Active' : 'Inactive'}</span>
+                                </div>
                             </div>
                         </div>
                         {product.aggr_product_id && (
@@ -227,15 +226,15 @@ export const AggregatorInventoryDetails = () => {
                             <div className="border-l-4 border-gray-300 pl-4 py-3">
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <div className="text-xs text-gray-500 mb-1">Maximum Retail Price (MRP)</div>
+                                        <div className="text-xs text-gray-500 mb-1">Base Price</div>
                                         <div className="text-2xl font-bold text-gray-900">₹ {parseFloat(product.base_price || "0").toLocaleString('en-IN')}</div>
                                     </div>
-                                    <div className="text-right">
+                                    {/* <div className="text-right">
                                         <div className="text-xs text-gray-500 mb-1">Channel Discount</div>
                                         <div className="text-base font-semibold text-[#C72030]">
                                             {discount > 0 ? `${discount}% OFF` : '0% OFF'}
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
 
@@ -243,16 +242,16 @@ export const AggregatorInventoryDetails = () => {
                             <div className="border-l-4 border-green-400 bg-green-50 pl-4 py-3">
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <div className="text-xs text-gray-600 mb-1">Client Purchase Price</div>
+                                        <div className="text-xs text-gray-600 mb-1">Client Price</div>
                                         <div className="text-2xl font-bold text-gray-900">₹ {parseFloat(product.sale_price || "0").toLocaleString('en-IN')}</div>
                                         <div className="text-xs text-green-600 mt-1">After channel discount</div>
                                     </div>
-                                    <div className="text-right">
+                                    {/* <div className="text-right">
                                         <div className="text-xs text-gray-600 mb-1">Client Discount</div>
                                         <div className="text-base font-semibold text-[#C72030]">
                                             {discount > 0 ? `${discount}% OFF` : '0% OFF'}
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
 
@@ -260,16 +259,16 @@ export const AggregatorInventoryDetails = () => {
                             <div className="border-l-4 border-[#C72030] pl-4 py-3">
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <div className="text-xs text-gray-500 mb-1">Final Customer Price</div>
+                                        <div className="text-xs text-gray-500 mb-1">Customer Price</div>
                                         <div className="text-2xl font-bold text-[#C72030]">₹ {product.base_amount.toLocaleString('en-IN')}</div>
                                         <div className="text-xs text-[#C72030] mt-1">Best price for end customer</div>
                                     </div>
-                                    <div className="text-right">
+                                    {/* <div className="text-right">
                                         <div className="text-xs text-gray-500 mb-1">Customer Discount</div>
                                         <div className="text-base font-semibold text-[#C72030]">
                                             {discount > 0 ? `${discount}% OFF` : '0% OFF'}
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         </div>
@@ -344,18 +343,20 @@ export const AggregatorInventoryDetails = () => {
                     {product.redemption_instructions && (
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
                             <h3 className="text-sm font-semibold text-gray-900 mb-3 underline">Redemption Instructions</h3>
-                            <p className="text-sm text-gray-700 leading-relaxed bg-blue-50 p-4 rounded-lg border border-blue-100">
-                                {product.redemption_instructions}
-                            </p>
+                            <div
+                                className="text-sm text-gray-700 leading-relaxed bg-blue-50 p-4 rounded-lg border border-blue-100"
+                                dangerouslySetInnerHTML={{ __html: product.redemption_instructions }}
+                            />
                         </div>
                     )}
 
                     {product.terms_and_conditions && (
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
                             <h3 className="text-sm font-semibold text-gray-900 mb-3 underline">Terms & Conditions</h3>
-                            <p className="text-xs text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                {product.terms_and_conditions}
-                            </p>
+                            <div
+                                className="text-xs text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-200"
+                                dangerouslySetInnerHTML={{ __html: product.terms_and_conditions }}
+                            />
                         </div>
                     )}
                 </div>
