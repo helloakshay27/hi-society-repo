@@ -322,7 +322,7 @@ const CMSPayments = () => {
 
     setIsSubmitting(true)
     try {
-      await axios.put(
+      await axios.patch(
         `https://${baseUrl}/crm/admin/facility_bookings/update_payment_details.json`,
         {
           payid: selectedPayment.id,
@@ -350,15 +350,6 @@ const CMSPayments = () => {
 
   const renderActions = (item: any) => (
     <div>
-      {/* {item.actions.can_edit && ( */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => handleEdit(item)}
-      >
-        <Edit className="w-4 h-4" />
-      </Button>
-      {/* )} */}
       <Button
         variant="ghost"
         size="sm"
@@ -366,6 +357,15 @@ const CMSPayments = () => {
       >
         <Printer className="w-4 h-4" />
       </Button>
+      {item.actions.can_edit && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleEdit(item)}
+        >
+          <Edit className="w-4 h-4" />
+        </Button>
+      )}
     </div>
   )
 
