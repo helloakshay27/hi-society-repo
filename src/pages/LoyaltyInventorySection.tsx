@@ -67,7 +67,7 @@ export const LoyaltyInventorySection = () => {
         { key: "base_price", label: "Base Price", sortable: true },
         { key: "sale_price", label: "Sale Price", sortable: true },
         { key: "final_price", label: "Final Price", sortable: true },
-        { key: "discount", label: "Discount", sortable: true },
+        // { key: "discount", label: "Discount", sortable: true },
         { key: "value_type", label: "Value Type", sortable: true },
         { key: "min_value", label: "Min Value", sortable: true },
         { key: "max_value", label: "Max Value", sortable: true },

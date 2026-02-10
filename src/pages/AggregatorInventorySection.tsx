@@ -22,7 +22,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Plus, Package, Warehouse, Eye } from "lucide-react";
+import { Plus, Package, Warehouse, Eye, RefreshCwIcon } from "lucide-react";
 // import { getFullUrl, API_CONFIG } from "@/config/apiConfig";
 
 const AggregatorInventorySection = () => {
@@ -90,7 +90,7 @@ const AggregatorInventorySection = () => {
             const response = await axios.get(url);
             const products = response.data?.data || [];
             const meta = response.data?.meta || {};
-            
+
             setInventoryData(products);
             setCurrentPage(meta.page || 1);
             setTotalPages(meta.total_pages || 1);
@@ -143,9 +143,9 @@ const AggregatorInventorySection = () => {
                 return <span className="font-medium">{item.id}</span>;
             case "banner_image_url":
                 return item.banner_image_url ? (
-                    <img 
-                        src={item.banner_image_url} 
-                        alt={item.name} 
+                    <img
+                        src={item.banner_image_url}
+                        alt={item.name}
                         className="w-16 h-16 object-cover rounded"
                         onError={(e) => {
                             (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64';
@@ -292,7 +292,7 @@ const AggregatorInventorySection = () => {
             const url = "https://runwal-api.lockated.com/aggregator_products/add_products_to_store?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
             await axios.post(
                 url,
-                { 
+                {
                     product_ids: selectedProductIds
                 }
             );
@@ -304,7 +304,7 @@ const AggregatorInventorySection = () => {
         } finally {
             setLoading(false);
         }
-        
+
         // Previous implementation with organization selection
         // if (selectedOrgIds.length === 0) {
         //     toast.error("Please select at least one organization.");
@@ -322,10 +322,26 @@ const AggregatorInventorySection = () => {
         // setSelectedOrgIds([]);
     };
 
+    const handleSyncInventory = async () => {
+        try {
+            setLoading(true);
+            await axios.post(
+                "https://runwal-api.lockated.com//aggregators/1/sync_products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+            );
+            toast.success("Inventory sync started!");
+            // Optionally, you can refresh the inventory data after sync
+            fetchInventoryData();
+        } catch (error) {
+            toast.error("Failed to sync inventory.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="p-6 space-y-6 bg-white min-h-screen">
             <Toaster position="top-right" richColors closeButton />
-            
+
             {/* Header */}
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-semibold text-[#1A1A1A]">Aggregator Inventory</h1>
@@ -335,7 +351,7 @@ const AggregatorInventorySection = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+            {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
                 <StatsCard
                     icon={<Package />}
                     label="Total Products"
@@ -350,8 +366,8 @@ const AggregatorInventorySection = () => {
                     bgColor="bg-[#F6F4EE]"
                     iconBg="bg-[#C4B89D54]"
                 />
-            </div>
-            
+            </div> */}
+
             {/* Add to Store Button */}
             <div className="flex justify-end">
                 <Button
@@ -373,6 +389,19 @@ const AggregatorInventorySection = () => {
                     enableExport={true}
                     enableGlobalSearch={true}
                     onGlobalSearch={handleGlobalSearch}
+                    leftActions={
+                        // Sync Inventory Button
+                        <div className="mb-2">
+                            <Button
+                                onClick={handleSyncInventory}
+                                className="bg-[#F6F4EE] text-[#C72030] border border-[#E5E1D8] rounded-none px-6 py-2 font-medium text-base hover:bg-[#f3e9e9]"
+                                disabled={loading}
+                            >
+                                <RefreshCwIcon className="mr-2 h-4 w-4" />
+                                Sync Inventory
+                            </Button>
+                        </div>
+                    }
                     handleExport={handleExport}
                     loading={loading}
                     loadingMessage="Loading aggregator products..."
@@ -381,8 +410,8 @@ const AggregatorInventorySection = () => {
                     exportFileName="aggregator-products"
                     storageKey="aggregator-products-table"
                 />
-                </div>
-                {/* <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+            </div>
+            {/* <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
                 <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-xl font-semibold text-[#1A1A1A]">
@@ -432,7 +461,7 @@ const AggregatorInventorySection = () => {
                     </div>
                 </DialogContent>
             </Dialog> */}
-            </div>
+            </div >
 )}
 
 export default AggregatorInventorySection;
