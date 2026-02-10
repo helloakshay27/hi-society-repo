@@ -1,34 +1,24 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit } from "lucide-react";
+import { Plus, Edit, Trash2, Pencil } from "lucide-react";
+import { getFullUrl, getAuthenticatedFetchOptions } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface PricingRule {
   id: number;
-  organization_id?: number;
-  generic_category_id?: number;
-  margin_type?: string;
-  margin_value?: number;
-  created_at?: string;
+  name: string;
+  rule_type: string;
+  discount_percentage?: number;
+  discount_amount?: number;
+  min_quantity?: number;
+  max_quantity?: number;
+  start_date?: string;
+  end_date?: string;
+  status: string;
+  created_at: string;
 }
 
 const PricingRuleList: React.FC = () => {
@@ -36,31 +26,11 @@ const PricingRuleList: React.FC = () => {
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
-  const [loadingOrgs, setLoadingOrgs] = useState(true);
-  const [loadingCats, setLoadingCats] = useState(true);
-  // Fetch organizations and categories on mount
-  useEffect(() => {
-    setLoadingOrgs(true);
-    fetch("https://runwal-api.lockated.com/organizations.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
-      .then((res) => res.json())
-      .then((data) => setOrganizations(data.organizations || []))
-      .catch(() => setOrganizations([]))
-      .finally(() => setLoadingOrgs(false));
-
-    setLoadingCats(true);
-    fetch("https://runwal-api.lockated.com/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
-      .then((res) => res.json())
-      .then((data) => setCategories(data.categories || []))
-      .catch(() => setCategories([]))
-      .finally(() => setLoadingCats(false));
-  }, []);
 
   const fetchPricingRules = useCallback(async () => {
     setLoading(true);
     try {
-      const url = "https://runwal-api.lockated.com/pricing_rules";
+      const url = "http://localhost:3000/pricing_rules";
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to fetch pricing rules");
@@ -99,82 +69,42 @@ const PricingRuleList: React.FC = () => {
     navigate("/settings/pricing-rule-create");
   };
 
-  // Modal state
-  const [editOpen, setEditOpen] = useState(false);
-  const [editId, setEditId] = useState<number | null>(null);
-  const [editOrgId, setEditOrgId] = useState<string | number>("");
-  const [editCatId, setEditCatId] = useState<string | number>("");
-  const [editMarginType, setEditMarginType] = useState<string>("percentage");
-  const [editMarginValue, setEditMarginValue] = useState<string>("");
-  const [editLoading, setEditLoading] = useState(false);
-
   const handleEdit = (id: number) => {
-    const rule = pricingRules.find(r => r.id === id);
-    setEditId(id);
-    setEditOrgId(rule?.organization_id ?? "");
-    setEditCatId(rule?.generic_category_id ?? "");
-    setEditMarginType(rule?.margin_type ?? "percentage");
-    setEditMarginValue(rule?.margin_value ? String(rule.margin_value) : "");
-    setEditOpen(true);
+    navigate(`/settings/pricing-rule-edit/${id}`);
   };
 
-  const handleEditClose = () => {
-    setEditOpen(false);
-    setEditId(null);
-    setEditOrgId("");
-    setEditCatId("");
-    setEditMarginType("percentage");
-    setEditMarginValue("");
-  };
-
-  const handleEditSubmit = async () => {
-    if (!editId) return;
-    if (
-      editOrgId === '' || editOrgId === null || editOrgId === undefined ||
-      editCatId === '' || editCatId === null || editCatId === undefined ||
-      !editMarginValue.trim()
-    ) {
-      toast.error("Please fill all fields");
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this pricing rule?")) {
       return;
     }
-    setEditLoading(true);
+
     try {
-      const url = `https://runwal-api.lockated.com/pricing_rules/${editId}`;
-      const payload = {
-        pricing_rule: {
-          organization_id: typeof editOrgId === 'string' ? parseInt(editOrgId) : editOrgId,
-          generic_category_id: typeof editCatId === 'string' ? parseInt(editCatId) : editCatId,
-          margin_type: editMarginType,
-          margin_value: parseFloat(editMarginValue),
-        },
-      };
+      const url = `http://localhost:3000/pricing_rules/${id}`;
       const response = await fetch(url, {
-        method: "PATCH",
+        method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
       });
+      
       if (!response.ok) {
-        throw new Error("Failed to update pricing rule");
+        throw new Error("Failed to delete pricing rule");
       }
-      toast.success("Pricing rule updated successfully!");
-      handleEditClose();
+      
+      toast.success("Pricing rule deleted successfully");
       fetchPricingRules();
     } catch (error) {
-      toast.error("Failed to update pricing rule", {
+      toast.error("Failed to delete pricing rule", {
         description: String(error),
       });
-    } finally {
-      setEditLoading(false);
     }
   };
 
   const columns = [
     { key: "actions", label: "Actions", sortable: false },
     { key: "id", label: "Sr No", sortable: false },
-    { key: "organization_id", label: "Organization", sortable: true },
-    { key: "generic_category_id", label: "Category", sortable: true },
+    { key: "organization_id", label: "Organization ID", sortable: true },
+    { key: "generic_category_id", label: "Category ID", sortable: true },
     { key: "margin_type", label: "Margin Type", sortable: true },
     { key: "margin_value", label: "Margin Value", sortable: true },
     { key: "created_at", label: "Created At", sortable: true },
@@ -183,38 +113,35 @@ const PricingRuleList: React.FC = () => {
   const renderCell = (item: any, columnKey: string) => {
     const index = pricingRules.findIndex(r => r.id === item.id);
     switch (columnKey) {
-      case "id":
-        return <span className="text-sm font-medium">{index + 1}</span>;
-      case "organization_id": {
-        if (!item.organization_id) return <span className="text-sm">-</span>;
-        const org = organizations.find((o) => o.id === item.organization_id);
-        return <span className="text-sm">{org ? org.name : item.organization_id}</span>;
-      }
-      case "generic_category_id": {
-        if (!item.generic_category_id) return <span className="text-sm">-</span>;
-        const cat = categories.find((c) => c.id === item.generic_category_id);
-        return <span className="text-sm">{cat ? cat.name : item.generic_category_id}</span>;
-      }
-      case "margin_type":
-        return <span className="text-sm capitalize">{item.margin_type || "-"}</span>;
-      case "margin_value":
-        return <span className="text-sm">{item.margin_value ? `${item.margin_value}${item.margin_type === 'percentage' ? '%' : ''}` : "-"}</span>;
-      case "created_at":
-        return <span className="text-sm">{item.created_at ? new Date(item.created_at).toLocaleString() : "-"}</span>;
       case "actions":
         return (
           <div className="flex gap-2">
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEdit(item.id);
-              }}
-              className="text-gray-600 hover:text-[#C72030]"
+              onClick={() => handleEdit(item.id)}
+              className="text-[#C72030] hover:text-[#A01828]"
             >
-              <Edit className="w-4 h-4" />
+              <Pencil size={18} />
+            </button>
+            <button
+              onClick={() => handleDelete(item.id)}
+              className="text-red-600 hover:text-red-900"
+            >
+              <Trash2 size={18} />
             </button>
           </div>
         );
+      case "id":
+        return <span className="font-medium">{index + 1}</span>;
+      case "organization_id":
+        return <span>{item.organization_id || "-"}</span>;
+      case "generic_category_id":
+        return <span>{item.generic_category_id || "-"}</span>;
+      case "margin_type":
+        return <span className="capitalize">{item.margin_type || "-"}</span>;
+      case "margin_value":
+        return <span>{item.margin_value ? `${item.margin_value}${item.margin_type === 'percentage' ? '%' : ''}` : "-"}</span>;
+      case "created_at":
+        return <span>{item.created_at ? new Date(item.created_at).toLocaleString() : "-"}</span>;
       default:
         return null;
     }
@@ -248,110 +175,6 @@ const PricingRuleList: React.FC = () => {
           loadingMessage="Loading pricing rules..."
         />
       </div>
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <DialogTitle className="text-xl font-semibold text-[#1A1A1A]">
-                  Edit Pricing Rule
-                </DialogTitle>
-                <DialogDescription className="text-sm text-gray-500 mt-1">
-                  Update pricing rule details below
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          <div className="space-y-4 mt-4 pb-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#1A1A1A]">
-                Organization <span className="text-red-500">*</span>
-              </Label>
-              <Select value={editOrgId?.toString()} onValueChange={setEditOrgId}>
-                <SelectTrigger className="bg-gray-50 border-[#e5e1d8]">
-                  <SelectValue placeholder="Select an organization" />
-                </SelectTrigger>
-                <SelectContent>
-                  {organizations.length === 0 ? (
-                    <div className="px-3 py-2 text-gray-400">No organizations found</div>
-                  ) : (
-                    organizations.map((org) => (
-                      <SelectItem key={org.id} value={org.id.toString()}>
-                        {org.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#1A1A1A]">
-                Category <span className="text-red-500">*</span>
-              </Label>
-              <Select value={editCatId?.toString()} onValueChange={setEditCatId}>
-                <SelectTrigger className="bg-gray-50 border-[#e5e1d8]">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.length === 0 ? (
-                    <div className="px-3 py-2 text-gray-400">No categories found</div>
-                  ) : (
-                    categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id.toString()}>
-                        {cat.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#1A1A1A]">
-                Margin Type <span className="text-red-500">*</span>
-              </Label>
-              <Select value={editMarginType} onValueChange={setEditMarginType}>
-                <SelectTrigger className="bg-gray-50 border-[#e5e1d8]">
-                  <SelectValue placeholder="Select margin type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="percentage">Percentage</SelectItem>
-                  <SelectItem value="flat">Flat</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-[#1A1A1A]">
-                Margin Value <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                type="number"
-                value={editMarginValue}
-                onChange={e => setEditMarginValue(e.target.value)}
-                className="bg-gray-50 border-[#e5e1d8]"
-                placeholder="e.g., 10"
-                min={0}
-                step={0.01}
-              />
-            </div>
-            <div className="flex justify-center pt-4">
-              <Button
-                onClick={handleEditSubmit}
-                className="bg-[#C72030] hover:bg-[#A01828] text-white px-12"
-                disabled={editLoading}
-              >
-                {editLoading ? "Saving..." : "Save"}
-              </Button>
-              <Button
-                onClick={handleEditClose}
-                className="bg-[#e7e3d9] text-[#C72030] px-6 ml-4"
-                disabled={editLoading}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

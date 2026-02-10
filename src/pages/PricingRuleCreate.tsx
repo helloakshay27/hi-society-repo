@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFullUrl, getAuthenticatedFetchOptions } from "@/config/apiConfig";
 import { toast } from "sonner";
@@ -110,7 +110,6 @@ interface PricingRuleForm {
   margin_value: string;
 }
 
-
 const PricingRuleCreate: React.FC = () => {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
@@ -120,32 +119,6 @@ const PricingRuleCreate: React.FC = () => {
     margin_type: "percentage",
     margin_value: "",
   });
-  const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
-  const [loadingOrgs, setLoadingOrgs] = useState(true);
-  const [loadingCats, setLoadingCats] = useState(true);
-
-  useEffect(() => {
-    // Fetch organizations
-    setLoadingOrgs(true);
-    fetch("https://runwal-api.lockated.com/organizations.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
-      .then((res) => res.json())
-      .then((data) => {
-        setOrganizations(data.organizations || []);
-      })
-      .catch(() => setOrganizations([]))
-      .finally(() => setLoadingOrgs(false));
-
-    // Fetch categories
-    setLoadingCats(true);
-    fetch("https://runwal-api.lockated.com/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
-      .then((res) => res.json())
-      .then((data) => {
-        setCategories(data.categories || []);
-      })
-      .catch(() => setCategories([]))
-      .finally(() => setLoadingCats(false));
-  }, []);
 
   const handleInputChange = (name: string, value: any) => {
     setFormData((prev) => ({
@@ -155,24 +128,15 @@ const PricingRuleCreate: React.FC = () => {
   };
 
   const validateForm = (): boolean => {
-    // Accept both string and number for IDs
-    if (
-      formData.organization_id === '' ||
-      formData.organization_id === null ||
-      formData.organization_id === undefined
-    ) {
-      toast.error("Please select organization");
+    if (!formData.organization_id.trim()) {
+      toast.error("Please enter organization ID");
       return false;
     }
-    if (
-      formData.generic_category_id === '' ||
-      formData.generic_category_id === null ||
-      formData.generic_category_id === undefined
-    ) {
-      toast.error("Please select category");
+    if (!formData.generic_category_id.trim()) {
+      toast.error("Please enter category ID");
       return false;
     }
-    if (!String(formData.margin_value).trim()) {
+    if (!formData.margin_value.trim()) {
       toast.error("Please enter margin value");
       return false;
     }
@@ -186,7 +150,7 @@ const PricingRuleCreate: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const url = "https://runwal-api.lockated.com/pricing_rules";
+      const url = "http://localhost:3000/pricing_rules";
       const payload = {
         pricing_rule: {
           organization_id: parseInt(formData.organization_id),
@@ -282,55 +246,27 @@ const PricingRuleCreate: React.FC = () => {
               gap: 3,
             }}
           >
-            <FormControl fullWidth sx={fieldStyles} required>
-              <InputLabel id="org-label">Organization</InputLabel>
-              <Select
-                labelId="org-label"
-                value={formData.organization_id}
-                label="Organization"
-                onChange={(e) => handleInputChange("organization_id", e.target.value)}
-                disabled={loadingOrgs}
-              >
-                {loadingOrgs ? (
-                  <MenuItem value="">
-                    Loading...
-                  </MenuItem>
-                ) : organizations.length === 0 ? (
-                  <MenuItem value="">
-                    No organizations found
-                  </MenuItem>
-                ) : (
-                  organizations.map((org) => (
-                    <MenuItem key={org.id} value={org.id}>{org.name}</MenuItem>
-                  ))
-                )}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth sx={fieldStyles} required>
-              <InputLabel id="cat-label">Category</InputLabel>
-              <Select
-                labelId="cat-label"
-                value={formData.generic_category_id}
-                label="Category"
-                onChange={(e) => handleInputChange("generic_category_id", e.target.value)}
-                disabled={loadingCats}
-              >
-                {loadingCats ? (
-                  <MenuItem value="">
-                    Loading...
-                  </MenuItem>
-                ) : categories.length === 0 ? (
-                  <MenuItem value="">
-                    No categories found
-                  </MenuItem>
-                ) : (
-                  categories.map((cat) => (
-                    <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
-                  ))
-                )}
-              </Select>
-            </FormControl>
+            <TextField
+              label="Organization ID"
+              required
+              type="number"
+              value={formData.organization_id}
+              onChange={(e) => handleInputChange("organization_id", e.target.value)}
+              placeholder="e.g., 9"
+              sx={fieldStyles}
+              fullWidth
+            />
+            
+            <TextField
+              label="Generic Category ID"
+              required
+              type="number"
+              value={formData.generic_category_id}
+              onChange={(e) => handleInputChange("generic_category_id", e.target.value)}
+              placeholder="e.g., 1"
+              sx={fieldStyles}
+              fullWidth
+            />
 
             <FormControl fullWidth sx={fieldStyles}>
               <InputLabel id="margin-type-label">Margin Type</InputLabel>
