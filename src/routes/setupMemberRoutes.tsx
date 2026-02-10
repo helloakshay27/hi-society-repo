@@ -33,7 +33,7 @@ import HiSocNoticeDetails from "@/pages/HiSocNoticeDetails";
 import ContestListPage from "@/pages/ContestListPage";
 import CreateContestPage from "@/pages/CreateContestPage";
 import ContestDetailsPage from "@/pages/ContestDetailsPage";
-import VisitorsDashboard from "@/pages/VisitorsDashboard";
+// import VisitorsDashboard from "@/pages/VisitorsDashboard";
 import PricingRuleEdit from "@/pages/PricingRuleEdit";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
