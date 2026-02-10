@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit } from "lucide-react";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import {
   Dialog,
   DialogContent,
@@ -20,10 +19,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  getSiteSchedules,
+  createSiteSchedule,
+  updateSiteSchedule,
+  SiteSchedule as APISiteSchedule,
+  getRMUsers,
+} from "@/services/appointmentzService";
 
 interface SlotConfig {
   id: number;
   rmUser: string;
+  rmUserId: number;
   startDate?: string;
   endDate?: string;
   startTime: string;
@@ -31,127 +38,25 @@ interface SlotConfig {
   mon: number;
   tue: number;
   wed: number;
-  thur: number;
+  thu: number;
   fri: number;
   sat: number;
   sun: number;
 }
 
-const MOCK_DATA: SlotConfig[] = [
-  {
-    id: 1,
-    rmUser: "Sudhakar Nair",
-    startDate: "10/01/2023",
-    endDate: "20/12/2024",
-    startTime: "02:00 PM",
-    endTime: "03:00 PM",
-    mon: 1,
-    tue: 1,
-    wed: 1,
-    thur: 1,
-    fri: 1,
-    sat: 1,
-    sun: 1,
-  },
-  {
-    id: 2,
-    rmUser: "Sudhakar Nair",
-    startDate: "10/01/2023",
-    endDate: "20/12/2024",
-    startTime: "04:00 PM",
-    endTime: "05:00 PM",
-    mon: 1,
-    tue: 1,
-    wed: 1,
-    thur: 1,
-    fri: 1,
-    sat: 1,
-    sun: 1,
-  },
-  {
-    id: 3,
-    rmUser: "Sudhakar Nair",
-    startDate: "10/01/2023",
-    endDate: "20/12/2024",
-    startTime: "03:00 PM",
-    endTime: "04:00 PM",
-    mon: 1,
-    tue: 1,
-    wed: 1,
-    thur: 1,
-    fri: 1,
-    sat: 1,
-    sun: 1,
-  },
-  {
-    id: 4,
-    rmUser: "Sudhakar Nair",
-    startTime: "01:00 PM",
-    endTime: "02:00 PM",
-    mon: 1,
-    tue: 1,
-    wed: 1,
-    thur: 1,
-    fri: 1,
-    sat: 1,
-    sun: 1,
-  },
-  {
-    id: 5,
-    rmUser: "Sudhakar Nair",
-    startTime: "12:00 PM",
-    endTime: "01:00 PM",
-    mon: 1,
-    tue: 1,
-    wed: 1,
-    thur: 1,
-    fri: 1,
-    sat: 1,
-    sun: 1,
-  },
-  {
-    id: 6,
-    rmUser: "Vishwas Prathamm",
-    startDate: "19/12/2022",
-    endDate: "31/12/2023",
-    startTime: "11:00 AM",
-    endTime: "12:00 PM",
-    mon: 10,
-    tue: 0,
-    wed: 0,
-    thur: 0,
-    fri: 0,
-    sat: 0,
-    sun: 0,
-  },
-  {
-    id: 7,
-    rmUser: "Sudhakar Nair",
-    startDate: "19/12/2022",
-    endDate: "31/12/2022",
-    startTime: "11:00 AM",
-    endTime: "12:00 PM",
-    mon: 20,
-    tue: 20,
-    wed: 20,
-    thur: 20,
-    fri: 20,
-    sat: 20,
-    sun: 20,
-  },
-];
-
 const AppointmentzSlotsConfig = () => {
-  const [data, setData] = useState<SlotConfig[]>(MOCK_DATA);
+  const [data, setData] = useState<SlotConfig[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [rmUsers, setRmUsers] = useState<{ id: number; name: string }[]>([]);
 
   // Form Data State
   const [formData, setFormData] = useState({
     rmUser: "",
+    rmUserId: 0,
     startDate: "",
     endDate: "",
     startHour: "00",
@@ -162,12 +67,75 @@ const AppointmentzSlotsConfig = () => {
       mon: 1,
       tue: 1,
       wed: 1,
-      thur: 1,
+      thu: 1,
       fri: 1,
       sat: 1,
       sun: 0,
     },
   });
+
+  // Fetch site schedules and RM users on component mount
+  const fetchSiteSchedules = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await getSiteSchedules();
+
+      // Fetch users once to map names
+      const rmResponse = await getRMUsers();
+      const users = rmResponse.data;
+
+      // Transform API data to component format
+      const transformedData: SlotConfig[] = response.data.map((schedule) => {
+        const user = users.find((u) => u.id === schedule.rm_user_id);
+        const [startTime, endTime] = (schedule.ampm_timing || "").split(" to ");
+
+        return {
+          id: schedule.id,
+          rmUser: user
+            ? `User ID: ${user.user_id}`
+            : `User ID: ${schedule.rm_user_id}`,
+          rmUserId: schedule.rm_user_id,
+          startDate: schedule.start_date,
+          endDate: schedule.end_date,
+          startTime: startTime || "",
+          endTime: endTime || "",
+          mon: schedule.mon,
+          tue: schedule.tue,
+          wed: schedule.wed,
+          thu: schedule.thu,
+          fri: schedule.fri,
+          sat: schedule.sat,
+          sun: schedule.sun,
+        };
+      });
+      setData(transformedData);
+    } catch (error) {
+      console.error("Error fetching site schedules:", error);
+      setTimeout(() => {
+        toast.error("Failed to fetch site schedules");
+      }, 0);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchRMUsers = useCallback(async () => {
+    try {
+      const response = await getRMUsers();
+      const users = response.data.map((user) => ({
+        id: user.id,
+        name: `User ID: ${user.user_id}`,
+      }));
+      setRmUsers(users);
+    } catch (error) {
+      console.error("Error fetching RM users:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSiteSchedules();
+    fetchRMUsers();
+  }, [fetchSiteSchedules, fetchRMUsers]);
 
   const columns = [
     { key: "actions", label: "Actions", sortable: false },
@@ -179,7 +147,7 @@ const AppointmentzSlotsConfig = () => {
     { key: "mon", label: "MON", sortable: false },
     { key: "tue", label: "TUE", sortable: false },
     { key: "wed", label: "WED", sortable: false },
-    { key: "thur", label: "THUR", sortable: false },
+    { key: "thu", label: "THU", sortable: false },
     { key: "fri", label: "FRI", sortable: false },
     { key: "sat", label: "SAT", sortable: false },
     { key: "sun", label: "SUN", sortable: false },
@@ -187,15 +155,7 @@ const AppointmentzSlotsConfig = () => {
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
-    if (!term) {
-      setData(MOCK_DATA);
-      return;
-    }
-    const lowerTerm = term.toLowerCase();
-    const filtered = MOCK_DATA.filter((item) =>
-      item.rmUser.toLowerCase().includes(lowerTerm)
-    );
-    setData(filtered);
+    // Search is handled by the table or can be implemented as a filter on 'data'
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,13 +171,23 @@ const AppointmentzSlotsConfig = () => {
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "rmUser") {
+      const selectedUser = rmUsers.find((u) => u.id.toString() === value);
+      setFormData((prev) => ({
+        ...prev,
+        rmUser: selectedUser?.name || "",
+        rmUserId: selectedUser?.id || 0,
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleOpenAddModal = () => {
     setIsEditMode(false);
     setFormData({
       rmUser: "",
+      rmUserId: 0,
       startDate: "",
       endDate: "",
       startHour: "00",
@@ -228,7 +198,7 @@ const AppointmentzSlotsConfig = () => {
         mon: 1,
         tue: 1,
         wed: 1,
-        thur: 1,
+        thu: 1,
         fri: 1,
         sat: 1,
         sun: 0,
@@ -247,6 +217,7 @@ const AppointmentzSlotsConfig = () => {
 
     setFormData({
       rmUser: item.rmUser,
+      rmUserId: item.rmUserId,
       startDate: item.startDate
         ? item.startDate.split("/").reverse().join("-")
         : "",
@@ -259,7 +230,7 @@ const AppointmentzSlotsConfig = () => {
         mon: item.mon,
         tue: item.tue,
         wed: item.wed,
-        thur: item.thur,
+        thu: item.thu,
         fri: item.fri,
         sat: item.sat,
         sun: item.sun,
@@ -268,41 +239,55 @@ const AppointmentzSlotsConfig = () => {
     setIsAddModalOpen(true);
   };
 
-  const handleSubmit = () => {
-    const newSlot: SlotConfig = {
-      id:
-        isEditMode && selectedId
-          ? selectedId
-          : Math.floor(Math.random() * 1000),
-      rmUser: formData.rmUser || "Sudhakar Nair",
-      startDate: formData.startDate
-        ? new Date(formData.startDate).toLocaleDateString("en-GB")
-        : "10/01/2023",
-      endDate: formData.endDate
-        ? new Date(formData.endDate).toLocaleDateString("en-GB")
-        : "20/12/2024",
-      startTime: `${formData.startHour}:${formData.startMinute} PM`,
-      endTime: `${formData.endHour}:${formData.endMinute} PM`,
-      mon: formData.days.mon,
-      tue: formData.days.tue,
-      wed: formData.days.wed,
-      thur: formData.days.thur,
-      fri: formData.days.fri,
-      sat: formData.days.sat,
-      sun: formData.days.sun,
-    };
-
-    if (isEditMode) {
-      setData((prev) =>
-        prev.map((item) => (item.id === selectedId ? newSlot : item))
-      );
-      toast.success("Slot updated successfully!");
-    } else {
-      setData([newSlot, ...data]);
-      toast.success("Slot added successfully!");
+  const handleSubmit = async () => {
+    if (!formData.rmUserId) {
+      setTimeout(() => {
+        toast.error("Please select an RM User");
+      }, 0);
+      return;
     }
 
-    setIsAddModalOpen(false);
+    try {
+      const payload = {
+        site_schedule: {
+          rm_user_ids: [formData.rmUserId],
+          start_date: formData.startDate || undefined,
+          end_date: formData.endDate || undefined,
+          start_hour: formData.startHour,
+          start_minute: formData.startMinute,
+          end_hour: formData.endHour,
+          end_minute: formData.endMinute,
+          mon: formData.days.mon,
+          tue: formData.days.tue,
+          wed: formData.days.wed,
+          thu: formData.days.thu,
+          fri: formData.days.fri,
+          sat: formData.days.sat,
+          sun: formData.days.sun,
+        },
+      };
+
+      if (isEditMode && selectedId) {
+        await updateSiteSchedule(selectedId, payload);
+        setTimeout(() => {
+          toast.success("Slot updated successfully!");
+        }, 0);
+      } else {
+        await createSiteSchedule(payload);
+        setTimeout(() => {
+          toast.success("Slot added successfully!");
+        }, 0);
+      }
+
+      // Refresh the list
+      await fetchSiteSchedules();
+      setIsAddModalOpen(false);
+    } catch (error) {
+      console.error("Error saving slot:", error);
+      setTimeout(() => {
+        toast.error("Failed to save slot");
+      }, 0);
+    }
   };
 
   const renderCell = (item: SlotConfig, columnKey: string) => {
@@ -318,15 +303,34 @@ const AppointmentzSlotsConfig = () => {
             <Edit className="w-4 h-4" />
           </Button>
         );
+      case "mon":
+      case "tue":
+      case "wed":
+      case "thu":
+      case "fri":
+      case "sat":
+      case "sun": {
+        const isActive = item[columnKey as keyof SlotConfig] === 1;
+        return (
+          <div
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+              isActive
+                ? "bg-green-100 text-green-700 border border-green-200"
+                : "bg-gray-100 text-gray-400 border border-gray-200"
+            }`}
+          >
+            {columnKey.toUpperCase().substring(0, 1)}
+          </div>
+        );
+      }
       default:
-        return item[columnKey];
+        // @ts-expect-error: accessing property by string key
+        return item[columnKey] || "N/A";
     }
   };
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <Toaster position="top-right" richColors />
-
       <EnhancedTable
         data={data}
         columns={columns}
@@ -364,17 +368,17 @@ const AppointmentzSlotsConfig = () => {
                 </label>
                 <Select
                   onValueChange={(val) => handleSelectChange("rmUser", val)}
-                  defaultValue={formData.rmUser}
-                  value={formData.rmUser}
+                  value={formData.rmUserId ? formData.rmUserId.toString() : ""}
                 >
                   <SelectTrigger className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10">
                     <SelectValue placeholder="Select Rm User" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Sudhakar Nair">Sudhakar Nair</SelectItem>
-                    <SelectItem value="Vishwas Pratham">
-                      Vishwas Pratham
-                    </SelectItem>
+                    {rmUsers.map((user) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        {user.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

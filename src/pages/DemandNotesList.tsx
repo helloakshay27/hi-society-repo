@@ -186,17 +186,66 @@ const DemandNotesList = () => {
                   className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <PaginationItem key={page}>
-                  <PaginationLink 
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-                    isActive={currentPage === page}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              
+              {/* First page */}
+              {currentPage > 3 && (
+                <>
+                  <PaginationItem>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(1); }}
+                    >
+                      1
+                    </PaginationLink>
+                  </PaginationItem>
+                  {currentPage > 4 && (
+                    <PaginationItem>
+                      <span className="px-3 py-2 text-gray-500">...</span>
+                    </PaginationItem>
+                  )}
+                </>
+              )}
+              
+              {/* Pages around current */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(page => {
+                  if (page === currentPage) return true;
+                  if (page === currentPage - 1 || page === currentPage - 2) return true;
+                  if (page === currentPage + 1 || page === currentPage + 2) return true;
+                  if (totalPages <= 7 && page <= totalPages) return true;
+                  return false;
+                })
+                .map(page => (
+                  <PaginationItem key={page}>
+                    <PaginationLink 
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
+                      isActive={currentPage === page}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+              
+              {/* Last page */}
+              {currentPage < totalPages - 2 && (
+                <>
+                  {currentPage < totalPages - 3 && (
+                    <PaginationItem>
+                      <span className="px-3 py-2 text-gray-500">...</span>
+                    </PaginationItem>
+                  )}
+                  <PaginationItem>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(totalPages); }}
+                    >
+                      {totalPages}
+                    </PaginationLink>
+                  </PaginationItem>
+                </>
+              )}
+              
               <PaginationItem>
                 <PaginationNext
                   href="#"

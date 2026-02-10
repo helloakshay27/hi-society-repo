@@ -125,7 +125,7 @@ export const LoyaltyInventoryDetails = () => {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <span className="text-xs text-gray-400 uppercase">SKU: </span>
-                <span className="text-sm font-semibold text-gray-700">{item.sku || "N/A"}</span>
+                <span className="text-sm font-semibold text-gray-700">{item.sku || "-"}</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className={`flex items-center gap-2 ${isActive ? 'bg-green-500' : 'bg-red-500'} text-white px-3 py-1 rounded-full`}>

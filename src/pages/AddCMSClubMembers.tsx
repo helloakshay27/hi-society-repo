@@ -72,6 +72,7 @@ const AddCMSClubMembers = () => {
     const [globalMembershipPlanId, setGlobalMembershipPlanId] = useState("");
     const [globalMembershipType, setGlobalMembershipType] = useState("paid");
     const [remark, setRemark] = useState("");
+    const [futureMembershipNumbers, setFutureMembershipNumbers] = useState<Record<string, string>>({});
 
     const [members, setMembers] = useState<MemberForm[]>([
         {
@@ -158,6 +159,25 @@ const AddCMSClubMembers = () => {
         }
     };
 
+    const fetchFutureMembershipNumbers = async () => {
+        try {
+            const response = await axios.get(
+                `https://${baseUrl}/club_member_allocations/future_membership_numbers.json?society_id=${societyId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            setFutureMembershipNumbers(response.data);
+            return response.data;
+        } catch (error) {
+            console.log(error);
+            toast.error("Failed to fetch membership numbers");
+            return {};
+        }
+    };
+
     useEffect(() => {
         fetchTowers();
         fetchMembershipPlans();
@@ -203,13 +223,52 @@ const AddCMSClubMembers = () => {
         }
     };
 
-    const updateMember = (id: string, field: keyof MemberForm, value: any) => {
-        setMembers(
-            members.map((member) =>
-                member.id === id ? { ...member, [field]: value } : member
-            )
-        );
+    const updateMember = async (id: string, field: keyof MemberForm, value: any) => {
+        // If club membership checkbox is being checked
+        console.log(field, value)
+        if (field === "isClubMembership" && value === true) {
+            // Fetch membership numbers if not already fetched
+            let membershipNumbers = futureMembershipNumbers;
+            if (Object.keys(membershipNumbers).length === 0) {
+                membershipNumbers = await fetchFutureMembershipNumbers();
+            }
+
+            // Find the index of the current member
+            const memberIndex = members.findIndex((member) => member.id === id);
+            console.log(membershipNumbers)
+
+            // Get the membership number for this member (1-indexed in the API response)
+            const membershipNumber = membershipNumbers.membership_numbers[(memberIndex + 1).toString()] || "";
+            console.log(membershipNumber)
+
+            // Update the member with both isClubMembership and membershipNumber
+            setMembers(
+                members.map((member) =>
+                    member.id === id
+                        ? { ...member, isClubMembership: value, membershipNumber }
+                        : member
+                )
+            );
+        } else if (field === "isClubMembership" && value === false) {
+            // If unchecking, clear the membership number
+            setMembers(
+                members.map((member) =>
+                    member.id === id
+                        ? { ...member, isClubMembership: value, membershipNumber: "" }
+                        : member
+                )
+            );
+        } else {
+            // Normal update for other fields
+            setMembers(
+                members.map((member) =>
+                    member.id === id ? { ...member, [field]: value } : member
+                )
+            );
+        }
     };
+
+    console.log(members)
 
     const handleSubmit = async () => {
         try {
@@ -574,6 +633,10 @@ const AddCMSClubMembers = () => {
                                                         )
                                                     }
                                                     sx={fieldStyles}
+                                                    InputProps={{
+                                                        readOnly: true,
+                                                    }}
+                                                    helperText="Auto-assigned from system"
                                                 />
                                             </div>
                                         )}

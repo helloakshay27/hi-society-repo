@@ -35,9 +35,9 @@ const LockPaymentsList = () => {
   const itemsPerPage = 10;
 
   const formatDate = (dateString: string): string => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return '-';
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
+    if (isNaN(date.getTime())) return '-';
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = String(date.getFullYear());
@@ -124,7 +124,7 @@ const LockPaymentsList = () => {
   };
 
   const columns = [
-    { key: 'id', label: 'IDdadasd', sortable: true },
+    { key: 'id', label: 'ID', sortable: true },
     { key: 'payment_date', label: 'Payment Date', sortable: true },
     { key: 'payment_mode', label: 'Payment Mode', sortable: true },
     { key: 'total_amount', label: 'Total Amount', sortable: true },
@@ -139,13 +139,13 @@ const LockPaymentsList = () => {
       case 'payment_date':
         return formatDate(item.payment_date);
       case 'payment_mode':
-        return item.payment_mode || 'N/A';
+        return item.payment_mode || '-';
       case 'total_amount':
         return `₹${item.total_amount?.toLocaleString() || '0'}`;
       case 'paid_amount':
-        return item.paid_amount ? `₹${item.paid_amount.toLocaleString()}` : 'N/A';
+        return item.paid_amount ? `₹${item.paid_amount.toLocaleString()}` : '-';
       case 'payment_status':
-        const status = item.payment_status || 'N/A';
+        const status = item.payment_status || '-';
         const statusClass = 
           status === 'success' || status === 'completed'
             ? 'bg-green-100 text-green-800'
@@ -158,9 +158,9 @@ const LockPaymentsList = () => {
           </span>
         );
       case 'pg_transaction_id':
-        return item.pg_transaction_id || 'N/A';
+        return item.pg_transaction_id || '-';
       case 'payment_gateway':
-        return item.payment_gateway || 'N/A';
+        return item.payment_gateway || '-';
       default:
         return item[columnKey as keyof LockPayment] as React.ReactNode ?? '-';
     }
@@ -193,17 +193,66 @@ const LockPaymentsList = () => {
                   className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-                    isActive={currentPage === page}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              
+              {/* First page */}
+              {currentPage > 3 && (
+                <>
+                  <PaginationItem>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(1); }}
+                    >
+                      1
+                    </PaginationLink>
+                  </PaginationItem>
+                  {currentPage > 4 && (
+                    <PaginationItem>
+                      <span className="px-3 py-2 text-gray-500">...</span>
+                    </PaginationItem>
+                  )}
+                </>
+              )}
+              
+              {/* Pages around current */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(page => {
+                  if (page === currentPage) return true;
+                  if (page === currentPage - 1 || page === currentPage - 2) return true;
+                  if (page === currentPage + 1 || page === currentPage + 2) return true;
+                  if (totalPages <= 7 && page <= totalPages) return true;
+                  return false;
+                })
+                .map(page => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
+                      isActive={currentPage === page}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+              
+              {/* Last page */}
+              {currentPage < totalPages - 2 && (
+                <>
+                  {currentPage < totalPages - 3 && (
+                    <PaginationItem>
+                      <span className="px-3 py-2 text-gray-500">...</span>
+                    </PaginationItem>
+                  )}
+                  <PaginationItem>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(totalPages); }}
+                    >
+                      {totalPages}
+                    </PaginationLink>
+                  </PaginationItem>
+                </>
+              )}
+              
               <PaginationItem>
                 <PaginationNext
                   href="#"

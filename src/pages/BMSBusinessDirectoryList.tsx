@@ -49,10 +49,10 @@ const BMSBusinessDirectoryList: React.FC = () => {
       const params: any = {};
 
       if (filters.category) {
-        params["q[business_directory_category_id_eq]"] = filters.category;
+        params["q[category_id_eq]"] = filters.category;
       }
       if (filters.subCategory) {
-        params["q[business_directory_sub_category_id_eq]"] = filters.subCategory;
+        params["q[sub_category_id_eq]"] = filters.subCategory;
       }
       if (filters.status !== '') {
         params["q[active_eq]"] = filters.status;
