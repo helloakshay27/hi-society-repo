@@ -53,6 +53,7 @@ const fixedStates = [
   { value: 'closed', label: 'Closed' },
   { value: 'reopen', label: 'Reopen' },
   { value: 'complete', label: 'Complete' },
+  { value: 'customer action pending', label: 'Customer Action Pending' },
 ];
 
 export const StatusTab: React.FC = () => {
@@ -131,8 +132,21 @@ export const StatusTab: React.FC = () => {
   const fetchStatuses = async () => {
     setIsLoading(true);
     try {
-      const data = await ticketManagementAPI.getStatuses();
-      setStatuses(Array.isArray(data) ? data : []);
+      const url = getFullUrl('/crm/admin/helpdesk_categories.json');
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setStatuses(Array.isArray(data.statuses) ? data.statuses : []);
+      } else {
+        toast.error('Failed to fetch statuses');
+      }
     } catch (error) {
       toast.error('Failed to fetch statuses');
       console.error('Error fetching statuses:', error);
@@ -201,8 +215,8 @@ export const StatusTab: React.FC = () => {
         fixed_state: data.fixedState,
         color_code: data.colorCode,
         position: data.position,
-        of_phase: 'pms',
-        society_id: userAccount.company_id.toString(),
+        // of_phase: 'pms',
+        // society_id: userAccount.company_id.toString(),
       };
 
       await ticketManagementAPI.createStatus(statusData);
