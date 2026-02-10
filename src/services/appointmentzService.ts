@@ -64,7 +64,7 @@ export const getSiteScheduleRequests = async (
   page: number = 1
 ): Promise<SiteScheduleRequestsResponse> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI";
+  const token = localStorage.getItem("token");
 
   const response = await axios.get(
     `https://${baseUrl}/crm/admin/site_schedule_requests.json`,
@@ -88,7 +88,7 @@ export const getSiteScheduleRequests = async (
  */
 export const exportSiteRequestsData = async (): Promise<Blob> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI";
+  const token = localStorage.getItem("token");
 
   try {
     const response = await axios.get(
@@ -126,7 +126,7 @@ export const updateSiteScheduleRequest = async (
   payload: UpdateSiteScheduleRequestPayload
 ): Promise<UpdateSiteScheduleRequestResponse> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI";
+  const token = localStorage.getItem("token");
 
   const response = await axios.put(
     `https://${baseUrl}/crm/admin/site_schedule_requests/${requestId}.json`,
@@ -194,8 +194,8 @@ export interface UpdateRMUserPayload {
  */
 export const getRMUsers = async (): Promise<RMUsersResponse> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  // Using the new token provided by the user
-  const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI";
+
+  const token = localStorage.getItem("token");
 
   const response = await axios.get(
     `https://${baseUrl}/crm/admin/rm_users.json`,
@@ -226,7 +226,7 @@ export const createRMUser = async (
   payload: CreateRMUserPayload
 ): Promise<CreateRMUserResponse> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI";
+  const token = localStorage.getItem("token");
 
   const response = await axios.post(
     `https://${baseUrl}/crm/admin/rm_users.json`,
@@ -253,7 +253,7 @@ export const updateRMUser = async (
   payload: UpdateRMUserPayload
 ): Promise<{ success: boolean; message: string }> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI";
+  const token = localStorage.getItem("token");
 
   const response = await axios.put(
     `https://${baseUrl}/spree/manage/rm_users/${userId}.json`,
@@ -327,7 +327,7 @@ export interface CreateSiteSchedulePayload {
  */
 export const getSiteSchedules = async (): Promise<SiteSchedulesResponse> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI";
+  const token = localStorage.getItem("token");
 
   const response = await axios.get(
     `https://${baseUrl}/crm/admin/site_schedules.json`,
@@ -352,7 +352,7 @@ export const getSiteSchedule = async (
   scheduleId: number
 ): Promise<{ site_schedule: SiteSchedule }> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI";
+  const token = localStorage.getItem("token");
 
   const response = await axios.get(
     `https://${baseUrl}/crm/admin/site_schedules/${scheduleId}.json`,
@@ -377,7 +377,7 @@ export const createSiteSchedule = async (
   payload: CreateSiteSchedulePayload
 ): Promise<{ success: boolean; message: string }> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI";
+  const token =  localStorage.getItem("token");
 
   const response = await axios.post(
     `https://${baseUrl}/crm/admin/site_schedules.json`,
@@ -404,7 +404,7 @@ export const updateSiteSchedule = async (
   payload: CreateSiteSchedulePayload
 ): Promise<{ success: boolean; message: string }> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI";
+  const token =  localStorage.getItem("token");
 
   const response = await axios.put(
     `https://${baseUrl}/crm/admin/site_schedules/${scheduleId}.json`,
@@ -478,7 +478,7 @@ export interface UpdateBlockDayPayload {
  */
 export const getBlockDays = async (): Promise<BlockDaysResponse> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI";
+  const token = localStorage.getItem("token");
 
   const response = await axios.get(
     `https://${baseUrl}/crm/admin/block_days.json`,
@@ -503,7 +503,7 @@ export const createBlockDay = async (
   payload: CreateBlockDayPayload
 ): Promise<CreateBlockDayResponse> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI";
+  const token = localStorage.getItem("token");
 
   const response = await axios.post(
     `https://${baseUrl}/crm/admin/block_days.json`,
@@ -530,7 +530,7 @@ export const updateBlockDay = async (
   payload: UpdateBlockDayPayload
 ): Promise<UpdateBlockDayResponse> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
-  const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI";
+  const token = localStorage.getItem("token");
 
   const response = await axios.put(
     `https://${baseUrl}/crm/admin/block_days/${blockDayId}.json`,
