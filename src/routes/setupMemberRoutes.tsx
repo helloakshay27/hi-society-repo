@@ -33,7 +33,6 @@ import HiSocNoticeDetails from "@/pages/HiSocNoticeDetails";
 import ContestListPage from "@/pages/ContestListPage";
 import CreateContestPage from "@/pages/CreateContestPage";
 import ContestDetailsPage from "@/pages/ContestDetailsPage";
-import BookingDetailsPage from "@/pages/BookingDetailsPage";
 import VisitorsDashboard from "@/pages/VisitorsDashboard";
 import PricingRuleEdit from "@/pages/PricingRuleEdit";
 
