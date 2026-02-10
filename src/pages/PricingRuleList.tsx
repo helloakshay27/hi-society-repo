@@ -107,6 +107,8 @@ const PricingRuleList: React.FC = () => {
     { key: "generic_category_id", label: "Category ID", sortable: true },
     { key: "margin_type", label: "Margin Type", sortable: true },
     { key: "margin_value", label: "Margin Value", sortable: true },
+    { key: "platform_fee_type", label: "Platform Fee Type", sortable: true },
+    { key: "platform_fee_value", label: "Platform Fee Value", sortable: true },
     { key: "created_at", label: "Created At", sortable: true },
   ];
 
@@ -146,6 +148,10 @@ const PricingRuleList: React.FC = () => {
         return <span className="text-sm capitalize">{item.margin_type || "-"}</span>;
       case "margin_value":
         return <span className="text-sm">{item.margin_value ? `${item.margin_value}${item.margin_type === 'percentage' ? '%' : ''}` : "-"}</span>;
+      case "platform_fee_type":
+        return <span className="text-sm capitalize">{item.platform_fee_type || "-"}</span>;
+      case "platform_fee_value":
+        return <span className="text-sm">{item.platform_fee_value ? `${item.platform_fee_value}${item.platform_fee_type === 'percentage' ? '%' : ''}` : "-"}</span>;
       case "created_at":
         return <span className="text-sm">{item.created_at ? new Date(item.created_at).toLocaleString() : "-"}</span>;
       default:

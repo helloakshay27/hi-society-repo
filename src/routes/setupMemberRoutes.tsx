@@ -36,6 +36,7 @@ import ContestDetailsPage from "@/pages/ContestDetailsPage";
 import HiSocGroupsPage from "@/pages/HiSocGroupsPage";
 import BookingDetailsPage from "@/pages/BookingDetailsPage";
 import VisitorsDashboard from "@/pages/VisitorsDashboard";
+import PricingRuleEdit from "@/pages/PricingRuleEdit";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
@@ -542,6 +543,10 @@ export const setupMemberRoutes = (
       path="/settings/pricing-rule-create"
       Component={withSuspense(AddPricingRulePage)}
     />
+    <Route
+      path="/settings/pricing-rule-edit/:id"
+      Component={withSuspense(PricingRuleEdit)}
+    />  
     {/* Banks Routes */}
     <Route path="/settings/banks/:bankId?" Component={withSuspense(Banks)} />
     <Route path="/settings/banks-list" Component={withSuspense(BanksList)} />

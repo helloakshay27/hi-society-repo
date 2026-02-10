@@ -16,6 +16,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { log } from "console";
 
 const SectionCard = styled(Paper)(() => ({
   backgroundColor: "white",
@@ -119,7 +120,7 @@ interface PricingRule {
   margin_value: number;
 }
 
-const PricingRuleEdit: React.FC = () => {
+export const PricingRuleEdit: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
@@ -129,8 +130,38 @@ const PricingRuleEdit: React.FC = () => {
   const [marginValue, setMarginValue] = useState<string>("");
   const [platformFeeType, setPlatformFeeType] = useState<string>("percentage");
   const [platformFeeValue, setPlatformFeeValue] = useState<string>("");
+  const [organizationId, setOrganizationId] = useState<string>("");
+  const [categoryId, setCategoryId] = useState<string>("");
   const [organizations, setOrganizations] = useState([]);
   const [categories, setCategories] = useState([]);
+console.log("id", id)
+  const fetchPricingRule = async () => {
+    setLoading(true);
+    try {
+      const url = `https://runwal-api.lockated.com/pricing_rules/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch pricing rule");
+      }
+      
+      const data = await response.json();
+      setPricingRule(data);
+      setMarginType(data.margin_type || "percentage");
+      setMarginValue(data.margin_value?.toString() || "");
+      setPlatformFeeType(data.platform_fee_type || "percentage");
+      setPlatformFeeValue(data.platform_fee_value?.toString() || "");
+      setOrganizationId(data.organization_id ? data.organization_id.toString() : "");
+      setCategoryId(data.generic_category_id ? data.generic_category_id.toString() : "");
+    } catch (error) {
+      toast.error("Failed to load pricing rule", {
+        description: String(error),
+      });
+      navigate("/settings/pricing-rule-list");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Fetch organizations
@@ -148,31 +179,7 @@ const PricingRuleEdit: React.FC = () => {
     fetchPricingRule();
   }, [id]);
 
-  const fetchPricingRule = async () => {
-    setLoading(true);
-    try {
-      const url = `https://runwal-api.lockated.com/pricing_rules/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch pricing rule");
-      }
-      
-      const data = await response.json();
-      setPricingRule(data);
-      setMarginType(data.margin_type || "percentage");
-      setMarginValue(data.margin_value?.toString() || "");
-      setPlatformFeeType(data.platform_fee_type || "percentage");
-      setPlatformFeeValue(data.platform_fee_value?.toString() || "");
-    } catch (error) {
-      toast.error("Failed to load pricing rule", {
-        description: String(error),
-      });
-      navigate("/settings/pricing-rule-list");
-    } finally {
-      setLoading(false);
-    }
-  };
+  
 
   const validateForm = (): boolean => {
     if (!marginValue.trim()) {
@@ -319,29 +326,41 @@ const PricingRuleEdit: React.FC = () => {
               gap: 3,
             }}
           >
-            <TextField
-              label="Organization"
-              value={getOrganizationName()}
-              sx={disabledFieldStyles}
-              fullWidth
-              disabled
-              InputProps={{
-                readOnly: true,
-              }}
-            />
-            
-            <TextField
-              label="Category"
-              value={getCategoryName()}
-              sx={disabledFieldStyles}
-              fullWidth
-              disabled
-              InputProps={{
-                readOnly: true,
-              }}
-            />
+            <FormControl fullWidth sx={fieldStyles} required>
+              <InputLabel id="organization-label">Organization</InputLabel>
+              <Select
+                labelId="organization-label"
+                value={organizationId}
+                label="Organization"
+                onChange={(e) => setOrganizationId(e.target.value)}
+                disabled
+              >
+                {organizations.map((org: any) => (
+                  <MenuItem key={org.id} value={org.id.toString()}>
+                    {org.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-            <FormControl fullWidth sx={fieldStyles}>
+            <FormControl fullWidth sx={fieldStyles} required>
+              <InputLabel id="category-label">Category</InputLabel>
+              <Select
+                labelId="category-label"
+                value={categoryId}
+                label="Category"
+                onChange={(e) => setCategoryId(e.target.value)}
+                disabled
+              >
+                {categories.map((cat: any) => (
+                  <MenuItem key={cat.id} value={cat.id.toString()}>
+                    {cat.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth sx={fieldStyles} required>
               <InputLabel id="margin-type-label">Margin Type</InputLabel>
               <Select
                 labelId="margin-type-label"
@@ -371,7 +390,7 @@ const PricingRuleEdit: React.FC = () => {
               }}
             />
 
-            <FormControl fullWidth sx={fieldStyles}>
+            <FormControl fullWidth sx={fieldStyles} required>
               <InputLabel id="platform-fee-type-label">Platform Fee Type</InputLabel>
               <Select
                 labelId="platform-fee-type-label"
