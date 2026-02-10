@@ -54,32 +54,34 @@ const SEGMENT_COLORS = [
 ];
 
 class NewSpinnerContestApi {
-    private baseURL: string = "";
+    private orgId: string = "";
     private token: string = "";
 
     /**
-     * Initialize the API with dynamic base URL and token from URL parameters
+     * Initialize the API with org_id and token (let baseClient handle URL)
      */
-    initialize() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const orgId = urlParams.get("org_id");
-        const token = urlParams.get("token");
-
-        console.warn("🔧 API Initialize - org_id:", orgId, "token:", token ? "✓" : "✗");
-
-        // Set token
-        if (token) {
+    initialize(orgId?: string, token?: string) {
+        // If parameters provided, use them
+        if (orgId && token) {
+            this.orgId = orgId;
             this.token = token;
+            console.warn("🔧 Spinner API Initialize - org_id:", orgId, "token:", token ? "✓" : "✗");
+            return;
         }
 
-        // Set base URL based on org_id or use default
-        if (orgId) {
-            // You can add logic here to determine base URL based on org_id
-            // For now, using runwal-api.lockated.com as default
-            this.baseURL = "https://runwal-api.lockated.com";
-        } else {
-            // Default base URL
-            this.baseURL = "https://runwal-api.lockated.com";
+        // Otherwise try to get from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlOrgId = urlParams.get("org_id");
+        const urlToken = urlParams.get("token");
+
+        console.warn("🔧 Spinner API Initialize from URL - org_id:", urlOrgId, "token:", urlToken ? "✓" : "✗");
+
+        // Set org_id and token
+        if (urlOrgId) {
+            this.orgId = urlOrgId;
+        }
+        if (urlToken) {
+            this.token = urlToken;
         }
     }
 
@@ -90,8 +92,10 @@ class NewSpinnerContestApi {
         try {
             this.initialize();
 
-            const url = `${this.baseURL}/contests/${contestId}`;
-            const params = this.token ? { token: this.token } : {};
+            const url = `/contests/${contestId}`;
+            const params: any = {};
+            if (this.token) params.token = this.token;
+            if (this.orgId) params.org_id = this.orgId;
 
             console.warn("🌐 API Call - URL:", url);
             console.warn("🔑 API Call - Params:", params);
@@ -121,8 +125,13 @@ class NewSpinnerContestApi {
         try {
             this.initialize();
 
-            const url = `${this.baseURL}/contests/${contestId}/play`;
-            const params = this.token ? { token: this.token } : {};
+            const url = `/contests/${contestId}/play`;
+            const params: any = {};
+            if (this.token) params.token = this.token;
+            if (this.orgId) params.org_id = this.orgId;
+
+            console.warn("🎲 Playing contest at:", url);
+            console.warn("🔑 API Call - Params:", params);
 
             const response = await baseClient.post<PlayResult>(url, {}, { params });
 

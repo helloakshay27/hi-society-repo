@@ -18,40 +18,9 @@ export const baseClient = axios.create({});
 baseClient.interceptors.request.use(
   async (config) => {
     try {
-      // Check session cache first to avoid re-fetching
-      const cachedBaseUrl = sessionStorage.getItem('apiBaseUrl');
-      if (cachedBaseUrl) {
-        config.baseURL = cachedBaseUrl;
-        console.log("✅ Base URL set from session cache:", cachedBaseUrl);
-        return config;
-      }
-
-      // First preference: use base URL saved via auth utilities (e.g., Mobile pages)
-      try {
-        const storedBaseUrl = getBaseUrl();
-        if (storedBaseUrl) {
-          config.baseURL = storedBaseUrl;
-          sessionStorage.setItem('apiBaseUrl', storedBaseUrl);
-          console.log("✅ Base URL set from stored baseUrl:", storedBaseUrl);
-          return config;
-        }
-      } catch (storageError) {
-        console.warn("⚠️ Unable to read stored baseUrl:", storageError);
-      }
-
-      // Extract URL parameters
-      // Check if running locally
+      // Extract URL parameters FIRST to check for org_id
       const hostname = window.location.hostname;
       const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
-
-      // If running locally, use runwal API directly
-      if (isLocalhost) {
-        config.baseURL = "https://runwal-api.lockated.com";
-        console.log("🏠 Running locally - Base URL set to:", config.baseURL);
-        return config;
-      }
-
-      // Extract URL parameters first to check for org_id
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get("token");
       const email = urlParams.get("email");
@@ -62,33 +31,31 @@ baseClient.interceptors.request.use(
       // This allows public survey access even when user is logged in
       const hasOrgIdParam = !!(organizationId || orgId);
 
-      // First preference: use base URL saved via auth utilities (e.g., Mobile pages)
-      // BUT skip this if org_id parameter is present (for public survey access)
-      if (!hasOrgIdParam) {
-        try {
-          const storedBaseUrl = getBaseUrl();
-          if (storedBaseUrl) {
-            config.baseURL = storedBaseUrl;
-            console.log("✅ Base URL set from stored baseUrl:", storedBaseUrl);
-            return config;
-          }
-        } catch (storageError) {
-          console.warn("⚠️ Unable to read stored baseUrl:", storageError);
-        }
+      // If NO org_id parameter, use cached/stored URLs
+      // if (!hasOrgIdParam) {
+      //   // Check session cache first to avoid re-fetching
+      //   const cachedBaseUrl = sessionStorage.getItem('apiBaseUrl');
+      //   if (cachedBaseUrl) {
+      //     config.baseURL = cachedBaseUrl;
+      //     console.log("✅ Base URL set from session cache:", cachedBaseUrl);
+      //     return config;
+      //   }
 
-        // Check if user is already logged in (has baseUrl in localStorage)
-        // Skip this if org_id parameter is present
-        const loggedInBaseUrl = localStorage.getItem("baseUrl");
-        if (loggedInBaseUrl) {
-          config.baseURL = loggedInBaseUrl;
-          console.log("✅ Base URL set from logged-in user:", loggedInBaseUrl);
-          return config;
-        }
-      } else {
-        console.log(
-          "🔓 org_id parameter detected - using public survey access mode"
-        );
-      }
+      //   // First preference: use base URL saved via auth utilities (e.g., Mobile pages)
+      //   try {
+      //     const storedBaseUrl = getBaseUrl();
+      //     if (storedBaseUrl) {
+      //       config.baseURL = storedBaseUrl;
+      //       sessionStorage.setItem('apiBaseUrl', storedBaseUrl);
+      //       console.log("✅ Base URL set from stored baseUrl:", storedBaseUrl);
+      //       return config;
+      //     }
+      //   } catch (storageError) {
+      //     console.warn("⚠️ Unable to read stored baseUrl:", storageError);
+      //   }
+      // } else {
+      //   console.log("🔓 org_id parameter detected - fetching organization data:", organizationId || orgId);
+      // }
 
       // Store token in session storage if available
       if (token) {
@@ -122,7 +89,6 @@ baseClient.interceptors.request.use(
       // Runwal specific host
       const isRunwalSite = hostname === "runwal-cp.lockated.com";
 
-      // Map hi-society host -> backend/base API URL
       let hiSocietyApiBase = "https://hi-society.lockated.com";
       if (isHiSocietyUIHost || isHiSocietyUATHost) {
         hiSocietyApiBase = "https://uat-hi-society.lockated.com";
