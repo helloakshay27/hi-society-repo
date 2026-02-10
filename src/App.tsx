@@ -4757,16 +4757,6 @@ function App() {
                       element={<BookingDetailsPage />}
                     />
 
-                    <Route
-                      path="/scratchcard/details/:rewardId"
-                      element={<VoucherDetails />}
-                    />
-
-                    <Route
-                      path="/scratchcard/:cardId/voucher"
-                      element={<VoucherDetails />}
-                    />
-
                     {/* <Route path="/vas/booking/setup" element={<BookingSetupDashboard />} /> */}
 
                     <Route
@@ -5704,6 +5694,15 @@ function App() {
                   <Route
                     path="/flipcard/:gameId/card/:cardId"
                     element={<FlipCardDetails />}
+                  />
+                  <Route
+                    path="/scratchcard/details/:rewardId"
+                    element={<VoucherDetails />}
+                  />
+
+                  <Route
+                    path="/scratchcard/:cardId/voucher"
+                    element={<VoucherDetails />}
                   />
                 </Routes>
                 {/* Mail Inbound Routes */}
