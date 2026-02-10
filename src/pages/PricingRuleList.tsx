@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, Pencil } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { getFullUrl, getAuthenticatedFetchOptions } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -30,7 +30,7 @@ const PricingRuleList: React.FC = () => {
   const fetchPricingRules = useCallback(async () => {
     setLoading(true);
     try {
-      const url = "http://localhost:3000/pricing_rules";
+      const url = "https://runwal-api.lockated.com/pricing_rules.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to fetch pricing rules");
@@ -79,7 +79,7 @@ const PricingRuleList: React.FC = () => {
     }
 
     try {
-      const url = `http://localhost:3000/pricing_rules/${id}`;
+      const url = `https://runwal-api.lockated.com/pricing_rules/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
       const response = await fetch(url, {
         method: "DELETE",
         headers: {
@@ -117,31 +117,37 @@ const PricingRuleList: React.FC = () => {
         return (
           <div className="flex gap-2">
             <button
-              onClick={() => handleEdit(item.id)}
-              className="text-[#C72030] hover:text-[#A01828]"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(item.id);
+              }}
+              className="text-gray-600 hover:text-[#C72030]"
             >
-              <Pencil size={18} />
+              <Edit className="w-4 h-4" />
             </button>
             <button
-              onClick={() => handleDelete(item.id)}
-              className="text-red-600 hover:text-red-900"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(item.id);
+              }}
+              className="text-gray-600 hover:text-[#C72030]"
             >
-              <Trash2 size={18} />
+              <Trash2 className="w-4 h-4" />
             </button>
           </div>
         );
       case "id":
-        return <span className="font-medium">{index + 1}</span>;
+        return <span className="text-sm font-medium">{index + 1}</span>;
       case "organization_id":
-        return <span>{item.organization_id || "-"}</span>;
+        return <span className="text-sm">{item.organization_id || "-"}</span>;
       case "generic_category_id":
-        return <span>{item.generic_category_id || "-"}</span>;
+        return <span className="text-sm">{item.generic_category_id || "-"}</span>;
       case "margin_type":
-        return <span className="capitalize">{item.margin_type || "-"}</span>;
+        return <span className="text-sm capitalize">{item.margin_type || "-"}</span>;
       case "margin_value":
-        return <span>{item.margin_value ? `${item.margin_value}${item.margin_type === 'percentage' ? '%' : ''}` : "-"}</span>;
+        return <span className="text-sm">{item.margin_value ? `${item.margin_value}${item.margin_type === 'percentage' ? '%' : ''}` : "-"}</span>;
       case "created_at":
-        return <span>{item.created_at ? new Date(item.created_at).toLocaleString() : "-"}</span>;
+        return <span className="text-sm">{item.created_at ? new Date(item.created_at).toLocaleString() : "-"}</span>;
       default:
         return null;
     }

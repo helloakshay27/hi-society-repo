@@ -212,10 +212,12 @@ const DemandNotesList = lazy(() => import("@/pages/DemandNotesList"));
 const OrdersList = lazy(() => import("@/pages/OrdersList"));
 const EncashList = lazy(() => import("@/pages/EncashList"));
 const AggregatorInventorySection = lazy(() => import("@/pages/AggregatorInventorySection"));
+const AggregatorInventoryDetails = lazy(() => import("@/pages/AggregatorInventoryDetails"));
 const OrderDetails = lazy(() => import("@/pages/OrderDetails"));
 
 // Add lazy imports for Billing, Redemption, Aggregator pages
 const BillingInvoices = lazy(() => import("@/pages/BillingInvoices"));
+const BillingInvoiceDetail = lazy(() => import("@/pages/BillingInvoiceDetail"));
 const RedemptionReport = lazy(() => import("@/pages/RedemptionReport"));
 
 // Add missing lazy imports
@@ -487,7 +489,7 @@ export const setupMemberRoutes = (
       element={<LoyaltyInventorySection />}
     />
     <Route
-      path="/loyalty/inventory-details/:sku"
+      path="/loyalty/inventory-details/:id"
       element={<LoyaltyInventoryDetails />}
     />
     <Route path="/settings/amenities" Component={withSuspense(Amenities)} />
@@ -1098,12 +1100,20 @@ export const setupMemberRoutes = (
       Component={withSuspense(BillingInvoices)}
     />
     <Route
+      path="/loyalty/billing-invoices/:id"
+      Component={withSuspense(BillingInvoiceDetail)}
+    />
+    <Route
       path="/loyalty/redemption-report"
       Component={withSuspense(RedemptionReport)}
     />
     <Route
       path="/loyalty/aggregator-inventory"
       Component={withSuspense(AggregatorInventorySection)}
+    />
+    <Route
+      path="/loyalty/aggregator-inventory/:id"
+      Component={withSuspense(AggregatorInventoryDetails)}
     />
 
     <Route

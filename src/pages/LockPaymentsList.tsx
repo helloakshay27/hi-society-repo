@@ -124,7 +124,7 @@ const LockPaymentsList = () => {
   };
 
   const columns = [
-    { key: 'id', label: 'ID', sortable: true },
+    { key: 'id', label: 'IDdadasd', sortable: true },
     { key: 'payment_date', label: 'Payment Date', sortable: true },
     { key: 'payment_mode', label: 'Payment Mode', sortable: true },
     { key: 'total_amount', label: 'Total Amount', sortable: true },

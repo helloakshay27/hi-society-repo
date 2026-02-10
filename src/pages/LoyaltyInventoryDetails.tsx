@@ -1,162 +1,301 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, Package, ShoppingCart, Calendar } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import axios from "axios";
+import { toast } from "sonner";
+import { StatsCard } from "@/components/StatsCard";
 
 export const LoyaltyInventoryDetails = () => {
-  // Demo data (replace with actual API data)
-  const item = {
-    name: "BOSE QUIETCOMFORT HEADPHONES",
-    sku: "BOSE-QC-HEADPHONES",
-    brand: "BOSE",
-    currentStock: 1020,
-    totalSold: 760,
-    lastSoldDate: "2026-01-24",
-    description:
-      "Product information: Bose creates over-ear headphones designed for comfort and clarity, including noise-cancelling features and wireless connectivity. These headphones are ideal for everyday listening, travel, and work.",
-    images: [
-      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1545127398-14699f92334b?auto=format&fit=crop&w=200&q=80",
-      "https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=200&q=80",
-    ],
-    pricing: {
-      mrp: 15500,
-      clientPrice: 13900,
-      pointsRequired: 1200,
-      discount: 10,
-    },
-    specs: {
-      type: "Over Ear",
-      wireless: "Yes",
-      noiseCancelling: "Yes",
-      batteryLife: "20 hours",
-      color: "White / Others Colours Available",
-      warranty: "1 year",
-      chargingTime: "1 hour",
-      connectivityType: "USB",
-    },
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [item, setItem] = useState<any>(null);
+  const [isActive, setIsActive] = useState(true);
+
+  useEffect(() => {
+    fetchProductDetails();
+  }, [id]);
+
+  const fetchProductDetails = async () => {
+    try {
+      setLoading(true);
+      const url = `https://runwal-api.lockated.com/products/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
+      const response = await axios.get(url);
+      const product = response.data?.product || null;
+      setItem(product);
+      if (product) {
+        setIsActive(product.status === 'active' || product.published);
+      }
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+      toast.error("Failed to load product details");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-[#fafafa] min-h-screen flex items-center justify-center">
+        <div className="text-gray-500">Loading product details...</div>
+      </div>
+    );
+  }
+
+  if (!item) {
+    return (
+      <div className="p-6 bg-[#fafafa] min-h-screen">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-gray-600 hover:text-[#C72030] mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </button>
+        <div className="text-gray-500">Product not found</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-[#fafafa] min-h-screen">
+      {/* Back Button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-2 text-gray-600 hover:text-[#C72030] mb-6"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span>Back to Inventory</span>
+      </button>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6 flex flex-col items-center justify-center">
-          <div className="text-sm text-gray-500 mb-2">Current Stock</div>
-          <div className="text-3xl font-bold text-[#C72030]">{item.currentStock}</div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-6 flex flex-col items-center justify-center">
-          <div className="text-sm text-gray-500 mb-2">Total Sold</div>
-          <div className="text-3xl font-bold text-[#C72030]">{item.totalSold}</div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-6 flex flex-col items-center justify-center">
-          <div className="text-sm text-gray-500 mb-2">Last Sold</div>
-          <div className="text-3xl font-bold text-[#C72030]">{item.lastSoldDate}</div>
-        </div>
+        <StatsCard
+          title="Current Stock"
+          value={item.stock_quantity || 0}
+          icon={<Package className="w-6 h-6 text-[#C72030]" />}
+          iconRounded={true}
+          valueColor="text-[#1A1A1A]"
+        />
+        <StatsCard
+          title="Total Sold"
+          value={0}
+          icon={<ShoppingCart className="w-6 h-6 text-[#C72030]" />}
+          iconRounded={true}
+          valueColor="text-[#1A1A1A]"
+        />
+        <StatsCard
+          title="Last Order Restocked"
+          value={new Date(item.updated_at).toLocaleDateString()}
+          icon={<Calendar className="w-6 h-6 text-[#C72030]" />}
+          iconRounded={true}
+          valueColor="text-[#1A1A1A]"
+        />
       </div>
 
-      {/* Product Info */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Images */}
-          <div className="flex flex-col gap-4">
-            <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-center">
-              <img src={item.images[0]} alt="Main" className="w-full h-80 object-contain" />
-            </div>
-            <div className="flex gap-3">
-              <div className="bg-pink-200 rounded-lg p-4 flex items-center justify-center w-24 h-24">
-                <img src={item.images[1]} alt="Pink variant" className="w-full h-full object-contain opacity-70" />
+      {/* Main Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column - Images */}
+        <div className="flex flex-col gap-4">
+          <div className="bg-white rounded-lg border border-gray-200 p-6 flex items-center justify-center">
+            {item.banner_image?.url ? (
+              <img src={item.banner_image.url} alt={item.name} className="w-full h-96 object-contain" />
+            ) : (
+              <div className="w-full h-96 flex items-center justify-center text-gray-400">
+                No Image Available
               </div>
-              <div className="bg-orange-200 rounded-lg p-4 flex items-center justify-center w-24 h-24">
-                <img src={item.images[2]} alt="Orange variant" className="w-full h-full object-contain opacity-70" />
+            )}
+          </div>
+          {item.images && item.images.length > 0 && (
+            <div className="flex gap-3">
+              {item.images.slice(0, 3).map((img: any, idx: number) => (
+                <div key={idx} className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-center w-28 h-28">
+                  <img src={img.url || img} alt={`Product ${idx + 1}`} className="w-full h-full object-contain" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right Column - Details */}
+        <div className="flex flex-col gap-6">
+          {/* Product Name & Info Card */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <span className="text-xs text-gray-400 uppercase">SKU: </span>
+                <span className="text-sm font-semibold text-gray-700">{item.sku || "N/A"}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className={`flex items-center gap-2 ${isActive ? 'bg-green-500' : 'bg-red-500'} text-white px-3 py-1 rounded-full`}>
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <span className="text-xs font-medium uppercase">{isActive ? "Active" : "Inactive"}</span>
+                </div>
+                <Switch
+                  checked={isActive}
+                  onCheckedChange={setIsActive}
+                  className="data-[state=checked]:bg-green-500"
+                />
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-bold text-[#C72030] mb-2 uppercase">{item.name || "Unnamed Product"}</h2>
+            <div className="text-sm text-gray-600 mb-4">
+              {item.brand && <span>{item.brand}</span>}
+              {item.brand && item.generic_category_id && <span className="mx-2">|</span>}
+              {item.generic_category_id && <span>Category {item.generic_category_id}</span>}
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 underline">Product Information</h3>
+              {item.description ? (
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {item.description}
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  No product description available.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Pricing Structure Card */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-sm font-semibold text-gray-900 mb-4 underline">Pricing Structure</h3>
+            <div className="space-y-0">
+              {/* Maximum Retail Price (MRP) */}
+              <div className="border-l-4 border-gray-300 pl-4 py-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Maximum Retail Price (MRP)</div>
+                    <div className="text-2xl font-bold text-gray-900">₹ {parseFloat(item.base_price || 0).toLocaleString('en-IN')}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500 mb-1">Channel Discount</div>
+                    <div className="text-base font-semibold text-[#C72030]">
+                      {item.discount || (
+                        item.base_price && item.sale_price
+                          ? Math.round(((parseFloat(item.base_price) - parseFloat(item.sale_price)) / parseFloat(item.base_price)) * 100) + '% OFF'
+                          : '0% OFF'
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Client Purchase Price */}
+              <div className="border-l-4 border-green-400 bg-green-50 pl-4 py-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="text-xs text-gray-600 mb-1">Client Purchase Price</div>
+                    <div className="text-2xl font-bold text-gray-900">₹ {parseFloat(item.sale_price || 0).toLocaleString('en-IN')}</div>
+                    <div className="text-xs text-green-600 mt-1">After channel discount</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-gray-600 mb-1">Client Discount</div>
+                    <div className="text-base font-semibold text-[#C72030]">
+                      {item.discount || (
+                        item.sale_price && item.final_price
+                          ? Math.round(((parseFloat(item.sale_price) - parseFloat(item.final_price)) / parseFloat(item.sale_price)) * 100) + '% OFF'
+                          : '0% OFF'
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Final Customer Price */}
+              <div className="border-l-4 border-[#C72030] pl-4 py-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Final Customer Price</div>
+                    <div className="text-2xl font-bold text-[#C72030]">₹ {parseFloat(item.final_price || item.sale_price || 0).toLocaleString('en-IN')}</div>
+                    <div className="text-xs text-[#C72030] mt-1">Best price for end customer</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500 mb-1">Customer Discount</div>
+                    <div className="text-base font-semibold text-[#C72030]">
+                      {item.base_price && item.final_price
+                        ? Math.round(((parseFloat(item.base_price) - parseFloat(item.final_price || item.sale_price)) / parseFloat(item.base_price)) * 100) + '% OFF'
+                        : '0% OFF'
+                      }
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Details */}
-          <div className="flex flex-col">
-            <div className="mb-3">
-              <span className="text-xs text-gray-400 uppercase">SKU: </span>
-              <span className="text-sm font-semibold text-[#C72030]">{item.sku}</span>
-            </div>
-            <h2 className="text-2xl font-bold text-[#C72030] mb-4 uppercase">{item.name}</h2>
-            
-            {/* Product Information */}
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Product Information</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                {item.description}
-              </p>
-            </div>
-
-            {/* Pricing Structure */}
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-sm font-semibold text-gray-700">Pricing Structure</h3>
-                <button className="text-xs text-[#C72030] bg-pink-50 px-3 py-1 rounded">Edit Pricing</button>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-600">MRP</span>
-                  <div className="flex items-center gap-8">
-                    <span className="text-sm font-semibold text-gray-900">₹ {item.pricing.mrp.toLocaleString()}</span>
-                    <span className="text-xs text-green-600 w-16 text-right">{item.pricing.discount}% Off</span>
+          {/* Technical Specifications Card */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-sm font-semibold text-gray-900 mb-4 underline">Technical Specifications</h3>
+            <div className="grid grid-cols-1 gap-4">
+              {item.published !== undefined && (
+                <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
+                  <div className="text-xs text-gray-500 mb-1">Published</div>
+                  <div className="text-base font-semibold text-gray-900">
+                    {item.published ? "Yes" : "No"}
                   </div>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-600">Client Price</span>
-                  <div className="flex items-center gap-8">
-                    <span className="text-sm font-semibold text-gray-900">₹ {item.pricing.clientPrice.toLocaleString()}</span>
-                    <span className="text-xs text-red-600 w-16 text-right">{item.pricing.discount}% Off</span>
+              )}
+              {item.featured !== undefined && (
+                <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
+                  <div className="text-xs text-gray-500 mb-1">Featured</div>
+                  <div className="text-base font-semibold text-gray-900">
+                    {item.featured ? "Yes" : "No"}
                   </div>
                 </div>
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-gray-600">Points Required</span>
-                  <div className="flex items-center gap-8">
-                    <span className="text-sm font-semibold text-gray-900">{item.pricing.pointsRequired}</span>
-                    <span className="text-xs text-gray-400 w-16 text-right">Redemption</span>
+              )}
+              {item.is_trending !== undefined && (
+                <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
+                  <div className="text-xs text-gray-500 mb-1">Trending</div>
+                  <div className="text-base font-semibold text-gray-900">
+                    {item.is_trending ? "Yes" : "No"}
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Technical Specifications */}
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-sm font-semibold text-gray-700">Technical Specifications</h3>
-                <button className="text-xs text-[#C72030] bg-pink-50 px-3 py-1 rounded">Edit Specs</button>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="border border-gray-200 rounded p-3">
-                  <div className="text-xs text-gray-400 mb-1">Type</div>
-                  <div className="text-sm text-gray-900">{item.specs.type}</div>
+              )}
+              {item.is_bestseller !== undefined && (
+                <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
+                  <div className="text-xs text-gray-500 mb-1">Bestseller</div>
+                  <div className="text-base font-semibold text-gray-900">
+                    {item.is_bestseller ? "Yes" : "No"}
+                  </div>
                 </div>
-                <div className="border border-gray-200 rounded p-3">
-                  <div className="text-xs text-gray-400 mb-1">Noise Cancelling</div>
-                  <div className="text-sm text-gray-900">{item.specs.noiseCancelling}</div>
+              )}
+              {item.is_new_arrival !== undefined && (
+                <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
+                  <div className="text-xs text-gray-500 mb-1">New Arrival</div>
+                  <div className="text-base font-semibold text-gray-900">
+                    {item.is_new_arrival ? "Yes" : "No"}
+                  </div>
                 </div>
-                <div className="border border-gray-200 rounded p-3">
-                  <div className="text-xs text-gray-400 mb-1">Wireless</div>
-                  <div className="text-sm text-gray-900">{item.specs.wireless}</div>
+              )}
+              {item.is_recommended !== undefined && (
+                <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
+                  <div className="text-xs text-gray-500 mb-1">Recommended</div>
+                  <div className="text-base font-semibold text-gray-900">
+                    {item.is_recommended ? "Yes" : "No"}
+                  </div>
                 </div>
-                <div className="border border-gray-200 rounded p-3">
-                  <div className="text-xs text-gray-400 mb-1">Battery Life</div>
-                  <div className="text-sm text-gray-900">{item.specs.batteryLife}</div>
+              )}
+              {item.phone_required !== undefined && (
+                <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
+                  <div className="text-xs text-gray-500 mb-1">Phone Required</div>
+                  <div className="text-base font-semibold text-gray-900">
+                    {item.phone_required ? "Yes" : "No"}
+                  </div>
                 </div>
-                <div className="border border-gray-200 rounded p-3">
-                  <div className="text-xs text-gray-400 mb-1">Charging Time</div>
-                  <div className="text-sm text-gray-900">{item.specs.chargingTime}</div>
+              )}
+              {item.redemption_fee_borne_by_user !== undefined && (
+                <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
+                  <div className="text-xs text-gray-500 mb-1">Fee Borne By User</div>
+                  <div className="text-base font-semibold text-gray-900">
+                    {item.redemption_fee_borne_by_user ? "Yes" : "No"}
+                  </div>
                 </div>
-                <div className="border border-gray-200 rounded p-3">
-                  <div className="text-xs text-gray-400 mb-1">Connectivity Type</div>
-                  <div className="text-sm text-gray-900">{item.specs.connectivityType}</div>
-                </div>
-                <div className="border border-gray-200 rounded p-3 col-span-2">
-                  <div className="text-xs text-gray-400 mb-1">Color</div>
-                  <div className="text-sm text-gray-900">{item.specs.color}</div>
-                </div>
-                <div className="border border-gray-200 rounded p-3 col-span-2">
-                  <div className="text-xs text-gray-400 mb-1">Warranty</div>
-                  <div className="text-sm text-gray-900">{item.specs.warranty}</div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

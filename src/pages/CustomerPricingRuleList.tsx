@@ -112,7 +112,7 @@ export const CustomerPricingRuleList = () => {
           generic_category_id: typeof editCatId === 'string' ? parseInt(editCatId) : editCatId,
           margin_type: editMarginType,
           margin_value: parseFloat(editMarginValue),
-          type: 'customer',
+          rule_for: 'customer',
         },
       };
       if (editId) {

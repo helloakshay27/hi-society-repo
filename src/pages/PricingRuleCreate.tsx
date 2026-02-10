@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFullUrl, getAuthenticatedFetchOptions } from "@/config/apiConfig";
 import { toast } from "sonner";
@@ -108,17 +108,43 @@ interface PricingRuleForm {
   generic_category_id: string;
   margin_type: string;
   margin_value: string;
+  platform_fee_type: string;
+  platform_fee_value: string;
 }
 
 const PricingRuleCreate: React.FC = () => {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const [organizations, setOrganizations] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loadingOrgs, setLoadingOrgs] = useState(true);
+  const [loadingCats, setLoadingCats] = useState(true);
   const [formData, setFormData] = useState<PricingRuleForm>({
     organization_id: "",
     generic_category_id: "",
     margin_type: "percentage",
     margin_value: "",
+    platform_fee_type: "percentage",
+    platform_fee_value: "",
   });
+
+  useEffect(() => {
+    // Fetch organizations
+    setLoadingOrgs(true);
+    fetch("https://runwal-api.lockated.com/organizations.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
+      .then((res) => res.json())
+      .then((data) => setOrganizations(data.organizations || []))
+      .catch(() => setOrganizations([]))
+      .finally(() => setLoadingOrgs(false));
+
+    // Fetch categories
+    setLoadingCats(true);
+    fetch("https://runwal-api.lockated.com/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
+      .then((res) => res.json())
+      .then((data) => setCategories(data.categories || []))
+      .catch(() => setCategories([]))
+      .finally(() => setLoadingCats(false));
+  }, []);
 
   const handleInputChange = (name: string, value: any) => {
     setFormData((prev) => ({
@@ -128,12 +154,12 @@ const PricingRuleCreate: React.FC = () => {
   };
 
   const validateForm = (): boolean => {
-    if (!formData.organization_id.trim()) {
-      toast.error("Please enter organization ID");
+    if (!formData.organization_id || formData.organization_id === "") {
+      toast.error("Please select an organization");
       return false;
     }
-    if (!formData.generic_category_id.trim()) {
-      toast.error("Please enter category ID");
+    if (!formData.generic_category_id || formData.generic_category_id === "") {
+      toast.error("Please select a category");
       return false;
     }
     if (!formData.margin_value.trim()) {
@@ -150,13 +176,15 @@ const PricingRuleCreate: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const url = "http://localhost:3000/pricing_rules";
+      const url = "https://runwal-api.lockated.com/pricing_rules.json?rule_for=customer&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
       const payload = {
         pricing_rule: {
           organization_id: parseInt(formData.organization_id),
           generic_category_id: parseInt(formData.generic_category_id),
           margin_type: formData.margin_type,
           margin_value: parseFloat(formData.margin_value),
+          platform_fee_type: formData.platform_fee_type,
+          platform_fee_value: formData.platform_fee_value ? parseFloat(formData.platform_fee_value) : null,
         },
       };
       
@@ -246,27 +274,49 @@ const PricingRuleCreate: React.FC = () => {
               gap: 3,
             }}
           >
-            <TextField
-              label="Organization ID"
-              required
-              type="number"
-              value={formData.organization_id}
-              onChange={(e) => handleInputChange("organization_id", e.target.value)}
-              placeholder="e.g., 9"
-              sx={fieldStyles}
-              fullWidth
-            />
+            <FormControl fullWidth sx={fieldStyles} required>
+              <InputLabel id="organization-label">Organization</InputLabel>
+              <Select
+                labelId="organization-label"
+                value={formData.organization_id}
+                label="Organization"
+                onChange={(e) => handleInputChange("organization_id", e.target.value)}
+              >
+                {loadingOrgs ? (
+                  <MenuItem value="">Loading...</MenuItem>
+                ) : organizations.length === 0 ? (
+                  <MenuItem value="">No organizations found</MenuItem>
+                ) : (
+                  organizations.map((org: any) => (
+                    <MenuItem key={org.id} value={org.id.toString()}>
+                      {org.name}
+                    </MenuItem>
+                  ))
+                )}
+              </Select>
+            </FormControl>
             
-            <TextField
-              label="Generic Category ID"
-              required
-              type="number"
-              value={formData.generic_category_id}
-              onChange={(e) => handleInputChange("generic_category_id", e.target.value)}
-              placeholder="e.g., 1"
-              sx={fieldStyles}
-              fullWidth
-            />
+            <FormControl fullWidth sx={fieldStyles} required>
+              <InputLabel id="category-label">Category</InputLabel>
+              <Select
+                labelId="category-label"
+                value={formData.generic_category_id}
+                label="Category"
+                onChange={(e) => handleInputChange("generic_category_id", e.target.value)}
+              >
+                {loadingCats ? (
+                  <MenuItem value="">Loading...</MenuItem>
+                ) : categories.length === 0 ? (
+                  <MenuItem value="">No categories found</MenuItem>
+                ) : (
+                  categories.map((cat: any) => (
+                    <MenuItem key={cat.id} value={cat.id.toString()}>
+                      {cat.name}
+                    </MenuItem>
+                  ))
+                )}
+              </Select>
+            </FormControl>
 
             <FormControl fullWidth sx={fieldStyles}>
               <InputLabel id="margin-type-label">Margin Type</InputLabel>
@@ -293,6 +343,35 @@ const PricingRuleCreate: React.FC = () => {
               inputProps={{ min: 0, step: 0.01 }}
               InputProps={{
                 endAdornment: formData.margin_type === "percentage" ? (
+                  <InputAdornment position="end">%</InputAdornment>
+                ) : undefined,
+              }}
+            />
+
+            <FormControl fullWidth sx={fieldStyles}>
+              <InputLabel id="platform-fee-type-label">Platform Fee Type</InputLabel>
+              <Select
+                labelId="platform-fee-type-label"
+                value={formData.platform_fee_type}
+                label="Platform Fee Type"
+                onChange={(e) => handleInputChange("platform_fee_type", e.target.value)}
+              >
+                <MenuItem value="percentage">Percentage</MenuItem>
+                <MenuItem value="flat">Flat</MenuItem>
+              </Select>
+            </FormControl>
+
+            <TextField
+              label="Platform Fee Value"
+              type="number"
+              value={formData.platform_fee_value}
+              onChange={(e) => handleInputChange("platform_fee_value", e.target.value)}
+              placeholder="e.g., 5"
+              sx={fieldStyles}
+              fullWidth
+              inputProps={{ min: 0, step: 0.01 }}
+              InputProps={{
+                endAdornment: formData.platform_fee_type === "percentage" ? (
                   <InputAdornment position="end">%</InputAdornment>
                 ) : undefined,
               }}

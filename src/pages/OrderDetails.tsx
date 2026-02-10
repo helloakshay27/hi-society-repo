@@ -503,8 +503,7 @@ const OrderDetails = () => {
                         </div>
                     </div>
 
-                    {/* Address */}
-                    <div className="bg-white rounded-lg shadow-sm border">
+                    {/* <div className="bg-white rounded-lg shadow-sm border">
                         <div className="px-6 py-4 border-b">
                             <div className="flex items-center gap-2">
                                 <MapPin className="w-5 h-5 text-gray-600" />
@@ -527,7 +526,6 @@ const OrderDetails = () => {
                         </div>
                     </div>
 
-                    {/* Billing Summary */}
                     <div className="bg-white rounded-lg shadow-sm border">
                         <div className="px-6 py-4 border-b">
                             <div className="flex items-center gap-2">
@@ -571,9 +569,7 @@ const OrderDetails = () => {
                                 <p>Status: <span className={`font-medium ${orderData?.paymentStatus === 'paid' ? 'text-green-600' : 'text-orange-600'}`}>{orderData?.paymentStatus || "-"}</span></p>
                             </div>
                         </div>
-                    </div>
-
-
+                    </div> */}
                 </div>
             </div>
         </div>
@@ -581,3 +577,4 @@ const OrderDetails = () => {
 };
 
 export default OrderDetails
+ 

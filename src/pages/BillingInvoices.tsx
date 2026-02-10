@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Eye, Calendar, FileText, TrendingUp, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
@@ -22,6 +23,7 @@ interface BillingInvoice {
 }
 
 export default function BillingInvoices() {
+  const navigate = useNavigate();
   const [invoices, setInvoices] = useState<BillingInvoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState('January');
@@ -98,8 +100,7 @@ export default function BillingInvoices() {
   };
 
   const handleViewInvoice = (id: number) => {
-    console.log('View invoice:', id);
-    // Navigate to invoice details page
+    navigate(`/loyalty/billing-invoices/${id}`);
   };
 
   const formatCurrency = (amount: number) => {

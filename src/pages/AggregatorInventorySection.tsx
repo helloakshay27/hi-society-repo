@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { StatsCard } from "@/components/StatsCard";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 import axios from "axios";
 import { toast } from "sonner";
 import {
@@ -20,52 +22,85 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Package, Warehouse, Eye } from "lucide-react";
 // import { getFullUrl, API_CONFIG } from "@/config/apiConfig";
 
 const AggregatorInventorySection = () => {
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [inventoryData, setInventoryData] = useState([]);
     const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
     const [stats, setStats] = useState({
         totalProducts: "0",
         totalStock: "0",
     });
 
-    // Define columns for EnhancedTable
+    // Define columns for EnhancedTable - ALL FIELDS
     const columns = [
-        { key: "checkbox", label: "Select" },
-        { key: "name", label: "Product Name" },
-        { key: "sku", label: "SKU" },
-        { key: "brand", label: "Brand" },
-        { key: "base_price", label: "Base Price" },
-        { key: "sale_price", label: "Sale Price" },
-        { key: "stock_quantity", label: "Stock Quantity" },
-        { key: "created_at", label: "Created At" },
-        // { key: "add_to_cart", label: "Add to Store" },
+        { key: "action", label: "Action", sortable: false },
+        { key: "checkbox", label: "Select", sortable: false },
+        { key: "id", label: "ID", sortable: true },
+        { key: "banner_image_url", label: "Image", sortable: false },
+        { key: "name", label: "Product Name", sortable: true },
+        { key: "sku", label: "SKU", sortable: true },
+        { key: "aggr_product_id", label: "Aggregator Product ID", sortable: true },
+        { key: "description", label: "Description", sortable: false },
+        { key: "brand", label: "Brand", sortable: true },
+        { key: "base_price", label: "Base Price", sortable: true },
+        { key: "sale_price", label: "Sale Price", sortable: true },
+        { key: "base_amount", label: "Base Amount", sortable: true },
+        { key: "stock_quantity", label: "Stock Quantity", sortable: true },
+        { key: "min_stock_level", label: "Min Stock Level", sortable: true },
+        { key: "value_type", label: "Value Type", sortable: false },
+        { key: "min_value", label: "Min Value", sortable: true },
+        { key: "max_value", label: "Max Value", sortable: true },
+        { key: "value_denominations", label: "Denominations", sortable: false },
+        { key: "validity", label: "Validity", sortable: false },
+        { key: "usage_type", label: "Usage Type", sortable: false },
+        { key: "phone_required", label: "Phone Required", sortable: true },
+        { key: "redemption_fee", label: "Redemption Fee", sortable: true },
+        { key: "redemption_fee_type", label: "Fee Type", sortable: false },
+        { key: "redemption_fee_borne_by_user", label: "Fee by User", sortable: true },
+        { key: "published", label: "Published", sortable: true },
+        { key: "featured", label: "Featured", sortable: true },
+        { key: "is_recommended", label: "Recommended", sortable: true },
+        { key: "categories", label: "Categories", sortable: false },
+        { key: "filter_group_code", label: "Filter Group", sortable: false },
+        { key: "shipping_info", label: "Shipping Info", sortable: false },
+        { key: "origin_country", label: "Origin Country", sortable: true },
+        { key: "aggregator_id", label: "Aggregator ID", sortable: true },
+        { key: "created_at", label: "Created At", sortable: true },
+        { key: "updated_at", label: "Updated At", sortable: true },
     ];
 
     // Fetch inventory data
     useEffect(() => {
         fetchInventoryData();
-    }, []);
+    }, [currentPage]);
 
     const fetchInventoryData = async () => {
         try {
             setLoading(true);
-            // const url = getFullUrl(`/aggregator_products?token=${API_CONFIG.TOKEN}`);
-            const url = "https://runwal-api.lockated.com/aggregator_products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+            // const url = getFullUrl(`/aggregator_products?token=${API_CONFIG.TOKEN}&page=${currentPage}`);
+            const url = `https://runwal-api.lockated.com/aggregator_products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ&page=${currentPage}`;
             const response = await axios.get(url);
             const products = response.data?.data || [];
+            const meta = response.data?.meta || {};
+            
             setInventoryData(products);
+            setCurrentPage(meta.page || 1);
+            setTotalPages(meta.total_pages || 1);
+            setTotalCount(meta.total_count || 0);
 
-            // Calculate stats
-            const totalProducts = products.length;
+            // Calculate stats from meta
             const totalStock = products.reduce((sum: number, p: any) => sum + (p.stock_quantity || 0), 0);
 
             setStats({
-                totalProducts: totalProducts.toString(),
+                totalProducts: (meta.total_count || 0).toString(),
                 totalStock: totalStock.toString(),
             });
         } catch (error) {
@@ -78,6 +113,17 @@ const AggregatorInventorySection = () => {
 
     const renderCell = (item: any, columnKey: string) => {
         switch (columnKey) {
+            case "action":
+                return (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/loyalty/aggregator-inventory/${item.id}`)}
+                        title="View Details"
+                    >
+                        <Eye className="w-4 h-4 text-gray-700" />
+                    </Button>
+                );
             case "checkbox":
                 return (
                     <input
@@ -93,40 +139,113 @@ const AggregatorInventorySection = () => {
                         className="w-4 h-4 cursor-pointer"
                     />
                 );
+            case "id":
+                return <span className="font-medium">{item.id}</span>;
+            case "banner_image_url":
+                return item.banner_image_url ? (
+                    <img 
+                        src={item.banner_image_url} 
+                        alt={item.name} 
+                        className="w-16 h-16 object-cover rounded"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64';
+                        }}
+                    />
+                ) : (
+                    <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-400">
+                        No Image
+                    </div>
+                );
             case "name":
-                return <span>{item.name || "-"}</span>;
+                return <span className="font-medium">{item.name || "-"}</span>;
             case "sku":
-                return <span>{item.sku || "-"}</span>;
+                return <span className="text-sm">{item.sku || "-"}</span>;
+            case "aggr_product_id":
+                return <span className="text-sm">{item.aggr_product_id || "-"}</span>;
+            case "description":
+                return (
+                    <div className="max-w-xs truncate" title={item.description || "-"}>
+                        {item.description || "-"}
+                    </div>
+                );
             case "brand":
                 return <span>{item.brand || "-"}</span>;
             case "base_price":
-                return <span>₹{parseFloat(item.base_price || 0).toFixed(2)}</span>;
+                return <span className="font-medium">₹{parseFloat(item.base_price || 0).toFixed(2)}</span>;
             case "sale_price":
-                return <span>₹{parseFloat(item.sale_price || 0).toFixed(2)}</span>;
+                return <span className="font-medium text-green-600">₹{parseFloat(item.sale_price || 0).toFixed(2)}</span>;
+            case "base_amount":
+                return <span>₹{item.base_amount || 0}</span>;
             case "stock_quantity":
                 return (
-                    <span className={item.stock_quantity > 0 ? "text-green-600" : "text-red-600"}>
+                    <span className={item.stock_quantity > 0 ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
                         {item.stock_quantity || 0}
                     </span>
                 );
+            case "min_stock_level":
+                return <span className="text-sm">{item.min_stock_level || 0}</span>;
+            case "value_type":
+                return <span className="text-sm">{item.value_type || "-"}</span>;
+            case "min_value":
+                return <span className="text-sm">{item.min_value || "-"}</span>;
+            case "max_value":
+                return <span className="text-sm">{item.max_value || "-"}</span>;
+            case "value_denominations":
+                return <span className="text-sm">{item.value_denominations || "-"}</span>;
+            case "validity":
+                return <span className="text-sm">{item.validity || "-"}</span>;
+            case "usage_type":
+                return <span className="text-sm">{item.usage_type || "-"}</span>;
+            case "phone_required":
+                return (
+                    <span className={`text-xs px-2 py-1 rounded ${item.phone_required ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {item.phone_required ? "Yes" : "No"}
+                    </span>
+                );
+            case "redemption_fee":
+                return <span className="text-sm">₹{parseFloat(item.redemption_fee || 0).toFixed(2)}</span>;
+            case "redemption_fee_type":
+                return <span className="text-sm">{item.redemption_fee_type || "-"}</span>;
+            case "redemption_fee_borne_by_user":
+                return (
+                    <span className={`text-xs px-2 py-1 rounded ${item.redemption_fee_borne_by_user ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {item.redemption_fee_borne_by_user ? "Yes" : "No"}
+                    </span>
+                );
+            case "published":
+                return (
+                    <span className={`text-xs px-2 py-1 rounded ${item.published ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {item.published ? "Yes" : "No"}
+                    </span>
+                );
+            case "featured":
+                return (
+                    <span className={`text-xs px-2 py-1 rounded ${item.featured ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {item.featured ? "Yes" : "No"}
+                    </span>
+                );
+            case "is_recommended":
+                return (
+                    <span className={`text-xs px-2 py-1 rounded ${item.is_recommended ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {item.is_recommended ? "Yes" : "No"}
+                    </span>
+                );
+            case "categories":
+                return <span className="text-sm">{item.categories || "-"}</span>;
+            case "filter_group_code":
+                return <span className="text-sm">{item.filter_group_code || "-"}</span>;
+            case "shipping_info":
+                return <span className="text-sm">{item.shipping_info || "-"}</span>;
+            case "origin_country":
+                return <span className="text-sm">{item.origin_country || "-"}</span>;
+            case "aggregator_id":
+                return <span className="text-sm">{item.aggregator_id || "-"}</span>;
             case "created_at":
-                return <span>{item.created_at ? new Date(item.created_at).toLocaleDateString() : "-"}</span>;
-            // case "add_to_cart":
-            //     return (
-            //         <Button
-            //             size="sm"
-            //             className="bg-[#C72030] hover:bg-[#A01828] text-white"
-            //             onClick={() => {
-            //                 setSelectedProductId(item.id);
-            //                 setSelectedOrgIds([]);
-            //                 setIsAddModalOpen(true);
-            //             }}
-            //         >
-            //             Add
-            //         </Button>
-            //     );
+                return <span className="text-sm">{item.created_at ? new Date(item.created_at).toLocaleDateString() : "-"}</span>;
+            case "updated_at":
+                return <span className="text-sm">{item.updated_at ? new Date(item.updated_at).toLocaleDateString() : "-"}</span>;
             default:
-                return null;
+                return <span className="text-sm">-</span>;
         }
     };
 
@@ -205,6 +324,33 @@ const AggregatorInventorySection = () => {
 
     return (
         <div className="p-6 space-y-6 bg-white min-h-screen">
+            <Toaster position="top-right" richColors closeButton />
+            
+            {/* Header */}
+            <div className="flex justify-between items-center">
+                <h1 className="text-2xl font-semibold text-[#1A1A1A]">Aggregator Inventory</h1>
+                <div className="text-sm text-gray-500">
+                    Page {currentPage} of {totalPages} | Total: {totalCount} products
+                </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+                <StatsCard
+                    icon={<Package />}
+                    label="Total Products"
+                    value={stats.totalProducts}
+                    bgColor="bg-[#F6F4EE]"
+                    iconBg="bg-[#C4B89D54]"
+                />
+                <StatsCard
+                    icon={<Warehouse />}
+                    label="Total Stock"
+                    value={stats.totalStock}
+                    bgColor="bg-[#F6F4EE]"
+                    iconBg="bg-[#C4B89D54]"
+                />
+            </div>
             
             {/* Add to Store Button */}
             <div className="flex justify-end">
@@ -231,6 +377,9 @@ const AggregatorInventorySection = () => {
                     loading={loading}
                     loadingMessage="Loading aggregator products..."
                     emptyMessage="No aggregator products found"
+                    pagination={true}
+                    exportFileName="aggregator-products"
+                    storageKey="aggregator-products-table"
                 />
                 </div>
                 {/* <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>

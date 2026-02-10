@@ -362,6 +362,19 @@ export const HiSocietySidebar: React.FC = () => {
           path: "/loyalty/aggregator-inventory",
         },
         {
+          id: "redemptions",
+          label: "Redemption Report",
+          icon: BarChart3,
+          path: "/loyalty/redemption-report",
+        },
+        {
+          id: "billing-invoices",
+          label: "Billing Invoices",
+          icon: FileText,
+          path: "/loyalty/billing-invoices",
+        },
+
+        {
           id: "loyalty-members",
           label: "Members",
           icon: Users,

@@ -127,15 +127,31 @@ const PricingRuleEdit: React.FC = () => {
   const [pricingRule, setPricingRule] = useState<PricingRule | null>(null);
   const [marginType, setMarginType] = useState<string>("percentage");
   const [marginValue, setMarginValue] = useState<string>("");
+  const [platformFeeType, setPlatformFeeType] = useState<string>("percentage");
+  const [platformFeeValue, setPlatformFeeValue] = useState<string>("");
+  const [organizations, setOrganizations] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
+    // Fetch organizations
+    fetch("https://runwal-api.lockated.com/organizations.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
+      .then((res) => res.json())
+      .then((data) => setOrganizations(data.organizations || []))
+      .catch(() => setOrganizations([]));
+
+    // Fetch categories
+    fetch("https://runwal-api.lockated.com/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
+      .then((res) => res.json())
+      .then((data) => setCategories(data.categories || []))
+      .catch(() => setCategories([]));
+
     fetchPricingRule();
   }, [id]);
 
   const fetchPricingRule = async () => {
     setLoading(true);
     try {
-      const url = `https://runwal-api.lockated.com/pricing_rules/${id}`;
+      const url = `https://runwal-api.lockated.com/pricing_rules/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -146,6 +162,8 @@ const PricingRuleEdit: React.FC = () => {
       setPricingRule(data);
       setMarginType(data.margin_type || "percentage");
       setMarginValue(data.margin_value?.toString() || "");
+      setPlatformFeeType(data.platform_fee_type || "percentage");
+      setPlatformFeeValue(data.platform_fee_value?.toString() || "");
     } catch (error) {
       toast.error("Failed to load pricing rule", {
         description: String(error),
@@ -176,11 +194,13 @@ const PricingRuleEdit: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const url = `https://runwal-api.lockated.com/pricing_rules/${id}`;
+      const url = `https://runwal-api.lockated.com/pricing_rules/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
       const payload = {
         pricing_rule: {
           margin_type: marginType,
           margin_value: parseFloat(marginValue),
+          platform_fee_type: platformFeeType,
+          platform_fee_value: platformFeeValue ? parseFloat(platformFeeValue) : null,
         },
       };
       
@@ -232,6 +252,16 @@ const PricingRuleEdit: React.FC = () => {
   if (!pricingRule) {
     return null;
   }
+
+  const getOrganizationName = () => {
+    const org = organizations.find((o: any) => o.id === pricingRule.organization_id);
+    return org ? (org as any).name : pricingRule.organization_id.toString();
+  };
+
+  const getCategoryName = () => {
+    const cat = categories.find((c: any) => c.id === pricingRule.generic_category_id);
+    return cat ? (cat as any).name : pricingRule.generic_category_id.toString();
+  };
 
   return (
     <Box
@@ -290,8 +320,8 @@ const PricingRuleEdit: React.FC = () => {
             }}
           >
             <TextField
-              label="Organization ID"
-              value={pricingRule.organization_id}
+              label="Organization"
+              value={getOrganizationName()}
               sx={disabledFieldStyles}
               fullWidth
               disabled
@@ -301,8 +331,8 @@ const PricingRuleEdit: React.FC = () => {
             />
             
             <TextField
-              label="Generic Category ID"
-              value={pricingRule.generic_category_id}
+              label="Category"
+              value={getCategoryName()}
               sx={disabledFieldStyles}
               fullWidth
               disabled
@@ -336,6 +366,35 @@ const PricingRuleEdit: React.FC = () => {
               inputProps={{ min: 0, step: 0.01 }}
               InputProps={{
                 endAdornment: marginType === "percentage" ? (
+                  <InputAdornment position="end">%</InputAdornment>
+                ) : undefined,
+              }}
+            />
+
+            <FormControl fullWidth sx={fieldStyles}>
+              <InputLabel id="platform-fee-type-label">Platform Fee Type</InputLabel>
+              <Select
+                labelId="platform-fee-type-label"
+                value={platformFeeType}
+                label="Platform Fee Type"
+                onChange={(e) => setPlatformFeeType(e.target.value)}
+              >
+                <MenuItem value="percentage">Percentage</MenuItem>
+                <MenuItem value="flat">Flat</MenuItem>
+              </Select>
+            </FormControl>
+
+            <TextField
+              label="Platform Fee Value"
+              type="number"
+              value={platformFeeValue}
+              onChange={(e) => setPlatformFeeValue(e.target.value)}
+              placeholder="e.g., 5"
+              sx={fieldStyles}
+              fullWidth
+              inputProps={{ min: 0, step: 0.01 }}
+              InputProps={{
+                endAdornment: platformFeeType === "percentage" ? (
                   <InputAdornment position="end">%</InputAdornment>
                 ) : undefined,
               }}
