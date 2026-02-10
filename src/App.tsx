@@ -1297,7 +1297,10 @@ function App() {
                       isAuthenticated() ? (
                         <Navigate to="/" replace />
                       ) : (
-                        <LoginPage setBaseUrl={setBaseUrl} setToken={setToken} />
+                        <LoginPage
+                          setBaseUrl={setBaseUrl}
+                          setToken={setToken}
+                        />
                       )
                     }
                   />
@@ -1328,7 +1331,10 @@ function App() {
                     path="/app/direct-pdf-download/:taskId"
                     element={<DirectPDFDownloadAPIPage />}
                   />
-                  <Route path="/dashboard-mobile" element={<DashboardMobile />} />
+                  <Route
+                    path="/dashboard-mobile"
+                    element={<DashboardMobile />}
+                  />
                   <Route path="/sitemap" element={<Sitemap />} />
 
                   <Route
@@ -1429,7 +1435,6 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-
 
                   <Route
                     path="/tickets/edit/:id"
@@ -1681,7 +1686,10 @@ function App() {
                       element={<ChecklistGroupsPage />}
                     />
 
-                    <Route path="/settings/currency" element={<CurrencyPage />} />
+                    <Route
+                      path="/settings/currency"
+                      element={<CurrencyPage />}
+                    />
 
                     <Route
                       path="/master/checklist"
@@ -1925,7 +1933,10 @@ function App() {
                       path="/crm/customers/edit/:id"
                       element={<EditCrmCustomer />}
                     />
-                    <Route path="/crm/wallet-list" element={<CRMWalletList />} />
+                    <Route
+                      path="/crm/wallet-list"
+                      element={<CRMWalletList />}
+                    />
                     <Route
                       path="/crm/wallet-list/:id"
                       element={<CRMWalletDetails />}
@@ -2212,10 +2223,7 @@ function App() {
                   />
 
                   {/* Setup - KYC Detail View Route */}
-                  <Route
-                    path="/kyc-details/:id"
-                    element={<KYCDetailView />}
-                  />
+                  <Route path="/kyc-details/:id" element={<KYCDetailView />} />
 
                   {/* Setup - Helpdesk Setup Route */}
                   <Route
@@ -2229,8 +2237,6 @@ function App() {
                     element={<CommunicationSetupDashboard />}
                   />
 
-
-
                   {/* <Route
                     path="/communication/events"
                     element={<EventsPage />}
@@ -2243,10 +2249,7 @@ function App() {
                     path="/communication/events/view/:id"
                     element={<EventDetailPage />}
                   /> */}
-                  <Route
-                    path="/communication/polls"
-                    element={<PollsPage />}
-                  />
+                  <Route path="/communication/polls" element={<PollsPage />} />
                   <Route
                     path="/communication/polls/add"
                     element={<AddPollPage />}
@@ -2363,10 +2366,7 @@ function App() {
                     path="/communication/notice/details/:id"
                     element={<NoticePageDetails />}
                   />
-                  <Route
-                    path="/communication/events"
-                    element={<EventList />}
-                  />
+                  <Route path="/communication/events" element={<EventList />} />
                   <Route
                     path="/communication/events/create"
                     element={<EventCommunicationCreate />}
@@ -2440,7 +2440,6 @@ function App() {
                     }
                   />
                   <Route path="/PermissionDemo" element={<PermissionDemo />} />
-
 
                   <Route
                     path="/tickets/add"
@@ -3232,7 +3231,10 @@ function App() {
                       path="/safety/permit/safety-check-form"
                       element={<PermitSafetyCheckForm />}
                     />
-                    <Route path="/safety/permit/vendor-form/:id?" element={<VendorPermitForm />} />
+                    <Route
+                      path="/safety/permit/vendor-form/:id?"
+                      element={<VendorPermitForm />}
+                    />
                     <Route
                       path="/safety/permit/fill-form/:id?"
                       element={<FillForm />}
@@ -4754,10 +4756,32 @@ function App() {
                       path="/vas/bookings/details/:id"
                       element={<BookingDetailsPage />}
                     />
+
+                    <Route
+                      path="/scratchcard/details/:rewardId"
+                      element={<VoucherDetails />}
+                    />
+
+                    <Route
+                      path="/scratchcard/:cardId/voucher"
+                      element={<VoucherDetails />}
+                    />
+
                     {/* <Route path="/vas/booking/setup" element={<BookingSetupDashboard />} /> */}
+
                     <Route
                       path="/vas/booking/setup/details/:id"
                       element={<BookingSetupDetailPage />}
+                    />
+
+                    <Route
+                      path="/flipcard/details/:rewardId"
+                      element={<FlipCardDetails />}
+                    />
+
+                    <Route
+                      path="/flipcard/:gameId/card/:cardId"
+                      element={<FlipCardDetails />}
                     />
 
                     <Route

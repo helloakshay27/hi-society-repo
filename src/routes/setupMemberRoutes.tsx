@@ -18,7 +18,7 @@ import { CustomerPricingRuleList } from "@/pages/CustomerPricingRuleList";
 import { TicketDashboard } from "@/TicketDashboardbackup";
 import CRMGroupsPage from "@/pages/CRMGroupsPage";
 // import { VisitorsDashboard } from "@/pages/VisitorsDashboard";
-// import { HiSocGroupsPage } from "@/pages/HiSocGroupsPage";
+import { HiSocGroupsPage } from "@/pages/HiSocGroupsPage";
 import HiSocGroupDetailsPage from "@/pages/HiSocGroupDetailsPage";
 import { PatrollingDashboard } from "@/pages/PatrollingDashboard";
 import { PatrollingResponsePage } from "@/pages/PatrollingResponsePage";
@@ -256,6 +256,10 @@ const BusinessDirectoryDetailsPage = lazy(
   () => import("@/pages/BusinessDirectoryDetailsPage")
 );
 
+const HelpdeskDashboard = lazy(() => import("@/pages/BMS/HelpdeskDashboard").then(module => ({ default: module.TicketDashboard })));
+const AddHelpdeskTicket = lazy(() => import("@/pages/BMS/AddHelpdeskTicket").then(module => ({ default: module.AddTicketDashboard })));
+const HelpdeskTicketDetails = lazy(() => import("@/pages/BMS/HelpdeskTicketDetails").then(module => ({ default: module.TicketDetailsPage })));
+
 // CMS Pages
 const CMSFacility = lazy(() => import("@/pages/CMSFacility"));
 const CMSRules = lazy(() => import("@/pages/CMSRules"));
@@ -269,6 +273,7 @@ const CMSFacilityBookings = lazy(() => import("@/pages/CMSFacilityBookings"));
 const AddFacilityBookingPage = lazy(
   () => import("@/pages/AddFacilityBookingPage")
 );
+const BookingDetailsPage = lazy(() => import("@/pages/BookingDetailsPage"));
 const CMSMembershipPlanSetup = lazy(
   () => import("@/pages/ClubManagement/CMSMembershipPlanSetup")
 );
@@ -425,6 +430,7 @@ const SmartSecureVisitorReport = lazy(
 const SmartSecureStaffReport = lazy(
   () => import("@/pages/SmartSecureStaffReport")
 );
+const VisitorsDashboard = lazy(() => import("@/pages/VisitorsDashboard"));
 const SmartSecurePatrolling = lazy(
   () => import("@/pages/SmartSecurePatrolling")
 );
@@ -479,6 +485,11 @@ const withSuspense = (Component: React.LazyExoticComponent<any>) => {
 
 export const setupMemberRoutes = (
   <>
+
+      <Route path="/bms/helpdesk" element={withSuspense(HelpdeskDashboard)()} />
+    <Route path="/bms/helpdesk/add" element={withSuspense(AddHelpdeskTicket)()} />
+    <Route path="/bms/helpdesk/details/:id" element={withSuspense(HelpdeskTicketDetails)()} />
+
     {/* Amenities Routes */}
     <Route path="/loyalty/dashboard" element={<LoyaltyDashboard />} />
     <Route path="/loyalty/wallet-management" element={<WalletManagement />} />
@@ -1158,7 +1169,7 @@ export const setupMemberRoutes = (
     />
     <Route path="/bms/feedbacks" Component={withSuspense(BMSFeedbacks)} />
     <Route path="/bms/parking" Component={withSuspense(BMSParking)} />
-    <Route path="/bms/groups" Component={withSuspense(HiSocGroupsPage)} />
+    <Route path="/bms/groups" element={<HiSocGroupsPage />} />
     <Route path="/bms/groups/details/:id" element={<HiSocGroupDetailsPage />} />
     <Route path="/bms/hisoc-event-list" element={<HiSocEventList />} />
     <Route path="/bms/hisoc-event-create" element={<HiSocEventCreate />} />
