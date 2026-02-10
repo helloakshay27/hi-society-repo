@@ -247,13 +247,14 @@ baseClient.interceptors.request.use(
       if (isRunwalSite) {
         config.baseURL = "https://runwal-cp-api.lockated.com/";
         console.warn("⚠️ Using Runwal fallback URL:", config.baseURL);
-      } else if (isHiSocietySite) {
-        config.baseURL = `${hiSocietyApiBase}/`;
-        console.warn("⚠️ Using Hi-Society fallback URL:", config.baseURL);
-      } else {
-        config.baseURL = "https://uat-hi-society.lockated.com/";
-        console.warn("⚠️ Using fallback URL:", config.baseURL);
       }
+      // } else if (isHiSocietySite) {
+      //   config.baseURL = `${hiSocietyApiBase}/`;
+      //   console.warn("⚠️ Using Hi-Society fallback URL:", config.baseURL);
+      // } else {
+      //   config.baseURL = "https://uat-hi-society.lockated.com/";
+      //   console.warn("⚠️ Using fallback URL:", config.baseURL);
+      // }
     } catch (error) {
       console.error("❌ Error in request interceptor:", error);
       // Always set a fallback URL on error
