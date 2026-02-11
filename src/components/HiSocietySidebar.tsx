@@ -122,7 +122,7 @@ export const HiSocietySidebar: React.FC = () => {
     ];
 
     // Extract first segment from path
-    const segments = path.split('/').filter(Boolean);
+    const segments = path.split("/").filter(Boolean);
     const firstSegment = segments[0];
 
     // Check for Application Setup paths first - these should stay in settings
@@ -150,10 +150,18 @@ export const HiSocietySidebar: React.FC = () => {
     if (path.startsWith("/incidents")) return "incidents";
     if (path.startsWith("/appointmentz")) return "appointmentz";
     if (path.startsWith("/settings")) return "settings";
-    if (path.startsWith("/loyalty") || loyaltyChildRoutes.includes(firstSegment)) return "loyalty";
+    if (
+      path.startsWith("/loyalty") ||
+      loyaltyChildRoutes.includes(firstSegment)
+    )
+      return "loyalty";
     if (path.startsWith("/bms") || path.startsWith("/communication"))
       return "bms";
-    if (path.startsWith("/maintenance") || homeChildRoutes.includes(firstSegment)) return "home";
+    if (
+      path.startsWith("/maintenance") ||
+      homeChildRoutes.includes(firstSegment)
+    )
+      return "home";
     return "home";
   };
 
@@ -732,6 +740,31 @@ export const HiSocietySidebar: React.FC = () => {
             },
           ],
         },
+        {
+          id: "setup",
+          label: "Setup",
+          icon: SettingsIcon,
+          subItems: [
+            {
+              id: "general",
+              label: "General",
+              icon: FileText,
+              path: "/smartsecure/setup/general",
+            },
+            {
+              id: "visitor-parking",
+              label: "Visitor Parking",
+              icon: Car,
+              path: "/smartsecure/setup/visitor-parking",
+            },
+            {
+              id: "support-staff",
+              label: "Support Staff",
+              icon: Users,
+              path: "/smartsecure/setup/support-staff",
+            },
+          ],
+        },
       ],
     },
     incidents: {
@@ -1039,7 +1072,7 @@ export const HiSocietySidebar: React.FC = () => {
           ],
         },
         {
-         id: "ticket-management",
+          id: "ticket-management",
           label: "Ticket Management",
           icon: SettingsIcon,
           subItems: [
@@ -1060,7 +1093,7 @@ export const HiSocietySidebar: React.FC = () => {
               label: "Cost Approval",
               icon: DollarSign,
               path: "/settings/ticket-management/cost-approval",
-            },          
+            },
           ],
         },
       ],
@@ -1194,8 +1227,9 @@ export const HiSocietySidebar: React.FC = () => {
 
   return (
     <div
-      className={`${isSidebarCollapsed ? "w-16" : "w-64"
-        } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      className={`${
+        isSidebarCollapsed ? "w-16" : "w-64"
+      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
       style={{ top: "4rem", height: "calc(100% - 4rem)" }}
     >
       <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>
