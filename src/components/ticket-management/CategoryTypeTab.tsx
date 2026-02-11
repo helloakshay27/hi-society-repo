@@ -136,6 +136,13 @@ export const CategoryTypeTab: React.FC = () => {
   const [selectedEngineers, setSelectedEngineers] = useState<number[]>([]);
   const [iconFile, setIconFile] = useState<File | null>(null);
   const [vendorEmailEnabled, setVendorEmailEnabled] = useState(false);
+  const [issueTypes, setIssueTypes] = useState<Array<{ id: number; name: string }>>([]);
+  const [selectedIssueType, setSelectedIssueType] = useState('');
+  const [selectedPriority, setSelectedPriority] = useState('');
+  const [fmResponseTime, setFmResponseTime] = useState('');
+  const [projectResponseTime, setProjectResponseTime] = useState('');
+  
+  const priorityOptions = ['P1', 'P2', 'P3', 'P4'];
   const [accountData, setAccountData] = useState<{
     id?: string;
     company_id?: number;
@@ -149,6 +156,10 @@ export const CategoryTypeTab: React.FC = () => {
   const [editVendorEmailEnabled, setEditVendorEmailEnabled] = useState(false);
   const [editVendorEmails, setEditVendorEmails] = useState<string[]>(['']);
   const [editSelectedSiteId, setEditSelectedSiteId] = useState<string>('');
+  const [editIssueType, setEditIssueType] = useState('');
+  const [editPriority, setEditPriority] = useState('');
+  const [editFmResponseTime, setEditFmResponseTime] = useState('');
+  const [editProjectResponseTime, setEditProjectResponseTime] = useState('');
 
   const form = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
@@ -229,9 +240,28 @@ export const CategoryTypeTab: React.FC = () => {
     fetchEngineers();
   }, []);
 
+  const fetchIssueTypes = async () => {
+    try {
+      const response = await fetch(getFullUrl('/user/issue_type.json'), {
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setIssueTypes(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching issue types:', error);
+      toast.error('Failed to fetch issue types');
+    }
+  };
+
   useEffect(() => {
     fetchCategories();
     fetchAccountData();
+    fetchIssueTypes();
   }, [fetchCategories, fetchAccountData]);
 
   const fetchSites = async () => {
@@ -263,16 +293,10 @@ export const CategoryTypeTab: React.FC = () => {
   const handleCreateSubmit = async () => {
     // Get form values directly from the form inputs
     const categoryNameInput = document.querySelector('input[name="categoryName"]') as HTMLInputElement;
-    const responseTimeInput = document.querySelector('input[name="responseTime"]') as HTMLInputElement;
     
-    // Check for required fields with specific messages like ParkingCategoryPage
+    // Check for required fields with specific messages
     if (!categoryNameInput?.value?.trim()) {
       toast.error('Please enter a category name');
-      return;
-    }
-    
-    if (!responseTimeInput?.value?.trim()) {
-      toast.error('Please enter response time');
       return;
     }
     
@@ -281,20 +305,13 @@ export const CategoryTypeTab: React.FC = () => {
       return;
     }
     
-    const formValues = form.getValues();
-    
-    if (!formValues.siteId || formValues.siteId.trim() === '') {
-      toast.error('Please select at least one site');
-      return;
-    }
-
     // Get the form data
     const data: CategoryFormData = {
       categoryName: categoryNameInput.value.trim(),
-      responseTime: responseTimeInput.value.trim(),
-      customerEnabled: false, // or get from checkbox if needed
-      siteId: formValues.siteId,
-      engineerIds: formValues.engineerIds || [],
+      responseTime: fmResponseTime, // Use the state variable
+      customerEnabled: false,
+      siteId: accountData?.company_id?.toString() || '',
+      engineerIds: [],
     };
 
     // Continue with the rest of the validation and submission logic
@@ -302,6 +319,23 @@ export const CategoryTypeTab: React.FC = () => {
   };
 
   const handleSubmit = async (data: CategoryFormData) => {
+    // Validate required fields
+    if (!selectedIssueType) {
+      toast.error('Please select issue type');
+      return;
+    }
+    if (!selectedPriority) {
+      toast.error('Please select priority');
+      return;
+    }
+    if (!fmResponseTime) {
+      toast.error('Please enter FM response time');
+      return;
+    }
+    if (!projectResponseTime) {
+      toast.error('Please enter project response time');
+      return;
+    }
 
     // Check for duplicate category name
     const existingCategory = categories.find(
@@ -344,50 +378,16 @@ export const CategoryTypeTab: React.FC = () => {
       const formData = new FormData();
       
       // Helpdesk category data
-      formData.append('helpdesk_category[society_id]', accountData?.company_id?.toString() || '');
-      formData.append('helpdesk_category[of_phase]', 'pms');
+      formData.append('helpdesk_category[issue_type_id]', selectedIssueType);
       formData.append('helpdesk_category[name]', data.categoryName);
-      formData.append('helpdesk_category[tat]', data.responseTime);
-      formData.append('helpdesk_category[customer_enabled]', data.customerEnabled ? '1' : '0');
+      formData.append('helpdesk_category[tat]', fmResponseTime);
+      formData.append('helpdesk_category[project_tat]', projectResponseTime);
+      formData.append('helpdesk_category[priority]', selectedPriority);
       
       if (iconFile) {
         formData.append('helpdesk_category[icon]', iconFile);
       }
-
-      // Add selected engineers
-      const selectedEngineers = form.getValues('engineerIds') || [];
-      if (selectedEngineers.length) {
-        selectedEngineers.forEach(engineerId => {
-          formData.append('complaint_worker[assign_to][]', engineerId.toString());
-        });
-      }
-      
-      // FAQ attributes
-      faqItems.forEach((item, index) => {
-        if (item.question.trim() || item.answer.trim()) {
-          formData.append(`helpdesk_category[complaint_faqs_attributes][${index}][question]`, item.question);
-          formData.append(`helpdesk_category[complaint_faqs_attributes][${index}][answer]`, item.answer);
-          formData.append(`helpdesk_category[complaint_faqs_attributes][${index}][_destroy]`, 'false');
-        }
-      });
-      
-      // Vendor email
-      if (vendorEmailEnabled && vendorEmails.length > 0) {
-        const validEmails = vendorEmails.filter(email => email.trim());
-        validEmails.forEach(email => {
-          formData.append('category_email[email]', email);
-        });
-      }
-      
-      // Location data (site_ids from account data)
-      // Location data (selected site IDs from the form)
-      if (data.siteId) {
-        const siteIds = data.siteId.split(',');
-        siteIds.forEach(siteId => {
-          formData.append('location_data[site_ids][]', siteId.trim());
-        });
-      }
-      const response = await fetch(getFullUrl('/pms/admin/helpdesk_categories.json'), {
+      const response = await fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
         method: 'POST',
         headers: {
           'Authorization': getAuthHeader(),
@@ -401,13 +401,11 @@ export const CategoryTypeTab: React.FC = () => {
         
         // Reset form
         form.reset();
-        setFaqItems([{ question: '', answer: '' }]);
-        setVendorEmails(['']);
+        setSelectedIssueType('');
+        setSelectedPriority('');
+        setFmResponseTime('');
+        setProjectResponseTime('');
         setIconFile(null);
-        setVendorEmailEnabled(false);
-        
-        // Auto-populate form with company_id again
-        form.setValue('siteId', accountData?.company_id?.toString() || '');
         
         fetchCategories();
       } else {
@@ -479,6 +477,22 @@ export const CategoryTypeTab: React.FC = () => {
   const handleEdit = (category: CategoryApiResponse['helpdesk_categories'][0]) => {
     setEditingCategory(category);
     
+    // Populate issue type, priority, and response times from category data
+    if (category.complaint_worker?.issue_type_id) {
+      setEditIssueType(category.complaint_worker.issue_type_id.toString());
+    } else {
+      setEditIssueType('');
+    }
+    
+    // Set response times
+    setEditFmResponseTime(category.tat || '');
+    // If you have project_tat in API response, use it:
+    // setEditProjectResponseTime(category.project_tat || '');
+    setEditProjectResponseTime('');
+    
+    // Set priority - you may need to adjust based on where priority is stored
+    setEditPriority('');
+    
     // Populate FAQ items if available, otherwise default empty FAQ
     if (category.complaint_faqs && category.complaint_faqs.length > 0) {
       setEditFaqItems(category.complaint_faqs.map(faq => ({
@@ -505,23 +519,18 @@ export const CategoryTypeTab: React.FC = () => {
         }
       }
       
-      console.log('Available engineers:', engineers);
-      console.log('Engineer IDs from API:', engineerIds);
-      console.log('Matched engineers:', engineers.filter(e => engineerIds.includes(e.id)));
-      
       setSelectedEngineers(engineerIds);
-      form.setValue('engineerIds', engineerIds); // Update form state
+      form.setValue('engineerIds', engineerIds);
     } else {
       setSelectedEngineers([]);
-      form.setValue('engineerIds', []); // Update form state
+      form.setValue('engineerIds', []);
     }
     
     setEditIconFile(null);
     setEditVendorEmailEnabled(category.category_email?.length > 0);
     setEditVendorEmails(category.category_email?.length > 0 ? category.category_email.map(e => e.email) : ['']);
     
-    // Set the selected site IDs (default to the current selected site or first available site)
-    // For now, default to selectedSite if available
+    // Set the selected site IDs
     setEditSelectedSiteId(selectedSite?.id.toString() || sites[0]?.id.toString() || '');
     
     setIsEditModalOpen(true);
@@ -530,17 +539,29 @@ export const CategoryTypeTab: React.FC = () => {
   const handleEditSubmit = async (formData: object) => {
     if (!editingCategory) return;
     
-    // Check for required fields with specific messages like ParkingCategoryPage
+    // Get category name from input
     const categoryNameInput = document.querySelector('#edit-category-name') as HTMLInputElement;
-    const responseTimeInput = document.querySelector('#edit-response-time') as HTMLInputElement;
     
     if (!categoryNameInput?.value?.trim()) {
       toast.error('Please enter a category name');
       return;
     }
     
-    if (!responseTimeInput?.value?.trim()) {
-      toast.error('Please enter response time');
+    // Validate required fields
+    if (!editIssueType) {
+      toast.error('Please select issue type');
+      return;
+    }
+    if (!editPriority) {
+      toast.error('Please select priority');
+      return;
+    }
+    if (!editFmResponseTime) {
+      toast.error('Please enter FM response time');
+      return;
+    }
+    if (!editProjectResponseTime) {
+      toast.error('Please enter project response time');
       return;
     }
     
@@ -557,7 +578,6 @@ export const CategoryTypeTab: React.FC = () => {
         return;
       }
       
-      // Check if at least one email is provided when vendor email is enabled
       const validEmails = editVendorEmails.filter(email => email.trim());
       if (validEmails.length === 0) {
         toast.error('Please provide at least one vendor email when vendor email is enabled.');
@@ -565,7 +585,7 @@ export const CategoryTypeTab: React.FC = () => {
       }
     }
 
-    // Validate FAQ items - if any FAQ is partially filled, both question and answer are required
+    // Validate FAQ items
     const incompleteFaqItems = editFaqItems.filter(item => 
       !item._destroy && ((item.question.trim() && !item.answer.trim()) || (!item.question.trim() && item.answer.trim()))
     );
@@ -579,65 +599,22 @@ export const CategoryTypeTab: React.FC = () => {
     try {
       const submitFormData = new FormData();
       
-      // Get form values from the edit modal inputs
-      const categoryNameInput = document.querySelector('#edit-category-name') as HTMLInputElement;
-      const responseTimeInput = document.querySelector('#edit-response-time') as HTMLInputElement;
-      const customerEnabledInput = document.querySelector('#edit-customer-enabled') as HTMLInputElement;
-      
-      // Helpdesk category data
-      submitFormData.append('helpdesk_category[name]', categoryNameInput?.value || editingCategory.name);
-      submitFormData.append('helpdesk_category[customer_enabled]', customerEnabledInput?.checked ? '1' : '0');
-      submitFormData.append('helpdesk_category[tat]', responseTimeInput?.value || editingCategory.tat);
+      // Helpdesk category data - only the 6 required parameters
+      submitFormData.append('helpdesk_category[issue_type_id]', editIssueType);
+      submitFormData.append('helpdesk_category[name]', categoryNameInput.value.trim());
+      submitFormData.append('helpdesk_category[tat]', editFmResponseTime);
+      submitFormData.append('helpdesk_category[project_tat]', editProjectResponseTime);
+      submitFormData.append('helpdesk_category[priority]', editPriority);
       
       // Add icon if a new one is selected
       if (editIconFile) {
         submitFormData.append('helpdesk_category[icon]', editIconFile);
       }
 
-      // Add selected engineers
-      if (selectedEngineers.length) {
-        selectedEngineers.forEach(engineerId => {
-          submitFormData.append('complaint_worker[assign_to][]', engineerId.toString());
-        });
-      }
-      
-      // FAQ attributes
-      editFaqItems.forEach((item, index) => {
-        // Include all FAQs (both existing and new) in the submission
-        submitFormData.append(`helpdesk_category[complaint_faqs_attributes][${index}][question]`, item.question);
-        submitFormData.append(`helpdesk_category[complaint_faqs_attributes][${index}][answer]`, item.answer);
-        submitFormData.append(`helpdesk_category[complaint_faqs_attributes][${index}][_destroy]`, item._destroy ? 'true' : 'false');
-        
-        // Add existing FAQ id if available
-        if (item.id) {
-          submitFormData.append(`helpdesk_category[complaint_faqs_attributes][${index}][id]`, item.id.toString());
-        }
-      });
-      
-      // Vendor email
-      if (editVendorEmailEnabled && editVendorEmails.length > 0) {
-        const validEmails = editVendorEmails.filter(email => email.trim());
-        validEmails.forEach(email => {
-          submitFormData.append('category_email[email]', email);
-        });
-      }
-      
-      // Location data (multiple selected sites)
-      if (editSelectedSiteId) {
-        const siteIds = editSelectedSiteId.split(',');
-        siteIds.forEach(siteId => {
-          submitFormData.append('location_data[site_ids][]', siteId.trim());
-        });
-      }
-      
-      // Add category ID
-      submitFormData.append('id', editingCategory.id.toString());
-
       const response = await fetch(getFullUrl(`/pms/admin/modify_helpdesk_category/${editingCategory.id}.json`), {
         method: 'PATCH',
         headers: {
           'Authorization': getAuthHeader(),
-          // Don't set Content-Type header when using FormData
         },
         body: submitFormData,
       });
@@ -646,7 +623,7 @@ export const CategoryTypeTab: React.FC = () => {
         toast.success('Category updated successfully!');
         setIsEditModalOpen(false);
         setEditingCategory(null);
-        fetchCategories(); // Refresh the list
+        fetchCategories();
       } else {
         const errorData = await response.json().catch(() => null);
         console.error('API Response Error:', errorData);
@@ -867,60 +844,125 @@ export const CategoryTypeTab: React.FC = () => {
           <Form {...form}>
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Issue Type Dropdown */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">
+                    Select Issue Type <span className="text-red-500">*</span>
+                  </label>
+                  <Select value={selectedIssueType} onValueChange={setSelectedIssueType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Issue Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {issueTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Category Name */}
                 <FormField
                   control={form.control}
                   name="categoryName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category Name <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>Enter category <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter category name" {...field} />
+                        <Input placeholder="Enter category" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="responseTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Response Time (Minutes) <span className="text-red-500">*</span></FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="Enter response time" 
-                          min="0"
-                          onKeyDown={(e) => {
-                            if (e.key === '-' || e.key === 'e' || e.key === 'E') {
-                              e.preventDefault();
-                            }
-                          }}
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-
-                
-
+                {/* FM Response Time */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  <label className="block text-sm font-medium">
+                    Enter FM response time <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <Input 
+                      type="number" 
+                      placeholder="Enter FM response time" 
+                      value={fmResponseTime}
+                      onChange={(e) => setFmResponseTime(e.target.value)}
+                      min="0"
+                      onKeyDown={(e) => {
+                        if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                          e.preventDefault();
+                        }
+                      }}
+                      className="flex-1"
+                    />
+                    <div className="w-16 flex items-center justify-center bg-gray-100 border border-gray-300 rounded px-3">
+                      Min
+                    </div>
+                  </div>
+                </div>
+
+                {/* Project Response Time */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">
+                    Enter Project response time <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <Input 
+                      type="number" 
+                      placeholder="Enter Project response time" 
+                      value={projectResponseTime}
+                      onChange={(e) => setProjectResponseTime(e.target.value)}
+                      min="0"
+                      onKeyDown={(e) => {
+                        if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                          e.preventDefault();
+                        }
+                      }}
+                      className="flex-1"
+                    />
+                    <div className="w-16 flex items-center justify-center bg-gray-100 border border-gray-300 rounded px-3">
+                      Min
+                    </div>
+                  </div>
+                </div>
+
+                {/* Priority Dropdown */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">
+                    Select Priority <span className="text-red-500">*</span>
+                  </label>
+                  <Select value={selectedPriority} onValueChange={setSelectedPriority}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {priorityOptions.map((priority) => (
+                        <SelectItem key={priority} value={priority}>
+                          {priority}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Upload Icon */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">
                     Upload Icon <span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center gap-2">
-                    <label htmlFor="icon-upload" className="cursor-pointer">
-                      <Button type="button" variant="outline" size="sm" asChild>
+                    <label htmlFor="icon-upload" className="cursor-pointer flex-1">
+                      <Button type="button" variant="outline" size="sm" className="w-full justify-start" asChild>
                         <span>
-                          <Upload className="h-4 w-4 mr-2" />
-                          Upload Icon
+                          Choose file
                         </span>
                       </Button>
                     </label>
+                    <span className="text-sm text-gray-600">
+                      {iconFile ? iconFile.name : 'No file chosen'}
+                    </span>
                     <input
                       id="icon-upload"
                       type="file"
@@ -928,160 +970,119 @@ export const CategoryTypeTab: React.FC = () => {
                       className="hidden"
                       onChange={handleIconChange}
                     />
-                    {iconFile && (
-                      <span className="text-sm text-gray-600">{iconFile.name}</span>
-                    )}
                   </div>
-                  {/* {!iconFile && (
-                    <p className="text-sm text-red-500">Icon is required</p>
-                  )} */}
                 </div>
+              </div>
 
-                <FormField
-                  control={form.control}
-                  name="siteId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Enable Sites <span className="text-red-500">*</span></FormLabel>
-                      <FormControl>
-                        <div className="space-y-3">
-                          <ReactSelect
-                            isMulti
-                            options={sites.map(site => ({
-                              value: site.id.toString(),
-                              label: site.name
-                            }))}
-                            onChange={(selected) => {
-                              if (!selected || selected.length === 0) {
-                                field.onChange('');
-                                return;
-                              }
-                              // Store comma-separated site IDs
-                              const siteIds = selected.map(s => s.value).join(',');
-                              field.onChange(siteIds);
-                            }}
-                            value={field.value ? 
-                              sites
-                                .filter(site => field.value.split(',').includes(site.id.toString()))
-                                .map(site => ({
-                                  value: site.id.toString(),
-                                  label: site.name
-                                }))
-                              : []
-                            }
-                            className="mt-1"
-                            placeholder="Select sites..."
-                            noOptionsMessage={() => "No sites available"}
-                            styles={{
-                              control: (base) => ({
-                                ...base,
-                                minHeight: '40px',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '0px',
-                                boxShadow: 'none',
-                                '&:hover': {
-                                  border: '1px solid #cbd5e1'
-                                }
-                              }),
-                              multiValue: (base) => ({
-                                ...base,
-                                backgroundColor: '#f1f5f9',
-                                borderRadius: '0px'
-                              }),
-                              multiValueLabel: (base) => ({
-                                ...base,
-                                color: '#334155'
-                              }),
-                              multiValueRemove: (base) => ({
-                                ...base,
-                                color: '#64748b',
-                                borderRadius: '0px',
-                                '&:hover': {
-                                  backgroundColor: '#e2e8f0',
-                                  color: '#475569'
-                                }
-                              })
-                            }}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+              {/* Comment out unused sections */}
+              {/*
+              <div className="space-y-2">
+                <label className="block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Upload Icon <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="icon-upload" className="cursor-pointer">
+                    <Button type="button" variant="outline" size="sm" asChild>
+                      <span>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Icon
+                      </span>
+                    </Button>
+                  </label>
+                  <input
+                    id="icon-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleIconChange}
+                  />
+                  {iconFile && (
+                    <span className="text-sm text-gray-600">{iconFile.name}</span>
                   )}
-                />
+                </div>
+              </div>
 
-                <FormField
-                  control={form.control}
-                  name="engineerIds"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Assign Engineers</FormLabel>
-                      <FormControl>
-                        <div className="space-y-3">
-                          <ReactSelect
-                            isMulti
-                            options={engineers.map(engineer => ({
+              <FormField
+                control={form.control}
+                name="siteId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Enable Sites <span className="text-red-500">*</span></FormLabel>
+                    <FormControl>
+                      <div className="space-y-3">
+                        <ReactSelect
+                          isMulti
+                          options={sites.map(site => ({
+                            value: site.id.toString(),
+                            label: site.name
+                          }))}
+                          onChange={(selected) => {
+                            if (!selected || selected.length === 0) {
+                              field.onChange('');
+                              return;
+                            }
+                            const siteIds = selected.map(s => s.value).join(',');
+                            field.onChange(siteIds);
+                          }}
+                          value={field.value ? 
+                            sites
+                              .filter(site => field.value.split(',').includes(site.id.toString()))
+                              .map(site => ({
+                                value: site.id.toString(),
+                                label: site.name
+                              }))
+                            : []
+                          }
+                          className="mt-1"
+                          placeholder="Select sites..."
+                          noOptionsMessage={() => "No sites available"}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="engineerIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assign Engineers</FormLabel>
+                    <FormControl>
+                      <div className="space-y-3">
+                        <ReactSelect
+                          isMulti
+                          options={engineers.map(engineer => ({
+                            value: engineer.id,
+                            label: engineer.full_name
+                          }))}
+                          onChange={(selected) => {
+                            if (!selected) {
+                              field.onChange([]);
+                              return;
+                            }
+                            const newEngineers = selected.map(s => s.value);
+                            field.onChange(newEngineers);
+                          }}
+                          value={engineers
+                            .filter(engineer => field.value?.includes(engineer.id))
+                            .map(engineer => ({
                               value: engineer.id,
                               label: engineer.full_name
                             }))}
-                            onChange={(selected) => {
-                              if (!selected) {
-                                field.onChange([]);
-                                return;
-                              }
+                          className="mt-1"
+                          placeholder="Select engineers..."
+                          noOptionsMessage={() => "No engineers available"}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                              const newEngineers = selected.map(s => s.value);
-                              field.onChange(newEngineers);
-                            }}
-                            value={engineers
-                              .filter(engineer => field.value?.includes(engineer.id))
-                              .map(engineer => ({
-                                value: engineer.id,
-                                label: engineer.full_name
-                              }))}
-                            className="mt-1"
-                            placeholder="Select engineers..."
-                            noOptionsMessage={() => "No engineers available"}
-                            styles={{
-                              control: (base) => ({
-                                ...base,
-                                minHeight: '40px',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '0px',
-                                boxShadow: 'none',
-                                '&:hover': {
-                                  border: '1px solid #cbd5e1'
-                                }
-                              }),
-                              multiValue: (base) => ({
-                                ...base,
-                                backgroundColor: '#f1f5f9',
-                                borderRadius: '0px'
-                              }),
-                              multiValueLabel: (base) => ({
-                                ...base,
-                                color: '#334155'
-                              }),
-                              multiValueRemove: (base) => ({
-                                ...base,
-                                color: '#64748b',
-                                borderRadius: '0px',
-                                '&:hover': {
-                                  backgroundColor: '#e2e8f0',
-                                  color: '#475569'
-                                }
-                              })
-                            }}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* PMS Phase - Hidden field, always "pms" */}
               <input type="hidden" value="pms" />
 
               <div className="space-y-4">
@@ -1183,14 +1184,30 @@ export const CategoryTypeTab: React.FC = () => {
                   </div>
                 ))}
               </div>
+              */}
 
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-3">
+                <Button 
+                  type="button"
+                  onClick={() => {
+                    form.reset();
+                    setSelectedIssueType('');
+                    setSelectedPriority('');
+                    setFmResponseTime('');
+                    setProjectResponseTime('');
+                    setIconFile(null);
+                  }}
+                  variant="outline"
+                  className="px-8"
+                >
+                  Cancel
+                </Button>
                 <Button 
                   onClick={handleCreateSubmit}
                   disabled={isSubmitting}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-8"
                 >
-                  {isSubmitting ? 'Saving...' : 'Submit'}
+                  {isSubmitting ? 'Submitting...' : 'Submit'}
                 </Button>
               </div>
             </div>
@@ -1224,173 +1241,127 @@ export const CategoryTypeTab: React.FC = () => {
       {/* Edit Category Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader className="relative">
+          <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Edit Category</DialogTitle>
-            <button
-              onClick={() => setIsEditModalOpen(false)}
-              className="absolute top-0 right-0 p-1 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <X size={20} className="text-gray-500" />
-            </button>
           </DialogHeader>
-
           {editingCategory && (
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
+                {/* Issue Type Dropdown */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">
+                    Select Issue Type <span className="text-red-500">*</span>
+                  </label>
+                  <Select value={editIssueType} onValueChange={setEditIssueType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Issue Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {issueTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Category Name */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">
                     Category <span className="text-red-500">*</span>
                   </label>
                   <Input
                     id="edit-category-name"
                     defaultValue={editingCategory.name}
-                    placeholder="Category Name"
+                    placeholder="Enter category"
                     className="w-full"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Selected Sites <span className="text-red-500">*</span>
+                {/* FM Response Time */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">
+                    Enter FM response time <span className="text-red-500">*</span>
                   </label>
-                  <ReactSelect
-                    isMulti
-                    options={sites.map(site => ({
-                      value: site.id.toString(),
-                      label: site.name
-                    }))}
-                    onChange={(selected) => {
-                      if (!selected || selected.length === 0) {
-                        setEditSelectedSiteId('');
-                        return;
-                      }
-                      // Store comma-separated site IDs
-                      const siteIds = selected.map(s => s.value).join(',');
-                      setEditSelectedSiteId(siteIds);
-                    }}
-                    value={editSelectedSiteId ? editSelectedSiteId.split(',').map(id => {
-                      const site = sites.find(s => s.id.toString() === id.trim());
-                      return site ? { value: id.trim(), label: site.name } : null;
-                    }).filter(Boolean) : []}
-                    className="mt-1"
-                    placeholder="Select sites..."
-                    noOptionsMessage={() => "No sites available"}
-                    styles={{
-                      control: (base) => ({
-                        ...base,
-                        minHeight: '40px',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '0px',
-                        boxShadow: 'none',
-                        '&:hover': {
-                          border: '1px solid #cbd5e1'
+                  <div className="flex gap-2">
+                    <Input 
+                      type="number" 
+                      placeholder="Enter FM response time" 
+                      value={editFmResponseTime}
+                      onChange={(e) => setEditFmResponseTime(e.target.value)}
+                      min="0"
+                      onKeyDown={(e) => {
+                        if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                          e.preventDefault();
                         }
-                      }),
-                      multiValue: (base) => ({
-                        ...base,
-                        backgroundColor: '#f1f5f9',
-                        borderRadius: '0px'
-                      }),
-                      multiValueLabel: (base) => ({
-                        ...base,
-                        color: '#334155'
-                      }),
-                      multiValueRemove: (base) => ({
-                        ...base,
-                        color: '#64748b',
-                        borderRadius: '0px',
-                        '&:hover': {
-                          backgroundColor: '#e2e8f0',
-                          color: '#475569'
-                        }
-                      })
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Response Time(min) <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    id="edit-response-time"
-                    defaultValue={editingCategory.tat}
-                    placeholder="Response Time"
-                    type="number"
-                    min="0"
-                    className="w-full"
-                  />
-                </div>
-              </div>
-
-              {/* <div className="flex items-center space-x-3">
-                <Checkbox id="edit-customer-enabled" />
-                <label htmlFor="edit-customer-enabled" className="text-sm font-medium">Customer Enabled</label>
-              </div> */}
-
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id="vendor-email-enabled"
-                    checked={editVendorEmailEnabled}
-                    onCheckedChange={(checked) => setEditVendorEmailEnabled(!!checked)}
-                  />
-                  <label htmlFor="vendor-email-enabled" className="text-sm font-medium">Enable Vendor Email</label>
-                </div>
-
-                {editVendorEmailEnabled && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Vendor Emails</h3>
-                      <Button type="button" onClick={addEditVendorEmail} variant="outline" size="sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Email
-                      </Button>
+                      }}
+                      className="flex-1"
+                    />
+                    <div className="w-16 flex items-center justify-center bg-gray-100 border border-gray-300 rounded px-3">
+                      Min
                     </div>
-
-                    {editVendorEmails.map((email, index) => (
-                      <div key={index} className="flex gap-2">
-                        <div className="flex-1">
-                          <Input
-                            type="email"
-                            placeholder="Enter vendor email"
-                            value={email}
-                            onChange={(e) => handleEditVendorEmailChange(index, e.target.value)}
-                            className={`${
-                              email && !isValidEmail(email) 
-                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
-                                : ''
-                            }`}
-                          />
-                          {email && !isValidEmail(email) && (
-                            <p className="text-red-500 text-xs mt-1">Please enter a valid email address</p>
-                          )}
-                        </div>
-                        {editVendorEmails.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeEditVendorEmail(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
                   </div>
-                )}
-              </div>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Upload Icon</label>
+                {/* Project Response Time */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">
+                    Enter Project response time <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <Input 
+                      type="number" 
+                      placeholder="Enter Project response time" 
+                      value={editProjectResponseTime}
+                      onChange={(e) => setEditProjectResponseTime(e.target.value)}
+                      min="0"
+                      onKeyDown={(e) => {
+                        if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                          e.preventDefault();
+                        }
+                      }}
+                      className="flex-1"
+                    />
+                    <div className="w-16 flex items-center justify-center bg-gray-100 border border-gray-300 rounded px-3">
+                      Min
+                    </div>
+                  </div>
+                </div>
+
+                {/* Priority Dropdown */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">
+                    Select Priority <span className="text-red-500">*</span>
+                  </label>
+                  <Select value={editPriority} onValueChange={setEditPriority}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {priorityOptions.map((priority) => (
+                        <SelectItem key={priority} value={priority}>
+                          {priority}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Upload Icon */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">Upload Icon</label>
                   <div className="flex items-center gap-2">
-                    <label htmlFor="edit-icon-upload" className="cursor-pointer">
-                      <Button type="button" variant="outline" size="sm" asChild>
-                        <span className="text-orange-500">Choose File</span>
+                    <label htmlFor="edit-icon-upload" className="cursor-pointer flex-1">
+                      <Button type="button" variant="outline" size="sm" className="w-full justify-start" asChild>
+                        <span>
+                          Choose file
+                        </span>
                       </Button>
                     </label>
+                    <span className="text-sm text-gray-600">
+                      {editIconFile ? editIconFile.name : 'No file chosen'}
+                    </span>
                     <input
                       id="edit-icon-upload"
                       type="file"
@@ -1398,9 +1369,6 @@ export const CategoryTypeTab: React.FC = () => {
                       className="hidden"
                       onChange={handleEditIconChange}
                     />
-                    <span className="text-sm text-gray-500">
-                      {editIconFile ? editIconFile.name : 'No file chosen'}
-                    </span>
                   </div>
                   {/* Display current icon if available */}
                   {editingCategory.icon_url && !editIconFile && (
@@ -1430,6 +1398,87 @@ export const CategoryTypeTab: React.FC = () => {
                 </div>
               </div>
 
+              {/* Comment out old fields */}
+              {/*
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Selected Sites <span className="text-red-500">*</span>
+                </label>
+                <ReactSelect
+                  isMulti
+                  options={sites.map(site => ({
+                    value: site.id.toString(),
+                    label: site.name
+                  }))}
+                  onChange={(selected) => {
+                    if (!selected || selected.length === 0) {
+                      setEditSelectedSiteId('');
+                      return;
+                    }
+                    const siteIds = selected.map(s => s.value).join(',');
+                    setEditSelectedSiteId(siteIds);
+                  }}
+                  value={editSelectedSiteId ? editSelectedSiteId.split(',').map(id => {
+                    const site = sites.find(s => s.id.toString() === id.trim());
+                    return site ? { value: id.trim(), label: site.name } : null;
+                  }).filter(Boolean) : []}
+                  className="mt-1"
+                  placeholder="Select sites..."
+                  noOptionsMessage={() => "No sites available"}
+                />
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <Checkbox id="edit-customer-enabled" />
+                <label htmlFor="edit-customer-enabled" className="text-sm font-medium">Customer Enabled</label>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="vendor-email-enabled"
+                    checked={editVendorEmailEnabled}
+                    onCheckedChange={(checked) => setEditVendorEmailEnabled(!!checked)}
+                  />
+                  <label htmlFor="vendor-email-enabled" className="text-sm font-medium">Enable Vendor Email</label>
+                </div>
+
+                {editVendorEmailEnabled && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">Vendor Emails</h3>
+                      <Button type="button" onClick={addEditVendorEmail} variant="outline" size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Email
+                      </Button>
+                    </div>
+
+                    {editVendorEmails.map((email, index) => (
+                      <div key={index} className="flex gap-2">
+                        <div className="flex-1">
+                          <Input
+                            type="email"
+                            placeholder="Enter vendor email"
+                            value={email}
+                            onChange={(e) => handleEditVendorEmailChange(index, e.target.value)}
+                          />
+                        </div>
+                        {editVendorEmails.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeEditVendorEmail(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="mt-4">
                 <Label className="text-base font-semibold">Assign Engineers</Label>
                 <div className="mt-2">
@@ -1445,7 +1494,6 @@ export const CategoryTypeTab: React.FC = () => {
                         setSelectedEngineers([]);
                         return;
                       }
-
                       const newEngineers = selected.map(s => s.value);
                       setSelectedEngineers(newEngineers);
                     }}
@@ -1458,40 +1506,9 @@ export const CategoryTypeTab: React.FC = () => {
                     className="mt-1"
                     placeholder="Select engineers..."
                     noOptionsMessage={() => "No engineers available"}
-                    styles={{
-                      control: (base) => ({
-                        ...base,
-                        minHeight: '40px',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '0px',
-                        boxShadow: 'none',
-                        '&:hover': {
-                          border: '1px solid #cbd5e1'
-                        }
-                      }),
-                      multiValue: (base) => ({
-                        ...base,
-                        backgroundColor: '#f1f5f9',
-                        borderRadius: '0px'
-                      }),
-                      multiValueLabel: (base) => ({
-                        ...base,
-                        color: '#334155'
-                      }),
-                      multiValueRemove: (base) => ({
-                        ...base,
-                        color: '#64748b',
-                        borderRadius: '0px',
-                        '&:hover': {
-                          backgroundColor: '#e2e8f0',
-                          color: '#475569'
-                        }
-                      })
-                    }}
                   />
                 </div>
               </div>
-
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -1543,9 +1560,21 @@ export const CategoryTypeTab: React.FC = () => {
                   )
                 ))}
               </div>
+              */}
 
               
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-end gap-3 pt-4">
+                <Button 
+                  type="button"
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setEditingCategory(null);
+                  }}
+                  variant="outline"
+                  className="px-8"
+                >
+                  Cancel
+                </Button>
                 <Button 
                   onClick={() => handleEditSubmit({})}
                   disabled={isSubmitting}

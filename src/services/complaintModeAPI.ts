@@ -19,7 +19,7 @@ export interface UpdateComplaintModeRequest {
 // Fetch complaint mode by ID
 export const fetchComplaintModeById = async (id: number): Promise<ComplaintMode | null> => {
   try {
-    const response = await fetch(getFullUrl('/pms/admin/complaint_modes.json'), {
+    const response = await fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
       headers: {
         'Authorization': getAuthHeader(),
         'Content-Type': 'application/json'
@@ -30,7 +30,8 @@ export const fetchComplaintModeById = async (id: number): Promise<ComplaintMode 
       throw new Error(`Failed to fetch complaint modes: ${response.status}`);
     }
 
-    const complaintModes: ComplaintMode[] = await response.json();
+    const data = await response.json();
+    const complaintModes: ComplaintMode[] = Array.isArray(data.complaint_modes) ? data.complaint_modes : [];
     return complaintModes.find(mode => mode.id === id) || null;
   } catch (error) {
     console.error('Error fetching complaint mode by ID:', error);
@@ -42,10 +43,9 @@ export const fetchComplaintModeById = async (id: number): Promise<ComplaintMode 
 export const updateComplaintMode = async (id: number, name: string): Promise<ComplaintMode> => {
   try {
     const formData = new FormData();
-    formData.append('id', id.toString());
     formData.append('complaint_mode[name]', name);
 
-    const response = await fetch(getFullUrl('/pms/admin/update_complaint_mode.json'), {
+    const response = await fetch(getFullUrl(`/crm/admin/helpdesk_categories/update_complaint_mode.json?id=${id}`), {
       method: 'POST',
       headers: {
         'Authorization': getAuthHeader(),
@@ -68,7 +68,7 @@ export const updateComplaintMode = async (id: number, name: string): Promise<Com
 // Fetch all complaint modes
 export const fetchAllComplaintModes = async (): Promise<ComplaintMode[]> => {
   try {
-    const response = await fetch(getFullUrl('/pms/admin/complaint_modes.json'), {
+    const response = await fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
       headers: {
         'Authorization': getAuthHeader(),
         'Content-Type': 'application/json'
@@ -79,7 +79,8 @@ export const fetchAllComplaintModes = async (): Promise<ComplaintMode[]> => {
       throw new Error(`Failed to fetch complaint modes: ${response.status}`);
     }
 
-    const complaintModes: ComplaintMode[] = await response.json();
+    const data = await response.json();
+    const complaintModes: ComplaintMode[] = Array.isArray(data.complaint_modes) ? data.complaint_modes : [];
     return complaintModes;
   } catch (error) {
     console.error('Error fetching complaint modes:', error);

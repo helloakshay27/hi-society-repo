@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ticketManagementAPI, OperationalDay, UserAccountResponse } from '@/services/ticketManagementAPI';
+import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Upload, Download } from 'lucide-react';
 
@@ -58,8 +59,17 @@ export const OperationalDaysTab: React.FC = () => {
   const fetchOperationalDays = async () => {
     setIsLoading(true);
     try {
-      const data = await ticketManagementAPI.getOperationalDays();
-      const operationalDays = Array.isArray(data) ? data : [];
+      const response = await fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch operational days');
+      }
+      const data = await response.json();
+      const operationalDays: OperationalDay[] = Array.isArray(data.helpdesk_operations) ? data.helpdesk_operations : [];
       
       // Ensure all days of the week are represented
       const completeSchedule = daysOfWeek.map(day => {

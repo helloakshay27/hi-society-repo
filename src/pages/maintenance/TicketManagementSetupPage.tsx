@@ -7,6 +7,9 @@ import { StatusTab } from '@/components/ticket-management/StatusTab';
 import { OperationalDaysTab } from '@/components/ticket-management/OperationalDaysTab';
 import { ComplaintModeTab } from '@/components/ticket-management/ComplaintModeTab';
 import { AgingRuleTab } from '@/components/ticket-management/AgingRuleTab';
+import { RelatedToTab } from '@/components/ticket-management/RelatedToTab';
+import { LocationTab } from '@/components/ticket-management/LocationTab';
+import { ProjectEmailsTab } from '@/components/ticket-management/ProjectEmailsTab';
 
 export const TicketManagementSetupPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('category-type');
@@ -28,7 +31,13 @@ export const TicketManagementSetupPage: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 bg-white border border-gray-200">
+        <TabsList className="grid w-full grid-cols-9 bg-white border border-gray-200">
+           <TabsTrigger
+            value="related-to"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Related To
+          </TabsTrigger>
           <TabsTrigger
             value="category-type"
             className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
@@ -63,7 +72,29 @@ export const TicketManagementSetupPage: React.FC = () => {
           >
             Complaint Mode
           </TabsTrigger>
-          {/* <TabsTrigger value="aging-rule">Aging Rule</TabsTrigger> */}
+
+          <TabsTrigger
+            value="location"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Location
+          </TabsTrigger>
+
+          <TabsTrigger
+            value="project-emails"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Project Emails
+          </TabsTrigger>
+
+          <TabsTrigger
+            value="aging-rule"
+            className="group flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
+          >
+            Aging Rule
+          </TabsTrigger>
+
+         
         </TabsList>
 
         <TabsContent value="category-type" className="mt-6">
@@ -86,8 +117,20 @@ export const TicketManagementSetupPage: React.FC = () => {
           <ComplaintModeTab />
         </TabsContent>
 
+        <TabsContent value="location" className="mt-6">
+          <LocationTab />
+        </TabsContent>
+
+        <TabsContent value="project-emails" className="mt-6">
+          <ProjectEmailsTab />
+        </TabsContent>
+
         <TabsContent value="aging-rule" className="mt-6">
           <AgingRuleTab />
+        </TabsContent>
+
+        <TabsContent value="related-to" className="mt-6">
+          <RelatedToTab />
         </TabsContent>
       </Tabs>
     </div>

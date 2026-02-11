@@ -558,7 +558,7 @@ export const ticketManagementAPI = {
       formData.append(`category_email[email][${index}]`, email);
     });
     
-    const response = await apiClient.post('/pms/admin/helpdesk_categories.json', formData, {
+    const response = await apiClient.post('/crm/admin/helpdesk_categories.json', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     return response.data;
@@ -566,8 +566,8 @@ export const ticketManagementAPI = {
 
   async getCategories() {
     try {
-      console.log('Fetching categories from:', '/pms/admin/helpdesk_categories.json');
-      const response = await apiClient.get('/pms/admin/helpdesk_categories.json');
+      console.log('Fetching categories from:', '/crm/admin/helpdesk_categories.json');
+      const response = await apiClient.get('/crm/admin/helpdesk_categories.json');
       console.log('Categories response:', response.data);
       return response.data;
     } catch (error) {
@@ -839,7 +839,7 @@ export const ticketManagementAPI = {
   },
 
   async getSubCategories() {
-    const response = await apiClient.get('/pms/admin/get_all_helpdesk_sub_categories.json');
+    const response = await apiClient.get('/crm/admin/complaints_sub_categories.json');
     return response.data;
   },
 
@@ -924,7 +924,7 @@ export const ticketManagementAPI = {
 
   // Status
   async createStatus(data: StatusFormData) {
-    const response = await apiClient.post('/pms/admin/create_complaint_statuses.json', {
+    const response = await apiClient.post('/crm/admin/helpdesk_categories/create_complaint_statuses.json', {
       complaint_status: data
     });
     return response.data;
@@ -997,6 +997,34 @@ export const ticketManagementAPI = {
 
   async getComplaintModes() {
     const response = await apiClient.get('/pms/admin/complaint_modes.json');
+    return response.data;
+  },
+
+  // Issue Types (Related To)
+  async createIssueType(data: IssueTypeFormData) {
+    const response = await apiClient.post(ENDPOINTS.CREATE_ISSUE_TYPE, {
+      name: data.name
+    });
+    return response.data;
+  },
+
+  async getIssueTypes() {
+    const response = await apiClient.get(ENDPOINTS.ISSUE_TYPES);
+    return response.data?.data || response.data || [];
+  },
+
+  async updateIssueType(issueTypeId: number, data: IssueTypeFormData) {
+    const response = await apiClient.post(ENDPOINTS.UPDATE_ISSUE_TYPE, {
+      id: issueTypeId,
+      name: data.name
+    });
+    return response.data;
+  },
+
+  async deleteIssueType(issueTypeId: number) {
+    const response = await apiClient.post(ENDPOINTS.DELETE_ISSUE_TYPE, {
+      id: issueTypeId
+    });
     return response.data;
   },
 

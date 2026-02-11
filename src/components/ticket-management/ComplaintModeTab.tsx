@@ -79,8 +79,17 @@ export const ComplaintModeTab: React.FC = () => {
   const fetchComplaintModes = async () => {
     setIsLoading(true);
     try {
-      const data = await ticketManagementAPI.getComplaintModes();
-      setComplaintModes(Array.isArray(data) ? data : []);
+      const response = await fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch complaint modes');
+      }
+      const data = await response.json();
+      setComplaintModes(Array.isArray(data.complaint_modes) ? data.complaint_modes : []);
     } catch (error) {
       toast.error('Failed to fetch complaint modes');
       console.error('Error fetching complaint modes:', error);
@@ -106,35 +115,37 @@ export const ComplaintModeTab: React.FC = () => {
   };
 
   const handleSubmit = async (data: ComplaintModeFormData) => {
-    if (!userAccount?.company_id) {
-      toast.error('Unable to determine company ID. Please refresh and try again.');
-      return;
-    }
-
     setIsSubmitting(true);
     try {
-      const complaintModeData = {
-        name: data.complaintMode,
-        of_phase: 'pms',
-        society_id: userAccount.company_id.toString(),
-        active: 1,
-      };
+      const formData = new FormData();
+      formData.append('complaint_mode[name]', data.complaintMode.trim());
 
-      await ticketManagementAPI.createComplaintMode(complaintModeData);
+      const response = await fetch(
+        getFullUrl('/crm/admin/helpdesk_categories/create_complaint_modes.json'),
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': getAuthHeader(),
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        if (response.status === 422 && errorData?.name?.includes('has already been taken')) {
+          toast.error('Complaint mode name has already been taken');
+          return;
+        }
+        throw new Error(errorData?.message || 'Failed to create complaint mode');
+      }
+
       toast.success('Complaint mode created successfully!');
       form.reset();
       fetchComplaintModes();
     } catch (error: any) {
       console.error('Error creating complaint mode:', error);
-      
-      // Check for 422 error with "name has already been taken" message
-      if (error.response?.status === 422 && 
-          error.response?.data?.name && 
-          error.response.data.name.includes('has already been taken')) {
-        toast.error('Complaint mode name has already been taken');
-      } else {
-        toast.error('Failed to create complaint mode');
-      }
+      toast.error(error.message || 'Failed to create complaint mode');
     } finally {
       setIsSubmitting(false);
     }
@@ -158,7 +169,25 @@ export const ComplaintModeTab: React.FC = () => {
     }
     
     try {
-      await ticketManagementAPI.deleteComplaintMode(complaintMode.id);
+      const formData = new FormData();
+      formData.append('id', complaintMode.id.toString());
+      formData.append('complaint_mode[active]', '0');
+
+      const response = await fetch(
+        getFullUrl('/crm/admin/helpdesk_categories/update_complaint_mode.json?id=' + complaintMode.id),
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': getAuthHeader(),
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to delete complaint mode');
+      }
+
       setComplaintModes(complaintModes.filter(mode => mode.id !== complaintMode.id));
       toast.success('Complaint mode deleted successfully!');
     } catch (error) {
