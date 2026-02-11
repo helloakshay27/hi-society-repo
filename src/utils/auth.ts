@@ -13,9 +13,13 @@ export interface User {
   spree_api_key?: string;
   is_login?: boolean;
   access_token?: string;
+<<<<<<< HEAD
   number_verified?: number;
   company_id?: number;
   web_enabled?: boolean;
+=======
+  number_verified?: number | boolean;
+>>>>>>> 927b4d1544175356d7ab78b4ea126083f438e138
   lock_role?: {
     id: number;
     name: string;
@@ -47,10 +51,14 @@ export interface LoginResponse {
   longitude?: number;
   country_code?: string;
   spree_api_key?: string;
+<<<<<<< HEAD
   number_verified?: number;
   company_id?: number;
   web_enabled?: boolean;
   user_type?: string;
+=======
+  number_verified?: number | boolean;
+>>>>>>> 927b4d1544175356d7ab78b4ea126083f438e138
   lock_role?: {
     id: number;
     name: string;
@@ -422,9 +430,9 @@ export const verifyOTP = async (otp: string): Promise<LoginResponse> => {
     );
   }
 
-  if (!baseUrl) {
-    throw new Error("Base URL not found. Please login again.");
-  }
+  // if (!baseUrl) {
+  //   throw new Error("Base URL not found. Please login again.");
+  // }
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -435,15 +443,12 @@ export const verifyOTP = async (otp: string): Promise<LoginResponse> => {
     headers["Authorization"] = `Bearer ${otptoken}`;
   }
 
+  // https://pulse-api.lockated.com/get_otps/verify_otp.json?email=sumitra.patil@lockated.com&otp=999999
   const response = await fetch(
-    `https://live-api.gophygital.work/verify_code.json`,
+    `https://pulse-api.lockated.com/get_otps/verify_otp.json?email=${email}&otp=${otp}`,
     {
-      method: "POST",
+      method: "GET",
       headers,
-      body: JSON.stringify({
-        email: email,
-        otp: otp,
-      }),
     }
   );
 
@@ -452,6 +457,11 @@ export const verifyOTP = async (otp: string): Promise<LoginResponse> => {
   }
 
   const data = await response.json();
+
+  // Adapter for existing UI logic that expects 'verified: true'
+  if ((data.code === 200 || data.access_token) && !data.verified) {
+    data.verified = true;
+  }
 
   // Only clear temp email after successful verification
   // Check if the response indicates success (you might need to adjust this based on your API response structure)
