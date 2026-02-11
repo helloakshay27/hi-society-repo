@@ -11,6 +11,7 @@ const OrderDetails = () => {
     // API data for order details
     const [orderData, setOrderData] = useState<any | null>(null);
     const [orderItems, setOrderItems] = useState<any[]>([]);
+    const [orderStatusLogs, setOrderStatusLogs] = useState<any[]>([]);
 
     useEffect(() => {
         if (!id) return;
@@ -56,7 +57,6 @@ const OrderDetails = () => {
                     updatedAt: data.updated_at || "-",
                     notes: data.notes || "-",
                 });
-
                 setOrderItems(
                     Array.isArray(data.order_items)
                         ? data.order_items.map((item: any, idx: number) => ({
@@ -72,10 +72,12 @@ const OrderDetails = () => {
                         }))
                         : []
                 );
+                setOrderStatusLogs(data.order_status_logs || []);
             } catch (e) {
                 console.error("Error fetching order details:", e);
                 setOrderData(null);
                 setOrderItems([]);
+                setOrderStatusLogs([]);
             } finally {
                 setLoading(false);
             }
@@ -152,42 +154,20 @@ const OrderDetails = () => {
 
     // Create timeline events from order data
     const timelineEvents = React.useMemo(() => {
-        const events: Array<{ date: string; status: string; description: string; by?: string }> = [];
-        
-        if (orderData?.createdAt && orderData.createdAt !== "-") {
-            events.push({
-                date: orderData.createdAt,
-                status: "Order Placed",
-                description: "Your order has been placed and is being prepared",
-            });
+        if (!orderStatusLogs || orderStatusLogs.length === 0) {
+            return [];
         }
 
-        if (orderData?.status === 'confirmed' || orderData?.status === 'completed') {
-            events.push({
-                date: orderData.updatedAt || orderData.createdAt,
-                status: "Order Confirmed",
-                description: "Your order has been confirmed",
-            });
-        }
-
-        if (orderData?.status === 'shipped' || orderData?.status === 'completed') {
-            events.push({
-                date: orderData.updatedAt || orderData.createdAt,
-                status: "Shipped",
-                description: "Your order is on the way",
-            });
-        }
-
-        if (orderData?.status === 'completed') {
-            events.push({
-                date: orderData.updatedAt || orderData.createdAt,
-                status: "Delivered",
-                description: "Order has been delivered",
-            });
-        }
-
-        return events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    }, [orderData]);
+        return orderStatusLogs
+            .map((log: any) => ({
+                id: log.id,
+                date: log.created_at,
+                status: log.status.charAt(0).toUpperCase() + log.status.slice(1),
+                description: log.notes || `Order status changed to ${log.status}`,
+                by: log.created_by?.id
+            }))
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }, [orderStatusLogs]);
 
     return (
         <div className="p-6 bg-[#fafafa] min-h-screen">
@@ -195,7 +175,7 @@ const OrderDetails = () => {
             <div className="mb-6 bg-white rounded-lg shadow-sm border p-6">
                 {/* Back Button and Download Invoice */}
                 <div className="flex items-center justify-between mb-4">
-                    <button 
+                    <button
                         onClick={() => navigate(-1)}
                         className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
                     >
@@ -207,29 +187,28 @@ const OrderDetails = () => {
                         Download Invoice
                     </button>
                 </div>
-                
+
                 {/* Order ID and Date */}
                 <div className="mb-3">
                     <p className="text-sm text-gray-600">
-                        Order ID: {orderData?.id || "-"} • {orderData?.createdAt && orderData.createdAt !== "-" 
+                        Order ID: {orderData?.id || "-"} • {orderData?.createdAt && orderData.createdAt !== "-"
                             ? new Date(orderData.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
                             : "-"}
                     </p>
                 </div>
-                
+
                 {/* Order Number and Status */}
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-semibold text-gray-900">
                         Order #{orderData?.orderNumber || "-"}
                     </h1>
-                    <span className={`px-3 py-1 rounded text-sm font-medium ${
-                        orderData?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    <span className={`px-3 py-1 rounded text-sm font-medium ${orderData?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                         orderData?.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
-                        orderData?.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
-                        orderData?.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        orderData?.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
-                    }`}>
+                            orderData?.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
+                                orderData?.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    orderData?.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                        'bg-gray-100 text-gray-800'
+                        }`}>
                         {orderData?.status ? orderData.status.charAt(0).toUpperCase() + orderData.status.slice(1) : 'Pending'}
                     </span>
                 </div>
@@ -243,7 +222,7 @@ const OrderDetails = () => {
                     <div className="bg-white rounded-lg shadow-sm border">
                         <div className="px-6 py-6">
                             <h2 className="text-lg font-semibold text-[#C72030] mb-6">Order Items</h2>
-                            
+
                             {/* Items List */}
                             <div className="space-y-4 mb-6">
                                 {orderItems.map((item) => (
@@ -252,14 +231,14 @@ const OrderDetails = () => {
                                         <div className="w-20 h-20 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
                                             <span className="text-xs text-gray-400">No image</span>
                                         </div>
-                                        
+
                                         {/* Item Details */}
                                         <div className="flex-1">
                                             <p className="text-xs text-gray-500 mb-1">SKU: {item.sku}</p>
                                             <p className="font-semibold text-gray-900 mb-1">{item.productName}</p>
                                             <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                                         </div>
-                                        
+
                                         {/* Price */}
                                         <div className="text-right">
                                             <p className="font-semibold text-gray-900">₹{parseFloat(item.total || 0).toFixed(0)}</p>
@@ -268,7 +247,7 @@ const OrderDetails = () => {
                                     </div>
                                 ))}
                             </div>
-                            
+
                             {/* Summary */}
                             <div className="border-t pt-4 space-y-2">
                                 <div className="flex justify-between text-sm">
@@ -301,71 +280,44 @@ const OrderDetails = () => {
                     <div className="bg-white rounded-lg shadow-sm border">
                         <div className="px-6 py-6">
                             <h2 className="text-lg font-semibold text-[#C72030] mb-6">Order Timeline</h2>
-                            
+
                             {/* Timeline Items */}
                             <div className="relative">
-                                <div className="space-y-[5px]">
-                                    {/* Order Placed - Completed */}
-                                    <div className="relative flex items-start justify-between py-[10px]">
-                                        <div className="flex items-start gap-4">
-                                            {/* Green checkmark circle */}
-                                            <div className="w-6 h-6 rounded-full border-2 border-green-500 bg-white flex items-center justify-center flex-shrink-0 z-10 relative">
-                                                <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                </svg>
+                                <div className="space-y-0">
+                                    {timelineEvents.map((event, index) => {
+                                        const isLast = index === timelineEvents.length - 1;
+                                        const dateObj = new Date(event.date);
+                                        const formattedDate = dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                                        const formattedTime = dateObj.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+
+                                        return (
+                                            <div key={event.id || index} className="relative flex items-start justify-between py-4">
+                                                <div className="flex items-start gap-4">
+                                                    {/* Status Indicator */}
+                                                    <div className="w-6 h-6 rounded-full border-2 border-green-500 bg-white flex items-center justify-center flex-shrink-0 z-10 relative">
+                                                        <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h3 className="font-semibold text-gray-900 mb-1">{event.status}</h3>
+                                                        <p className="text-sm text-gray-600">{event.description}</p>
+                                                    </div>
+                                                </div>
+                                                <span className="text-sm text-gray-500 ml-4 whitespace-nowrap">
+                                                    {formattedDate}, {formattedTime}
+                                                </span>
+                                                {/* Connecting line to next item */}
+                                                {!isLast && (
+                                                    <div className="absolute left-[11px] top-[calc(0%+40px)] w-[2px] h-[calc(100%-24px)] bg-[#B9F8CF]"></div>
+                                                )}
                                             </div>
-                                            <div className="flex-1">
-                                                <h3 className="font-semibold text-gray-900 mb-1">Order Placed</h3>
-                                                <p className="text-sm text-gray-600">Your order has been received and is being processed</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-sm text-gray-500 ml-4 whitespace-nowrap">Feb 4, 3:23 PM</span>
-                                        {/* Green connecting line to next item */}
-                                        <div className="absolute left-[11px] top-[calc(50%+10px)] w-[2px] bottom-[-5px] bg-[#B9F8CF]"></div>
-                                    </div>
-                                    
-                                    {/* Order Confirmed - Pending */}
-                                    <div className="relative flex items-start justify-between py-[10px]">
-                                        <div className="flex items-start gap-4">
-                                            {/* Gray empty circle */}
-                                            <div className="w-6 h-6 rounded-full border-2 border-gray-300 bg-white flex-shrink-0 z-10 relative"></div>
-                                            <div className="flex-1">
-                                                <h3 className="font-semibold text-gray-400 mb-1">Order Confirmed</h3>
-                                                <p className="text-sm text-gray-400">Payment confirmed, preparing for shipment</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-sm text-gray-400 ml-4 whitespace-nowrap">Pending</span>
-                                        {/* Gray connecting line to next item */}
-                                        <div className="absolute left-[10px] top-[calc(50%+10px)] w-[2px] bottom-[-5px] bg-gray-200"></div>
-                                    </div>
-                                    
-                                    {/* Shipped - Pending */}
-                                    <div className="relative flex items-start justify-between py-[10px]">
-                                        <div className="flex items-start gap-4">
-                                            {/* Gray empty circle */}
-                                            <div className="w-6 h-6 rounded-full border-2 border-gray-300 bg-white flex-shrink-0 z-10 relative"></div>
-                                            <div className="flex-1">
-                                                <h3 className="font-semibold text-gray-400 mb-1">Shipped</h3>
-                                                <p className="text-sm text-gray-400">Order has been shipped and is on the way</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-sm text-gray-400 ml-4 whitespace-nowrap">Pending</span>
-                                        {/* Gray connecting line to next item */}
-                                        <div className="absolute left-[11px] top-[calc(50%+10px)] w-[2px] bottom-[-5px] bg-gray-200"></div>
-                                    </div>
-                                    
-                                    {/* Delivered - Pending - No line after this */}
-                                    <div className="relative flex items-start justify-between py-[10px]">
-                                        <div className="flex items-start gap-4">
-                                            {/* Gray empty circle */}
-                                            <div className="w-6 h-6 rounded-full border-2 border-gray-300 bg-white flex-shrink-0 z-10 relative"></div>
-                                            <div className="flex-1">
-                                                <h3 className="font-semibold text-gray-400 mb-1">Delivered</h3>
-                                                <p className="text-sm text-gray-400">Order delivered successfully</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-sm text-gray-400 ml-4 whitespace-nowrap">Pending</span>
-                                    </div>
+                                        );
+                                    })}
+
+                                    {timelineEvents.length === 0 && (
+                                        <p className="text-gray-500 text-center py-4">No status updates available.</p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -378,7 +330,7 @@ const OrderDetails = () => {
                     <div className="bg-white rounded-lg shadow-sm border">
                         <div className="px-6 py-6">
                             <h2 className="text-lg font-semibold text-[#C72030] mb-6">Customer Information</h2>
-                            
+
                             {/* Customer Details */}
                             <div className="space-y-4">
                                 {/* Avatar and Name */}
@@ -396,7 +348,7 @@ const OrderDetails = () => {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 {/* Email */}
                                 <div className="flex items-start gap-3">
                                     <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -407,7 +359,7 @@ const OrderDetails = () => {
                                         <p className="text-sm text-gray-900">{orderData?.customerEmail || "-"}</p>
                                     </div>
                                 </div>
-                                
+
                                 {/* Phone */}
                                 <div className="flex items-start gap-3">
                                     <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -418,7 +370,7 @@ const OrderDetails = () => {
                                         <p className="text-sm text-gray-900">{orderData?.customerPhone || "-"}</p>
                                     </div>
                                 </div>
-                                
+
                                 {/* Address */}
                                 <div className="flex items-start gap-3">
                                     <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
@@ -427,24 +379,21 @@ const OrderDetails = () => {
                                         <p className="text-sm text-gray-900">{orderData?.shippingAddress || "-"}</p>
                                     </div>
                                 </div>
-                                
+
                                 {/* Total Loyalty Points */}
-                                <div className="pt-4 border-t">
+                                {/* <div className="pt-4 border-t">
                                     <div className="flex justify-between items-center mb-4">
                                         <span className="text-sm text-gray-700">Total Loyalty Points</span>
                                         <span className="font-bold text-[#C72030] text-lg">1250 pts</span>
                                     </div>
                                     
-                                    {/* Loyalty Points Summary Collapsible */}
                                     <div className="border rounded-lg">
                                         <button className="w-full py-3 px-4 flex items-center justify-start gap-2 text-sm font-medium text-gray-900 hover:bg-gray-50">
                                             <Award className="w-5 h-5 text-purple-600" />
                                             <span>Loyalty Points Summary</span>
                                         </button>
                                         
-                                        {/* Expanded Content */}
                                         <div className="px-4 pb-4 space-y-4">
-                                            {/* Points Earned and Used */}
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="flex items-start gap-2">
                                                     <svg className="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -466,13 +415,11 @@ const OrderDetails = () => {
                                                 </div>
                                             </div>
                                             
-                                            {/* Net Points */}
                                             <div className="flex justify-between items-center py-2 border-t">
                                                 <span className="text-sm text-gray-700">Net Points</span>
                                                 <span className="font-bold text-[#C72030]">{orderData?.loyaltyPointsEarned || 17} pts</span>
                                             </div>
                                             
-                                            {/* Tier Information */}
                                             <div className="space-y-3">
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
@@ -485,20 +432,18 @@ const OrderDetails = () => {
                                                     </div>
                                                 </div>
                                                 
-                                                {/* Progress Bar */}
                                                 <div className="w-full bg-gray-200 rounded-full h-2">
                                                     <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-2 rounded-full" style={{width: '80%'}}></div>
                                                 </div>
                                                 <p className="text-xs text-center text-gray-600">250 points to reach Platinum</p>
                                             </div>
                                             
-                                            {/* Earned Badge */}
                                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
                                                 <p className="text-sm font-medium text-blue-900">🎉 This order earned {orderData?.loyaltyPointsEarned || 17} loyalty points!</p>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     </div>
@@ -577,4 +522,3 @@ const OrderDetails = () => {
 };
 
 export default OrderDetails
- 
