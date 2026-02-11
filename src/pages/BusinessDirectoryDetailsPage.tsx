@@ -31,6 +31,9 @@ interface BusinessDirectoryDetails {
     active: boolean;
     documents?: any[];
     image?: string;
+    gallery_images?: [{
+        document: string;
+    }];
 }
 
 const BusinessDirectoryDetailsPage: React.FC = () => {
@@ -320,11 +323,11 @@ const BusinessDirectoryDetailsPage: React.FC = () => {
                                 <CardTitle className="text-base font-semibold text-gray-900">Gallery</CardTitle>
                             </CardHeader>
                             <CardContent className="p-6">
-                                {data.documents && data.documents.length > 0 ? (
+                                {data.gallery_images && data.gallery_images.length > 0 ? (
                                     <div className="grid grid-cols-3 gap-2">
-                                        {data.documents.map((doc, idx) => (
+                                        {data.gallery_images.map((doc, idx) => (
                                             <div key={idx} className="aspect-square rounded-md overflow-hidden border border-gray-100 bg-gray-50">
-                                                <img src={doc.url} alt={`Gallery ${idx}`} className="h-full w-full object-cover" />
+                                                <img src={doc.document} alt={`Gallery ${idx}`} className="h-full w-full object-cover" />
                                             </div>
                                         ))}
                                     </div>
