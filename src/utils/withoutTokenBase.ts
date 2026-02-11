@@ -121,7 +121,7 @@ baseClient.interceptors.request.use(
         if (organizationId) {
           apiUrl = `${hiSocietyApiBase}/api/users/get_organizations_by_email.json?org_id=${organizationId}`;
           console.log("🔍 Hi-Society using organizationId:", organizationId);
-        } else if (orgId || 10) {
+        } else if (orgId ) {
           apiUrl = `${hiSocietyApiBase}/api/users/get_organizations_by_email.json?org_id=${orgId}`;
           console.log("🔍 Hi-Society using orgId:", orgId);
         } else if (email) {
@@ -247,14 +247,13 @@ baseClient.interceptors.request.use(
       if (isRunwalSite) {
         config.baseURL = "https://runwal-cp-api.lockated.com/";
         console.warn("⚠️ Using Runwal fallback URL:", config.baseURL);
+      } else if (isHiSocietySite) {
+        config.baseURL = `${hiSocietyApiBase}/`;
+        console.warn("⚠️ Using Hi-Society fallback URL:", config.baseURL);
+      } else {
+        config.baseURL = "https://uat-hi-society.lockated.com/";
+        console.warn("⚠️ Using fallback URL:", config.baseURL);
       }
-      // } else if (isHiSocietySite) {
-      //   config.baseURL = `${hiSocietyApiBase}/`;
-      //   console.warn("⚠️ Using Hi-Society fallback URL:", config.baseURL);
-      // } else {
-      //   config.baseURL = "https://uat-hi-society.lockated.com/";
-      //   console.warn("⚠️ Using fallback URL:", config.baseURL);
-      // }
     } catch (error) {
       console.error("❌ Error in request interceptor:", error);
       // Always set a fallback URL on error
