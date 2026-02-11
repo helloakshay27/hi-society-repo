@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, X, Eye, Edit, Trash2, Package, CheckCircle, AlertCircle } from "lucide-react";
+import { Plus, X, Eye, Edit, Trash2, Package, CheckCircle, AlertCircle, Upload, Download } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,9 @@ export const LoyaltyInventorySection = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>("");
     const [selectedDiscount, setSelectedDiscount] = useState<string>("");
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
+    const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
+    const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
     // Add Item Form States
     const [isActive, setIsActive] = useState(true);
@@ -119,6 +122,47 @@ export const LoyaltyInventorySection = () => {
         }
     };
 
+    const handleToggleActive = async (nextActive: boolean) => {
+        if (selectedProductIds.length === 0 || isUpdatingStatus) {
+            return;
+        }
+
+        try {
+            setIsUpdatingStatus(true);
+
+            // Update all selected products
+            const updatePromises = selectedProductIds.map(async (id) => {
+                const url = `https://runwal-api.lockated.com/products/${id}.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
+                return axios.put(url, {
+                    product: {
+                        status: nextActive ? "active" : "inactive",
+                        published: nextActive,
+                    },
+                });
+            });
+
+            await Promise.all(updatePromises);
+
+            // Update local state
+            setInventoryData((prevData: any[]) =>
+                prevData.map((item) =>
+                    selectedProductIds.includes(item.id)
+                        ? { ...item, status: nextActive ? "active" : "inactive", published: nextActive }
+                        : item
+                )
+            );
+
+            toast.success(`${selectedProductIds.length} product(s) marked ${nextActive ? "active" : "inactive"}.`);
+            setIsSelectionModalOpen(false);
+            setSelectedProductIds([]);
+        } catch (error) {
+            console.error("Error updating product status:", error);
+            toast.error("Failed to update product status");
+        } finally {
+            setIsUpdatingStatus(false);
+        }
+    };
+
     const fetchInventoryData = async () => {
         try {
             setLoading(true);
@@ -155,6 +199,24 @@ export const LoyaltyInventorySection = () => {
             case "actions":
                 return (
                     <div className="flex gap-2 items-center">
+                        <input
+                            type="checkbox"
+                            checked={selectedProductIds.includes(item.id)}
+                            onChange={(e) => {
+                                if (e.target.checked) {
+                                    const newSelection = [...selectedProductIds, item.id];
+                                    setSelectedProductIds(newSelection);
+                                    setIsSelectionModalOpen(true);
+                                } else {
+                                    const newSelection = selectedProductIds.filter(id => id !== item.id);
+                                    setSelectedProductIds(newSelection);
+                                    if (newSelection.length === 0) {
+                                        setIsSelectionModalOpen(false);
+                                    }
+                                }
+                            }}
+                            className="w-4 h-4 cursor-pointer"
+                        />
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -497,6 +559,69 @@ export const LoyaltyInventorySection = () => {
                     emptyMessage="No inventory items found"
                 />
             </div>
+
+            {/* Selection Floating Bar */}
+            {isSelectionModalOpen && selectedProductIds.length > 0 && (
+                <div className="fixed bottom-1/2 left-1/2 -translate-x-1/2 z-50 bg-white rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.15)] flex items-center overflow-hidden min-w-[600px] min-h-[100px]">
+                    {/* Left accent border */}
+                    <div className="w-10 self-stretch bg-[#C4B089] shrink-0 flex items-center justify-center" >
+                        <span className="text-sm font-bold text-[#C72030]">{selectedProductIds.length}</span>
+                    </div>
+
+                    {/* Count badge */}
+                    <div className="flex items-center gap-3 px-4 py-3 flex-1">
+                        <div className="min-w-0">
+                            <h3 className="text-base font-semibold text-[#1A1A1A]">Selection</h3>
+                            <p className="text-sm text-gray-500 truncate">
+                                {(() => {
+                                    const selectedItem = (inventoryData as any[]).find(
+                                        (item) => item.id === selectedProductIds[0]
+                                    );
+                                    return selectedItem
+                                        ? `${selectedItem.categories || ""} | ${selectedItem.name || ""}`
+                                        : "";
+                                })()}
+                                {selectedProductIds.length > 1 && ` +${selectedProductIds.length - 1} more`}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-1 px-2">
+                        <button
+                            onClick={() => handleToggleActive(true)}
+                            disabled={isUpdatingStatus}
+                            className="flex flex-col items-center gap-1 px-5 py-2 hover:bg-gray-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Upload className="w-5 h-5 text-gray-900" strokeWidth={3} />
+                            <span className="text-sm mt-2 font-medium text-gray-900">Activate</span>
+                        </button>
+                        <button
+                            onClick={() => handleToggleActive(false)}
+                            disabled={isUpdatingStatus}
+                            className="flex flex-col items-center gap-1 px-5 py-2 hover:bg-gray-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
+                                <path d="M8.15309 3.15385C6.19156 1.19231 3.07617 0.576923 0.345403 1.42308C0.230018 1.42308 0.0761719 1.61538 0.0761719 1.92308C0.0761719 2.23077 0.0761719 3.07692 0.0761719 3.42308C0.0761719 3.73077 0.345403 3.80769 0.499249 3.76923C2.57617 2.92308 5.11463 3.30769 6.76848 5.03846L7.19156 5.46154C7.42233 5.69231 7.23002 6.11539 6.92233 6.11539H3.92233C3.61463 6.11539 3.3454 6.34615 3.3454 6.69231V7.84615C3.3454 8.15385 3.57617 8.42308 3.92233 8.42308L11.3069 8.5C11.6146 8.5 11.8839 8.26923 11.8839 7.92308L11.9223 0.576923C11.9223 0.269231 11.6916 0 11.3454 0H10.1916C9.88386 0 9.57617 0.230769 9.57617 0.538462L9.53771 3.57692C9.53771 3.88462 9.11463 4.07692 8.88386 3.84615C8.92233 3.88462 8.15309 3.15385 8.15309 3.15385Z" fill="black" />
+                                <path d="M0.576923 9.92311H1.73077C2.03846 9.92311 2.30769 10.1923 2.30769 10.5V15.577C2.30769 15.8847 2.57692 16.1539 2.88462 16.1539H15.5769C15.8846 16.1539 16.1538 15.8847 16.1538 15.577V5.73081C16.1538 5.42311 15.8846 5.15388 15.5769 5.15388H14.0385C13.7308 5.15388 13.4615 4.88465 13.4615 4.57696V3.42311C13.4615 3.11542 13.7308 2.84619 14.0385 2.84619H16.9231C17.7692 2.84619 18.4615 3.5385 18.4615 4.38465V16.9231C18.4615 17.7693 17.7692 18.4616 16.9231 18.4616H1.53846C0.692308 18.4616 0 17.7693 0 16.9231V10.5C0 10.1923 0.269231 9.92311 0.576923 9.92311Z" fill="black" />
+                            </svg>
+                            <span className="text-sm mt-2 font-medium text-gray-900">Deactivate</span>
+                        </button>
+                    </div>
+
+                    {/* Divider + Close */}
+                    <div className="h-10 w-px bg-gray-200 mx-1" />
+                    <button
+                        onClick={() => {
+                            setIsSelectionModalOpen(false);
+                            setSelectedProductIds([]);
+                        }}
+                        className="p-3 hover:bg-gray-50 rounded transition-colors mr-2"
+                    >
+                        <X className="h-5 w-5 text-gray-500" />
+                    </button>
+                </div>
+            )}
 
             {/* Add Item Modal */}
             <Dialog open={isAddItemModalOpen} onOpenChange={setIsAddItemModalOpen}>
