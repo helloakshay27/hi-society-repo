@@ -138,7 +138,7 @@ export const AggregatorInventoryDetails = () => {
                     valueColor="text-[#1A1A1A]"
                 />
                 <StatsCard
-                    title="Last Updated"
+                    title="Last Order Restocked"
                     value={new Date(product.updated_at).toLocaleDateString()}
                     icon={<Calendar className="w-6 h-6 text-[#C72030]" />}
                     iconRounded={true}
@@ -147,25 +147,25 @@ export const AggregatorInventoryDetails = () => {
             </div>
 
             {/* Main Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex flex-col md:flex-row gap-6">
                 {/* Left Column - Images */}
-                <div className="flex flex-col gap-4">
-                    <div className="bg-white rounded-lg border border-gray-200 p-6 flex items-center justify-center">
-                        {product.banner_image_url ? (
-                            <img
-                                src={product.banner_image_url}
-                                alt={product.name}
-                                className="w-full h-96 object-contain"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x320?text=No+Image';
-                                }}
-                            />
-                        ) : (
-                            <div className="w-full h-96 flex items-center justify-center text-gray-400">
-                                No Image Available
-                            </div>
-                        )}
-                    </div>
+                <div className="flex flex-col w-full md:w-[30%]">
+                    {/* <div className="bg-white rounded-lg border border-gray-200 flex items-center justify-center"> */}
+                    {product.banner_image_url ? (
+                        <img
+                            src={product.banner_image_url}
+                            alt={product.name}
+                            className="w-full h-96 object-contain"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x320?text=No+Image';
+                            }}
+                        />
+                    ) : (
+                        <div className="w-full h-96 flex items-center justify-center text-gray-400">
+                            No Image Available
+                        </div>
+                    )}
+                    {/* </div> */}
                     <div className="flex gap-3">
                         {product.featured && (
                             <div className="bg-purple-100 rounded-lg px-4 py-2">
@@ -180,13 +180,13 @@ export const AggregatorInventoryDetails = () => {
                     </div>
                 </div>
                 {/* Right Column - Details */}
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-6 w-full md:w-[70%]">
                     {/* Product Name & Info Card */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <div className="bg-white w-full rounded-lg border border-gray-200 p-6">
                         <div className="flex justify-between items-start mb-4">
                             <div>
-                                <span className="text-xs text-gray-400 uppercase">SKU: </span>
-                                <span className="text-sm font-semibold text-gray-700">{product.sku}</span>
+                                <span className="text-sm font-semibold text-gray-400 uppercase">SKU: </span>
+                                <span className="text-sm font-semibold text-gray-400">{product.sku}</span>
                             </div>
                             {/* <div className="flex items-center gap-3">
                                 <Switch
@@ -199,13 +199,13 @@ export const AggregatorInventoryDetails = () => {
                                 </div>
                             </div> */}
                         </div>
-                        {product.aggr_product_id && (
+                        {/* {product.aggr_product_id && (
                             <div className="mb-2">
                                 <span className="text-xs text-gray-400 uppercase">Aggregator Product ID: </span>
                                 <span className="text-xs font-medium text-gray-600">{product.aggr_product_id}</span>
                             </div>
-                        )}
-                        <h2 className="text-2xl font-bold text-[#C72030] mb-2 uppercase">{product.name}</h2>
+                        )} */}
+                        <h2 className="text-xl font-bold text-[#C72030] mb-2 uppercase">{product.name}</h2>
                         <div className="text-sm text-gray-600 mb-4">
                             {product.brand && <span>{product.brand}</span>}
                             {product.brand && product.categories && <span className="mx-2">|</span>}
@@ -279,14 +279,14 @@ export const AggregatorInventoryDetails = () => {
                     {/* Technical Specifications Card */}
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
                         <h3 className="text-sm font-semibold text-gray-900 mb-4 underline">Technical Specifications</h3>
-                        <div className="grid grid-cols-1 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                             {product.value_type && (
                                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                                     <div className="text-xs text-gray-500 mb-1">Value Type</div>
                                     <div className="text-base font-semibold text-gray-900">{product.value_type}</div>
                                 </div>
                             )}
-                            {product.min_value && (
+                            {/* {product.min_value && (
                                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                                     <div className="text-xs text-gray-500 mb-1">Min Value</div>
                                     <div className="text-base font-semibold text-gray-900">₹{product.min_value}</div>
@@ -297,7 +297,7 @@ export const AggregatorInventoryDetails = () => {
                                     <div className="text-xs text-gray-500 mb-1">Max Value</div>
                                     <div className="text-base font-semibold text-gray-900">₹{product.max_value}</div>
                                 </div>
-                            )}
+                            )} */}
                             {product.validity && (
                                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                                     <div className="text-xs text-gray-500 mb-1">Validity</div>
@@ -364,7 +364,7 @@ export const AggregatorInventoryDetails = () => {
                 </div>
             )}
         </div>
-  );
+    );
 };
 
 export default AggregatorInventoryDetails;
