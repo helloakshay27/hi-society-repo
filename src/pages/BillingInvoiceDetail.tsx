@@ -232,7 +232,7 @@ export default function BillingInvoiceDetail() {
           </Button>
 
           <div className="flex gap-2">
-            {/* <Button
+            <Button
               variant="outline"
               onClick={handleDownloadPDF}
               className="flex items-center gap-2 bg-white border-gray-300"
@@ -254,28 +254,28 @@ export default function BillingInvoiceDetail() {
             >
               <Mail className="w-4 h-4" />
               Send Email
-            </Button> */}
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Invoice Container */}
-      <div className="max-w-5xl mx-auto bg-white border border-gray-200 shadow-sm p-8 sm:p-10">
+      <div className="max-w-5xl mx-auto bg-white border border-gray-200 shadow-sm ">
         {/* Invoice Header */}
-        <div className="flex justify-between items-center mb-2 px-0 py-0 border-none shadow-none">
+        <div className="flex justify-between items-start mb-6 px-0 py-0 border-none shadow-none p-5 sm:p-5">
           <div>
-            <h1 className="text-lg font-semibold text-gray-900 mb-0">INVOICE</h1>
-            {/* <p className="text-xs text-gray-600 mt-1">#20260988</p> */}
+            <h1 className="text-2xl font-bold text-gray-900 mb-0">INVOICE</h1>
+            <p className="text-sm text-gray-500 mt-1">#{id}</p>
           </div>
           <div>
             <span
-              className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${invoice.status === 'Paid'
-                ? 'bg-emerald-50 text-emerald-600'
-                : invoice.status === 'Overdue'
-                  ? 'bg-red-50 text-red-600'
-                  : 'bg-yellow-50 text-yellow-600'
-                }`}
-              style={{ fontWeight: 500 }}
+              className={`text-sm font-medium ${
+                invoice.status === 'Paid'
+                  ? 'text-red-600'
+                  : invoice.status === 'Overdue'
+                    ? 'text-red-600'
+                    : 'text-yellow-600'
+              }`}
             >
               {invoice.status}
             </span>
@@ -283,68 +283,68 @@ export default function BillingInvoiceDetail() {
         </div>
 
         {/* Invoice Details Grid */}
-        <div className="mb-2 pb-2 border-b border-gray-200">
+        <div className="mb-5 p-5 border-t border-gray-200">
           <div className="grid grid-cols-3">
-            <div className="flex items-center py-1">
-              <span className="text-xs text-gray-500 w-[100px]">Invoice Number</span>
-              <span className="text-xs text-gray-900 font-semibold pl-2">: {invoice.invoiceNumber}</span>
+            <div className="flex items-center py-1.5">
+              <span className="text-[13px] text-gray-500 w-[115px]">Invoice Number</span>
+              <span className="text-[13px] text-gray-900 font-semibold pl-2">: {invoice.invoiceNumber}</span>
             </div>
-            <div className="flex items-center py-1">
-              <span className="text-xs text-gray-500 w-[100px]">Due Date</span>
-              <span className="text-xs text-gray-900 font-semibold pl-2">: {invoice.dueDate}</span>
+            <div className="flex items-center py-1.5">
+              <span className="text-[13px] text-gray-500 w-[115px]">Due Date</span>
+              <span className="text-[13px] text-gray-900 font-semibold pl-2">: {invoice.dueDate}</span>
             </div>
-            <div className="flex items-center py-1">
-              <span className="text-xs text-gray-500 w-[100px]">Place Of Supply</span>
-              <span className="text-xs text-gray-900 font-semibold pl-2">: {invoice.placeOfSupply}</span>
+            <div className="flex items-center py-1.5">
+              <span className="text-[13px] text-gray-500 w-[115px]">Place Of Supply</span>
+              <span className="text-[13px] text-gray-900 font-semibold pl-2">: {invoice.placeOfSupply}</span>
             </div>
           </div>
           <div className="grid grid-cols-3">
-            <div className="flex items-center py-1">
-              <span className="text-xs text-gray-500 w-[100px]">Invoice Date</span>
-              <span className="text-xs text-gray-900 font-semibold pl-2">: {invoice.invoiceDate}</span>
+            <div className="flex items-center py-1.5">
+              <span className="text-[13px] text-gray-500 w-[115px]">Invoice Date</span>
+              <span className="text-[13px] text-gray-900 font-semibold pl-2">: {invoice.invoiceDate}</span>
             </div>
-            <div className="flex items-center py-1">
-              <span className="text-xs text-gray-500 w-[100px]">P.O.#</span>
-              <span className="text-xs text-gray-900 font-semibold pl-2">: {invoice.po}</span>
+            <div className="flex items-center py-1.5">
+              <span className="text-[13px] text-gray-500 w-[115px]">P.O.#</span>
+              <span className="text-[13px] text-gray-900 font-semibold pl-2">: {invoice.po}</span>
             </div>
-            <div className="flex items-center py-1">
-              <span className="text-xs text-gray-500 w-[100px]">Account Name</span>
-              <span className="text-xs text-gray-900 font-semibold pl-2">: {invoice.accountName}</span>
+            <div className="flex items-center py-1.5">
+              <span className="text-[13px] text-gray-500 w-[115px]">Account Name</span>
+              <span className="text-[13px] text-gray-900 font-semibold pl-2">: {invoice.accountName}</span>
             </div>
           </div>
         </div>
 
         {/* Bill To, Ship To, Subject, Items, and Totals in a single table */}
         <div className="mb-6">
-          <table className="w-full border border-gray-300">
+          <table className="w-full border-l-0 border-r-0 border border-gray-300">
             <thead>
               <tr>
-                <th className="text-xs text-left font-semibold text-gray-900 border-b border-gray-300 border-r border-gray-300 px-2 py-2 w-1/2">Bill To</th>
-                <th className="text-xs text-left font-semibold text-gray-900 border-b border-gray-300 px-2 py-2 w-1/2">
-                  {/* Ship To */}
+                <th className="text-[13px] text-left font-semibold text-gray-900 border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 w-1/2">Bill To</th>
+                <th className="text-[13px] text-left font-semibold text-gray-900 border-b border-gray-300 px-3 py-2.5 w-1/2">
+                  Ship To
                 </th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="align-top border-r border-gray-300 px-2 py-2 text-xs text-gray-700">
+                <td className="align-top border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 leading-relaxed">
                   <div className="font-medium">{invoice.billTo.name}</div>
                   <div>{invoice.billTo.address}</div>
                   <div>{invoice.billTo.city},</div>
                   <div>{invoice.billTo.state}</div>
                   <div>{invoice.billTo.country}</div>
-                  <div className="mt-1">{invoice.billTo.gstin}</div>
+                  <div className="mt-1">GSTIN {invoice.billTo.gstin}</div>
                 </td>
-                <td className="align-top px-2 py-2 text-xs text-gray-700">
-                  {/* <div className="font-medium">{invoice.shipTo.name}</div>
+                <td className="align-top px-3 py-2.5 text-[13px] text-gray-700 leading-relaxed">
+                  <div className="font-medium">{invoice.shipTo.name}</div>
                   <div>{invoice.shipTo.address}</div>
                   <div>{invoice.shipTo.city},</div>
                   <div>{invoice.shipTo.state}</div>
-                  <div>{invoice.shipTo.country}</div> */}
+                  <div>{invoice.shipTo.country}</div>
                 </td>
               </tr>
               <tr>
-                <td colSpan={2} className="border-t border-gray-300 px-2 py-2 text-xs text-gray-700">
+                <td colSpan={2} className="border-t border-gray-300 px-3 py-2.5 text-[13px] text-gray-700">
                   <span className="font-medium">Subject :</span>
                   <span className="ml-2">{invoice.subject}</span>
                 </td>
@@ -355,35 +355,35 @@ export default function BillingInvoiceDetail() {
                   <table className="w-full border-none">
                     <thead>
                       <tr>
-                        <th className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-left align-bottom" rowSpan={2}>#</th>
-                        <th className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-left align-bottom" rowSpan={2}>Item & Description</th>
-                        <th className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-left align-bottom" rowSpan={2}>HSN/SAC</th>
-                        <th className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-left align-bottom" rowSpan={2}>QTY</th>
-                        <th className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-left align-bottom" rowSpan={2}>Rate</th>
-                        <th className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-center" colSpan={2}>CGST</th>
-                        <th className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-center" colSpan={2}>SGST</th>
-                        <th className="border-b border-gray-300 border-x  border-gray-300 px-2 py-2 text-xs text-gray-700 text-left align-bottom" rowSpan={2}>Amount</th>
+                        <th className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-left align-bottom" rowSpan={2}>#</th>
+                        <th className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-left align-bottom" rowSpan={2}>Item & Description</th>
+                        <th className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-left align-bottom" rowSpan={2}>HSN/SAC</th>
+                        <th className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-left align-bottom" rowSpan={2}>QTY</th>
+                        <th className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-left align-bottom" rowSpan={2}>Rate</th>
+                        <th className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-center" colSpan={2}>CSGT</th>
+                        <th className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-center" colSpan={2}>SGST</th>
+                        <th className="border-b border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-right align-bottom" rowSpan={2}>Amount</th>
                       </tr>
                       <tr>
-                        <th className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-center">%</th>
-                        <th className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-center">Amt</th>
-                        <th className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-center">%</th>
-                        <th className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-center">Amt</th>
+                        <th className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-center">%</th>
+                        <th className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-center">Amt</th>
+                        <th className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-center">%</th>
+                        <th className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-center">Amt</th>
                       </tr>
                     </thead>
                     <tbody>
                       {invoice.items.map((item, idx) => (
                         <tr key={item.id}>
-                          <td className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700">{idx + 1}</td>
-                          <td className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700">{item.description}</td>
-                          <td className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700">{item.hsnSac}</td>
-                          <td className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700">{String(item.qty).padStart(2, '0')}</td>
-                          <td className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700">{item.rate?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                          <td className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-center">{item.cgstPercent}%</td>
-                          <td className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-center">{item.cgstAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                          <td className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-center">{item.sgstPercent}%</td>
-                          <td className="border-b border-gray-300 border-r border-gray-300 px-2 py-2 text-xs text-gray-700 text-center">{item.sgstAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                          <td className="border-b border-gray-300 px-2 py-2 text-xs text-gray-700">{item.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          <td className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700">{idx + 1}</td>
+                          <td className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700">{item.description}</td>
+                          <td className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700">{item.hsnSac}</td>
+                          <td className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700">{String(item.qty).padStart(2, '0')}</td>
+                          <td className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700">{item.rate?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          <td className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-center">{item.cgstPercent}%</td>
+                          <td className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-center">{item.cgstAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          <td className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-center">{item.sgstPercent}%</td>
+                          <td className="border-b border-gray-300 border-r border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-center">{item.sgstAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          <td className="border-b border-gray-300 px-3 py-2.5 text-[13px] text-gray-700 text-right">{item.totalAmount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -392,31 +392,31 @@ export default function BillingInvoiceDetail() {
               </tr>
               {/* Total in Words and Calculations */}
               <tr>
-                <td className="border-t border-gray-300 border-r border-gray-300 px-2 py-2 align-top" style={{ verticalAlign: 'top' }}>
-                  <div className="text-xs font-semibold text-gray-900 mb-1.5">Total In Words</div>
-                  <div className="text-xs italic text-gray-700">{invoice.totalInWords}</div>
+                <td className="border-t border-gray-300 border-r border-gray-300 px-3 py-4 align-top" style={{ verticalAlign: 'top' }}>
+                  <div className="text-[13px] font-semibold text-gray-900 mb-2">Total In Words</div>
+                  <div className="text-[13px] italic text-gray-700">{invoice.totalInWords}</div>
                 </td>
-                <td className="border-t border-gray-300 px-2 py-2 align-top" style={{ verticalAlign: 'top' }}>
-                  <div className="flex flex-col items-end space-y-1">
-                    <div className="flex items-center justify-between w-[200px] text-xs">
-                      <div className="text-gray-500">Sub Total</div>
-                      <div className="text-gray-900 font-medium">{formatCurrency(invoice.subTotal)}</div>
+                <td className="border-t border-gray-300 px-4 py-4 align-top" style={{ verticalAlign: 'top' }}>
+                  <div className="flex flex-col items-end space-y-2">
+                    <div className="flex items-center justify-between w-full text-[13px]">
+                      <div className="text-gray-500 text-right" style={{ minWidth: '100px' }}>Sub Total</div>
+                      <div className="text-gray-900 font-medium text-right" style={{ minWidth: '120px' }}>{formatCurrency(invoice.subTotal)}</div>
                     </div>
-                    <div className="flex items-center justify-between w-[200px] text-xs">
-                      <div className="text-gray-500">CGST (9%)</div>
-                      <div className="text-gray-900 font-medium">{formatCurrency(invoice.cgstTotal)}</div>
+                    <div className="flex items-center justify-between w-full text-[13px]">
+                      <div className="text-gray-500 text-right" style={{ minWidth: '100px' }}>CGST (9%)</div>
+                      <div className="text-gray-900 font-medium text-right" style={{ minWidth: '120px' }}>{formatCurrency(invoice.cgstTotal)}</div>
                     </div>
-                    <div className="flex items-center justify-between w-[200px] text-xs">
-                      <div className="text-gray-500">SGST (9%)</div>
-                      <div className="text-gray-900 font-medium">{formatCurrency(invoice.sgstTotal)}</div>
+                    <div className="flex items-center justify-between w-full text-[13px]">
+                      <div className="text-gray-500 text-right" style={{ minWidth: '100px' }}>SGST (9%)</div>
+                      <div className="text-gray-900 font-medium text-right" style={{ minWidth: '120px' }}>{formatCurrency(invoice.sgstTotal)}</div>
                     </div>
-                    <div className="flex items-center justify-between w-[200px] text-xs font-semibold pt-2 border-t border-gray-300">
-                      <div className="text-gray-900">Total</div>
-                      <div className="text-gray-900">{formatCurrency(invoice.total)}</div>
+                    <div className="flex items-center justify-between w-full text-[13px] font-semibold pt-2 border-t border-gray-200">
+                      <div className="text-gray-900 text-right" style={{ minWidth: '100px' }}>Total</div>
+                      <div className="text-gray-900 text-right" style={{ minWidth: '120px' }}>{formatCurrency(invoice.total)}</div>
                     </div>
-                    <div className="flex items-center justify-between w-[200px] text-xs font-bold pt-1.5 border-t border-gray-300">
-                      <div className="text-gray-900">Balance Due</div>
-                      <div className="text-gray-900">{formatCurrency(invoice.balanceDue)}</div>
+                    <div className="flex items-center justify-between w-full text-[13px] font-bold pt-2 border-t border-gray-200">
+                      <div className="text-gray-900 text-right" style={{ minWidth: '100px' }}>Balance Due</div>
+                      <div className="text-gray-900 text-right" style={{ minWidth: '120px' }}>{formatCurrency(invoice.balanceDue)}</div>
                     </div>
                   </div>
                 </td>

@@ -708,7 +708,7 @@ export const LoyaltyInventorySection = () => {
                                 type="text"
                                 value={skuCode}
                                 onChange={(e) => setSkuCode(e.target.value)}
-                                className="bg-gray-50 border-[#e5e1d8]"
+                                className="bg-gray-50 border-[#e5e1d8] p-4 h-16 text-lg" // Increased height and font size
                                 placeholder="e.g., ELEC-PH-IP15-001"
                             />
                         </div>
