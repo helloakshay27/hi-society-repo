@@ -251,7 +251,7 @@ const RedemptionReport = () => {
           data={transactions}
           columns={columns}
           renderCell={renderCell}
-          renderActions={renderActions}
+          // renderActions={renderActions}
           loading={loading}
           loadingMessage="Loading transactions..."
           emptyMessage="No transactions found"
