@@ -9,6 +9,8 @@ import axios from "axios";
 import { toast } from "sonner";
 
 interface AggregatorProduct {
+    client_price: string;
+    customer_price: any;
     id: number;
     aggregator_id: number;
     aggr_product_id: string;
@@ -186,7 +188,7 @@ export const AggregatorInventoryDetails = () => {
                                 <span className="text-xs text-gray-400 uppercase">SKU: </span>
                                 <span className="text-sm font-semibold text-gray-700">{product.sku}</span>
                             </div>
-                            <div className="flex items-center gap-3">
+                            {/* <div className="flex items-center gap-3">
                                 <Switch
                                     checked={isActive}
                                     onCheckedChange={setIsActive}
@@ -195,7 +197,7 @@ export const AggregatorInventoryDetails = () => {
                                 <div className={`flex items-center gap-2 ${isActive ? 'bg-green-300' : 'bg-red-500'} px-3 py-1 rounded-lg`}>
                                     <span className="text-xs font-medium uppercase">{isActive ? 'Active' : 'Inactive'}</span>
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
                         {product.aggr_product_id && (
                             <div className="mb-2">
@@ -243,7 +245,7 @@ export const AggregatorInventoryDetails = () => {
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <div className="text-xs text-gray-600 mb-1">Client Price</div>
-                                        <div className="text-2xl font-bold text-gray-900">₹ {parseFloat(product.sale_price || "0").toLocaleString('en-IN')}</div>
+                                        <div className="text-2xl font-bold text-gray-900">₹ {parseFloat(product.client_price || "0").toLocaleString('en-IN')}</div>
                                         <div className="text-xs text-green-600 mt-1">After channel discount</div>
                                     </div>
                                     {/* <div className="text-right">
@@ -260,7 +262,7 @@ export const AggregatorInventoryDetails = () => {
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <div className="text-xs text-gray-500 mb-1">Customer Price</div>
-                                        <div className="text-2xl font-bold text-[#C72030]">₹ {product.base_amount.toLocaleString('en-IN')}</div>
+                                        <div className="text-2xl font-bold text-[#C72030]">₹ {product.customer_price.toLocaleString('en-IN')}</div>
                                         <div className="text-xs text-[#C72030] mt-1">Best price for end customer</div>
                                     </div>
                                     {/* <div className="text-right">

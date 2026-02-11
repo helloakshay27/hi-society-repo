@@ -12,6 +12,7 @@ export const LoyaltyInventoryDetails = () => {
   const [loading, setLoading] = useState(true);
   const [item, setItem] = useState<any>(null);
   const [isActive, setIsActive] = useState(true);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   useEffect(() => {
     fetchProductDetails();
@@ -32,6 +33,45 @@ export const LoyaltyInventoryDetails = () => {
       toast.error("Failed to load product details");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleActive = async (nextActive: boolean) => {
+    if (!item?.id || isUpdatingStatus) {
+      return;
+    }
+
+    const previousActive = isActive;
+
+    try {
+      setIsUpdatingStatus(true);
+      setIsActive(nextActive);
+
+      const url = `https://runwal-api.lockated.com/products/${id}.json?token=00f7c12e459b75225a07519c088edae3e9612e59d80111bb`;
+      await axios.put(url, {
+        product: {
+          status: nextActive ? "active" : "inactive",
+          published: nextActive,
+        },
+      });
+
+      setItem((prev: any) =>
+        prev
+          ? {
+              ...prev,
+              status: nextActive ? "active" : "inactive",
+              published: nextActive,
+            }
+          : prev
+      );
+
+      toast.success(`Product marked ${nextActive ? "active" : "inactive"}.`);
+    } catch (error) {
+      console.error("Error updating product status:", error);
+      toast.error("Failed to update product status");
+      setIsActive(previousActive);
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -130,8 +170,9 @@ export const LoyaltyInventoryDetails = () => {
               <div className="flex items-center gap-3">
                 <Switch
                   checked={isActive}
-                  onCheckedChange={setIsActive}
+                  onCheckedChange={handleToggleActive}
                   className="data-[state=checked]:bg-green-500"
+                  disabled={isUpdatingStatus}
                 />
                 <div className={`flex items-center gap-2 ${isActive ? 'bg-green-300' : 'bg-red-500'} text-white px-3 py-1 rounded-lg`}>
                   <span className="text-xs font-medium uppercase">{isActive ? 'Active' : 'Inactive'}</span>
@@ -189,7 +230,7 @@ export const LoyaltyInventoryDetails = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <div className="text-xs text-gray-600 mb-1">Client Price</div>
-                    <div className="text-2xl font-bold text-gray-900">₹ {parseFloat(item.sale_price || 0).toLocaleString('en-IN')}</div>
+                    <div className="text-2xl font-bold text-gray-900">₹ {parseFloat(item.client_price || 0).toLocaleString('en-IN')}</div>
                     <div className="text-xs text-green-600 mt-1">After channel discount</div>
                   </div>
                   {/* <div className="text-right">
@@ -210,7 +251,7 @@ export const LoyaltyInventoryDetails = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Customer Price</div>
-                    <div className="text-2xl font-bold text-[#C72030]">₹ {parseFloat(item.final_price || item.sale_price || 0).toLocaleString('en-IN')}</div>
+                    <div className="text-2xl font-bold text-[#C72030]">₹ {parseFloat(item.customer_price || 0).toLocaleString('en-IN')}</div>
                     <div className="text-xs text-[#C72030] mt-1">Best price for end customer</div>
                   </div>
                   {/* <div className="text-right">

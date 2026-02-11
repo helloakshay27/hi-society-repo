@@ -80,6 +80,31 @@
   background-color: rgba(0, 0, 0, 0.3);
 }
 
+/* Scoped horizontal scrollbar styling for Aggregator Inventory table */
+.mui-scrollbar-x .table-container {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #e5e7eb;
+}
+
+.mui-scrollbar-x .table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.mui-scrollbar-x .table-container::-webkit-scrollbar-track {
+  background: #e5e7eb;
+  border-radius: 999px;
+}
+
+.mui-scrollbar-x .table-container::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 999px;
+}
+
+.mui-scrollbar-x .table-container::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
 /* Hide scrollbar for mobile devices but keep functionality */
 @media (max-width: 640px) {
   .scrollbar-hide {

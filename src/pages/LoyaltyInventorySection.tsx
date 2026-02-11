@@ -29,20 +29,21 @@ export const LoyaltyInventorySection = () => {
     const navigate = useNavigate();
     // const baseURL = API_CONFIG.BASE_URL;
     const [loading, setLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
     const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
     const [inventoryData, setInventoryData] = useState([]);
+    // Track expanded description rows by item id
+    const [expandedDescRows, setExpandedDescRows] = useState<Set<number>>(new Set());
     const [stats, setStats] = useState({
         totalItems: "0",
         inStock: "0",
         outOfStock: "0",
     });
-    
+
     // Filter states
     const [selectedCategory, setSelectedCategory] = useState<string>("");
     const [selectedDiscount, setSelectedDiscount] = useState<string>("");
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
-    
+
     // Add Item Form States
     const [isActive, setIsActive] = useState(true);
     const [category, setCategory] = useState("");
@@ -58,15 +59,16 @@ export const LoyaltyInventorySection = () => {
     // Define columns for EnhancedTable - All API fields
     const columns = [
         { key: "actions", label: "Actions", sortable: false },
-        { key: "id", label: "ID", sortable: true },
-        { key: "sku", label: "SKU", sortable: true },
-        { key: "aggregator_product_id", label: "Aggregator ID", sortable: true },
+        { key: "status", label: "Status", sortable: true },
+        // { key: "id", label: "ID", sortable: true },
+        { key: "sku", label: "SKU/Item", sortable: true },
+        { key: "aggregator_product_id", label: "Aggregator Product ID", sortable: true },
         { key: "name", label: "Name", sortable: true },
         { key: "description", label: "Description", sortable: true },
         { key: "brand", label: "Brand", sortable: true },
-       { key: "base_price", label: "Base Price", sortable: true },
+        { key: "base_price", label: "Base Price", sortable: true },
         { key: "client_price", label: "Client Price", sortable: true },
-        { key: "customer_price", label: "Customer Amount", sortable: true },
+        { key: "customer_price", label: "Customer Price", sortable: true },
         // { key: "discount", label: "Discount", sortable: true },
         { key: "value_type", label: "Value Type", sortable: true },
         { key: "min_value", label: "Min Value", sortable: true },
@@ -82,7 +84,6 @@ export const LoyaltyInventorySection = () => {
         { key: "redemption_instructions", label: "Redemption Instructions", sortable: true },
         { key: "stock_quantity", label: "Stock Quantity", sortable: true },
         { key: "min_stock_level", label: "Min Stock Level", sortable: true },
-        { key: "status", label: "Status", sortable: true },
         { key: "published", label: "Published", sortable: true },
         { key: "featured", label: "Featured", sortable: true },
         { key: "is_trending", label: "Is Trending", sortable: true },
@@ -90,7 +91,7 @@ export const LoyaltyInventorySection = () => {
         { key: "is_new_arrival", label: "Is New Arrival", sortable: true },
         { key: "is_recommended", label: "Is Recommended", sortable: true },
         { key: "generic_category_id", label: "Category ID", sortable: true },
-        { key: "categories", label: "Categories", sortable: true },
+        { key: "categories", label: "Category", sortable: true },
         { key: "filter_group_code", label: "Filter Group Code", sortable: true },
         { key: "origin_country", label: "Origin Country", sortable: true },
         { key: "shipping_info", label: "Shipping Info", sortable: true },
@@ -122,7 +123,7 @@ export const LoyaltyInventorySection = () => {
         try {
             setLoading(true);
             // const url = getFullUrl("/products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
-            const url = "https://runwal-api.lockated.com/products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+            const url = "https://runwal-api.lockated.com/products?source=admin_portal&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
             const response = await axios.get(url);
             const products = response.data?.products || [];
             setInventoryData(products);
@@ -146,6 +147,10 @@ export const LoyaltyInventorySection = () => {
     };
 
     const renderCell = (item: any, columnKey: string) => {
+        const statusColors = {
+            active: "bg-green-100 text-green-800",
+            inactive: "bg-red-100 text-red-800",
+        };
         switch (columnKey) {
             case "actions":
                 return (
@@ -161,6 +166,13 @@ export const LoyaltyInventorySection = () => {
                         </button>
                     </div>
                 );
+            case "status":
+                const published = item.published === true;
+                return (
+                    <div className={`flex items-center justify-center w-24 px-2 py-1 rounded-md text-xs font-medium ${published ? statusColors.active : statusColors.inactive}`}>
+                        <p className="mx-auto">{published ? "True" : "False"}</p>
+                    </div>
+                );
             case "id":
                 return <span className="text-sm">{item.id || "-"}</span>;
             case "sku":
@@ -170,11 +182,43 @@ export const LoyaltyInventorySection = () => {
             case "name":
                 return <span className="text-sm">{item.name || "-"}</span>;
             case "description":
-                return <span className="text-sm truncate max-w-xs" title={item.description}>{item.description || "-"}</span>;
+    const desc = item.description || "-";
+    const isExpanded = expandedDescRows.has(item.id);
+    return (
+        <div
+            className={`text-sm ${isExpanded ? "whitespace-pre-line break-words" : "truncate"}`}
+            style={{
+                maxWidth: 300,
+                width: 300,
+                cursor: desc !== "-" ? "pointer" : "default",
+                wordBreak: isExpanded ? "break-word" : "normal",
+            }}
+            title={desc}
+            onClick={() => {
+                if (desc !== "-") {
+                    setExpandedDescRows(prev => {
+                        const next = new Set(prev);
+                        if (next.has(item.id)) {
+                            next.delete(item.id);
+                        } else {
+                            next.add(item.id);
+                        }
+                        return next;
+                    });
+                }
+            }}
+        >
+            {desc}
+        </div>
+    );
             case "brand":
                 return <span className="text-sm">{item.brand || "-"}</span>;
             case "base_price":
                 return <span className="text-sm">₹{parseFloat(item.base_price || 0).toFixed(2)}</span>;
+            case "client_price":
+                return <span className="text-sm">₹{parseFloat(item.client_price || 0).toFixed(2)}</span>;
+            case "customer_price":
+                return <span className="text-sm">₹{parseFloat(item.customer_price || 0).toFixed(2)}</span>;
             case "sale_price":
                 return <span className="text-sm">₹{parseFloat(item.sale_price || 0).toFixed(2)}</span>;
             case "final_price":
@@ -218,7 +262,7 @@ export const LoyaltyInventorySection = () => {
             case "min_stock_level":
                 return <span className="text-sm">{item.min_stock_level || 0}</span>;
             case "status":
-                const statusColors = {
+                const statusColorsMap = {
                     active: "bg-green-100 text-green-800",
                     pending: "bg-yellow-100 text-yellow-800",
                     inactive: "bg-red-100 text-red-800",
@@ -288,10 +332,6 @@ export const LoyaltyInventorySection = () => {
             default:
                 return null;
         }
-    };
-
-    const handleGlobalSearch = (term: string) => {
-        setSearchTerm(term);
     };
 
     const handleExport = () => {
@@ -370,8 +410,8 @@ export const LoyaltyInventorySection = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 Add Item
             </Button>
-            
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+
+            {/* <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger className="w-[140px] bg-white border-gray-300">
                     <SelectValue placeholder="Category" />
                 </SelectTrigger>
@@ -394,7 +434,7 @@ export const LoyaltyInventorySection = () => {
                     <SelectItem value="15">15%</SelectItem>
                     <SelectItem value="20">20%</SelectItem>
                 </SelectContent>
-            </Select>
+            </Select> */}
         </div>
     );
 
@@ -420,7 +460,7 @@ export const LoyaltyInventorySection = () => {
                         <div className="text-sm text-gray-600">Total Items</div>
                     </div>
                 </div>
-                
+
                 <div className="bg-white p-4 rounded-lg border border-gray-200 flex items-center gap-4">
                     <div className="w-12 h-12 bg-[#D1FAE5] rounded flex items-center justify-center">
                         <CheckCircle className="w-6 h-6 text-[#059669]" />
@@ -430,7 +470,7 @@ export const LoyaltyInventorySection = () => {
                         <div className="text-sm text-gray-600">In Stock</div>
                     </div>
                 </div>
-                
+
                 <div className="bg-white p-4 rounded-lg border border-gray-200 flex items-center gap-4">
                     <div className="w-12 h-12 bg-[#FEF3C7] rounded flex items-center justify-center">
                         <AlertCircle className="w-6 h-6 text-[#F59E0B]" />
@@ -448,9 +488,7 @@ export const LoyaltyInventorySection = () => {
                     data={inventoryData}
                     columns={columns}
                     renderCell={renderCell}
-                    enableExport={true}
-                    enableGlobalSearch={true}
-                    onGlobalSearch={handleGlobalSearch}
+                    enableExport={false}
                     handleExport={handleExport}
                     leftActions={renderLeftActions()}
                     loading={loading}
@@ -477,16 +515,22 @@ export const LoyaltyInventorySection = () => {
 
                     <div className="space-y-4 mt-4 pb-4">
                         {/* Status Toggle */}
-                        <div className="flex items-center justify-between">
-                            <Label className="text-sm font-medium">Status</Label>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                            <Label className="text-sm font-medium text-[#1A1A1A]">Status</Label>
+                            <div className="flex items-center gap-3">
+                                <span
+                                    className={`text-xs font-medium px-3 py-1 rounded-md ${
+                                        isActive
+                                            ? "bg-[#D1FAE5] text-[#065F46]"
+                                            : "bg-red-100 text-red-800"
+                                    }`}
+                                >
                                     {isActive ? "Active" : "Inactive"}
                                 </span>
                                 <Switch
                                     checked={isActive}
                                     onCheckedChange={setIsActive}
-                                    className="data-[state=checked]:bg-[#10b981]"
+                                    className="h-6 w-11 data-[state=checked]:!bg-[#10b981] data-[state=unchecked]:!bg-gray-300 [&>span]:h-5 [&>span]:w-5 [&>span]:data-[state=checked]:translate-x-5"
                                 />
                             </div>
                         </div>

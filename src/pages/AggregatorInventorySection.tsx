@@ -26,6 +26,8 @@ import { Plus, Package, Warehouse, Eye, RefreshCwIcon } from "lucide-react";
 // import { getFullUrl, API_CONFIG } from "@/config/apiConfig";
 
 const AggregatorInventorySection = () => {
+        // Track expanded description rows by item id
+        const [expandedDescRows, setExpandedDescRows] = useState<Set<number>>(new Set());
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -42,17 +44,17 @@ const AggregatorInventorySection = () => {
     // Define columns for EnhancedTable - ALL FIELDS
     const columns = [
         { key: "action", label: "Action", sortable: false },
-        { key: "checkbox", label: "Select", sortable: false },
+        // { key: "checkbox", label: "Select", sortable: false },
         { key: "id", label: "ID", sortable: true },
         { key: "banner_image_url", label: "Image", sortable: false },
         { key: "name", label: "Product Name", sortable: true },
-        { key: "sku", label: "SKU", sortable: true },
+        { key: "sku", label: "SKU/Item", sortable: true },
         { key: "aggr_product_id", label: "Aggregator Product ID", sortable: true },
         { key: "description", label: "Description", sortable: false },
         { key: "brand", label: "Brand", sortable: true },
         { key: "base_price", label: "Base Price", sortable: true },
         { key: "client_price", label: "Client Price", sortable: true },
-        { key: "customer_price", label: "Customer Amount", sortable: true },
+        { key: "customer_price", label: "Customer Price", sortable: true },
         { key: "stock_quantity", label: "Stock Quantity", sortable: true },
         { key: "min_stock_level", label: "Min Stock Level", sortable: true },
         { key: "value_type", label: "Value Type", sortable: false },
@@ -68,8 +70,8 @@ const AggregatorInventorySection = () => {
         { key: "published", label: "Published", sortable: true },
         { key: "featured", label: "Featured", sortable: true },
         { key: "is_recommended", label: "Recommended", sortable: true },
-        { key: "categories", label: "Categories", sortable: false },
-        { key: "filter_group_code", label: "Filter Group", sortable: false },
+        { key: "categories", label: "Category", sortable: false },
+        // { key: "filter_group_code", label: "Filter Group", sortable: false },
         { key: "shipping_info", label: "Shipping Info", sortable: false },
         { key: "origin_country", label: "Origin Country", sortable: true },
         { key: "aggregator_id", label: "Aggregator ID", sortable: true },
@@ -115,29 +117,28 @@ const AggregatorInventorySection = () => {
         switch (columnKey) {
             case "action":
                 return (
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(`/loyalty/aggregator-inventory/${item.id}`)}
-                        title="View Details"
-                    >
-                        <Eye className="w-4 h-4 text-gray-700" />
-                    </Button>
-                );
-            case "checkbox":
-                return (
-                    <input
-                        type="checkbox"
-                        checked={selectedProductIds.includes(item.id)}
-                        onChange={(e) => {
-                            if (e.target.checked) {
-                                setSelectedProductIds([...selectedProductIds, item.id]);
-                            } else {
-                                setSelectedProductIds(selectedProductIds.filter(id => id !== item.id));
-                            }
-                        }}
-                        className="w-4 h-4 cursor-pointer"
-                    />
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            checked={selectedProductIds.includes(item.id)}
+                            onChange={(e) => {
+                                if (e.target.checked) {
+                                    setSelectedProductIds([...selectedProductIds, item.id]);
+                                } else {
+                                    setSelectedProductIds(selectedProductIds.filter(id => id !== item.id));
+                                }
+                            }}
+                            className="w-4 h-4 cursor-pointer"
+                        />
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/loyalty/aggregator-inventory/${item.id}`)}
+                            title="View Details"
+                        >
+                            <Eye className="w-4 h-4 text-gray-700" />
+                        </Button>
+                    </div>
                 );
             case "id":
                 return <span className="font-medium">{item.id}</span>;
@@ -162,20 +163,45 @@ const AggregatorInventorySection = () => {
                 return <span className="text-sm">{item.sku || "-"}</span>;
             case "aggr_product_id":
                 return <span className="text-sm">{item.aggr_product_id || "-"}</span>;
-            case "description":
+            case "description": {
+                const desc = item.description || "-";
+                const isExpanded = expandedDescRows.has(item.id);
                 return (
-                    <div className="max-w-xs truncate" title={item.description || "-"}>
-                        {item.description || "-"}
+                    <div
+                        className={`max-w-xs text-sm ${isExpanded ? "whitespace-pre-line break-words" : "truncate"}`}
+                        style={{
+                            maxWidth: 300,
+                            width: 300,
+                            cursor: desc !== "-" ? "pointer" : "default",
+                            wordBreak: isExpanded ? "break-word" : "normal",
+                        }}
+                        title={desc}
+                        onClick={() => {
+                            if (desc !== "-") {
+                                setExpandedDescRows(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(item.id)) {
+                                        next.delete(item.id);
+                                    } else {
+                                        next.add(item.id);
+                                    }
+                                    return next;
+                                });
+                            }
+                        }}
+                    >
+                        {desc}
                     </div>
                 );
+            }
             case "brand":
-                return <span>{item.brand || "-"}</span>;
+                return <span>{item?.brand || "-"}</span>;
             case "base_price":
                 return <span className="font-medium">₹{parseFloat(item.base_price || 0).toFixed(2)}</span>;
-            case "sale_price":
-                return <span className="font-medium text-green-600">₹{parseFloat(item.sale_price || 0).toFixed(2)}</span>;
-            case "base_amount":
-                return <span>₹{item.base_amount || 0}</span>;
+            case "customer_price":
+                return <span className="font-medium text-green-600">₹{parseFloat(item.customer_price || 0).toFixed(2)}</span>;
+            case "client_price":
+                return <span>₹{item.client_price || 0}</span>;
             case "stock_quantity":
                 return (
                     <span className={item.stock_quantity > 0 ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
@@ -325,8 +351,8 @@ const AggregatorInventorySection = () => {
     const handleSyncInventory = async () => {
         try {
             setLoading(true);
-            await axios.post(
-                "https://runwal-api.lockated.com//aggregators/1/sync_products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+            await axios.get(
+                "https://runwal-api.lockated.com/aggregators/1/sync_products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
             );
             toast.success("Inventory sync started!");
             // Optionally, you can refresh the inventory data after sync
@@ -381,14 +407,14 @@ const AggregatorInventorySection = () => {
             </div>
 
             {/* Inventory Table */}
-            <div className="space-y-4">
+            <div className="space-y-4 mui-scrollbar-x">
                 <EnhancedTable
                     data={inventoryData}
                     columns={columns}
                     renderCell={renderCell}
-                    enableExport={true}
+                    enableExport={false}
                     enableGlobalSearch={true}
-                    onGlobalSearch={handleGlobalSearch}
+                    // onGlobalSearch={handleGlobalSearch}
                     leftActions={
                         // Sync Inventory Button
                         <div className="mb-2">
@@ -461,7 +487,8 @@ const AggregatorInventorySection = () => {
                     </div>
                 </DialogContent>
             </Dialog> */}
-            </div >
-)}
+        </div >
+    )
+}
 
 export default AggregatorInventorySection;
