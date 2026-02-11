@@ -26,8 +26,8 @@ import { Plus, Package, Warehouse, Eye, RefreshCwIcon } from "lucide-react";
 // import { getFullUrl, API_CONFIG } from "@/config/apiConfig";
 
 const AggregatorInventorySection = () => {
-        // Track expanded description rows by item id
-        const [expandedDescRows, setExpandedDescRows] = useState<Set<number>>(new Set());
+    // Track expanded description rows by item id
+    const [expandedDescRows, setExpandedDescRows] = useState<Set<number>>(new Set());
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -52,8 +52,8 @@ const AggregatorInventorySection = () => {
         { key: "aggr_product_id", label: "Aggregator Product ID", sortable: true },
         { key: "description", label: "Description", sortable: false },
         { key: "brand", label: "Brand", sortable: true },
-        { key: "base_price", label: "Base Price", sortable: true },
-        { key: "client_price", label: "Client Price", sortable: true },
+        // { key: "base_price", label: "Base Price", sortable: true },
+        { key: "client_price", label: "Price", sortable: true },
         { key: "customer_price", label: "Customer Price", sortable: true },
         { key: "stock_quantity", label: "Stock Quantity", sortable: true },
         { key: "min_stock_level", label: "Min Stock Level", sortable: true },

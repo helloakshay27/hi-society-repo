@@ -359,16 +359,16 @@ export const HiSocietySidebar: React.FC = () => {
           path: "/loyalty/customers",
         },
         {
-          id: "loyalty-inventory",
-          label: "Inventory Section",
-          icon: Database,
-          path: "/loyalty/inventory-section",
-        },
-        {
           id: "aggregator-inventory",
           label: "Aggregator Inventory",
           icon: Database,
           path: "/loyalty/aggregator-inventory",
+        },
+        {
+          id: "loyalty-inventory",
+          label: "Inventory Section",
+          icon: Database,
+          path: "/loyalty/inventory-section",
         },
         {
           id: "redemptions",
@@ -1227,9 +1227,8 @@ export const HiSocietySidebar: React.FC = () => {
 
   return (
     <div
-      className={`${
-        isSidebarCollapsed ? "w-16" : "w-64"
-      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      className={`${isSidebarCollapsed ? "w-16" : "w-64"
+        } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
       style={{ top: "4rem", height: "calc(100% - 4rem)" }}
     >
       <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>

@@ -59,10 +59,10 @@ export const LoyaltyInventoryDetails = () => {
       setItem((prev: any) =>
         prev
           ? {
-              ...prev,
-              status: nextActive ? "active" : "inactive",
-              published: nextActive,
-            }
+            ...prev,
+            status: nextActive ? "active" : "inactive",
+            published: nextActive,
+          }
           : prev
       );
 
@@ -212,20 +212,20 @@ export const LoyaltyInventoryDetails = () => {
             <h3 className="text-sm font-semibold text-gray-900 mb-4 underline">Pricing Structure</h3>
             <div className="space-y-0">
               {/* Base Price */}
-              <div className="border-l-4 border-gray-300 pl-4 py-3">
+              {/* <div className="border-l-4 border-gray-300 pl-4 py-3">
                 <div className="flex justify-between items-center">
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Base Price</div>
                     <div className="text-2xl font-bold text-gray-900">₹ {parseFloat(item.base_price || "0").toLocaleString('en-IN')}</div>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Client Price */}
               <div className="border-l-4 border-green-400 bg-green-50 pl-4 py-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <div className="text-xs text-gray-600 mb-1">Client Price</div>
+                    <div className="text-xs text-gray-600 mb-1">Price</div>
                     <div className="text-2xl font-bold text-gray-900">₹ {parseFloat(item.client_price || "0").toLocaleString('en-IN')}</div>
                     <div className="text-xs text-green-600 mt-1">After channel discount</div>
                   </div>

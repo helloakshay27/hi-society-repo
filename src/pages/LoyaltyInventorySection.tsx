@@ -62,15 +62,16 @@ export const LoyaltyInventorySection = () => {
     // Define columns for EnhancedTable - All API fields
     const columns = [
         { key: "actions", label: "Actions", sortable: false },
+        { key: "image", label: "Image", sortable: false },
         { key: "status", label: "Status", sortable: true },
+        { key: "name", label: "Name", sortable: true },
         // { key: "id", label: "ID", sortable: true },
         { key: "sku", label: "SKU/Item", sortable: true },
         { key: "aggregator_product_id", label: "Aggregator Product ID", sortable: true },
-        { key: "name", label: "Name", sortable: true },
         { key: "description", label: "Description", sortable: true },
         { key: "brand", label: "Brand", sortable: true },
-        { key: "base_price", label: "Base Price", sortable: true },
-        { key: "client_price", label: "Client Price", sortable: true },
+        // { key: "base_price", label: "Base Price", sortable: true },
+        { key: "client_price", label: "Price", sortable: true },
         { key: "customer_price", label: "Customer Price", sortable: true },
         // { key: "discount", label: "Discount", sortable: true },
         { key: "value_type", label: "Value Type", sortable: true },
@@ -226,6 +227,21 @@ export const LoyaltyInventorySection = () => {
                         >
                             <Eye className="w-4 h-4" />
                         </button>
+                    </div>
+                );
+            case "image":
+                return item.banner_image ? (
+                    <img
+                        src={item.banner_image}
+                        alt={item.name}
+                        className="w-16 h-16 object-cover rounded"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64';
+                        }}
+                    />
+                ) : (
+                    <div className="w-16 h-16 bg-gray-200 rounded flex items-center !justify-center text-xs text-gray-400">
+                        No Image
                     </div>
                 );
             case "status":
