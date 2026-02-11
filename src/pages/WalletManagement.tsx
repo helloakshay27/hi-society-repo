@@ -24,6 +24,8 @@ interface WalletTransaction {
   amount?: number;
   remarks?: string;
   created_at?: string;
+  redirect_ur?: string;
+  resource_type?: string;
 }
 
 export const WalletManagement = () => {
@@ -57,26 +59,26 @@ export const WalletManagement = () => {
     if (activeTab !== "wallet-management") return;
     setLoading(true);
     const fetchTransactions = async () => {
-    try {
-      // const token = API_CONFIG.TOKEN || "";
-      // const url = getFullUrl(`/organization_wallet/transactions.json?token=${token}`);
-      const url = "https://runwal-api.lockated.com/organization_wallet/transactions.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
-      const response = await fetch(url, {
-      headers: {
-        Authorization: getAuthHeader(),
-        "Content-Type": "application/json",
-      },
-      });
-      if (!response.ok) throw new Error("Failed to fetch transactions");
-      const data = await response.json();
-      setCardsData(data.wallet)
-      setTransactions(data.transactions || []);
-    } catch (error) {
-      toast.error("Failed to load wallet transactions");
-      setTransactions([]);
-    } finally {
-      setLoading(false);
-    }
+      try {
+        // const token = API_CONFIG.TOKEN || "";
+        // const url = getFullUrl(`/organization_wallet/transactions.json?token=${token}`);
+        const url = "https://runwal-api.lockated.com/organization_wallet/transactions.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+        const response = await fetch(url, {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) throw new Error("Failed to fetch transactions");
+        const data = await response.json();
+        setCardsData(data.wallet)
+        setTransactions(data.transactions || []);
+      } catch (error) {
+        toast.error("Failed to load wallet transactions");
+        setTransactions([]);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchTransactions();
   }, [activeTab]);
@@ -89,15 +91,16 @@ export const WalletManagement = () => {
     { key: "amount", label: "Amount" },
     { key: "remarks", label: "Remarks" },
     { key: "created_at", label: "Date" },
+    { key: "resource_type", label: "Resource Type" },
   ];
 
   const renderApiCell = (item: WalletTransaction, columnKey: string) => {
     switch (columnKey) {
       case "transaction_type": {
-        const type = item.transaction_type || "";
+        const type = item.transaction_type.charAt(0).toUpperCase() + item.transaction_type.slice(1) || "";
         let color = "";
-        if (type === "DR") color = "text-red-600 font-bold";
-        if (type === "CR") color = "text-green-600 font-bold";
+        if (type === "Debit" || type === "DR") color = "text-red-600 font-bold";
+        if (type === "Credit" || type === "CR") color = "text-green-600 font-bold";
         return <span className={color}>{type}</span>;
       }
       case "created_at":
@@ -108,6 +111,8 @@ export const WalletManagement = () => {
         return item.id;
       case "remarks":
         return item.remarks || "";
+      case "resource_type":
+        return <a target="_blank" className="text-blue-500 underline" href={item.redirect_ur}>{item.resource_type}</a>;
       default:
         return item[columnKey as keyof WalletTransaction] ?? "";
     }
