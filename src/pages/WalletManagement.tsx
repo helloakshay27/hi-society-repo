@@ -89,6 +89,7 @@ export const WalletManagement = () => {
     { key: "id", label: "Transaction ID" },
     { key: "transaction_type", label: "Type" },
     { key: "amount", label: "Amount" },
+    { key: "category", label: "Category" },
     { key: "remarks", label: "Remarks" },
     { key: "created_at", label: "Date" },
     { key: "resource_type", label: "Resource Type" },
