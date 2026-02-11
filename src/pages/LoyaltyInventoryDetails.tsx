@@ -345,7 +345,7 @@ export const LoyaltyInventoryDetails = () => {
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h3 className="text-sm font-semibold text-gray-900 mb-3 underline">Redemption Instructions</h3>
               <div
-                className="text-sm text-gray-700 leading-relaxed bg-blue-50 p-4 rounded-lg border border-blue-100"
+                className="text-base text-gray-700 leading-7 bg-blue-50 p-4 rounded-lg border border-blue-100 [&>p]:mb-2 [&>p:last-child]:mb-0 [&>ul]:mb-2 [&>ol]:mb-2 [&>li]:mb-2"
                 dangerouslySetInnerHTML={{ __html: item.redemption_instructions }}
               />
             </div>
@@ -355,7 +355,7 @@ export const LoyaltyInventoryDetails = () => {
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h3 className="text-sm font-semibold text-gray-900 mb-3 underline">Terms & Conditions</h3>
               <div
-                className="text-xs text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-200"
+                className="text-base text-gray-600 leading-7 bg-gray-50 p-4 rounded-lg border border-gray-200 [&>p]:mb-2 [&>p:last-child]:mb-0 [&>ul]:mb-2 [&>ol]:mb-2 [&>li]:mb-2"
                 dangerouslySetInnerHTML={{ __html: item.terms_and_conditions }}
               />
             </div>

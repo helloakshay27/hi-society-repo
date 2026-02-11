@@ -49,18 +49,30 @@ const WalletTopup: React.FC = () => {
   >([]);
   const [loadingOrgs, setLoadingOrgs] = useState(true);
 
+  const API_TOKEN = "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+  const BASE_URL = "https://runwal-api.lockated.com";
+
   useEffect(() => {
     // Fetch organizations
-    setLoadingOrgs(true);
-    fetch(
-      "https://runwal-api.lockated.com/organizations.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
-    )
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchOrganizations = async () => {
+      setLoadingOrgs(true);
+      try {
+        const response = await fetch(
+          `${BASE_URL}/organizations.json?token=${API_TOKEN}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch organizations");
+        const data = await response.json();
         setOrganizations(data.organizations || []);
-      })
-      .catch(() => setOrganizations([]))
-      .finally(() => setLoadingOrgs(false));
+      } catch (err) {
+        console.error("Error fetching organizations:", err);
+        setOrganizations([]);
+        setError("Failed to load organizations");
+      } finally {
+        setLoadingOrgs(false);
+      }
+    };
+
+    fetchOrganizations();
   }, []);
 
   // Fetch wallet data and transactions when organization is selected
@@ -71,21 +83,26 @@ const WalletTopup: React.FC = () => {
       return;
     }
 
-    setLoadingTransactions(true);
-    fetch(
-      `https://runwal-api.lockated.com/organization_wallet/transactions?organization_id=${selectedOrgId}&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`
-    )
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchWalletData = async () => {
+      setLoadingTransactions(true);
+      try {
+        const response = await fetch(
+          `${BASE_URL}/organization_wallet/transactions?organization_id=${selectedOrgId}&token=${API_TOKEN}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch wallet data");
+        const data = await response.json();
         setWalletData(data.wallet || null);
         setTransactions(data.transactions || []);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Error fetching wallet data:", err);
         setWalletData(null);
         setTransactions([]);
-      })
-      .finally(() => setLoadingTransactions(false));
+      } finally {
+        setLoadingTransactions(false);
+      }
+    };
+
+    fetchWalletData();
   }, [selectedOrgId]);
 
   const handleInputChange = (
@@ -96,7 +113,6 @@ const WalletTopup: React.FC = () => {
       ...prev,
       [name]: value,
     }));
-    // Clear messages when user starts typing
     setError(null);
     setSuccess(null);
   };
@@ -108,7 +124,6 @@ const WalletTopup: React.FC = () => {
     setSuccess(null);
 
     try {
-      // Validate inputs
       if (!selectedOrgId || !formData.amount || !formData.remarks) {
         throw new Error("All fields are required");
       }
@@ -125,7 +140,7 @@ const WalletTopup: React.FC = () => {
       }
 
       const response = await fetch(
-        "https://runwal-api.lockated.com/organization_wallet/credit?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ",
+        `${BASE_URL}/organization_wallet/credit?token=${API_TOKEN}`,
         {
           method: "POST",
           headers: {
@@ -146,10 +161,7 @@ const WalletTopup: React.FC = () => {
         );
       }
 
-      const data = await response.json();
-      setSuccess(
-        `Successfully credited ₹${amount} to organization`
-      );
+      setSuccess(`Successfully credited ₹${amount} to organization`);
 
       // Reset form
       setFormData({
@@ -159,7 +171,7 @@ const WalletTopup: React.FC = () => {
 
       // Refresh wallet data
       const walletResponse = await fetch(
-        `https://runwal-api.lockated.com/organization_wallet/transactions?organization_id=${selectedOrgId}&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`
+        `${BASE_URL}/organization_wallet/transactions?organization_id=${selectedOrgId}&token=${API_TOKEN}`
       );
       const walletData = await walletResponse.json();
       setWalletData(walletData.wallet || null);
@@ -172,7 +184,6 @@ const WalletTopup: React.FC = () => {
     }
   };
 
-  // Table columns configuration
   const transactionColumns = [
     { key: "id", label: "ID", sortable: true },
     { key: "transaction_type", label: "Type", sortable: true },
@@ -211,7 +222,7 @@ const WalletTopup: React.FC = () => {
           </span>
         );
       case "remarks":
-        return <span className="text-gray-600">{item.remarks}</span>;
+        return <span className="text-gray-600">{item.remarks || "-"}</span>;
       case "created_at":
         return (
           <span className="text-gray-500">
@@ -455,9 +466,7 @@ const WalletTopup: React.FC = () => {
                         Processing...
                       </>
                     ) : (
-                      <>
-                        Top Up
-                      </>
+                      "Top Up"
                     )}
                   </Button>
                 </div>

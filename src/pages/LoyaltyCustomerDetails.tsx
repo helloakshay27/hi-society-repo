@@ -9,6 +9,7 @@ const LoyaltyCustomerDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set());
 
     // API data for customer details and transactions
     const [customerData, setCustomerData] = useState<any | null>(null);
@@ -72,6 +73,45 @@ const LoyaltyCustomerDetails = () => {
         };
         fetchDetails();
     }, [id]);
+
+    const toggleFieldExpansion = (fieldKey: string) => {
+        setExpandedFields(prev => {
+            const next = new Set(prev);
+            if (next.has(fieldKey)) {
+                next.delete(fieldKey);
+            } else {
+                next.add(fieldKey);
+            }
+            return next;
+        });
+    };
+
+    const renderField = (label: string, value: string, fieldKey: string) => {
+        const isExpanded = expandedFields.has(fieldKey);
+        const hasLongValue = value && value.length > 20;
+
+        return (
+            <div className="flex items-start gap-2 min-w-0">
+                <div className="w-[120px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
+                    {label}
+                </div>
+                <div
+                    className={`text-[14px] font-semibold text-gray-900 flex-1 min-w-0 ${
+                        !isExpanded && hasLongValue
+                            ? 'truncate'
+                            : 'break-all whitespace-normal'
+                    } ${hasLongValue ? 'cursor-pointer hover:text-[#C72030] transition-colors' : ''}`}
+                    onClick={() => hasLongValue && toggleFieldExpansion(fieldKey)}
+                    title={hasLongValue && !isExpanded ? value : undefined}
+                >
+                    {value || "-"}
+                    {hasLongValue && !isExpanded && (
+                        <span className="text-[#C72030] ml-1">...</span>
+                    )}
+                </div>
+            </div>
+        );
+    };
 
     // Wallet Transactions Table Columns
     const walletTransactionColumns = [
@@ -148,71 +188,15 @@ const LoyaltyCustomerDetails = () => {
                     </div>
                 </div>
                 <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-8">
-                        <div className="flex items-start">
-                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                                Full Name
-                            </div>
-                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                {customerData?.fullName || "-"}
-                            </div>
-                        </div>
-                        <div className="flex items-start">
-                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                                Email
-                            </div>
-                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                {customerData?.email || "-"}
-                            </div>
-                        </div>
-                        <div className="flex items-start">
-                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                                Phone No
-                            </div>
-                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                {customerData?.phoneNo || "-"}
-                            </div>
-                        </div>
-                        <div className="flex items-start">
-                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                                Gender
-                            </div>
-                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                {customerData?.gender || "-"}
-                            </div>
-                        </div>
-                        <div className="flex items-start">
-                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                                Joining Date
-                            </div>
-                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                {customerData?.joiningDate || "-"}
-                            </div>
-                        </div>
-                        <div className="flex items-start">
-                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                                Last Sign In
-                            </div>
-                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                {customerData?.lastSignIn || "-"}
-                            </div>
-                        </div>
-                        <div className="flex items-start">
-                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                                Duration
-                            </div>
-                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                {customerData?.duration || "-"}
-                            </div>
-                        </div>
-                        <div className="flex items-start">
-                            <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                                Status
-                            </div>
-                            <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                                {customerData?.active || "-"}
-                            </div>
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-6">
+                        {renderField("Full Name", customerData?.fullName, "fullName")}
+                        {renderField("Email", customerData?.email, "email")}
+                        {renderField("Phone No", customerData?.phoneNo, "phoneNo")}
+                        {renderField("Gender", customerData?.gender, "gender")}
+                        {renderField("Joining Date", customerData?.joiningDate, "joiningDate")}
+                        {renderField("Last Sign In", customerData?.lastSignIn, "lastSignIn")}
+                        {renderField("Duration", customerData?.duration, "duration")}
+                        {renderField("Status", customerData?.active, "active")}
                     </div>
                 </div>
             </div>
