@@ -142,7 +142,7 @@ const AddBusinessDirectoryPage: React.FC = () => {
       }
       if (gallery.length > 0) {
         gallery.forEach((file, index) => {
-          formData.append(`business_directory[gallery_images]`, file);
+          formData.append(`business_directory[gallery_images][]`, file);
         });
       }
 
