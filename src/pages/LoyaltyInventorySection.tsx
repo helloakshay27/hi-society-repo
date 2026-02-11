@@ -182,35 +182,35 @@ export const LoyaltyInventorySection = () => {
             case "name":
                 return <span className="text-sm">{item.name || "-"}</span>;
             case "description":
-    const desc = item.description || "-";
-    const isExpanded = expandedDescRows.has(item.id);
-    return (
-        <div
-            className={`text-sm ${isExpanded ? "whitespace-pre-line break-words" : "truncate"}`}
-            style={{
-                maxWidth: 300,
-                width: 300,
-                cursor: desc !== "-" ? "pointer" : "default",
-                wordBreak: isExpanded ? "break-word" : "normal",
-            }}
-            title={desc}
-            onClick={() => {
-                if (desc !== "-") {
-                    setExpandedDescRows(prev => {
-                        const next = new Set(prev);
-                        if (next.has(item.id)) {
-                            next.delete(item.id);
-                        } else {
-                            next.add(item.id);
-                        }
-                        return next;
-                    });
-                }
-            }}
-        >
-            {desc}
-        </div>
-    );
+                const desc = item.description || "-";
+                const isExpanded = expandedDescRows.has(item.id);
+                return (
+                    <div
+                        className={`text-sm ${isExpanded ? "whitespace-pre-line break-words" : "truncate"}`}
+                        style={{
+                            maxWidth: 300,
+                            width: 300,
+                            cursor: desc !== "-" ? "pointer" : "default",
+                            wordBreak: isExpanded ? "break-word" : "normal",
+                        }}
+                        title={desc}
+                        onClick={() => {
+                            if (desc !== "-") {
+                                setExpandedDescRows(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(item.id)) {
+                                        next.delete(item.id);
+                                    } else {
+                                        next.add(item.id);
+                                    }
+                                    return next;
+                                });
+                            }
+                        }}
+                    >
+                        {desc}
+                    </div>
+                );
             case "brand":
                 return <span className="text-sm">{item.brand || "-"}</span>;
             case "base_price":
@@ -254,9 +254,9 @@ export const LoyaltyInventorySection = () => {
                     </span>
                 );
             case "terms_and_conditions":
-                return <span className="text-sm truncate max-w-xs" title={item.terms_and_conditions}>{item.terms_and_conditions || "-"}</span>;
+                return <div className="text-sm truncate max-w-xs" title={item.terms_and_conditions}>{item.terms_and_conditions || "-"}</div>;
             case "redemption_instructions":
-                return <span className="text-sm truncate max-w-xs" title={item.redemption_instructions}>{item.redemption_instructions || "-"}</span>;
+                return <div className="text-sm truncate max-w-xs" title={item.redemption_instructions}>{item.redemption_instructions || "-"}</div>;
             case "stock_quantity":
                 return <span className="text-sm font-medium">{item.stock_quantity || 0}</span>;
             case "min_stock_level":
@@ -416,13 +416,14 @@ export const LoyaltyInventorySection = () => {
                     <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="gadgets">Gadgets</SelectItem>
-                    <SelectItem value="fashion">Fashion</SelectItem>
-                    <SelectItem value="electronics">Electronics</SelectItem>
+                    {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                        </SelectItem>
+                    ))}
                 </SelectContent>
             </Select>
-            
+
             <Select value={selectedDiscount} onValueChange={setSelectedDiscount}>
                 <SelectTrigger className="w-[140px] bg-white border-gray-300">
                     <SelectValue placeholder="Discount" />
@@ -435,7 +436,7 @@ export const LoyaltyInventorySection = () => {
                     <SelectItem value="20">20%</SelectItem>
                 </SelectContent>
             </Select> */}
-        </div>
+        </div >
     );
 
     return (
@@ -519,11 +520,10 @@ export const LoyaltyInventorySection = () => {
                             <Label className="text-sm font-medium text-[#1A1A1A]">Status</Label>
                             <div className="flex items-center gap-3">
                                 <span
-                                    className={`text-xs font-medium px-3 py-1 rounded-md ${
-                                        isActive
-                                            ? "bg-[#D1FAE5] text-[#065F46]"
-                                            : "bg-red-100 text-red-800"
-                                    }`}
+                                    className={`text-xs font-medium px-3 py-1 rounded-md ${isActive
+                                        ? "bg-[#D1FAE5] text-[#065F46]"
+                                        : "bg-red-100 text-red-800"
+                                        }`}
                                 >
                                     {isActive ? "Active" : "Inactive"}
                                 </span>
