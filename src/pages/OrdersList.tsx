@@ -87,7 +87,7 @@ const OrdersList = () => {
 
       // Client-side filtering
       let filteredOrders = ordersData;
-      
+
       // Search filter
       if (search) {
         const searchLower = search.toLowerCase();
@@ -207,7 +207,7 @@ const OrdersList = () => {
     { key: 'status', label: 'Status', sortable: true },
     { key: 'payment_status', label: 'Payment Status', sortable: true },
     { key: 'total_amount', label: 'Total Amount', sortable: true },
-    { key: 'loyalty_points_redeemed', label: 'Points Used', sortable: true },
+    // { key: 'loyalty_points_redeemed', label: 'Points Used', sortable: true },
     { key: 'items', label: 'Items', sortable: false },
     { key: 'created_at', label: 'Created At', sortable: true },
   ];
@@ -216,7 +216,7 @@ const OrdersList = () => {
     switch (columnKey) {
       case 'id':
         return (
-          <span 
+          <span
             className="font-medium text-[#C72030] cursor-pointer hover:underline"
             onClick={() => navigate(`/loyalty/orders/${item.id}`)}
           >
@@ -225,7 +225,7 @@ const OrdersList = () => {
         );
       case 'order_number':
         return (
-          <span 
+          <span
             className="text-sm text-[#C72030] cursor-pointer hover:underline"
             onClick={() => navigate(`/orders/${item.id}`)}
           >
@@ -348,7 +348,7 @@ const OrdersList = () => {
               </PaginationItem>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                 <PaginationItem key={page}>
-                  <PaginationLink 
+                  <PaginationLink
                     href="#"
                     onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
                     isActive={currentPage === page}
