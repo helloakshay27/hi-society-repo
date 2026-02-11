@@ -13,13 +13,7 @@ export interface User {
   spree_api_key?: string;
   is_login?: boolean;
   access_token?: string;
-<<<<<<< HEAD
-  number_verified?: number;
-  company_id?: number;
-  web_enabled?: boolean;
-=======
   number_verified?: number | boolean;
->>>>>>> 927b4d1544175356d7ab78b4ea126083f438e138
   lock_role?: {
     id: number;
     name: string;
@@ -51,14 +45,7 @@ export interface LoginResponse {
   longitude?: number;
   country_code?: string;
   spree_api_key?: string;
-<<<<<<< HEAD
-  number_verified?: number;
-  company_id?: number;
-  web_enabled?: boolean;
-  user_type?: string;
-=======
   number_verified?: number | boolean;
->>>>>>> 927b4d1544175356d7ab78b4ea126083f438e138
   lock_role?: {
     id: number;
     name: string;
