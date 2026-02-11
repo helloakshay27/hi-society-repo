@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import axios from 'axios';
 
 interface BillingInvoice {
   id: number;
@@ -20,6 +21,7 @@ interface BillingInvoice {
   invoiceAmount: number;
   totalDebits: number;
   invoiceStatus: 'Paid' | 'Overdue' | 'Pending';
+  note: string;
 }
 
 export default function BillingInvoices() {
@@ -30,9 +32,9 @@ export default function BillingInvoices() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Stats
-  const [totalInvoices, setTotalInvoices] = useState(300);
-  const [overdueInvoices, setOverdueInvoices] = useState(24);
-  const [paidInvoices, setPaidInvoices] = useState(240);
+  const [totalInvoices, setTotalInvoices] = useState(1);
+  const [overdueInvoices, setOverdueInvoices] = useState(0);
+  const [paidInvoices, setPaidInvoices] = useState(0);
 
   // Cleanup body overflow styles when component mounts
   useEffect(() => {
@@ -44,54 +46,11 @@ export default function BillingInvoices() {
     };
   }, []);
 
-  useEffect(() => {
-    fetchInvoices();
-  }, [selectedMonth]);
-
   const fetchInvoices = async () => {
     setLoading(true);
     try {
-      // Mock data - replace with actual API call
-      const mockData: BillingInvoice[] = [
-        {
-          id: 1,
-          billingPeriod: 'January 2026',
-          dateOfInvoice: '14/01/2026',
-          invoiceNumber: '20260988',
-          invoiceAmount: 304680.00,
-          totalDebits: 40125300.00,
-          invoiceStatus: 'Paid',
-        },
-        {
-          id: 2,
-          billingPeriod: 'December 2025',
-          dateOfInvoice: '25/12/2025',
-          invoiceNumber: '20260778',
-          invoiceAmount: 254680.00,
-          totalDebits: 33125300.00,
-          invoiceStatus: 'Overdue',
-        },
-        {
-          id: 3,
-          billingPeriod: 'November 2025',
-          dateOfInvoice: '18/11/2025',
-          invoiceNumber: '20260344',
-          invoiceAmount: 100680.00,
-          totalDebits: 2125300.00,
-          invoiceStatus: 'Paid',
-        },
-        {
-          id: 4,
-          billingPeriod: 'October 2025',
-          dateOfInvoice: '02/10/2025',
-          invoiceNumber: '20250667',
-          invoiceAmount: 44680.00,
-          totalDebits: 25300.00,
-          invoiceStatus: 'Paid',
-        },
-      ];
-
-      setInvoices(mockData);
+      const response = await axios.get(`https://runwal-api.lockated.com/lock_account_bills/lock_account_bill_list.json?token=00f7c12e459b75225a07519c088edae3e9612e59d80111bb&society_id=9`)
+      setInvoices(response.data.bills);
     } catch (error) {
       console.error('Error fetching invoices:', error);
     } finally {
@@ -99,22 +58,27 @@ export default function BillingInvoices() {
     }
   };
 
+  useEffect(() => {
+    fetchInvoices();
+  }, [selectedMonth]);
+
   const handleViewInvoice = (id: number) => {
     navigate(`/loyalty/billing-invoices/${id}`);
   };
 
   const formatCurrency = (amount: number) => {
-    return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    return `₹${amount?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
   };
 
   const columns = [
     { key: 'action', label: 'Action', sortable: false },
     { key: 'billingPeriod', label: 'Billing Period', sortable: true },
-    { key: 'dateOfInvoice', label: 'Date Of Invoice', sortable: true },
-    { key: 'invoiceNumber', label: 'Invoice Number', sortable: true },
-    { key: 'invoiceAmount', label: 'Invoice Amount', sortable: true },
-    { key: 'totalDebits', label: 'Total Debits', sortable: true },
-    { key: 'invoiceStatus', label: 'Invoice Status', sortable: true },
+    { key: 'due_date', label: 'Date Of Invoice', sortable: true },
+    { key: 'bill_number', label: 'Invoice Number', sortable: true },
+    { key: 'total_amount', label: 'Invoice Amount', sortable: true },
+    { key: 'total_amount', label: 'Total Debits', sortable: true },
+    { key: 'status', label: 'Invoice Status', sortable: true },
+    { key: 'note', label: 'Notes', sortable: true },
   ];
 
   const renderCell = (item: BillingInvoice, columnKey: string) => {
@@ -130,39 +94,6 @@ export default function BillingInvoices() {
             <Eye className="w-4 h-4 text-gray-700" />
           </Button>
         );
-      
-      case 'billingPeriod':
-        return <span className="text-sm text-gray-700">{item.billingPeriod}</span>;
-      
-      case 'dateOfInvoice':
-        return <span className="text-sm text-gray-700">{item.dateOfInvoice}</span>;
-      
-      case 'invoiceNumber':
-        return <span className="text-sm text-gray-700">{item.invoiceNumber}</span>;
-      
-      case 'invoiceAmount':
-        return <span className="text-sm text-gray-700">{formatCurrency(item.invoiceAmount)}</span>;
-      
-      case 'totalDebits':
-        return <span className="text-sm text-gray-700">{formatCurrency(item.totalDebits)}</span>;
-      
-      case 'invoiceStatus':
-        return (
-          <div className="inline-flex" style={{ width: 200, maxWidth: 200 }}>
-            <div className={`py-2.5 w-full text-center ${
-              item.invoiceStatus === 'Paid'
-                ? 'bg-[#d5dbdb]'
-                : item.invoiceStatus === 'Overdue'
-                ? 'bg-[#e4626f]'
-                : 'bg-[#f0ad4e]'
-            }`}>
-              <p className="text-center text-xs font-medium">
-                {item.invoiceStatus}
-              </p>
-            </div>
-          </div>
-        );
-      
       default:
         return String(item[columnKey as keyof BillingInvoice] ?? "-");
     }
@@ -176,7 +107,7 @@ export default function BillingInvoices() {
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       <Toaster position="top-right" richColors closeButton />
-      
+
       {/* Header with Month Selector */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-[#1A1A1A]">BILLING PERIOD</h1>
@@ -251,13 +182,10 @@ export default function BillingInvoices() {
           pagination={false}
           enableExport={true}
           exportFileName="billing-invoices"
-          storageKey="billing-invoices-table"
           enableGlobalSearch={true}
           searchPlaceholder="Search invoices..."
           loading={loading}
           loadingMessage="Loading invoices..."
-          hideTableExport={false}
-          hideColumnsButton={false}
         />
       </div>
     </div>

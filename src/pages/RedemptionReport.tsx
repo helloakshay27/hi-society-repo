@@ -39,6 +39,7 @@ interface Transaction {
   customer_code: string | null;
   resource_id: number | null;
   resource_type: string | null;
+  redirect_ur: string | null;
 }
 
 // Define wallet data type
@@ -56,6 +57,7 @@ const columns = [
   { key: "category", label: "Category", sortable: true },
   { key: "amount", label: "Point Burned", sortable: true },
   { key: "transaction_type", label: "Status", sortable: true },
+  { key: "resource_type", label: "Resource Type", sortable: true },
 ];
 
 const RedemptionReport = () => {
@@ -74,8 +76,8 @@ const RedemptionReport = () => {
       const baseUrl = localStorage.getItem("baseUrl") || "runwal-api.lockated.com";
       const token = localStorage.getItem("token") || "";
 
-      const url = `https://${baseUrl}/organization_wallet/transactions?transaction_type=${transactionType}&token=${token}`;
-
+      // const url = `https://${baseUrl}/organization_wallet/transactions?transaction_type=${transactionType}&token=${token}`;
+      const url = `https://runwal-api.lockated.com/organization_wallet/transactions.json?transaction_type=credit&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`
       const response = await axios.get(url);
 
       setWalletData(response.data.wallet);
@@ -124,6 +126,8 @@ const RedemptionReport = () => {
         return item.customer_name || "-";
       case "customer_code":
         return item.customer_code || "-";
+      case "resource_type":
+        return <a className="text-blue-600 underline" target="_blank" href={item.redirect_ur}>{item.resource_type}</a>;
       default:
         return <span>{item[columnKey as keyof Transaction] || "-"}</span>;
     }
