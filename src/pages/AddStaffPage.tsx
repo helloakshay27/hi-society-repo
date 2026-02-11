@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Camera, X } from 'lucide-react';
 import { staffService, StaffFormData, ScheduleData, StaffAttachments, Unit, Department, WorkType } from '@/services/staffService';
 import { toast } from 'sonner';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
@@ -36,6 +36,16 @@ const fieldStyles = {
 
 export const AddStaffPage = () => {
   const navigate = useNavigate();
+  
+  // Camera refs
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const [selectedCamera, setSelectedCamera] = useState<string | undefined>(undefined);
+  const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [isPhotoSaved, setIsPhotoSaved] = useState(false);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -72,6 +82,151 @@ export const AddStaffPage = () => {
   const [loadingUnits, setLoadingUnits] = useState(true);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
   const [loadingWorkTypes, setLoadingWorkTypes] = useState(true);
+
+  // Camera functions
+  useEffect(() => {
+    getCameraDevices();
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [stream]);
+
+  const getCameraDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter((device) => device.kind === 'videoinput');
+      setCameras(videoDevices);
+    } catch (error) {
+      console.error('Error getting camera devices:', error);
+    }
+  };
+
+  const initializeCamera = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter((device) => device.kind === 'videoinput');
+      setCameras(videoDevices);
+
+      if (videoDevices.length > 0) {
+        const defaultCamera = videoDevices[0].deviceId;
+        setSelectedCamera(defaultCamera);
+        await startCamera(defaultCamera);
+      } else {
+        toast.error('No camera devices found. Please connect a camera and try again.');
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      toast.error('Camera permission denied or no camera available. Please allow camera access and try again.');
+    }
+  };
+
+  const startCamera = async (deviceId: string) => {
+    try {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+
+      const constraints = {
+        video: deviceId ? { deviceId: { exact: deviceId } } : true,
+        audio: false,
+      };
+
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      setStream(newStream);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = newStream;
+        videoRef.current.onloadedmetadata = () => {
+          if (videoRef.current) {
+            videoRef.current.play();
+          }
+        };
+      }
+    } catch (error) {
+      console.error('Error starting camera:', error);
+      toast.error('Failed to access camera. Please check permissions and try again.');
+    }
+  };
+
+  const handleCameraChange = (deviceId: string) => {
+    setSelectedCamera(deviceId);
+    startCamera(deviceId);
+  };
+
+  const handleCameraClick = () => {
+    setShowCameraModal(true);
+    initializeCamera();
+  };
+
+  const handleRetakePhoto = () => {
+    setCapturedPhoto(null);
+    setIsPhotoSaved(false);
+    setShowCameraModal(true);
+    initializeCamera();
+  };
+
+  const handleCaptureAndClose = () => {
+    if (videoRef.current && canvasRef.current && stream) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+
+      if (ctx && video.videoWidth > 0 && video.videoHeight > 0) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        
+        setCapturedPhoto(imageData);
+        setIsPhotoSaved(true);
+
+        stream.getTracks().forEach((track) => track.stop());
+        setStream(null);
+        setShowCameraModal(false);
+        
+        toast.success('Photo captured successfully!');
+      } else {
+        console.error('❌ Failed to capture - invalid video dimensions');
+        toast.error('Failed to capture photo. Please try again.');
+      }
+    } else {
+      console.error('❌ Failed to capture - missing refs or stream');
+      toast.error('Camera not ready. Please try again.');
+    }
+  };
+
+  const handleAllowThisTime = () => {
+    if (videoRef.current && canvasRef.current && stream) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+
+      if (ctx && video.videoWidth > 0 && video.videoHeight > 0) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        
+        setCapturedPhoto(imageData);
+        setIsPhotoSaved(true);
+
+        stream.getTracks().forEach((track) => track.stop());
+        setStream(null);
+        setShowCameraModal(false);
+        
+        toast.success('Photo captured successfully!');
+      } else {
+        console.error('❌ Failed to capture - invalid video dimensions');
+        toast.error('Failed to capture photo. Please try again.');
+      }
+    } else {
+      console.error('❌ Failed to capture - missing refs or stream');
+      toast.error('Camera not ready. Please try again.');
+    }
+  };
 
   // Fetch units, departments, and work types on component mount
   useEffect(() => {
@@ -181,6 +336,103 @@ export const AddStaffPage = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Camera Modal */}
+      {showCameraModal && (
+        <div className="fixed top-20 left-8 z-50 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-4">
+          {/* Close Button */}
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-medium">Camera</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (stream) {
+                  stream.getTracks().forEach((track) => track.stop());
+                  setStream(null);
+                }
+                setShowCameraModal(false);
+              }}
+              className="h-6 w-6 p-0 hover:bg-gray-100"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Camera permissions checkbox */}
+          <div className="mb-4">
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                className="rounded border-gray-300"
+                defaultChecked
+                aria-label="Remember camera permission decision"
+              />
+              <span>Remember this decision</span>
+            </label>
+          </div>
+
+          {/* Camera Preview */}
+          <div className="relative mb-4 bg-gray-900 rounded-lg overflow-hidden">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-48 object-cover"
+            />
+            <canvas ref={canvasRef} className="hidden" />
+          </div>
+
+          {/* Camera Selection Dropdown */}
+          <div className="mb-4">
+            <label htmlFor="camera-select" className="block text-sm font-medium text-gray-700 mb-1">
+              Select Camera
+            </label>
+            <select
+              id="camera-select"
+              value={selectedCamera || ''}
+              onChange={(e) => handleCameraChange(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C72030] focus:border-[#C72030]"
+            >
+              {cameras.map((camera) => (
+                <option key={camera.deviceId} value={camera.deviceId}>
+                  {camera.label || `Camera ${cameras.indexOf(camera) + 1}`}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Camera Control Buttons */}
+          <div className="space-y-2">
+            <Button
+              onClick={handleAllowThisTime}
+              className="w-full bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+            >
+              Allow this time
+            </Button>
+            <Button
+              onClick={handleCaptureAndClose}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Capture & Close
+            </Button>
+            <Button
+              onClick={() => {
+                if (stream) {
+                  stream.getTracks().forEach((track) => track.stop());
+                  setStream(null);
+                }
+                setShowCameraModal(false);
+              }}
+              variant="outline"
+              className="w-full"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">NEW STAFF</h1>
@@ -449,6 +701,44 @@ export const AddStaffPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label className="text-sm font-medium text-gray-700 mb-2 block">Profile Picture Upload</Label>
+                
+                {/* Camera Capture Button */}
+                <div className="mb-4">
+                  <Button
+                    type="button"
+                    onClick={handleCameraClick}
+                    variant="outline"
+                    className="w-full flex items-center justify-center gap-2 border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
+                  >
+                    <Camera className="w-4 h-4" />
+                    Capture Photo
+                  </Button>
+                </div>
+
+                {/* Camera Captured Photo Preview */}
+                {isPhotoSaved && capturedPhoto && (
+                  <div className="mb-4 p-4 border-2 border-green-500 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-green-600">Captured Photo</span>
+                      <Button
+                        type="button"
+                        onClick={handleRetakePhoto}
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs text-[#C72030] hover:bg-[#C72030]/10"
+                      >
+                        Retake
+                      </Button>
+                    </div>
+                    <img
+                      src={capturedPhoto}
+                      alt="Captured"
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+
+                {/* File Upload */}
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
                   <input
                     type="file"
@@ -545,6 +835,7 @@ export const AddStaffPage = () => {
                             checked={data.checked}
                             onChange={(e) => handleScheduleChange(day, 'checked', e.target.checked)}
                             className="rounded border-gray-300 text-red-600 focus:ring-red-600"
+                            aria-label={`Enable ${day}`}
                           />
                           <span className="capitalize font-medium text-gray-700">{day}</span>
                         </div>
