@@ -205,7 +205,7 @@ const WalletTopup: React.FC = () => {
                 : "bg-red-100 text-red-700"
             }`}
           >
-            {item.transaction_type.toUpperCase()}
+            {item.transaction_type?.toUpperCase() || "-"}
           </span>
         );
       case "amount":
@@ -218,7 +218,7 @@ const WalletTopup: React.FC = () => {
             }`}
           >
             {item.transaction_type === "credit" ? "+" : "-"}₹
-            {item.amount.toFixed(2)}
+            {(item.amount || 0).toFixed(2)}
           </span>
         );
       case "remarks":
@@ -226,7 +226,7 @@ const WalletTopup: React.FC = () => {
       case "created_at":
         return (
           <span className="text-gray-500">
-            {new Date(item.created_at).toLocaleString()}
+            {item.created_at ? new Date(item.created_at).toLocaleString() : "-"}
           </span>
         );
       default:
@@ -320,7 +320,7 @@ const WalletTopup: React.FC = () => {
                   <div>
                     <p className="text-sm text-gray-600">Total Credited</p>
                     <p className="text-2xl font-bold text-green-700">
-                      ₹{walletData.credited_amount.toFixed(2)}
+                      ₹{(walletData.credited_amount || 0).toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -336,7 +336,7 @@ const WalletTopup: React.FC = () => {
                   <div>
                     <p className="text-sm text-gray-600">Total Debited</p>
                     <p className="text-2xl font-bold text-red-700">
-                      ₹{walletData.debited_amount.toFixed(2)}
+                      ₹{(walletData.debited_amount || 0).toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -352,7 +352,7 @@ const WalletTopup: React.FC = () => {
                   <div>
                     <p className="text-sm text-gray-600">Available Balance</p>
                     <p className="text-2xl font-bold text-blue-700">
-                      ₹{walletData.available_amount.toFixed(2)}
+                      ₹{(walletData.available_amount || 0).toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -379,6 +379,9 @@ const WalletTopup: React.FC = () => {
                 emptyMessage="No transactions found"
                 enableExport={true}
                 enableGlobalSearch={true}
+                hideTableSearch={false}
+                hideTableExport={false}
+                hideColumnsButton={false}
               />
             </CardContent>
           </Card>
