@@ -285,7 +285,7 @@ export const AggregatorInventoryDetails = () => {
                                     <div className="text-xs text-gray-500 mb-1">Value Type</div>
                                     <div className="text-base font-semibold text-gray-900">{product.value_type}</div>
                                 </div>
-                            )} */
+                            )} */}
                             {/* {product.min_value && (
                                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                                     <div className="text-xs text-gray-500 mb-1">Min Value</div>
@@ -315,7 +315,8 @@ export const AggregatorInventoryDetails = () => {
                                     <div className="text-xs text-gray-500 mb-1">Phone Required</div>
                                     <div className="text-base font-semibold text-gray-900">{product.phone_required ? 'Yes' : 'No'}</div>
                                 </div>
-                            )} */
+                            )} */}
+
                             {product.shipping_info && (
                                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                                     <div className="text-xs text-gray-500 mb-1">Shipping Info</div>
