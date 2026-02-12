@@ -24,6 +24,15 @@ const LoyaltyCustomerDetails = () => {
                 const url = `https://runwal-api.lockated.com/loyalty/members/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
                 const res = await fetch(url);
                 const data = await res.json();
+                // Calculate dynamic duration
+                let duration = "-";
+                if (data.joining_date) {
+                    const joinDate = new Date(data.joining_date);
+                    const now = new Date();
+                    const diffMs = now.getTime() - joinDate.getTime();
+                    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    duration = `${diffDays} days`;
+                }
                 setCustomerData({
                     id: data.id,
                     fullName: `${data.firstname || ""} ${data.lasttname || ""}`.trim(),
@@ -32,8 +41,8 @@ const LoyaltyCustomerDetails = () => {
                     gender: data.gender || "-",
                     address: data.address || "-",
                     joiningDate: data.joining_date || "-",
-                    lastSignIn: data.last_sign_in || "-",
-                    duration: data.duration || "-",
+                    lastSignIn: data.last_sign_in || undefined,
+                    duration,
                     active: data.active ? "Active" : "Inactive",
                     currentLoyaltyPoints: data.current_loyalty_points ?? "-",
                     earnedPoints: data.earned_points ?? "-",
@@ -41,6 +50,7 @@ const LoyaltyCustomerDetails = () => {
                     tierProgress: data.member_status?.tier_progression ?? "-",
                     tierLevel: data.member_status?.tier_level ?? "-",
                     tierValidity: data.tier_validity ?? "-",
+                    walletAvailableBalance: data.wallet_available_balance ?? "-",
                 });
                 setWalletTransactions(
                     Array.isArray(data.wallet_transactions)
@@ -194,7 +204,8 @@ const LoyaltyCustomerDetails = () => {
                         {renderField("Phone No", customerData?.phoneNo, "phoneNo")}
                         {renderField("Gender", customerData?.gender, "gender")}
                         {renderField("Joining Date", customerData?.joiningDate, "joiningDate")}
-                        {renderField("Last Sign In", customerData?.lastSignIn, "lastSignIn")}
+                        {/* Hide Last Sign In if not present */}
+                        {customerData?.lastSignIn && renderField("Last Sign In", customerData.lastSignIn, "lastSignIn")}
                         {renderField("Duration", customerData?.duration, "duration")}
                         {renderField("Status", customerData?.active, "active")}
                     </div>
@@ -202,7 +213,7 @@ const LoyaltyCustomerDetails = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
                 <StatsCard
                     title="Total Points Earned"
                     value={customerData?.earnedPoints ?? "-"}
@@ -250,6 +261,28 @@ const LoyaltyCustomerDetails = () => {
                 <StatsCard
                     title="Current Points"
                     value={customerData?.currentLoyaltyPoints ?? "-"}
+                    icon={
+                        <svg
+                            className="w-6 h-6 text-[#C72030]"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                            />
+                        </svg>
+                    }
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    iconRounded={true}
+                    valueColor="text-[#C72030]"
+                />
+                <StatsCard
+                    title="Wallet Available Balance"
+                    value={customerData?.walletAvailableBalance ?? "-"}
                     icon={
                         <svg
                             className="w-6 h-6 text-[#C72030]"

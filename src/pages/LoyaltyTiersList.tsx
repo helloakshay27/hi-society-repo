@@ -140,7 +140,7 @@ const LoyaltyTiersList = () => {
   };
 
   const handleView = (id: number) => {
-    navigate(`/setup-member/tier-details/${id}`);
+    navigate(`/loyalty/tier-details/${id}`);
   };
 
   const handleEditClick = (tier: LoyaltyTier) => {
@@ -151,7 +151,31 @@ const LoyaltyTiersList = () => {
   const handleFormSubmit = async (values: any) => {
     if (selectedTier) {
       try {
-        // Use only the token in the base URL, no Authorization header
+        // Fetch all tiers to check for duplicates
+        const tiersResponse = await fetch("https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ", {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!tiersResponse.ok) {
+          throw new Error('Failed to fetch tiers for validation');
+        }
+        const data = await tiersResponse.json();
+        let tiersData = [];
+        if (Array.isArray(data)) {
+          tiersData = data;
+        } else if (data?.tiers && Array.isArray(data.tiers)) {
+          tiersData = data.tiers;
+        } else if (data?.data && Array.isArray(data.data)) {
+          tiersData = data.data;
+        }
+        // Check for duplicate name (case-insensitive, excluding current tier)
+        const newName = values.name?.toLowerCase().trim();
+        const duplicate = tiersData.find(tier => tier.id !== selectedTier.id && tier.name?.toLowerCase().trim() === newName);
+        if (duplicate) {
+          toast.error(`Tier name "${values.name}" already exists.`);
+          return;
+        }
+        // Proceed with update if no duplicate
         const response = await fetch(`https://runwal-api.lockated.com/loyalty/tiers/${selectedTier.id}.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`, {
           method: 'PUT',
           headers: {
@@ -159,17 +183,15 @@ const LoyaltyTiersList = () => {
           },
           body: JSON.stringify({ loyalty_tier: values }),
         });
-
         if (!response.ok) {
           throw new Error('Failed to update tier');
         }
-
         toast.success('Tier updated successfully!');
         await fetchTiers(currentPage, searchTerm);
         handleCloseModal();
       } catch (error) {
         console.error('Error updating tier:', error);
-        toast.error('Failed to update tier');
+        toast.error(error.message || 'Failed to update tier');
       }
     }
   };

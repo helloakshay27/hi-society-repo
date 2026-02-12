@@ -97,28 +97,25 @@ const NewTier = () => {
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      // const storedValue = sessionStorage.getItem("selectedId");
-      // const token = localStorage.getItem("access_token");
-      // const getTiersUrl = getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=${storedValue}${token ? `&access_token=${token}` : ''}`);
-      // Use static baseurl and token for now:
+      // Always fetch the latest tiers for uniqueness validation
       const getTiersUrl = 'https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ';
       const existingTiersResponse = await axios.get(getTiersUrl, {
-        headers: {
-          // Authorization: token ? `Bearer ${token}` : undefined,
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
       let existingTiers = [];
       if (Array.isArray(existingTiersResponse.data)) {
         existingTiers = existingTiersResponse.data;
       } else if (Array.isArray(existingTiersResponse.data.tiers)) {
         existingTiers = existingTiersResponse.data.tiers;
+      } else if (Array.isArray(existingTiersResponse.data.data)) {
+        existingTiers = existingTiersResponse.data.data;
       }
+      // Check for duplicate names (case-insensitive)
       const allNewTierNames = [values.name, ...(values.tiers || []).map(tier => tier.name)];
-      const lowerCaseNewNames = allNewTierNames.map(name => name?.toLowerCase()).filter(Boolean);
+      const lowerCaseNewNames = allNewTierNames.map(name => name?.toLowerCase().trim()).filter(Boolean);
       const conflictingTier = existingTiers.find(existingTier =>
         lowerCaseNewNames.some(newName =>
-          existingTier.name && existingTier.name.toLowerCase() === newName
+          existingTier.name && existingTier.name.toLowerCase().trim() === newName
         )
       );
       if (conflictingTier) {
@@ -154,17 +151,13 @@ const NewTier = () => {
       };
       let postUrl = "";
       if (formattedTiers?.length > 0) {
-        // postUrl = getFullUrl(`/loyalty/tiers/bulk_create${token ? `?token=${token}` : ''}`);
         postUrl = "https://runwal-api.lockated.com/loyalty/tiers/bulk_create?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
       } else {
-        // postUrl = getFullUrl(`/loyalty/tiers.json${token ? `?access_token=${token}` : ''}`);
         postUrl = "https://runwal-api.lockated.com/loyalty/tiers.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
       }
       const response = await fetch(postUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       if (response.ok) {
@@ -287,7 +280,7 @@ const NewTier = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => navigate("/setup-member/loyalty-tiers-list")}
+                    onClick={() => navigate("/loyalty/loyalty-tiers-list")}
                     className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                   >
                     Cancel

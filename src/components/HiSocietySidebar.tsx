@@ -382,13 +382,12 @@ export const HiSocietySidebar: React.FC = () => {
           icon: FileText,
           path: "/loyalty/billing-invoices",
         },
-
-        {
-          id: "loyalty-members",
-          label: "Members",
-          icon: Users,
-          path: "/loyalty/loyalty-members-list",
-        },
+        // {
+        //   id: "loyalty-members",
+        //   label: "Members",
+        //   icon: Users,
+        //   path: "/loyalty/loyalty-members-list",
+        // },
         {
           id: "loyalty-tiers",
           label: "Tiers",

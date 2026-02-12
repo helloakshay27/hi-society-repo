@@ -113,7 +113,8 @@ export const WalletManagement = () => {
       case "remarks":
         return item.remarks || "";
       case "resource_type":
-        return <a target="_blank" className="text-blue-500 underline" href={item.redirect_ur}>{item.resource_type}</a>;
+        // Remove hyperlink, just show plain text
+        return <span>{item.resource_type}</span>;
       default:
         return item[columnKey as keyof WalletTransaction] ?? "";
     }
@@ -206,18 +207,7 @@ export const WalletManagement = () => {
           >
             Wallet Management
           </TabsTrigger>
-          {/* <TabsTrigger
-            value="auto-top-up"
-            className="data-[state=active]:bg-white data-[state=active]:text-[#1A1A1A] px-6 py-2"
-          >
-            Auto Top Up
-          </TabsTrigger> */}
-          <TabsTrigger
-            value="alerts"
-            className="data-[state=active]:bg-white data-[state=active]:text-[#1A1A1A] px-6 py-2"
-          >
-            Alerts
-          </TabsTrigger>
+          {/* Alerts tab hidden as per request */}
         </TabsList>
 
         <TabsContent value="wallet-management" className="space-y-6 mt-6">
@@ -227,9 +217,7 @@ export const WalletManagement = () => {
               <h1 className="text-2xl font-semibold text-[#1A1A1A]">
                 WALLET MANAGEMENT
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Last Updated: 15/01/2025 - 10:04
-              </p>
+              {/* Last Updated hidden as per request */}
             </div>
           </div>
 
@@ -531,7 +519,6 @@ export const WalletManagement = () => {
             </div>
           </div>
         </TabsContent>
-
         <TabsContent value="alerts" className="space-y-6 mt-6">
           <div className="max-w-2xl">
             {/* Header with Toggle */}
@@ -603,7 +590,8 @@ export const WalletManagement = () => {
               </div>
             </div>
           </div>
-        </TabsContent>
+        </TabsContent>          
+        {/* Alerts tab content hidden as per request */}
       </Tabs>
     </div>
   );

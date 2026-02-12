@@ -38,6 +38,7 @@ import { AddStaffPage } from "@/pages/AddStaffPage";
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
 const NewTier = lazy(() => import("@/pages/NewTier"));
+const TierDetails = lazy(() => import("@/pages/TierDetails"));
 const DepartmentCreate = lazy(() => import("@/pages/DepartmentCreate"));
 const DepartmentList = lazy(() => import("@/pages/DepartmentList"));
 const ProjectBuildingType = lazy(() => import("@/pages/ProjectBuildingType"));
@@ -1091,6 +1092,7 @@ export const setupMemberRoutes = (
       Component={withSuspense(LoyaltyTiersList)}
     />
     <Route path="/loyalty/new-tier" Component={withSuspense(NewTier)} />
+    <Route path="/loyalty/tier-details/:id" Component={withSuspense(TierDetails)} />
     <Route
       path="/loyalty/rule-engine-list"
       Component={withSuspense(RuleEngineList)}
