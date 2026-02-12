@@ -5675,15 +5675,15 @@ function App() {
                     element={<SpinnerContest />}
                   />
                   {/* Scratch Card Routes */}
-                  <Route
+                  {/* <Route
                     path="/scratchcards"
                     element={<ScratchCardListing />}
-                  />
-                  <Route path="/scratchcard" element={<ScratchCard />} />
-                  <Route
+                  /> */}
+                  <Route path="/scratchcards" element={<ScratchCard />} />
+                  {/* <Route
                     path="/scratchcard/:cardId"
                     element={<ScratchCard />}
-                  />
+                  /> */}
                   <Route
                     path="/scratchcard/:cardId/voucher"
                     element={<VoucherDetails />}
