@@ -60,6 +60,7 @@ const ConnectivityTypeEdit = lazy(() => import("@/pages/ConnectivityTypeEdit"));
 const AddMISPage = lazy(() => import("@/pages/AddMISPage"));
 const PricingRuleList = lazy(() => import("@/pages/PricingRuleList"));
 const AddPricingRulePage = lazy(() => import("@/pages/PricingRuleCreate"));
+const PricingRuleEdit = lazy(() => import("@/pages/PricingRuleEdit"));
 const AddUserPage = lazy(() => import("@/pages/AddUserPage"));
 const AddQuarantinePage = lazy(() => import("@/pages/AddQuarantinePage"));
 const AddOfferPage = lazy(() => import("@/pages/AddOfferPage"));
@@ -554,7 +555,7 @@ export const setupMemberRoutes = (
     <Route
       path="/settings/pricing-rule-edit/:id"
       Component={withSuspense(PricingRuleEdit)}
-    />  
+    />
     {/* Banks Routes */}
     <Route path="/settings/banks/:bankId?" Component={withSuspense(Banks)} />
     <Route path="/settings/banks-list" Component={withSuspense(BanksList)} />
