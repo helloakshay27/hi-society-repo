@@ -166,7 +166,7 @@ export const AggregatorInventoryDetails = () => {
                         </div>
                     )}
                     {/* </div> */}
-                    <div className="flex gap-3">
+                    {/* <div className="flex gap-3">
                         {product.featured && (
                             <div className="bg-purple-100 rounded-lg px-4 py-2">
                                 <span className="text-sm font-semibold text-purple-700">Featured</span>
@@ -177,7 +177,7 @@ export const AggregatorInventoryDetails = () => {
                                 <span className="text-sm font-semibold text-yellow-700">Recommended</span>
                             </div>
                         )}
-                    </div>
+                    </div> */}
                 </div>
                 {/* Right Column - Details */}
                 <div className="flex flex-col gap-6 w-full md:w-[70%]">
@@ -280,12 +280,12 @@ export const AggregatorInventoryDetails = () => {
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
                         <h3 className="text-sm font-semibold text-gray-900 mb-4 underline">Technical Specifications</h3>
                         <div className="grid grid-cols-2 gap-4">
-                            {product.value_type && (
+                            {/* {product.value_type && (
                                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                                     <div className="text-xs text-gray-500 mb-1">Value Type</div>
                                     <div className="text-base font-semibold text-gray-900">{product.value_type}</div>
                                 </div>
-                            )}
+                            )} */
                             {/* {product.min_value && (
                                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                                     <div className="text-xs text-gray-500 mb-1">Min Value</div>
@@ -304,7 +304,7 @@ export const AggregatorInventoryDetails = () => {
                                     <div className="text-base font-semibold text-gray-900">{product.validity}</div>
                                 </div>
                             )}
-                            {product.usage_type && (
+                            {/* {product.usage_type && (
                                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                                     <div className="text-xs text-gray-500 mb-1">Usage Type</div>
                                     <div className="text-base font-semibold text-gray-900">{product.usage_type}</div>
@@ -315,7 +315,7 @@ export const AggregatorInventoryDetails = () => {
                                     <div className="text-xs text-gray-500 mb-1">Phone Required</div>
                                     <div className="text-base font-semibold text-gray-900">{product.phone_required ? 'Yes' : 'No'}</div>
                                 </div>
-                            )}
+                            )} */
                             {product.shipping_info && (
                                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                                     <div className="text-xs text-gray-500 mb-1">Shipping Info</div>
@@ -328,12 +328,12 @@ export const AggregatorInventoryDetails = () => {
                                     <div className="text-base font-semibold text-gray-900">{product.origin_country}</div>
                                 </div>
                             )}
-                            {product.value_denominations && (
+                            {/* {product.value_denominations && (
                                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                                     <div className="text-xs text-gray-500 mb-1">Available Denominations</div>
                                     <div className="text-base font-semibold text-gray-900">{product.value_denominations}</div>
                                 </div>
-                            )}
+                            )} */}
                         </div>
                     </div>
                 </div>

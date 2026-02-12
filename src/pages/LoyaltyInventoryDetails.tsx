@@ -157,7 +157,7 @@ export const LoyaltyInventoryDetails = () => {
             </div>
           )}
           <div className="flex gap-3 mt-3">
-            {item.featured && (
+            {/* {item.featured && (
               <div className="bg-purple-100 rounded-lg px-4 py-2">
                 <span className="text-sm font-semibold text-purple-700">Featured</span>
               </div>
@@ -166,7 +166,7 @@ export const LoyaltyInventoryDetails = () => {
               <div className="bg-yellow-100 rounded-lg px-4 py-2">
                 <span className="text-sm font-semibold text-yellow-700">Recommended</span>
               </div>
-            )}
+            )} */}
           </div>
         </div>
 
@@ -249,19 +249,19 @@ export const LoyaltyInventoryDetails = () => {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-sm font-semibold text-gray-900 mb-4 underline">Technical Specifications</h3>
             <div className="grid grid-cols-2 gap-4">
-              {item.value_type && (
+              {/* {item.value_type && (
                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                   <div className="text-xs text-gray-500 mb-1">Value Type</div>
                   <div className="text-base font-semibold text-gray-900">{item.value_type}</div>
                 </div>
-              )}
+              )} */}
               {item.validity && (
                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                   <div className="text-xs text-gray-500 mb-1">Validity</div>
                   <div className="text-base font-semibold text-gray-900">{item.validity}</div>
                 </div>
               )}
-              {item.usage_type && (
+              {/* {item.usage_type && (
                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                   <div className="text-xs text-gray-500 mb-1">Usage Type</div>
                   <div className="text-base font-semibold text-gray-900">{item.usage_type}</div>
@@ -272,7 +272,7 @@ export const LoyaltyInventoryDetails = () => {
                   <div className="text-xs text-gray-500 mb-1">Phone Required</div>
                   <div className="text-base font-semibold text-gray-900">{item.phone_required ? 'Yes' : 'No'}</div>
                 </div>
-              )}
+              )} */}
               {item.shipping_info && (
                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                   <div className="text-xs text-gray-500 mb-1">Shipping Info</div>
@@ -285,7 +285,7 @@ export const LoyaltyInventoryDetails = () => {
                   <div className="text-base font-semibold text-gray-900">{item.origin_country}</div>
                 </div>
               )}
-              {item.published !== undefined && (
+              {/* {item.published !== undefined && (
                 <div className="border-l-4 border-[#C72030] bg-gray-50 pl-4 py-3">
                   <div className="text-xs text-gray-500 mb-1">Published</div>
                   <div className="text-base font-semibold text-gray-900">{item.published ? "Yes" : "No"}</div>
@@ -332,7 +332,7 @@ export const LoyaltyInventoryDetails = () => {
                   <div className="text-xs text-gray-500 mb-1">Available Denominations</div>
                   <div className="text-base font-semibold text-gray-900">{item.value_denominations}</div>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         </div>
