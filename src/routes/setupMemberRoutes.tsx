@@ -33,8 +33,7 @@ import HiSocNoticeDetails from "@/pages/HiSocNoticeDetails";
 import ContestListPage from "@/pages/ContestListPage";
 import CreateContestPage from "@/pages/CreateContestPage";
 import ContestDetailsPage from "@/pages/ContestDetailsPage";
-// import VisitorsDashboard from "@/pages/VisitorsDashboard";
-import PricingRuleEdit from "@/pages/PricingRuleEdit";
+import { AddStaffPage } from "@/pages/AddStaffPage";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
@@ -1461,10 +1460,14 @@ export const setupMemberRoutes = (
       Component={withSuspense(VisitorsDashboard)}
     />
     <Route
-      path="/smartsecure/staffs/all"
-      Component={withSuspense(SmartSecureStaffsAll)}
+      path="/smartsecure/staff-all"
+      element={<StaffsDashboard />} 
     />
-    <Route path="/smartsecure/staff-in" element={<StaffsDashboard />} />
+     <Route
+        path="/smartsecure/staff/add"
+        element={<AddStaffPage />}
+      />
+    <Route path="/smartsecure/staff-in" element={<SmartSecureStaffsIn />} />
     <Route
       path="/smartsecure/staffs/in"
       Component={withSuspense(SmartSecureStaffsIn)}

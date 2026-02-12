@@ -628,21 +628,21 @@ export const HiSocietySidebar: React.FC = () => {
     smartsecure: {
       title: "SmartSecure",
       items: [
-        {
-          id: "visitor-in",
-          label: "Visitor In",
-          icon: LogIn,
-          path: "/smartsecure/visitor-in",
-        },
-        {
-          id: "visitor-out",
-          label: "Visitor Out",
-          icon: LogOut,
-          path: "/smartsecure/visitor-out",
-        },
+        // {
+        //   id: "visitor-in",
+        //   label: "Visitor In",
+        //   icon: LogIn,
+        //   path: "/smartsecure/visitor-in",
+        // },
+        // {
+        //   id: "visitor-out",
+        //   label: "Visitor Out",
+        //   icon: LogOut,
+        //   path: "/smartsecure/visitor-out",
+        // },
         {
           id: "visitor-history",
-          label: "Visitor History",
+          label: "Visitors",
           icon: History,
           path: "/smartsecure/visitor-history",
         },
@@ -651,6 +651,12 @@ export const HiSocietySidebar: React.FC = () => {
           label: "Staffs",
           icon: Users,
           subItems: [
+              {
+              id: "staff-all",
+              label: "Staff All",
+              icon: LogIn,
+              path: "/smartsecure/staff-all",
+            },
             {
               id: "staff-in",
               label: "Staff In",
@@ -661,13 +667,13 @@ export const HiSocietySidebar: React.FC = () => {
               id: "staff-out",
               label: "Staff Out",
               icon: LogOut,
-              path: "/smartsecure/staff-out",
+              path: "/smartsecure/staffs/out",
             },
             {
               id: "staff-history",
               label: "Staff History",
               icon: History,
-              path: "/smartsecure/staff-history",
+              path: "/smartsecure/staffs/history",
             },
           ],
         },

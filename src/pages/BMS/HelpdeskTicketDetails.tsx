@@ -4112,13 +4112,13 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
                   Create Task
                 </Button> */}
 
-                {/* <Button
+                <Button
                   onClick={handleUpdate}
                   variant="outline"
                   className="border-gray-300 text-gray-700 bg-white hover:bg-gray-50 px-4 py-2"
                 >
                   <Edit className="w-4 h-4" />
-                </Button> */}
+                </Button>
               </>
             )}
           </div>

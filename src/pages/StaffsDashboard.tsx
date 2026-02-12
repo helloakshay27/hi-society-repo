@@ -683,7 +683,7 @@ export const StaffsDashboard = () => {
             leftActions={
               <div className="flex gap-3">
                 <Button 
-                  onClick={() => navigate('/security/staff/add')}
+                  onClick={() => navigate('/smartsecure/staff/add')}
                   style={{ backgroundColor: '#C72030' }}
                   className="hover:bg-[#C72030]/90 text-white px-4 py-2"
                 >
