@@ -131,7 +131,7 @@ export const LoyaltyCustomers = () => {
                     data={customersData}
                     columns={columns}
                     renderCell={renderCell}
-                    enableExport={true}
+                    enableExport={false}
                     enableGlobalSearch={true}
                     onGlobalSearch={handleGlobalSearch}
                     handleExport={handleExport}

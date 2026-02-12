@@ -64,7 +64,7 @@ export const LoyaltyInventorySection = () => {
         { key: "actions", label: "Actions", sortable: false },
         { key: "image", label: "Image", sortable: false },
         { key: "status", label: "Status", sortable: true },
-        { key: "name", label: "Name", sortable: true },
+        { key: "name", label: "Item Name", sortable: true },
         // { key: "id", label: "ID", sortable: true },
         { key: "sku", label: "SKU/Item", sortable: true },
         { key: "aggregator_product_id", label: "Aggregator Product ID", sortable: true },
@@ -573,6 +573,7 @@ export const LoyaltyInventorySection = () => {
                     loading={loading}
                     loadingMessage="Loading inventory..."
                     emptyMessage="No inventory items found"
+                    storageKey="loyalty-inventory-table"
                 />
             </div>
 

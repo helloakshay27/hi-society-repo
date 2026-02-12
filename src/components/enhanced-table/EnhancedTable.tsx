@@ -395,7 +395,7 @@ export function EnhancedTable<T extends Record<string, any>>({
     }
   };
 
-  // Wrap toggleColumnVisibility to handle localStorage
+  // Wrap toggleColumnVisibility to save preferences to localStorage
   const handleToggleColumnVisibility = (columnKey: string) => {
     toggleColumnVisibility(columnKey);
     if (storageKey) {

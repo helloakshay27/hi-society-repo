@@ -241,7 +241,7 @@ const LoyaltyTiersList = () => {
         columns={columns}
         renderCell={renderCell}
         pagination={false}
-        enableExport={true}
+        enableExport={false}
         exportFileName="loyalty-tiers"
         storageKey="loyalty-tiers-table"
         enableGlobalSearch={true}

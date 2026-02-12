@@ -251,6 +251,7 @@ const RedemptionReport = () => {
           data={transactions}
           columns={columns}
           renderCell={renderCell}
+          enableExport={false}
           // renderActions={renderActions}
           loading={loading}
           loadingMessage="Loading transactions..."
