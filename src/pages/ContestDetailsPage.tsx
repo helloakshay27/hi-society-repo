@@ -126,8 +126,7 @@ export const ContestDetailsPage: React.FC = () => {
   };
 
   const handleEdit = (section: string) => {
-    toast.info(`Editing ${section} section (not implemented yet)`);
-    // You can later navigate to /contests/${id}/edit?section=basic etc.
+    navigate(`/contests/${id}/edit`);
   };
 
   const handleBack = () => {
@@ -217,7 +216,7 @@ export const ContestDetailsPage: React.FC = () => {
                 Basic Contest Info
               </h3>
             </div>
-            <Button
+            {/* <Button
               onClick={() => handleEdit("basic")}
               variant="outline"
               size="sm"
@@ -225,7 +224,7 @@ export const ContestDetailsPage: React.FC = () => {
             >
               <Edit className="w-4 h-4 mr-1" />
               Edit
-            </Button>
+            </Button> */}
           </div>
           <CardContent className="bg-white p-6 rounded-b-lg">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -267,7 +266,7 @@ export const ContestDetailsPage: React.FC = () => {
               >
                 {contest.active ? "Active" : "Inactive"}
               </span>
-              <Button
+              {/* <Button
                 onClick={() => handleEdit("validity")}
                 variant="outline"
                 size="sm"
@@ -275,7 +274,7 @@ export const ContestDetailsPage: React.FC = () => {
               >
                 <Edit className="w-4 h-4 mr-1" />
                 Edit
-              </Button>
+              </Button> */}
             </div>
           </div>
           <CardContent className="bg-white p-6 rounded-b-lg">
@@ -317,7 +316,7 @@ export const ContestDetailsPage: React.FC = () => {
               </div>
               <h3 className="text-lg font-semibold text-[#1A1A1A]">Prizes / Offers</h3>
             </div>
-            <Button
+            {/* <Button
               onClick={() => handleEdit("prizes")}
               variant="outline"
               size="sm"
@@ -325,7 +324,7 @@ export const ContestDetailsPage: React.FC = () => {
             >
               <Edit className="w-4 h-4 mr-1" />
               Edit
-            </Button>
+            </Button> */}
           </div>
           <CardContent className="bg-white p-6 rounded-b-lg">
             {contest.prizes.length === 0 ? (
@@ -422,7 +421,7 @@ export const ContestDetailsPage: React.FC = () => {
               </div>
               <h3 className="text-lg font-semibold text-[#1A1A1A]">Terms & Conditions</h3>
             </div>
-            <Button
+            {/* <Button
               onClick={() => handleEdit("terms")}
               variant="outline"
               size="sm"
@@ -430,7 +429,7 @@ export const ContestDetailsPage: React.FC = () => {
             >
               <Edit className="w-4 h-4 mr-1" />
               Edit
-            </Button>
+            </Button> */}
           </div>
           <CardContent className="bg-white p-6 rounded-b-lg">
             <div className="prose max-w-none text-sm quill-content">

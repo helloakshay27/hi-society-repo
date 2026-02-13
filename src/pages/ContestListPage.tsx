@@ -336,7 +336,7 @@ export const ContestListPage: React.FC = () => {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-lg shadow-sm">
+      <div className="rounded-lg shadow-sm">
         {loading ? (
           <div className="py-10 text-center text-gray-500">
             Loading contests...
@@ -393,7 +393,7 @@ export const ContestListPage: React.FC = () => {
                   className="bg-[#C72030] hover:bg-[#B01D2A] text-white px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Contest
+                  Create Contest
                 </Button>
               </div>
             }

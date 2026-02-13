@@ -32,6 +32,7 @@ import HiSocNoticeCreate from "@/pages/HiSocNoticeCreate";
 import HiSocNoticeDetails from "@/pages/HiSocNoticeDetails";
 import ContestListPage from "@/pages/ContestListPage";
 import CreateContestPage from "@/pages/CreateContestPage";
+import EditContestPage from "@/pages/EditContestPage";
 import ContestDetailsPage from "@/pages/ContestDetailsPage";
 import { AddStaffPage } from "@/pages/AddStaffPage";
 
@@ -1086,6 +1087,7 @@ export const setupMemberRoutes = (
     />
     <Route path="/contests" element={<ContestListPage />} />
     <Route path="/contests/create" element={<CreateContestPage />} />
+    <Route path="/contests/:id/edit" element={<EditContestPage />} />
     <Route path="/contests/:id" element={<ContestDetailsPage />} />
     <Route
       path="/loyalty/loyalty-tiers-list"
