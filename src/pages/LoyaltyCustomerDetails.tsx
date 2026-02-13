@@ -47,16 +47,21 @@ const LoyaltyCustomerDetails = () => {
                     currentLoyaltyPoints: data.current_loyalty_points ?? "-",
                     earnedPoints: data.earned_points ?? "-",
                     redeemedPoints: data.reedem_points ?? "-",
+                    earned_amount: data.earned_amount ?? "-",
+                    reedem_amount: data.reedem_amount ?? "-",
+                    available_balance: data.available_balance ?? "-",
                     tierProgress: data.member_status?.tier_progression ?? "-",
                     tierLevel: data.member_status?.tier_level ?? "-",
                     tierValidity: data.tier_validity ?? "-",
-                    walletAvailableBalance: data.wallet_available_balance ?? "-",
+                    walletAvailableBalance: data.available_balance ?? "-",
                 });
                 setWalletTransactions(
                     Array.isArray(data.wallet_transactions)
                         ? data.wallet_transactions.map((t: any, idx: number) => ({
                               id: t.id || idx,
                               transactionType: t.transaction_type || "-",
+                              resource_type: t.resource_type || "-",
+                              created_at: t.created_at || "-",
                               amount: t.amount ?? "-",
                               remarks: t.remarks || "-",
                           }))
@@ -126,7 +131,9 @@ const LoyaltyCustomerDetails = () => {
     // Wallet Transactions Table Columns
     const walletTransactionColumns = [
         { key: "transactionType", label: "Type", sortable: true },
+        { key: "resourceType", label: "Resource Type", sortable: false },
         { key: "amount", label: "Amount", sortable: true },
+        { key: "createdAt", label: "Date", sortable: true },
         { key: "remarks", label: "Remarks", sortable: false },
     ];
 
@@ -142,8 +149,19 @@ const LoyaltyCustomerDetails = () => {
     // Renderers
     const renderWalletTransactionCell = (item: any, columnKey: string) => {
         switch (columnKey) {
-            case "transactionType":
-                return <span>{item.transactionType}</span>;
+            case "transactionType": {
+                const type = item.transactionType?.toLowerCase();
+                let color = "";
+                if (type === "debit") color = "text-red-600 font-medium";
+                if (type === "credit") color = "text-green-600 font-medium";
+                return <span className={color}>{item.transactionType}</span>;
+            }
+            case "resourceType":
+                return <span>{item.resource_type || '-'}</span>;
+            case "createdAt":
+                if (!item.created_at) return "-";
+                const d = new Date(item.created_at);
+                return <span>{isNaN(d.getTime()) ? item.created_at : d.toLocaleString()}</span>;
             case "amount":
                 return <span>{item.amount}</span>;
             case "remarks":
@@ -216,7 +234,7 @@ const LoyaltyCustomerDetails = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
                 <StatsCard
                     title="Total Points Earned"
-                    value={customerData?.earnedPoints ?? "-"}
+                    value={customerData?.earned_amount ?? customerData?.earnedPoints ?? "-"}
                     icon={
                         <svg
                             className="w-6 h-6 text-[#C72030]"
@@ -238,7 +256,7 @@ const LoyaltyCustomerDetails = () => {
                 />
                 <StatsCard
                     title="Total Points Redeemed"
-                    value={customerData?.redeemedPoints ?? "-"}
+                    value={customerData?.reedem_amount ?? customerData?.redeemedPoints ?? "-"}
                     icon={
                         <svg
                             className="w-6 h-6 text-[#C72030]"

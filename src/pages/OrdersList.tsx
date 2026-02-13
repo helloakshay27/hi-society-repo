@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import Select from 'react-select';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
@@ -41,6 +42,13 @@ const OrdersList = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
+  const [orderDateFilter, setOrderDateFilter] = useState('last_30_days');
+  const [orderDateOptions, setOrderDateOptions] = useState([
+    { value: 'last_30_days', label: 'Last 30 days' },
+    { value: 'last_3_months', label: 'Last 3 months' },
+    { value: '2025', label: '2025' },
+    { value: '2024', label: '2024' },
+  ]);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
 
   const statusOptions = [
@@ -63,16 +71,22 @@ const OrdersList = () => {
     { label: "Refunded", value: "refunded" },
   ];
 
-  const fetchOrders = useCallback(async (page: number, search: string, status: string, paymentStatus: string) => {
+  const fetchOrders = useCallback(async (page: number, search: string, status: string, paymentStatus: string, orderDate: string) => {
     setLoading(true);
-    setIsSearching(!!search || !!status || !!paymentStatus);
+    setIsSearching(!!search || !!status || !!paymentStatus || !!orderDate);
     try {
-      // Use baseurl and token as done for updateOrderStatus
-      const url = `https://runwal-api.lockated.com/admin/orders.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
+      // Build query params for API
+      const params = new URLSearchParams();
+      params.append('token', '00f7c12e459b75225a07519c088edae3e9612e59d80111bb');
+      params.append('order_date', orderDate || 'last_30_days');
+      if (status) params.append('status', status);
+      if (paymentStatus) params.append('payment_status', paymentStatus);
+
+      const url = `https://runwal-api.lockated.com/orders.json?${params.toString()}`;
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Authorization': getAuthHeader(),
+          'Authorization': 'e66eeb9c080f2995b9f52d8e57a16738944d97578ed04fdb',
           'Content-Type': 'application/json',
         },
       });
@@ -85,10 +99,8 @@ const OrdersList = () => {
       const ordersData = data.orders || [];
       setAllOrders(ordersData);
 
-      // Client-side filtering
+      // Client-side search filter (if API does not support search param)
       let filteredOrders = ordersData;
-
-      // Search filter
       if (search) {
         const searchLower = search.toLowerCase();
         filteredOrders = filteredOrders.filter((order: Order) =>
@@ -97,16 +109,6 @@ const OrdersList = () => {
           order.user?.email?.toLowerCase().includes(searchLower) ||
           order.id?.toString().toLowerCase().includes(searchLower)
         );
-      }
-
-      // Status filter
-      if (status) {
-        filteredOrders = filteredOrders.filter((order: Order) => order.status === status);
-      }
-
-      // Payment status filter
-      if (paymentStatus) {
-        filteredOrders = filteredOrders.filter((order: Order) => order.payment_status === paymentStatus);
       }
 
       // Client-side pagination
@@ -129,8 +131,23 @@ const OrdersList = () => {
   }, []);
 
   useEffect(() => {
-    fetchOrders(currentPage, searchTerm, statusFilter, paymentStatusFilter);
-  }, [currentPage, searchTerm, statusFilter, paymentStatusFilter, fetchOrders]);
+    fetchOrders(currentPage, searchTerm, statusFilter, paymentStatusFilter, orderDateFilter);
+  }, [currentPage, searchTerm, statusFilter, paymentStatusFilter, orderDateFilter, fetchOrders]);
+
+  // Fetch filter options for order date dropdown
+  useEffect(() => {
+    async function fetchFilterOptions() {
+      try {
+        const response = await fetch('https://runwal-api.lockated.com//orders/filter_options.json?token=00f7c12e459b75225a07519c088edae3e9612e59d80111bb');
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.order_date_filters) {
+          setOrderDateOptions(data.order_date_filters.map(opt => ({ value: opt.key, label: opt.label })));
+        }
+      } catch (e) {}
+    }
+    fetchFilterOptions();
+  }, []);
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
@@ -289,7 +306,7 @@ const OrdersList = () => {
   };
 
   const renderCustomFilters = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">Status Filter</label>
         <SelectBox
@@ -313,6 +330,77 @@ const OrdersList = () => {
             setPaymentStatusFilter(value);
             setCurrentPage(1);
           }}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Order Date</label>
+        <Select
+          value={orderDateOptions.find(opt => opt.value === orderDateFilter)}
+          onChange={opt => {
+            setOrderDateFilter(opt?.value || 'last_30_days');
+            setCurrentPage(1);
+          }}
+          options={orderDateOptions}
+          isSearchable={false}
+          styles={{
+            control: (provided, state) => ({
+              ...provided,
+              minHeight: "44px",
+              borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
+              boxShadow: "none",
+              fontSize: "14px",
+              backgroundColor: "transparent",
+              "&:hover": { borderColor: "#C72030" },
+            }),
+            valueContainer: (provided) => ({
+              ...provided,
+              padding: "4px 6px",
+              backgroundColor: "transparent",
+            }),
+            dropdownIndicator: (provided, state) => ({
+              ...provided,
+              padding: "4px 8px",
+              color: state.isFocused ? "#C72030" : "#666",
+              "&:hover": { color: "#C72030" },
+            }),
+            indicatorSeparator: () => ({ display: "none" }),
+            placeholder: (provided) => ({
+              ...provided,
+              color: "#999",
+              fontSize: "14px",
+            }),
+            menu: (provided) => ({
+              ...provided,
+              zIndex: 9999,
+              fontSize: "14px",
+              backgroundColor: "#fff",
+            }),
+            option: (provided, state) => ({
+              ...provided,
+              backgroundColor: state.isSelected
+                ? "#C72030"
+                : state.isFocused
+                  ? "#F6F4EE"
+                  : "#fff",
+              color: state.isSelected ? "#fff" : "#1A1A1A",
+              fontSize: "14px",
+              padding: "8px 12px",
+              cursor: "pointer",
+              "&:hover": {
+                backgroundColor: "#F6F4EE",
+                color: "#1A1A1A",
+              },
+              "&:active": {
+                backgroundColor: "#C72030",
+                color: "#fff",
+              },
+            }),
+          }}
+          isDisabled={orderDateOptions.length === 0}
+          placeholder="Select Date Range..."
+          menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
+          menuPosition="fixed"
         />
       </div>
     </div>
