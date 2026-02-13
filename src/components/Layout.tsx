@@ -61,7 +61,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const hostname = window.location.hostname;
 
   // Detect Club Management routes
-  const isClubManagementRoute = hostname === "club.lockated.com";
+  const isClubManagementRoute = hostname === "club.lockated.com" || location.pathname.startsWith("/club-management");
 
   // Debug layoutMode state and localStorage sync
   useEffect(() => {
@@ -89,14 +89,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   useEffect(() => {
     // Always force admin view - disable view selection
     const storedUserType = localStorage.getItem("userType");
-    
+
     // Set to admin if not already set
     if (!storedUserType || storedUserType === "pms_occupant") {
       localStorage.setItem("userType", "admin");
       localStorage.setItem("selectedView", "admin");
       console.log("🔧 Forced userType to admin");
     }
-    
+
     // Never show view modal - always use admin view
     setShowViewModal(false);
   }, []);
@@ -429,20 +429,24 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {console.log("layoutMode:", layoutMode)}
 
       {/* Conditional Header - Hi-Society mode shows HiSocietyHeader, FM Matrix mode shows admin Header */}
-      {layoutMode === 'hi-society' ? (
-        <HiSocietyHeader />
-      ) : (
-        <Header />
-      )}
+      {
+        layoutMode === 'hi-society' ? (
+          <HiSocietyHeader />
+        ) : (
+          <Header />
+        )
+      }
 
       {renderSidebar()}
 
       {/* Navigation - Conditional based on layoutMode */}
-      {layoutMode === 'hi-society' ? (
-        <HiSocietyNavigation />
-      ) : (
-        renderDynamicHeader()
-      )}
+      {
+        layoutMode === 'hi-society' ? (
+          <HiSocietyNavigation />
+        ) : (
+          renderDynamicHeader()
+        )
+      }
 
       {/* Action-based navigation - only shown when action context is active */}
 
@@ -454,22 +458,22 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               ? "ml-16"
               : "ml-64"
             : // FM Matrix mode - always show sidebar margin for admin users
-              isActionSidebarVisible
-                ? "ml-64 pt-28" // ActionSidebar is visible (fixed width 64)
-                : isSidebarCollapsed
-                  ? "ml-16"
-                  : "ml-64"
+            isActionSidebarVisible
+              ? "ml-64 pt-28" // ActionSidebar is visible (fixed width 64)
+              : isSidebarCollapsed
+                ? "ml-16"
+                : "ml-64"
           } ${
           // Top padding based on mode
           layoutMode === 'hi-society'
             ? "pt-28" // Header (16) + Navigation (12) = 28
             : isActionSidebarVisible
-                ? ""
-                : "pt-28"
+              ? ""
+              : "pt-28"
           } transition-all duration-300`}
       >
         <Outlet />
       </main>
-    </div>
+    </div >
   );
 };

@@ -3508,7 +3508,7 @@ export const EditBookingSetupClubPage = () => {
                                     variant="outlined"
                                 />
                                 <TextField
-                                    label="GST(%)"
+                                    label="CGST(%)"
                                     value={formData.gstPercentage}
                                     onChange={(e) => {
                                         const value = e.target.value;

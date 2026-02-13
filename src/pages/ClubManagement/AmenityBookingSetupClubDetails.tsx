@@ -1141,6 +1141,10 @@ export const BookingSetupDetailClubPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {slotsConfigured[0]?.map((slot, idx) => {
                 const slotKey = `${slot.id}-${idx}`;
+                // Format hours and minutes to always be two digits
+                const pad = (n) => n.toString().padStart(2, '0');
+                const slotStart = `${pad(slot.startTime.hour)}:${pad(slot.startTime.minute)}`;
+                const slotEnd = `${pad(slot.endTime.hour)}:${pad(slot.endTime.minute)}`;
                 return (
                   <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
                     <Label
@@ -1409,7 +1413,7 @@ export const BookingSetupDetailClubPage = () => {
                 </span>
               </div>
               <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">GST (%)</span>
+                <span className="text-gray-500 min-w-[140px]">CGST (%)</span>
                 <span className="text-gray-500 mx-2">:</span>
                 <span className="text-gray-900 font-medium">
                   {formData.gstPercentage || "-"}

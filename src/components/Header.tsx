@@ -84,16 +84,16 @@ export const Header = () => {
     email?: string;
     role_name?: string;
   } | null>(null);
-  
+
   // Hi-Society specific state
   const [hiSocietySocieties, setHiSocietySocieties] = useState<HiSocietySociety[]>([]);
   const [selectedSociety, setSelectedSociety] = useState<HiSocietySociety | null>(null);
   const [hiSocietyLoading, setHiSocietyLoading] = useState(false);
-  
+
   const dispatch = useDispatch<AppDispatch>();
   const { layoutMode, toggleLayoutMode } = useLayout();
-  console.log("layoutMode:-",layoutMode);
-  
+  console.log("layoutMode:-", layoutMode);
+
 
   const currentPath = window.location.pathname;
 
@@ -218,7 +218,7 @@ export const Header = () => {
             role_name: data?.role_name,
           });
         })
-        .catch(() => {});
+        .catch(() => { });
     } catch {
       /* no-op */
     }
@@ -229,11 +229,11 @@ export const Header = () => {
     const loadHiSocietyData = () => {
       const societiesData = localStorage.getItem("hiSocietyApprovedSocieties");
       const selectedUserSociety = localStorage.getItem("selectedUserSociety");
-      
+
       if (societiesData) {
         const societies: HiSocietySociety[] = JSON.parse(societiesData);
         setHiSocietySocieties(societies);
-        
+
         // Find and set selected society
         if (selectedUserSociety) {
           const selected = societies.find(s => s.id.toString() === selectedUserSociety);
@@ -278,7 +278,7 @@ export const Header = () => {
       }
 
       const data = await response.json();
-      
+
       // Update selected society
       const selected = hiSocietySocieties.find(s => s.id === societyId);
       if (selected) {
@@ -761,39 +761,39 @@ export const Header = () => {
         <div className="flex items-center gap-3">
           {/* Layout Mode Toggle Button - Only available on localhost for development */}
           {/* {(hostname.includes("localhost") || hostname.includes("dev-hisociety.lockated.com")) && ( */}
-            <Button
-              onClick={() => {
-                // Set base URL BEFORE toggling mode to ensure proper API routing
-                if (layoutMode === 'hi-society') {
-                  // Switching to FM Matrix - set FM Matrix base URL
-                  localStorage.setItem('baseUrl', 'https://fm-uat-api.lockated.com');
-                  toggleLayoutMode();
-                  // Use React Router navigate for client-side navigation (preserves auth)
-                  navigate('/maintenance/asset');
-                } else {
-                  // Switching to Hi-Society - set Hi-Society base URL
-                  localStorage.setItem('baseUrl', 'https://hi-society.lockated.com');
-                  toggleLayoutMode();
-                  // Use React Router navigate for client-side navigation (preserves auth)
-                  navigate('/maintenance/project-details-list');
-                }
-              }}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 text-xs font-medium border-[#D5DbDB] hover:bg-[#f6f4ee] hover:text-[#C72030] transition-colors"
-            >
-              {layoutMode === 'fm-matrix' ? (
-                <>
-                  <Building2 className="w-3.5 h-3.5" />
-                  Switch to Hi-Society   
-                </>
-              ) : (
-                <>
-                  <Home className="w-3.5 h-3.5" />
-                  Switch to FM Matrix
-                </>
-              )}
-            </Button>
+          <Button
+            onClick={() => {
+              // Set base URL BEFORE toggling mode to ensure proper API routing
+              if (layoutMode === 'hi-society') {
+                // Switching to FM Matrix - set FM Matrix base URL
+                localStorage.setItem('baseUrl', 'https://fm-uat-api.lockated.com');
+                toggleLayoutMode();
+                // Use React Router navigate for client-side navigation (preserves auth)
+                navigate('/maintenance/asset');
+              } else {
+                // Switching to Hi-Society - set Hi-Society base URL
+                localStorage.setItem('baseUrl', 'https://hi-society.lockated.com');
+                toggleLayoutMode();
+                // Use React Router navigate for client-side navigation (preserves auth)
+                navigate('/maintenance/project-details-list');
+              }
+            }}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 text-xs font-medium border-[#D5DbDB] hover:bg-[#f6f4ee] hover:text-[#C72030] transition-colors"
+          >
+            {layoutMode === 'fm-matrix' ? (
+              <>
+                <Building2 className="w-3.5 h-3.5" />
+                Switch to Hi-Society
+              </>
+            ) : (
+              <>
+                <Home className="w-3.5 h-3.5" />
+                Switch to FM Matrix
+              </>
+            )}
+          </Button>
           {/* )} */}
 
           {/* Hi-Society Mode: Society Dropdown */}
@@ -881,42 +881,42 @@ export const Header = () => {
               </DropdownMenu>
 
               {/* Site Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
-                <MapPin className="w-4 h-4" />
-                {siteLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <span className="text-sm font-medium">
-                    {selectedSite?.name || "Select Site"}
-                  </span>
-                )}
-                <ChevronDown className="w-3 h-3" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
-                {sites.length > 0 ? (
-                  sites.map((site) => (
-                    <DropdownMenuItem
-                      key={site.id}
-                      onClick={() => handleSiteChange(site.id)}
-                      className={
-                        selectedSite?.id === site.id
-                          ? "bg-[#f6f4ee] text-[#C72030]"
-                          : ""
-                      }
-                    >
-                      {site.name}
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
+                  <MapPin className="w-4 h-4" />
+                  {siteLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <span className="text-sm font-medium">
+                      {selectedSite?.name || "Select Site"}
+                    </span>
+                  )}
+                  <ChevronDown className="w-3 h-3" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
+                  {sites.length > 0 ? (
+                    sites.map((site) => (
+                      <DropdownMenuItem
+                        key={site.id}
+                        onClick={() => handleSiteChange(site.id)}
+                        className={
+                          selectedSite?.id === site.id
+                            ? "bg-[#f6f4ee] text-[#C72030]"
+                            : ""
+                        }
+                      >
+                        {site.name}
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <DropdownMenuItem disabled>
+                      {selectedCompany
+                        ? "No sites available"
+                        : "Select a project first"}
                     </DropdownMenuItem>
-                  ))
-                ) : (
-                  <DropdownMenuItem disabled>
-                    {selectedCompany
-                      ? "No sites available"
-                      : "Select a project first"}
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           )}
 
@@ -1147,7 +1147,7 @@ export const Header = () => {
                 <p className="text-sm font-semibold text-gray-900">
                   {isViSite && viAccount
                     ? `${viAccount.firstname || ""} ${viAccount.lastname || ""}`.trim() ||
-                      "User"
+                    "User"
                     : `${user.firstname} ${user.lastname}`}
                 </p>
                 <div className="flex items-center text-gray-600 text-xs mt-0.5">
@@ -1181,7 +1181,7 @@ export const Header = () => {
                 </div>
               </div>
 
-              {/* View Switcher - Only shown for admin users (pms_organization_admin) */} 
+              {/* View Switcher - Only shown for admin users (pms_organization_admin) */}
               {/* commented due to switch not needed for hi society  */}
               {/* {(canSwitchToEmployee || tempSwitchToEmployee) && isLocalhost && (
                 <div className="px-3 py-3 bg-gray-50 border-b border-gray-200">

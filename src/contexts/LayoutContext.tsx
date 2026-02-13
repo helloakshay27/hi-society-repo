@@ -181,20 +181,20 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
   // After that, always respect user's manual selection
   const [layoutMode, setLayoutMode] = useState<'fm-matrix' | 'hi-society'>(() => {
     const savedMode = localStorage.getItem("layoutMode");
-    
+
     // If mode already exists, respect it (user has made a choice)
     if (savedMode) {
       console.log('🎨 Loading saved layout mode from localStorage:', savedMode);
       return (savedMode === 'hi-society' ? 'hi-society' : 'fm-matrix') as 'fm-matrix' | 'hi-society';
     }
-    
+
     // First visit - auto-detect based on hostname
     const hostname = window.location.hostname;
     const isHiSocietySite =
       hostname.includes("localhost") ||
       hostname.includes("ui-hisociety.lockated.com") ||
       hostname.includes("web.hisociety.lockated.com");
-    
+
     // Set initial mode based on hostname and save it
     const initialMode = isHiSocietySite ? 'hi-society' : 'fm-matrix';
     console.log('🎨 First visit - Auto-detecting layout mode:', initialMode, '(hostname:', hostname, ')');
@@ -227,7 +227,7 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
   // Automatic section detection based on current route
   useEffect(() => {
     const path = location.pathname;
-    
+
     // Check if user is in employee mode
     const userType = localStorage.getItem("userType");
     const isEmployeeUser = userType === "pms_occupant";
@@ -268,7 +268,7 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
 
     // Use route detection logic for all other cases
     const newSection = detectSectionFromRoute(path);
-    
+
     // Always update the section when route changes
     if (newSection !== currentSection) {
       console.log(

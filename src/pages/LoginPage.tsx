@@ -102,6 +102,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   // Check if it's Runwal site
   const isRunwalSite = hostname === "runwal-cp.lockated.com";
   console.log("domain is runwal", isRunwalSite, hostname);
+  const isClubSite = hostname === "club.lockated.com" || hostname === "recess-club.panchshil.com";
 
   // Check URL for email and orgId parameters on component mount
   React.useEffect(() => {
