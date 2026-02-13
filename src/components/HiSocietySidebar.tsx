@@ -460,6 +460,12 @@ export const HiSocietySidebar: React.FC = () => {
             },
             { id: "rules", label: "Rules", icon: FileText, path: "/cms/rules" },
             {
+              id: "payment-plan-setup",
+              label: "Payment Plan Setup",
+              icon: FileText,
+              path: "/cms/payment-plan-setup",
+            },
+            {
               id: "membership-plan-setup",
               label: "Membership Plan Setup",
               icon: FileText,
@@ -650,7 +656,7 @@ export const HiSocietySidebar: React.FC = () => {
           label: "Staffs",
           icon: Users,
           subItems: [
-              {
+            {
               id: "staff-all",
               label: "Staff All",
               icon: LogIn,

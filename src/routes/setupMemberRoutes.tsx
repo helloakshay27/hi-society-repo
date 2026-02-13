@@ -485,7 +485,7 @@ const withSuspense = (Component: React.LazyExoticComponent<any>) => {
 export const setupMemberRoutes = (
   <>
 
-      <Route path="/bms/helpdesk" element={withSuspense(HelpdeskDashboard)()} />
+    <Route path="/bms/helpdesk" element={withSuspense(HelpdeskDashboard)()} />
     <Route path="/bms/helpdesk/add" element={withSuspense(AddHelpdeskTicket)()} />
     <Route path="/bms/helpdesk/details/:id" element={withSuspense(HelpdeskTicketDetails)()} />
 
@@ -1241,6 +1241,18 @@ export const setupMemberRoutes = (
       path="/cms/membership-plan-setup"
       Component={withSuspense(CMSMembershipPlanSetup)}
     />
+    <Route
+      path="/cms/payment-plan-setup"
+      Component={withSuspense(CMSPaymentPlanSetup)}
+    />
+    <Route
+      path="/cms/payment-plan-setup/add"
+      Component={withSuspense(CMSPaymentPlanSetupAdd)}
+    />
+    <Route
+      path="/cms/payment-plan-setup/:id"
+      Component={withSuspense(CMSPaymentPlanSetupDetails)}
+    />
     <Route path="/cms/club-members" Component={withSuspense(CMSClubMembers)} />
     <Route path="/cms/club-members/view/:id" Component={withSuspense(CMSClubMembersDetails)} />
     <Route
@@ -1464,12 +1476,12 @@ export const setupMemberRoutes = (
     />
     <Route
       path="/smartsecure/staff-all"
-      element={<StaffsDashboard />} 
+      element={<StaffsDashboard />}
     />
-     <Route
-        path="/smartsecure/staff/add"
-        element={<AddStaffPage />}
-      />
+    <Route
+      path="/smartsecure/staff/add"
+      element={<AddStaffPage />}
+    />
     <Route path="/smartsecure/staff-in" element={<SmartSecureStaffsIn />} />
     <Route
       path="/smartsecure/staffs/in"

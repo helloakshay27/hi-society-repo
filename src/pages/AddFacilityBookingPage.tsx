@@ -189,19 +189,18 @@ const AddFacilityBookingPage = () => {
     return true;
   };
 
-  // Helper function to check if a slot should be enabled
   const isSlotEnabled = (slotId: string): boolean => {
-    // If consecutive slots not required, all slots are enabled
-    if (!facilityDetails?.consecutive_slot) return true;
-
-    // If slot is already selected, it's enabled (for deselection)
     if (selectedSlotIds.includes(slotId)) return true;
 
-    // If no slots selected yet, all slots are enabled
     if (selectedSlotIds.length === 0) return true;
 
-    // Check if adding this slot would maintain consecutiveness
-    return areConsecutiveSlots(selectedSlotIds, slotId);
+    if (facilityDetails?.fac_type !== "bookable") return true;
+
+    if (facilityDetails?.consecutive_slot) {
+      return true;
+    } else {
+      return selectedSlotIds.every(id => Math.abs(parseInt(id) - parseInt(slotId)) !== 1);
+    }
   };
 
   // Fetch Towers
@@ -625,9 +624,9 @@ const AddFacilityBookingPage = () => {
                           (Loading...)
                         </span>
                       )}
-                      {facilityDetails?.consecutive_slot && (
-                        <span className="ml-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-md">
-                          Consecutive slots only
+                      {facilityDetails?.fac_type === "bookable" && !facilityDetails?.consecutive_slot && (
+                        <span className="ml-2 px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded-md">
+                          Consecutive slots not allowed
                         </span>
                       )}
                     </h3>
@@ -654,29 +653,6 @@ const AddFacilityBookingPage = () => {
 
                                 // Check if we're deselecting
                                 if (isSelected) {
-                                  // If consecutive slots are required, check if remaining slots would still be consecutive
-                                  if (facilityDetails?.consecutive_slot && selectedSlotIds.length > 1) {
-                                    const remainingSlots = selectedSlotIds.filter((id) => id !== slotIdStr);
-
-                                    // Check if remaining slots are consecutive
-                                    if (remainingSlots.length > 1) {
-                                      const sortedIds = remainingSlots.map(id => parseInt(id)).sort((a, b) => a - b);
-                                      let isConsecutive = true;
-
-                                      for (let i = 1; i < sortedIds.length; i++) {
-                                        if (sortedIds[i] !== sortedIds[i - 1] + 1) {
-                                          isConsecutive = false;
-                                          break;
-                                        }
-                                      }
-
-                                      if (!isConsecutive) {
-                                        toast.error("Cannot deselect this slot - remaining slots must be consecutive");
-                                        return;
-                                      }
-                                    }
-                                  }
-
                                   setSelectedSlotIds((prev) => prev.filter((id) => id !== slotIdStr));
                                   return;
                                 }

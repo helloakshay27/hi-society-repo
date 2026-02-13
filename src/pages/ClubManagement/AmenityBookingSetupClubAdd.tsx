@@ -148,7 +148,7 @@ export const AddBookingSetupClubPage = () => {
       concurrentSlots: "",
       slotBy: 15,
       wrapTime: "",
-      consecutiveSlotsAllowed: false,
+      consecutiveSlotsAllowed: true,
     },
     customSlots: [
       {
@@ -1342,7 +1342,7 @@ export const AddBookingSetupClubPage = () => {
                                           ...subFacility.chargeSetup.member,
                                           child: checked
                                             ? subFacility.chargeSetup.member
-                                                .child || ""
+                                              .child || ""
                                             : "",
                                         },
                                       },
@@ -1456,7 +1456,7 @@ export const AddBookingSetupClubPage = () => {
                                           ...subFacility.chargeSetup.guest,
                                           child: checked
                                             ? subFacility.chargeSetup.guest
-                                                .child || ""
+                                              .child || ""
                                             : "",
                                         },
                                       },
@@ -1574,7 +1574,7 @@ export const AddBookingSetupClubPage = () => {
                                           ...subFacility.chargeSetup.nonMember,
                                           child: checked
                                             ? subFacility.chargeSetup.nonMember
-                                                .child || ""
+                                              .child || ""
                                             : "",
                                         },
                                       },
@@ -1691,7 +1691,7 @@ export const AddBookingSetupClubPage = () => {
                                           ...subFacility.chargeSetup.tenant,
                                           child: checked
                                             ? subFacility.chargeSetup.tenant
-                                                .child || ""
+                                              .child || ""
                                             : "",
                                         },
                                       },
@@ -1748,7 +1748,7 @@ export const AddBookingSetupClubPage = () => {
                             if (
                               subFacility.maximumPersonAllowed &&
                               parseInt(subFacility.maximumPersonAllowed) <=
-                                parseInt(value)
+                              parseInt(value)
                             ) {
                               toast.error(
                                 "Maximum Person Allowed must be greater than Minimum Person Allowed"
@@ -1774,7 +1774,7 @@ export const AddBookingSetupClubPage = () => {
                             if (
                               subFacility.minimumPersonAllowed &&
                               parseInt(value) <=
-                                parseInt(subFacility.minimumPersonAllowed)
+                              parseInt(subFacility.minimumPersonAllowed)
                             ) {
                               toast.error(
                                 "Maximum Person Allowed must be greater than Minimum Person Allowed"
@@ -1791,7 +1791,7 @@ export const AddBookingSetupClubPage = () => {
                     </div>
                     {formData.isBookable ? (
                       <div className="flex items-center gap-3">
-                        <label className="text-sm font-semibold whitespace-nowrap">
+                        {/* <label className="text-sm font-semibold whitespace-nowrap">
                           GST
                         </label>
                         <TextField
@@ -1808,7 +1808,7 @@ export const AddBookingSetupClubPage = () => {
                           }}
                           className="w-32"
                           placeholder="0.0"
-                        />
+                        /> */}
                       </div>
                     ) : (
                       <div className="flex items-center gap-3">
@@ -1944,7 +1944,7 @@ export const AddBookingSetupClubPage = () => {
                                       ...formData.chargeSetup.member,
                                       child: checked
                                         ? formData.chargeSetup.member.child ||
-                                          ""
+                                        ""
                                         : "",
                                     },
                                   },
@@ -2173,7 +2173,7 @@ export const AddBookingSetupClubPage = () => {
                                       ...formData.chargeSetup.nonMember,
                                       child: checked
                                         ? formData.chargeSetup.nonMember
-                                            .child || ""
+                                          .child || ""
                                         : "",
                                     },
                                   },
@@ -2288,7 +2288,7 @@ export const AddBookingSetupClubPage = () => {
                                       ...formData.chargeSetup.tenant,
                                       child: checked
                                         ? formData.chargeSetup.tenant.child ||
-                                          ""
+                                        ""
                                         : "",
                                     },
                                   },
@@ -2351,7 +2351,7 @@ export const AddBookingSetupClubPage = () => {
                         if (
                           formData.chargeSetup.maximumPersonAllowed &&
                           parseInt(formData.chargeSetup.maximumPersonAllowed) <=
-                            parseInt(value)
+                          parseInt(value)
                         ) {
                           toast.error(
                             "Maximum Person Allowed must be greater than Minimum Person Allowed"
@@ -2379,7 +2379,7 @@ export const AddBookingSetupClubPage = () => {
                         if (
                           formData.chargeSetup.minimumPersonAllowed &&
                           parseInt(value) <=
-                            parseInt(formData.chargeSetup.minimumPersonAllowed)
+                          parseInt(formData.chargeSetup.minimumPersonAllowed)
                         ) {
                           toast.error(
                             "Maximum Person Allowed must be greater than Minimum Person Allowed"
@@ -2729,16 +2729,19 @@ export const AddBookingSetupClubPage = () => {
                         }}
                       >
                         <MenuItem value={15}>15 Minutes</MenuItem>
-                        <MenuItem value={30}>Half hour</MenuItem>
+                        <MenuItem value={30}>30 Minutes</MenuItem>
                         <MenuItem value={45}>45 Minutes</MenuItem>
                         <MenuItem value={60}>1 hour</MenuItem>
-                        <MenuItem value={90}>1 and a half hours</MenuItem>
+                        <MenuItem value={90}>1 hour 30 minutes</MenuItem>
                         <MenuItem value={120}>2 hours</MenuItem>
-                        <MenuItem value={150}>2 and a half hours</MenuItem>
+                        <MenuItem value={150}>2 hours 30 minutes</MenuItem>
                         <MenuItem value={180}>3 hours</MenuItem>
-                        <MenuItem value={210}>3 and a half hours</MenuItem>
+                        <MenuItem value={360}>6 hours</MenuItem>
+                        <MenuItem value={720}>12 hours</MenuItem>
+                        <MenuItem value={1440}>24 hours</MenuItem>
+                        {/* <MenuItem value={210}>3 hours 30 minutes</MenuItem>
                         <MenuItem value={240}>4 hours</MenuItem>
-                        <MenuItem value={270}>4 and a half hours</MenuItem>
+                        <MenuItem value={270}>4 hours 30 minutes</MenuItem> */}
                       </Select>
                     </FormControl>
 
@@ -3192,97 +3195,101 @@ export const AddBookingSetupClubPage = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border-2 p-6 space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
-                <CreditCard className="w-4 h-4" />
-              </div>
-              <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-                CONFIGURE PAYMENT
-              </h3>
-            </div>
+          {
+            formData.isBookable && (
+              <div className="bg-white rounded-lg border-2 p-6 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12  h-12  rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                    <CreditCard className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
+                    CONFIGURE PAYMENT
+                  </h3>
+                </div>
 
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="postpaid"
-                    checked={formData.postpaid}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, postpaid: !!checked })
-                    }
-                  />
-                  <label htmlFor="postpaid">Postpaid</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="prepaid"
-                    checked={formData.prepaid}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, prepaid: !!checked })
-                    }
-                  />
-                  <label htmlFor="prepaid">Prepaid</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="payOnFacility"
-                    checked={formData.payOnFacility}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, payOnFacility: !!checked })
-                    }
-                  />
-                  <label htmlFor="payOnFacility">Pay on Facility</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="complimentary"
-                    checked={formData.complimentary}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, complimentary: !!checked })
-                    }
-                  />
-                  <label htmlFor="complimentary">Complimentary</label>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="postpaid"
+                        checked={formData.postpaid}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, postpaid: !!checked })
+                        }
+                      />
+                      <label htmlFor="postpaid">Postpaid</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="prepaid"
+                        checked={formData.prepaid}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, prepaid: !!checked })
+                        }
+                      />
+                      <label htmlFor="prepaid">Prepaid</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="payOnFacility"
+                        checked={formData.payOnFacility}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, payOnFacility: !!checked })
+                        }
+                      />
+                      <label htmlFor="payOnFacility">Pay on Facility</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="complimentary"
+                        checked={formData.complimentary}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, complimentary: !!checked })
+                        }
+                      />
+                      <label htmlFor="complimentary">Complimentary</label>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <TextField
+                      label="SGST(%)"
+                      value={formData.sgstPercentage}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Allow only non-negative numbers with max 2 decimal places
+                        if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
+                          setFormData({ ...formData, sgstPercentage: value });
+                        }
+                      }}
+                      variant="outlined"
+                    />
+                    <TextField
+                      label="GST(%)"
+                      value={formData.gstPercentage}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
+                          setFormData({ ...formData, gstPercentage: value });
+                        }
+                      }}
+                      variant="outlined"
+                    />
+                    <TextField
+                      label="IGST(%)"
+                      value={formData.igstPercentage}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
+                          setFormData({ ...formData, igstPercentage: value });
+                        }
+                      }}
+                      variant="outlined"
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <TextField
-                  label="SGST(%)"
-                  value={formData.sgstPercentage}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    // Allow only non-negative numbers with max 2 decimal places
-                    if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
-                      setFormData({ ...formData, sgstPercentage: value });
-                    }
-                  }}
-                  variant="outlined"
-                />
-                <TextField
-                  label="GST(%)"
-                  value={formData.gstPercentage}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
-                      setFormData({ ...formData, gstPercentage: value });
-                    }
-                  }}
-                  variant="outlined"
-                />
-                <TextField
-                  label="IGST(%)"
-                  value={formData.igstPercentage}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === "" || /^\d*\.?\d{0,2}$/.test(value)) {
-                      setFormData({ ...formData, igstPercentage: value });
-                    }
-                  }}
-                  variant="outlined"
-                />
-              </div>
-            </div>
-          </div>
+            )
+          }
 
           <div className="flex items-start justify-between gap-4">
             <div className="bg-white rounded-lg border-2 p-6 space-y-6 w-full">

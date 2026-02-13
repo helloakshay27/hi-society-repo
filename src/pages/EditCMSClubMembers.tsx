@@ -81,8 +81,33 @@ const EditCMSClubMembers = () => {
     const [globalEndDate, setGlobalEndDate] = useState("");
     const [globalMembershipPlanId, setGlobalMembershipPlanId] = useState("");
     const [globalMembershipType, setGlobalMembershipType] = useState("paid");
+    const [remark, setRemark] = useState("");
+
+    // Cost Summary States
+    const [editablePlanCost, setEditablePlanCost] = useState<string>("");
+    const [discountPercentage, setDiscountPercentage] = useState<string>("0");
+    const [cgstPercentage, setCgstPercentage] = useState<string>("0");
+    const [sgstPercentage, setSgstPercentage] = useState<string>("0");
 
     const [members, setMembers] = useState<MemberForm[]>([]);
+
+    // Get selected plan details
+    const selectedPlan: any = membershipPlans.find((plan: any) => plan.id === globalMembershipPlanId);
+
+    // Initialize editable cost if not set (e.g. no payment details in API)
+    useEffect(() => {
+        if (selectedPlan && !editablePlanCost) {
+            setEditablePlanCost(selectedPlan.price || "0");
+        }
+    }, [globalMembershipPlanId, membershipPlans]);
+
+    // Cost Summary Calculations
+    const planCost = parseFloat(editablePlanCost) || 0;
+    const discountAmount = (planCost * (parseFloat(discountPercentage) || 0)) / 100;
+    const subtotal = planCost - discountAmount;
+    const cgstAmount = (subtotal * (parseFloat(cgstPercentage) || 0)) / 100;
+    const sgstAmount = (subtotal * (parseFloat(sgstPercentage) || 0)) / 100;
+    const totalCost = subtotal + cgstAmount + sgstAmount;
 
     const fetchTowers = async () => {
         try {
@@ -146,6 +171,23 @@ const EditCMSClubMembers = () => {
             setGlobalEndDate(data.end_date.split("T")[0] || "");
             setGlobalMembershipPlanId(data.membership_plan_id?.toString() || "");
             setGlobalMembershipType(data.membership_type || "paid");
+            setRemark(data.remark || "");
+
+            if (data.allocation_payment_detail) {
+                const base = parseFloat(data.allocation_payment_detail.base_amount) || 0;
+                setEditablePlanCost(base.toString());
+                if (base > 0) {
+                    const disc = parseFloat(data.allocation_payment_detail.discount) || 0;
+                    setDiscountPercentage(((disc / base) * 100).toString());
+                    const sub = base - disc;
+                    const cgst = parseFloat(data.allocation_payment_detail.cgst) || 0;
+                    const sgst = parseFloat(data.allocation_payment_detail.sgst) || 0;
+                    if (sub > 0) {
+                        setCgstPercentage(((cgst / sub) * 100).toString());
+                        setSgstPercentage(((sgst / sub) * 100).toString());
+                    }
+                }
+            }
 
             if (data.club_members && Array.isArray(data.club_members)) {
                 const mappedMembers: MemberForm[] = data.club_members.map((m: any) => ({
@@ -250,6 +292,17 @@ const EditCMSClubMembers = () => {
             formData.append(`club_member_allocation[end_date]`, globalEndDate)
             formData.append(`club_member_allocation[membership_plan_id]`, globalMembershipPlanId)
             formData.append(`club_member_allocation[membership_type]`, globalMembershipType)
+            formData.append(`club_member_allocation[remark]`, remark);
+
+            // Add payment details from cost summary
+            formData.append("club_member_allocation[allocation_payment_detail_attributes][base_amount]", editablePlanCost);
+            formData.append("club_member_allocation[allocation_payment_detail_attributes][discount]", discountAmount.toString());
+            formData.append("club_member_allocation[allocation_payment_detail_attributes][cgst]", cgstAmount.toString());
+            formData.append("club_member_allocation[allocation_payment_detail_attributes][sgst]", sgstAmount.toString());
+            formData.append("club_member_allocation[allocation_payment_detail_attributes][total_tax]", (cgstAmount + sgstAmount).toString());
+            formData.append("club_member_allocation[allocation_payment_detail_attributes][total_amount]", totalCost.toString());
+            formData.append("club_member_allocation[allocation_payment_detail_attributes][landed_amount]", totalCost.toString());
+            // formData.append("club_member_allocation[allocation_payment_detail_attributes][payment_status]", "pending");
 
             members.forEach((member, idx) => {
                 formData.append(`members[${idx}][id]`, member.id)
@@ -307,7 +360,7 @@ const EditCMSClubMembers = () => {
 
     return (
         <div className="p-6 bg-white min-h-screen">
-            <div className="mb-6">
+            <div className="mb-4 space-y-3">
                 <button
                     onClick={() => navigate(-1)}
                     className="text-gray-600 hover:text-gray-800 transition-colors flex items-center gap-2"
@@ -315,15 +368,76 @@ const EditCMSClubMembers = () => {
                     <ArrowLeft className="w-4 h-4" />
                     <p className="text-gray-600 text-sm">Back</p>
                 </button>
+
+                <h2 className="text-lg font-semibold text-[#1a1a1a] mb-2">Edit Club Member</h2>
             </div>
 
             <div className="space-y-6">
+                {/* Plan Selection Card */}
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Global Configuration</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-6">
                         <div className="space-y-4">
+                            <h2 className="text-lg font-semibold text-[#1a1a1a] mb-2">Select Membership Plan</h2>
+                            {membershipPlans.length === 0 ? (
+                                <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed">
+                                    <p className="text-gray-500 text-sm">No membership plans available.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-4">
+                                    {membershipPlans.map((plan: any) => (
+                                        <div
+                                            key={plan.id}
+                                            onClick={() => {
+                                                setGlobalMembershipPlanId(plan.id);
+                                                setEditablePlanCost(plan.price || "0");
+                                            }}
+                                            className={`border-2 rounded-lg p-4 cursor-pointer transition-all relative ${globalMembershipPlanId === plan.id || globalMembershipPlanId === plan.id.toString()
+                                                ? 'border-[#C72030] bg-red-50'
+                                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                }`}
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <div>
+                                                    <h4 className="font-bold text-gray-900">{plan.name}</h4>
+                                                    <p className="text-xs text-gray-500 mt-1 capitalize">
+                                                        {plan.renewal_terms} Membership
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-xl font-bold text-[#C72030]">₹{plan.price}</p>
+                                                    <p className="text-[10px] text-gray-400 capitalize">per {plan.renewal_terms}</p>
+                                                </div>
+                                            </div>
+
+                                            {plan.plan_amenities && plan.plan_amenities.length > 0 && (
+                                                <div className="mt-2 pt-2 border-t border-gray-100">
+                                                    <div className="flex flex-wrap gap-x-3 gap-y-1">
+                                                        {plan.plan_amenities.slice(0, 3).map((amenity: any) => (
+                                                            <div key={amenity.id} className="flex items-center gap-1">
+                                                                <div className="w-1 h-1 rounded-full bg-green-500"></div>
+                                                                <span className="text-[11px] text-gray-600">
+                                                                    {amenity.facility_setup_name || amenity.facility_setup?.name || 'Amenity'}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                        {plan.plan_amenities.length > 3 && (
+                                                            <span className="text-[11px] text-gray-400">+{plan.plan_amenities.length - 3} more</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="space-y-6">
+                            <h2 className="text-lg font-semibold text-[#1a1a1a]">Membership Info</h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormControl required sx={fieldStyles}>
                                     <InputLabel className="bg-white px-1">Tower</InputLabel>
@@ -357,22 +471,6 @@ const EditCMSClubMembers = () => {
                                         }
                                     </Select>
                                 </FormControl>
-                                <FormControl fullWidth sx={fieldStyles}>
-                                    <InputLabel className="bg-white px-1">Membership Plan</InputLabel>
-                                    <Select
-                                        value={globalMembershipPlanId}
-                                        onChange={(e) => setGlobalMembershipPlanId(e.target.value)}
-                                        label="Membership Plan"
-                                        displayEmpty
-                                    >
-                                        <MenuItem value="">Select Membership Plan</MenuItem>
-                                        {membershipPlans.map((plan: any) => (
-                                            <MenuItem key={plan.id} value={plan.id}>
-                                                {plan.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
                                 <TextField
                                     required
                                     type="date"
@@ -403,9 +501,121 @@ const EditCMSClubMembers = () => {
                                     </Select>
                                 </FormControl>
                             </div>
+                            <TextField
+                                label="Remark"
+                                placeholder="Enter Remark"
+                                value={remark}
+                                onChange={(e) => setRemark(e.target.value)}
+                                sx={fieldStyles}
+                                fullWidth
+                            />
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Cost Summary Card */}
+                {globalMembershipPlanId && (
+                    <Card className="bg-gray-50 border-gray-200">
+                        <CardContent className="pt-6">
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-[#1a1a1a]">Cost Summary</h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Left Column: Inputs */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-4">
+                                            <label className="text-sm font-medium text-gray-700 w-32">Plan Cost (₹):</label>
+                                            <TextField
+                                                value={editablePlanCost}
+                                                onChange={(e) => setEditablePlanCost(e.target.value)}
+                                                type="number"
+                                                size="small"
+                                                sx={{ ...fieldStyles, flex: 1 }}
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center gap-4">
+                                            <label className="text-sm font-medium text-gray-700 w-32">Discount (%):</label>
+                                            <div className="flex items-center gap-2 flex-1">
+                                                <TextField
+                                                    value={discountPercentage}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val === "" || (parseFloat(val) >= 0 && parseFloat(val) <= 100)) {
+                                                            setDiscountPercentage(val);
+                                                        }
+                                                    }}
+                                                    type="number"
+                                                    size="small"
+                                                    sx={{ ...fieldStyles, width: '100px' }}
+                                                />
+                                                <span className="text-xs text-gray-500">
+                                                    Amount: ₹{discountAmount.toFixed(2)}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-4">
+                                            <label className="text-sm font-medium text-gray-700 w-32">CGST (%):</label>
+                                            <div className="flex items-center gap-2 flex-1">
+                                                <TextField
+                                                    value={cgstPercentage}
+                                                    onChange={(e) => setCgstPercentage(e.target.value)}
+                                                    type="number"
+                                                    size="small"
+                                                    sx={{ ...fieldStyles, width: '100px' }}
+                                                />
+                                                <span className="text-xs text-gray-500">
+                                                    Amount: ₹{cgstAmount.toFixed(2)}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-4">
+                                            <label className="text-sm font-medium text-gray-700 w-32">SGST (%):</label>
+                                            <div className="flex items-center gap-2 flex-1">
+                                                <TextField
+                                                    value={sgstPercentage}
+                                                    onChange={(e) => setSgstPercentage(e.target.value)}
+                                                    type="number"
+                                                    size="small"
+                                                    sx={{ ...fieldStyles, width: '100px' }}
+                                                />
+                                                <span className="text-xs text-gray-500">
+                                                    Amount: ₹{sgstAmount.toFixed(2)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Right Column: Calculations */}
+                                    <div className="bg-white p-4 rounded-md border border-gray-200 space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-600">Plan Base Cost:</span>
+                                            <span className="font-medium">₹{planCost.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm text-red-600">
+                                            <span>Discount:</span>
+                                            <span>-₹{discountAmount.toFixed(2)}</span>
+                                        </div>
+                                        <div className="border-t pt-2 flex justify-between text-sm font-semibold">
+                                            <span>Subtotal:</span>
+                                            <span>₹{subtotal.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-600">Total Tax (CGST + SGST):</span>
+                                            <span className="font-medium">₹{(cgstAmount + sgstAmount).toFixed(2)}</span>
+                                        </div>
+                                        <div className="border-t-2 border-double pt-2 flex justify-between items-center mt-2">
+                                            <span className="text-base font-bold text-gray-900">Total Amount:</span>
+                                            <span className="text-xl font-bold text-[#C72030]">₹{totalCost.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
 
                 {/* Dynamic Member Forms */}

@@ -65,6 +65,7 @@ const BookingDetailsPage = () => {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
+  const [error, setError] = useState("")
   const [refundFormData, setRefundFormData] = useState({
     refundable_amount: "",
     refund_mode: "",
@@ -98,6 +99,7 @@ const BookingDetailsPage = () => {
       setBookings(response);
     } catch (error) {
       console.error("Error fetching booking details:", error);
+      setError(error);
     }
   };
 
@@ -657,6 +659,29 @@ const BookingDetailsPage = () => {
       ),
     },
   ];
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[300px] p-10">
+        <div className="text-center bg-red-50 border border-red-200 rounded-lg p-6 max-w-md w-full">
+          <h2 className="text-lg font-semibold text-red-600">
+            Something went wrong
+          </h2>
+          <p className="text-sm text-gray-600 mt-2">
+            We were unable to fetch the booking details.
+          </p>
+
+          <Button
+            variant="outline"
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (!bookings) {
     return <div className="p-10 text-gray-600">Loading booking details...</div>;
