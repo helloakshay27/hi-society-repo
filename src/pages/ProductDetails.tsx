@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import * as tf from "@tensorflow/tfjs";
-import * as cocoSsd from "@tensorflow-models/coco-ssd";
+// TODO: Install TensorFlow dependencies when network is stable
+// import * as tf from "@tensorflow/tfjs";
+// import * as cocoSsd from "@tensorflow-models/coco-ssd";
 import {
   ArrowLeft,
   Monitor,
@@ -68,15 +69,17 @@ const ProductDetails: React.FC = () => {
   const [isBlurred, setIsBlurred] = useState(false);
   const [showBlackout, setShowBlackout] = useState(false);
   const [isDeviceDetected, setIsDeviceDetected] = useState(false);
-  const [model, setModel] = useState<cocoSsd.ObjectDetection | null>(null);
+  const [model, setModel] = useState<any>(null); // TODO: Use cocoSsd.ObjectDetection type
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const loadModel = async () => {
       try {
-        await tf.ready();
-        const loadedModel = await cocoSsd.load();
-        setModel(loadedModel);
+        // TODO: Uncomment when TensorFlow is installed
+        // await tf.ready();
+        // const loadedModel = await cocoSsd.load();
+        // setModel(loadedModel);
+        console.warn("TensorFlow not installed - AI features disabled");
       } catch (err) {
         console.error("AI Model failed to load:", err);
       }
@@ -111,8 +114,10 @@ const ProductDetails: React.FC = () => {
     if (model && cameraPermission === "granted") {
       detectionInterval = setInterval(async () => {
         if (currentVideo && currentVideo.readyState === 4) {
+          // TODO: Uncomment when TensorFlow is installed
           // Detect more objects with a lower confidence threshold for maximum safety
-          const predictions = await model.detect(currentVideo, 12, 0.15);
+          // const predictions = await model.detect(currentVideo, 12, 0.15);
+          const predictions: any[] = []; // Temporary empty array
 
           // 1. Check for person (must be clearly identified)
           const personPresent = predictions.some(
