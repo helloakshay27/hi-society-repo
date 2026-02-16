@@ -381,7 +381,7 @@ const OrderDetails = () => {
                                 </div>
 
                                 {/* Total Loyalty Points */}
-                                {/* <div className="pt-4 border-t">
+                                <div className="pt-4 border-t">
                                     <div className="flex justify-between items-center mb-4">
                                         <span className="text-sm text-gray-700">Total Loyalty Points</span>
                                         <span className="font-bold text-[#C72030] text-lg">1250 pts</span>
@@ -443,7 +443,7 @@ const OrderDetails = () => {
                                             </div>
                                         </div>
                                     </div>
-                                </div> */}
+                                </div>
                             </div>
                         </div>
                     </div>

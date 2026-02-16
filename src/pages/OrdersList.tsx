@@ -82,7 +82,7 @@ const OrdersList = () => {
       if (status) params.append('status', status);
       if (paymentStatus) params.append('payment_status', paymentStatus);
 
-      const url = `https://runwal-api.lockated.com/orders.json?${params.toString()}`;
+      const url = `https://runwal-api.lockated.com/admin/orders.json?${params.toString()}`;
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -138,7 +138,7 @@ const OrdersList = () => {
   useEffect(() => {
     async function fetchFilterOptions() {
       try {
-        const response = await fetch('https://runwal-api.lockated.com//orders/filter_options.json?token=00f7c12e459b75225a07519c088edae3e9612e59d80111bb');
+        const response = await fetch('https://runwal-api.lockated.com/admin/orders/filter_options.json?token=00f7c12e459b75225a07519c088edae3e9612e59d80111bb');
         if (!response.ok) return;
         const data = await response.json();
         if (data.order_date_filters) {
@@ -164,7 +164,7 @@ const OrdersList = () => {
     setUpdatingStatus(orderId);
     try {
       // const url = getFullUrl(`/orders/${orderId}/status_update.json?status=${newStatus}&notes=${encodeURIComponent(notes)}`);
-      const url = `https://runwal-api.lockated.com/orders/${orderId}/status_update.json?status=${newStatus}&notes=${encodeURIComponent(notes)}&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
+      const url = `https://runwal-api.lockated.com/admin/orders/${orderId}/status_update.json?status=${newStatus}&notes=${encodeURIComponent(notes)}&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
