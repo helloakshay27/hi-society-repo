@@ -47,7 +47,6 @@ export const LoyaltyCustomers = () => {
         { key: "customerId", label: "Customer ID", sortable: true },
         { key: "customerName", label: "Customer Name", sortable: true },
         { key: "tierLevel", label: "Tier Level", sortable: true },
-        { key: "tierValidity", label: "Tier", sortable: true },
         { key: "websites", label: "Email", sortable: true },
         { key: "dateJoined", label: "Date Joined", sortable: true },
     ];

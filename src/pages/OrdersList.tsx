@@ -1,12 +1,19 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import Select from 'react-select';
-import { toast } from 'sonner';
-import { Toaster } from '@/components/ui/sonner';
-import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
-import SelectBox from '../components/ui/select-box';
-import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useCallback } from "react";
+import Select from "react-select";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationLink,
+  PaginationNext,
+} from "@/components/ui/pagination";
+import SelectBox from "../components/ui/select-box";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { useNavigate } from "react-router-dom";
 
 interface User {
   name: string;
@@ -38,16 +45,16 @@ const OrdersList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string[]>([]);
   const [orderDateFilter, setOrderDateFilter] = useState('last_30_days');
   const [orderDateOptions, setOrderDateOptions] = useState([
-    { value: 'last_30_days', label: 'Last 30 days' },
-    { value: 'last_3_months', label: 'Last 3 months' },
-    { value: '2025', label: '2025' },
-    { value: '2024', label: '2024' },
+    { value: "last_30_days", label: "Last 30 days" },
+    { value: "last_3_months", label: "Last 3 months" },
+    { value: "2025", label: "2025" },
+    { value: "2024", label: "2024" },
   ]);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
 
@@ -71,93 +78,136 @@ const OrdersList = () => {
     { label: "Refunded", value: "refunded" },
   ];
 
-  const fetchOrders = useCallback(async (page: number, search: string, status: string[] | string, paymentStatus: string[] | string, orderDate: string) => {
-    setLoading(true);
-    setIsSearching(!!search || (Array.isArray(status) ? status.length > 0 : !!status) || (Array.isArray(paymentStatus) ? paymentStatus.length > 0 : !!paymentStatus) || !!orderDate);
-    try {
-      // Build query params for API
-      const params = new URLSearchParams();
-      params.append('token', '00f7c12e459b75225a07519c088edae3e9612e59d80111bb');
-      params.append('order_date', orderDate || 'last_30_days');
-      if (Array.isArray(status) && status.length > 0) {
-        status.forEach(s => params.append('status[]', s));
-      } else if (typeof status === 'string' && status) {
-        params.append('status', status);
-      }
-      if (Array.isArray(paymentStatus) && paymentStatus.length > 0) {
-        paymentStatus.forEach(s => params.append('payment_status[]', s));
-      } else if (typeof paymentStatus === 'string' && paymentStatus) {
-        params.append('payment_status', paymentStatus);
-      }
-
-      const url = `https://runwal-api.lockated.com/admin/orders.json?${params.toString()}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': 'e66eeb9c080f2995b9f52d8e57a16738944d97578ed04fdb',
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch orders: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const ordersData = data.orders || [];
-      setAllOrders(ordersData);
-
-      // Client-side search filter (if API does not support search param)
-      let filteredOrders = ordersData;
-      if (search) {
-        const searchLower = search.toLowerCase();
-        filteredOrders = filteredOrders.filter((order: Order) =>
-          order.order_number?.toLowerCase().includes(searchLower) ||
-          order.user?.name?.toLowerCase().includes(searchLower) ||
-          order.user?.email?.toLowerCase().includes(searchLower) ||
-          order.id?.toString().toLowerCase().includes(searchLower)
+  const fetchOrders = useCallback(
+    async (
+      page: number,
+      search: string,
+      status: string[] | string,
+      paymentStatus: string[] | string,
+      orderDate: string
+    ) => {
+      setLoading(true);
+      setIsSearching(
+        !!search ||
+        (Array.isArray(status) ? status.length > 0 : !!status) ||
+        (Array.isArray(paymentStatus) ? paymentStatus.length > 0 : !!paymentStatus) ||
+        !!orderDate
+      );
+      try {
+        // Build query params for API
+        const params = new URLSearchParams();
+        params.append(
+          "token",
+          "00f7c12e459b75225a07519c088edae3e9612e59d80111bb"
         );
-      }
-      // Filter by status and payment status (client-side for multi-select)
-      if (Array.isArray(status) && status.length > 0) {
-        filteredOrders = filteredOrders.filter((order: Order) => status.includes(order.status));
-      }
-      if (Array.isArray(paymentStatus) && paymentStatus.length > 0) {
-        filteredOrders = filteredOrders.filter((order: Order) => paymentStatus.includes(order.payment_status));
-      }
+        params.append("order_date", orderDate || "last_30_days");
+        if (Array.isArray(status) && status.length > 0) {
+          status.forEach((s) => params.append("status[]", s));
+        } else if (typeof status === "string" && status) {
+          params.append("status", status);
+        }
+        if (Array.isArray(paymentStatus) && paymentStatus.length > 0) {
+          paymentStatus.forEach((s) => params.append("payment_status[]", s));
+        } else if (typeof paymentStatus === "string" && paymentStatus) {
+          params.append("payment_status", paymentStatus);
+        }
 
-      // Client-side pagination
-      const itemsPerPage = 10;
-      const startIndex = (page - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+        const url = `https://runwal-api.lockated.com/admin/orders.json?${params.toString()}`;
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            Authorization:
+              "e66eeb9c080f2995b9f52d8e57a16738944d97578ed04fdb",
+            "Content-Type": "application/json",
+          },
+        });
 
-      setOrders(paginatedOrders);
-      setCurrentPage(page);
-      setTotalPages(Math.ceil(filteredOrders.length / itemsPerPage));
-      setTotalCount(filteredOrders.length);
-    } catch (error) {
-      toast.error('Failed to fetch orders');
-      console.error('Error fetching orders:', error);
-    } finally {
-      setLoading(false);
-      setIsSearching(false);
-    }
-  }, []);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch orders: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const ordersData = data.orders || [];
+        setAllOrders(ordersData);
+
+        // Client-side search filter (if API does not support search param)
+        let filteredOrders: Order[] = ordersData;
+        if (search) {
+          const searchLower = search.toLowerCase();
+          filteredOrders = filteredOrders.filter((order: Order) =>
+            order.order_number?.toLowerCase().includes(searchLower) ||
+            order.user?.name?.toLowerCase().includes(searchLower) ||
+            order.user?.email?.toLowerCase().includes(searchLower) ||
+            order.id?.toString().toLowerCase().includes(searchLower)
+          );
+        }
+
+        // Filter by status and payment status (client-side for multi-select)
+        if (Array.isArray(status) && status.length > 0) {
+          filteredOrders = filteredOrders.filter((order: Order) =>
+            status.includes(order.status)
+          );
+        }
+        if (Array.isArray(paymentStatus) && paymentStatus.length > 0) {
+          filteredOrders = filteredOrders.filter((order: Order) =>
+            paymentStatus.includes(order.payment_status)
+          );
+        }
+
+        // Client-side pagination
+        const itemsPerPage = 10;
+        const startIndex = (page - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
+        setOrders(paginatedOrders);
+        setCurrentPage(page);
+        setTotalPages(Math.ceil(filteredOrders.length / itemsPerPage));
+        setTotalCount(filteredOrders.length);
+      } catch (error) {
+        toast.error("Failed to fetch orders");
+        console.error("Error fetching orders:", error);
+      } finally {
+        setLoading(false);
+        setIsSearching(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
-    fetchOrders(currentPage, searchTerm, statusFilter, paymentStatusFilter, orderDateFilter);
-  }, [currentPage, searchTerm, statusFilter, paymentStatusFilter, orderDateFilter, fetchOrders]);
+    fetchOrders(
+      currentPage,
+      searchTerm,
+      statusFilter,
+      paymentStatusFilter,
+      orderDateFilter
+    );
+  }, [
+    currentPage,
+    searchTerm,
+    statusFilter,
+    paymentStatusFilter,
+    orderDateFilter,
+    fetchOrders,
+  ]);
 
   // Fetch filter options for order date dropdown
   useEffect(() => {
     async function fetchFilterOptions() {
       try {
-        const response = await fetch('https://runwal-api.lockated.com/admin/orders/filter_options.json?token=00f7c12e459b75225a07519c088edae3e9612e59d80111bb');
+        const response = await fetch(
+          "https://runwal-api.lockated.com//orders/filter_options.json?token=00f7c12e459b75225a07519c088edae3e9612e59d80111bb"
+        );
         if (!response.ok) return;
         const data = await response.json();
         if (data.order_date_filters) {
-          setOrderDateOptions(data.order_date_filters.map(opt => ({ value: opt.key, label: opt.label })));
+          setOrderDateOptions(
+            data.order_date_filters.map((opt) => ({
+              value: opt.key,
+              label: opt.label,
+            }))
+          );
         }
       } catch (e) { }
     }
@@ -175,73 +225,79 @@ const OrdersList = () => {
     }
   };
 
-  const updateOrderStatus = async (orderId: number, newStatus: string, notes = '') => {
+  const updateOrderStatus = async (
+    orderId: number,
+    newStatus: string,
+    notes = ""
+  ) => {
     setUpdatingStatus(orderId);
     try {
       // const url = getFullUrl(`/orders/${orderId}/status_update.json?status=${newStatus}&notes=${encodeURIComponent(notes)}`);
       const url = `https://runwal-api.lockated.com/admin/orders/${orderId}/status_update.json?status=${newStatus}&notes=${encodeURIComponent(notes)}&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
       const response = await fetch(url, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Authorization': getAuthHeader(),
-          'Content-Type': 'application/json',
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to update order status: ${response.statusText}`);
+        throw new Error(
+          `Failed to update order status: ${response.statusText}`
+        );
       }
 
       toast.success('Order status updated successfully!');
       fetchOrders(currentPage, searchTerm, statusFilter, paymentStatusFilter, orderDateFilter);
     } catch (error) {
-      console.error('Error updating order status:', error);
-      toast.error('Failed to update order status');
+      console.error("Error updating order status:", error);
+      toast.error("Failed to update order status");
     } finally {
       setUpdatingStatus(null);
     }
   };
 
   const handleStatusChange = (orderId: number, newStatus: string) => {
-    const notes = prompt('Enter notes for status update (optional):');
+    const notes = prompt("Enter notes for status update (optional):");
     if (notes !== null) {
       updateOrderStatus(orderId, newStatus, notes);
     }
   };
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    if (isNaN(date.getTime())) return "N/A";
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = String(date.getFullYear());
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
     return `${day}-${month}-${year} ${hours}:${minutes}`;
   };
 
   const getPaymentStatusBadgeClass = (status: string) => {
     const statusClasses: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      paid: 'bg-green-100 text-green-800',
-      partially_paid: 'bg-blue-100 text-blue-800',
-      failed: 'bg-red-100 text-red-800',
-      refunded: 'bg-gray-100 text-gray-800',
+      pending: "bg-yellow-100 text-yellow-800",
+      paid: "bg-green-100 text-green-800",
+      partially_paid: "bg-blue-100 text-blue-800",
+      failed: "bg-red-100 text-red-800",
+      refunded: "bg-gray-100 text-gray-800",
     };
-    return statusClasses[status] || 'bg-gray-100 text-gray-800';
+    return statusClasses[status] || "bg-gray-100 text-gray-800";
   };
 
   const columns = [
-    { key: 'id', label: 'Order ID', sortable: true },
-    { key: 'order_number', label: 'Order Number', sortable: true },
-    { key: 'customer', label: 'Customer', sortable: false },
-    { key: 'status', label: 'Status', sortable: true },
-    { key: 'payment_status', label: 'Payment Status', sortable: true },
-    { key: 'total_amount', label: 'Total Amount', sortable: true },
+    { key: "id", label: "Order ID", sortable: true },
+    { key: "order_number", label: "Order Number", sortable: true },
+    { key: "customer", label: "Customer", sortable: false },
+    { key: "status", label: "Status", sortable: true },
+    { key: "payment_status", label: "Payment Status", sortable: true },
+    { key: "total_amount", label: "Total Amount", sortable: true },
     // { key: 'loyalty_points_redeemed', label: 'Points Used', sortable: true },
-    { key: 'items', label: 'Items', sortable: false },
-    { key: 'created_at', label: 'Created At', sortable: true },
+    { key: "items", label: "Items", sortable: false },
+    { key: "created_at", label: "Created At", sortable: true },
   ];
 
   const CustomMultiValue = (props: any) => (
@@ -442,7 +498,7 @@ const renderListTab = () => (
 
   const renderCell = (item: Order, columnKey: string) => {
     switch (columnKey) {
-      case 'id':
+      case "id":
         return (
           <span
             className="font-medium text-[#C72030] cursor-pointer hover:underline"
@@ -451,27 +507,31 @@ const renderListTab = () => (
             {item.id}
           </span>
         );
-      case 'order_number':
+      case "order_number":
         return (
           <span
             className="text-sm"
           >
-            {item.order_number || '-'}
+            {item.order_number || "-"}
           </span>
         );
-      case 'customer':
+      case "customer":
         return (
           <div>
-            <div className="font-medium text-gray-900">{item.user?.name || 'N/A'}</div>
-            <div className="text-sm text-gray-500">{item.user?.email || '-'}</div>
+            <div className="font-medium text-gray-900">
+              {item.user?.name || "N/A"}
+            </div>
+            <div className="text-sm text-gray-500">
+              {item.user?.email || "-"}
+            </div>
           </div>
         );
-      case 'status':
+      case "status":
         return (
           <div>
             <SelectBox
               label=""
-              options={statusOptions.filter(opt => opt.value !== '')}
+              options={statusOptions.filter((opt) => opt.value !== "")}
               defaultValue={item.status}
               onChange={(value) => handleStatusChange(item.id, value)}
             />
@@ -480,38 +540,51 @@ const renderListTab = () => (
             )}
           </div>
         );
-      case 'payment_status':
-        const paymentStatus = item.payment_status || '';
-        const displayStatus = paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1).replace('_', ' ');
+      case "payment_status":
+        const paymentStatus = item.payment_status || "";
+        const displayStatus =
+          paymentStatus.charAt(0).toUpperCase() +
+          paymentStatus.slice(1).replace("_", " ");
         return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusBadgeClass(paymentStatus)}`}>
-            {displayStatus || 'N/A'}
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusBadgeClass(paymentStatus)}`}
+          >
+            {displayStatus || "N/A"}
           </span>
         );
-      case 'total_amount':
-        return <span className="font-semibold">₹{parseFloat(item.total_amount?.toString() || '0').toFixed(2)}</span>;
-      case 'loyalty_points_redeemed':
+      case "total_amount":
+        return (
+          <span className="font-semibold">
+            ₹{parseFloat(item.total_amount?.toString() || "0").toFixed(2)}
+          </span>
+        );
+      case "loyalty_points_redeemed":
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
             {(item.loyalty_points_redeemed || 0).toLocaleString()} pts
           </span>
         );
-      case 'items':
+      case "items":
         return (
           <div>
             <div className="font-medium">{item.total_items || 0} item(s)</div>
             {item.order_items?.length > 0 && (
               <div className="text-sm text-gray-500 truncate max-w-[150px]">
                 {item.order_items[0].product_name}
-                {item.order_items.length > 1 && ` +${item.order_items.length - 1} more`}
+                {item.order_items.length > 1 &&
+                  ` +${item.order_items.length - 1} more`}
               </div>
             )}
           </div>
         );
-      case 'created_at':
-        return <span className="text-sm text-gray-600">{formatDate(item.created_at)}</span>;
+      case "created_at":
+        return (
+          <span className="text-sm text-gray-600">
+            {formatDate(item.created_at)}
+          </span>
+        );
       default:
-        return item[columnKey as keyof Order] as React.ReactNode ?? '-';
+        return (item[columnKey as keyof Order] as React.ReactNode) ?? "-";
     }
   };
 
@@ -581,11 +654,13 @@ const renderListTab = () => (
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Order Date</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Order Date
+        </label>
         <Select
-          value={orderDateOptions.find(opt => opt.value === orderDateFilter)}
-          onChange={opt => {
-            setOrderDateFilter(opt?.value || 'last_30_days');
+          value={orderDateOptions.find((opt) => opt.value === orderDateFilter)}
+          onChange={(opt) => {
+            setOrderDateFilter(opt?.value || "last_30_days");
             setCurrentPage(1);
           }}
           options={orderDateOptions}

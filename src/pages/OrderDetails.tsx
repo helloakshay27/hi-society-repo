@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { Package, MapPin, CreditCard, User, Award, ArrowLeft, Download } from "lucide-react";
+import {
+    Package,
+    MapPin,
+    CreditCard,
+    User,
+    Award,
+    ArrowLeft,
+    Download,
+} from "lucide-react";
 
 const OrderDetails = () => {
     const { id } = useParams();
@@ -23,11 +31,40 @@ const OrderDetails = () => {
                 const response = await res.json();
                 const data = response.order; // Extract the order object
 
+                let loyaltyPoints = "-";
+                let tierName = "Gold";
+                let nextTierName = "Platinum";
+                let pointsToNextTier = 250;
+                let progress = 0;
+
+                if (data.user && data.user.id) {
+                    try {
+                        const userUrl = `https://runwal-api.lockated.com/loyalty/members/${data.user.id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
+                        const userRes = await fetch(userUrl);
+                        const userData = await userRes.json();
+                        loyaltyPoints = userData.current_loyalty_points ?? "-";
+                        tierName = userData.member_status?.tier_level || "Gold";
+                        nextTierName =
+                            userData.member_status?.next_tier_level || "Platinum";
+                        pointsToNextTier =
+                            userData.member_status?.points_to_next_tier ?? 250;
+                        progress = userData.member_status?.tier_progression || 0;
+                    } catch (err) {
+                        console.error("Error fetching user loyalty points:", err);
+                    }
+                }
+
                 setOrderData({
+                    tierName,
+                    nextTierName,
+                    pointsToNextTier,
+                    progress,
+                    customerLoyaltyPoints: loyaltyPoints,
                     id: data.id,
                     orderNumber: data.order_number || "-",
                     customerName: data.user
-                        ? `${data.user.firstname || ''} ${data.user.lastname || ''}`.trim() || "-"
+                        ? `${data.user.firstname || ""} ${data.user.lastname || ""}`.trim() ||
+                        "-"
                         : "-",
                     customerEmail: data.user?.email || "-",
                     customerPhone: data.user?.mobile || "-",
@@ -44,10 +81,14 @@ const OrderDetails = () => {
                     loyaltyPointsEarned: data.loyalty_points_earned ?? "-",
                     totalItems: data.total_items ?? "-",
                     shippingAddress: data.shipping_address
-                        ? `${data.shipping_address.address || ''}, ${data.shipping_address.address_line_two || ''}, ${data.shipping_address.city || ''}, ${data.shipping_address.state || ''}, ${data.shipping_address.country || ''} - ${data.shipping_address.pin_code || ''}`.replace(/,\s*,/g, ',').replace(/^,\s*|,\s*$/g, '')
+                        ? `${data.shipping_address.address || ""}, ${data.shipping_address.address_line_two || ""}, ${data.shipping_address.city || ""}, ${data.shipping_address.state || ""}, ${data.shipping_address.country || ""} - ${data.shipping_address.pin_code || ""}`
+                            .replace(/,\s*,/g, ",")
+                            .replace(/^,\s*|,\s*$/g, "")
                         : "-",
                     billingAddress: data.billing_address
-                        ? `${data.billing_address.address || ''}, ${data.billing_address.address_line_two || ''}, ${data.billing_address.city || ''}, ${data.billing_address.state || ''}, ${data.billing_address.country || ''} - ${data.billing_address.pin_code || ''}`.replace(/,\s*,/g, ',').replace(/^,\s*|,\s*$/g, '')
+                        ? `${data.billing_address.address || ""}, ${data.billing_address.address_line_two || ""}, ${data.billing_address.city || ""}, ${data.billing_address.state || ""}, ${data.billing_address.country || ""} - ${data.billing_address.pin_code || ""}`
+                            .replace(/,\s*,/g, ",")
+                            .replace(/^,\s*|,\s*$/g, "")
                         : "-",
                     shippingContact: data.shipping_address?.contact_person || "-",
                     shippingMobile: data.shipping_address?.mobile || "-",
@@ -85,17 +126,6 @@ const OrderDetails = () => {
         fetchDetails();
     }, [id]);
 
-    // Order Items Table Columns
-    const orderItemsColumns = [
-        { key: "productName", label: "Product Name", sortable: true },
-        { key: "sku", label: "SKU", sortable: true },
-        { key: "quantity", label: "Quantity", sortable: true },
-        { key: "price", label: "Price", sortable: true },
-        { key: "subtotal", label: "Subtotal", sortable: true },
-        { key: "taxAmount", label: "Tax", sortable: true },
-        { key: "total", label: "Total", sortable: true },
-    ];
-
     const renderOrderItemCell = (item: any, columnKey: string) => {
         switch (columnKey) {
             case "productName":
@@ -111,7 +141,11 @@ const OrderDetails = () => {
             case "taxAmount":
                 return <span>₹{parseFloat(item.taxAmount || 0).toFixed(2)}</span>;
             case "total":
-                return <span className="font-semibold">₹{parseFloat(item.total || 0).toFixed(2)}</span>;
+                return (
+                    <span className="font-semibold">
+                        ₹{parseFloat(item.total || 0).toFixed(2)}
+                    </span>
+                );
             default:
                 return null;
         }
@@ -124,32 +158,15 @@ const OrderDetails = () => {
         return date.toLocaleString();
     };
 
-    const formatLogCardDate = (dateString: string) => {
-        if (!dateString || dateString === "-") return "-";
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return "-";
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
-
-        if (dateOnly.getTime() === todayOnly.getTime()) {
-            return "Today";
-        } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
-            return "Yesterday";
-        } else {
-            return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-        }
-    };
-
     const formatLogTime = (dateString: string) => {
         if (!dateString || dateString === "-") return "-";
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return "-";
-        return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+        return date.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
     };
 
     // Create timeline events from order data
@@ -164,7 +181,7 @@ const OrderDetails = () => {
                 date: log.created_at,
                 status: log.status.charAt(0).toUpperCase() + log.status.slice(1),
                 description: log.notes || `Order status changed to ${log.status}`,
-                by: log.created_by?.id
+                by: log.created_by?.id,
             }))
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [orderStatusLogs]);
@@ -177,42 +194,18 @@ const OrderDetails = () => {
                 <div className="flex items-center justify-between mb-4">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        <span className="font-medium">Back to Orders</span>
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-[#C72030] rounded-md text-sm font-medium hover:bg-gray-50">
-                        <Download className="w-4 h-4" />
-                        Download Invoice
-                    </button>
-                </div>
-
-                {/* Order ID and Date */}
-                <div className="mb-3">
-                    <p className="text-sm text-gray-600">
-                        Order ID: {orderData?.id || "-"} • {orderData?.createdAt && orderData.createdAt !== "-"
-                            ? new Date(orderData.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-                            : "-"}
-                    </p>
-                </div>
-
-                {/* Order Number and Status */}
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold text-gray-900">
-                        Order #{orderData?.orderNumber || "-"}
-                    </h1>
-                    <span className={`px-3 py-1 rounded text-sm font-medium ${orderData?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        orderData?.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
-                            orderData?.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
-                                orderData?.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    orderData?.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                        'bg-gray-100 text-gray-800'
-                        }`}>
-                        {orderData?.status ? orderData.status.charAt(0).toUpperCase() + orderData.status.slice(1) : 'Pending'}
-                    </span>
-                </div>
+                    className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                    <ArrowLeft className="w-5 h-5" />
+                    <span className="font-medium">Back to Orders</span>
+                </button>
+                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-[#C72030] rounded-md text-sm font-medium hover:bg-gray-50">
+                    <Download className="w-4 h-4" />
+                    Download Invoice
+                </button>
             </div>
+
+
 
             {/* Main Grid Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -398,13 +391,13 @@ const OrderDetails = () => {
                                 <div className="pt-4 border-t">
                                     <div className="flex justify-between items-center mb-4">
                                         <span className="text-sm text-gray-700">Total Loyalty Points</span>
-                                        <span className="font-bold text-[#C72030] text-lg">1250 pts</span>
+                                        <span className="font-bold text-[#C72030] text-lg">{orderData?.wallet_balance || 1250} pts</span>
                                     </div>
 
-                                    <div className="border rounded-lg">
+                                    {/* <div className="border rounded-lg">
                                         <button className="w-full py-3 px-4 flex items-center justify-start gap-2 text-sm font-medium text-gray-900 hover:bg-gray-50">
                                             <Award className="w-5 h-5 text-purple-600" />
-                                            <span className="text-2xl text-gray-700">Loyalty Points Summary</span>
+                                            <span className="text-lg text-gray-700">Loyalty Points Summary</span>
                                         </button>
 
                                         <div className="px-4 pb-4 space-y-4">
@@ -456,7 +449,7 @@ const OrderDetails = () => {
                                                 <p className="text-sm font-medium text-blue-900">🎉 This order earned {orderData?.loyaltyPointsEarned || 17} loyalty points!</p>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         </div>
@@ -532,7 +525,8 @@ const OrderDetails = () => {
                 </div>
             </div>
         </div>
-    );
+    </div>
+);
 };
 
-export default OrderDetails
+export default OrderDetails;

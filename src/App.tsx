@@ -638,6 +638,12 @@ import CloudTelephonyDetailPage from "./pages/CloudTelephonyDetailPage";
 // Import Accounting Detail page
 import AccountingDetailPage from "./pages/AccountingDetailPage";
 
+// Import Loyalty Pages
+import LoyaltyTiersList from "./pages/LoyaltyTiersList";
+import NewTier from "./pages/NewTier";
+import TierDetails from "./pages/TierDetails";
+import OrderDetails from "./pages/OrderDetails";
+
 // Import Rule List page
 import { RuleListPage } from "./pages/RuleListPage";
 import { TrainingListDashboard } from "./pages/TrainingListDashboard";
@@ -1095,7 +1101,6 @@ import useRouteLogger from "./hooks/useRouteLogger";
 import ClubEditOccupantUserPage from "./pages/master/ClubEditOccupantUserPage";
 import ClubAddOccupantUserPage from "./pages/master/ClubAddOccupantUserPage";
 
-
 const queryClient = new QueryClient();
 
 function App() {
@@ -1147,7 +1152,7 @@ function App() {
         ).unwrap()) as Array<{ currency?: string; symbol?: string }>;
         const currency =
           Array.isArray(response) &&
-            (response[0]?.currency as string | undefined)
+          (response[0]?.currency as string | undefined)
             ? response[0].currency
             : "INR";
         const currencySymbol =
@@ -2784,6 +2789,21 @@ function App() {
                       element={<LoyaltyRuleEngineDashboard />}
                     />
 
+                    {/* Loyalty Routes */}
+                    <Route
+                      path="/loyalty/loyalty-tiers-list"
+                      element={<LoyaltyTiersList />}
+                    />
+                    <Route path="/loyalty/new-tier" element={<NewTier />} />
+                    <Route
+                      path="/loyalty/tier-details/:id"
+                      element={<TierDetails />}
+                    />
+                    <Route
+                      path="/loyalty/orders/:id"
+                      element={<OrderDetails />}
+                    />
+
                     {/* Settings Routes */}
                     <Route
                       path="/settings/users"
@@ -3421,7 +3441,10 @@ function App() {
                       path="/accounting/opening-balance"
                       element={<OpeningBalance />}
                     />
-                    <Route path="/accounting/tax-setup" element={<TaxSetup />} />
+                    <Route
+                      path="/accounting/tax-setup"
+                      element={<TaxSetup />}
+                    />
                     <Route
                       path="/accounting/charge-setup"
                       element={<ChargeSetupDashboard />}
@@ -3504,7 +3527,10 @@ function App() {
                       path="/accounting/items"
                       element={<ItemsDashboard />}
                     />
-                    <Route path="/accounting/items/add" element={<ItemsAdd />} />
+                    <Route
+                      path="/accounting/items/add"
+                      element={<ItemsAdd />}
+                    />
                     <Route
                       path="/accounting/items/details/:id"
                       element={<ItemsDetails />}
@@ -3540,7 +3566,6 @@ function App() {
                       element={<SalesOrderCreatePage />}
                     />
 
-
                     <Route
                       path="/accounting/recurring-invoices"
                       element={<RecurringInvoicesListPage />}
@@ -3569,7 +3594,10 @@ function App() {
                     />
 
                     {/* Bills Routes */}
-                    <Route path="/accounting/bills" element={<BillListPage />} />
+                    <Route
+                      path="/accounting/bills"
+                      element={<BillListPage />}
+                    />
                     <Route
                       path="/accounting/bills/create"
                       element={<BillCreatePage />}

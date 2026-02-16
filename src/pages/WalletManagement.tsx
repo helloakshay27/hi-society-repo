@@ -43,7 +43,9 @@ export const WalletManagement = () => {
   // Alerts states
   const [alertsActive, setAlertsActive] = useState(true);
   const [minBalanceThreshold, setMinBalanceThreshold] = useState("50000");
-  const [alertRecipients, setAlertRecipients] = useState("admin@company.com, finance@company.com");
+  const [alertRecipients, setAlertRecipients] = useState(
+    "admin@company.com, finance@company.com"
+  );
 
   // Stats mock data (replace with API if needed)
   const stats = {
@@ -62,7 +64,8 @@ export const WalletManagement = () => {
       try {
         // const token = API_CONFIG.TOKEN || "";
         // const url = getFullUrl(`/organization_wallet/transactions.json?token=${token}`);
-        const url = "https://runwal-api.lockated.com/organization_wallet/transactions.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+        const url =
+          "https://runwal-api.lockated.com/organization_wallet/transactions.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
         const response = await fetch(url, {
           headers: {
             Authorization: getAuthHeader(),
@@ -71,7 +74,7 @@ export const WalletManagement = () => {
         });
         if (!response.ok) throw new Error("Failed to fetch transactions");
         const data = await response.json();
-        setCardsData(data.wallet)
+        setCardsData(data.wallet);
         setTransactions(data.transactions || []);
       } catch (error) {
         toast.error("Failed to load wallet transactions");
@@ -98,14 +101,19 @@ export const WalletManagement = () => {
   const renderApiCell = (item: WalletTransaction, columnKey: string) => {
     switch (columnKey) {
       case "transaction_type": {
-        const type = item.transaction_type.charAt(0).toUpperCase() + item.transaction_type.slice(1) || "";
+        const type =
+          item.transaction_type.charAt(0).toUpperCase() +
+            item.transaction_type.slice(1) || "";
         let color = "";
         if (type === "Debit" || type === "DR") color = "text-red-600 font-bold";
-        if (type === "Credit" || type === "CR") color = "text-green-600 font-bold";
+        if (type === "Credit" || type === "CR")
+          color = "text-green-600 font-bold";
         return <span className={color}>{type}</span>;
       }
       case "created_at":
-        return item.created_at ? new Date(item.created_at).toLocaleString() : "";
+        return item.created_at
+          ? new Date(item.created_at).toLocaleString()
+          : "";
       case "amount":
         return item.amount !== undefined ? item.amount.toLocaleString() : "";
       case "id":
@@ -200,14 +208,31 @@ export const WalletManagement = () => {
     <div className="p-6 space-y-6 bg-[#fafafa] min-h-screen">
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-[#f6f4ee] p-1 h-auto">
+        <TabsList className="bg-[#f6f4ee] p-1 h-auto w-full grid grid-cols-4 gap-6">
           <TabsTrigger
             value="wallet-management"
             className="data-[state=active]:bg-white data-[state=active]:text-[#1A1A1A] px-6 py-2"
           >
             Wallet Management
           </TabsTrigger>
-          {/* Alerts tab hidden as per request */}
+          <TabsTrigger
+            value="auto-top-up"
+            className="data-[state=active]:bg-white data-[state=active]:text-[#1A1A1A] px-6 py-2"
+          >
+            Auto Top up
+          </TabsTrigger>
+          <TabsTrigger
+            value="alerts"
+            className="data-[state=active]:bg-white data-[state=active]:text-[#1A1A1A] px-6 py-2"
+          >
+            Alerts
+          </TabsTrigger>
+          <TabsTrigger
+            value="receipts"
+            className="data-[state=active]:bg-white data-[state=active]:text-[#1A1A1A] px-6 py-2"
+          >
+            Receipts
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="wallet-management" className="space-y-6 mt-6">
@@ -352,12 +377,18 @@ export const WalletManagement = () => {
                   <Zap className="w-5 h-5 text-[#10b981]" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-[#1A1A1A]">Auto Top-Up</h2>
-                  <p className="text-sm text-gray-500">Automatically recharge wallet</p>
+                  <h2 className="text-xl font-semibold text-[#1A1A1A]">
+                    Auto Top-Up
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    Automatically recharge wallet
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-[#10b981]">Active</span>
+                <span className="text-sm font-medium text-[#10b981]">
+                  Active
+                </span>
                 <Switch
                   checked={autoTopUpActive}
                   onCheckedChange={setAutoTopUpActive}
@@ -375,7 +406,9 @@ export const WalletManagement = () => {
                   <Info className="w-3 h-3 text-gray-400" />
                 </Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    ₹
+                  </span>
                   <Input
                     type="text"
                     value={triggerBalance}
@@ -393,7 +426,9 @@ export const WalletManagement = () => {
                   <Info className="w-3 h-3 text-gray-400" />
                 </Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    ₹
+                  </span>
                   <Input
                     type="text"
                     value={topUpAmount}
@@ -499,7 +534,14 @@ export const WalletManagement = () => {
                       Auto Top-Up Preview
                     </p>
                     <p className="text-sm text-gray-700">
-                      When balance drops below <span className="font-semibold">Rs.{triggerBalance || '40,000'}</span>, automatically add <span className="font-semibold">Rs.{topUpAmount || '25,000'}</span>
+                      When balance drops below{" "}
+                      <span className="font-semibold">
+                        Rs.{triggerBalance || "40,000"}
+                      </span>
+                      , automatically add{" "}
+                      <span className="font-semibold">
+                        Rs.{topUpAmount || "25,000"}
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -528,12 +570,18 @@ export const WalletManagement = () => {
                   <Bell className="w-5 h-5 text-[#c72030]" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-[#1A1A1A]">Threshold Alerts</h2>
-                  <p className="text-sm text-gray-500">Get notified when balance is low</p>
+                  <h2 className="text-xl font-semibold text-[#1A1A1A]">
+                    Threshold Alerts
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    Get notified when balance is low
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-[#10b981]">Active</span>
+                <span className="text-sm font-medium text-[#10b981]">
+                  Active
+                </span>
                 <Switch
                   checked={alertsActive}
                   onCheckedChange={setAlertsActive}
@@ -551,7 +599,9 @@ export const WalletManagement = () => {
                   <Info className="w-3 h-3 text-gray-400" />
                 </Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    ₹
+                  </span>
                   <Input
                     type="text"
                     value={minBalanceThreshold}
@@ -570,9 +620,7 @@ export const WalletManagement = () => {
                     <p className="text-sm font-medium text-[#c72030] mb-1">
                       Alert Recipients
                     </p>
-                    <p className="text-sm text-[#1A1A1A]">
-                      {alertRecipients}
-                    </p>
+                    <p className="text-sm text-[#1A1A1A]">{alertRecipients}</p>
                   </div>
                 </div>
               </div>
@@ -590,8 +638,24 @@ export const WalletManagement = () => {
               </div>
             </div>
           </div>
-        </TabsContent>          
-        {/* Alerts tab content hidden as per request */}
+        </TabsContent>
+
+        <TabsContent value="receipts" className="space-y-6 mt-6">
+          <div className="max-w-4xl">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-[#1A1A1A]">Receipts</h2>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+              <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                <Download className="w-12 h-12 mb-4 text-gray-300" />
+                <p className="text-lg font-medium">No receipts available</p>
+                <p className="text-sm mt-1">
+                  Transactions receipts will appear here
+                </p>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
