@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +23,8 @@ import {
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { TextField, InputAdornment, Switch } from "@mui/material";
+import { useDebounce } from "@/hooks/useDebounce";
+import { startTransition, useRef } from "react";
 
 interface ContestRecord {
   id: number;
@@ -34,13 +36,14 @@ interface ContestRecord {
   attempt: number;
   status: "Active" | "Inactive" | "Expired";
   isActive: boolean;
+  contentStatus: string;
 }
 
 const statusCards = [
-  { title: "Total Contest", icon: Trophy, status: null },
-  { title: "Active", icon: Circle, status: "Active" },
-  { title: "Inactive", icon: Ban, status: "Inactive" },
-  { title: "Expired", icon: AlertCircle, status: "Expired" },
+  { title: "Total Contest", icon: Trophy, status: null, queryParam: null },
+  { title: "Active", icon: Circle, status: "Active", queryParam: "q[active_cont]=true" },
+  { title: "Inactive", icon: Ban, status: "Inactive", queryParam: "q[active_cont]=false" },
+  { title: "Expired", icon: AlertCircle, status: "Expired", queryParam: "q[status_cont]=expired" },
 ];
 
 export const ContestListPage: React.FC = () => {
@@ -49,8 +52,14 @@ export const ContestListPage: React.FC = () => {
   const [contests, setContests] = useState<ContestRecord[]>([]);
   const [filteredContests, setFilteredContests] = useState<ContestRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const isSearchingRef = useRef(false);
+
+  // Debounce the search input to avoid excessive API calls
+  const debouncedSearchQuery = useDebounce(searchInput, 800);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages] = useState(1);
@@ -65,37 +74,64 @@ export const ContestListPage: React.FC = () => {
 
   /* ---------------- API FETCH ---------------- */
 
-  useEffect(() => {
-    fetchContests();
-  }, []);
-
-  const fetchContests = async () => {
+  const fetchContests = useCallback(async () => {
     try {
-      setLoading(true);
+      // Use different loading states based on whether it's a search operation
+      const isSearch = searchQuery.trim() !== "";
+      if (isSearch) {
+        setSearchLoading(true);
+      } else {
+        setLoading(true);
+      }
 
-      const baseUrl = localStorage.getItem("baseUrl");
-      const token = localStorage.getItem("token");
-      //   const baseUrl =  "https://uat-hi-society.lockated.com";
-      // const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI"
+      const baseUrl = localStorage.getItem('baseUrl');
+      const token = localStorage.getItem('token');
+    //   const baseUrl =  "https://uat-hi-society.lockated.com";
+    // const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI"
+
 
       if (!baseUrl || !token) {
         throw new Error("Base URL or token not set in localStorage");
       }
 
       // Ensure protocol is present
-      const url = /^https?:\/\//i.test(baseUrl)
-        ? baseUrl
-        : `https://${baseUrl}`;
+      const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
 
-      const response = await fetch(`${url}/contests.json`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // Build URL with query parameters based on selected status and search query
+      const queryParams = new URLSearchParams();
+      queryParams.append('source', 'web');
+      
+      // Add search query parameter if exists
+      if (searchQuery.trim()) {
+        queryParams.append(
+          'q[name_or_description_or_content_type_or_status_or_attemp_required_text_or_start_at_text_or_end_at_text_or_prizes_title_cont]',
+          searchQuery.trim()
+        );
+      }
+      
+      // Add status filter if selected
+      if (selectedStatus) {
+        const card = statusCards.find(c => c.status === selectedStatus);
+        if (card?.queryParam) {
+          const [key, value] = card.queryParam.split('=');
+          queryParams.append(key, value);
+        }
+      }
+
+      const apiUrl = `${url}/contests.json?${queryParams.toString()}`;
+
+      const response = await fetch(
+        apiUrl,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       const data = await response.json();
-      console.log("Contest API response:", data);
+      console.log('Contest API response:', data);
       const today = new Date();
 
       // Handle both array and object response
@@ -139,6 +175,7 @@ export const ContestListPage: React.FC = () => {
           attempt: item.attemp_required ?? 1,
           status,
           isActive: item.active ?? false,
+          contentStatus: item.status ?? "-",
         };
       });
 
@@ -147,36 +184,60 @@ export const ContestListPage: React.FC = () => {
 
       setStatusCounts({
         total: formatted.length,
-        active: formatted.filter((c) => c.status === "Active").length,
-        inactive: formatted.filter((c) => c.status === "Inactive").length,
-        expired: formatted.filter((c) => c.status === "Expired").length,
+        active: formatted.filter(c => c.status === "Active").length,
+        inactive: formatted.filter(c => c.status === "Inactive").length,
+        expired: formatted.filter(c => c.status === "Expired").length,
       });
     } catch (error) {
       console.error("Error fetching contests", error);
     } finally {
-      setLoading(false);
+      // Clear loading states immediately
+      if (searchQuery.trim() !== "") {
+        setSearchLoading(false);
+      } else {
+        setLoading(false);
+      }
     }
-  };
+  }, [searchQuery, selectedStatus]);
+
+  // Initial load
+  useEffect(() => {
+    fetchContests();
+  }, []);
 
   /* ---------------- FILTER & SEARCH ---------------- */
 
+  // Handle search input change
+  const handleSearch = useCallback((query: string) => {
+    setSearchInput(query);
+  }, []);
+
+  // Effect to handle debounced search
   useEffect(() => {
-    let filtered = contests;
-
-    if (selectedStatus) {
-      filtered = filtered.filter((c) => c.status === selectedStatus);
+    // Update search query when debounced input changes
+    const trimmedQuery = debouncedSearchQuery.trim();
+    
+    if (searchQuery !== trimmedQuery) {
+      setSearchQuery(trimmedQuery);
+      setCurrentPage(1);
+      // Trigger fetch after state update
+      const timer = setTimeout(() => {
+        fetchContests();
+      }, 0);
+      return () => clearTimeout(timer);
     }
+  }, [debouncedSearchQuery]);
 
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (c) =>
-          c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          c.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
+  // Effect to handle status filter changes
+  useEffect(() => {
+    fetchContests();
+  }, [selectedStatus]);
 
-    setFilteredContests(filtered);
-  }, [searchQuery, selectedStatus, contests]);
+  useEffect(() => {
+    // Backend handles both search and status filtering
+    // No client-side filtering needed
+    setFilteredContests(contests);
+  }, [contests]);
 
   /* ---------------- HELPERS ---------------- */
 
@@ -193,22 +254,17 @@ export const ContestListPage: React.FC = () => {
     return "bg-gray-100 text-gray-800";
   };
 
-  const handleToggleActive = async (
-    contestId: number,
-    currentIsActive: boolean
-  ) => {
+  const handleToggleActive = async (contestId: number, currentIsActive: boolean) => {
     try {
       setTogglingId(contestId);
       const baseUrl = localStorage.getItem("baseUrl");
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token") ;
 
       if (!baseUrl || !token) {
         throw new Error("Base URL or token not set in localStorage");
       }
 
-      const url = /^https?:\/\//i.test(baseUrl)
-        ? baseUrl
-        : `https://${baseUrl}`;
+      const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
       const newActiveState = !currentIsActive;
 
       const formData = new FormData();
@@ -228,7 +284,7 @@ export const ContestListPage: React.FC = () => {
       }
 
       // Optimistic UI update
-      const updatedContests = contests.map((contest) => {
+      const updatedContests = contests.map(contest => {
         if (contest.id === contestId) {
           return {
             ...contest,
@@ -242,27 +298,29 @@ export const ContestListPage: React.FC = () => {
       setContests(updatedContests);
 
       // Update status counts
-      const activeCounts = updatedContests.filter(
-        (c) => c.status === "Active"
-      ).length;
-      const inactiveCounts = updatedContests.filter(
-        (c) => c.status === "Inactive"
-      ).length;
-      setStatusCounts((prev) => ({
+      const activeCounts = updatedContests.filter(c => c.status === "Active").length;
+      const inactiveCounts = updatedContests.filter(c => c.status === "Inactive").length;
+      setStatusCounts(prev => ({
         ...prev,
         active: activeCounts,
         inactive: inactiveCounts,
       }));
 
-      console.log(
-        `Contest ${contestId} toggled to ${newActiveState ? "Active" : "Inactive"}`
-      );
+      console.log(`Contest ${contestId} toggled to ${newActiveState ? "Active" : "Inactive"}`);
     } catch (error) {
       console.error("Error toggling contest status", error);
     } finally {
       setTogglingId(null);
     }
   };
+
+  const getShortText = (text: string, wordLimit = 10) => {
+  if (!text) return "-";
+  const words = text.split(" ");
+  if (words.length <= wordLimit) return text;
+  return words.slice(0, wordLimit).join(" ") + "...";
+};
+
 
   /* ---------------- TABLE CONFIG ---------------- */
 
@@ -274,6 +332,7 @@ export const ContestListPage: React.FC = () => {
     { key: "endDate", label: "End Date", sortable: true },
     { key: "contestType", label: "Contest Type", sortable: true },
     { key: "attempt", label: "Attempt", sortable: true },
+    { key: "contentStatus", label: "Content Status", sortable: true },
     { key: "status", label: "Status", sortable: true },
   ];
 
@@ -346,15 +405,10 @@ export const ContestListPage: React.FC = () => {
 
       {/* TABLE */}
       <div className="rounded-lg shadow-sm">
-        {loading ? (
-          <div className="py-10 text-center text-gray-500">
-            Loading contests...
-          </div>
-        ) : (
-          <EnhancedTable
+        <EnhancedTable
             data={filteredContests}
             columns={columns}
-            renderRow={(contest) => ({
+            renderRow={contest => ({
               actions: (
                 <Button
                   variant="ghost"
@@ -366,33 +420,37 @@ export const ContestListPage: React.FC = () => {
               ),
               name: contest.name,
               description: (
-                <div className="whitespace-normal min-w-[200px] max-w-[400px]">
-                  {contest.description}
-                </div>
-              ),
+  <span
+    title={contest.description}
+    className="cursor-pointer"
+  >
+    {getShortText(contest.description, 10)}
+  </span>
+),
+
               startDate: contest.startDate,
               endDate: contest.endDate,
               contestType: contest.contestType,
               attempt: String(contest.attempt).padStart(2, "0"),
+              contentStatus: (
+                <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                  {contest.contentStatus}
+                </span>
+              ),
               status: (
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={contest.isActive}
-                    onChange={() =>
-                      handleToggleActive(contest.id, contest.isActive)
-                    }
-                    disabled={
-                      togglingId === contest.id || contest.status === "Expired"
-                    }
+                    onChange={() => handleToggleActive(contest.id, contest.isActive)}
+                    disabled={togglingId === contest.id || contest.status === "Expired"}
                     size="small"
                     sx={{
                       "& .MuiSwitch-switchBase.Mui-checked": {
                         color: "#22c55e",
                       },
-                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                        {
-                          backgroundColor: "#22c55e",
-                        },
+                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                        backgroundColor: "#22c55e",
+                      },
                     }}
                   />
                   <span className="text-sm font-medium">
@@ -401,9 +459,14 @@ export const ContestListPage: React.FC = () => {
                 </div>
               ),
             })}
-            enableSearch={false}
+            enableSearch={true}
+            enableGlobalSearch={true}
+            onGlobalSearch={handleSearch}
+            searchPlaceholder="Search contests..."
             enableSelection={false}
             enableExport={false}
+            loading={loading || searchLoading}
+            loadingMessage={searchLoading ? "Searching contests..." : "Loading contests..."}
             leftActions={
               <div className="flex items-center gap-2">
                 <Button
@@ -418,7 +481,6 @@ export const ContestListPage: React.FC = () => {
             storageKey="contest-table"
             emptyMessage="No contests found"
           />
-        )}
       </div>
 
       {/* PAGINATION (READY FOR BACKEND) */}
@@ -429,7 +491,7 @@ export const ContestListPage: React.FC = () => {
               <PaginationItem>
                 <PaginationPrevious
                   onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                    setCurrentPage(prev => Math.max(1, prev - 1))
                   }
                 />
               </PaginationItem>
@@ -441,7 +503,7 @@ export const ContestListPage: React.FC = () => {
               <PaginationItem>
                 <PaginationNext
                   onClick={() =>
-                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                    setCurrentPage(prev => Math.min(totalPages, prev + 1))
                   }
                 />
               </PaginationItem>

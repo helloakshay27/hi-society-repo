@@ -247,6 +247,8 @@ export const CreateContestPage: React.FC = () => {
     );
   };
 
+  const today = new Date().toISOString().split("T")[0];
+
   const buildISO = (date: string, time: string, isEnd = false): string => {
     if (!date || !time) return "";
     const [y, m, d] = date.split("-");
@@ -258,97 +260,120 @@ export const CreateContestPage: React.FC = () => {
     return dt.toISOString(); // UTC — change to +05:30 string if backend requires it
   };
 
-  console.log("offers", offers);
-  const handleSubmit = async () => {
-    if (!validateCurrentStep()) return;
+
+  const saveContest = async (isStep1Only: boolean = false) => {
+    // Basic validation for the fields we are about to send
+    if (isStep1Only) {
+       if (!contestName.trim() || !contestDescription.trim() || !contestType) {
+         sonnerToast.error("Please fill in all basic info fields");
+         return false;
+       }
+    } else {
+      // Validate current step before saving, unless it's a "save as draft" from a later step which might be partial? 
+      // Actually, let's stick to validating current step to ensure data integrity.
+      if (!validateCurrentStep()) return false;
+    }
 
     setSubmitting(true);
 
     const baseUrl = localStorage.getItem('baseUrl') || '';
     const token = localStorage.getItem('token') || '';
-    //     const baseUrl =  "https://uat-hi-society.lockated.com";
-    // const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI"
     const formData = new FormData();
 
-    // Basic contest fields
+    // 1. Basic contest fields (Always send these as they are the core identity)
     formData.append('contest[name]', contestName.trim());
     formData.append('contest[description]', contestDescription.trim());
     formData.append('contest[content_type]', contestType.toLowerCase());
-    formData.append('contest[active]', String(isActive));
-    formData.append('contest[start_at]', buildISO(startDate, startTime));
-    formData.append('contest[end_at]', buildISO(endDate, endTime, true));
+    
+    // Only send these if we are NOT in the initial step 1 creation (or if we have them)
+    // For Step 1 creation, we just need name, description, type.
+    if (!isStep1Only) {
+       formData.append('contest[active]', String(isActive));
+       
+       if (startDate && startTime) {
+          formData.append('contest[start_at]', buildISO(startDate, startTime));
+       }
+       if (endDate && endTime) {
+          formData.append('contest[end_at]', buildISO(endDate, endTime, true));
+       }
 
-    if (usersCap) {
-      formData.append('contest[user_caps]', usersCap);
-    }
-    if (attemptsRequired) {
-      formData.append('contest[attemp_required]', attemptsRequired);
-    }
+       if (usersCap) {
+         formData.append('contest[user_caps]', usersCap);
+       }
+       if (attemptsRequired) {
+         formData.append('contest[attemp_required]', attemptsRequired);
+       }
 
-    // Add prizes_attributes
-    offers.forEach((offer, index) => {
-      formData.append(`contest[prizes_attributes][${index}][title]`, offer.offerTitle.trim());
-      
-      // Determine reward type based on offer.rewardType
-      const rewardType = offer.rewardType === "Points" ? "points" : "coupon";
-      formData.append(`contest[prizes_attributes][${index}][reward_type]`, rewardType);
+       // Add prizes_attributes
+       offers.forEach((offer, index) => {
+         formData.append(`contest[prizes_attributes][${index}][title]`, offer.offerTitle.trim());
+         
+         const rewardType = offer.rewardType === "Points" ? "points" : "coupon";
+         formData.append(`contest[prizes_attributes][${index}][reward_type]`, rewardType);
 
-      // Add coupon_code only if reward type is "Coupon Code"
-      if (offer.rewardType === "Coupon Code") {
-        formData.append(`contest[prizes_attributes][${index}][coupon_code]`, offer.couponCode.trim());
-      }
+         if (offer.rewardType === "Coupon Code") {
+           formData.append(`contest[prizes_attributes][${index}][coupon_code]`, offer.couponCode.trim());
+         }
 
-      // Add points_value only if reward type is "Points"
-      if (offer.rewardType === "Points") {
-        formData.append(`contest[prizes_attributes][${index}][points_value]`, offer.pointsValue.trim());
-      }
+         if (offer.rewardType === "Points") {
+           formData.append(`contest[prizes_attributes][${index}][points_value]`, offer.pointsValue.trim());
+         }
 
-      // Add partner_name only if provided
-      if (offer.partner.trim()) {
-        formData.append(`contest[prizes_attributes][${index}][partner_name]`, offer.partner.trim());
-      }
+         if (offer.partner.trim()) {
+           formData.append(`contest[prizes_attributes][${index}][partner_name]`, offer.partner.trim());
+         }
 
-      formData.append(
-        `contest[prizes_attributes][${index}][probability_value]`,
-        offer.winningProbability || "0"
-      );
-      formData.append(
-        `contest[prizes_attributes][${index}][probability_out_of]`,
-        offer.probabilityOutOf || "100"
-      );
-      formData.append(`contest[prizes_attributes][${index}][position]`, String(index + 1));
-      formData.append(`contest[prizes_attributes][${index}][active]`, "true");
+         formData.append(
+           `contest[prizes_attributes][${index}][probability_value]`,
+           offer.winningProbability || "0"
+         );
+         formData.append(
+           `contest[prizes_attributes][${index}][probability_out_of]`,
+           offer.probabilityOutOf || "100"
+         );
+         formData.append(`contest[prizes_attributes][${index}][position]`, String(index + 1));
+         formData.append(`contest[prizes_attributes][${index}][active]`, "true");
 
-      // Add banner image if present
-      if (offer.bannerImage) {
-        formData.append(
-          `contest[prizes_attributes][${index}][image_attributes][document]`,
-          offer.bannerImage
-        );
-      }
-    });
+         if (offer.bannerImage) {
+           formData.append(
+             `contest[prizes_attributes][${index}][image_attributes][document]`,
+             offer.bannerImage
+           );
+         }
+         // Important: If updating an existing prize, backend might need ID. 
+         // But here we are just sending attributes. Rails usually handles nested attributes if ID is provided.
+         // Since we don't store prize IDs from backend yet, we might be recreating prizes on every save or the backend handles it.
+         // For now, assuming standard nested attributes behavior.
+       });
 
-    // Add terms and conditions text if present
-    if (termsText.trim()) {
-      formData.append('contest[terms_and_conditions]', termsText.trim());
-    }
+       if (termsText.trim()) {
+         formData.append('contest[terms_and_conditions]', termsText.trim());
+       }
 
-    // Add redemption guide text if present (for all contest types)
-    if (redemptionText.trim()) {
-      formData.append('contest[redemption_guide]', redemptionText.trim());
+       if (redemptionText.trim()) {
+         formData.append('contest[redemption_guide]', redemptionText.trim());
+       }
     }
 
     try {
-      // Ensure protocol is present
       const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+      // Logic for POST or PUT
+      let finalUrl = `${url}/contests.json`;
+      let method = "POST";
 
-      const res = await fetch(
-        `${url}/contests.json`,
-        {
-          method: "POST",
+      if (createdContestId) {
+         // Should be PUT to update existing contest
+         finalUrl = `${url}/contests/${createdContestId}.json`;
+         method = "PUT";
+      }
+
+      console.log(`Sending ${method} request to ${finalUrl}`);
+
+      const res = await fetch(finalUrl, {
+          method: method,
           headers: {
             Authorization: `Bearer ${token}`,
-            // Don't set Content-Type - browser will set it with boundary for multipart/form-data
+            // Don't set Content-Type for FormData
           },
           body: formData,
         }
@@ -360,24 +385,87 @@ export const CreateContestPage: React.FC = () => {
       }
 
       const data = await res.json();
-      sonnerToast.success("Contest created successfully!");
-      
-      // Store the created contest ID for navigation
-      if (data.id) {
-        setCreatedContestId(data.id);
+      console.log("Success:", data);
+
+      if (method === "POST" && data.id) {
+          setCreatedContestId(data.id);
       }
-      
-      setShowSuccessModal(true);
+
+      // Success Logic
+      if (isStep1Only) {
+          sonnerToast.success("Draft created successfully!");
+          // Move to Step 2
+          if (currentStep === 1) {
+             setCompletedSteps(prev => {
+                const newSteps = [...prev];
+                if (!newSteps.includes(1)) newSteps.push(1);
+                return newSteps;
+             });
+             setCurrentStep(2);
+          }
+      } else {
+         // If we are saving from other steps or final submit
+         if (method === "PUT") {
+             // Draft update
+         } else {
+             // Created
+         }
+      }
+      return true;
 
     } catch (err: any) {
       console.error(err);
-      sonnerToast.error(err.message || "Failed to create contest");
+      sonnerToast.error(err.message || "Failed to save contest");
+      return false;
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleSaveDraft = async () => {
+    // Validate current step before saving
+    if (!validateCurrentStep()) return;
+
+    let success = false;
+
+    // If Step 1, create draft (POST)
+    if (currentStep === 1 && !createdContestId) {
+        success = await saveContest(true);
+    } else {
+        // If updating existing draft (PUT) - save current step stuff
+        // For Step > 1, pass false to include all partial data
+        success = await saveContest(false);
+        if (success) {
+          sonnerToast.success("Draft updated successfully!");
+          
+          // Mark current step as completed
+          if (!completedSteps.includes(currentStep)) {
+            setCompletedSteps([...completedSteps, currentStep]);
+          }
+          
+          // Move to next step if not on the last step
+          if (currentStep < 4) {
+            setCurrentStep(currentStep + 1);
+          }
+        }
+    }
+  };
+
+  const handleSubmit = async () => {
+     // Final submission from Step 4
+    if (!validateCurrentStep()) return;
+    
+    // Call saveContest with full data
+    const success = await saveContest(false);
+    
+    if (success) {
+        sonnerToast.success("Contest submitted successfully!");
+        setShowSuccessModal(true);
+    }
+  };
+
   const handleNext = () => {
+    // Standard next logic without auto-save
     if (validateCurrentStep()) {
       if (!completedSteps.includes(currentStep)) {
         setCompletedSteps([...completedSteps, currentStep]);
@@ -472,9 +560,7 @@ export const CreateContestPage: React.FC = () => {
     }
   };
 
-  const handleSaveDraft = () => {
-    sonnerToast.success("Draft saved successfully!");
-  };
+
 
   const handleSuccessClose = () => {
     setShowSuccessModal(false);
@@ -519,7 +605,7 @@ export const CreateContestPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <TextField
                   fullWidth
-                  label="Contest Name"
+                  label="Contest Name *"
                   placeholder="Enter Title"
                   value={contestName}
                   onChange={(e) => setContestName(e.target.value)}
@@ -529,7 +615,7 @@ export const CreateContestPage: React.FC = () => {
                 />
 
                 <FormControl fullWidth size="small" sx={textFieldSx}>
-                  <InputLabel>Contest Type</InputLabel>
+                  <InputLabel>Contest Type *</InputLabel>
                   <MuiSelect
                     value={contestType}
                     label="Contest Type"
@@ -547,7 +633,7 @@ export const CreateContestPage: React.FC = () => {
               <div className="mt-6">
                 <TextField
                   fullWidth
-                  label="Contest Description"
+                  label="Contest Description *"
                   placeholder="Enter Description"
                   value={contestDescription}
                   onChange={(e) => setContestDescription(e.target.value)}
@@ -793,14 +879,15 @@ export const CreateContestPage: React.FC = () => {
                 <TextField
                   fullWidth
                   label="Start Date *"
-                  placeholder="DD/MM/YYYY"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   variant="outlined"
                   size="small"
                   type="date"
                   InputLabelProps={{ shrink: true }}
-                  // InputProps={{ endAdornment: <Calendar className="w-4 h-4 text-gray-400" /> }}
+                  inputProps={{
+                    min: today, // ✅ Disable previous dates
+                  }}
                   sx={{
                     ...textFieldSx,
                     '& input[type="date"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
@@ -809,6 +896,7 @@ export const CreateContestPage: React.FC = () => {
                     '& input[type="date"]::-webkit-datetime-edit-year-field': { textTransform: 'uppercase' },
                   }}
                 />
+
 
                 <TextField
                   fullWidth
