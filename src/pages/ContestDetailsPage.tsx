@@ -37,8 +37,8 @@ interface ContestDetails {
   terms_and_conditions: string | null;
   content_type: string;
   active: boolean;
-  start_at: string;           // ISO string
-  end_at: string;             // ISO string
+  start_at: string; // ISO string
+  end_at: string; // ISO string
   user_caps: number | null;
   attemp_required: number | null;
   prizes: Prize[];
@@ -61,23 +61,25 @@ export const ContestDetailsPage: React.FC = () => {
       setError(null);
 
       try {
-        const baseUrl = localStorage.getItem('baseUrl');
-        const token = localStorage.getItem('token');
-// const baseUrl =  "https://uat-hi-society.lockated.com";
-//     const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI"
+        const baseUrl = localStorage.getItem("baseUrl");
+        const token = localStorage.getItem("token");
+        // const baseUrl =  "https://uat-hi-society.lockated.com";
+        //     const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI"
 
         if (!baseUrl || !token) {
           throw new Error("Base URL or token not set in localStorage");
         }
 
         // Ensure protocol is present
-        const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+        const url = /^https?:\/\//i.test(baseUrl)
+          ? baseUrl
+          : `https://${baseUrl}`;
 
         const res = await fetch(`${url}/contests/${id}.json`, {
           headers: {
             Accept: "application/json",
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
 
@@ -177,16 +179,19 @@ export const ContestDetailsPage: React.FC = () => {
                 {contest.name}
               </h1>
               <span
-                className={`px-3 py-1 rounded-md text-sm font-medium ${contest.active
-                  ? "bg-green-100 text-green-800"
-                  : "bg-gray-100 text-gray-800"
-                  }`}
+                className={`px-3 py-1 rounded-md text-sm font-medium ${
+                  contest.active
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
               >
                 {contest.active ? "Active" : "Inactive"}
               </span>
             </div>
             <p className="text-sm text-gray-600">
-              {contest.content_type.charAt(0).toUpperCase() + contest.content_type.slice(1)} Contest
+              {contest.content_type.charAt(0).toUpperCase() +
+                contest.content_type.slice(1)}{" "}
+              Contest
             </p>
           </div>
 
@@ -229,18 +234,23 @@ export const ContestDetailsPage: React.FC = () => {
           <CardContent className="bg-white p-6 rounded-b-lg">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">Contest Name</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Contest Name
+                </p>
                 <p className="text-base text-[#1A1A1A]">{contest.name}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">Contest Type</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Contest Type
+                </p>
                 <p className="text-base text-[#1A1A1A]">
-                  {contest.content_type.charAt(0).toUpperCase() + contest.content_type.slice(1)}
+                  {contest.content_type.charAt(0).toUpperCase() +
+                    contest.content_type.slice(1)}
                 </p>
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium text-gray-500">Description</p>
-                <p className="text-base text-[#1A1A1A]">
+                <p className="text-base text-[#1A1A1A] break-words whitespace-pre-wrap">
                   {contest.description || "—"}
                 </p>
               </div>
@@ -261,8 +271,11 @@ export const ContestDetailsPage: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
               <span
-                className={`px-3 py-1 rounded-md text-sm font-medium ${contest.active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-                  }`}
+                className={`px-3 py-1 rounded-md text-sm font-medium ${
+                  contest.active
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
               >
                 {contest.active ? "Active" : "Inactive"}
               </span>
@@ -281,27 +294,41 @@ export const ContestDetailsPage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               <div className="space-y-1">
                 <p className="text-sm font-medium text-gray-500">Start Date</p>
-                <p className="text-base text-[#1A1A1A]">{formatDate(contest.start_at)}</p>
+                <p className="text-base text-[#1A1A1A]">
+                  {formatDate(contest.start_at)}
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium text-gray-500">Start Time</p>
-                <p className="text-base text-[#1A1A1A]">{formatTime(contest.start_at)}</p>
+                <p className="text-base text-[#1A1A1A]">
+                  {formatTime(contest.start_at)}
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium text-gray-500">End Date</p>
-                <p className="text-base text-[#1A1A1A]">{formatDate(contest.end_at)}</p>
+                <p className="text-base text-[#1A1A1A]">
+                  {formatDate(contest.end_at)}
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium text-gray-500">End Time</p>
-                <p className="text-base text-[#1A1A1A]">{formatTime(contest.end_at)}</p>
+                <p className="text-base text-[#1A1A1A]">
+                  {formatTime(contest.end_at)}
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium text-gray-500">Users Cap</p>
-                <p className="text-base text-[#1A1A1A]">{contest.user_caps ?? "—"}</p>
+                <p className="text-base text-[#1A1A1A]">
+                  {contest.user_caps ?? "—"}
+                </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-500">Attempts Required</p>
-                <p className="text-base text-[#1A1A1A]">{contest.attemp_required ?? "—"}</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Attempts Required
+                </p>
+                <p className="text-base text-[#1A1A1A]">
+                  {contest.attemp_required ?? "—"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -314,7 +341,9 @@ export const ContestDetailsPage: React.FC = () => {
               <div className="bg-[#C4B89D54] p-2 rounded-lg">
                 <Gift className="w-5 h-5 text-[#C72030]" />
               </div>
-              <h3 className="text-lg font-semibold text-[#1A1A1A]">Prizes / Offers</h3>
+              <h3 className="text-lg font-semibold text-[#1A1A1A]">
+                Prizes / Offers
+              </h3>
             </div>
             {/* <Button
               onClick={() => handleEdit("prizes")}
@@ -328,30 +357,43 @@ export const ContestDetailsPage: React.FC = () => {
           </div>
           <CardContent className="bg-white p-6 rounded-b-lg">
             {contest.prizes.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No prizes defined yet</p>
+              <p className="text-gray-500 text-center py-8">
+                No prizes defined yet
+              </p>
             ) : (
               contest.prizes.map((prize, index) => (
-                <div key={prize.id} className="mb-8 last:mb-0 border-b pb-6 last:border-b-0">
+                <div
+                  key={prize.id}
+                  className="mb-8 last:mb-0 border-b pb-6 last:border-b-0"
+                >
                   <div className="flex items-start gap-3 mb-4">
-                    <span className="text-[#C72030] font-semibold text-lg">{index + 1}.</span>
+                    <span className="text-[#C72030] font-semibold text-lg">
+                      {index + 1}.
+                    </span>
                     <div className="flex-1">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-5 gap-x-6">
                         {/* Row 1 */}
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-gray-500">Prize Title</p>
-                          <p className="text-sm font-medium text-[#1A1A1A]">{prize.title}</p>
+                          <p className="text-xs font-medium text-gray-500">
+                            Prize Title
+                          </p>
+                          <p className="text-sm font-medium text-[#1A1A1A]">
+                            {prize.title}
+                          </p>
                         </div>
 
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-gray-500"> Reward Type</p>
+                          <p className="text-xs font-medium text-gray-500">
+                            {" "}
+                            Reward Type
+                          </p>
                           <p className="text-sm text-[#1A1A1A]">
                             {/* {prize.reward_type === "points" ? "Loyalty Points" : "Coupon/Voucher"} */}
                             {prize.reward_type === "points"
-  ? "Points"
-  : prize.reward_type === "coupon"
-  ? "Coupon Code"
-  : ""}
-
+                              ? "Points"
+                              : prize.reward_type === "coupon"
+                                ? "Coupon Code"
+                                : ""}
                           </p>
                         </div>
 
@@ -381,27 +423,36 @@ export const ContestDetailsPage: React.FC = () => {
                           </p>
                         </div> */}
                         <div className="space-y-1">
-  <p className="text-xs font-medium text-gray-500">
-    {prize.reward_type === "points" ? "Points" : "Coupon Code"}
-  </p>
+                          <p className="text-xs font-medium text-gray-500">
+                            {prize.reward_type === "points"
+                              ? "Points"
+                              : "Coupon Code"}
+                          </p>
 
-  <p className="text-sm text-[#1A1A1A]">
-    {prize.reward_type === "points"
-      ? `${prize.points_value ?? 0} Points`
-      : prize.coupon_code ?? "—"}
-  </p>
-</div>
-
+                          <p className="text-sm text-[#1A1A1A]">
+                            {prize.reward_type === "points"
+                              ? `${prize.points_value ?? 0} Points`
+                              : (prize.coupon_code ?? "—")}
+                          </p>
+                        </div>
 
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-gray-500">Partner</p>
-                          <p className="text-sm text-[#1A1A1A]">{prize.partner_name ?? "—"}</p>
+                          <p className="text-xs font-medium text-gray-500">
+                            Partner
+                          </p>
+                          <p className="text-sm text-[#1A1A1A]">
+                            {prize.partner_name ?? "—"}
+                          </p>
                         </div>
 
                         {/* Row 3 */}
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-gray-500">Probability</p>
-                          <p className="text-sm text-[#1A1A1A]">{getProbability(prize)}</p>
+                          <p className="text-xs font-medium text-gray-500">
+                            Probability
+                          </p>
+                          <p className="text-sm text-[#1A1A1A]">
+                            {getProbability(prize)}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -419,7 +470,9 @@ export const ContestDetailsPage: React.FC = () => {
               <div className="bg-[#C4B89D54] p-2 rounded-lg">
                 <FileText className="w-5 h-5 text-[#C72030]" />
               </div>
-              <h3 className="text-lg font-semibold text-[#1A1A1A]">Terms & Conditions</h3>
+              <h3 className="text-lg font-semibold text-[#1A1A1A]">
+                Terms & Conditions
+              </h3>
             </div>
             {/* <Button
               onClick={() => handleEdit("terms")}
@@ -438,9 +491,13 @@ export const ContestDetailsPage: React.FC = () => {
               ) : (
                 <p className="text-gray-500 italic">No terms and conditions provided.</p>
               )} */}
-              <div dangerouslySetInnerHTML={{ __html:contest.terms_and_conditions || "<p className='text-gray-500'>No terms and conditions provided</p>" }}/>
-
-              
+              <div
+                dangerouslySetInnerHTML={{
+                  __html:
+                    contest.terms_and_conditions ||
+                    "<p className='text-gray-500'>No terms and conditions provided</p>",
+                }}
+              />
             </div>
           </CardContent>
         </Card>

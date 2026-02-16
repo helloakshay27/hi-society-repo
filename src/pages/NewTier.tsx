@@ -10,14 +10,15 @@ import { ChevronRight, ArrowLeft, X } from "lucide-react";
 const validationSchema = Yup.object().shape({
   name: Yup.string()
     .required("Tier name is required")
-    .test('unique-name', 'Tier name already exists.', async function(value) {
+    .test("unique-name", "Tier name already exists.", async function (value) {
       if (!value) return true;
       try {
         const storedValue = sessionStorage.getItem("selectedId");
         const token = localStorage.getItem("access_token");
         // const url = getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=1${token ? `&access_token=${token}` : ''}`);
         // Use static baseurl and token for now:
-        const url = 'https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ';
+        const url =
+          "https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
         const response = await axios.get(url, {
           headers: {
             Authorization: token ? `Bearer ${token}` : undefined,
@@ -31,15 +32,17 @@ const validationSchema = Yup.object().shape({
           tiersArray = response.data.tiers;
         }
         if (tiersArray.length > 0) {
-          const existingTier = tiersArray.find(tier =>
-            tier.name && tier.name.toLowerCase() === value.toLowerCase()
+          const existingTier = tiersArray.find(
+            (tier) =>
+              tier.name && tier.name.toLowerCase() === value.toLowerCase()
           );
           if (existingTier) return false;
         }
         const { tiers } = this.parent;
         if (tiers && tiers.length > 0) {
-          const duplicateCount = tiers.filter(tier =>
-            tier.name && tier.name.toLowerCase() === value.toLowerCase()
+          const duplicateCount = tiers.filter(
+            (tier) =>
+              tier.name && tier.name.toLowerCase() === value.toLowerCase()
           ).length;
           return duplicateCount === 0;
         }
@@ -98,7 +101,8 @@ const NewTier = () => {
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
       // Always fetch the latest tiers for uniqueness validation
-      const getTiersUrl = 'https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ';
+      const getTiersUrl =
+        "https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
       const existingTiersResponse = await axios.get(getTiersUrl, {
         headers: { "Content-Type": "application/json" },
       });
@@ -111,11 +115,18 @@ const NewTier = () => {
         existingTiers = existingTiersResponse.data.data;
       }
       // Check for duplicate names (case-insensitive)
-      const allNewTierNames = [values.name, ...(values.tiers || []).map(tier => tier.name)];
-      const lowerCaseNewNames = allNewTierNames.map(name => name?.toLowerCase().trim()).filter(Boolean);
-      const conflictingTier = existingTiers.find(existingTier =>
-        lowerCaseNewNames.some(newName =>
-          existingTier.name && existingTier.name.toLowerCase().trim() === newName
+      const allNewTierNames = [
+        values.name,
+        ...(values.tiers || []).map((tier) => tier.name),
+      ];
+      const lowerCaseNewNames = allNewTierNames
+        .map((name) => name?.toLowerCase().trim())
+        .filter(Boolean);
+      const conflictingTier = existingTiers.find((existingTier) =>
+        lowerCaseNewNames.some(
+          (newName) =>
+            existingTier.name &&
+            existingTier.name.toLowerCase().trim() === newName
         )
       );
       if (conflictingTier) {
@@ -123,7 +134,8 @@ const NewTier = () => {
         setSubmitting(false);
         return;
       }
-      const hasDuplicates = lowerCaseNewNames.length !== new Set(lowerCaseNewNames).size;
+      const hasDuplicates =
+        lowerCaseNewNames.length !== new Set(lowerCaseNewNames).size;
       if (hasDuplicates) {
         toast.error("Tier name already exists in your submission.");
         setSubmitting(false);
@@ -151,9 +163,11 @@ const NewTier = () => {
       };
       let postUrl = "";
       if (formattedTiers?.length > 0) {
-        postUrl = "https://runwal-api.lockated.com/loyalty/tiers/bulk_create?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+        postUrl =
+          "https://runwal-api.lockated.com/loyalty/tiers/bulk_create?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
       } else {
-        postUrl = "https://runwal-api.lockated.com/loyalty/tiers.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+        postUrl =
+          "https://runwal-api.lockated.com/loyalty/tiers.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
       }
       const response = await fetch(postUrl, {
         method: "POST",
@@ -168,7 +182,9 @@ const NewTier = () => {
         }, 1500);
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.message || `Unexpected response: ${response.status}`);
+        throw new Error(
+          errorData.message || `Unexpected response: ${response.status}`
+        );
       }
     } catch (error) {
       toast.error(error.message || "Failed to create tier. Please try again.");
@@ -205,9 +221,12 @@ const NewTier = () => {
             {/* Main Content */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-bold text-gray-900">Point Accumulation Timeframe</h3>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Point Accumulation Timeframe
+                </h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  Establish how members enter into higher tiers on points earning and time frame.
+                  Establish how members enter into higher tiers on points
+                  earning and time frame.
                 </p>
               </div>
               <div className="p-6">
@@ -222,17 +241,24 @@ const NewTier = () => {
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        timeframe === "lifetime" ? "border-[#c72030]" : "border-gray-300"
-                      }`}>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          timeframe === "lifetime"
+                            ? "border-[#c72030]"
+                            : "border-gray-300"
+                        }`}
+                      >
                         {timeframe === "lifetime" && (
                           <div className="w-3 h-3 rounded-full bg-[#c72030]" />
                         )}
                       </div>
                       <div className="text-left">
-                        <h4 className="font-semibold text-gray-900 mb-1">Lifetime</h4>
+                        <h4 className="font-semibold text-gray-900 mb-1">
+                          Lifetime
+                        </h4>
                         <p className="text-sm text-gray-600">
-                          Members accumulate points throughout their lifetime and tier progression is permanent.
+                          Members accumulate points throughout their lifetime
+                          and tier progression is permanent.
                         </p>
                       </div>
                     </div>
@@ -248,17 +274,24 @@ const NewTier = () => {
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        timeframe === "yearly" ? "border-[#c72030]" : "border-gray-300"
-                      }`}>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          timeframe === "yearly"
+                            ? "border-[#c72030]"
+                            : "border-gray-300"
+                        }`}
+                      >
                         {timeframe === "yearly" && (
                           <div className="w-3 h-3 rounded-full bg-[#c72030]" />
                         )}
                       </div>
                       <div className="text-left">
-                        <h4 className="font-semibold text-gray-900 mb-1">Rolling Year</h4>
+                        <h4 className="font-semibold text-gray-900 mb-1">
+                          Rolling Year
+                        </h4>
                         <p className="text-sm text-gray-600">
-                          Points reset annually and tier status is re-evaluated each year based on current points.
+                          Points reset annually and tier status is re-evaluated
+                          each year based on current points.
                         </p>
                       </div>
                     </div>
@@ -308,13 +341,17 @@ const NewTier = () => {
                 <ChevronRight className="w-4 h-4" />
                 <span className="text-[#C72030] font-medium">New Tier</span>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">CREATE NEW TIER</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                CREATE NEW TIER
+              </h1>
             </div>
 
             {/* Main Content */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="bg-[#F6F4EE] px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-bold text-gray-900">Tier Details</h3>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Tier Details
+                </h3>
               </div>
               <div className="p-6">
                 <Formik
@@ -343,7 +380,11 @@ const NewTier = () => {
                             placeholder="Enter tier name"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                           />
-                          <ErrorMessage name="name" component="div" className="text-red-500 text-xs mt-1" />
+                          <ErrorMessage
+                            name="name"
+                            component="div"
+                            className="text-red-500 text-xs mt-1"
+                          />
                         </div>
 
                         {/* Exit Points */}
@@ -358,7 +399,11 @@ const NewTier = () => {
                             placeholder="Enter exit points"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                           />
-                          <ErrorMessage name="exit_points" component="div" className="text-red-500 text-xs mt-1" />
+                          <ErrorMessage
+                            name="exit_points"
+                            component="div"
+                            className="text-red-500 text-xs mt-1"
+                          />
                         </div>
 
                         {/* Multipliers */}
@@ -373,7 +418,11 @@ const NewTier = () => {
                             placeholder="Enter multipliers"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                           />
-                          <ErrorMessage name="multipliers" component="div" className="text-red-500 text-xs mt-1" />
+                          <ErrorMessage
+                            name="multipliers"
+                            component="div"
+                            className="text-red-500 text-xs mt-1"
+                          />
                         </div>
 
                         {/* Welcome Bonus */}
@@ -388,7 +437,11 @@ const NewTier = () => {
                             placeholder="Enter welcome bonus"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                           />
-                          <ErrorMessage name="welcome_bonus" component="div" className="text-red-500 text-xs mt-1" />
+                          <ErrorMessage
+                            name="welcome_bonus"
+                            component="div"
+                            className="text-red-500 text-xs mt-1"
+                          />
                         </div>
                       </div>
 
@@ -397,10 +450,15 @@ const NewTier = () => {
                         {({ remove, push }) => (
                           <div className="space-y-4 mb-6">
                             {values.tiers.length > 0 && (
-                              <h4 className="text-md font-semibold text-gray-900 mb-4">Additional Tiers</h4>
+                              <h4 className="text-md font-semibold text-gray-900 mb-4">
+                                Additional Tiers
+                              </h4>
                             )}
                             {values.tiers.map((tier, index) => (
-                              <div key={index} className="relative p-6 border border-gray-200 rounded-lg bg-gray-50">
+                              <div
+                                key={index}
+                                className="relative p-6 border border-gray-200 rounded-lg bg-gray-50"
+                              >
                                 <button
                                   type="button"
                                   onClick={() => remove(index)}
@@ -409,22 +467,32 @@ const NewTier = () => {
                                 >
                                   <X className="w-4 h-4" />
                                 </button>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                   <div className="space-y-2">
                                     <label className="block text-sm font-medium text-gray-700">
-                                      Tier Name<span className="text-red-500 ml-1">*</span>
+                                      Tier Name
+                                      <span className="text-red-500 ml-1">
+                                        *
+                                      </span>
                                     </label>
                                     <Field
                                       name={`tiers[${index}].name`}
                                       placeholder="Enter tier name"
                                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                                     />
-                                    <ErrorMessage name={`tiers[${index}].name`} component="div" className="text-red-500 text-xs mt-1" />
+                                    <ErrorMessage
+                                      name={`tiers[${index}].name`}
+                                      component="div"
+                                      className="text-red-500 text-xs mt-1"
+                                    />
                                   </div>
                                   <div className="space-y-2">
                                     <label className="block text-sm font-medium text-gray-700">
-                                      Exit Points<span className="text-red-500 ml-1">*</span>
+                                      Exit Points
+                                      <span className="text-red-500 ml-1">
+                                        *
+                                      </span>
                                     </label>
                                     <Field
                                       name={`tiers[${index}].exit_points`}
@@ -432,11 +500,18 @@ const NewTier = () => {
                                       placeholder="Enter exit points"
                                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                                     />
-                                    <ErrorMessage name={`tiers[${index}].exit_points`} component="div" className="text-red-500 text-xs mt-1" />
+                                    <ErrorMessage
+                                      name={`tiers[${index}].exit_points`}
+                                      component="div"
+                                      className="text-red-500 text-xs mt-1"
+                                    />
                                   </div>
                                   <div className="space-y-2">
                                     <label className="block text-sm font-medium text-gray-700">
-                                      Multipliers<span className="text-red-500 ml-1">*</span>
+                                      Multipliers
+                                      <span className="text-red-500 ml-1">
+                                        *
+                                      </span>
                                     </label>
                                     <Field
                                       name={`tiers[${index}].multipliers`}
@@ -444,11 +519,18 @@ const NewTier = () => {
                                       placeholder="Enter multipliers"
                                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                                     />
-                                    <ErrorMessage name={`tiers[${index}].multipliers`} component="div" className="text-red-500 text-xs mt-1" />
+                                    <ErrorMessage
+                                      name={`tiers[${index}].multipliers`}
+                                      component="div"
+                                      className="text-red-500 text-xs mt-1"
+                                    />
                                   </div>
                                   <div className="space-y-2">
                                     <label className="block text-sm font-medium text-gray-700">
-                                      Welcome Bonus<span className="text-red-500 ml-1">*</span>
+                                      Welcome Bonus
+                                      <span className="text-red-500 ml-1">
+                                        *
+                                      </span>
                                     </label>
                                     <Field
                                       name={`tiers[${index}].welcome_bonus`}
@@ -456,17 +538,34 @@ const NewTier = () => {
                                       placeholder="Enter welcome bonus"
                                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                                     />
-                                    <ErrorMessage name={`tiers[${index}].welcome_bonus`} component="div" className="text-red-500 text-xs mt-1" />
+                                    <ErrorMessage
+                                      name={`tiers[${index}].welcome_bonus`}
+                                      component="div"
+                                      className="text-red-500 text-xs mt-1"
+                                    />
                                   </div>
                                 </div>
                               </div>
                             ))}
                             <button
                               type="button"
-                              onClick={() => push({ name: "", exit_points: "", multipliers: "", welcome_bonus: "" })}
+                              onClick={() =>
+                                push({
+                                  name: "",
+                                  exit_points: "",
+                                  multipliers: "",
+                                  welcome_bonus: "",
+                                })
+                              }
                               className="flex items-center gap-2 px-4 py-2 text-[#c72030] border border-[#c72030] rounded-lg hover:bg-[#c7203008] transition-colors"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={20}
+                                height={20}
+                                fill="currentColor"
+                                viewBox="0 0 16 16"
+                              >
                                 <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
                               </svg>
                               Add New Tier
@@ -495,7 +594,9 @@ const NewTier = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={() => navigate("/setup-member/loyalty-tiers-list")}
+                          onClick={() =>
+                            navigate("/loyalty/loyalty-tiers-list")
+                          }
                           disabled={isSubmitting}
                           className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                         >
