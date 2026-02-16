@@ -643,6 +643,7 @@ export const LoyaltyInventorySection = () => {
             {/* Add Item Modal */}
             <Dialog open={isAddItemModalOpen} onOpenChange={setIsAddItemModalOpen}>
                 <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+
                     <DialogHeader>
                         <div className="flex justify-between items-start">
                             <div>
@@ -653,6 +654,16 @@ export const LoyaltyInventorySection = () => {
                                     Add a new SKU to the catalog with pricing and points configuration
                                 </DialogDescription>
                             </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsAddItemModalOpen(false)}
+                                className="ml-4 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#C72030]"
+                                aria-label="Close"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-gray-500">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
                     </DialogHeader>
 

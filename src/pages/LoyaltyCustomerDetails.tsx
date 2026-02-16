@@ -132,7 +132,7 @@ const LoyaltyCustomerDetails = () => {
     const walletTransactionColumns = [
         { key: "transactionType", label: "Type", sortable: true },
         { key: "resourceType", label: "Resource Type", sortable: false },
-        { key: "amount", label: "Amount", sortable: true },
+        { key: "amount", label: "Points", sortable: true },
         { key: "createdAt", label: "Date", sortable: true },
         { key: "remarks", label: "Remarks", sortable: false },
     ];
@@ -179,8 +179,16 @@ const LoyaltyCustomerDetails = () => {
                 return <span>₹{parseFloat(item.totalAmount || 0).toFixed(2)}</span>;
             case "status":
                 return <span>{item.status}</span>;
-            case "createdAt":
-                return <span>{item.createdAt}</span>;
+            case "createdAt": {
+                // Format date as DD/MM/YYYY
+                if (!item.createdAt) return "-";
+                const d = new Date(item.createdAt);
+                if (isNaN(d.getTime())) return item.createdAt;
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                return <span>{`${day}/${month}/${year}`}</span>;
+            }
             case "actions":
                 return (
                     <button

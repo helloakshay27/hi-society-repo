@@ -182,7 +182,7 @@ const OrderDetails = () => {
                         <ArrowLeft className="w-5 h-5" />
                         <span className="font-medium">Back to Orders</span>
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50">
+                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-[#C72030] rounded-md text-sm font-medium hover:bg-gray-50">
                         <Download className="w-4 h-4" />
                         Download Invoice
                     </button>
@@ -221,7 +221,7 @@ const OrderDetails = () => {
                     {/* Order Items */}
                     <div className="bg-white rounded-lg shadow-sm border">
                         <div className="px-6 py-6">
-                            <h2 className="text-lg font-semibold text-[#C72030] mb-6">Order Items</h2>
+                            <h1 className="text-[#C72030] font-semibold mb-6">Order Items</h1>
 
                             {/* Items List */}
                             <div className="space-y-4 mb-6">
@@ -279,7 +279,7 @@ const OrderDetails = () => {
                     {/* Order Timeline */}
                     <div className="bg-white rounded-lg shadow-sm border">
                         <div className="px-6 py-6">
-                            <h2 className="text-lg font-semibold text-[#C72030] mb-6">Order Timeline</h2>
+                            <h1 className="font-semibold text-[#C72030] mb-6">Order Timeline</h1>
 
                             {/* Timeline Items */}
                             <div className="relative">
@@ -329,7 +329,7 @@ const OrderDetails = () => {
                     {/* Customer Information */}
                     <div className="bg-white rounded-lg shadow-sm border">
                         <div className="px-6 py-6">
-                            <h2 className="text-lg font-semibold text-[#C72030] mb-6">Customer Information</h2>
+                            <h1 className="font-semibold text-[#C72030] mb-6">Customer Information</h1>
 
                             {/* Customer Details */}
                             <div className="space-y-4">
@@ -340,9 +340,23 @@ const OrderDetails = () => {
                                     </div>
                                     <div className="flex-1">
                                         <h3 className="font-semibold text-gray-900">{orderData?.customerName || "-"}</h3>
-                                        <div className="flex items-center gap-1 mt-1">
-                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#EAB308">
-                                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                                        <div className="flex items-center gap-1 mt-1 border-1 p-1 border-gray-900">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                                <path d="M19.3588 9.67942C19.3588 15.0251 15.0252 19.3588 9.67938 19.3588C4.3336 19.3588 0 15.0251 0 9.67942C0 4.33361 4.3336 0 9.67938 0C15.0252 0 19.3588 4.33361 19.3588 9.67942Z" fill="url(#paint0_linear_714_3143)" />
+                                                <path d="M17.2343 9.67865C17.2343 13.8515 13.8515 17.2344 9.67872 17.2344C5.50582 17.2344 2.12305 13.8515 2.12305 9.67865C2.12305 5.50581 5.50582 2.12305 9.67872 2.12305C13.8515 2.12305 17.2343 5.50581 17.2343 9.67865Z" fill="#A88300" />
+                                                <path d="M16.7656 9.88248C16.7656 13.9759 13.6316 17.2942 9.76563 17.2942C5.89964 17.2942 2.76562 13.9759 2.76562 9.88248C2.76562 5.78906 5.89964 2.4707 9.76563 2.4707C13.6316 2.4707 16.7656 5.78906 16.7656 9.88248Z" fill="#C28B37" />
+                                                <path d="M17.2519 9.67866C17.2519 13.8613 13.8613 17.2519 9.67872 17.2519C5.49612 17.2519 2.10547 13.8613 2.10547 9.67866C2.10547 5.49612 5.49612 2.10547 9.67872 2.10547C13.8613 2.10547 17.2519 5.49612 17.2519 9.67866Z" fill="#E9B631" />
+                                                <path d="M9.71931 4.41016L11.3529 7.67746L14.6203 8.08587L12.3767 10.6017L12.9867 14.212L9.71931 12.5784L6.45201 14.212L7.06735 10.6017L4.81836 8.08587L8.08569 7.67746L9.71931 4.41016Z" fill="url(#paint1_linear_714_3143)" />
+                                                <defs>
+                                                    <linearGradient id="paint0_linear_714_3143" x1="9.02226" y1="3.52793" x2="10.3355" y2="27.9694" gradientUnits="userSpaceOnUse">
+                                                        <stop stop-color="#FFC600" />
+                                                        <stop offset="1" stop-color="#FFDE69" />
+                                                    </linearGradient>
+                                                    <linearGradient id="paint1_linear_714_3143" x1="9.71949" y1="4.41016" x2="9.71949" y2="14.212" gradientUnits="userSpaceOnUse">
+                                                        <stop stop-color="#FFFCDD" />
+                                                        <stop offset="1" stop-color="#FFE896" />
+                                                    </linearGradient>
+                                                </defs>
                                             </svg>
                                             <span className="text-sm text-gray-600">Gold Member</span>
                                         </div>
@@ -386,13 +400,13 @@ const OrderDetails = () => {
                                         <span className="text-sm text-gray-700">Total Loyalty Points</span>
                                         <span className="font-bold text-[#C72030] text-lg">1250 pts</span>
                                     </div>
-                                    
+
                                     <div className="border rounded-lg">
                                         <button className="w-full py-3 px-4 flex items-center justify-start gap-2 text-sm font-medium text-gray-900 hover:bg-gray-50">
                                             <Award className="w-5 h-5 text-purple-600" />
-                                            <span>Loyalty Points Summary</span>
+                                            <span className="text-2xl text-gray-700">Loyalty Points Summary</span>
                                         </button>
-                                        
+
                                         <div className="px-4 pb-4 space-y-4">
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="flex items-start gap-2">
@@ -414,12 +428,12 @@ const OrderDetails = () => {
                                                     </div>
                                                 </div>
                                             </div>
-                                            
+
                                             <div className="flex justify-between items-center py-2 border-t">
                                                 <span className="text-sm text-gray-700">Net Points</span>
                                                 <span className="font-bold text-[#C72030]">{orderData?.loyaltyPointsEarned || 17} pts</span>
                                             </div>
-                                            
+
                                             <div className="space-y-3">
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
@@ -431,13 +445,13 @@ const OrderDetails = () => {
                                                         <p className="font-bold text-gray-900">Platinum</p>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div className="w-full bg-gray-200 rounded-full h-2">
-                                                    <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-2 rounded-full" style={{width: '80%'}}></div>
+                                                    <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-2 rounded-full" style={{ width: '80%' }}></div>
                                                 </div>
                                                 <p className="text-xs text-center text-gray-600">250 points to reach Platinum</p>
                                             </div>
-                                            
+
                                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
                                                 <p className="text-sm font-medium text-blue-900">🎉 This order earned {orderData?.loyaltyPointsEarned || 17} loyalty points!</p>
                                             </div>

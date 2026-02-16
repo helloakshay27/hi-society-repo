@@ -40,8 +40,8 @@ const OrdersList = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('');
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string[]>([]);
   const [orderDateFilter, setOrderDateFilter] = useState('last_30_days');
   const [orderDateOptions, setOrderDateOptions] = useState([
     { value: 'last_30_days', label: 'Last 30 days' },
@@ -71,16 +71,24 @@ const OrdersList = () => {
     { label: "Refunded", value: "refunded" },
   ];
 
-  const fetchOrders = useCallback(async (page: number, search: string, status: string, paymentStatus: string, orderDate: string) => {
+  const fetchOrders = useCallback(async (page: number, search: string, status: string[] | string, paymentStatus: string[] | string, orderDate: string) => {
     setLoading(true);
-    setIsSearching(!!search || !!status || !!paymentStatus || !!orderDate);
+    setIsSearching(!!search || (Array.isArray(status) ? status.length > 0 : !!status) || (Array.isArray(paymentStatus) ? paymentStatus.length > 0 : !!paymentStatus) || !!orderDate);
     try {
       // Build query params for API
       const params = new URLSearchParams();
       params.append('token', '00f7c12e459b75225a07519c088edae3e9612e59d80111bb');
       params.append('order_date', orderDate || 'last_30_days');
-      if (status) params.append('status', status);
-      if (paymentStatus) params.append('payment_status', paymentStatus);
+      if (Array.isArray(status) && status.length > 0) {
+        status.forEach(s => params.append('status[]', s));
+      } else if (typeof status === 'string' && status) {
+        params.append('status', status);
+      }
+      if (Array.isArray(paymentStatus) && paymentStatus.length > 0) {
+        paymentStatus.forEach(s => params.append('payment_status[]', s));
+      } else if (typeof paymentStatus === 'string' && paymentStatus) {
+        params.append('payment_status', paymentStatus);
+      }
 
       const url = `https://runwal-api.lockated.com/admin/orders.json?${params.toString()}`;
       const response = await fetch(url, {
@@ -109,6 +117,13 @@ const OrdersList = () => {
           order.user?.email?.toLowerCase().includes(searchLower) ||
           order.id?.toString().toLowerCase().includes(searchLower)
         );
+      }
+      // Filter by status and payment status (client-side for multi-select)
+      if (Array.isArray(status) && status.length > 0) {
+        filteredOrders = filteredOrders.filter((order: Order) => status.includes(order.status));
+      }
+      if (Array.isArray(paymentStatus) && paymentStatus.length > 0) {
+        filteredOrders = filteredOrders.filter((order: Order) => paymentStatus.includes(order.payment_status));
       }
 
       // Client-side pagination
@@ -144,7 +159,7 @@ const OrdersList = () => {
         if (data.order_date_filters) {
           setOrderDateOptions(data.order_date_filters.map(opt => ({ value: opt.key, label: opt.label })));
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     fetchFilterOptions();
   }, []);
@@ -178,7 +193,7 @@ const OrdersList = () => {
       }
 
       toast.success('Order status updated successfully!');
-      fetchOrders(currentPage, searchTerm, statusFilter, paymentStatusFilter);
+      fetchOrders(currentPage, searchTerm, statusFilter, paymentStatusFilter, orderDateFilter);
     } catch (error) {
       console.error('Error updating order status:', error);
       toast.error('Failed to update order status');
@@ -229,6 +244,202 @@ const OrdersList = () => {
     { key: 'created_at', label: 'Created At', sortable: true },
   ];
 
+  const CustomMultiValue = (props: any) => (
+    <div
+      style={{
+        position: "relative",
+        backgroundColor: "#E5E0D3",
+        borderRadius: "2px",
+        margin: "3px",
+        marginTop: "10px",
+        padding: "4px 10px 6px 10px",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        paddingRight: "28px",
+      }}
+    >
+      <span
+        style={{
+          color: "#1a1a1a8a",
+          fontSize: "13px",
+          fontWeight: "500",
+        }}
+      >
+        {props.data.label}
+      </span>
+      <button
+        onClick={e => {
+          e.stopPropagation();
+          props.removeProps.onClick(e);
+        }}
+        onMouseDown={e => {
+          e.stopPropagation();
+          props.removeProps.onMouseDown(e);
+        }}
+        onTouchEnd={e => {
+          e.stopPropagation();
+          props.removeProps.onTouchEnd(e);
+        }}
+        style={{
+          position: "absolute",
+          right: "-10px",
+          top: "-5px",
+          transform: "translateY(-50%), translateX(-50%)",
+          background: "transparent",
+          border: "1px solid #ccc",
+          borderRadius: "50%",
+          cursor: "pointer",
+          padding: "0",
+          display: "flex",
+          alignItems: "start",
+          justifyContent: "center",
+          color: "#666",
+          fontSize: "12px",
+          lineHeight: "1",
+          width: "16px",
+          height: "16px",
+          transition: "background 0.2s, color 0.2s, border-color 0.2s",
+        }}
+        type="button"
+        onMouseOver={e => {
+          (e.currentTarget as HTMLButtonElement).style.background = "#f6f4ee";
+          (e.currentTarget as HTMLButtonElement).style.color = "#C72030";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "#C72030";
+        }}
+        onMouseOut={e => {
+          (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+          (e.currentTarget as HTMLButtonElement).style.color = "#666";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "#ccc";
+        }}
+      >
+        ×
+      </button>
+    </div>
+  );
+
+  const CustomMultiValueRemove = (props: any) => null;
+
+  const customStyles = {
+    control: (provided: any, state: any) => ({
+      ...provided,
+      minHeight: "44px",
+      borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
+      boxShadow: "none",
+      fontSize: "14px",
+      paddingTop: "6px",
+      backgroundColor: "transparent",
+      "&:hover": { borderColor: "#C72030" },
+    }),
+    valueContainer: (provided: any) => ({
+      ...provided,
+      padding: "4px 6px",
+      flexWrap: "wrap",
+      backgroundColor: "transparent",
+    }),
+    dropdownIndicator: (provided: any, state: any) => ({
+      ...provided,
+      padding: "4px 8px",
+      color: state.isFocused ? "#C72030" : "#666",
+      "&:hover": { color: "#C72030" },
+    }),
+    indicatorSeparator: () => ({ display: "none" }),
+    placeholder: (provided: any) => ({
+      ...provided,
+      color: "#999",
+      fontSize: "14px",
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      zIndex: 9999,
+      fontSize: "14px",
+      backgroundColor: "#fff",
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? "#C72030"
+        : state.isFocused
+          ? "#F6F4EE"
+          : "#fff",
+      color: state.isSelected ? "#fff" : "#1A1A1A",
+      fontSize: "14px",
+      padding: "8px 12px",
+      cursor: "pointer",
+      "&:hover": {
+        backgroundColor: "#F6F4EE",
+        color: "#1A1A1A",
+      },
+      "&:active": {
+        backgroundColor: "#C72030",
+        color: "#fff",
+      },
+    }),
+    multiValue: (provided: any) => ({
+      ...provided,
+      backgroundColor: "transparent",
+    }),
+    multiValueLabel: (provided: any) => ({
+      ...provided,
+      color: "#1a1a1a8a",
+      fontSize: "13px",
+      fontWeight: "500",
+    }),
+  };
+
+const renderListTab = () => (
+  <div className="space-y-4">
+    {renderCustomFilters()}
+    <EnhancedTable
+      data={orders}
+      columns={columns}
+      renderCell={renderCell}
+      pagination={false}
+      enableExport={true}
+      exportFileName="orders"
+      storageKey="orders-table"
+      enableGlobalSearch={true}
+      onGlobalSearch={handleGlobalSearch}
+      searchPlaceholder="Search orders (ID, number, customer name/email)..."
+      loading={isSearching || loading}
+      loadingMessage={isSearching ? "Searching orders..." : "Loading orders..."}
+    />
+    {!searchTerm && !statusFilter && !paymentStatusFilter && totalPages > 1 && (
+      <div className="mt-6 flex justify-center">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <PaginationItem key={page}>
+                <PaginationLink
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
+                  isActive={currentPage === page}
+                >
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+    )}
+  </div>
+);
+
   const renderCell = (item: Order, columnKey: string) => {
     switch (columnKey) {
       case 'id':
@@ -243,8 +454,7 @@ const OrdersList = () => {
       case 'order_number':
         return (
           <span
-            className="text-sm text-[#C72030] cursor-pointer hover:underline"
-            onClick={() => navigate(`/orders/${item.id}`)}
+            className="text-sm"
           >
             {item.order_number || '-'}
           </span>
@@ -307,29 +517,66 @@ const OrdersList = () => {
 
   const renderCustomFilters = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Status Filter</label>
-        <SelectBox
-          label=""
-          options={statusOptions}
-          defaultValue={statusFilter}
-          onChange={(value) => {
-            setStatusFilter(value);
+      {/* Clear Filter Button */}
+      <div className="col-span-3 flex justify-end mb-2">
+        <button
+          className="px-4 py-2 bg-[#C72030] text-white rounded hover:bg-[#A01828] transition-colors"
+          onClick={() => {
+            setStatusFilter([]);
+            setPaymentStatusFilter([]);
+            setOrderDateFilter("last_30_days");
+            setSearchTerm("");
             setCurrentPage(1);
           }}
+        >
+          Clear Filter
+        </button>
+      </div>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Status Filter</label>
+        <Select
+          isMulti
+          value={statusOptions.filter(opt => Array.isArray(statusFilter) && statusFilter.includes(opt.value))}
+          onChange={selected => {
+            const values = selected ? selected.map(s => s.value) : [];
+            setStatusFilter(values);
+            setCurrentPage(1);
+          }}
+          options={statusOptions.filter(opt => opt.value !== "")}
+          styles={customStyles}
+          components={{
+            MultiValue: CustomMultiValue,
+            MultiValueRemove: CustomMultiValueRemove,
+          }}
+          closeMenuOnSelect={false}
+          placeholder="Select Status..."
+          isClearable
+          menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
+          menuPosition="fixed"
         />
       </div>
 
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">Payment Status</label>
-        <SelectBox
-          label=""
-          options={paymentStatusOptions}
-          defaultValue={paymentStatusFilter}
-          onChange={(value) => {
-            setPaymentStatusFilter(value);
+        <Select
+          isMulti
+          value={paymentStatusOptions.filter(opt => Array.isArray(paymentStatusFilter) && paymentStatusFilter.includes(opt.value))}
+          onChange={selected => {
+            const values = selected ? selected.map(s => s.value) : [];
+            setPaymentStatusFilter(values);
             setCurrentPage(1);
           }}
+          options={paymentStatusOptions.filter(opt => opt.value !== "")}
+          styles={customStyles}
+          components={{
+            MultiValue: CustomMultiValue,
+            MultiValueRemove: CustomMultiValueRemove,
+          }}
+          closeMenuOnSelect={false}
+          placeholder="Select Payment Status..."
+          isClearable
+          menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
+          menuPosition="fixed"
         />
       </div>
 
@@ -343,131 +590,26 @@ const OrdersList = () => {
           }}
           options={orderDateOptions}
           isSearchable={false}
-          styles={{
-            control: (provided, state) => ({
-              ...provided,
-              minHeight: "44px",
-              borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
-              boxShadow: "none",
-              fontSize: "14px",
-              backgroundColor: "transparent",
-              "&:hover": { borderColor: "#C72030" },
-            }),
-            valueContainer: (provided) => ({
-              ...provided,
-              padding: "4px 6px",
-              backgroundColor: "transparent",
-            }),
-            dropdownIndicator: (provided, state) => ({
-              ...provided,
-              padding: "4px 8px",
-              color: state.isFocused ? "#C72030" : "#666",
-              "&:hover": { color: "#C72030" },
-            }),
-            indicatorSeparator: () => ({ display: "none" }),
-            placeholder: (provided) => ({
-              ...provided,
-              color: "#999",
-              fontSize: "14px",
-            }),
-            menu: (provided) => ({
-              ...provided,
-              zIndex: 9999,
-              fontSize: "14px",
-              backgroundColor: "#fff",
-            }),
-            option: (provided, state) => ({
-              ...provided,
-              backgroundColor: state.isSelected
-                ? "#C72030"
-                : state.isFocused
-                  ? "#F6F4EE"
-                  : "#fff",
-              color: state.isSelected ? "#fff" : "#1A1A1A",
-              fontSize: "14px",
-              padding: "8px 12px",
-              cursor: "pointer",
-              "&:hover": {
-                backgroundColor: "#F6F4EE",
-                color: "#1A1A1A",
-              },
-              "&:active": {
-                backgroundColor: "#C72030",
-                color: "#fff",
-              },
-            }),
-          }}
-          isDisabled={orderDateOptions.length === 0}
+          styles={customStyles}
           placeholder="Select Date Range..."
+          isClearable
           menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
           menuPosition="fixed"
         />
       </div>
-    </div>
-  );
+    </div>)
+  // --- CustomMultiValue and customStyles for filter dropdowns (copied from AddOfferPage) ---
+  
 
-  const renderListTab = () => (
-    <div className="space-y-4">
-      {renderCustomFilters()}
-      <EnhancedTable
-        data={orders}
-        columns={columns}
-        renderCell={renderCell}
-        pagination={false}
-        enableExport={true}
-        exportFileName="orders"
-        storageKey="orders-table"
-        enableGlobalSearch={true}
-        onGlobalSearch={handleGlobalSearch}
-        searchPlaceholder="Search orders (ID, number, customer name/email)..."
-        loading={isSearching || loading}
-        loadingMessage={isSearching ? "Searching orders..." : "Loading orders..."}
-      />
-      {!searchTerm && !statusFilter && !paymentStatusFilter && totalPages > 1 && (
-        <div className="mt-6 flex justify-center">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-                    isActive={currentPage === page}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
+return (
+  <div className="p-2 sm:p-4 lg:p-6">
+    <Toaster position="top-right" richColors closeButton />
+    <div className="mb-4">
+      <h1 className="text-2xl font-bold text-gray-900">ORDERS ({totalCount} total)</h1>
     </div>
-  );
-
-  return (
-    <div className="p-2 sm:p-4 lg:p-6">
-      <Toaster position="top-right" richColors closeButton />
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">ORDERS ({totalCount} total)</h1>
-      </div>
-      {renderListTab()}
-    </div>
-  );
+    {renderListTab()}
+  </div>
+);
 };
 
 export default OrdersList;
