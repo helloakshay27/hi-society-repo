@@ -48,7 +48,7 @@ import {
 interface MenuItem {
   id: string;
   label: string;
-  icon: React.ElementType;
+  icon?: React.ElementType;
   path?: string;
   subItems?: MenuItem[];
 }
@@ -338,121 +338,97 @@ export const HiSocietySidebar: React.FC = () => {
       ],
     },
     loyalty: {
-      title: "Loyalty",
+      title: "",
       items: [
         {
-          id: "loyalty-dashboard",
-          label: "Dashboard",
-          icon: LayoutDashboard,
-          path: "/loyalty/dashboard",
+          id: "loyalty",
+          label: "Loyalty",
+          subItems: [
+            {
+              id: "loyalty-dashboard",
+              label: "Dashboard",
+              icon: LayoutDashboard,
+              path: "/loyalty/dashboard",
+            },
+            {
+              id: "wallet-management",
+              label: "Wallet Management",
+              icon: Database,
+              path: "/loyalty/wallet-management",
+            },
+            {
+              id: "loyalty-customers",
+              label: "Customers",
+              icon: Users,
+              path: "/loyalty/customers",
+            },
+            {
+              id: "aggregator-inventory",
+              label: "Aggregator Inventory",
+              icon: Database,
+              path: "/loyalty/aggregator-inventory",
+            },
+            {
+              id: "loyalty-inventory",
+              label: "Inventory Section",
+              icon: Database,
+              path: "/loyalty/inventory-section",
+            },
+            {
+              id: "redemptions",
+              label: "Redemption Report",
+              icon: BarChart3,
+              path: "/loyalty/redemption-report",
+            },
+            {
+              id: "billing-invoices",
+              label: "Billing Invoices",
+              icon: FileText,
+              path: "/loyalty/billing-invoices",
+            },
+            {
+              id: "loyalty-tiers",
+              label: "Tiers",
+              icon: Award,
+              path: "/loyalty/loyalty-tiers-list",
+            },
+            {
+              id: "orders",
+              label: "Orders",
+              icon: Briefcase,
+              path: "/loyalty/orders-list",
+            },
+            {
+              id: "Contest",
+              label: "Contest",
+              icon: Briefcase,
+              path: "/contests",
+            },
+          ],
         },
-        {
-          id: "wallet-management",
-          label: "Wallet Management",
-          icon: Database,
-          path: "/loyalty/wallet-management",
-        },
-        {
-          id: "loyalty-customers",
-          label: "Customers",
-          icon: Users,
-          path: "/loyalty/customers",
-        },
-        {
-          id: "aggregator-inventory",
-          label: "Aggregator Inventory",
-          icon: Database,
-          path: "/loyalty/aggregator-inventory",
-        },
-        {
-          id: "loyalty-inventory",
-          label: "Inventory Section",
-          icon: Database,
-          path: "/loyalty/inventory-section",
-        },
-        {
-          id: "redemptions",
-          label: "Redemption Report",
-          icon: BarChart3,
-          path: "/loyalty/redemption-report",
-        },
-        {
-          id: "billing-invoices",
-          label: "Billing Invoices",
-          icon: FileText,
-          path: "/loyalty/billing-invoices",
-        },
-        // {
-        //   id: "loyalty-members",
-        //   label: "Members",
-        //   icon: Users,
-        //   path: "/loyalty/loyalty-members-list",
-        // },
-        {
-          id: "loyalty-tiers",
-          label: "Tiers",
-          icon: Award,
-          path: "/loyalty/loyalty-tiers-list",
-        },
-        // {
-        //   id: "rule-engine",
-        //   label: "Rule Engine",
-        //   icon: SettingsIcon,
-        //   path: "/loyalty/rule-engine-list",
-        // },
-        // {
-        //   id: "loyalty-referral",
-        //   label: "Referrals",
-        //   icon: UserCheck,
-        //   path: "/loyalty/referral-list",
-        // },
-        // {
-        //   id: "lock-payments",
-        //   label: "Lock Payments",
-        //   icon: Shield,
-        //   path: "/loyalty/lock-payments-list",
-        // },
-        // {
-        //   id: "home-loan-requests",
-        //   label: "Home Loan Requests",
-        //   icon: Home,
-        //   path: "/loyalty/home-loan-requests-list",
-        // },
-        // {
-        //   id: "demand-notes",
-        //   label: "Demand Notes",
-        //   icon: FileText,
-        //   path: "/loyalty/demand-notes-list",
-        // },
-        {
-          id: "orders",
-          label: "Orders",
-          icon: Briefcase,
-          path: "/loyalty/orders-list",
-        },
-        {
-          id: "Contest",
-          label: "Contest",
-          icon: Briefcase,
-          path: "/contests",
-        },
-        // {
-        //   id: "encash",
-        //   label: "Encash",
-        //   icon: Gift,
-        //   path: "/loyalty/encash-list",
-        // },
         {
           id: "offers",
           label: "Offers",
-          icon: Gift,
-          path: "/loyalty/offers-list",
+          subItems: [
+            {
+              id: "offers-list",
+              label: "Offers List",
+              icon: Gift,
+              path: "/loyalty/offers-list",
+            },
+          ],
         },
         {
           id: "event",
           label: "Events",
-          icon: Calendar,
-          path: "/loyalty/event-list",
+          subItems: [
+            {
+              id: "events-list",
+              label: "Events List",
+              icon: Calendar,
+              path: "/loyalty/event-list",
+            },
+          ],
         },
       ],
     },
@@ -1152,7 +1128,6 @@ export const HiSocietySidebar: React.FC = () => {
     });
   };
 
-
   // Render menu item
   const renderMenuItem = (
     item: MenuItem,
@@ -1165,7 +1140,8 @@ export const HiSocietySidebar: React.FC = () => {
 
     const isLoyaltyMaintenancePath = (p?: string) =>
       !!p &&
-      (p.startsWith("/maintenance/event-list") || p.startsWith("/maintenance/offers-list")) &&
+      (p.startsWith("/maintenance/event-list") ||
+        p.startsWith("/maintenance/offers-list")) &&
       activeSection === "loyalty";
 
     // collapsed view -> when navigating to firstSubItem
@@ -1198,13 +1174,17 @@ export const HiSocietySidebar: React.FC = () => {
                 if (firstSubItem.path) {
                   handleNavigation(
                     firstSubItem.path,
-                    isLoyaltyMaintenancePath(firstSubItem.path) ? { fromSection: "loyalty" } : undefined
+                    isLoyaltyMaintenancePath(firstSubItem.path)
+                      ? { fromSection: "loyalty" }
+                      : undefined
                   );
                 }
               } else if (item.path) {
                 handleNavigation(
                   item.path,
-                  isLoyaltyMaintenancePath(item.path) ? { fromSection: "loyalty" } : undefined
+                  isLoyaltyMaintenancePath(item.path)
+                    ? { fromSection: "loyalty" }
+                    : undefined
                 );
               }
             }}
@@ -1214,15 +1194,26 @@ export const HiSocietySidebar: React.FC = () => {
             {active && (
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
             )}
-            <Icon className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+            {Icon ? (
+              <Icon className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+            ) : (
+              <span className="text-[10px] font-bold uppercase">
+                {item.label.substring(0, 2)}
+              </span>
+            )}
           </button>
         </div>
       );
     }
 
     // Expanded view
+    const isHeaderStyle = !Icon;
+    const buttonClass = isHeaderStyle
+      ? "flex items-center gap-3 w-full px-2 py-2 text-sm font-medium text-[#1a1a1a] opacity-70 uppercase tracking-wide hover:opacity-100 transition-opacity"
+      : "flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]";
+
     return (
-      <div key={item.id}>
+      <div key={item.id} className={isHeaderStyle ? "mb-1" : ""}>
         <button
           onClick={() => {
             if (hasSubItems) {
@@ -1230,16 +1221,18 @@ export const HiSocietySidebar: React.FC = () => {
             } else if (item.path) {
               handleNavigation(
                 item.path,
-                isLoyaltyMaintenancePath(item.path) ? { fromSection: "loyalty" } : undefined
+                isLoyaltyMaintenancePath(item.path)
+                  ? { fromSection: "loyalty" }
+                  : undefined
               );
             }
           }}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
+          className={buttonClass}
         >
-          {active && (
+          {active && !isHeaderStyle && (
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
           )}
-          <Icon className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
+          {Icon && <Icon className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />}
           <span className="truncate flex-1 text-left">{item.label}</span>
           {hasSubItems &&
             (isExpanded ? (
@@ -1264,7 +1257,9 @@ export const HiSocietySidebar: React.FC = () => {
                     subItem.path &&
                     handleNavigation(
                       subItem.path,
-                      isLoyaltyMaintenancePath(subItem.path) ? { fromSection: "loyalty" } : undefined
+                      isLoyaltyMaintenancePath(subItem.path)
+                        ? { fromSection: "loyalty" }
+                        : undefined
                     )
                   }
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
@@ -1272,7 +1267,9 @@ export const HiSocietySidebar: React.FC = () => {
                   {subActive && (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
                   )}
-                  <SubIcon className="w-4 h-4 flex-shrink-0 text-[#1a1a1a]" />
+                  {SubIcon && (
+                    <SubIcon className="w-4 h-4 flex-shrink-0 text-[#1a1a1a]" />
+                  )}
                   <span className="truncate">{subItem.label}</span>
                 </button>
               );
@@ -1290,8 +1287,9 @@ export const HiSocietySidebar: React.FC = () => {
 
   return (
     <div
-      className={`${isSidebarCollapsed ? "w-16" : "w-64"
-        } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      className={`${
+        isSidebarCollapsed ? "w-16" : "w-64"
+      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
       style={{ top: "4rem", height: "calc(100% - 4rem)" }}
     >
       <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>
