@@ -17,6 +17,7 @@ import "./styles/enhanced-select.css"; // Global enhanced select styles
 import { Layout } from "./components/Layout";
 import { AdminSidebar } from "./components/AdminSidebar";
 import { AdminLayout } from "./components/AdminLayout";
+import { PWALayoutWrapper } from "./components/PWALayoutWrapper";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Dashboard } from "./pages/Dashboard";
 import DashboardConfiguration from "./pages/DashboardConfiguration";
@@ -1055,6 +1056,9 @@ import { PurchaseOrderDetailPage } from "./pages/PurchaseOrderDetailPage";
 import { PurchaseOrderListPage } from "./pages/PurchaseOrderListPage";
 import { RecurringBillCreatePage } from "./pages/ClubManagement/RecurringBillCreatePage";
 import { RecurringBillsDashboard } from "./pages/ClubManagement/RecurringBillsDashboard";
+import NewRecurringExpensePage from "./pages/New Recurring Expense";
+import RecurringExpensesListPage from "./pages/ClubManagement/RecurringExpensesListPage";
+import RecurringExpenseDetailPage from "./pages/ClubManagement/RecurringExpenseDetailPage";
 import { RecurringInvoicesCreatePage } from "./pages/ClubManagement/RecurringInvoicesCreatePage";
 import { RecurringInvoicesListPage } from "./pages/ClubManagement/RecurringInvoicesListPage";
 import { RecurringJournalDashboard } from "./pages/ClubManagement/RecurringJournalDashboard";
@@ -1106,6 +1110,7 @@ import ClubAddOccupantUserPage from "./pages/master/ClubAddOccupantUserPage";
 import { RideDetail } from "./pages/pulse/RideDetail";
 import { OccupantUserListWrapper } from "./components/OccupantUserListWrapper";
 import { OccupantUserDetailWrapper } from "./components/OccupantUserDetailWrapper";
+import { LoginPageWrapper } from "./components/LoginPageWrapper";
 import ModulesManagement from "./pages/settings/ModulesManagement";
 import { InvoiceAdd } from "./pages/ClubManagement/InvoiceAdd";
 import { InvoiceDashboardAccounting } from "./pages/ClubManagement/InvoiceDashboard";
@@ -1165,6 +1170,7 @@ function App() {
         ).unwrap()) as Array<{ currency?: string; symbol?: string }>;
         const currency =
           Array.isArray(response) &&
+          (response[0]?.currency as string | undefined)
           (response[0]?.currency as string | undefined)
             ? response[0].currency
             : "INR";
@@ -7069,3 +7075,4 @@ function App() {
 }
 
 export default App;
+
