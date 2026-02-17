@@ -124,7 +124,7 @@ const BookingDetailsPage = () => {
   }, []);
 
   const handleStatusChange = async (newStatus: string) => {
-    setStatusUpdating(id);
+    setStatusUpdating(Number(id));
     try {
       await axios.patch(
         `https://${baseUrl}/crm/admin/facility_bookings/${id}.json`,
@@ -363,7 +363,11 @@ const BookingDetailsPage = () => {
                   onClick={() => {
                     setRefundFormData((prev) => ({
                       ...prev,
-                      refundable_amount: bookings?.amount_paid?.toString() || "",
+                      refundable_amount: (
+                        (bookings?.returned_amount && bookings.returned_amount > 0)
+                          ? bookings.returned_amount.toString()
+                          : bookings?.amount_paid?.toString() ?? ""
+                      ),
                     }));
                     setIsRefundDialogOpen(true);
                   }}
@@ -569,6 +573,42 @@ const BookingDetailsPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Refundable Amount Section */}
+            {bookings?.can_refund && bookings?.amount_paid && (
+              <div className="mt-10">
+                <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-4">
+                  Refundable Amount
+                </h3>
+                <div className="bg-gray-50 rounded-lg p-6 space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-600">Total Paid</span>
+                    <span className="text-gray-900 font-medium">
+                      INR {bookings.amount_paid.toFixed(2)}
+                    </span>
+                  </div>
+                  {bookings.return_percentage !== null && bookings.return_percentage !== undefined && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">Deduction Charges ({bookings.return_percentage}%)</span>
+                      <span className="text-gray-900 font-medium">
+                        INR {(bookings.amount_paid * (bookings.return_percentage / 100)).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
+                    <span className="text-gray-900 font-bold">Total Refundable Amount</span>
+                    <span className="text-gray-900 font-bold text-lg">
+                      INR {(
+                        bookings.return_percentage !== null && bookings.return_percentage !== undefined
+                          ? bookings.returned_amount ?? (bookings.amount_paid * (1 - bookings.return_percentage / 100))
+                          : bookings.amount_paid
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
 
             {/* Members Details Table */}
             {bookings?.fac_type === "Bookable" && (

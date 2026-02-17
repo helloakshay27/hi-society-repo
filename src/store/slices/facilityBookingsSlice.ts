@@ -35,6 +35,8 @@ export interface FacilityBookingDetails {
   pg_state?: string;
   payment_mode?: string;
   booked_members?: any[];
+  return_percentage?: number | null;
+  returned_amount?: number | null;
   lock_payment?: {
     pg_transaction_id?: string;
   };
