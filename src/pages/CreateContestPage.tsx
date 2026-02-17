@@ -44,6 +44,14 @@ interface OfferData {
   bannerImageName: string;
   rewardType: string;
   pointsValue: string;
+  resourceId: string;
+  resourceType: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  sku: string;
 }
 
 export const CreateContestPage: React.FC = () => {
@@ -74,6 +82,8 @@ export const CreateContestPage: React.FC = () => {
     bannerImageName: "",
     rewardType: "Coupon Code",
     pointsValue: "",
+    resourceId: "",
+    resourceType: "Product",
   });
 
   // Helper function to get initial offers count based on contest type
@@ -116,6 +126,39 @@ export const CreateContestPage: React.FC = () => {
 
   // Offers
   const [offers, setOffers] = useState<OfferData[]>([createDefaultOffer()]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  // Fetch products for merchandise
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoadingProducts(true);
+        const baseUrl = localStorage.getItem('baseUrl') || '';
+        const token = localStorage.getItem('token') || '';
+        const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+        
+        const response = await fetch(`${url}/products?source=admin_portal`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch products');
+        
+        const data = await response.json();
+        setProducts(data.products || []);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        sonnerToast.error('Failed to load products');
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+    
+    fetchProducts();
+  }, []);
 
   // Validity
   const [startDate, setStartDate] = useState("");
@@ -234,11 +277,16 @@ export const CreateContestPage: React.FC = () => {
       prev.map((offer) => {
         if (offer.id === id) {
           const updatedOffer = { ...offer, rewardType: newRewardType };
-          // Clear the opposite field value
+          // Clear the opposite field values
           if (newRewardType === "Coupon Code") {
             updatedOffer.pointsValue = "";
+            updatedOffer.resourceId = "";
           } else if (newRewardType === "Points") {
             updatedOffer.couponCode = "";
+            updatedOffer.resourceId = "";
+          } else if (newRewardType === "Merchandise") {
+            updatedOffer.couponCode = "";
+            updatedOffer.pointsValue = "";
           }
           return updatedOffer;
         }
@@ -308,7 +356,7 @@ export const CreateContestPage: React.FC = () => {
        offers.forEach((offer, index) => {
          formData.append(`contest[prizes_attributes][${index}][title]`, offer.offerTitle.trim());
          
-         const rewardType = offer.rewardType === "Points" ? "points" : "coupon";
+         const rewardType = offer.rewardType === "Points" ? "points" : offer.rewardType === "Merchandise" ? "merchandise" : "coupon";
          formData.append(`contest[prizes_attributes][${index}][reward_type]`, rewardType);
 
          if (offer.rewardType === "Coupon Code") {
@@ -317,6 +365,11 @@ export const CreateContestPage: React.FC = () => {
 
          if (offer.rewardType === "Points") {
            formData.append(`contest[prizes_attributes][${index}][points_value]`, offer.pointsValue.trim());
+         }
+
+         if (offer.rewardType === "Merchandise" && offer.resourceId) {
+           formData.append(`contest[prizes_attributes][${index}][resource_id]`, offer.resourceId);
+           formData.append(`contest[prizes_attributes][${index}][resource_type]`, offer.resourceType);
          }
 
          if (offer.partner.trim()) {
@@ -519,6 +572,10 @@ export const CreateContestPage: React.FC = () => {
             alert("Please enter points value for all offers");
             return false;
           }
+          if (offer.rewardType === "Merchandise" && !offer.resourceId) {
+            alert("Please select a resource for all merchandise offers");
+            return false;
+          }
         }
         return true;
 
@@ -715,6 +772,8 @@ export const CreateContestPage: React.FC = () => {
                       >
                         <MenuItem value="Coupon Code">Coupon Code</MenuItem>
                         <MenuItem value="Points">Points</MenuItem>
+                        <MenuItem value="Merchandise">Merchandise</MenuItem>
+                        <MenuItem value="None">None</MenuItem>
                       </MuiSelect>
                     </FormControl>
 
@@ -742,6 +801,29 @@ export const CreateContestPage: React.FC = () => {
                         inputProps={{ min: 0 }}
                         required
                       />
+                    )}
+
+                    {offer.rewardType === "Merchandise" && (
+                      <FormControl fullWidth size="small" sx={textFieldSx} required>
+                        <InputLabel>Resource</InputLabel>
+                        <MuiSelect
+                          value={offer.resourceId}
+                          label="Resource *"
+                          onChange={(e) => updateOffer(offer.id, "resourceId", e.target.value)}
+                        >
+                          {loadingProducts ? (
+                            <MenuItem disabled>Loading products...</MenuItem>
+                          ) : products.length === 0 ? (
+                            <MenuItem disabled>No products available</MenuItem>
+                          ) : (
+                            products.map((product) => (
+                              <MenuItem key={product.id} value={product.id.toString()}>
+                                {product.name}
+                              </MenuItem>
+                            ))
+                          )}
+                        </MuiSelect>
+                      </FormControl>
                     )}
 
                     <TextField

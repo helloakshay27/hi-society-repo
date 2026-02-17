@@ -35,6 +35,7 @@ import CreateContestPage from "@/pages/CreateContestPage";
 import EditContestPage from "@/pages/EditContestPage";
 import ContestDetailsPage from "@/pages/ContestDetailsPage";
 import { AddStaffPage } from "@/pages/AddStaffPage";
+import ApprovalMatrixSetupPage from "@/pages/settings/ApprovalMatrixSetupPage";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
@@ -1426,6 +1427,7 @@ export const setupMemberRoutes = (
     />
 
     {/* Fitout Routes */}
+    <Route path="/settings/approval-matrix" Component={withSuspense(ApprovalMatrixSetupPage)} />
     <Route path="/fitout/setup" Component={withSuspense(FitoutSetup)} />
     <Route path="/fitout/requests" Component={withSuspense(FitoutRequests)} />
     <Route

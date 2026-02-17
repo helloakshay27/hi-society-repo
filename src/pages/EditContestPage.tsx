@@ -44,6 +44,14 @@ interface OfferData {
   pointsValue: string;
   existingImageUrl?: string;
   prizeId?: number;
+  resourceId: string;
+  resourceType: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  sku: string;
 }
 
 export const EditContestPage: React.FC = () => {
@@ -75,6 +83,8 @@ export const EditContestPage: React.FC = () => {
     bannerImageName: "",
     rewardType: "Coupon Code",
     pointsValue: "",
+    resourceId: "",
+    resourceType: "Product",
   });
 
   // Form data
@@ -94,6 +104,10 @@ export const EditContestPage: React.FC = () => {
 
   // Store original data for comparison
   const [originalData, setOriginalData] = useState<any>(null);
+
+  // Products for Merchandise
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
 
   // Fetch contest data
   useEffect(() => {
@@ -176,9 +190,11 @@ export const EditContestPage: React.FC = () => {
             offerDescription: prize.description || "",
             bannerImage: null,
             bannerImageName: "",
-            rewardType: prize.reward_type === "points" ? "Points" : "Coupon Code",
+            rewardType: prize.reward_type === "points" ? "Points" : prize.reward_type === "merchandise" ? "Merchandise" : "Coupon Code",
             pointsValue: prize.points_value?.toString() || "",
             existingImageUrl: prize.image?.url || prize.icon_url || "",
+            resourceId: prize.resource_id?.toString() || "",
+            resourceType: prize.resource_type || "Product",
           }));
           setOffers(mappedOffers);
         }
@@ -252,6 +268,37 @@ export const EditContestPage: React.FC = () => {
     }
   }, [currentStep, loading, termsText, redemptionText]);
 
+  // Fetch products for merchandise
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoadingProducts(true);
+        const baseUrl = localStorage.getItem('baseUrl') || '';
+        const token = localStorage.getItem('token') || '';
+        const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+        
+        const response = await fetch(`${url}/products?source=admin_portal`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch products');
+        
+        const data = await response.json();
+        setProducts(data.products || []);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        sonnerToast.error('Failed to load products');
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+    
+    fetchProducts();
+  }, []);
+
   const steps: ContestStep[] = [
     { id: 1, title: "Basic Info", completed: completedSteps.includes(1), active: currentStep === 1 },
     { id: 2, title: "Offers & Vouchers", completed: completedSteps.includes(2), active: currentStep === 2 },
@@ -298,8 +345,13 @@ export const EditContestPage: React.FC = () => {
           const updatedOffer = { ...offer, rewardType: newRewardType };
           if (newRewardType === "Coupon Code") {
             updatedOffer.pointsValue = "";
+            updatedOffer.resourceId = "";
           } else if (newRewardType === "Points") {
             updatedOffer.couponCode = "";
+            updatedOffer.resourceId = "";
+          } else if (newRewardType === "Merchandise") {
+            updatedOffer.couponCode = "";
+            updatedOffer.pointsValue = "";
           }
           return updatedOffer;
         }
@@ -440,7 +492,7 @@ export const EditContestPage: React.FC = () => {
           formData.append(`contest[prizes_attributes][${index}][id]`, offer.prizeId.toString());
         }
 
-        const rewardType = offer.rewardType === "Points" ? "points" : "coupon";
+        const rewardType = offer.rewardType === "Points" ? "points" : offer.rewardType === "Merchandise" ? "merchandise" : "coupon";
         formData.append(`contest[prizes_attributes][${index}][reward_type]`, rewardType);
 
         if (offer.rewardType === "Coupon Code") {
@@ -449,6 +501,11 @@ export const EditContestPage: React.FC = () => {
 
         if (offer.rewardType === "Points") {
           formData.append(`contest[prizes_attributes][${index}][points_value]`, offer.pointsValue.trim());
+        }
+
+        if (offer.rewardType === "Merchandise" && offer.resourceId) {
+          formData.append(`contest[prizes_attributes][${index}][resource_id]`, offer.resourceId);
+          formData.append(`contest[prizes_attributes][${index}][resource_type]`, offer.resourceType);
         }
 
         if (offer.partner.trim()) {
@@ -569,6 +626,10 @@ export const EditContestPage: React.FC = () => {
           }
           if (offer.rewardType === "Points" && !offer.pointsValue.trim()) {
             sonnerToast.error("Please enter points value for all offers");
+            return false;
+          }
+          if (offer.rewardType === "Merchandise" && !offer.resourceId) {
+            sonnerToast.error("Please select a resource for all merchandise offers");
             return false;
           }
         }
@@ -760,6 +821,8 @@ export const EditContestPage: React.FC = () => {
                       >
                         <MenuItem value="Coupon Code">Coupon Code</MenuItem>
                         <MenuItem value="Points">Points</MenuItem>
+                        <MenuItem value="Merchandise">Merchandise</MenuItem>
+                        <MenuItem value="None">None</MenuItem>
                       </MuiSelect>
                     </FormControl>
 
@@ -787,6 +850,29 @@ export const EditContestPage: React.FC = () => {
                         inputProps={{ min: 0 }}
                         required
                       />
+                    )}
+
+                    {offer.rewardType === "Merchandise" && (
+                      <FormControl fullWidth size="small" sx={textFieldSx} required>
+                        <InputLabel>Resource</InputLabel>
+                        <MuiSelect
+                          value={offer.resourceId}
+                          label="Resource *"
+                          onChange={(e) => updateOffer(offer.id, "resourceId", e.target.value)}
+                        >
+                          {loadingProducts ? (
+                            <MenuItem disabled>Loading products...</MenuItem>
+                          ) : products.length === 0 ? (
+                            <MenuItem disabled>No products available</MenuItem>
+                          ) : (
+                            products.map((product) => (
+                              <MenuItem key={product.id} value={product.id.toString()}>
+                                {product.name}
+                              </MenuItem>
+                            ))
+                          )}
+                        </MuiSelect>
+                      </FormControl>
                     )}
 
                     <TextField

@@ -23,7 +23,17 @@ const ApprovalMatrixSetupPage = () => {
     const fetchApprovalData = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get('/pms/admin/invoice_approvals.json');
+        
+        // Get dynamic society_id from localStorage
+        const societyId = localStorage.getItem('selectedSocietyId');
+        
+        if (!societyId) {
+          console.error('No society selected');
+          setLoading(false);
+          return;
+        }
+        
+        const response = await apiClient.get(`/pms/admin/invoice_approvals.json?society_id=${societyId}`);
         setApprovalData(response.data);
       } catch (error) {
         console.error('Error fetching approval data:', error);

@@ -12,11 +12,25 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 
+interface Product {
+  id: number;
+  name: string;
+  sku: string;
+  description: string;
+  brand: string;
+  base_price: string;
+  sale_price: string;
+  final_price: string;
+  stock_quantity: number;
+  status: string;
+  banner_image: string | null;
+}
+
 interface Prize {
   id: number;
   title: string;
   display_name: string | null;
-  reward_type: "points" | "coupon";
+  reward_type: "points" | "coupon" | "merchandise";
   coupon_code: string | null;
   partner_name: string | null;
   points_value: number | null;
@@ -27,6 +41,7 @@ interface Prize {
     id: number;
     url: string;
   } | null;
+  product: Product | null;
   // other fields omitted if not used in UI
 }
 
@@ -388,12 +403,13 @@ export const ContestDetailsPage: React.FC = () => {
                             Reward Type
                           </p>
                           <p className="text-sm text-[#1A1A1A]">
-                            {/* {prize.reward_type === "points" ? "Loyalty Points" : "Coupon/Voucher"} */}
                             {prize.reward_type === "points"
                               ? "Points"
                               : prize.reward_type === "coupon"
                                 ? "Coupon Code"
-                                : ""}
+                                : prize.reward_type === "merchandise"
+                                  ? "Merchandise"
+                                  : ""}
                           </p>
                         </div>
 
@@ -414,25 +430,21 @@ export const ContestDetailsPage: React.FC = () => {
                         </div>
 
                         {/* Row 2 */}
-                        {/* <div className="space-y-1">
-                          <p className="text-xs font-medium text-gray-500">Coupon Code</p>
-                          <p className="text-sm text-[#1A1A1A]">
-                            {prize.reward_type === "points"
-                              ? `${prize.points_value ?? 0} Points`
-                              : prize.coupon_code ?? "—"}
-                          </p>
-                        </div> */}
                         <div className="space-y-1">
                           <p className="text-xs font-medium text-gray-500">
                             {prize.reward_type === "points"
                               ? "Points"
-                              : "Coupon Code"}
+                              : prize.reward_type === "merchandise"
+                                ? "Resource"
+                                : "Coupon Code"}
                           </p>
 
                           <p className="text-sm text-[#1A1A1A]">
                             {prize.reward_type === "points"
                               ? `${prize.points_value ?? 0} Points`
-                              : (prize.coupon_code ?? "—")}
+                              : prize.reward_type === "merchandise"
+                                ? (prize.product?.name ?? "—")
+                                : (prize.coupon_code ?? "—")}
                           </p>
                         </div>
 
@@ -455,6 +467,45 @@ export const ContestDetailsPage: React.FC = () => {
                           </p>
                         </div>
                       </div>
+
+                      {/* Product Details for Merchandise */}
+                      {prize.reward_type === "merchandise" && prize.product && (
+                        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          <h4 className="text-sm font-semibold text-[#1A1A1A] mb-3">Product Details</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-gray-500">Product Name</p>
+                              <p className="text-sm text-[#1A1A1A]">{prize.product.name}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-gray-500">SKU</p>
+                              <p className="text-sm text-[#1A1A1A]">{prize.product.sku}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-gray-500">Brand</p>
+                              <p className="text-sm text-[#1A1A1A]">{prize.product.brand || "—"}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-gray-500">Price</p>
+                              <p className="text-sm text-[#1A1A1A]">₹{prize.product.final_price}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-gray-500">Stock Quantity</p>
+                              <p className="text-sm text-[#1A1A1A]">{prize.product.stock_quantity}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-gray-500">Status</p>
+                              <p className="text-sm text-[#1A1A1A] capitalize">{prize.product.status}</p>
+                            </div>
+                            {prize.product.description && (
+                              <div className="space-y-1 md:col-span-3">
+                                <p className="text-xs font-medium text-gray-500">Description</p>
+                                <p className="text-sm text-[#1A1A1A]">{prize.product.description}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

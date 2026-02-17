@@ -989,6 +989,12 @@ export const HiSocietySidebar: React.FC = () => {
               path: "/fitout/setup",
             },
             {
+              id: "approval-matrix",
+              label: "Approval Matrix",
+              icon: Home,
+              path: "/settings/approval-matrix",
+            },
+            {
               id: "tax-setup",
               label: "Tax Setup",
               icon: Calculator,

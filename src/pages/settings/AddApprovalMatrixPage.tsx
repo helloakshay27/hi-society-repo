@@ -17,7 +17,11 @@ interface ApprovalLevel {
 
 interface User {
   id: number;
-  full_name: string;
+  user?: {
+    id: number;
+    firstname: string;
+    lastname: string;
+  };
 }
 
 const AddApprovalMatrixPage = () => {
@@ -37,33 +41,34 @@ const AddApprovalMatrixPage = () => {
 
   // Function options with label-value pairs
   const functionOptions = [
-    { label: 'Purchase Order', value: 'purchase_order' },
-    { label: 'GRN', value: 'grn' },
-    { label: 'Work Order', value: 'work_order' },
-    { label: 'Work Order Invoice', value: 'work_order_invoice' },
-    { label: 'Bill', value: 'bill' },
-    { label: 'Vendor Evaluation', value: 'vendor_audit' },
-    { label: 'Permit', value: 'permit' },
-    { label: 'Permit Extend', value: 'permit_extend' },
-    { label: 'Permit Closure', value: 'permit_closure' },
-    { label: 'Supplier', value: 'supplier' },
-    { label: 'GDN', value: 'gdn' },
-    { label: 'Asset Movement', value: 'asset_movement' },
-    { label: 'PR Deletion', value: 'pr_deletion_request' },
+    { label: 'Fitout Request', value: 'fitout_request' },
+    // { label: 'GRN', value: 'grn' },
+    // { label: 'Work Order', value: 'work_order' },
+    // { label: 'Work Order Invoice', value: 'work_order_invoice' },
+    // { label: 'Bill', value: 'bill' },
+    // { label: 'Vendor Evaluation', value: 'vendor_audit' },
+    // { label: 'Permit', value: 'permit' },
+    // { label: 'Permit Extend', value: 'permit_extend' },
+    // { label: 'Permit Closure', value: 'permit_closure' },
+    // { label: 'Supplier', value: 'supplier' },
+    // { label: 'GDN', value: 'gdn' },
+    // { label: 'Asset Movement', value: 'asset_movement' },
+    // { label: 'PR Deletion', value: 'pr_deletion_request' },
   ];
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoadingUsers(true);
-        const response = await apiClient.get('/pms/users/get_escalate_to_users.json');
+        const response = await apiClient.get('/usergroups/get_members_list.json');
         console.log('Users API response:', response.data);
 
-        // Ensure we always set an array
-        if (Array.isArray(response.data.users)) {
-          setUsers(response.data.users);
+        // Filter users that have user data and ensure we always set an array
+        if (Array.isArray(response.data)) {
+          const filteredUsers = response.data.filter((item: any) => item.user && item.user.id);
+          setUsers(filteredUsers);
         } else {
-          console.error('API response.data.users is not an array:', response.data);
+          console.error('API response is not an array:', response.data);
           setUsers([]);
         }
       } catch (error) {
@@ -163,9 +168,20 @@ const AddApprovalMatrixPage = () => {
     try {
       setIsSubmitting(true);
 
+      // Get dynamic society_id from localStorage
+      const societyId = localStorage.getItem('selectedSocietyId');
+      
+      if (!societyId) {
+        toast.error('Please select a society from the header');
+        setIsSubmitting(false);
+        return;
+      }
+
       const payload = {
+         society_id: societyId,
         invoice_approval: {
           approval_type: selectedFunction,
+         
           invoice_approval_levels_attributes: approvalLevels.map(level => ({
             name: level.name,
             order: level.order,
@@ -391,8 +407,8 @@ const AddApprovalMatrixPage = () => {
                       renderValue={(selected) => {
                         if (selected.length === 0) return 'Select up to 15 Options...';
                         if (!Array.isArray(users)) return 'Loading...';
-                        const selectedUsers = users.filter(user => selected.includes(user.id.toString()));
-                        return selectedUsers.map(user => user.full_name).join(', ');
+                        const selectedUsers = users.filter(u => u.user && selected.includes(u.id.toString()));
+                        return selectedUsers.map(u => `${u.user!.firstname} ${u.user!.lastname}`).join(', ');
                       }}
                       displayEmpty
                       sx={{
@@ -412,16 +428,16 @@ const AddApprovalMatrixPage = () => {
                       ) : !Array.isArray(users) ? (
                         <MenuItem disabled>Error loading users</MenuItem>
                       ) : (
-                        users.map((user) => (
-                          <MenuItem key={user.id} value={user.id.toString()}>
+                        users.map((userItem) => (
+                          <MenuItem key={userItem.id} value={userItem.id.toString()}>
                             <Checkbox
-                              checked={level.users.includes(user.id.toString())}
+                              checked={level.users.includes(userItem.id.toString())}
                               sx={{
                                 color: '#C72030',
                                 '&.Mui-checked': { color: '#C72030' },
                               }}
                             />
-                            {user.full_name}
+                            {userItem.user ? `${userItem.user.firstname} ${userItem.user.lastname}` : 'Unknown User'}
                           </MenuItem>
                         ))
                       )}

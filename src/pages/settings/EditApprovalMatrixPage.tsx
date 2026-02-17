@@ -20,7 +20,11 @@ interface ApprovalLevel {
 
 interface User {
   id: number;
-  full_name: string;
+  user?: {
+    id: number;
+    firstname: string;
+    lastname: string;
+  };
 }
 
 const EditApprovalMatrixPage = () => {
@@ -39,18 +43,18 @@ const EditApprovalMatrixPage = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const functionOptions = [
-    { label: 'Purchase Order', value: 'purchase_order' },
-    { label: 'GRN', value: 'grn' },
-    { label: 'Work Order', value: 'work_order' },
-    { label: 'Work Order Invoice', value: 'work_order_invoice' },
-    { label: 'Bill', value: 'bill' },
-    { label: 'Vendor Evaluation', value: 'vendor_audit' },
-    { label: 'Permit', value: 'permit' },
-    { label: 'Permit Extend', value: 'permit_extend' },
-    { label: 'Permit Closure', value: 'permit_closure' },
-    { label: 'Supplier', value: 'supplier' },
-    { label: 'GDN', value: 'gdn' },
-    { label: 'Asset Movement', value: 'asset_movement' },
+     { label: 'Fitout Request', value: 'fitout_request' },
+    // { label: 'GRN', value: 'grn' },
+    // { label: 'Work Order', value: 'work_order' },
+    // { label: 'Work Order Invoice', value: 'work_order_invoice' },
+    // { label: 'Bill', value: 'bill' },
+    // { label: 'Vendor Evaluation', value: 'vendor_audit' },
+    // { label: 'Permit', value: 'permit' },
+    // { label: 'Permit Extend', value: 'permit_extend' },
+    // { label: 'Permit Closure', value: 'permit_closure' },
+    // { label: 'Supplier', value: 'supplier' },
+    // { label: 'GDN', value: 'gdn' },
+    // { label: 'Asset Movement', value: 'asset_movement' },
   ];
 
   // Fetch users for selection
@@ -58,9 +62,16 @@ const EditApprovalMatrixPage = () => {
     const fetchUsers = async () => {
       try {
         setLoadingUsers(true);
-        const response = await apiClient.get('/pms/users/get_escalate_to_users.json');
-        if (Array.isArray(response.data?.users)) setUsers(response.data.users);
-        else setUsers([]);
+        const response = await apiClient.get('/usergroups/get_members_list.json');
+        console.log('Users API response:', response.data);
+        
+        // Filter users that have user data
+        if (Array.isArray(response.data)) {
+          const filteredUsers = response.data.filter((item: any) => item.user && item.user.id);
+          setUsers(filteredUsers);
+        } else {
+          setUsers([]);
+        }
       } catch (e) {
         console.error('Error fetching users', e);
         setUsers([]);
@@ -186,9 +197,21 @@ const EditApprovalMatrixPage = () => {
     if (!validateForm()) return;
     try {
       setIsSubmitting(true);
+      
+      // Get dynamic society_id from localStorage
+      const societyId = localStorage.getItem('selectedSocietyId');
+      
+      if (!societyId) {
+        toast.error('Please select a society from the header');
+        setIsSubmitting(false);
+        return;
+      }
+      
       const payload = {
+         society_id: societyId,
         invoice_approval: {
           approval_type: selectedFunction,
+         
           invoice_approval_levels_attributes: approvalLevels.map((level) => ({
             ...(level.levelId ? { id: level.levelId } : {}),
             name: level.name,
@@ -261,7 +284,7 @@ const EditApprovalMatrixPage = () => {
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         {/* Function Selection */}
-        <div className="mb-8">
+        <div className="mb-8"> 
           <FormControl fullWidth error={!!functionError}>
             <InputLabel required shrink={true} sx={{ color: '#1a1a1a', '&.Mui-focused': { color: '#C72030' } }}>
               Function
@@ -368,12 +391,12 @@ const EditApprovalMatrixPage = () => {
                           if (level.userNames) return Array.isArray(level.userNames) ? level.userNames.join(', ') : level.userNames;
                           return sel.join(', ');
                         }
-                        const selectedUsers = users.filter((u) => sel.includes(u.id.toString()));
+                        const selectedUsers = users.filter((u) => u.user && sel.includes(u.id.toString()));
                         if (selectedUsers.length === 0) {
                           if (level.userNames) return Array.isArray(level.userNames) ? level.userNames.join(', ') : level.userNames;
                           return sel.join(', ');
                         }
-                        return selectedUsers.map((u) => u.full_name).join(', ');
+                        return selectedUsers.map((u) => `${u.user!.firstname} ${u.user!.lastname}`).join(', ');
                       }}
                       displayEmpty
                       sx={{
@@ -387,13 +410,13 @@ const EditApprovalMatrixPage = () => {
                       ) : !Array.isArray(users) ? (
                         <MenuItem disabled>Error loading users</MenuItem>
                       ) : (
-                        users.map((user) => (
-                          <MenuItem key={user.id} value={user.id.toString()}>
+                        users.map((userItem) => (
+                          <MenuItem key={userItem.id} value={userItem.id.toString()}>
                             <Checkbox
-                              checked={level.users.includes(user.id.toString())}
+                              checked={level.users.includes(userItem.id.toString())}
                               sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' } }}
                             />
-                            {user.full_name}
+                            {userItem.user ? `${userItem.user.firstname} ${userItem.user.lastname}` : 'Unknown User'}
                           </MenuItem>
                         ))
                       )}
