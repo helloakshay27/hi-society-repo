@@ -94,7 +94,7 @@ export const exportReport = createAsyncThunk(
   ) => {
     try {
       const response = await axios.get(
-        `https://${baseUrl}/pms/admin/facility_bookings.xlsx`,
+        `https://${baseUrl}/crm/admin/facility_bookings/export.csv`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

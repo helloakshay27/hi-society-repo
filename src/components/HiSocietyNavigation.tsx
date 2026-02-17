@@ -124,9 +124,10 @@ export const HiSocietyNavigation: React.FC = () => {
   // Detect active navigation based on current path
   useEffect(() => {
     const path = location.pathname;
-    
+
     // Define child routes for each section (routes without parent prefix)
     const loyaltyChildRoutes = [
+      "claims",
       "contests",
       "wallet-management",
       "customers",
@@ -155,7 +156,7 @@ export const HiSocietyNavigation: React.FC = () => {
     // Extract first segment from path
     const segments = path.split('/').filter(Boolean);
     const firstSegment = segments[0];
-    
+
     // Check for Application Setup paths first - these should stay in settings
     if (
       path.startsWith("/campaigns/referral-setup") ||
@@ -205,7 +206,7 @@ export const HiSocietyNavigation: React.FC = () => {
       homeChildRoutes.includes(firstSegment)
     ) {
       setActiveNav("home");
-    } 
+    }
     else {
       setActiveNav("home");
     }

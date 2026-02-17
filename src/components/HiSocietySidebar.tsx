@@ -96,6 +96,7 @@ export const HiSocietySidebar: React.FC = () => {
 
     // Define child routes for each section (routes without parent prefix)
     const loyaltyChildRoutes = [
+      "claims",
       "contests",
       "wallet-management",
       "customers",
@@ -403,6 +404,12 @@ export const HiSocietySidebar: React.FC = () => {
               label: "Contest",
               icon: Briefcase,
               path: "/contests",
+            },
+            {
+              id: "Claims",
+              label: "Claims",
+              icon: FileText,
+              path: "/claims",
             },
           ],
         },
@@ -1293,9 +1300,8 @@ export const HiSocietySidebar: React.FC = () => {
 
   return (
     <div
-      className={`${
-        isSidebarCollapsed ? "w-16" : "w-64"
-      } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
+      className={`${isSidebarCollapsed ? "w-16" : "w-64"
+        } bg-[#f6f4ee] border-r border-[#D5DbDB] fixed left-0 top-0 overflow-y-auto transition-all duration-300`}
       style={{ top: "4rem", height: "calc(100% - 4rem)" }}
     >
       <div className={`${isSidebarCollapsed ? "px-2 py-2" : "p-2"}`}>

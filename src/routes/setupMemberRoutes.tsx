@@ -36,6 +36,8 @@ import EditContestPage from "@/pages/EditContestPage";
 import ContestDetailsPage from "@/pages/ContestDetailsPage";
 import { AddStaffPage } from "@/pages/AddStaffPage";
 import ApprovalMatrixSetupPage from "@/pages/settings/ApprovalMatrixSetupPage";
+import Claims from "@/pages/Claims";
+import ClaimsDetails from "@/pages/ClaimsDetails";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
@@ -1105,6 +1107,8 @@ export const setupMemberRoutes = (
     <Route path="/contests/create" element={<CreateContestPage />} />
     <Route path="/contests/:id/edit" element={<EditContestPage />} />
     <Route path="/contests/:id" element={<ContestDetailsPage />} />
+    <Route path="/claims" element={<Claims />} />
+    <Route path="/claims/:id" element={<ClaimsDetails />} />
     <Route
       path="/loyalty/loyalty-tiers-list"
       Component={withSuspense(LoyaltyTiersList)}
