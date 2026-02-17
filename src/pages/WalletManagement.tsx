@@ -103,7 +103,7 @@ export const WalletManagement = () => {
       case "transaction_type": {
         const type =
           item.transaction_type.charAt(0).toUpperCase() +
-            item.transaction_type.slice(1) || "";
+          item.transaction_type.slice(1) || "";
         let color = "";
         if (type === "Debit" || type === "DR") color = "text-red-600 font-bold";
         if (type === "Credit" || type === "CR")
@@ -208,7 +208,7 @@ export const WalletManagement = () => {
     <div className="p-6 space-y-6 bg-[#fafafa] min-h-screen">
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-[#f6f4ee] p-1 h-auto w-full grid grid-cols-4 gap-6">
+        {/* <TabsList className="bg-[#f6f4ee] p-1 h-auto w-full grid grid-cols-4 gap-6">
           <TabsTrigger
             value="wallet-management"
             className="data-[state=active]:bg-white data-[state=active]:text-[#1A1A1A] px-6 py-2"
@@ -233,7 +233,7 @@ export const WalletManagement = () => {
           >
             Receipts
           </TabsTrigger>
-        </TabsList>
+        </TabsList> */}
 
         <TabsContent value="wallet-management" className="space-y-6 mt-6">
           {/* Header */}
