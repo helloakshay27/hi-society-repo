@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Edit, Download, User, Mail, Phone, Calendar, CreditCard, Building2, FileText, Image as ImageIcon, RefreshCw, X } from 'lucide-react';
+import { ArrowLeft, Edit, Download, User, Mail, Phone, Calendar, CreditCard, Building2, FileText, Image as ImageIcon, RefreshCw, X, Logs } from 'lucide-react';
 import { toast } from 'sonner';
 import { API_CONFIG } from '@/config/apiConfig';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LogsTimeline } from '@/components/LogTimeline';
 import {
     Dialog,
     DialogTitle,
@@ -98,6 +99,19 @@ interface Bill {
     invoice_file: string | null;
 }
 
+interface Log {
+    id: number;
+    log_of: string;
+    log_of_id: number;
+    changed_attr: string | null;
+    changed_by: number;
+    about: string;
+    about_id: number;
+    log_type: string;
+    question_id: number | null;
+    room_type_id: number | null;
+}
+
 interface GroupMembershipDetail {
     id: number;
     membership_plan_id: number;
@@ -108,6 +122,7 @@ interface GroupMembershipDetail {
     referred_by?: string;
     club_members: ClubMember[];
     bills?: Bill[];
+    logs?: Log[];
     allocation_payment_detail?: {
         id: number;
         club_member_allocation_id: number;
@@ -741,6 +756,12 @@ export const CMSClubMembersDetails = () => {
                         >
                             Member Details
                         </TabsTrigger>
+                        <TabsTrigger
+                            value="logs"
+                            className="flex-1 min-w-0 bg-white data-[state=active]:bg-[#EDEAE3] px-3 py-2 data-[state=active]:text-[#C72030] border-r border-gray-200 last:border-r-0"
+                        >
+                            Logs
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="overview" className="p-4 sm:p-6">
@@ -1286,6 +1307,34 @@ export const CMSClubMembersDetails = () => {
                                     </TabsContent>
                                 </Tabs>
                             </>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="logs" className="p-4 sm:p-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#E5E0D3] text-[#C72030]">
+                                <Logs className="w-5 h-5" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-[#1a1a1a]">
+                                Activity Logs
+                            </h2>
+                        </div>
+                        {membershipData.logs && membershipData.logs.length > 0 ? (
+                            <div className="overflow-x-auto px-3">
+                                <LogsTimeline
+                                    logs={membershipData.logs.map((log, index) => ({
+                                        id: log.id.toString(),
+                                        description: log.log_type || 'Activity logged',
+                                        timestamp: `Log ID: ${log.id}`,
+                                    }))}
+                                />
+                            </div>
+                        ) : (
+                            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                                <Logs className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                                <p className="text-gray-600 font-medium">No logs available</p>
+                                <p className="text-sm text-gray-500 mt-1">Activity logs will appear here</p>
+                            </div>
                         )}
                     </TabsContent>
                 </Tabs >

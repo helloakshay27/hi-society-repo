@@ -35,6 +35,9 @@ export interface FacilityBookingDetails {
   pg_state?: string;
   payment_mode?: string;
   booked_members?: any[];
+  lock_payment?: {
+    pg_transaction_id?: string;
+  };
 }
 
 export interface FacilityBookingResponse {

@@ -519,7 +519,7 @@ const BookingDetailsPage = () => {
                     Transaction ID:
                   </span>
                   <span className="text-gray-900 font-medium">
-                    {bookings?.transaction_id || "-"}
+                    {bookings?.lock_payment?.pg_transaction_id || "-"}
                   </span>
                 </div>
                 <div className="flex items-start text-sm">
