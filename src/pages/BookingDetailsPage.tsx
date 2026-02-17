@@ -587,14 +587,14 @@ const BookingDetailsPage = () => {
                       INR {bookings.amount_paid.toFixed(2)}
                     </span>
                   </div>
-                  {bookings.return_percentage !== null && bookings.return_percentage !== undefined && (
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">Deduction Charges ({bookings.return_percentage}%)</span>
-                      <span className="text-gray-900 font-medium">
-                        INR {(bookings.amount_paid * (bookings.return_percentage / 100)).toFixed(2)}
-                      </span>
-                    </div>
-                  )}
+                  {/* {bookings.return_percentage !== null && bookings.return_percentage !== undefined && ( */}
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-600">Deduction Charges ({bookings.return_percentage ?? 0}%)</span>
+                    <span className="text-gray-900 font-medium">
+                      INR {(bookings.amount_paid * (bookings.return_percentage / 100)).toFixed(2)}
+                    </span>
+                  </div>
+                  {/* )} */}
                   <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
                     <span className="text-gray-900 font-bold">Total Refundable Amount</span>
                     <span className="text-gray-900 font-bold text-lg">
