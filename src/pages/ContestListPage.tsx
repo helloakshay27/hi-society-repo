@@ -84,54 +84,29 @@ export const ContestListPage: React.FC = () => {
         setLoading(true);
       }
 
-      const baseUrl = localStorage.getItem('baseUrl');
-      const token = localStorage.getItem('token');
-    //   const baseUrl =  "https://uat-hi-society.lockated.com";
-    // const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI"
-
+      const baseUrl = localStorage.getItem("baseUrl");
+      const token = localStorage.getItem("token");
+      //   const baseUrl =  "https://uat-hi-society.lockated.com";
+      // const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI"
 
       if (!baseUrl || !token) {
         throw new Error("Base URL or token not set in localStorage");
       }
 
       // Ensure protocol is present
-      const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+      const url = /^https?:\/\//i.test(baseUrl)
+        ? baseUrl
+        : `https://${baseUrl}`;
 
-      // Build URL with query parameters based on selected status and search query
-      const queryParams = new URLSearchParams();
-      queryParams.append('source', 'web');
-      
-      // Add search query parameter if exists
-      if (searchQuery.trim()) {
-        queryParams.append(
-          'q[name_or_description_or_content_type_or_status_or_attemp_required_text_or_start_at_text_or_end_at_text_or_prizes_title_cont]',
-          searchQuery.trim()
-        );
-      }
-      
-      // Add status filter if selected
-      if (selectedStatus) {
-        const card = statusCards.find(c => c.status === selectedStatus);
-        if (card?.queryParam) {
-          const [key, value] = card.queryParam.split('=');
-          queryParams.append(key, value);
-        }
-      }
-
-      const apiUrl = `${url}/contests.json?${queryParams.toString()}`;
-
-      const response = await fetch(
-        apiUrl,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await fetch(`${url}/contests.json`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       const data = await response.json();
-      console.log('Contest API response:', data);
+      console.log("Contest API response:", data);
       const today = new Date();
 
       // Handle both array and object response
@@ -172,7 +147,7 @@ export const ContestListPage: React.FC = () => {
               : item.content_type === "scratch"
                 ? "Scratch Card"
                 : "Card Flip",
-          attempt: item.attemp_required ?? 1,
+          attempt: item.user_attemp_remaining ?? 1,
           status,
           isActive: item.active ?? false,
           contentStatus: item.status ?? "-",
@@ -184,9 +159,9 @@ export const ContestListPage: React.FC = () => {
 
       setStatusCounts({
         total: formatted.length,
-        active: formatted.filter(c => c.status === "Active").length,
-        inactive: formatted.filter(c => c.status === "Inactive").length,
-        expired: formatted.filter(c => c.status === "Expired").length,
+        active: formatted.filter((c) => c.status === "Active").length,
+        inactive: formatted.filter((c) => c.status === "Inactive").length,
+        expired: formatted.filter((c) => c.status === "Expired").length,
       });
     } catch (error) {
       console.error("Error fetching contests", error);
@@ -214,30 +189,22 @@ export const ContestListPage: React.FC = () => {
 
   // Effect to handle debounced search
   useEffect(() => {
-    // Update search query when debounced input changes
-    const trimmedQuery = debouncedSearchQuery.trim();
-    
-    if (searchQuery !== trimmedQuery) {
-      setSearchQuery(trimmedQuery);
-      setCurrentPage(1);
-      // Trigger fetch after state update
-      const timer = setTimeout(() => {
-        fetchContests();
-      }, 0);
-      return () => clearTimeout(timer);
+    let filtered = contests;
+
+    if (selectedStatus) {
+      filtered = filtered.filter((c) => c.status === selectedStatus);
     }
-  }, [debouncedSearchQuery]);
 
-  // Effect to handle status filter changes
-  useEffect(() => {
-    fetchContests();
-  }, [selectedStatus]);
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (c) =>
+          c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          c.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
 
-  useEffect(() => {
-    // Backend handles both search and status filtering
-    // No client-side filtering needed
-    setFilteredContests(contests);
-  }, [contests]);
+    setFilteredContests(filtered);
+  }, [searchQuery, selectedStatus, contests]);
 
   /* ---------------- HELPERS ---------------- */
 
@@ -254,17 +221,22 @@ export const ContestListPage: React.FC = () => {
     return "bg-gray-100 text-gray-800";
   };
 
-  const handleToggleActive = async (contestId: number, currentIsActive: boolean) => {
+  const handleToggleActive = async (
+    contestId: number,
+    currentIsActive: boolean
+  ) => {
     try {
       setTogglingId(contestId);
       const baseUrl = localStorage.getItem("baseUrl");
-      const token = localStorage.getItem("token") ;
+      const token = localStorage.getItem("token");
 
       if (!baseUrl || !token) {
         throw new Error("Base URL or token not set in localStorage");
       }
 
-      const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+      const url = /^https?:\/\//i.test(baseUrl)
+        ? baseUrl
+        : `https://${baseUrl}`;
       const newActiveState = !currentIsActive;
 
       const formData = new FormData();
@@ -284,7 +256,7 @@ export const ContestListPage: React.FC = () => {
       }
 
       // Optimistic UI update
-      const updatedContests = contests.map(contest => {
+      const updatedContests = contests.map((contest) => {
         if (contest.id === contestId) {
           return {
             ...contest,
@@ -298,15 +270,21 @@ export const ContestListPage: React.FC = () => {
       setContests(updatedContests);
 
       // Update status counts
-      const activeCounts = updatedContests.filter(c => c.status === "Active").length;
-      const inactiveCounts = updatedContests.filter(c => c.status === "Inactive").length;
-      setStatusCounts(prev => ({
+      const activeCounts = updatedContests.filter(
+        (c) => c.status === "Active"
+      ).length;
+      const inactiveCounts = updatedContests.filter(
+        (c) => c.status === "Inactive"
+      ).length;
+      setStatusCounts((prev) => ({
         ...prev,
         active: activeCounts,
         inactive: inactiveCounts,
       }));
 
-      console.log(`Contest ${contestId} toggled to ${newActiveState ? "Active" : "Inactive"}`);
+      console.log(
+        `Contest ${contestId} toggled to ${newActiveState ? "Active" : "Inactive"}`
+      );
     } catch (error) {
       console.error("Error toggling contest status", error);
     } finally {
@@ -408,7 +386,7 @@ export const ContestListPage: React.FC = () => {
         <EnhancedTable
             data={filteredContests}
             columns={columns}
-            renderRow={contest => ({
+            renderRow={(contest) => ({
               actions: (
                 <Button
                   variant="ghost"
@@ -441,16 +419,21 @@ export const ContestListPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={contest.isActive}
-                    onChange={() => handleToggleActive(contest.id, contest.isActive)}
-                    disabled={togglingId === contest.id || contest.status === "Expired"}
+                    onChange={() =>
+                      handleToggleActive(contest.id, contest.isActive)
+                    }
+                    disabled={
+                      togglingId === contest.id || contest.status === "Expired"
+                    }
                     size="small"
                     sx={{
                       "& .MuiSwitch-switchBase.Mui-checked": {
                         color: "#22c55e",
                       },
-                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                        backgroundColor: "#22c55e",
-                      },
+                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                        {
+                          backgroundColor: "#22c55e",
+                        },
                     }}
                   />
                   <span className="text-sm font-medium">
@@ -491,7 +474,7 @@ export const ContestListPage: React.FC = () => {
               <PaginationItem>
                 <PaginationPrevious
                   onClick={() =>
-                    setCurrentPage(prev => Math.max(1, prev - 1))
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
                 />
               </PaginationItem>
@@ -503,7 +486,7 @@ export const ContestListPage: React.FC = () => {
               <PaginationItem>
                 <PaginationNext
                   onClick={() =>
-                    setCurrentPage(prev => Math.min(totalPages, prev + 1))
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                   }
                 />
               </PaginationItem>

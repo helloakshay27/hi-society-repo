@@ -61,7 +61,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const hostname = window.location.hostname;
 
   // Detect Club Management routes
-  const isClubManagementRoute = hostname === "club.lockated.com" || location.pathname.startsWith("/club-management");
+  const isClubManagementRoute =
+    hostname === "club.lockated.com" ||
+    location.pathname.startsWith("/club-management");
 
   // Debug layoutMode state and localStorage sync
   useEffect(() => {
@@ -152,6 +154,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     hostname.includes("pulse.lockated.com") ||
     hostname.includes("pulse.gophygital.work") ||
     hostname.includes("pulse-uat.panchshil.com") ||
+    hostname.includes("pulse.panchshil.com") ||
     location.pathname.startsWith("/pulse");
   const isLocalhost =
     hostname.includes("localhost") ||
@@ -189,7 +192,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           selectedCompany?.id === 298 ||
           selectedCompany?.id === 199 ||
           org_id === "90" ||
-          // org_id === "84" ||
+          org_id === "84" ||
+          org_id === "1" ||
           userEmail === "ubaid.hashmat@lockated.com" ||
           userEmail === "besis69240@azeriom.com" ||
           userEmail === "megipow156@aixind.com" ||
@@ -226,7 +230,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       selectedCompany?.id === 199 ||
       selectedCompany?.id === 307 ||
       org_id === "90" ||
-      // org_id === "84" ||
+      org_id === "84" ||
+      org_id === "1" ||
       userEmail === "ubaid.hashmat@lockated.com" ||
       userEmail === "besis69240@azeriom.com" ||
       userEmail === "megipow156@aixind.com" ||
@@ -252,6 +257,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     if (selectedCompany?.id === 294) {
       return <ZycusSidebar />;
+    }
+
+    if (org_id === "3") {
+      return <ZycusSidebarCopy />;
     }
 
     if (selectedCompany?.id === 304) {
@@ -300,7 +309,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       selectedCompany?.id === 199 ||
       selectedCompany?.id === 307 ||
       org_id === "90" ||
-      // org_id === "84" ||
+      org_id === "84" ||
+      org_id === "1" ||
       userEmail === "ubaid.hashmat@lockated.com" ||
       userEmail === "besis69240@azeriom.com" ||
       userEmail === "megipow156@aixind.com" ||

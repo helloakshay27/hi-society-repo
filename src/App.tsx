@@ -698,6 +698,9 @@ import AddFacilityBookingPage from "./pages/AddFacilityBookingPage";
 import { PaymentRedirectPage } from "./pages/PaymentRedirectPage";
 import { AssetGroupsDashboard } from "./pages/setup/AssetGroupsDashboard";
 
+import { PaymentsMadePage } from "./pages/PaymentsMadePage";
+import { CreatePaymentPage } from "./pages/CreatePaymentPage";
+
 import ApprovalMatrixSetupPage from "./pages/settings/ApprovalMatrixSetupPage";
 import AddApprovalMatrixPage from "./pages/settings/AddApprovalMatrixPage";
 
@@ -1100,6 +1103,16 @@ import TransactionsEdit from "./pages/ClubManagement/TransactionsEdit";
 import useRouteLogger from "./hooks/useRouteLogger";
 import ClubEditOccupantUserPage from "./pages/master/ClubEditOccupantUserPage";
 import ClubAddOccupantUserPage from "./pages/master/ClubAddOccupantUserPage";
+import { RideDetail } from "./pages/pulse/RideDetail";
+import { OccupantUserListWrapper } from "./components/OccupantUserListWrapper";
+import { OccupantUserDetailWrapper } from "./components/OccupantUserDetailWrapper";
+import ModulesManagement from "./pages/settings/ModulesManagement";
+import { InvoiceAdd } from "./pages/ClubManagement/InvoiceAdd";
+import { InvoiceDashboardAccounting } from "./pages/ClubManagement/InvoiceDashboard";
+import { QuotesDashboard } from "./pages/ClubManagement/QuotesDashboard";
+import { QuotesAdd } from "./pages/ClubManagement/QuotesAdd";
+import { DeliveryChallansDashboard } from "./pages/ClubManagement/DeliveryChallansDashboard";
+import { DeliveryChallansAdd } from "./pages/ClubManagement/DeliveryChallansAdd";
 
 const queryClient = new QueryClient();
 
@@ -1330,7 +1343,40 @@ function App() {
                       element={<LockModuleList />}
                     />
 
-                    {/* <Route
+                      <Route
+                        path="master/user/fm-users"
+                        element={<FMUserMasterDashboard />}
+                      />
+                      <Route
+                        path="master/user/fm-users/add"
+                        element={<AddFMUserPage />}
+                      />
+                      <Route
+                        path="master/user/fm-users/edit/:id"
+                        element={<EditFMUserPage />}
+                      />
+                      <Route
+                        path="master/user/fm-users/view/:id"
+                        element={<ViewFMUserPage />}
+                      />
+                      <Route
+                        path="settings/roles/role"
+                        element={<RoleDashboard />}
+                      />
+                      <Route
+                        path="settings/roles/role/add"
+                        element={<AddRolePage />}
+                      />
+                      <Route
+                        path="settings/account/lock-module"
+                        element={<LockModuleList />}
+                      />
+                      <Route
+                        path="settings/modules"
+                        element={<ModulesManagement />}
+                      />
+
+                      {/* <Route
                       path="settings/account/lock-module/view/:id"
                       element={<LockModuleView />}
                     />
@@ -1370,6 +1416,10 @@ function App() {
                       path="settings/account/locked-users"
                       element={<LockedUsersDashboard />}
                     />
+
+                    <Route path="settings/account/user-list-otp" element={<OccupantUserListWrapper />} />
+                    <Route path="settings/account/user-list-otp/detail/:id" element={<OccupantUserDetailWrapper />} />
+
                     {/* <Route
                       path="settings/account/lock-sub-function/create"
                       element={<LockSubFunctionCreate />}
@@ -4982,6 +5032,654 @@ function App() {
                       path="/security/vehicle/g-vehicles"
                       element={<GVehiclesDashboard />}
                     />
+                    
+                    <Route
+                      path="/security/vehicle/r-vehicles/in"
+                      element={<RVehiclesInDashboard />}
+                    />
+                    <Route
+                      path="/security/vehicle/r-vehicles/out"
+                      element={<RVehiclesOutDashboard />}
+                    />
+                    {/* Value Added Services Routes */}
+
+                    <Route
+                      path="/mail-inbounds-create"
+                      element={<NewInboundPage />}
+                    />
+                    <Route
+                      path="/vas/fnb"
+                      element={<RestaurantOrdersTable needPadding={true} />}
+                    />
+                    {/* <Route path="/vas/fnb/add" element={<AddRestaurantPage />} /> */}
+                    <Route
+                      path="/vas/fnb/details/:id"
+                      element={<FnBRestaurantDetailsPage />}
+                    />
+                      <Route
+                        path="/vas/fnb/details/:id/restaurant-menu/:mid"
+                        element={<ProductSetupDetailPage />}
+                      />
+                      <Route
+                        path="/vas/fnb/details/:id/restaurant-order/:oid"
+                        element={<RestaurantOrderDetailPage />}
+                      />
+                      <Route
+                        path="/vas/fnb/discounts"
+                        element={<FnBDiscountsPage />}
+                      />
+                      {/* Mailroom Routes */}
+                      <Route
+                        path="/vas/mailroom/inbound"
+                        element={<InboundListPage />}
+                      />
+                      <Route
+                        path="/vas/mailroom/inbound/create"
+                        element={<NewInboundPage />}
+                      />
+                      <Route
+                        path="/vas/mailroom/inbound/:id"
+                        element={<InboundDetailPage />}
+                      />
+                      <Route
+                        path="/vas/mailroom/outbound"
+                        element={<OutboundListPage />}
+                      />
+                      <Route
+                        path="/vas/mailroom/outbound/create"
+                        element={<NewOutboundPage />}
+                      />
+                      <Route
+                        path="/vas/mailroom/outbound/:id"
+                        element={<OutboundDetailPage />}
+                      />
+                      <Route
+                        path="/vas/parking"
+                        element={<ParkingDashboard />}
+                      />
+                      <Route
+                        path="/vas/parking/details/:clientId"
+                        element={<ParkingDetailsPage />}
+                      />
+                      <Route
+                        path="/vas/parking/bookings"
+                        element={<ParkingBookingsDashboard />}
+                      />
+                      <Route
+                        path="/vas/parking/site-wise-bookings"
+                        element={<ParkingBookingListSiteWise />}
+                      />
+                      <Route
+                        path="/vas/parking/create"
+                        element={<ParkingCreatePage />}
+                      />
+                      <Route
+                        path="/vas/parking/edit/:clientId?"
+                        element={<ParkingEditPage />}
+                      />
+                      <Route path="/vas/osr" element={<OSRDashboard />} />
+                      <Route
+                        path="/vas/osr/details/:id"
+                        element={<OSRDetailsPage />}
+                      />
+                      <Route
+                        path="/vas/osr/generate-receipt"
+                        element={<OSRGenerateReceiptPage />}
+                      />
+                      <Route
+                        path="/vas/redemption-marketplace"
+                        element={<RedemptionMarketplacePage />}
+                      />
+                      <Route
+                        path="/vas/hotels/rewards"
+                        element={<HotelRewardsPage />}
+                      />
+                      <Route
+                        path="/vas/hotels/details"
+                        element={<HotelDetailsPage />}
+                      />
+                      <Route
+                        path="/vas/hotels/booking"
+                        element={<HotelBookingPage />}
+                      />
+                      <Route
+                        path="/vas/tickets/discounts"
+                        element={<TicketDiscountsPage />}
+                      />
+                      {/* Value Added Services Routes */}
+                      {/* <Route path="/vas/fnb" element={<FnBRestaurantDashboard />} /> */}
+                      <Route
+                        path="/settings/approval-matrix/setup/edit/:id"
+                        element={<EditApprovalMatrixPage />}
+                      />
+                      <Route
+                        path="/vas/fnb/discounts"
+                        element={<FnBDiscountsPage />}
+                      />
+                      <Route
+                        path="/vas/parking"
+                        element={<ConditionalParkingPage />}
+                      />
+                      <Route
+                        path="/vas/parking/details/:clientId"
+                        element={<ParkingDetailsPage />}
+                      />
+                      <Route
+                        path="/vas/parking/bookings"
+                        element={<ParkingBookingsDashboard />}
+                      />
+                      <Route path="/vas/osr" element={<OSRDashboard />} />
+                      <Route
+                        path="/vas/osr/details/:id"
+                        element={<OSRDetailsPage />}
+                      />
+                      <Route
+                        path="/vas/osr/generate-receipt"
+                        element={<OSRGenerateReceiptPage />}
+                      />
+                      <Route
+                        path="/vas/redemption-marketplace"
+                        element={<RedemptionMarketplacePage />}
+                      />
+                      <Route
+                        path="/vas/hotels/rewards"
+                        element={<HotelRewardsPage />}
+                      />
+                      <Route
+                        path="/vas/hotels/details"
+                        element={<HotelDetailsPage />}
+                      />
+                      <Route
+                        path="/vas/hotels/booking"
+                        element={<HotelBookingPage />}
+                      />
+                      <Route
+                        path="/vas/tickets/discounts"
+                        element={<TicketDiscountsPage />}
+                      />
+                      {/* Handle the typo in the URL */}
+                      <Route
+                        path="/vas/redemonection-marketplace"
+                        element={
+                          <Navigate to="/vas/redemption-marketplace" replace />
+                        }
+                      />
+                      {/* Space Management Routes */}
+                      <Route
+                        path="/vas/space-management/bookings"
+                        element={<SpaceManagementBookingsDashboard />}
+                      />
+                      <Route
+                        path="/employee/space-management/bookings"
+                        element={
+                          <ProtectedRoute>
+                            <SpaceManagementBookingsDashboardEmployee />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/vas/space-management/bookings/employee/add"
+                        element={
+                          <ProtectedRoute>
+                            <SpaceManagementBookingAddEmployee />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/vas/space-management/bookings/details/:id"
+                        element={
+                          <ProtectedRoute>
+                            <SpaceManagementBookingDetailsPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/vas/space-management/seat-requests"
+                        element={<SpaceManagementSeatRequestsDashboard />}
+                      />
+                      <Route
+                        path="/space-management/bookings"
+                        element={<SpaceManagementBookingsDashboard />}
+                      />
+                      <Route
+                        path="/space-management/seat-requests"
+                        element={<SpaceManagementSeatRequestsDashboard />}
+                      />
+                      {/* VAS Space Management Setup Routes - moved inside main layout */}
+                      <Route
+                        path="/vas/space-management/setup/seat-type"
+                        element={<SeatTypeDashboard />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/seat-setup"
+                        element={<SeatSetupDashboard />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/seat-setup/add"
+                        element={<AddSeatSetupDashboard />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/seat-setup/edit/:id"
+                        element={<EditSeatSetupDashboard />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/shift"
+                        element={<ShiftDashboard />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/roster"
+                        element={<UserRoastersDashboard />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/roster/create"
+                        element={<CreateRosterTemplateDashboard />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/roster/edit/:id"
+                        element={<EditRosterTemplatePage />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/employees"
+                        element={<EmployeesDashboard />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/employees/add"
+                        element={<AddEmployeeDashboard />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/employees/edit/:id"
+                        element={<EditEmployeePage />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/employees/details/:id"
+                        element={<EmployeeDetailsPage />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/check-in-margin"
+                        element={<CheckInMarginDashboard />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/roster-calendar"
+                        element={<RosterCalendarDashboard />}
+                      />
+                      <Route
+                        path="/vas/space-management/setup/export"
+                        element={<ExportDashboard />}
+                      />
+                      {/* M Safe Routes */}
+                      <Route
+                        path="/safety/m-safe/non-fte-users"
+                        element={<NonFTEUsersDashboard />}
+                      />
+                      <Route
+                        path="/safety/m-safe/krcc-form-list"
+                        element={<KRCCFormListDashboard />}
+                      />
+                      <Route
+                        path="/safety/m-safe"
+                        element={
+                          <Navigate to="/safety/m-safe/internal" replace />
+                        }
+                      />
+                      <Route
+                        path="/safety/m-safe/external"
+                        element={<ExternalUsersDashboard />}
+                      />
+                      <Route
+                        path="/safety/m-safe/user/:userId"
+                        element={<MSafeUserDetail />}
+                      />
+                      <Route
+                        path="/safety/m-safe/external/user/:userId"
+                        element={<ExternalUserDetail />}
+                      />
+                      <Route
+                        path="/safety/m-safe/external/user/:userId/edit"
+                        element={<EditExternalUserPage />}
+                      />
+                      <Route
+                        path="/safety/m-safe/external/user/:userId/lmc-manager"
+                        element={<LMCPage />}
+                      />
+                      <Route
+                        path="/safety/m-safe/non-fte-users"
+                        element={<NonFTEUsersDashboard />}
+                      />
+                      <Route
+                        path="/safety/m-safe/krcc-list"
+                        element={<KRCCFormListDashboard />}
+                      />
+                      <Route
+                        path="/safety/m-safe/krcc-list/:id"
+                        element={<KRCCFormDetail />}
+                      />
+                      <Route
+                        path="/safety/m-safe/lmc"
+                        element={<LMCDashboard />}
+                      />
+                      <Route
+                        path="/safety/m-safe/lmc/:id"
+                        element={<LMCUserDetail />}
+                      />
+                      <Route
+                        path="/safety/m-safe/training-list"
+                        element={<TrainingDashboard />}
+                      />
+                      <Route
+                        path="/safety/m-safe/training-list/:id"
+                        element={<TrainingDetailPage />}
+                      />
+                      <Route
+                        path="/safety/m-safe/smt"
+                        element={<SMTDashboard />}
+                      />
+                      <Route
+                        path="/safety/m-safe/smt/:id"
+                        element={<SMTDetailPage />}
+                      />
+                      <Route
+                        path="/safety/m-safe/external-users/multiple-delete"
+                        element={<MultipleUserDeletePage />}
+                      />
+                      <Route
+                        path="/safety/m-safe/reportees-reassign"
+                        element={<ReporteesReassignPage />}
+                      />
+                      <Route
+                        path="/safety/vi-miles/vehicle-details"
+                        element={<VehicleDetails />}
+                      />
+                      <Route
+                        path="/safety/vi-miles/vehicle-check-in"
+                        element={<VehicleCheckIn />}
+                      />
+                      <Route
+                        path="/vehicle-history/update"
+                        element={<UpdateVehicleHistoryPage />}
+                      />
+                      {/* Market Place Routes */}
+                      <Route
+                        path="/market-place/all"
+                        element={<MarketPlaceAllPage />}
+                      />
+                      <Route
+                        path="/market-place/installed"
+                        element={<MarketPlaceInstalledPage />}
+                      />
+                      <Route
+                        path="/market-place/updates"
+                        element={<MarketPlaceUpdatesPage />}
+                      />
+                      <Route
+                        path="/market-place/lease-management"
+                        element={<LeaseManagementDetailPage />}
+                      />
+                      <Route
+                        path="/market-place/loyalty-rule-engine"
+                        element={<LoyaltyRuleEngineDetailPage />}
+                      />
+                      <Route
+                        path="/market-place/cloud-telephony"
+                        element={<CloudTelephonyDetailPage />}
+                      />
+                      <Route
+                        path="/market-place/accounting"
+                        element={<AccountingDetailPage />}
+                      />
+                      {/* VAS Booking Routes */}
+                      <Route
+                        path="/vas/booking/list"
+                        element={<BookingList />}
+                      />
+                      <Route
+                        path="/vas/booking/add"
+                        element={<AddFacilityBookingPage />}
+                      />
+                      <Route
+                        path="/vas/booking/edit/:id"
+                        element={<EditFacilityBookingPage />}
+                      />
+                      <Route
+                        path="/vas/bookings/details/:id"
+                        element={<BookingDetailsPage />}
+                      />
+                      {/* <Route path="/vas/booking/setup" element={<BookingSetupDashboard />} /> */}
+                      <Route
+                        path="/vas/booking/setup/details/:id"
+                        element={<BookingSetupDetailPage />}
+                      />
+                      <Route
+                        path="/payment-redirect"
+                        element={<PaymentRedirectPage />}
+                      />
+                      {/* Payments Made Routes */}
+                      {/* Master Location Routes */}
+                      <Route
+                        path="/master/location/building"
+                        element={<BuildingPage />}
+                      />
+                      <Route
+                        path="/master/location/wing"
+                        element={<WingPage />}
+                      />
+                      <Route
+                        path="/master/location/area"
+                        element={<AreaPage />}
+                      />
+                      <Route
+                        path="/master/location/floor"
+                        element={<FloorPage />}
+                      />
+                      <Route
+                        path="/master/location/unit"
+                        element={<UnitPage />}
+                      />
+                      <Route
+                        path="/master/location/room"
+                        element={<RoomPage />}
+                      />
+                      <Route
+                        path="/master/location/account"
+                        element={<LocationAccountPage />}
+                      />
+                      {/* Master User Routes */}
+                      <Route
+                        path="/master/user/fm-users"
+                        element={<FMUserMasterDashboard />}
+                      />
+                      <Route
+                        path="/master/user/fm-users/add"
+                        element={<AddFMUserPage />}
+                      />
+                      <Route
+                        path="/master/user/fm-users/edit/:id"
+                        element={<EditFMUserPage />}
+                      />
+                      <Route
+                        path="/master/user/fm-users/view/:id"
+                        element={<ViewFMUserPage />}
+                      />
+                      <Route
+                        path="/master/user/occupant-users"
+                        element={<OccupantUserMasterDashboard />}
+                      />
+                      {/* Material Master Route */}
+                      <Route
+                        path="/master/material-ebom"
+                        element={<MaterialMasterPage />}
+                      />
+                      <Route
+                        path="/master/gate-number"
+                        element={<GateNumberPage />}
+                      />
+                      <Route
+                        path="/master/gate-number/add"
+                        element={<AddGateNumberPage />}
+                      />
+                      <Route
+                        path="/master/gate-number/edit/:id"
+                        element={<EditGateNumberPage />}
+                      />
+                      <Route
+                        path="/master/communication-template"
+                        element={<CommunicationTemplateListPage />}
+                      />
+                      <Route
+                        path="/master/communication-template/add"
+                        element={<AddCommunicationTemplatePage />}
+                      />
+                      <Route
+                        path="/master/communication-template/edit/:id"
+                        element={<EditCommunicationTemplatePage />}
+                      />
+                      <Route
+                        path="/master/document-category"
+                        element={<DocumentCategoryListPage />}
+                      />
+                      <Route
+                        path="/master/document-category/add"
+                        element={<AddDocumentCategoryPage />}
+                      />
+                      <Route
+                        path="/master/document-category/edit/:id"
+                        element={<EditDocumentCategoryPage />}
+                      />
+                      {/* Template Routes - Root Cause Analysis */}
+                      <Route
+                        path="/master/template/root-cause-analysis"
+                        element={<RootCauseAnalysisListPage />}
+                      />
+                      <Route
+                        path="/master/template/root-cause-analysis/add"
+                        element={<AddRootCauseAnalysisPage />}
+                      />
+                      <Route
+                        path="/master/template/root-cause-analysis/edit/:id"
+                        element={<EditRootCauseAnalysisPage />}
+                      />
+                      {/* Template Routes - Preventive Action */}
+                      <Route
+                        path="/master/template/preventive-action"
+                        element={<PreventiveActionListPage />}
+                      />
+                      <Route
+                        path="/master/template/preventive-action/add"
+                        element={<AddPreventiveActionPage />}
+                      />
+                      <Route
+                        path="/master/template/preventive-action/edit/:id"
+                        element={<EditPreventiveActionPage />}
+                      />
+                      {/* Template Routes - Short-term Impact */}
+                      <Route
+                        path="/master/template/short-term-impact"
+                        element={<ShortTermImpactListPage />}
+                      />
+                      <Route
+                        path="/master/template/short-term-impact/add"
+                        element={<AddShortTermImpactPage />}
+                      />
+                      <Route
+                        path="/master/template/short-term-impact/edit/:id"
+                        element={<EditShortTermImpactPage />}
+                      />
+                      {/* Template Routes - Long-term Impact */}
+                      <Route
+                        path="/master/template/long-term-impact"
+                        element={<LongTermImpactListPage />}
+                      />
+                      <Route
+                        path="/master/template/long-term-impact/add"
+                        element={<AddLongTermImpactPage />}
+                      />
+                      <Route
+                        path="/master/template/long-term-impact/edit/:id"
+                        element={<EditLongTermImpactPage />}
+                      />
+                      {/* Template Routes - Corrective Action */}
+                      <Route
+                        path="/master/template/corrective-action"
+                        element={<CorrectiveActionListPage />}
+                      />
+                      <Route
+                        path="/master/template/corrective-action/add"
+                        element={<AddCorrectiveActionPage />}
+                      />
+                      <Route
+                        path="/master/template/corrective-action/edit/:id"
+                        element={<EditCorrectiveActionPage />}
+                      />
+                      <Route
+                        path="/master/gate-pass-type"
+                        element={<GatePassTypePage />}
+                      />
+                      <Route
+                        path="/master/gate-pass-type/add"
+                        element={<AddGatePassTypePage />}
+                      />
+                      <Route
+                        path="/master/gate-pass-type/edit/:id"
+                        element={<EditGatePassTypePage />}
+                      />
+                      <Route
+                        path="/master/inventory-type"
+                        element={<InventoryTypePage />}
+                      />
+                      <Route
+                        path="/master/inventory-type/add"
+                        element={<AddInventoryTypePage />}
+                      />
+                      <Route
+                        path="/master/inventory-type/edit/:id"
+                        element={<EditInventoryTypePage />}
+                      />
+                      <Route
+                        path="/settings/inventory-management/inventory-type"
+                        element={<InventoryTypePage />}
+                      />
+                      <Route
+                        path="/settings/inventory-management/inventory-type/add"
+                        element={<AddInventoryTypePage />}
+                      />
+                      <Route
+                        path="/settings/inventory-management/inventory-type/edit/:id"
+                        element={<EditInventoryTypePage />}
+                      />
+                      <Route
+                        path="/master/inventory-sub-type"
+                        element={<InventorySubTypePage />}
+                      />
+                      <Route
+                        path="/master/inventory-sub-type/add"
+                        element={<AddInventorySubTypePage />}
+                      />
+                      <Route
+                        path="/master/inventory-sub-type/edit/:id"
+                        element={<EditInventorySubTypePage />}
+                      />
+                      <Route
+                        path="/maintenance/waste/generation/add"
+                        element={<AddWasteGenerationPage />}
+                      />
+                      <Route
+                        path="/maintenance/task"
+                        element={<ScheduledTaskDashboard />}
+                      />
+                      <Route
+                        path="/maintenance/task/task-details/:id"
+                        element={<TaskDetailsPage />}
+                      />
+                      <Route
+                        path="/maintenance/task/job-sheet/:id"
+                        element={<JobSheetPage />}
+                      />
+                      <Route
+                        path="/product-details"
+                        element={<ProductDetails />}
+                      />
+                      <Route path="*" element={<NotFound />} />
+
+                    {/* Security Vehicle Routes */}
 
                     <Route
                       path="/security/vehicle/r-vehicles/in"
@@ -5153,6 +5851,240 @@ function App() {
                       element={
                         <Navigate to="/vas/redemption-marketplace" replace />
                       }
+                    />
+
+                    {/* Banner Routes */}
+                    <Route
+                      path="/pulse/community-modules/banner-list"
+                      element={<BannerListPage />}
+                    />
+                    <Route
+                      path="/pulse/community-modules/banner-list/add"
+                      element={<BannerAddPage />}
+                    />
+                    <Route
+                      path="/pulse/community-modules/banner-list/edit/:id"
+                      element={<BannerEditPage />}
+                    />
+                    <Route
+                      path="/pulse/community-modules/banner-list/:id"
+                      element={<BannerDetailsPage />}
+                    />
+                    
+                    {/* Event Routes */}
+                    <Route path="/pulse/events" element={<CRMEventsPage />} />
+                    <Route
+                      path="/pulse/events/add"
+                      element={<AddEventPage />}
+                    />
+                    <Route
+                      path="/pulse/events/details/:id"
+                      element={<CRMEventDetailsPage />}
+                    />
+                    <Route
+                      path="/pulse/events/edit/:id"
+                      element={<EditEventPage />}
+                    />
+                    <Route
+                      path="/pulse/events/details/:id/users/:userid"
+                      element={<EventUserDetailsPage />}
+                    />
+
+                    {/* Notice Routes */}
+                    <Route
+                      path="/pulse/notices"
+                      element={<BroadcastDashboard />}
+                    />
+                    <Route
+                      path="/pulse/notices/add"
+                      element={<AddBroadcastPage />}
+                    />
+                    <Route
+                      path="/pulse/notices/edit/:id"
+                      element={<EditBroadcastPage />}
+                    />
+                    <Route
+                      path="/pulse/notices/details/:id"
+                      element={<BroadcastDetailsPage />}
+                    />
+
+                    {/* Community Routes */}
+                    <Route path="/pulse/community" element={<Communtiy />} />
+                    <Route
+                      path="/pulse/community/add"
+                      element={<CommunityAdd />}
+                    />
+                    <Route
+                      path="/pulse/community/:id"
+                      element={<CommunityDetails />}
+                    />
+                    <Route
+                      path="/pulse/community/:id/reports"
+                      element={<CommunityReportsPage />}
+                    />
+                    <Route
+                      path="/pulse/community/edit/:id"
+                      element={<CommunityEdit />}
+                    />
+                    <Route
+                      path="/pulse/community/:communityId/user/:userId"
+                      element={<CommunityUserDetails />}
+                    />
+                    <Route
+                      path="/pulse/community/:communityId/reports/details/:id"
+                      element={<ReportsDetailsPage />}
+                    />
+                    <Route
+                      path="/pulse/community/notice/:id"
+                      element={<CommunityNoticeDetails />}
+                    />
+                    <Route
+                      path="/pulse/community/event/:id"
+                      element={<CommunityEventDetails />}
+                    />
+                    <Route
+                      path="/pulse/community/document/:id"
+                      element={<CommunityDocumentDetails />}
+                    />
+
+                    {/* Visitor Routes */}
+                    <Route
+                      path="/pulse/visitor"
+                      element={<VisitorsDashboard />}
+                    />
+                    <Route
+                      path="/pulse/visitor/add"
+                      element={<VisitorFormPage />}
+                    />
+                    <Route
+                      path="/pulse/visitor/details/:id"
+                      element={<VisitorDetailsPage />}
+                    />
+
+                    {/* Document Routes */}
+                    <Route
+                      path="/pulse/documents"
+                      element={<DocumentManagement />}
+                    />
+                    <Route
+                      path="/pulse/documents/add"
+                      element={<AddDocumentDashboard />}
+                    />
+                    <Route
+                      path="/pulse/documents/edit/:id"
+                      element={<EditDocumentPage />}
+                    />
+                    <Route
+                      path="/pulse/documents/create-folder"
+                      element={<CreateFolderPage />}
+                    />
+                    <Route
+                      path="/pulse/documents/folder/edit/:id"
+                      element={<EditFolderPage />}
+                    />
+                    <Route
+                      path="/pulse/documents/folder/:id"
+                      element={<FolderDetailsPage />}
+                    />
+                    <Route
+                      path="/pulse/documents/details/:id"
+                      element={<DocumentDetailPage />}
+                    />
+
+                    {/* Plus Service Routes */}
+                    <Route
+                      path="/pulse/pulse-privilege/plus-service"
+                      element={<PlusServiceDashboard />}
+                    />
+                    <Route
+                      path="/pulse/pulse-privilege/plus-service/create"
+                      element={<AddPlusServicePage />}
+                    />
+                    <Route
+                      path="/pulse/pulse-privilege/plus-service/edit/:id"
+                      element={<EditPlusServicePage />}
+                    />
+
+                    {/* Service Category Routes */}
+                    <Route
+                      path="/pulse/pulse-privilege/service-category"
+                      element={<ServiceCategoryDashboard />}
+                    />
+                    <Route
+                      path="/pulse/pulse-privilege/service-category/create"
+                      element={<AddServiceCategoryPage />}
+                    />
+                    <Route
+                      path="/pulse/pulse-privilege/service-category/edit/:id"
+                      element={<EditServiceCategoryPage />}
+                    />
+                    <Route path="/pulse/amenity" element={<BookingList />} />
+
+                    {/* Plus curated Service Routes */}
+                    <Route
+                      path="/pulse/curated-services/service"
+                      element={<CuratedServiceDashboard />}
+                    />
+                    <Route
+                      path="/pulse/curated-services/service/create"
+                      element={<AddCuratedServicePage />}
+                    />
+                    <Route
+                      path="/pulse/curated-services/service/edit/:id"
+                      element={<EditCuratedServicePage />}
+                    />
+
+
+                    {/*  curated Service  Category Routes */}
+                    <Route
+                      path="/pulse/curated-services/service-category"
+                      element={<CuratedServiceCategoryDashboard />}
+                    />
+                    <Route
+                      path="/pulse/curated-services/service-category/create"
+                      element={<AddCuratedServiceCategoryPage />}
+                    />
+                    <Route
+                      path="/pulse/curated-services/service-category/edit/:id"
+                      element={<EditCuratedServiceCategoryPage />}
+                    />
+
+                    {/* Carpool Routes */}
+                    <Route
+                      path="/pulse/carpool"
+                      element={<CarpoolDashboard />}
+                    />
+                    <Route
+                      path="/pulse/carpool/ride-detail"
+                      element={<RideDetail />}
+                    />
+
+                    {/* Amenity Routes */}
+                    <Route
+                      path="/pulse/amenity/:id"
+                      element={<AmenityDetailsPage />}
+                    />
+
+                    {/* SOS Directory Routes */}
+                    <Route
+                      path="/pulse/sos-directory"
+                      element={<SOSDirectory />}
+                    />
+                    <Route
+                      path="/pulse/sos-directory/add"
+                      element={<AddSosDirectory />}
+                    />
+                    <Route
+                      path="/pulse/sos-directory/:id/edit"
+                      element={<EditSosDirectory />}
+                    />
+                    <Route
+                      path="/pulse/sos-directory/:id"
+                      element={<SosDirectoryDetailsPage />}
+                    />
+                    <Route
+                      path="/pulse/sos-category-setup"
+                      element={<SOSCategorySetupPage />}
                     />
 
                     {/* Space Management Routes */}
@@ -5661,246 +6593,7 @@ function App() {
 
                   {/* Settings Routes */}
 
-                  <Route
-                    path="/pulse"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <div />
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route
-                      path="/pulse/community-modules/banner-list"
-                      element={<BannerListPage />}
-                    />
-                    <Route
-                      path="/pulse/community-modules/banner-list/add"
-                      element={<BannerAddPage />}
-                    />
-                    <Route
-                      path="/pulse/community-modules/banner-list/edit/:id"
-                      element={<BannerEditPage />}
-                    />
-                    <Route
-                      path="/pulse/community-modules/banner-list/:id"
-                      element={<BannerDetailsPage />}
-                    />
-                    <Route path="/pulse/events" element={<CRMEventsPage />} />
-                    <Route
-                      path="/pulse/events/add"
-                      element={<AddEventPage />}
-                    />
-                    <Route
-                      path="/pulse/events/details/:id"
-                      element={<CRMEventDetailsPage />}
-                    />
-                    <Route
-                      path="/pulse/events/edit/:id"
-                      element={<EditEventPage />}
-                    />
-                    <Route
-                      path="/pulse/events/details/:id/users/:userid"
-                      element={<EventUserDetailsPage />}
-                    />
-
-                    <Route
-                      path="/pulse/notices"
-                      element={<BroadcastDashboard />}
-                    />
-                    <Route
-                      path="/pulse/notices/add"
-                      element={<AddBroadcastPage />}
-                    />
-                    <Route
-                      path="/pulse/notices/edit/:id"
-                      element={<EditBroadcastPage />}
-                    />
-                    <Route
-                      path="/pulse/notices/details/:id"
-                      element={<BroadcastDetailsPage />}
-                    />
-
-                    <Route path="/pulse/community" element={<Communtiy />} />
-
-                    <Route
-                      path="/pulse/community/add"
-                      element={<CommunityAdd />}
-                    />
-
-                    <Route
-                      path="/pulse/community/:id"
-                      element={<CommunityDetails />}
-                    />
-
-                    <Route
-                      path="/pulse/community/:id/reports"
-                      element={<CommunityReportsPage />}
-                    />
-
-                    <Route
-                      path="/pulse/community/edit/:id"
-                      element={<CommunityEdit />}
-                    />
-
-                    <Route
-                      path="/pulse/community/:communityId/user/:userId"
-                      element={<CommunityUserDetails />}
-                    />
-                    <Route
-                      path="/pulse/community/:communityId/reports/details/:id"
-                      element={<ReportsDetailsPage />}
-                    />
-                    <Route
-                      path="/pulse/community/notice/:id"
-                      element={<CommunityNoticeDetails />}
-                    />
-                    <Route
-                      path="/pulse/community/event/:id"
-                      element={<CommunityEventDetails />}
-                    />
-                    <Route
-                      path="/pulse/community/document/:id"
-                      element={<CommunityDocumentDetails />}
-                    />
-
-                    <Route
-                      path="/pulse/visitor"
-                      element={<VisitorsDashboard />}
-                    />
-                    <Route
-                      path="/pulse/visitor/add"
-                      element={<VisitorFormPage />}
-                    />
-                    <Route
-                      path="/pulse/visitor/details/:id"
-                      element={<VisitorDetailsPage />}
-                    />
-
-                    {/* Document Routes */}
-                    <Route
-                      path="/pulse/documents"
-                      element={<DocumentManagement />}
-                    />
-                    <Route
-                      path="/pulse/documents/add"
-                      element={<AddDocumentDashboard />}
-                    />
-                    <Route
-                      path="/pulse/documents/edit/:id"
-                      element={<EditDocumentPage />}
-                    />
-                    <Route
-                      path="/pulse/documents/create-folder"
-                      element={<CreateFolderPage />}
-                    />
-                    <Route
-                      path="/pulse/documents/folder/edit/:id"
-                      element={<EditFolderPage />}
-                    />
-                    <Route
-                      path="/pulse/documents/folder/:id"
-                      element={<FolderDetailsPage />}
-                    />
-                    <Route
-                      path="/pulse/documents/details/:id"
-                      element={<DocumentDetailPage />}
-                    />
-
-                    {/* Plus Service Routes */}
-                    <Route
-                      path="/pulse/pulse-privilege/plus-service"
-                      element={<PlusServiceDashboard />}
-                    />
-                    <Route
-                      path="/pulse/pulse-privilege/plus-service/create"
-                      element={<AddPlusServicePage />}
-                    />
-                    <Route
-                      path="/pulse/pulse-privilege/plus-service/edit/:id"
-                      element={<EditPlusServicePage />}
-                    />
-
-                    {/* Service Category Routes */}
-                    <Route
-                      path="/pulse/pulse-privilege/service-category"
-                      element={<ServiceCategoryDashboard />}
-                    />
-                    <Route
-                      path="/pulse/pulse-privilege/service-category/create"
-                      element={<AddServiceCategoryPage />}
-                    />
-                    <Route
-                      path="/pulse/pulse-privilege/service-category/edit/:id"
-                      element={<EditServiceCategoryPage />}
-                    />
-                    <Route path="/pulse/amenity" element={<BookingList />} />
-                    {/* Plus curated Service Routes */}
-                    <Route
-                      path="/pulse/curated-services/service"
-                      element={<CuratedServiceDashboard />}
-                    />
-                    <Route
-                      path="/pulse/curated-services/service/create"
-                      element={<AddCuratedServicePage />}
-                    />
-                    <Route
-                      path="/pulse/curated-services/service/edit/:id"
-                      element={<EditCuratedServicePage />}
-                    />
-
-                    {/*  curated Service  Category Routes */}
-                    <Route
-                      path="/pulse/curated-services/service-category"
-                      element={<CuratedServiceCategoryDashboard />}
-                    />
-                    <Route
-                      path="/pulse/curated-services/service-category/create"
-                      element={<AddCuratedServiceCategoryPage />}
-                    />
-                    <Route
-                      path="/pulse/curated-services/service-category/edit/:id"
-                      element={<EditCuratedServiceCategoryPage />}
-                    />
-
-                    {/* Carpool Routes */}
-                    <Route
-                      path="/pulse/carpool"
-                      element={<CarpoolDashboard />}
-                    />
-
-                    <Route
-                      path="/pulse/amenity/:id"
-                      element={<AmenityDetailsPage />}
-                    />
-
-                    <Route
-                      path="/pulse/sos-directory"
-                      element={<SOSDirectory />}
-                    />
-
-                    <Route
-                      path="/pulse/sos-directory/add"
-                      element={<AddSosDirectory />}
-                    />
-
-                    <Route
-                      path="/pulse/sos-directory/:id/edit"
-                      element={<EditSosDirectory />}
-                    />
-
-                    <Route
-                      path="/pulse/sos-directory/:id"
-                      element={<SosDirectoryDetailsPage />}
-                    />
-
-                    <Route
-                      path="/pulse/sos-category-setup"
-                      element={<SOSCategorySetupPage />}
-                    />
-                  </Route>
-
+                  {/* Pulse routes end here - duplicate block removed */}
                   <Route
                     path="/settings"
                     element={

@@ -491,22 +491,31 @@ export const ScratchCard: React.FC = () => {
               <X className="w-6 h-6" />
             </button>
 
-            {/* Gift icon */}
+            {/* Gift icon - different for none type */}
             <div className="w-20 h-20 mx-auto mb-6 bg-[#F5E6D3] rounded-full flex items-center justify-center">
-              <div className="text-4xl">🎁</div>
+              <div className="text-4xl">
+                {wonPrize.reward_type === "none" ? "😔" : "🎁"}
+              </div>
             </div>
 
-            {/* Congratulations text */}
+            {/* Title text - different for none type */}
             <h2 className="text-2xl font-bold text-gray-900 text-center mb-4">
-              Congratulations!
+              {wonPrize.reward_type === "none"
+                ? "Better Luck Next Time!"
+                : "Congratulations!"}
             </h2>
 
-            {/* Won prize text */}
-            <p className="text-center text-gray-600 mb-2">You've won</p>
+            {/* Description text - different for none type */}
+            {wonPrize.reward_type !== "none" && (
+              <p className="text-center text-gray-600 mb-2">You've won</p>
+            )}
 
-            <p className="text-center text-2xl font-bold text-gray-900 mb-6">
-              {wonPrize.title}
-            </p>
+            {/* Prize title - only show for non-none rewards */}
+            {wonPrize.reward_type !== "none" && (
+              <p className="text-center text-2xl font-bold text-gray-900 mb-6">
+                {wonPrize.title}
+              </p>
+            )}
 
             {/* Display prize details based on type */}
             {wonPrize.reward_type === "coupon" && wonPrize.coupon_code && (
@@ -534,24 +543,49 @@ export const ScratchCard: React.FC = () => {
               </p>
             )}
 
-            {/* Copy button */}
-            <button
-              onClick={copyPrizeInfo}
-              className="w-full bg-[#B88B15] text-white py-4 rounded-lg font-semibold hover:bg-[#9a7612] transition-colors mb-3"
-            >
-              Copy To Clipboard
-            </button>
+            {wonPrize.reward_type === "marchandise" && (
+              <>
+                <p className="text-center text-gray-600 mb-2">
+                  Merchandise Prize
+                </p>
+                {wonPrize.coupon_code && (
+                  <p className="text-center text-sm text-gray-500 mb-6">
+                    Code: {wonPrize.coupon_code}
+                  </p>
+                )}
+              </>
+            )}
 
-            {/* View Details button */}
-            <button
-              onClick={() => {
-                setShowResultModal(false);
-                handleViewVoucher();
-              }}
-              className="w-full bg-gray-100 text-gray-900 py-4 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
-            >
-              View Voucher Details
-            </button>
+            {wonPrize.reward_type === "none" && (
+              <>
+                <p className="text-center text-gray-600 mb-6">
+                  Don't give up! Try again for a chance to win exciting prizes.
+                </p>
+              </>
+            )}
+
+            {/* Copy button - only show if coupon_code exists and not 'none' type */}
+            {wonPrize.coupon_code && wonPrize.reward_type !== "none" && (
+              <button
+                onClick={copyPrizeInfo}
+                className="w-full bg-[#B88B15] text-white py-4 rounded-lg font-semibold hover:bg-[#9a7612] transition-colors mb-3"
+              >
+                Copy To Clipboard
+              </button>
+            )}
+
+            {/* View Details button - hide for 'none' type */}
+            {wonPrize.reward_type !== "none" && (
+              <button
+                onClick={() => {
+                  setShowResultModal(false);
+                  handleViewVoucher();
+                }}
+                className="w-full bg-gray-100 text-gray-900 py-4 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+              >
+                View Voucher Details
+              </button>
+            )}
           </div>
         </div>
       )}

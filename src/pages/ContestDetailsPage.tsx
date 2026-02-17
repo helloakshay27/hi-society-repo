@@ -55,7 +55,7 @@ interface ContestDetails {
   start_at: string; // ISO string
   end_at: string; // ISO string
   user_caps: number | null;
-  attemp_required: number | null;
+  user_attemp_remaining: number | null;
   prizes: Prize[];
 }
 
@@ -342,7 +342,7 @@ export const ContestDetailsPage: React.FC = () => {
                   Attempts Required
                 </p>
                 <p className="text-base text-[#1A1A1A]">
-                  {contest.attemp_required ?? "—"}
+                  {contest.user_attemp_remaining ?? "—"}
                 </p>
               </div>
             </div>
@@ -407,9 +407,7 @@ export const ContestDetailsPage: React.FC = () => {
                               ? "Points"
                               : prize.reward_type === "coupon"
                                 ? "Coupon Code"
-                                : prize.reward_type === "merchandise"
-                                  ? "Merchandise"
-                                  : ""}
+                                : ""}
                           </p>
                         </div>
 
@@ -445,6 +443,20 @@ export const ContestDetailsPage: React.FC = () => {
                               : prize.reward_type === "merchandise"
                                 ? (prize.product?.name ?? "—")
                                 : (prize.coupon_code ?? "—")}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-gray-500">
+                            {prize.reward_type === "points"
+                              ? "Points"
+                              : "Coupon Code"}
+                          </p>
+
+                          <p className="text-sm text-[#1A1A1A]">
+                            {prize.reward_type === "points"
+                              ? `${prize.points_value ?? 0} Points`
+                              : (prize.coupon_code ?? "—")}
                           </p>
                         </div>
 

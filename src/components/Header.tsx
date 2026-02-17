@@ -124,6 +124,7 @@ export const Header = () => {
   const isPulseSite =
     hostname === "pulse.lockated.com" ||
     hostname.includes("pulse-uat.panchshil.com") ||
+    hostname.includes("pulse.panchshil.com") ||
     org_id === "90";
 
   const isLocalhost =
@@ -150,7 +151,7 @@ export const Header = () => {
   };
   const userId = user.id;
   const isRestrictedUser =
-    user?.email === "karan.balsara@zycus.com" || org_id === "90"; // Example condition for restricted user
+    user?.email === "karan.balsara@zycus.com" || org_id === "90" || isPulseSite; // Example condition for restricted user
 
   const assetSuggestions = [
     "sdcdsc",
