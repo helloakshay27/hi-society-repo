@@ -154,6 +154,14 @@ const EventDetails = () => {
     );
   }
 
+  const tabs = [
+    { label: 'Event Details', value: 'event-details' },
+    { label: 'Events Related Images', value: 'images' },
+  ];
+  if (!location.pathname.includes("/loyalty")) {
+    tabs.push({ label: 'Invited CPs', value: 'invited-cps' });
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -178,11 +186,7 @@ const EventDetails = () => {
         `}</style>
         <Tabs defaultValue="event-details" className="w-full">
           <TabsList className="top-level-tabs w-full flex flex-nowrap rounded-t-lg p-0 overflow-x-auto mb-4" style={{ gap: '0', padding: '0', backgroundColor: 'rgba(246, 247, 247, 1)', height: '50px', marginBottom: '16px' }}>
-            {[
-              { label: 'Event Details', value: 'event-details' },
-              { label: 'Events Related Images', value: 'images' },
-              { label: 'Invited CPs', value: 'invited-cps' },
-            ].map((tab) => (
+            {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}

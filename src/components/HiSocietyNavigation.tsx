@@ -205,10 +205,11 @@ export const HiSocietyNavigation: React.FC = () => {
       homeChildRoutes.includes(firstSegment)
     ) {
       setActiveNav("home");
-    } else {
+    } 
+    else {
       setActiveNav("home");
     }
-  }, [location.pathname, isCMSDomain]);
+  }, [location.pathname, isCMSDomain, location.state]);
 
   const handleNavClick = (item: NavigationItem) => {
     setActiveNav(item.id);

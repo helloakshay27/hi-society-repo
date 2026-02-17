@@ -442,6 +442,18 @@ export const HiSocietySidebar: React.FC = () => {
         //   icon: Gift,
         //   path: "/loyalty/encash-list",
         // },
+        {
+          id: "offers",
+          label: "Offers",
+          icon: Gift,
+          path: "/loyalty/offers-list",
+        },
+        {
+          id: "event",
+          label: "Events",
+          icon: Calendar,
+          path: "/loyalty/event-list",
+        },
       ],
     },
     cms: {
@@ -1133,12 +1145,13 @@ export const HiSocietySidebar: React.FC = () => {
     );
   };
 
-  // Handle navigation
-  const handleNavigation = (path: string) => {
+  // before: const handleNavigation = (path: string) => { ... }
+  const handleNavigation = (path: string, navState?: Record<string, any>) => {
     startTransition(() => {
-      navigate(path);
+      navigate(path, { state: navState });
     });
   };
+
 
   // Render menu item
   const renderMenuItem = (
@@ -1150,6 +1163,30 @@ export const HiSocietySidebar: React.FC = () => {
     const Icon = item.icon;
     const active = isActive(item.path);
 
+    const isLoyaltyMaintenancePath = (p?: string) =>
+      !!p &&
+      (p.startsWith("/maintenance/event-list") || p.startsWith("/maintenance/offers-list")) &&
+      activeSection === "loyalty";
+
+    // collapsed view -> when navigating to firstSubItem
+    // const navState =
+    //   firstSubItem.path === "/maintenance/event-list" && activeSection === "loyalty"
+    //     ? { fromSection: "loyalty" }
+    //     : undefined;
+    // handleNavigation(firstSubItem.path, navState);
+
+    // // expanded main item (no subItems)
+    // const navState = item.path === "/maintenance/event-list" && activeSection === "loyalty"
+    //   ? { fromSection: "loyalty" }
+    //   : undefined;
+    // handleNavigation(item.path, navState);
+
+    // // sub-item click
+    // const navState = subItem.path === "/maintenance/event-list" && activeSection === "loyalty"
+    //   ? { fromSection: "loyalty" }
+    //   : undefined;
+    // handleNavigation(subItem.path, navState);
+
     if (isSidebarCollapsed) {
       // Collapsed view - show only icons
       return (
@@ -1157,13 +1194,18 @@ export const HiSocietySidebar: React.FC = () => {
           <button
             onClick={() => {
               if (hasSubItems) {
-                // Navigate to first sub-item
                 const firstSubItem = item.subItems![0];
                 if (firstSubItem.path) {
-                  handleNavigation(firstSubItem.path);
+                  handleNavigation(
+                    firstSubItem.path,
+                    isLoyaltyMaintenancePath(firstSubItem.path) ? { fromSection: "loyalty" } : undefined
+                  );
                 }
               } else if (item.path) {
-                handleNavigation(item.path);
+                handleNavigation(
+                  item.path,
+                  isLoyaltyMaintenancePath(item.path) ? { fromSection: "loyalty" } : undefined
+                );
               }
             }}
             className="flex items-center justify-center w-full p-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
@@ -1186,7 +1228,10 @@ export const HiSocietySidebar: React.FC = () => {
             if (hasSubItems) {
               toggleSection(item.id);
             } else if (item.path) {
-              handleNavigation(item.path);
+              handleNavigation(
+                item.path,
+                isLoyaltyMaintenancePath(item.path) ? { fromSection: "loyalty" } : undefined
+              );
             }
           }}
           className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
@@ -1214,7 +1259,14 @@ export const HiSocietySidebar: React.FC = () => {
               return (
                 <button
                   key={subItem.id}
-                  onClick={() => subItem.path && handleNavigation(subItem.path)}
+                  // inside sub-item click
+                  onClick={() =>
+                    subItem.path &&
+                    handleNavigation(
+                      subItem.path,
+                      isLoyaltyMaintenancePath(subItem.path) ? { fromSection: "loyalty" } : undefined
+                    )
+                  }
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
                 >
                   {subActive && (

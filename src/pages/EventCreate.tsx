@@ -110,6 +110,9 @@ const EventCreate = () => {
     featuredEvent: false,
   });
 
+  const isLoyalty = location.pathname.includes("/loyalty");
+  const effectiveTotalSteps = isLoyalty ? 2 : 3;
+
   // Fetch image configurations from API
   const fetchImageConfigurations = async () => {
     try {
@@ -1203,7 +1206,7 @@ const EventCreate = () => {
   const handleProceedToSave = () => {
     // Validate current step before proceeding
     let isValid = false;
-    
+
     switch (currentStep) {
       case 0:
         isValid = validateStep0();
@@ -1212,7 +1215,7 @@ const EventCreate = () => {
         isValid = validateStep1();
         break;
       case 2:
-        isValid = validateStep2();
+        isValid = isLoyalty ? true : validateStep2();
         break;
       default:
         isValid = true;
@@ -1227,6 +1230,25 @@ const EventCreate = () => {
       setCompletedSteps(prev => [...prev, currentStep]);
     }
 
+    // Step navigation logic for loyalty
+    if (isLoyalty) {
+      // Step 0 -> Step 1
+      if (currentStep === 0) {
+        setCurrentStep(1);
+        setShowPreviousSections(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      // Step 1 -> Preview
+      if (currentStep === 1) {
+        setIsPreviewMode(true);
+        setShowPreviousSections(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+    }
+
+    // Original logic for non-loyalty
     // If on Step 0 (Event Details) and RSVP is No, skip to Step 1 (Event Images)
     if (currentStep === 0 && formData.rsvp_action === "0") {
       setCurrentStep(1);
@@ -1260,11 +1282,11 @@ const EventCreate = () => {
     }
 
     // If on Step 2 (Invite CPs), go to preview
-    if (currentStep === totalSteps - 1) {
+    if (currentStep === effectiveTotalSteps - 1) {
       setIsPreviewMode(true);
       setShowPreviousSections(true);
     } else {
-      if (currentStep < totalSteps - 1) {
+      if (currentStep < effectiveTotalSteps - 1) {
         setCurrentStep(currentStep + 1);
       }
       setShowPreviousSections(false);
@@ -1275,7 +1297,7 @@ const EventCreate = () => {
   const handleSaveToDraft = () => {
     // Validate current step before saving to draft
     let isValid = false;
-    
+
     switch (currentStep) {
       case 0:
         isValid = validateStep0();
@@ -1284,7 +1306,7 @@ const EventCreate = () => {
         isValid = validateStep1();
         break;
       case 2:
-        isValid = validateStep2();
+        isValid = isLoyalty ? true : validateStep2();
         break;
       default:
         isValid = true;
@@ -1299,16 +1321,27 @@ const EventCreate = () => {
       setCompletedSteps(prev => [...prev, currentStep]);
     }
 
-    // If on Step 0 (Event Details) and RSVP is No, skip to Step 1 (Event Images)
-    if (currentStep === 0 && formData.rsvp_action === "0") {
-      setCurrentStep(1);
-      setShowPreviousSections(true);
-      toast.success("Progress saved to draft successfully!");
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
+    // Step navigation logic for loyalty
+    if (isLoyalty) {
+      // Step 0 -> Step 1
+      if (currentStep === 0) {
+        setCurrentStep(1);
+        setShowPreviousSections(true);
+        toast.success("Progress saved to draft successfully!");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      // Step 1 -> Preview
+      if (currentStep === 1) {
+        setIsPreviewMode(true);
+        setShowPreviousSections(true);
+        toast.success("Progress saved to draft successfully!");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
     }
 
-    if (currentStep < totalSteps - 1) {
+    if (currentStep < effectiveTotalSteps - 1) {
       setCurrentStep(currentStep + 1);
     }
     setShowPreviousSections(true);
@@ -1318,7 +1351,7 @@ const EventCreate = () => {
 
   // Stepper component
   const StepperComponent = () => {
-    const steps = formData.rsvp_action === "1" 
+    const steps = formData.rsvp_action === "1" && !location.pathname.includes("/loyalty")
       ? ['Event Details', 'Event Related Images', 'Invite CPs']
       : ['Event Details', 'Event Related Images'];
 

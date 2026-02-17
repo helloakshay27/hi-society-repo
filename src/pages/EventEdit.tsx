@@ -1365,7 +1365,8 @@ const EventEdit = () => {
       });
 
       toast.success("Event updated successfully!");
-      navigate("/maintenance/event-list");
+      
+      location.pathname.includes("/loyalty") ? navigate("/loyalty/event-list") : navigate("/maintenance/event-list");
     } catch (error) {
       console.error("Submit error:", error);
       const errorMessage = error.response?.data?.message || "Failed to update event.";

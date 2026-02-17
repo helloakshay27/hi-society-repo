@@ -174,11 +174,9 @@ const Eventlist = () => {
     }
   };
 
-  const handleAddEvent = () => navigate("/maintenance/event-create");
-  const handleEditEvent = (id: number) =>
-    navigate(`/maintenance/event-edit/${id}`);
-  const handleViewEvent = (id: number) =>
-    navigate(`/maintenance/event-details/${id}`);
+  const handleAddEvent = () => location.pathname.includes("/loyalty") ? navigate("/loyalty/event-create") : navigate("/maintenance/event-create");
+  const handleEditEvent = (id: number) => location.pathname.includes("/loyalty") ? navigate(`/loyalty/event-edit/${id}`) : navigate(`/maintenance/event-edit/${id}`);
+  const handleViewEvent = (id: number) => location.pathname.includes("/loyalty") ? navigate(`/loyalty/event-details/${id}`) : navigate(`/maintenance/event-details/${id}`);
   const handleClearSelection = () => {
     setShowActionPanel(false);
   };
@@ -190,7 +188,7 @@ const Eventlist = () => {
         getFullUrl(`/crm/admin/events/${id}.json`),
         { event: { active: !currentStatus } },
         {
-         headers: {
+          headers: {
             Authorization: getAuthHeader(),
           },
         }
@@ -208,9 +206,9 @@ const Eventlist = () => {
     toast.dismiss();
     try {
       // Update local state immediately for better UX
-      setEvents(prevEvents => 
-        prevEvents.map(event => 
-          event.id === id 
+      setEvents(prevEvents =>
+        prevEvents.map(event =>
+          event.id === id
             ? { ...event, show_on_home: !currentStatus }
             : event
         )
@@ -232,9 +230,9 @@ const Eventlist = () => {
       console.error("Error toggling show on home:", error);
       toast.error("Failed to update Show on Home.");
       // Revert the change on error
-      setEvents(prevEvents => 
-        prevEvents.map(event => 
-          event.id === id 
+      setEvents(prevEvents =>
+        prevEvents.map(event =>
+          event.id === id
             ? { ...event, show_on_home: currentStatus }
             : event
         )
@@ -377,62 +375,62 @@ const Eventlist = () => {
   const renderListTab = () => (
     <div className="space-y-4">
       {/* Event Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-3 gap-4 mb-6">
-        {[
-          {
-            label: "Total Invited CP",
-            value: eventStats.totalInvitedCPs,
-            icon: Users,
-            type: "total",
-            clickable: false,
-          },
-          {
-            label: "Attended CPs",
-            value: eventStats.attendedCPs,
-            icon: UserCheck,
-            type: "attended",
-            clickable: false,
-          },
-          {
-            label: "Not Attended CPs",
-            value: eventStats.notAttendedCPs,
-            icon: UserX,
-            type: "notAttended",
-            clickable: false,
-          },
-          // {
-          //   label: 'Scan Time & Entry Log',
-          //   value: eventStats.scanTimeEntries,
-          //   icon: Clock,
-          //   type: 'scanLog',
-          //   clickable: false
-          // }
-        ].map((item, i) => {
-          const IconComponent = item.icon;
-          return (
-            <div
-              key={i}
-              className={`bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 ${
-                item.clickable
+      {!location.pathname.includes("/loyalty") && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-3 gap-4 mb-6">
+          {[
+            {
+              label: "Total Invited CP",
+              value: eventStats.totalInvitedCPs,
+              icon: Users,
+              type: "total",
+              clickable: false,
+            },
+            {
+              label: "Attended CPs",
+              value: eventStats.attendedCPs,
+              icon: UserCheck,
+              type: "attended",
+              clickable: false,
+            },
+            {
+              label: "Not Attended CPs",
+              value: eventStats.notAttendedCPs,
+              icon: UserX,
+              type: "notAttended",
+              clickable: false,
+            },
+            // {
+            //   label: 'Scan Time & Entry Log',
+            //   value: eventStats.scanTimeEntries,
+            //   icon: Clock,
+            //   type: 'scanLog',
+            //   clickable: false
+            // }
+          ].map((item, i) => {
+            const IconComponent = item.icon;
+            return (
+              <div
+                key={i}
+                className={`bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 ${item.clickable
                   ? "cursor-pointer hover:shadow-lg transition-shadow"
                   : ""
-              }`}
-            >
-              <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center rounded">
-                <IconComponent className="w-6 h-6 text-[#C72030]" />
-              </div>
-              <div>
-                <div className="text-2xl font-semibold text-[#1A1A1A]">
-                  {item.value.toLocaleString()}
+                  }`}
+              >
+                <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center rounded">
+                  <IconComponent className="w-6 h-6 text-[#C72030]" />
                 </div>
-                <div className="text-sm font-medium text-[#1A1A1A]">
-                  {item.label}
+                <div>
+                  <div className="text-2xl font-semibold text-[#1A1A1A]">
+                    {item.value.toLocaleString()}
+                  </div>
+                  <div className="text-sm font-medium text-[#1A1A1A]">
+                    {item.label}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>)}
 
       {/* {showActionPanel && (
         <SelectionPanel
