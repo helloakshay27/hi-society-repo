@@ -246,9 +246,18 @@ const CMSMembershipPlanSetup = () => {
                             label="Price"
                             fullWidth
                             size="small"
-                            type="number"
+                            type="text"
                             value={formData.price}
-                            onChange={(e) => handleInputChange('price', e.target.value)}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (/^\d*\.?\d{0,2}$/.test(value)) {
+                                    handleInputChange("price", value);
+                                }
+                            }}
+                            inputProps={{
+                                inputMode: "decimal",
+                                pattern: "^\\d*\\.?\\d{0,2}$"
+                            }}
                             sx={fieldStyles}
                         />
                         <FormControl fullWidth size="small" sx={fieldStyles}>

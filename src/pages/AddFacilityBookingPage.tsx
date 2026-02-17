@@ -383,8 +383,41 @@ const AddFacilityBookingPage = () => {
     }
   }, [facilityDetails, bookingDate]);
 
+  const validateForm = () => {
+    if (!selectedTowerId) {
+      toast.error("Please select a tower");
+      return false;
+    }
+    if (!selectedFlatId) {
+      toast.error("Please select a flat");
+      return false;
+    }
+    if (!selectedUserId) {
+      toast.error("Please select a user");
+      return false;
+    }
+    if (!selectedFacilitySetup) {
+      toast.error("Please select a facility");
+      return false;
+    }
+    if (!bookingDate) {
+      toast.error("Please select a date");
+      return false;
+    }
+    if (!paymentMethod) {
+      toast.error("Please select a payment method");
+      return false;
+    }
+    if (selectedSlotIds.length === 0) {
+      toast.error("Please select at least one slot");
+      return false;
+    }
+    return true;
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
     try {
       const booked_members_attributes: any[] = [];
 
@@ -608,6 +641,9 @@ const AddFacilityBookingPage = () => {
                 InputLabelProps={{ shrink: true }}
                 fullWidth
                 sx={fieldStyles}
+                inputProps={{
+                  min: new Date().toISOString().split("T")[0]
+                }}
               />
             </div>
 

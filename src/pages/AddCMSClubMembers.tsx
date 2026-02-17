@@ -79,6 +79,7 @@ const AddCMSClubMembers = () => {
     const [discountPercentage, setDiscountPercentage] = useState<string>("0");
     const [cgstPercentage, setCgstPercentage] = useState<string>("0");
     const [sgstPercentage, setSgstPercentage] = useState<string>("0");
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     const [members, setMembers] = useState<MemberForm[]>([
         {
@@ -297,6 +298,7 @@ const AddCMSClubMembers = () => {
     console.log(members)
 
     const handleSubmit = async () => {
+        setIsSubmitting(true)
         try {
             const formData = new FormData();
 
@@ -374,6 +376,8 @@ const AddCMSClubMembers = () => {
             navigate(-1);
         } catch (error) {
             console.log(error);
+        } finally {
+            setIsSubmitting(false)
         }
     };
 
@@ -508,6 +512,9 @@ const AddCMSClubMembers = () => {
                                         label="End Date (Applies to all)"
                                         value={globalEndDate}
                                         onChange={(e) => setGlobalEndDate(e.target.value)}
+                                        inputProps={{
+                                            min: globalStartDate || undefined
+                                        }}
                                         InputLabelProps={{ shrink: true }}
                                         sx={fieldStyles}
                                     />
@@ -584,7 +591,13 @@ const AddCMSClubMembers = () => {
                                                 <div className="flex items-center gap-2 flex-1">
                                                     <TextField
                                                         value={cgstPercentage}
-                                                        onChange={(e) => setCgstPercentage(e.target.value)}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+
+                                                            if (val === "" || (parseFloat(val) >= 0 && parseFloat(val) <= 100)) {
+                                                                setCgstPercentage(val);
+                                                            }
+                                                        }}
                                                         type="number"
                                                         size="small"
                                                         sx={{ ...fieldStyles, width: '100px' }}
@@ -600,7 +613,13 @@ const AddCMSClubMembers = () => {
                                                 <div className="flex items-center gap-2 flex-1">
                                                     <TextField
                                                         value={sgstPercentage}
-                                                        onChange={(e) => setSgstPercentage(e.target.value)}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+
+                                                            if (val === "" || (parseFloat(val) >= 0 && parseFloat(val) <= 100)) {
+                                                                setSgstPercentage(val);
+                                                            }
+                                                        }}
                                                         type="number"
                                                         size="small"
                                                         sx={{ ...fieldStyles, width: '100px' }}
@@ -959,8 +978,9 @@ const AddCMSClubMembers = () => {
                             variant="default"
                             className="bg-green-600 hover:bg-green-700 text-white min-w-[120px]"
                             onClick={handleSubmit}
+                            disabled={isSubmitting}
                         >
-                            Submit
+                            {isSubmitting ? "Submitting..." : "Submit"}
                         </Button>
                     </div>
                 </div>

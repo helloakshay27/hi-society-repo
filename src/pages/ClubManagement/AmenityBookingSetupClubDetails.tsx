@@ -182,7 +182,7 @@ export const BookingSetupDetailClubPage = () => {
     subFacilities: [] as Array<{
       id: string;
       name: string;
-      status: string;
+      status: boolean;
       chargeSetup: {
         member: { selected: boolean; adult: string; child: string };
         guest: { selected: boolean; adult: string; child: string };
@@ -785,8 +785,8 @@ export const BookingSetupDetailClubPage = () => {
                   <div key={subFacility.id || idx} className="border rounded-lg p-6 space-y-4">
                     <div className="flex justify-between items-center">
                       <h4 className="text-sm font-semibold text-gray-700">Sub-Facility {idx + 1}: {subFacility.name}</h4>
-                      <span className={`text-xs font-medium px-2 py-1 rounded ${subFacility.status === "1" || subFacility.status === "true" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                        {subFacility.status === "1" || subFacility.status === "true" ? "Active" : "Inactive"}
+                      <span className={`text-xs font-medium px-2 py-1 rounded ${subFacility.status === true ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                        {subFacility.status === true ? "Active" : "Inactive"}
                       </span>
                     </div>
 

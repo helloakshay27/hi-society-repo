@@ -727,7 +727,7 @@ const BookingListDashboard = () => {
                     "bg-[#E4626F] hover:bg-[#E4626F] text-white"
                   )}
                 >
-                  {item.bookingStatus}
+                  {item.bookingStatus.charAt(0).toUpperCase() + item.bookingStatus.slice(1)}
                 </Badge>
               </SelectValue>
             </SelectTrigger>

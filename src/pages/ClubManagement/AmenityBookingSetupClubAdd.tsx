@@ -619,12 +619,12 @@ export const AddBookingSetupClubPage = () => {
             subFacility.maximumPersonAllowed || "1"
           );
 
-          if (formData.isBookable) {
-            formDataToSend.append(
-              `facility_setup[sub_facilities_attributes][${idx}][gst]`,
-              subFacility.gst || "0.0"
-            );
-          }
+          // if (formData.isBookable) {
+          //   formDataToSend.append(
+          //     `facility_setup[sub_facilities_attributes][${idx}][gst]`,
+          //     subFacility.gst || "0.0"
+          //   );
+          // }
 
           if (formData.isRequest) {
             formDataToSend.append(
@@ -778,7 +778,7 @@ export const AddBookingSetupClubPage = () => {
         "facility_setup[complementary]",
         formData.complimentary ? "1" : "0"
       );
-      formDataToSend.append("facility_setup[gst]", formData.gstPercentage);
+      formDataToSend.append("facility_setup[cgst]", formData.gstPercentage);
       formDataToSend.append("facility_setup[sgst]", formData.sgstPercentage);
       formDataToSend.append("facility_setup[igst]", formData.igstPercentage);
 
@@ -1212,7 +1212,7 @@ export const AddBookingSetupClubPage = () => {
                       onChange={(e) => {
                         const value = e.target.value;
                         // Only allow letters and spaces, no numbers
-                        if (/^[a-zA-Z\s]*$/.test(value)) {
+                        if (/^[a-zA-Z0-9\s]*$/.test(value)) {
                           updateSubFacility(subFacility.id, { name: value });
                         }
                       }}

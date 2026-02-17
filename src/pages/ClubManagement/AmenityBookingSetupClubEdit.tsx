@@ -2815,16 +2815,16 @@ export const EditBookingSetupClubPage = () => {
                                                     }}
                                                 >
                                                     <MenuItem value={15}>15 Minutes</MenuItem>
-                                                    <MenuItem value={30}>Half hour</MenuItem>
+                                                    <MenuItem value={30}>30 Minutes</MenuItem>
                                                     <MenuItem value={45}>45 Minutes</MenuItem>
                                                     <MenuItem value={60}>1 hour</MenuItem>
-                                                    <MenuItem value={90}>1 and a half hours</MenuItem>
+                                                    <MenuItem value={90}>1 hour 30 minutes</MenuItem>
                                                     <MenuItem value={120}>2 hours</MenuItem>
-                                                    <MenuItem value={150}>2 and a half hours</MenuItem>
+                                                    <MenuItem value={150}>2 hours 30 minutes</MenuItem>
                                                     <MenuItem value={180}>3 hours</MenuItem>
-                                                    <MenuItem value={210}>3 and a half hours</MenuItem>
-                                                    <MenuItem value={240}>4 hours</MenuItem>
-                                                    <MenuItem value={270}>4 and a half hours</MenuItem>
+                                                    <MenuItem value={360}>6 hours</MenuItem>
+                                                    <MenuItem value={720}>12 hours</MenuItem>
+                                                    <MenuItem value={1440}>24 hours</MenuItem>
                                                 </Select>
                                             </FormControl>
 

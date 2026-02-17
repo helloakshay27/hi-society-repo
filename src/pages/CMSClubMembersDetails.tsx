@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Edit, Download, User, Mail, Phone, Calendar, CreditCard, Building2, FileText, Image as ImageIcon, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Edit, Download, User, Mail, Phone, Calendar, CreditCard, Building2, FileText, Image as ImageIcon, RefreshCw, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { API_CONFIG } from '@/config/apiConfig';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,7 +11,15 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
+
     TextField,
+    Box,
+    Typography,
+    IconButton,
+    FormControl,
+    Select as MuiSelect,
+    MenuItem,
+    TextareaAutosize,
 } from "@mui/material";
 import axios from "axios";
 
@@ -228,6 +236,16 @@ export const CMSClubMembersDetails = () => {
     const [renewEndDate, setRenewEndDate] = useState("");
     const [renewing, setRenewing] = useState(false);
 
+    // Capture Payment State
+    const [isCaptureDialogOpen, setIsCaptureDialogOpen] = useState(false);
+    const [captureFormData, setCaptureFormData] = useState({
+        total_payable: "",
+        payment_mode: "",
+        transaction_number: "",
+        notes: "",
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     // Fetch membership details
     useEffect(() => {
         if (id) {
@@ -239,6 +257,14 @@ export const CMSClubMembersDetails = () => {
         if (membershipData) {
             setRenewStartDate(membershipData.start_date ? membershipData.start_date.split("T")[0] : "");
             setRenewEndDate(membershipData.end_date ? membershipData.end_date.split("T")[0] : "");
+
+            // Populate capture form data if payment details exist
+            if (membershipData.allocation_payment_detail) {
+                setCaptureFormData(prev => ({
+                    ...prev,
+                    total_payable: membershipData.allocation_payment_detail?.total_amount || "",
+                }));
+            }
         }
     }, [membershipData]);
 
@@ -566,6 +592,45 @@ export const CMSClubMembersDetails = () => {
         }
     };
 
+    const handleCaptureChange = (e: any) => {
+        const { name, value } = e.target;
+        setCaptureFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleCaptureSubmit = async () => {
+        setIsSubmitting(true);
+        try {
+            const baseUrl = localStorage.getItem("baseUrl");
+            const token = localStorage.getItem("token");
+
+            await axios.post(
+                `https://${baseUrl}/club_member_allocations/${id}/payment.json`,
+                {
+                    lock_payment: {
+                        paid_amount: captureFormData.total_payable,
+                        payment_method: captureFormData.payment_mode,
+                        pg_transaction_id: captureFormData.transaction_number,
+                        notes: captureFormData.notes,
+                        payment_status: "SUCCESS",
+                    },
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            toast.success("Payment captured successfully");
+            setIsCaptureDialogOpen(false);
+            fetchMembershipDetails();
+        } catch (error) {
+            console.error("Error capturing payment:", error);
+            toast.error("Failed to capture payment");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="p-4 sm:p-6 min-h-screen flex items-center justify-center">
@@ -784,10 +849,24 @@ export const CMSClubMembersDetails = () => {
 
                     {membershipData.allocation_payment_detail && (
                         <TabsContent value="payment" className="p-4 sm:p-6">
-                            <h2 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
-                                <CreditCard className="w-5 h-5 text-[#C72030]" />
-                                Payment Information
-                            </h2>
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
+                                    <CreditCard className="w-5 h-5 text-[#C72030]" />
+                                    Payment Information
+                                </h2>
+
+                                {(!membershipData.allocation_payment_detail.payment_status ||
+                                    membershipData.allocation_payment_detail.payment_status.toLowerCase() === 'pending') && (
+                                        <Button
+                                            onClick={() => setIsCaptureDialogOpen(true)}
+                                            className="bg-[#16B364] hover:bg-[#129a55] text-white text-xs font-semibold px-3 py-1 h-auto ml-2"
+                                            size="sm"
+                                        >
+                                            Capture Payment
+                                        </Button>
+                                    )}
+                            </div>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                                 <div className="flex items-start">
                                     <span className="text-gray-500 min-w-[140px]">Payment ID</span>
@@ -831,18 +910,21 @@ export const CMSClubMembersDetails = () => {
                                     <span className="text-gray-500 mx-2">:</span>
                                     <span className="text-gray-900 font-medium">₹ {membershipData.allocation_payment_detail.landed_amount}</span>
                                 </div>
-                                <div className="flex items-start">
+                                {membershipData.allocation_payment_detail.payment_mode && <div className="flex items-start">
                                     <span className="text-gray-500 min-w-[140px]">Payment Mode</span>
                                     <span className="text-gray-500 mx-2">:</span>
                                     <span className="text-gray-900 font-medium capitalize">{membershipData.allocation_payment_detail.payment_mode}</span>
-                                </div>
+                                </div>}
                                 <div className="flex items-start">
                                     <span className="text-gray-500 min-w-[140px]">Payment Status</span>
                                     <span className="text-gray-500 mx-2">:</span>
-                                    <Badge variant={membershipData.allocation_payment_detail.payment_status === 'success' ? "default" : "secondary"} className="capitalize">
-                                        {membershipData.allocation_payment_detail.payment_status}
-                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant={membershipData.allocation_payment_detail.payment_status === 'success' ? "default" : "secondary"} className="capitalize">
+                                            {membershipData.allocation_payment_detail.payment_status ?? "Pending"}
+                                        </Badge>
+                                    </div>
                                 </div>
+
                                 <div className="flex items-start">
                                     <span className="text-gray-500 min-w-[140px]">Payment Created</span>
                                     <span className="text-gray-500 mx-2">:</span>
@@ -851,6 +933,7 @@ export const CMSClubMembersDetails = () => {
                             </div>
                         </TabsContent>
                     )}
+
 
                     <TabsContent value="bill" className="p-4 sm:p-6">
                         <h2 className="text-lg font-semibold text-[#1a1a1a] mb-4 flex items-center gap-3">
@@ -1048,15 +1131,15 @@ export const CMSClubMembersDetails = () => {
                                             <div className="flex items-start">
                                                 <span className="text-gray-500 min-w-[140px]">Club Member</span>
                                                 <span className="text-gray-500 mx-2">:</span>
-                                                <Badge variant={selectedMember.club_member_enabled ? "default" : "secondary"}>
-                                                    {selectedMember.club_member_enabled ? 'Enabled' : 'Disabled'}
+                                                <Badge variant={selectedMember.club_member_check ? "default" : "secondary"}>
+                                                    {selectedMember.club_member_check ? 'Enabled' : 'Disabled'}
                                                 </Badge>
                                             </div>
                                             <div className="flex items-start">
                                                 <span className="text-gray-500 min-w-[140px]">Access Card</span>
                                                 <span className="text-gray-500 mx-2">:</span>
-                                                <Badge variant={selectedMember.access_card_enabled ? "default" : "secondary"}>
-                                                    {selectedMember.access_card_enabled ? 'Enabled' : 'Disabled'}
+                                                <Badge variant={selectedMember.access_card_check ? "default" : "secondary"}>
+                                                    {selectedMember.access_card_check ? 'Enabled' : 'Disabled'}
                                                 </Badge>
                                             </div>
                                             <div className="flex items-start">
@@ -1280,6 +1363,133 @@ export const CMSClubMembersDetails = () => {
                         )}
                     </Button>
                 </div>
+            </Dialog>
+
+            {/* Capture Payment Dialog */}
+            <Dialog
+                open={isCaptureDialogOpen}
+                onClose={() => setIsCaptureDialogOpen(false)}
+                maxWidth="xs"
+                fullWidth
+                PaperProps={{
+                    style: {
+                        borderRadius: "8px",
+                    },
+                }}
+            >
+                <DialogTitle
+                    sx={{
+                        m: 0,
+                        p: 2,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        bgcolor: "#f5f5f5",
+                        position: "relative",
+                    }}
+                >
+                    <Typography variant="h6" fontWeight="bold">
+                        Capture Payment
+                    </Typography>
+                    <IconButton
+                        aria-label="close"
+                        onClick={() => setIsCaptureDialogOpen(false)}
+                        sx={{
+                            position: "absolute",
+                            right: 8,
+                            top: 8,
+                            color: "red",
+                        }}
+                    >
+                        <X size={20} />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent sx={{ p: 3 }}>
+                    <Box className="space-y-4 pt-2">
+                        <div>
+                            <Typography variant="body2" color="textSecondary" gutterBottom>
+                                Total Payable Amount
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                name="total_payable"
+                                value={captureFormData.total_payable}
+                                onChange={handleCaptureChange}
+                                variant="outlined"
+                                size="small"
+                                disabled
+                            />
+                        </div>
+                        <div>
+                            <Typography variant="body2" color="textSecondary" gutterBottom>
+                                Payment Mode
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <MuiSelect
+                                    name="payment_mode"
+                                    value={captureFormData.payment_mode}
+                                    onChange={handleCaptureChange}
+                                    displayEmpty
+                                >
+                                    <MenuItem value="" disabled>
+                                        Select Payment Mode
+                                    </MenuItem>
+                                    <MenuItem value="UPI">UPI</MenuItem>
+                                    <MenuItem value="cash">Cash</MenuItem>
+                                    <MenuItem value="cheque">Cheque</MenuItem>
+                                    <MenuItem value="NEFT">NEFT</MenuItem>
+                                    <MenuItem value="RTGS">RTGS</MenuItem>
+                                    <MenuItem value="credit card">Credit Card</MenuItem>
+                                    <MenuItem value="debit card">Debit Card</MenuItem>
+                                    <MenuItem value="net banking">Net Banking</MenuItem>
+                                </MuiSelect>
+                            </FormControl>
+                        </div>
+                        <div>
+                            <Typography variant="body2" color="textSecondary" gutterBottom>
+                                Transaction Number
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                name="transaction_number"
+                                value={captureFormData.transaction_number}
+                                onChange={handleCaptureChange}
+                                variant="outlined"
+                                size="small"
+                                placeholder="Enter Transaction ID"
+                            />
+                        </div>
+                        <div>
+                            <Typography variant="body2" color="textSecondary" gutterBottom>
+                                Notes
+                            </Typography>
+                            <TextareaAutosize
+                                minRows={3}
+                                name="notes"
+                                value={captureFormData.notes}
+                                onChange={handleCaptureChange}
+                                placeholder="Write note"
+                                style={{
+                                    width: "100%",
+                                    padding: "8px",
+                                    borderRadius: "4px",
+                                    border: "1px solid #ccc",
+                                    fontFamily: "inherit",
+                                    fontSize: "14px",
+                                }}
+                            />
+                        </div>
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, display: "flex", justifyContent: "center" }}>
+                    <Button
+                        onClick={handleCaptureSubmit}
+                        disabled={isSubmitting}
+                        className="bg-[#16B364] hover:bg-[#129a55] text-white w-full"
+                    >
+                        {isSubmitting ? "Processing..." : "Submit Payment"}
+                    </Button>
+                </DialogActions>
             </Dialog>
         </div >
     );

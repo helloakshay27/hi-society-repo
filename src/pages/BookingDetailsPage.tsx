@@ -449,7 +449,13 @@ const BookingDetailsPage = () => {
                     Scheduled Date:
                   </span>
                   <span className="text-gray-900 font-medium">
-                    {bookings?.startdate?.split("T")[0]}
+                    {bookings?.startdate
+                      ? new Date(bookings.startdate).toLocaleString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
+                      : "-"}
                   </span>
                 </div>
                 <div className="flex items-start text-sm">
@@ -465,7 +471,15 @@ const BookingDetailsPage = () => {
                     Booked On:
                   </span>
                   <span className="text-gray-900 font-medium">
-                    {bookings?.created_at?.split("T")[0]}
+                    {bookings?.created_at
+                      ? new Date(bookings.created_at).toLocaleString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                      : "-"}
                   </span>
                 </div>
                 <div className="flex items-start text-sm">
@@ -476,12 +490,12 @@ const BookingDetailsPage = () => {
                     {bookings?.booked_by_name || bookings?.created_by_name}
                   </span>
                 </div>
-                <div className="flex items-start text-sm">
+                {/* <div className="flex items-start text-sm">
                   <span className="text-gray-500 w-32 shrink-0">Notes:</span>
                   <span className="text-gray-900 font-medium">
                     {bookings?.comment || "None"}
                   </span>
-                </div>
+                </div> */}
               </div>
 
               {/* Right Column */}
