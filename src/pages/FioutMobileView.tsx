@@ -187,23 +187,25 @@ const FioutMobileView: React.FC<FioutMobileViewProps> = ({
   const adaptFromFitout = useCallback((payload: FitoutItem[]) => {
     return (payload || []).map((item) => ({
       name: item.name || "Category",
-      questions: (item.snag_quest_maps || []).map((entry) => {
-        const s = entry.snag_question;
-        let qtype = s.qtype;
-        if (qtype === "text") qtype = "inputbox";
-        return {
-          id: s.id,
-          // keep a reference to snag_quest_map_id so POST can use it
-          snag_quest_map_id: entry.id,
-          title: s.descr,
-          required: !!s.quest_mandatory,
-          qtype,
-          options: (s.snag_quest_options || []).map((o) => ({
-            id: o.id,
-            label: o.qname || String(o.id),
-          })),
-        } as SurveyQuestion;
-      }),
+      questions: (item.snag_quest_maps || [])
+        .filter((entry) => entry.snag_question) // Filter out entries without snag_question
+        .map((entry) => {
+          const s = entry.snag_question;
+          let qtype = s.qtype || "inputbox"; // Provide default if qtype is missing
+          if (qtype === "text") qtype = "inputbox";
+          return {
+            id: s.id,
+            // keep a reference to snag_quest_map_id so POST can use it
+            snag_quest_map_id: entry.id,
+            title: s.descr || "Untitled Question",
+            required: !!s.quest_mandatory,
+            qtype,
+            options: (s.snag_quest_options || []).map((o) => ({
+              id: o.id,
+              label: o.qname || String(o.id),
+            })),
+          } as SurveyQuestion;
+        }),
     }));
   }, []);
 
