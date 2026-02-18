@@ -43,7 +43,7 @@ const EditApprovalMatrixPage = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const functionOptions = [
-     { label: 'Fitout Request', value: 'fitout_request' },
+      { label: 'Fitout Request Category', value: 'fitout_request_category' },
     // { label: 'GRN', value: 'grn' },
     // { label: 'Work Order', value: 'work_order' },
     // { label: 'Work Order Invoice', value: 'work_order_invoice' },
@@ -391,7 +391,7 @@ const EditApprovalMatrixPage = () => {
                           if (level.userNames) return Array.isArray(level.userNames) ? level.userNames.join(', ') : level.userNames;
                           return sel.join(', ');
                         }
-                        const selectedUsers = users.filter((u) => u.user && sel.includes(u.id.toString()));
+                        const selectedUsers = users.filter((u) => u.user && sel.includes(u.user.id.toString()));
                         if (selectedUsers.length === 0) {
                           if (level.userNames) return Array.isArray(level.userNames) ? level.userNames.join(', ') : level.userNames;
                           return sel.join(', ');
@@ -411,13 +411,15 @@ const EditApprovalMatrixPage = () => {
                         <MenuItem disabled>Error loading users</MenuItem>
                       ) : (
                         users.map((userItem) => (
-                          <MenuItem key={userItem.id} value={userItem.id.toString()}>
-                            <Checkbox
-                              checked={level.users.includes(userItem.id.toString())}
-                              sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' } }}
-                            />
-                            {userItem.user ? `${userItem.user.firstname} ${userItem.user.lastname}` : 'Unknown User'}
-                          </MenuItem>
+                          userItem.user && (
+                            <MenuItem key={userItem.user.id} value={userItem.user.id.toString()}>
+                              <Checkbox
+                                checked={level.users.includes(userItem.user.id.toString())}
+                                sx={{ color: '#C72030', '&.Mui-checked': { color: '#C72030' } }}
+                              />
+                              {`${userItem.user.firstname} ${userItem.user.lastname}`}
+                            </MenuItem>
+                          )
                         ))
                       )}
                     </MuiSelect>

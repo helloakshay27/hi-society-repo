@@ -407,7 +407,7 @@ const AddApprovalMatrixPage = () => {
                       renderValue={(selected) => {
                         if (selected.length === 0) return 'Select up to 15 Options...';
                         if (!Array.isArray(users)) return 'Loading...';
-                        const selectedUsers = users.filter(u => u.user && selected.includes(u.id.toString()));
+                        const selectedUsers = users.filter(u => u.user && selected.includes(u.user.id.toString()));
                         return selectedUsers.map(u => `${u.user!.firstname} ${u.user!.lastname}`).join(', ');
                       }}
                       displayEmpty
@@ -429,16 +429,18 @@ const AddApprovalMatrixPage = () => {
                         <MenuItem disabled>Error loading users</MenuItem>
                       ) : (
                         users.map((userItem) => (
-                          <MenuItem key={userItem.id} value={userItem.id.toString()}>
-                            <Checkbox
-                              checked={level.users.includes(userItem.id.toString())}
-                              sx={{
-                                color: '#C72030',
-                                '&.Mui-checked': { color: '#C72030' },
-                              }}
-                            />
-                            {userItem.user ? `${userItem.user.firstname} ${userItem.user.lastname}` : 'Unknown User'}
-                          </MenuItem>
+                          userItem.user && (
+                            <MenuItem key={userItem.user.id} value={userItem.user.id.toString()}>
+                              <Checkbox
+                                checked={level.users.includes(userItem.user.id.toString())}
+                                sx={{
+                                  color: '#C72030',
+                                  '&.Mui-checked': { color: '#C72030' },
+                                }}
+                              />
+                              {`${userItem.user.firstname} ${userItem.user.lastname}`}
+                            </MenuItem>
+                          )
                         ))
                       )}
                     </MuiSelect>
