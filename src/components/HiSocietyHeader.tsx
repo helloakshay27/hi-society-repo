@@ -35,6 +35,8 @@ import { Dashboard } from "@mui/icons-material";
 import { AnalyticsGrid } from "./dashboard/AnalyticsGrid";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import { useLayout } from "@/contexts/LayoutContext";
+import { UIHiSocietyNavigation } from "@asset";
+import RunwalLogo from "@/assets/Runwal Logo - A Subodh Runwal Group-01 1.png";
 
 export interface HiSocietySociety {
   id: number;
@@ -81,6 +83,10 @@ export const HiSocietyHeader = () => {
   const isViSite = hostname.includes("vi-web.gophygital.work");
 
   const isWebSite = hostname.includes("web.gophygital.work");
+
+    const isUIHiSocietySite =
+    hostname.includes("ui-hisociety.lockated.com") ||
+    hostname.includes("localhost");
 
   const isLocalhost =
     hostname.includes("localhost") ||
@@ -390,6 +396,12 @@ export const HiSocietyHeader = () => {
                 />
               </defs>
             </svg>
+          ) : isUIHiSocietySite ? (
+            <img 
+              src={RunwalLogo} 
+              alt="Runwal Logo" 
+              width={60} 
+            />
           ) : isViSite ? (
             <svg
               width="218"
@@ -466,7 +478,7 @@ export const HiSocietyHeader = () => {
           )}
 
           {/* Dashboard Button */}
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             {!isViSite && (
               <button
                 onClick={() => (window.location.href = "/dashboard")}
@@ -510,7 +522,7 @@ export const HiSocietyHeader = () => {
                 MSafe Dashboard
               </button>
             )}
-          </div>
+          </div> */}
 
           {/* Project Dropdown */}
         </div>
