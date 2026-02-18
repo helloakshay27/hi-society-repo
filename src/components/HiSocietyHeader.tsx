@@ -84,9 +84,7 @@ export const HiSocietyHeader = () => {
 
   const isWebSite = hostname.includes("web.gophygital.work");
 
-    const isUIHiSocietySite =
-    hostname.includes("ui-hisociety.lockated.com") ||
-    hostname.includes("localhost");
+  const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com");
 
   const isLocalhost =
     hostname.includes("localhost") ||
@@ -530,6 +528,7 @@ export const HiSocietyHeader = () => {
         <div className="flex items-center gap-3">
           {/* Layout Mode Toggle Button - Available on localhost and dev environments */}
           {/* {(hostname.includes("localhost") || hostname.includes("dev-hisociety.lockated.com")) && ( */}
+          {!isUIHiSocietySite && (
             <Button
               onClick={() => {
                 // Set base URL BEFORE toggling mode to ensure proper API routing
@@ -563,6 +562,7 @@ export const HiSocietyHeader = () => {
                 </>
               )}
             </Button>
+          )}
           {/* )} */}
 
           {/* Society Dropdown */}

@@ -86,7 +86,9 @@ export const HiSocityHeader = () => {
   // Check if it's Oman site
   const isOmanSite = hostname.includes("oig.gophygital.work");
   // Treat vi-web prod and localhost as VI for dev account fetch
-  
+  const isViSite = hostname.includes("vi-web.gophygital.work");
+  const isWebSite = hostname.includes("web.gophygital.work");
+  const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com") || hostname.includes("localhost");
 
   const isLocalhost =
     hostname.includes("localhost") ||
@@ -430,6 +432,7 @@ export const HiSocityHeader = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          {!isUIHiSocietySite && (
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
               <Building2 className="w-4 h-4" />
@@ -459,9 +462,10 @@ export const HiSocityHeader = () => {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          )}
 
           {/* Site Dropdown (hidden for VI and localhost) */}
-          {!isViSite && (
+          {!isViSite && !isUIHiSocietySite && (
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
                 <MapPin className="w-4 h-4" />
