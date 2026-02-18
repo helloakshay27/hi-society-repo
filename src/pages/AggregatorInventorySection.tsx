@@ -23,6 +23,15 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Plus, Package, Warehouse, Eye, RefreshCwIcon } from "lucide-react";
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+    PaginationEllipsis,
+} from "@/components/ui/pagination";
 // import { getFullUrl, API_CONFIG } from "@/config/apiConfig";
 
 const AggregatorInventorySection = () => {
@@ -364,6 +373,133 @@ const AggregatorInventorySection = () => {
         }
     };
 
+    const handlePageChange = (page: number) => {
+        if (page < 1 || page > totalPages || page === currentPage || loading) {
+            return;
+        }
+        setCurrentPage(page);
+    };
+
+    const renderPaginationItems = () => {
+        if (!totalPages || totalPages <= 0) {
+            return null;
+        }
+        const items = [];
+        const showEllipsis = totalPages > 7;
+
+        if (showEllipsis) {
+            items.push(
+                <PaginationItem key={1} className="cursor-pointer">
+                    <PaginationLink
+                        onClick={() => handlePageChange(1)}
+                        isActive={currentPage === 1}
+                        aria-disabled={loading}
+                        className={loading ? "pointer-events-none opacity-50" : ""}
+                    >
+                        1
+                    </PaginationLink>
+                </PaginationItem>
+            );
+
+            if (currentPage > 4) {
+                items.push(
+                    <PaginationItem key="ellipsis1">
+                        <PaginationEllipsis />
+                    </PaginationItem>
+                );
+            } else {
+                for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+                    items.push(
+                        <PaginationItem key={i} className="cursor-pointer">
+                            <PaginationLink
+                                onClick={() => handlePageChange(i)}
+                                isActive={currentPage === i}
+                                aria-disabled={loading}
+                                className={loading ? "pointer-events-none opacity-50" : ""}
+                            >
+                                {i}
+                            </PaginationLink>
+                        </PaginationItem>
+                    );
+                }
+            }
+
+            if (currentPage > 3 && currentPage < totalPages - 2) {
+                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                    items.push(
+                        <PaginationItem key={i} className="cursor-pointer">
+                            <PaginationLink
+                                onClick={() => handlePageChange(i)}
+                                isActive={currentPage === i}
+                                aria-disabled={loading}
+                                className={loading ? "pointer-events-none opacity-50" : ""}
+                            >
+                                {i}
+                            </PaginationLink>
+                        </PaginationItem>
+                    );
+                }
+            }
+
+            if (currentPage < totalPages - 3) {
+                items.push(
+                    <PaginationItem key="ellipsis2">
+                        <PaginationEllipsis />
+                    </PaginationItem>
+                );
+            } else {
+                for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+                    if (!items.find((item) => item.key === i.toString())) {
+                        items.push(
+                            <PaginationItem key={i} className="cursor-pointer">
+                                <PaginationLink
+                                    onClick={() => handlePageChange(i)}
+                                    isActive={currentPage === i}
+                                    aria-disabled={loading}
+                                    className={loading ? "pointer-events-none opacity-50" : ""}
+                                >
+                                    {i}
+                                </PaginationLink>
+                            </PaginationItem>
+                        );
+                    }
+                }
+            }
+
+            if (totalPages > 1) {
+                items.push(
+                    <PaginationItem key={totalPages} className="cursor-pointer">
+                        <PaginationLink
+                            onClick={() => handlePageChange(totalPages)}
+                            isActive={currentPage === totalPages}
+                            aria-disabled={loading}
+                            className={loading ? "pointer-events-none opacity-50" : ""}
+                        >
+                            {totalPages}
+                        </PaginationLink>
+                    </PaginationItem>
+                );
+            }
+        } else {
+            for (let i = 1; i <= totalPages; i++) {
+                items.push(
+                    <PaginationItem key={i} className="cursor-pointer">
+                        <PaginationLink
+                            onClick={() => handlePageChange(i)}
+                            isActive={currentPage === i}
+                            aria-disabled={loading}
+                            className={loading ? "pointer-events-none opacity-50" : ""}
+                        >
+                            {i}
+                        </PaginationLink>
+                    </PaginationItem>
+                );
+            }
+        }
+
+        return items;
+    };
+
     return (
         <div className="p-6 space-y-6 bg-white min-h-screen">
             <Toaster position="top-right" richColors closeButton />
@@ -432,10 +568,34 @@ const AggregatorInventorySection = () => {
                     loading={loading}
                     loadingMessage="Loading aggregator products..."
                     emptyMessage="No aggregator products found"
-                    pagination={true}
+                    // pagination={true}
+                    // manualPagination={true}
+                    // currentPage={currentPage}
+                    // totalPages={totalPages}
+                    // onPageChange={(page) => setCurrentPage(page)}
                     exportFileName="aggregator-products"
                     storageKey="aggregator-products-table"
                 />
+            </div>
+
+            <div className="flex justify-center mt-6 pb-6">
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                className={currentPage === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                        </PaginationItem>
+                        {renderPaginationItems()}
+                        <PaginationItem>
+                            <PaginationNext
+                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                className={currentPage === totalPages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
             </div>
             {/* <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
                 <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">

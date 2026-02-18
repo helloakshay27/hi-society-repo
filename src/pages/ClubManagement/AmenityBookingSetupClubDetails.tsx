@@ -261,7 +261,7 @@ export const BookingSetupDetailClubPage = () => {
     try {
       const formattedDate = date.replace(/-/g, '/');
       const response = await axios.get(
-        `https://${baseUrl}/pms/admin/facility_setups/${facilityId}/all_schedules_for_facility_setup.json`,
+        `https://${baseUrl}/crm/admin/facility_setups/${facilityId}/all_schedules_for_facility_setup.json`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

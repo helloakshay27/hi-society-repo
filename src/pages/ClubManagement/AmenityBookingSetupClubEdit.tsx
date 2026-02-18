@@ -130,6 +130,7 @@ export const EditBookingSetupClubPage = () => {
         termsConditions: "",
         cancellationText: "",
         slots: {
+            id: null,
             startTime: { hour: "00", minute: "00" },
             breakTimeStart: { hour: "00", minute: "00" },
             breakTimeEnd: { hour: "00", minute: "00" },
@@ -549,6 +550,7 @@ export const EditBookingSetupClubPage = () => {
 
             // Facility Slots
             const slot = formData.slots;
+            formDataToSend.append("facility_slots[][id]", slot.id);
             formDataToSend.append(
                 `facility_slots[][slot_no]`,
                 "1"
@@ -667,9 +669,14 @@ export const EditBookingSetupClubPage = () => {
                 }
 
                 formDataToSend.append(
-                    `facility_setup[reason]`,
+                    `facility_setup[facility_blockings_attributes][][reason]`,
                     blockDay.blockReason
                 );
+
+                // formDataToSend.append(
+                //     `facility_setup[reason]`,
+                //     blockDay.blockReason
+                // );
 
                 if (blockDay.dayType === "selectedSlots" && blockDay.selectedSlots && blockDay.selectedSlots.length > 0) {
                     blockDay.selectedSlots.forEach((slotId) => {
@@ -902,6 +909,7 @@ export const EditBookingSetupClubPage = () => {
 
             // Map API response to form data
             const transformedSlot = {
+                id: data.facility_slots?.[0]?.facility_slot?.id,
                 startTime: { hour: String(data.facility_slots?.[0]?.facility_slot.start_hour).padStart(2, "0") || "00", minute: String(data.facility_slots?.[0]?.facility_slot.start_min).padStart(2, "0") || "00" },
                 breakTimeStart: { hour: String(data.facility_slots?.[0]?.facility_slot.break_start_hour).padStart(2, "0") || "00", minute: String(data.facility_slots?.[0]?.facility_slot.break_start_min).padStart(2, "0") || "00" },
                 breakTimeEnd: { hour: String(data.facility_slots?.[0]?.facility_slot.break_end_hour).padStart(2, "0") || "00", minute: String(data.facility_slots?.[0]?.facility_slot.break_end_min).padStart(2, "0") || "00" },
@@ -1020,7 +1028,7 @@ export const EditBookingSetupClubPage = () => {
                     refundableDeposit: subFac.sub_facility.deposit || "0.0",
                 })) || [],
                 blockDays: (data.facility_blockings || []).map((blocking: any) => ({
-                    id: blocking.facility_blocking?.id || blocking.id,
+                    id: blocking.facility_blocking?.id,
                     startDate: blocking.facility_blocking?.ondate || "",
                     endDate: "",
                     dayType: blocking.facility_blocking?.block_slot && blocking.facility_blocking?.block_slot.length > 0 ? "selectedSlots" : "entireDay",
@@ -1159,7 +1167,7 @@ export const EditBookingSetupClubPage = () => {
         try {
             const formattedDate = date.replace(/-/g, '/');
             const response = await axios.get(
-                `https://${baseUrl}/pms/admin/facility_setups/${facilityId}/all_schedules_for_facility_setup.json`,
+                `https://${baseUrl}/crm/admin/facility_setups/${facilityId}/all_schedules_for_facility_setup.json`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
