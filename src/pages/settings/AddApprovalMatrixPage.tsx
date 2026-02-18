@@ -41,7 +41,7 @@ const AddApprovalMatrixPage = () => {
 
   // Function options with label-value pairs
   const functionOptions = [
-    { label: 'Fitout Request', value: 'fitout_request' },
+    { label: 'Fitout Request Category', value: 'fitout_request_category' },
     // { label: 'GRN', value: 'grn' },
     // { label: 'Work Order', value: 'work_order' },
     // { label: 'Work Order Invoice', value: 'work_order_invoice' },
