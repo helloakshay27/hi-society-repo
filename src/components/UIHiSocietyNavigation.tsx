@@ -25,12 +25,12 @@ const navigationItems: NavigationItem[] = [
     path: "/loyalty/dashboard",
   },
   
-  {
-    id: "settings",
-    label: "Settings",
-    icon: <SettingsIcon className="w-4 h-4" />,
-    path: "/settings/special-users-category",
-  },
+  // {
+  //   id: "settings",
+  //   label: "Settings",
+  //   icon: <SettingsIcon className="w-4 h-4" />,
+  //   path: "/settings/special-users-category",
+  // },
 ];
 
 export const UIHiSocietyNavigation: React.FC = () => {
