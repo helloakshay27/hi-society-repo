@@ -13,31 +13,62 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import baseClient from "@/utils/withoutTokenBase";
 import { toast } from "sonner";
 
-interface FitoutRequestCategory {
+interface SnagAnswerDoc {
     id: number;
-    fitout_category_id: number;
-    category_name: string;
-    status_name: string | null;
-    complaint_status_id: number | null;
-    amount: number | null;
-    documents: Array<{ id: number; title: string; thumbnail: string }>;
+    relation?: string;
+    relation_id?: number;
+    document?: string;
+    document_url?: string;
+    thumbnail?: string;
+    document_type?: string;
 }
 
-interface FitoutRequest {
+interface SnagAnswer {
     id: number;
-    fitout_number: string;
-    status_name: string;
+    question_id: number;
+    ans_descr: string;
     created_at: string;
-    start_date: string;
+    docs?: SnagAnswerDoc[];
+}
+
+interface SnagQuestion {
+    id: number;
+    qtype: string;
+    descr: string;
+    active: number;
+    qnumber: number;
+}
+
+interface SnagQuestMap {
+    id: number;
+    question_id: number;
+    snag_question: SnagQuestion;
+    snag_answers: SnagAnswer[];
+}
+
+interface FitoutCategoryDetail {
+    id: number;
+    category_id: number;
+    name: string;
+    complaint_status_name: string;
+    status: string;
+    status_color: string;
+    created_at: string;
     updated_at: string;
-    description: string;
-    documents: Array<{ id: number; title: string; thumbnail: string }>;
-    comments: Array<{ id: number; author: string; dateTime: string; text: string }>;
-    annexure_statuses: Array<{ label: string; status: string; colorClass: string; textColor: string }>;
-    fitout_request_categories?: FitoutRequestCategory[];
+    comments: any[];
+    snag_quest_maps: SnagQuestMap[];
 }
 
 const FitoutRequestCategoryApprovalRequestMobile: React.FC = () => {
@@ -47,32 +78,39 @@ const FitoutRequestCategoryApprovalRequestMobile: React.FC = () => {
 
     // Extract token and org_id from URL parameters
     const token = searchParams.get("token");
-    const orgId = searchParams.get("org_id") || searchParams.get("organization_id");
 
-    const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
-    const [commentText, setCommentText] = useState("");
-    const [fitoutData, setFitoutData] = useState<FitoutRequest | null>(null);
-    const [fitoutResponses, setFitoutResponses] = useState<any[]>([]);
+    const [fitoutCategoryData, setFitoutCategoryData] = useState<FitoutCategoryDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Approval/Rejection States
+    const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+    const [currentAction, setCurrentAction] = useState<"approve" | "reject" | null>(null);
+    const [rejectionReason, setRejectionReason] = useState("");
+    const [rectifyComments, setRectifyComments] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const level_id = searchParams.get("level_id");
+    const org_id = searchParams.get("org_id");
+
+    console.log(fitoutCategoryData)
+
     useEffect(() => {
-        const fetchFitoutRequest = async () => {
+        const fetchFitoutRequestCategory = async () => {
             try {
                 setLoading(true);
                 setError(null);
-                // Check if token is available
                 if (!token) {
                     throw new Error("No authentication token found in URL");
                 }
 
                 const response = await baseClient.get(
-                    `/crm/admin/fitout_requests/${id}.json?token=${token}`
+                    `/fitout_request_categories/${id}.json?token=${token}`
                 );
-                setFitoutData(response.data);
-                console.log("✅ Fitout request loaded:", response.data);
-            } catch (err) {
-                console.error("❌ Error fetching fitout request:", err);
+                setFitoutCategoryData(response.data);
+                console.log("✅ Fitout category request loaded:", response.data);
+            } catch (err: any) {
+                console.error("❌ Error fetching fitout category request:", err);
                 setError(err.response?.data?.error || "Failed to load fitout request details");
             } finally {
                 setLoading(false);
@@ -80,183 +118,58 @@ const FitoutRequestCategoryApprovalRequestMobile: React.FC = () => {
         };
 
         if (id) {
-            fetchFitoutRequest();
-        }
-    }, [id]);
-
-    // Fetch fitout responses for annexure statuses and comments
-    useEffect(() => {
-        const fetchFitoutResponses = async () => {
-            try {
-                if (!token) {
-                    throw new Error("No authentication token found in URL");
-                }
-
-                const response = await baseClient.get(
-                    `/crm/admin/fitout_requests/${id}/fitout_responses.json?token=${token}`,
-                );
-                setFitoutResponses(response.data);
-                console.log("✅ Fitout responses loaded:", response.data);
-            } catch (err) {
-                console.error("❌ Error fetching fitout responses:", err);
-                // Don't set error - this is secondary data
-            }
-        };
-
-        if (id && token) {
-            fetchFitoutResponses();
+            fetchFitoutRequestCategory();
         }
     }, [id, token]);
 
-    // Function to get status color based on status name
-    const getStatusColor = (statusName: string | null): string => {
-        if (!statusName) return "bg-[#999999]";
+    const handleStatusConfirmation = async () => {
+        if (!currentAction || !id || !token) return;
 
-        const statusLower = statusName.toLowerCase();
-
-        if (statusLower.includes("pending") || statusLower.includes("received")) {
-            return "bg-[#FFC928]";
-        } else if (statusLower.includes("review") || statusLower.includes("under review")) {
-            return "bg-[#01B5D8]";
-        } else if (statusLower.includes("approved") || statusLower.includes("completed")) {
-            return "bg-[#00A650]";
-        } else if (statusLower.includes("rejected")) {
-            return "bg-[#FF3B30]";
-        }
-
-        return "bg-[#0257E7]";
-    };
-
-    // Map fitout responses to annexure statuses
-    const annexureStatuses = fitoutResponses && fitoutResponses.length > 0
-        ? fitoutResponses.map((response) => ({
-            label: response.name || "ANNEXURE",
-            status: response.status || response.complaint_status_name || "Pending",
-            colorClass: response.status_color ? "" : getStatusColor(response.status),
-            backgroundColor: response.status_color || undefined,
-            textColor: "text-white",
-        }))
-        : fitoutData?.fitout_request_categories?.map((category) => ({
-            label: category.category_name || "ANNEXURE",
-            status: category.status_name || "Pending",
-            colorClass: getStatusColor(category.status_name),
-            backgroundColor: undefined,
-            textColor: "text-white",
-        })) || [
-            {
-                label: "ANNEXURE-2(STATEMENTOF",
-                status: "Fitout Request Received",
-                colorClass: "bg-[#FFC928]",
-                backgroundColor: undefined,
-                textColor: "text-white",
-            },
-        ];
-
-    // Map documents from all categories
-    const documents = fitoutData?.fitout_request_categories?.reduce(
-        (acc: any[], category) => [
-            ...acc,
-            ...(category.documents || []).map((doc: any) => ({
-                id: doc.id,
-                title: doc.title || category.category_name || "Document",
-                thumbnail: doc.document_url,
-            })),
-        ],
-        []
-    ) || [];
-
-    // Helper function to format comment date
-    const formatCommentDate = (dateString: string) => {
-        try {
-            const date = new Date(dateString);
-            const time = date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
-            const formattedDate = date.toLocaleDateString("en-IN");
-            return `${formattedDate} ${time}`;
-        } catch {
-            return dateString;
-        }
-    };
-
-    // Helper function to map comment fields
-    const mapCommentFields = (comment: any) => ({
-        id: comment.id,
-        author: comment.commentor_name || comment.author || "Unknown",
-        dateTime: comment.created_at ? formatCommentDate(comment.created_at) : comment.dateTime || "Unknown date",
-        text: comment.body || comment.text || "",
-    });
-
-    // Map comments grouped by annexure
-    const annexureWithComments = fitoutResponses && fitoutResponses.length > 0
-        ? fitoutResponses.map((response) => ({
-            id: response.id,
-            name: response.name || "ANNEXURE",
-            comments: (response.comments || []).map(mapCommentFields),
-        }))
-        : fitoutData?.fitout_request_categories?.map((category) => ({
-            id: category.id,
-            name: category.category_name || "ANNEXURE",
-            comments: (fitoutData?.comments || []).map(mapCommentFields),
-        })) || [];
-
-    const fetchFitoutResponses = async () => {
-        try {
-            if (!token) {
-                throw new Error("No authentication token found in URL");
-            }
-
-            const response = await baseClient.get(
-                `/crm/admin/fitout_requests/${id}/fitout_responses.json?token=${token}`,
-            );
-            setFitoutResponses(response.data);
-            console.log("✅ Fitout responses refreshed:", response.data);
-        } catch (err) {
-            console.error("❌ Error refreshing fitout responses:", err);
-        }
-    };
-
-    const handlePostComment = async () => {
-        // Validate inputs
-        if (!commentText.trim()) return;
-        if (!selectedCategory) {
-            alert("Please select a category first");
+        if (currentAction === "reject" && !rejectionReason.trim()) {
+            toast.error("Please provide a rejection reason");
             return;
         }
 
         try {
-            // Extract index from selectedCategory value (e.g., "category-0" -> 0)
-            const categoryIndex = parseInt(selectedCategory.replace("category-", ""));
-            const selectedAnnexure = annexureWithComments[categoryIndex];
+            setIsSubmitting(true);
+            const payload = {
+                level_id: level_id ? parseInt(level_id) : 1,
+                approve: currentAction === "approve",
+                rejection_reason: currentAction === "reject" ? rejectionReason : null,
+                rectify_comments: rectifyComments || null
+            };
 
-            if (!selectedAnnexure || !selectedAnnexure.id) {
-                alert("Invalid category selected");
-                return;
-            }
-
-            if (!token) {
-                alert("No authentication token found");
-                return;
-            }
-
-            // Make API call to post comment
-            const response = await baseClient.put(
-                `/fitout_request_categories/${selectedAnnexure.id}.json?token=${token}`,
-                {
-                    id: selectedAnnexure.id.toString(),
-                    comment: {
-                        body: commentText,
-                    },
-                },
+            await baseClient.post(
+                `/fitout_request_categories/${id}/status_confirmation.json?token=${token}&org_id=${org_id || 10}`,
+                payload
             );
 
-            console.log("✅ Comment posted successfully:", response.data);
-            setCommentText("");
+            toast.success(`Category ${currentAction === "approve" ? "approved" : "rejected"} successfully`);
+            setIsActionModalOpen(false);
+            // Refresh data or navigate back
+            setTimeout(() => navigate(-1), 1500);
+        } catch (err: any) {
+            console.error("❌ Error confirming status:", err);
+            toast.error(err.response?.data?.error || `Failed to ${currentAction} request`);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
-            // Refetch the APIs to reflect the new comment
-            await fetchFitoutResponses();
-            toast.success("Comment posted successfully!");
-        } catch (err) {
-            console.error("❌ Error posting comment:", err);
-            toast.error("Failed to post comment. Please try again.");
+    // Helper function to format date
+    const formatDate = (dateString: string) => {
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleString("en-IN", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true
+            });
+        } catch {
+            return dateString;
         }
     };
 
@@ -277,15 +190,14 @@ const FitoutRequestCategoryApprovalRequestMobile: React.FC = () => {
                         <ArrowLeft className="w-5 h-5 text-gray-700" />
                     </Button>
                     <h1 className="flex-1 text-center text-xl font-semibold text-gray-900">
-                        Fitout Request Details
+                        Category Details
                     </h1>
-                    {/* spacer to balance back button */}
                     <div className="w-6" />
                 </Card>
 
                 {loading && (
                     <div className="flex items-center justify-center min-h-[400px]">
-                        <p className="text-gray-600">Loading fitout request details...</p>
+                        <p className="text-gray-600">Loading details...</p>
                     </div>
                 )}
 
@@ -295,194 +207,246 @@ const FitoutRequestCategoryApprovalRequestMobile: React.FC = () => {
                     </div>
                 )}
 
-                {!loading && !error && (
-                    <div className="px-4 pb-6 pt-4 space-y-6">
-                        {/* Main Card */}
-                        <Card className="rounded-2xl shadow-sm overflow-hidden">
-                            {/* Status Ribbon */}
-                            <div className="relative">
-                                <div className="flex justify-end">
-                                    <div className="flex items-center">
-                                        <Badge className="rounded-l-none rounded-tr-[10px] rounded-br-none bg-[#00A650] px-6 py-1.5 text-xs font-semibold tracking-wide text-white">
-                                            {fitoutData?.status_name || "PENDING"}
-                                        </Badge>
+                {!loading && !error && fitoutCategoryData && (
+                    <div className="px-4 pb-32 pt-4 space-y-6">
+                        {/* Summary Card */}
+                        <Card className="rounded-[24px] shadow-sm overflow-hidden border-none bg-white">
+                            <div className="bg-[#fcfcfc] border-b border-gray-100 p-6">
+                                <div className="flex justify-between items-start gap-4">
+                                    <div className="space-y-1">
+                                        <p className="text-[11px] font-bold text-[#d4a574] uppercase tracking-wider">Fitout Category</p>
+                                        <h2 className="text-xl font-bold text-gray-900 leading-tight">
+                                            {fitoutCategoryData.name}
+                                        </h2>
                                     </div>
+                                    <Badge
+                                        className="px-3 py-1.5 text-[10px] font-bold rounded-full text-white shadow-sm whitespace-nowrap uppercase tracking-wide border-none"
+                                        style={{ backgroundColor: fitoutCategoryData.status_color || "#C99A31" }}
+                                    >
+                                        {fitoutCategoryData.status}
+                                    </Badge>
                                 </div>
                             </div>
 
-                            <div className="px-5 py-5">
-                                <h2 className="text-lg font-semibold text-gray-900 mb-1">
-                                    Fitout <span className="font-normal text-gray-700">(#{fitoutData?.id})</span>
-                                </h2>
-
-                                <div>
-                                    {annexureStatuses.map((item, index) => (
-                                        <div
-                                            key={index}
-                                            className="flex items-center justify-between gap-3 rounded-xl py-2"
-                                        >
-                                            <p className="flex-1 text-[11px] font-medium text-gray-800 leading-snug line-clamp-2">
-                                                {item.label}
-                                            </p>
-                                            <Badge
-                                                className={`flex-shrink-0 rounded-[5px] px-3 py-1 text-[11px] font-semibold text-center shadow-sm whitespace-nowrap ${item.colorClass} ${item.textColor}`}
-                                                style={item.backgroundColor ? { backgroundColor: item.backgroundColor } : undefined}
-                                            >
-                                                {item.status}
-                                            </Badge>
-                                        </div>
-                                    ))}
+                            <div className="p-6 grid grid-cols-2 gap-y-6 gap-x-4">
+                                <div className="space-y-1">
+                                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">Category ID</p>
+                                    <p className="text-sm font-semibold text-gray-900">#{fitoutCategoryData.id}</p>
                                 </div>
-
-                                <div className="mt-5 grid grid-cols-3 gap-1">
-                                    <div className="bg-[#f4f4f4] rounded-xl px-2 py-2 text-center">
-                                        <p className="text-[11px] font-medium text-gray-500">
-                                            Created On
-                                        </p>
-                                        <p className="text-xs font-semibold text-gray-900 mt-1">
-                                            {fitoutData?.created_at ? formatCommentDate(fitoutData.created_at) : "21/02/2023"}
-                                        </p>
-                                    </div>
-                                    <div className="bg-[#f4f4f4] rounded-xl px-2 py-2 text-center">
-                                        <p className="text-[11px] font-medium text-gray-500">
-                                            Requested On
-                                        </p>
-                                        <p className="text-xs font-semibold text-gray-900 mt-1">
-                                            {fitoutData?.start_date || "-"}
-                                        </p>
-                                    </div>
-                                    <div className="bg-[#f4f4f4] rounded-xl px-2 py-2 text-center">
-                                        <p className="text-[11px] font-medium text-gray-500">
-                                            Updated On
-                                        </p>
-                                        <p className="text-xs font-semibold text-gray-900 mt-1">
-                                            {fitoutData?.updated_at ? formatCommentDate(fitoutData.updated_at) : "06/06/2023"}
+                                <div className="space-y-1">
+                                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">Reference ID</p>
+                                    <p className="text-sm font-semibold text-gray-900">#{fitoutCategoryData.category_id}</p>
+                                </div>
+                                <div className="col-span-2 space-y-1">
+                                    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">Submission Date</p>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                                        <p className="text-sm font-semibold text-gray-800">
+                                            {formatDate(fitoutCategoryData.created_at)}
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </Card>
 
-                        {/* Description */}
-                        <Card className="rounded-2xl shadow-sm px-4 py-3">
-                            <h3 className="text-base font-semibold text-gray-900 mb-1.5">
-                                Description
-                            </h3>
-                            <p className="text-sm text-gray-700">{fitoutData?.description || "No description available"}</p>
-                        </Card>
+                        {/* Snag Questions & Answers */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between px-1">
+                                <h3 className="text-lg font-bold text-gray-900">Form Details</h3>
+                                <Badge variant="outline" className="text-[10px] font-bold text-gray-500 border-gray-200">
+                                    {fitoutCategoryData.snag_quest_maps?.length || 0} ITEMS
+                                </Badge>
+                            </div>
 
-                        {/* Documents */}
-                        <Card className="rounded-2xl shadow-sm px-4 py-3">
-                            <h3 className="text-base font-semibold text-gray-900 mb-3">
-                                Documents
-                            </h3>
-
-                            {documents && documents.length > 0 ? (
+                            {fitoutCategoryData.snag_quest_maps && fitoutCategoryData.snag_quest_maps.length > 0 ? (
                                 <div className="space-y-4">
-                                    {documents.map((doc) => (
-                                        <div key={doc.id}>
-                                            <p className="text-xs font-semibold text-gray-800 mb-2">
-                                                {doc.title}
-                                            </p>
-                                            <div className="w-32 h-24 rounded-xl overflow-hidden border border-gray-200">
-                                                <img
-                                                    src={doc.thumbnail}
-                                                    alt={doc.title}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-sm text-gray-500">No documents available</p>
-                            )}
-                        </Card>
-
-                        {/* Comments & Annexures */}
-                        <Card className="rounded-2xl shadow-sm px-4 py-4 space-y-4">
-                            {/* Category select */}
-                            <Select
-                                value={selectedCategory}
-                                onValueChange={(value) => setSelectedCategory(value)}
-                            >
-                                <SelectTrigger className="w-full h-11 rounded-xl border-gray-300 bg-white text-[13px]">
-                                    <SelectValue placeholder="Select Category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {annexureWithComments && annexureWithComments.length > 0 ? (
-                                        annexureWithComments.map((annexure, idx) => (
-                                            <SelectItem key={idx} value={`category-${idx}`}>
-                                                {annexure.name}
-                                            </SelectItem>
-                                        ))
-                                    ) : []}
-                                </SelectContent>
-                            </Select>
-
-                            {/* Comment input + Post */}
-                            <div className="flex gap-3 items-center rounded-2xl overflow-hidden border border-[#e8e8e8] bg-white px-4 py-3">
-                                <Textarea
-                                    value={commentText}
-                                    onChange={(e) => setCommentText(e.target.value)}
-                                    placeholder="Leave a comment..."
-                                    className="min-h-[40px] flex-1 resize-none border-none rounded-lg text-[13px] px-0 py-0 bg-white focus-visible:ring-0 focus-visible:ring-offset-0"
-                                />
-                                <Button
-                                    type="button"
-                                    onClick={handlePostComment}
-                                    variant="ghost"
-                                    className="h-[40px] min-w-[70px] rounded-[5px] bg-[#d4a574] hover:bg-[#c49460] text-white text-sm font-semibold border-none flex-shrink-0"
-                                >
-                                    Post
-                                </Button>
-                            </div>
-
-                            {/* Comments heading */}
-                            <h3 className="text-base font-semibold text-gray-900 pt-2">
-                                Comments
-                            </h3>
-
-                            {/* Comments grouped by annexure */}
-                            {annexureWithComments && annexureWithComments.length > 0 ? (
-                                <div className="space-y-6 pt-3">
-                                    {annexureWithComments.map((annexure, idx) => (
-                                        <div key={idx} className="space-y-3">
-                                            <p className="text-sm font-semibold text-gray-800">
-                                                {annexure.name}
-                                            </p>
-                                            {annexure.comments && annexure.comments.length > 0 ? (
-                                                <div className="space-y-3">
-                                                    {annexure.comments.map((comment) => (
-                                                        <Card
-                                                            key={comment.id}
-                                                            className="border border-[#f0f0f0] bg-white shadow-sm px-4 py-3 rounded-2xl"
-                                                        >
-                                                            <div className="flex items-center gap-2 text-[11px] text-gray-500 mb-1.5">
-                                                                <span className="font-semibold text-[#d49a23]">
-                                                                    {comment.author}
-                                                                </span>
-                                                                <span className="text-gray-400">•</span>
-                                                                <span>{comment.dateTime}</span>
-                                                            </div>
-                                                            <p className="text-sm text-gray-900">
-                                                                {comment.text}
-                                                            </p>
-                                                        </Card>
-                                                    ))}
+                                    {fitoutCategoryData.snag_quest_maps.map((map, index) => (
+                                        <Card key={map.id} className="rounded-[20px] shadow-sm p-0 overflow-hidden border-none bg-white">
+                                            <div className="p-5 space-y-4">
+                                                <div className="flex gap-3">
+                                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-[12px] font-bold text-gray-400 border border-gray-100">
+                                                        {map.snag_question.qnumber}
+                                                    </div>
+                                                    <p className="text-[15px] font-bold text-gray-800 leading-snug pt-1">
+                                                        {map.snag_question.descr}
+                                                    </p>
                                                 </div>
-                                            ) : (
-                                                <p className="text-sm text-gray-500">No comments yet</p>
-                                            )}
-                                        </div>
+
+                                                <div className="ml-11 space-y-4">
+                                                    {map.snag_answers && map.snag_answers.length > 0 ? (
+                                                        map.snag_answers.map((answer, ansIndex) => (
+                                                            <div key={answer.id || ansIndex} className="space-y-3">
+                                                                {answer.ans_descr && (
+                                                                    <div className="bg-[#f9f9f9] rounded-[14px] p-4 border border-gray-50 group transition-all">
+                                                                        <p className="text-[13px] text-gray-700 leading-relaxed italic">
+                                                                            {answer.ans_descr}
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+                                                                {/* Render attachments for this answer */}
+                                                                {answer.docs && answer.docs.length > 0 && (
+                                                                    <div className="flex flex-wrap gap-3 mt-1">
+                                                                        {answer.docs.map((doc) => {
+                                                                            const docUrl = doc.document || doc.document_url || doc.thumbnail;
+
+                                                                            console.log("docUrl", docUrl);
+                                                                            if (!docUrl) return null;
+
+                                                                            return (
+                                                                                <div key={doc.id} className="relative group">
+                                                                                    {doc.document_type?.startsWith("image/") || docUrl.match(/\.(jpg|jpeg|png|gif|webp)/i) ? (
+                                                                                        <div
+                                                                                            className="w-24 h-24 rounded-[12px] overflow-hidden border border-gray-100 shadow-sm active:scale-95 transition-all cursor-pointer hover:shadow-md bg-gray-50 flex items-center justify-center"
+                                                                                            onClick={() => window.open(docUrl, "_blank")}
+                                                                                        >
+                                                                                            <img
+                                                                                                src={docUrl}
+                                                                                                alt="Attachment"
+                                                                                                className="w-full h-full object-cover"
+                                                                                                onError={(e) => {
+                                                                                                    (e.target as any).src = "https://placehold.co/100x100?text=Error";
+                                                                                                }}
+                                                                                            />
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        <Button
+                                                                                            variant="ghost"
+                                                                                            className="h-24 w-24 flex flex-col items-center justify-center gap-1 rounded-[12px] border border-gray-100 bg-gray-50 text-[10px] font-bold text-gray-500 hover:bg-gray-100 hover:text-gray-700 active:scale-95 transition-all"
+                                                                                            onClick={() => window.open(docUrl, "_blank")}
+                                                                                        >
+                                                                                            <span className="text-2xl">📄</span>
+                                                                                            <span className="uppercase tracking-tight truncate w-full px-1">
+                                                                                                {doc.document_type?.split('/')[1] || docUrl.split('.').pop() || 'DOC'}
+                                                                                            </span>
+                                                                                        </Button>
+                                                                                    )}
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Fallback if both description and docs are empty but answer object exists */}
+                                                                {!answer.ans_descr && (!answer.docs || answer.docs.length === 0) && (
+                                                                    <div className="bg-[#f9f9f9] rounded-[14px] p-4 border border-gray-50">
+                                                                        <p className="text-[13px] text-gray-400 italic">Answer recorded (no details/docs)</p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="bg-[#f9f9f9] rounded-[14px] p-4 border border-gray-50">
+                                                            <p className="text-[13px] text-gray-300 italic">No answer provided</p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* {map.snag_question.qtype && (
+                                                        <div className="mt-2 flex items-center gap-2">
+                                                            <div className="w-1 h-1 rounded-full bg-gray-300" />
+                                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{map.snag_question.qtype}</p>
+                                                        </div>
+                                                    )} */}
+                                                </div>
+                                            </div>
+                                        </Card>
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-sm text-gray-500 pt-3">No comments available</p>
+                                <div className="py-12 text-center bg-gray-50 rounded-[24px] border-2 border-dashed border-gray-100">
+                                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
+                                        <p className="text-xl">📋</p>
+                                    </div>
+                                    <p className="text-sm text-gray-400 font-medium">No checklist data found for this category.</p>
+                                </div>
                             )}
-                        </Card>
+                        </div>
                     </div>
                 )}
+
+                {/* Sticky Footer Actions */}
+                {!loading && !error && fitoutCategoryData && (
+                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-20">
+                        <Button
+                            variant="outline"
+                            className="flex-1 h-12 rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold"
+                            onClick={() => {
+                                setCurrentAction("reject");
+                                setIsActionModalOpen(true);
+                            }}
+                        >
+                            Reject
+                        </Button>
+                        <Button
+                            className="flex-1 h-12 rounded-xl bg-[#d4a574] hover:bg-[#c49460] text-white font-bold"
+                            onClick={() => {
+                                setCurrentAction("approve");
+                                setIsActionModalOpen(true);
+                            }}
+                        >
+                            Approve
+                        </Button>
+                    </div>
+                )}
+
+                {/* Action Modal */}
+                <Dialog open={isActionModalOpen} onOpenChange={setIsActionModalOpen}>
+                    <DialogContent className="sm:max-w-[425px] rounded-[24px]">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-bold text-gray-900">
+                                {currentAction === "approve" ? "Approve Category" : "Reject Category"}
+                            </DialogTitle>
+                            <DialogDescription>
+                                {currentAction === "approve"
+                                    ? "Are you sure you want to approve this fitout category?"
+                                    : "Please provide a reason for rejecting this category."}
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="py-4 space-y-4">
+                            {currentAction === "reject" && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="reason" className="text-sm font-bold text-gray-700">Rejection Reason *</Label>
+                                    <Textarea
+                                        id="reason"
+                                        placeholder="Enter the reason for rejection..."
+                                        className="rounded-xl border-gray-200 focus:ring-[#d4a574]"
+                                        value={rejectionReason}
+                                        onChange={(e) => setRejectionReason(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <Label htmlFor="comments" className="text-sm font-bold text-gray-700">
+                                    {currentAction === "approve" ? "Approval Comments (Optional)" : "Rectification Comments (Optional)"}
+                                </Label>
+                                <Textarea
+                                    id="comments"
+                                    placeholder="Enter any additional comments..."
+                                    className="rounded-xl border-gray-200 focus:ring-[#d4a574]"
+                                    value={rectifyComments}
+                                    onChange={(e) => setRectifyComments(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <DialogFooter className="flex !flex-row gap-2 justify-end">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsActionModalOpen(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleStatusConfirmation}
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? "Processing..." : (currentAction === "approve" ? "Approve" : "Reject")}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </PullToRefresh >
     );

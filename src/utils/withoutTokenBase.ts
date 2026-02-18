@@ -77,8 +77,7 @@ baseClient.interceptors.request.use(
       const isFmSite =
         hostname === "fm-uat.gophygital.work" ||
         hostname === "fm.gophygital.work" ||
-        hostname === "fm-matrix.lockated.com" ||
-        hostname === "localhost";
+        hostname === "fm-matrix.lockated.com"
       const isClubSite =
         hostname.includes("club-uat-api.lockated.com") ||
         hostname.includes("club.lockated.com");
@@ -86,11 +85,12 @@ baseClient.interceptors.request.use(
       const isDevSite = hostname === "dev-fm-matrix.lockated.com";
 
       // Hi-Society specific hosts and their API base URLs (strict equality check)
-      const isHiSocietyWebHost = hostname === "web.hisociety.lockated.com";
+      const isHiSocietyWebHost = hostname === "web.hisociety.lockated.com" ||
+        hostname === "localhost";;
       const isHiSocietyUIHost = hostname === "ui-hisociety.lockated.com";
-      const isHiSocietyUATHost = hostname === "uat-hi-society.lockated.com" || hostname === "localhost";
+      const isHiSocietyUATHost = hostname === "uat-hi-society.lockated.com";
       const isHiSocietySite = isHiSocietyWebHost || isHiSocietyUIHost || isHiSocietyUATHost;
-      
+
       // Runwal specific host
       const isRunwalSite = hostname === "runwal-cp.lockated.com";
 
@@ -121,7 +121,7 @@ baseClient.interceptors.request.use(
         if (organizationId) {
           apiUrl = `${hiSocietyApiBase}/api/users/get_organizations_by_email.json?org_id=${organizationId}`;
           console.log("🔍 Hi-Society using organizationId:", organizationId);
-        } else if (orgId ) {
+        } else if (orgId) {
           apiUrl = `${hiSocietyApiBase}/api/users/get_organizations_by_email.json?org_id=${orgId}`;
           console.log("🔍 Hi-Society using orgId:", orgId);
         } else if (email) {
@@ -189,15 +189,17 @@ baseClient.interceptors.request.use(
       // Fetch organizations from API
       console.log("📡 Fetching organizations from:", apiUrl);
       const response = await axios.get(apiUrl);
+      console.log("📡 Response:", response.data);
       const { organizations, backend_url } = response.data;
 
       // Priority 1: Use backend_url from API response (highest priority)
-      if (backend_url) {
-        config.baseURL = backend_url;
-        sessionStorage.setItem('apiBaseUrl', backend_url);
+      console.log("backend_url", backend_url)
+      if (organizations && organizations.length > 0) {
+        config.baseURL = `https://${organizations[0].sub_domain}.${organizations[0].domain}`;
+        sessionStorage.setItem('apiBaseUrl', `${organizations[0].sub_domain}.${organizations[0].domain}`);
         console.log(
           "✅ Base URL set from API response backend_url:",
-          backend_url
+          `${organizations[0].sub_domain}.${organizations[0].domain}`
         );
         return config;
       }
