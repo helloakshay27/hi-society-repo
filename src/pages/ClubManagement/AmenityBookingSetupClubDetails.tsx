@@ -1376,6 +1376,33 @@ export const BookingSetupDetailClubPage = () => {
               </h3>
             </div>
 
+            <div className="flex flex-wrap gap-6 mb-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="prepaid"
+                  checked={!!formData.prepaid}
+                  disabled
+                />
+                <label htmlFor="prepaid">Prepaid</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="payOnFacility"
+                  checked={!!formData.payOnFacility}
+                  disabled
+                />
+                <label htmlFor="payOnFacility">Pay on Facility</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="complimentary"
+                  checked={!!formData.complimentary}
+                  disabled
+                />
+                <label htmlFor="complimentary">Complimentary</label>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="flex items-start">
                 <span className="text-gray-500 min-w-[140px]">Postpaid</span>
