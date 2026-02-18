@@ -301,7 +301,7 @@ const FitoutRequestCategoryApprovalRequestMobile: React.FC = () => {
                                                                                                 <img
                                                                                                     src={docUrl}
                                                                                                     alt="Attachment"
-                                                                                                    className="w-full h-full object-cover"
+                                                                                                    className="w-full h-full object-contain"
                                                                                                     onError={(e) => {
                                                                                                         (e.target as any).src = "https://placehold.co/100x100?text=Error";
                                                                                                     }}
