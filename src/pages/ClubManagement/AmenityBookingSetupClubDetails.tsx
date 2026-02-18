@@ -375,7 +375,7 @@ export const BookingSetupDetailClubPage = () => {
         prepaid: response.prepaid,
         payOnFacility: response.pay_on_facility,
         complimentary: response.complementary,
-        gstPercentage: response.gst,
+        gstPercentage: response.cgst,
         sgstPercentage: response.sgst,
         igstPercentage: response.igst,
         perSlotCharge: response?.facility_charge?.per_slot_charge,
