@@ -58,6 +58,20 @@ interface SnagQuestMap {
     snag_answers: SnagAnswer[];
 }
 
+interface InvoiceApprovalHistory {
+    id: number;
+    invoice_approval_level_id: number;
+    approve: boolean | null;
+    rejection_reason: string | null;
+    rectify_comments: string | null;
+    status_updated_at: string;
+    updated_by_id: number;
+    created_at: string;
+    updated_at: string;
+    status_text: string;
+    updated_by_name: string;
+}
+
 interface FitoutCategoryDetail {
     id: number;
     category_id: number;
@@ -69,6 +83,7 @@ interface FitoutCategoryDetail {
     updated_at: string;
     comments: any[];
     snag_quest_maps: SnagQuestMap[];
+    invoice_approval_histories?: InvoiceApprovalHistory[];
 }
 
 const FitoutRequestCategoryApprovalRequestMobile: React.FC = () => {
@@ -92,6 +107,12 @@ const FitoutRequestCategoryApprovalRequestMobile: React.FC = () => {
 
     const level_id = searchParams.get("level_id");
     const org_id = searchParams.get("org_id");
+
+    const currentLevelId = level_id ? parseInt(level_id) : 1;
+    const currentLevelHistory = fitoutCategoryData?.invoice_approval_histories?.find(
+        (h) => h.invoice_approval_level_id === currentLevelId
+    );
+    const isAlreadyProcessed = currentLevelHistory && currentLevelHistory.approve !== null;
 
     console.log(fitoutCategoryData)
 
@@ -365,25 +386,35 @@ const FitoutRequestCategoryApprovalRequestMobile: React.FC = () => {
                     {/* Sticky Footer Actions */}
                     {!loading && !error && fitoutCategoryData && (
                         <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-3xl p-4 bg-white border-t flex gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-20">
-                            <Button
-                                variant="outline"
-                                className="flex-1 h-12 rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold"
-                                onClick={() => {
-                                    setCurrentAction("reject");
-                                    setIsActionModalOpen(true);
-                                }}
-                            >
-                                Reject
-                            </Button>
-                            <Button
-                                className="flex-1 h-12 rounded-xl bg-[#d4a574] hover:bg-[#c49460] text-white font-bold"
-                                onClick={() => {
-                                    setCurrentAction("approve");
-                                    setIsActionModalOpen(true);
-                                }}
-                            >
-                                Approve
-                            </Button>
+                            {isAlreadyProcessed ? (
+                                <div className="flex-1 text-center py-3 px-4 bg-gray-50 rounded-xl border border-gray-100">
+                                    <p className="text-sm font-bold text-gray-500 uppercase tracking-wide">
+                                        This category is already {currentLevelHistory.approve ? "approved" : "rejected"}
+                                    </p>
+                                </div>
+                            ) : (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 h-12 rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold"
+                                        onClick={() => {
+                                            setCurrentAction("reject");
+                                            setIsActionModalOpen(true);
+                                        }}
+                                    >
+                                        Reject
+                                    </Button>
+                                    <Button
+                                        className="flex-1 h-12 rounded-xl bg-[#d4a574] hover:bg-[#c49460] text-white font-bold"
+                                        onClick={() => {
+                                            setCurrentAction("approve");
+                                            setIsActionModalOpen(true);
+                                        }}
+                                    >
+                                        Approve
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     )}
 
