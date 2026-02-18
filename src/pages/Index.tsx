@@ -16,6 +16,8 @@ const Index = () => {
 
     const hostname = window.location.hostname;
     const isViSite = hostname.includes("vi-web.gophygital.work");
+    const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com");
+    const isHiSocietySite = hostname === "web.hisociety.lockated.com";
     const userType = localStorage.getItem("userType");
     const isLocalhost =
       hostname.includes("localhost") ||
@@ -29,6 +31,17 @@ const Index = () => {
       hostname.includes("pulse.gophygital.work") ||
       hostname.includes("pulse-uat.panchshil.com");
     const isClubSite = hostname.includes("club.lockated.com");
+
+    // PRIORITY 0: Hi-Society site routing (highest priority for specific domains)
+    if (isUIHiSocietySite) {
+      navigate("/loyalty/dashboard", { replace: true });
+      return;
+    }
+
+    if (isHiSocietySite) {
+      navigate("/maintenance/project-details-list", { replace: true });
+      return;
+    }
 
     // PRIORITY 1: Dynamic route from userRole permissions (highest priority)
     if (userRole) {
