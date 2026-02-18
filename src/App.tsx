@@ -1118,6 +1118,7 @@ import { QuotesDashboard } from "./pages/ClubManagement/QuotesDashboard";
 import { QuotesAdd } from "./pages/ClubManagement/QuotesAdd";
 import { DeliveryChallansDashboard } from "./pages/ClubManagement/DeliveryChallansDashboard";
 import { DeliveryChallansAdd } from "./pages/ClubManagement/DeliveryChallansAdd";
+import FitoutRequestCategoryApprovalRequestMobile from "./pages/FitoutRequestCategoryApprovalRequestMobile";
 
 const queryClient = new QueryClient();
 
@@ -7047,6 +7048,10 @@ function App() {
                   <Route
                     path="/fitout-details-mobile/:id"
                     element={<FitoutRequestDetailsPageMobile />}
+                  />
+                   <Route
+                    path="/fitout-category-approval-mobile/:id"
+                    element={<FitoutRequestCategoryApprovalRequestMobile />}
                   />
                 </Routes>
                 {/* Mail Inbound Routes */}
