@@ -38,7 +38,7 @@ interface OfferData {
   displayName: string;
   partner: string;
   winningProbability: string;
-  probabilityOutOf: string;
+  totalQuantity: string;
   offerDescription: string;
   bannerImage: File | null;
   bannerImageName: string;
@@ -76,7 +76,7 @@ export const CreateContestPage: React.FC = () => {
     displayName: "",
     partner: "",
     winningProbability: "",
-    probabilityOutOf: "",
+    totalQuantity: "",
     offerDescription: "",
     bannerImage: null,
     bannerImageName: "",
@@ -420,8 +420,8 @@ export const CreateContestPage: React.FC = () => {
         offer.winningProbability || "0"
       );
       formData.append(
-        `contest[prizes_attributes][${index}][probability_out_of]`,
-        offer.probabilityOutOf || "100"
+        `contest[prizes_attributes][${index}][total_quantity]`,
+        offer.totalQuantity || "0"
       );
       formData.append(
         `contest[prizes_attributes][${index}][position]`,
@@ -576,6 +576,10 @@ export const CreateContestPage: React.FC = () => {
         for (const offer of offers) {
           if (!offer.offerTitle.trim()) {
             alert("Please fill all offer titles");
+            return false;
+          }
+          if (!offer.winningProbability.trim()) {
+            alert("Please enter winning probability for all offers");
             return false;
           }
           if (offer.rewardType === "Coupon Code" && !offer.couponCode.trim()) {
@@ -885,16 +889,17 @@ export const CreateContestPage: React.FC = () => {
                       size="small"
                       type="number"
                       inputProps={{ min: 0 }}
+                      required
                     />
 
                     <TextField
                       fullWidth
-                      label="Probability (Out of)"
-                      value={offer.probabilityOutOf}
+                      label="Total Quantity"
+                      value={offer.totalQuantity}
                       onChange={(e) =>
                         updateOffer(
                           offer.id,
-                          "probabilityOutOf",
+                          "totalQuantity",
                           e.target.value
                         )
                       }
@@ -902,6 +907,7 @@ export const CreateContestPage: React.FC = () => {
                       size="small"
                       type="number"
                       inputProps={{ min: 0 }}
+                      required
                     />
                   </div>
 

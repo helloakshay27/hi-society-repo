@@ -36,7 +36,7 @@ interface OfferData {
   displayName: string;
   partner: string;
   winningProbability: string;
-  probabilityOutOf: string;
+  totalQuantity: string;
   offerDescription: string;
   bannerImage: File | null;
   bannerImageName: string;
@@ -77,7 +77,7 @@ export const EditContestPage: React.FC = () => {
     displayName: "",
     partner: "",
     winningProbability: "",
-    probabilityOutOf: "",
+    totalQuantity: "",
     offerDescription: "",
     bannerImage: null,
     bannerImageName: "",
@@ -186,7 +186,7 @@ export const EditContestPage: React.FC = () => {
             displayName: prize.display_name || "",
             partner: prize.partner_name || "",
             winningProbability: prize.probability_value?.toString() || "",
-            probabilityOutOf: prize.probability_out_of?.toString() || "",
+            totalQuantity: prize.total_quantity?.toString() || "",
             offerDescription: prize.description || "",
             bannerImage: null,
             bannerImageName: "",
@@ -474,7 +474,7 @@ export const EditContestPage: React.FC = () => {
           offer.displayName.trim() !== (originalPrize.display_name || "") ||
           offer.partner.trim() !== (originalPrize.partner_name || "") ||
           offer.winningProbability !== (originalPrize.probability_value?.toString() || "") ||
-          offer.probabilityOutOf !== (originalPrize.probability_out_of?.toString() || "") ||
+          offer.totalQuantity !== (originalPrize.total_quantity?.toString() || "") ||
           offer.offerDescription.trim() !== (originalPrize.description || "") ||
           offer.pointsValue !== (originalPrize.points_value?.toString() || "") ||
           (offer.rewardType === "Points" ? "points" : "coupon") !== originalPrize.reward_type ||
@@ -517,8 +517,8 @@ export const EditContestPage: React.FC = () => {
           offer.winningProbability || "0"
         );
         formData.append(
-          `contest[prizes_attributes][${index}][probability_out_of]`,
-          offer.probabilityOutOf || "100"
+          `contest[prizes_attributes][${index}][total_quantity]`,
+          offer.totalQuantity || "0"
         );
         formData.append(`contest[prizes_attributes][${index}][position]`, String(index + 1));
         formData.append(`contest[prizes_attributes][${index}][active]`, "true");
@@ -618,6 +618,10 @@ export const EditContestPage: React.FC = () => {
         for (const offer of offers) {
           if (!offer.offerTitle.trim()) {
             sonnerToast.error("Please fill all offer titles");
+            return false;
+          }
+          if (!offer.winningProbability.trim()) {
+            sonnerToast.error("Please enter winning probability for all offers");
             return false;
           }
           if (offer.rewardType === "Coupon Code" && !offer.couponCode.trim()) {
@@ -902,17 +906,19 @@ export const EditContestPage: React.FC = () => {
                       size="small"
                       type="number"
                       inputProps={{ min: 0 }}
+                      required
                     />
 
                     <TextField
                       fullWidth
-                      label="Probability (Out of)"
-                      value={offer.probabilityOutOf}
-                      onChange={(e) => updateOffer(offer.id, "probabilityOutOf", e.target.value)}
+                      label="Total Quantity"
+                      value={offer.totalQuantity}
+                      onChange={(e) => updateOffer(offer.id, "totalQuantity", e.target.value)}
                       sx={textFieldSx}
                       size="small"
                       type="number"
                       inputProps={{ min: 0 }}
+                      required
                     />
                   </div>
 

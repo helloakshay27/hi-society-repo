@@ -42,6 +42,7 @@ interface Prize {
     url: string;
   } | null;
   product: Product | null;
+  total_quantity: number | null;
   // other fields omitted if not used in UI
 }
 
@@ -476,6 +477,14 @@ export const ContestDetailsPage: React.FC = () => {
                           </p>
                           <p className="text-sm text-[#1A1A1A]">
                             {getProbability(prize)}
+                          </p>
+                        </div>
+                         <div className="space-y-1">
+                          <p className="text-xs font-medium text-gray-500">
+                            Total Quantity
+                          </p>
+                          <p className="text-sm text-[#1A1A1A]">
+                            {prize.total_quantity !== null ? prize.total_quantity : "—"}
                           </p>
                         </div>
                       </div>
