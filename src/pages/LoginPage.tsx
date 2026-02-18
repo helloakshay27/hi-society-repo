@@ -99,6 +99,11 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   const isWebSite = hostname.includes("web.gophygital.work");
   // Check if it's Hi-Society site
   const isHiSocietySite = hostname === "web.hisociety.lockated.com";
+
+    const isUIHiSocietySite =
+    hostname.includes("ui-hisociety.lockated.com") ;
+
+
   // Check if it's Runwal site
   const isRunwalSite = hostname === "runwal-cp.lockated.com";
   console.log("domain is runwal", isRunwalSite, hostname);
@@ -294,7 +299,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
     setLoginLoading(true);
     try {
       // Check if it's Hi Society site
-      const isHiSocietySite =
+      const isHiSocietySiteLogin =
         hostname.includes("localhost") ||
         hostname.includes("ui-hisociety.lockated.com") ||
         hostname.includes("web.hisociety.lockated.com");
@@ -303,7 +308,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       let baseUrl: string;
       if (isRunwalSite) {
         baseUrl = 'runwal-cp-api.lockated.com';
-      } else if (isHiSocietySite) {
+      } else if (isHiSocietySiteLogin) {
         baseUrl = localStorage.getItem("baseUrl") || "";
       } else {
         // Use HI_SOCIETY_CONFIG for other environments
@@ -443,16 +448,17 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
       sessionStorage.setItem("userType", "admin"); // Force admin view only
       sessionStorage.setItem("userId", response.id.toString());
 
-      if (isHiSocietySite) {
+      if (isHiSocietySite || isUIHiSocietySite) {
         // Hi Society specific logic - fetch additional data
         // Fetch Hi-Society specific data
         await fetchHiSocietyData(response.spree_api_key);
 
         toast.success(`Welcome back, ${response.firstname}! Login successful.`);
 
-        // Navigate directly to Hi Society dashboard
+        // Navigate based on site type
+        const redirectPath = isUIHiSocietySite ? "/loyalty/dashboard" : "/maintenance/project-details-list";
         setTimeout(() => {
-          navigate("/maintenance/project-details-list", { replace: true });
+          navigate(redirectPath, { replace: true });
         }, 500);
       } else {
         // Other sites logic - still use hi-society mode and admin view
@@ -486,7 +492,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
           // PRIORITY 2: Localhost with userType-based routing
           if (userType && isLocalhost) {
             if (userType === "pms_organization_admin") {
-              navigate("/admin/dashboard", { replace: true });
+              navigate("/loyalty/dashboard", { replace: true });
               return;
             } else if (userType === "pms_occupant") {
               navigate("/vas/projects", { replace: true });
@@ -526,14 +532,6 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
           }
         }, 500);
       }
-      // Navigate based on domain
-      const redirectPath = isHiSocietySite
-        ? "/fitout/requests"
-        : "/maintenance/project-details-list";
-
-      setTimeout(() => {
-        navigate(redirectPath, { replace: true });
-      }, 500);
     } catch (error: any) {
       console.error("Login error:", error);
 
