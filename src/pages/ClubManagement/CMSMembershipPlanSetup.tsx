@@ -147,7 +147,7 @@ const CMSMembershipPlanSetup = () => {
     }
 
     const handleSubmit = async () => {
-        if (!formData.name || !formData.price || !formData.type) {
+        if (!formData.name || !formData.price || !formData.type || !formData.payment_plan_id) {
             toast.error("Please fill all the fields")
             return
         }
@@ -235,7 +235,7 @@ const CMSMembershipPlanSetup = () => {
                     </DialogContentText>
                     <div className="grid grid-cols-2 gap-4">
                         <TextField
-                            label="Plan Name"
+                            label={<span>Plan Name <span className="text-[#C72030]">*</span></span>}
                             fullWidth
                             size="small"
                             value={formData.name}
@@ -243,7 +243,7 @@ const CMSMembershipPlanSetup = () => {
                             sx={fieldStyles}
                         />
                         <TextField
-                            label="Price"
+                            label={<span>Price <span className="text-[#C72030]">*</span></span>}
                             fullWidth
                             size="small"
                             type="text"
@@ -261,10 +261,10 @@ const CMSMembershipPlanSetup = () => {
                             sx={fieldStyles}
                         />
                         <FormControl fullWidth size="small" sx={fieldStyles}>
-                            <InputLabel id="plan-type-label">Membership Type</InputLabel>
+                            <InputLabel id="plan-type-label">Membership Type <span className="text-[#C72030]">*</span></InputLabel>
                             <Select
                                 labelId="plan-type-label"
-                                label="Membership Type"
+                                label={<span>Membership Type <span className="text-[#C72030]">*</span></span>}
                                 value={formData.type}
                                 onChange={(e) => handleInputChange('type', e.target.value)}
                             >
@@ -276,10 +276,10 @@ const CMSMembershipPlanSetup = () => {
                             </Select>
                         </FormControl>
                         <FormControl fullWidth size="small" sx={fieldStyles}>
-                            <InputLabel id="payment-plan-label">Payment Plan</InputLabel>
+                            <InputLabel id="payment-plan-label">Payment Plan <span className="text-[#C72030]">*</span></InputLabel>
                             <Select
                                 labelId="payment-plan-label"
-                                label="Payment Plan"
+                                label={<span>Payment Plan <span className="text-[#C72030]">*</span></span>}
                                 value={formData.payment_plan_id}
                                 onChange={(e) => handleInputChange('payment_plan_id', e.target.value)}
                             >

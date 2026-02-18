@@ -984,7 +984,7 @@ export const AddBookingSetupClubPage = () => {
             <div className="space-y-6 py-2">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <TextField
-                  label="Facility Name"
+                  label={<span>Facility Name <span className="text-[#C72030]">*</span></span>}
                   placeholder="Enter Facility Name"
                   value={formData.facilityName}
                   onChange={(e) => {
@@ -995,11 +995,7 @@ export const AddBookingSetupClubPage = () => {
                     }
                   }}
                   variant="outlined"
-                  required
                   InputLabelProps={{
-                    classes: {
-                      asterisk: "text-red-500", // Tailwind class for red color
-                    },
                     shrink: true,
                   }}
                 />
@@ -1219,9 +1215,6 @@ export const AddBookingSetupClubPage = () => {
                       variant="outlined"
                       required
                       InputLabelProps={{
-                        classes: {
-                          asterisk: "text-red-500",
-                        },
                         shrink: true,
                       }}
                     />
@@ -3142,7 +3135,7 @@ export const AddBookingSetupClubPage = () => {
                         })
                       }
                     />
-                    <span>Facility can be booked</span>
+                    <span>Facility can be booked <span className="text-[#C72030]">*</span></span>
                     <TextField
                       placeholder=""
                       value={booking.times}
@@ -3532,7 +3525,7 @@ export const AddBookingSetupClubPage = () => {
                   <ReceiptText className="w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-semibold uppercase text-[#1A1A1A]">
-                  TERMS & CONDITIONS*
+                  TERMS & CONDITIONS <span className="text-[#C72030]">*</span>
                 </h3>
               </div>
 
@@ -3667,7 +3660,7 @@ export const AddBookingSetupClubPage = () => {
 
             <div className="space-y-3">
               <div className="font-medium text-gray-700">
-                Cancellation Policy <span>*</span>
+                Cancellation Policy <span className="text-[#C72030]">*</span>
               </div>
               <Textarea
                 placeholder="Enter cancellation text"

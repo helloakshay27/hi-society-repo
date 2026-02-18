@@ -408,6 +408,10 @@ const AddFacilityBookingPage = () => {
       toast.error("Please select a payment method");
       return false;
     }
+    if (facilityDetails?.sub_facility_enabled && facilityDetails.sub_facilities?.length > 0 && !selectedSubFacility) {
+      toast.error("Please select a sub-facility");
+      return false;
+    }
     if (selectedSlotIds.length === 0) {
       toast.error("Please select at least one slot");
       return false;
@@ -509,11 +513,11 @@ const AddFacilityBookingPage = () => {
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormControl fullWidth>
-                <InputLabel shrink>Tower *</InputLabel>
+                <InputLabel shrink>Tower <span className="text-[#C72030]">*</span></InputLabel>
                 <MuiSelect
                   value={selectedTowerId}
                   onChange={(e) => setSelectedTowerId(e.target.value)}
-                  label="Tower *"
+                  label={<span>Tower <span className="text-[#C72030]">*</span></span>}
                   displayEmpty
                   sx={fieldStyles}
                 >
@@ -529,11 +533,11 @@ const AddFacilityBookingPage = () => {
               </FormControl>
 
               <FormControl fullWidth>
-                <InputLabel shrink>Flat *</InputLabel>
+                <InputLabel shrink>Flat <span className="text-[#C72030]">*</span></InputLabel>
                 <MuiSelect
                   value={selectedFlatId}
                   onChange={(e) => setSelectedFlatId(e.target.value)}
-                  label="Flat *"
+                  label={<span>Flat <span className="text-[#C72030]">*</span></span>}
                   displayEmpty
                   disabled={!selectedTowerId}
                   sx={fieldStyles}
@@ -550,11 +554,11 @@ const AddFacilityBookingPage = () => {
               </FormControl>
 
               <FormControl fullWidth>
-                <InputLabel shrink>User *</InputLabel>
+                <InputLabel shrink>User <span className="text-[#C72030]">*</span></InputLabel>
                 <MuiSelect
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
-                  label="User *"
+                  label={<span>User <span className="text-[#C72030]">*</span></span>}
                   displayEmpty
                   disabled={!selectedFlatId}
                   sx={fieldStyles}
@@ -584,11 +588,11 @@ const AddFacilityBookingPage = () => {
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormControl fullWidth>
-                <InputLabel shrink>Facility *</InputLabel>
+                <InputLabel shrink>Facility <span className="text-[#C72030]">*</span></InputLabel>
                 <MuiSelect
                   value={selectedFacilitySetup}
                   onChange={(e) => setSelectedFacilitySetup(e.target.value)}
-                  label="Facility *"
+                  label={<span>Facility <span className="text-[#C72030]">*</span></span>}
                   displayEmpty
                   sx={fieldStyles}
                 >
@@ -605,7 +609,7 @@ const AddFacilityBookingPage = () => {
 
               {facilityDetails?.sub_facility_enabled && (
                 <FormControl fullWidth>
-                  <InputLabel shrink>Sub-Facility *</InputLabel>
+                  <InputLabel shrink>Sub-Facility <span className="text-[#C72030]">*</span></InputLabel>
                   <MuiSelect
                     value={selectedSubFacility}
                     onChange={(e) => {
@@ -614,7 +618,7 @@ const AddFacilityBookingPage = () => {
                       if (val) fetchSubFacilityDetails(val);
                       else setSubFacilityDetails(null);
                     }}
-                    label="Sub-Facility *"
+                    label={<span>Sub-Facility <span className="text-[#C72030]">*</span></span>}
                     displayEmpty
                     sx={fieldStyles}
                   >
@@ -634,7 +638,7 @@ const AddFacilityBookingPage = () => {
               )}
 
               <TextField
-                label="Date *"
+                label={<span>Date <span className="text-[#C72030]">*</span></span>}
                 type="date"
                 value={bookingDate}
                 onChange={(e) => setBookingDate(e.target.value)}
