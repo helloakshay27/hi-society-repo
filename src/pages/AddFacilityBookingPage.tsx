@@ -97,38 +97,69 @@ const AddFacilityBookingPage = () => {
         : facilityDetails?.facility_charge;
 
     if (!charge)
-      return { subTotal: 0, gst: 0, convenienceCharge: 0, grandTotal: 0 };
+      return {
+        subTotal: 0,
+        cgstAmount: 0,
+        sgstAmount: 0,
+        igstAmount: 0,
+        gst: 0,
+        convenienceCharge: 0,
+        grandTotal: 0,
+      };
 
-    let subTotal = 0;
+    let baseSubTotal = 0;
 
     // Member charges
-    subTotal += memberCounts.adultMember * (charge.adult_member_charge || 0);
-    subTotal += memberCounts.childMember * (charge.child_member_charge || 0);
+    baseSubTotal += memberCounts.adultMember * (charge.adult_member_charge || 0);
+    baseSubTotal += memberCounts.childMember * (charge.child_member_charge || 0);
 
     // Guest charges
-    subTotal += memberCounts.adultGuest * (charge.adult_guest_charge || 0);
-    subTotal += memberCounts.childGuest * (charge.child_guest_charge || 0);
+    baseSubTotal += memberCounts.adultGuest * (charge.adult_guest_charge || 0);
+    baseSubTotal += memberCounts.childGuest * (charge.child_guest_charge || 0);
 
     // Tenant charges
-    subTotal += memberCounts.adultTenant * (charge.adult_tenant_charge || 0);
-    subTotal += memberCounts.childTenant * (charge.child_tenant_charge || 0);
+    baseSubTotal += memberCounts.adultTenant * (charge.adult_tenant_charge || 0);
+    baseSubTotal += memberCounts.childTenant * (charge.child_tenant_charge || 0);
 
     // Non-member charges
-    subTotal +=
+    baseSubTotal +=
       memberCounts.adultNonMember * (charge.adult_non_member_charge || 0);
-    subTotal +=
+    baseSubTotal +=
       memberCounts.childNonMember * (charge.child_non_member_charge || 0);
 
-    const gst_percentage =
-      selectedSubFacility && subFacilityDetails
-        ? (subFacilityDetails.gst || 0) / 100
-        : 0.18; // Default 18% GST if not from sub-facility
+    // Multiply by number of selected slots
+    const subTotal = baseSubTotal * (selectedSlotIds.length || 1);
 
-    const gst = subTotal * gst_percentage;
+    const activeDetails =
+      selectedSubFacility && subFacilityDetails
+        ? subFacilityDetails
+        : facilityDetails;
+
+    const cgst_percentage = (activeDetails?.cgst || 0) / 100;
+    const sgst_percentage = (activeDetails?.sgst || 0) / 100;
+    const igst_percentage = (activeDetails?.igst || 0) / 100;
+
+    const cgstAmount = subTotal * cgst_percentage;
+    const sgstAmount = subTotal * sgst_percentage;
+    const igstAmount = subTotal * igst_percentage;
+
+    const gst = cgstAmount + sgstAmount + igstAmount;
     const convenienceCharge = 0; // Can be configured
     const grandTotal = subTotal + gst + convenienceCharge;
 
-    return { subTotal, gst, convenienceCharge, grandTotal };
+    return {
+      subTotal,
+      cgstAmount,
+      sgstAmount,
+      igstAmount,
+      gst,
+      cgst_percent: activeDetails?.cgst || 0,
+      sgst_percent: activeDetails?.sgst || 0,
+      igst_percent: activeDetails?.igst || 0,
+      slotCount: selectedSlotIds.length || 1,
+      convenienceCharge,
+      grandTotal,
+    };
   };
 
   // Handle count change
@@ -455,14 +486,14 @@ const AddFacilityBookingPage = () => {
         }
       });
 
+      const costs = calculateCosts();
+
       const payload = {
         tower: selectedTowerId,
         flat: selectedFlatId,
         facility_booking: {
           facility_id: selectedFacilitySetup,
           user_society_id: selectedUserId,
-          resource_id: selectedFacilitySetup,
-          resource_type: "FacilitySetup",
           startdate: bookingDate.replace(/-/g, "/"),
           selected_slots: selectedSlotIds,
           payment_method: paymentMethod,
@@ -472,6 +503,8 @@ const AddFacilityBookingPage = () => {
           book_by_id: selectedSlotIds[0],
           book_by: "slot",
           booked_members_attributes,
+          amount_full: costs.grandTotal,
+          gst: costs.cgstAmount + costs.sgstAmount + costs.igstAmount
         },
       };
 
@@ -916,47 +949,104 @@ const AddFacilityBookingPage = () => {
 
                   {/* Cost Summary Card */}
                   <div className="bg-[#F8F9FA] p-8 rounded-xl border border-gray-100 shadow-sm space-y-4">
-                    <div className="flex justify-between items-center text-gray-600">
-                      <span className="text-sm font-medium">Sub Total</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        ₹{" "}
-                        {calculateCosts().subTotal.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                        })}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-gray-600">
-                      <span className="text-sm font-medium">GST (18%)</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        ₹{" "}
-                        {calculateCosts().gst.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                        })}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-gray-600 border-b border-gray-200 pb-5">
-                      <span className="text-sm font-medium">
-                        Convenience Charge
-                      </span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        ₹{" "}
-                        {calculateCosts().convenienceCharge.toLocaleString(
-                          "en-IN",
-                          { minimumFractionDigits: 2 }
-                        )}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center pt-2">
-                      <span className="text-[18px] font-bold text-gray-900">
-                        Grand Total
-                      </span>
-                      <span className="text-[20px] font-extrabold text-[#C72030]">
-                        ₹{" "}
-                        {calculateCosts().grandTotal.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                        })}
-                      </span>
-                    </div>
+                    {(() => {
+                      const costs = calculateCosts();
+                      return (
+                        <>
+                          <div className="flex justify-between items-center text-gray-600">
+                            <span className="text-sm font-medium">
+                              Sub Total ({costs.slotCount} {costs.slotCount > 1 ? "Slots" : "Slot"})
+                            </span>
+                            <span className="text-sm font-semibold text-gray-900">
+                              ₹{" "}
+                              {costs.subTotal.toLocaleString("en-IN", {
+                                minimumFractionDigits: 2,
+                              })}
+                            </span>
+                          </div>
+
+                          {costs.cgstAmount > 0 && (
+                            <div className="flex justify-between items-center text-gray-600">
+                              <span className="text-sm font-medium">
+                                CGST ({costs.cgst_percent}%)
+                              </span>
+                              <span className="text-sm font-semibold text-gray-900">
+                                ₹{" "}
+                                {costs.cgstAmount.toLocaleString("en-IN", {
+                                  minimumFractionDigits: 2,
+                                })}
+                              </span>
+                            </div>
+                          )}
+
+                          {costs.sgstAmount > 0 && (
+                            <div className="flex justify-between items-center text-gray-600">
+                              <span className="text-sm font-medium">
+                                SGST ({costs.sgst_percent}%)
+                              </span>
+                              <span className="text-sm font-semibold text-gray-900">
+                                ₹{" "}
+                                {costs.sgstAmount.toLocaleString("en-IN", {
+                                  minimumFractionDigits: 2,
+                                })}
+                              </span>
+                            </div>
+                          )}
+
+                          {costs.igstAmount > 0 && (
+                            <div className="flex justify-between items-center text-gray-600">
+                              <span className="text-sm font-medium">
+                                IGST ({costs.igst_percent}%)
+                              </span>
+                              <span className="text-sm font-semibold text-gray-900">
+                                ₹{" "}
+                                {costs.igstAmount.toLocaleString("en-IN", {
+                                  minimumFractionDigits: 2,
+                                })}
+                              </span>
+                            </div>
+                          )}
+
+                          {costs.gst > 0 &&
+                            costs.cgstAmount === 0 &&
+                            costs.sgstAmount === 0 &&
+                            costs.igstAmount === 0 && (
+                              <div className="flex justify-between items-center text-gray-600">
+                                <span className="text-sm font-medium">GST</span>
+                                <span className="text-sm font-semibold text-gray-900">
+                                  ₹{" "}
+                                  {costs.gst.toLocaleString("en-IN", {
+                                    minimumFractionDigits: 2,
+                                  })}
+                                </span>
+                              </div>
+                            )}
+
+                          <div className="flex justify-between items-center text-gray-600 border-b border-gray-200 pb-5">
+                            <span className="text-sm font-medium">
+                              Convenience Charge
+                            </span>
+                            <span className="text-sm font-semibold text-gray-900">
+                              ₹{" "}
+                              {costs.convenienceCharge.toLocaleString("en-IN", {
+                                minimumFractionDigits: 2,
+                              })}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center pt-2">
+                            <span className="text-[18px] font-bold text-gray-900">
+                              Grand Total
+                            </span>
+                            <span className="text-[20px] font-extrabold text-[#C72030]">
+                              ₹{" "}
+                              {costs.grandTotal.toLocaleString("en-IN", {
+                                minimumFractionDigits: 2,
+                              })}
+                            </span>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               )}
