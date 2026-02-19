@@ -163,6 +163,29 @@ const Eventlist = () => {
     fetchEvents(currentPage, searchTerm);
   }, [currentPage, searchTerm, fetchEvents]);
 
+  // Return cached events (set by fetchEvents) or fall back to current `events` page
+  const getAllEvents = (): Event[] => {
+    try {
+      const cached = sessionStorage.getItem('cached_events');
+      if (cached) return JSON.parse(cached) as Event[];
+    } catch (e) {
+      // ignore parse errors
+    }
+    return events || [];
+  };
+
+  // Count of upcoming events (date > now) — used only in loyalty view
+  const upcomingCount = (() => {
+    const all = getAllEvents();
+    const now = new Date();
+    return all.filter(ev => {
+      const dateStr = ev.from_time || ev.event_at || '';
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      return !isNaN(d.getTime()) && d > now;
+    }).length;
+  })();
+
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
     setCurrentPage(1);
@@ -375,6 +398,41 @@ const Eventlist = () => {
   const renderListTab = () => (
     <div className="space-y-4">
       {/* Event Statistics Cards */}
+      {location.pathname.includes("/loyalty") && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 mb-6">
+          <div
+            className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4"
+          >
+            <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
+              <Settings className="w-6 h-6 text-[#C72030]" />
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-[#1A1A1A]">
+                {totalCount}
+              </div>
+              <div className="text-sm font-medium text-[#1A1A1A]">
+                Total Events
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => console.log('Filter by upcoming')}
+          >
+            <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
+              <Clock className="w-6 h-6 text-[#C72030]" />
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-[#1A1A1A]">
+                {upcomingCount}
+              </div>
+              <div className="text-sm font-medium text-[#1A1A1A]">Upcoming</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!location.pathname.includes("/loyalty") && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-3 gap-4 mb-6">
           {[

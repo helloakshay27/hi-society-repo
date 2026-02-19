@@ -12,7 +12,7 @@ import {
   Settings,
 } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
-// import { getFullUrl } from "@/config/apiConfig";
+import { getFullUrl, getAuthenticatedFetchOptions } from "@/config/apiConfig";
 import {
   Select,
   SelectContent,
@@ -47,9 +47,12 @@ export const LoyaltyDashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // const url = getFullUrl("/organizations/loyalty_dashboard?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
-        const url = "https://runwal-api.lockated.com/organizations/loyalty_dashboard?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
-        const res = await fetch(url);
+        const url = getFullUrl("/organizations/loyalty_dashboard");
+        const res = await fetch(url, getAuthenticatedFetchOptions('GET'));
+        if (!res.ok) {
+          console.error("Failed to fetch loyalty dashboard:", res.status, res.statusText);
+          return;
+        }
         const json = await res.json();
         if (json.success && json.data) {
           setStats({
