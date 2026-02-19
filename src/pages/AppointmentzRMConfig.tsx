@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 import {
   getRMUsers,
+  getRMUserById,
   createRMUser,
   updateRMUser,
   RMUserData as APIRMUser,
@@ -29,11 +30,13 @@ import {
 
 interface RMUser {
   id: number;
+  userId: string;
   name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   mobile: string;
   userType: string;
-  section: string;
   createdOn: string;
   status: boolean;
 }
@@ -45,6 +48,7 @@ const AppointmentzRMConfig = () => {
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [editingUserName, setEditingUserName] = useState("");
 
   // Form State
   const [formData, setFormData] = useState({
@@ -54,7 +58,6 @@ const AppointmentzRMConfig = () => {
     mobile: "",
     password: "",
     userType: "",
-    section: "",
   });
 
   // Fetch RM users on component mount
@@ -65,11 +68,13 @@ const AppointmentzRMConfig = () => {
       // Transform API data to component format
       const transformedData: RMUser[] = response.data.map((user) => ({
         id: user.id,
-        name: `User ID: ${user.user_id}`, // Using user_id as identifier
-        email: "N/A",
-        mobile: "N/A",
-        userType: user.admin ? "Admin" : "RM User",
-        section: `Society: ${user.society_id}`,
+        userId: `${user.user_id}`,
+        name: user.full_name || `${user.first_name || ""} ${user.last_name || ""}`.trim(),
+        firstName: user.first_name || "",
+        lastName: user.last_name || "",
+        email: user.email,
+        mobile: user.mobile,
+        userType: user.user_type === "cs" ? "Cs User" : "Rm User",
         createdOn: new Date(user.created_at).toLocaleDateString("en-GB"),
         status: user.active,
       }));
@@ -91,11 +96,11 @@ const AppointmentzRMConfig = () => {
   const columns = [
     { key: "actions", label: "Actions", sortable: false },
     { key: "id", label: "ID", sortable: true },
-    { key: "name", label: "Name", sortable: true },
+    { key: "userId", label: "User ID", sortable: true },
+    { key: "name", label: "Full Name", sortable: true },
     { key: "email", label: "Email", sortable: true },
     { key: "mobile", label: "Mobile", sortable: true },
     { key: "userType", label: "User Type", sortable: true },
-    { key: "section", label: "Section", sortable: true },
     { key: "createdOn", label: "Created On", sortable: true },
     { key: "status", label: "Status", sortable: false },
   ];
@@ -109,7 +114,7 @@ const AppointmentzRMConfig = () => {
   const handleToggleStatus = async (id: number, currentStatus: boolean) => {
     try {
       await updateRMUser(id, {
-        user: {
+        rm_user: {
           active: !currentStatus,
         },
       });
@@ -149,25 +154,35 @@ const AppointmentzRMConfig = () => {
       mobile: "",
       password: "",
       userType: "",
-      section: "",
     });
     setIsAddModalOpen(true);
   };
 
-  const handleOpenEdit = (item: RMUser) => {
-    setIsEditMode(true);
-    setSelectedId(item.id);
-    const [first, ...last] = item.name.split(" ");
-    setFormData({
-      firstName: first || "",
-      lastName: last.join(" ") || "",
-      email: item.email,
-      mobile: item.mobile,
-      password: "",
-      userType: item.userType === "Cs User" ? "cs" : "rm",
-      section: item.section || "",
-    });
-    setIsAddModalOpen(true);
+  const handleOpenEdit = async (item: RMUser) => {
+    try {
+      setIsEditMode(true);
+      setSelectedId(item.id);
+      setEditingUserName(`${item.firstName} ${item.lastName}`);
+      
+      // Fetch the latest user details from API
+      const response = await getRMUserById(item.id);
+      const user = response.data;
+      
+      setFormData({
+        firstName: user.first_name || "",
+        lastName: user.last_name || "",
+        email: user.email,
+        mobile: user.mobile,
+        password: "",
+        userType: user.user_type === "cs" ? "cs" : "rm",
+      });
+      setIsAddModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      setTimeout(() => {
+        toast.error("Failed to load user details");
+      }, 0);
+    }
   };
 
   const handleSubmit = async () => {
@@ -177,8 +192,7 @@ const AppointmentzRMConfig = () => {
       !formData.email ||
       !formData.mobile ||
       (!isEditMode && !formData.password) ||
-      !formData.userType ||
-      !formData.section
+      !formData.userType
     ) {
       setTimeout(() => {
         toast.error("Please fill all required fields");
@@ -189,12 +203,12 @@ const AppointmentzRMConfig = () => {
     try {
       if (isEditMode && selectedId) {
         await updateRMUser(selectedId, {
-          user: {
+          rm_user: {
             first_name: formData.firstName,
             last_name: formData.lastName,
             mobile: formData.mobile,
             user_type: formData.userType,
-            section: formData.section,
+            section: "",
           },
         });
         setTimeout(() => {
@@ -202,14 +216,14 @@ const AppointmentzRMConfig = () => {
         }, 0);
       } else {
         const response = await createRMUser({
-          user: {
+          rm_user: {
             first_name: formData.firstName,
             last_name: formData.lastName,
             email: formData.email,
             mobile: formData.mobile,
             password: formData.password,
             user_type: formData.userType,
-            section: formData.section,
+            section: "", // Default empty as it's removed from UI
           },
         });
         setTimeout(() => {
@@ -287,7 +301,7 @@ const AppointmentzRMConfig = () => {
         <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-[#F6F4EE]">
           <DialogHeader className="bg-white p-4 border-b flex flex-row items-center justify-between">
             <DialogTitle className="text-center w-full font-bold text-lg">
-              {isEditMode ? "Edit" : "Add"}
+              {isEditMode ? `Edit - ${editingUserName}` : "Add New User"}
             </DialogTitle>
           </DialogHeader>
 
@@ -400,23 +414,6 @@ const AppointmentzRMConfig = () => {
                   <SelectItem value="rm">Rm User</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="relative">
-              <label
-                htmlFor="section"
-                className="absolute -top-2 left-2 bg-[#F6F4EE] px-1 text-xs font-semibold text-gray-600 z-10"
-              >
-                Section <span className="text-[#C72030]">*</span>
-              </label>
-              <Input
-                id="section"
-                name="section"
-                placeholder="Enter Section"
-                value={formData.section}
-                onChange={handleInputChange}
-                className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
-              />
             </div>
           </div>
 

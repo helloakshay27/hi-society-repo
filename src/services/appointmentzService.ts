@@ -154,6 +154,13 @@ export interface RMUserData {
   created_at: string;
   updated_at: string;
   admin: boolean;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  email: string;
+  mobile: string;
+  user_type: string;
+  section: string;
 }
 
 export interface RMUsersResponse {
@@ -213,6 +220,29 @@ export const getRMUsers = async (): Promise<RMUsersResponse> => {
   return response.data;
 };
 
+/**
+ * Fetch single RM user by ID
+ */
+export const getRMUserById = async (userId: number): Promise<{ success: boolean; data: RMUserData }> => {
+  const baseUrl = normalizeBaseUrl(getBaseUrl());
+  const token = localStorage.getItem("token");
+
+  const response = await axios.get(
+    `https://${baseUrl}/crm/admin/rm_users/${userId}.json`,
+    {
+      params: {
+        token,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
+
 export interface CreateRMUserResponse {
   success: boolean;
   message: string;
@@ -256,7 +286,7 @@ export const updateRMUser = async (
   const token = localStorage.getItem("token");
 
   const response = await axios.put(
-    `https://${baseUrl}/spree/manage/rm_users/${userId}.json`,
+    `https://${baseUrl}/crm/admin/rm_users/${userId}.json`,
     payload,
     {
       params: {
@@ -469,6 +499,8 @@ export interface CreateBlockDayPayload {
 
 export interface UpdateBlockDayPayload {
   block_day: {
+    rm_user_ids?: number;
+    blocked_date?: string;
     active?: boolean;
   };
 }
