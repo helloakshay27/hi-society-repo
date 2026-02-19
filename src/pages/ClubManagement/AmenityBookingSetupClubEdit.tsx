@@ -770,7 +770,7 @@ export const EditBookingSetupClubPage = () => {
                 formData.complimentary ? "1" : "0"
             );
             formDataToSend.append(
-                "facility_setup[gst]",
+                "facility_setup[cgst]",
                 formData.gstPercentage
             );
             formDataToSend.append(
@@ -966,7 +966,7 @@ export const EditBookingSetupClubPage = () => {
                 prepaid: data.prepaid,
                 payOnFacility: data.pay_on_facility,
                 complimentary: data.complementary,
-                gstPercentage: data.gst || "",
+                gstPercentage: data.cgst || "",
                 sgstPercentage: data.sgst || "",
                 igstPercentage: data.igst || "",
                 bookingAllowedBefore: {
