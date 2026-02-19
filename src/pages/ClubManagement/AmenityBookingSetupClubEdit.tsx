@@ -245,7 +245,6 @@ export const EditBookingSetupClubPage = () => {
             toast.error("Please enter Cancellation Policies");
             return false;
         }
-<<<<<<< HEAD
 
         // Validate slots
         const slot = formData.slots;
@@ -328,19 +327,6 @@ export const EditBookingSetupClubPage = () => {
             }
         }
 
-=======
-        // Validate Maximum Person Allowed > Minimum Person Allowed
-        const min = parseInt(formData.chargeSetup.minimumPersonAllowed || "1");
-        const max = parseInt(formData.chargeSetup.maximumPersonAllowed || "1");
-        if (
-            formData.chargeSetup.maximumPersonAllowed &&
-            formData.chargeSetup.minimumPersonAllowed &&
-            max < min
-        ) {
-            toast.error("Maximum Person Allowed must be greater than or equal to Minimum Person Allowed");
-            return false;
-        }
->>>>>>> 55ee6451005d47c160dec9da0211199fd6641250
         return true;
     };
 
@@ -3668,32 +3654,6 @@ export const EditBookingSetupClubPage = () => {
                                     ref={bookingImageRef}
                                     hidden
                                 />
-<<<<<<< HEAD
-=======
-                                {selectedBookingFiles.length > 0 && (
-                                    <div className="mt-4 flex gap-2 flex-wrap">
-                                        {selectedBookingFiles.map(({ file, id }, index) => (
-                                            <div key={index} className="relative">
-                                                <img
-                                                    src={
-                                                        typeof file === "string"
-                                                            ? file
-                                                            : URL.createObjectURL(file)
-                                                    }
-                                                    alt={`cover-preview-${index}`}
-                                                    className="h-[80px] w-20 rounded border border-gray-200 bg-cover"
-                                                />
-                                                {/* <button
-                                                    onClick={() => handleRemoveBookingImage(index, id)}
-                                                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                </button> */}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
->>>>>>> 55ee6451005d47c160dec9da0211199fd6641250
                             </div>
                             {(selectedBookingFiles.length > 0 || existingBookingImageUrls.length > 0) && (
                                 <div className="mt-4 flex gap-2 flex-wrap">
