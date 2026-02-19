@@ -74,6 +74,9 @@ const Eventlist = () => {
     scanTimeEntries: 0,
   });
 
+  // Upcoming events count (bound from API `upcomming_events` / `upcoming_events`)
+  const [upcomingEventsCount, setUpcomingEventsCount] = useState(0);
+
   const getEventPermissions = () => {
     try {
       const lockRolePermissions = localStorage.getItem("lock_role_permissions");
@@ -122,6 +125,15 @@ const Eventlist = () => {
             notAttendedCPs: response.data.not_attended_count || 0,
             scanTimeEntries: 0, // This may need to be added to the API response
           });
+
+          // Bind upcoming events count from API (support both spellings)
+          setUpcomingEventsCount(
+            (response.data.upcomming_events && Array.isArray(response.data.upcomming_events)
+              ? response.data.upcomming_events.length
+              : (response.data.upcoming_events && Array.isArray(response.data.upcoming_events)
+                ? response.data.upcoming_events.length
+                : 0))
+          );
         }
 
         // Client-side search filtering
@@ -163,28 +175,8 @@ const Eventlist = () => {
     fetchEvents(currentPage, searchTerm);
   }, [currentPage, searchTerm, fetchEvents]);
 
-  // Return cached events (set by fetchEvents) or fall back to current `events` page
-  const getAllEvents = (): Event[] => {
-    try {
-      const cached = sessionStorage.getItem('cached_events');
-      if (cached) return JSON.parse(cached) as Event[];
-    } catch (e) {
-      // ignore parse errors
-    }
-    return events || [];
-  };
+  // `upcomingEventsCount` is populated from API in `fetchEvents` (see response.data.upcomming_events)
 
-  // Count of upcoming events (date > now) — used only in loyalty view
-  const upcomingCount = (() => {
-    const all = getAllEvents();
-    const now = new Date();
-    return all.filter(ev => {
-      const dateStr = ev.from_time || ev.event_at || '';
-      if (!dateStr) return false;
-      const d = new Date(dateStr);
-      return !isNaN(d.getTime()) && d > now;
-    }).length;
-  })();
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
@@ -425,7 +417,7 @@ const Eventlist = () => {
             </div>
             <div>
               <div className="text-2xl font-semibold text-[#1A1A1A]">
-                {upcomingCount}
+                {upcomingEventsCount}
               </div>
               <div className="text-sm font-medium text-[#1A1A1A]">Upcoming</div>
             </div>
