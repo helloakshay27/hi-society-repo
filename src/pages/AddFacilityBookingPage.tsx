@@ -503,8 +503,8 @@ const AddFacilityBookingPage = () => {
           book_by_id: selectedSlotIds[0],
           book_by: "slot",
           booked_members_attributes,
-          amount_full: costs.grandTotal,
-          gst: costs.cgstAmount + costs.sgstAmount + costs.igstAmount
+          amount_full: costs.subTotal,
+          // gst: costs.cgstAmount + costs.sgstAmount + costs.igstAmount
         },
       };
 
