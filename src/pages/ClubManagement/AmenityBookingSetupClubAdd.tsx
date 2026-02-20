@@ -110,6 +110,7 @@ export const AddBookingSetupClubPage = () => {
     shareable: "",
     linkToBilling: "",
     minGuarantee: "",
+    price: "",
     isBookable: true,
     isRequest: false,
     active: "1",
@@ -352,6 +353,10 @@ export const AddBookingSetupClubPage = () => {
       formDataToSend.append(
         "facility_setup[min_guarantee]",
         formData.minGuarantee
+      );
+      formDataToSend.append(
+        "facility_setup[min_guarantee_price]",
+        formData.price
       );
       formDataToSend.append(
         "facility_setup[sub_facility_enabled]",
@@ -982,7 +987,7 @@ export const AddBookingSetupClubPage = () => {
             </div>
 
             <div className="space-y-6 py-2">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <TextField
                   label={<span>Facility Name <span className="text-[#C72030]">*</span></span>}
                   placeholder="Enter Facility Name"
@@ -991,7 +996,7 @@ export const AddBookingSetupClubPage = () => {
                     const value = e.target.value;
                     // Only allow letters and spaces, no numbers
                     // if (/^[a-zA-Z\s]*$/.test(value)) {
-                      setFormData({ ...formData, facilityName: value });
+                    setFormData({ ...formData, facilityName: value });
                     // }
                   }}
                   variant="outlined"
@@ -999,6 +1004,22 @@ export const AddBookingSetupClubPage = () => {
                     shrink: true,
                   }}
                 />
+
+                <FormControl>
+                  <InputLabel className="bg-[#F6F7F7]">Active</InputLabel>
+                  <Select
+                    value={formData.active}
+                    onChange={(e) =>
+                      setFormData({ ...formData, active: e.target.value })
+                    }
+                    label="Active"
+                    displayEmpty
+                  >
+                    <MenuItem value="">Select</MenuItem>
+                    <MenuItem value="1">Yes</MenuItem>
+                    <MenuItem value="0">No</MenuItem>
+                  </Select>
+                </FormControl>
 
                 <FormControl>
                   <InputLabel className="bg-[#F6F7F7]">Shareable</InputLabel>
@@ -1058,6 +1079,25 @@ export const AddBookingSetupClubPage = () => {
                       <MenuItem value="No">No</MenuItem>
                     </Select>
                   </FormControl>
+                )}
+
+                {formData.shareable && formData.linkToBilling === "Yes" && formData.minGuarantee === "Yes" && (
+                  <TextField
+                    label={<span>Price <span className="text-[#C72030]">*</span></span>}
+                    placeholder="Price"
+                    value={formData.price}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Only allow letters and spaces, no numbers
+                      // if (/^[a-zA-Z\s]*$/.test(value)) {
+                      setFormData({ ...formData, price: value });
+                      // }
+                    }}
+                    variant="outlined"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                  />
                 )}
               </div>
 
