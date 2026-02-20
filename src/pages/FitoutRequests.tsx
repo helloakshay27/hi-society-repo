@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Eye, Settings } from "lucide-react";
+import { Plus, Edit, Eye, Settings, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
@@ -190,6 +190,42 @@ const FitoutRequests: React.FC = () => {
     }
   }, [allRequests, toast]);
 
+  const handleResendEmail = async (requestId: number) => {
+    try {
+      const response = await axios.post(
+        getFullUrl(`/fitout_requests/${requestId}/retrigger_email.json`),
+        {},
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      
+      toast.success("Email resent successfully", {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
+    } catch (error) {
+      console.error("Error resending email:", error);
+      toast.error("Failed to resend email. Please try again.", {
+        position: 'top-right',
+        duration: 3000,
+        style: {
+          background: '#fff',
+          color: 'black',
+          border: 'none',
+        },
+      });
+    }
+  };
+
   const handleRowAction = (action: string, requestId: number) => {
     console.log(`${action} action for Request ${requestId}`);
     if (action === "Edit") {
@@ -218,6 +254,7 @@ const FitoutRequests: React.FC = () => {
         draggable: false,
         defaultVisible: true,
       },
+
       {
         key: "id",
         label: "ID",
@@ -316,6 +353,13 @@ const FitoutRequests: React.FC = () => {
         draggable: true,
         defaultVisible: true,
       },
+      {
+        key: "resend_email",
+        label: "Resend Email",
+        sortable: false,
+        draggable: true,
+        defaultVisible: true,
+      },
     ],
     []
   );
@@ -339,6 +383,19 @@ const FitoutRequests: React.FC = () => {
                 title="Edit"
               >
                 <Edit className="w-4 h-4" />
+              </button>
+            </div>
+          );
+        case "resend_email":
+          return (
+            <div className="flex justify-center items-center">
+              <button
+                onClick={() => handleResendEmail(item.id)}
+                className="flex items-center gap-2 bg-[#F2EEE9] text-[#BF213E] border-0 hover:bg-[#F2EEE9]/80"
+                title="Resend Email"
+              >
+                <Mail className="w-4 h-4" />Resend Email
+                
               </button>
             </div>
           );
