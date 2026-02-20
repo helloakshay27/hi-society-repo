@@ -30,7 +30,7 @@ interface Prize {
   id: number;
   title: string;
   display_name: string | null;
-  reward_type: "points" | "coupon" | "merchandise";
+  reward_type: "points" | "coupon" | "merchandise" | "none";
   coupon_code: string | null;
   partner_name: string | null;
   points_value: number | null;
@@ -408,7 +408,11 @@ export const ContestDetailsPage: React.FC = () => {
                               ? "Points"
                               : prize.reward_type === "coupon"
                                 ? "Coupon Code"
-                                : ""}
+                                : prize.reward_type === "merchandise"
+                                  ? "Merchandise"
+                                  : prize.reward_type === "none"
+                                    ? "None"
+                                    : "—"}
                           </p>
                         </div>
 
@@ -429,37 +433,25 @@ export const ContestDetailsPage: React.FC = () => {
                         </div>
 
                         {/* Row 2 */}
-                        <div className="space-y-1">
-                          <p className="text-xs font-medium text-gray-500">
-                            {prize.reward_type === "points"
-                              ? "Points"
-                              : prize.reward_type === "merchandise"
-                                ? "Resource"
-                                : "Coupon Code"}
-                          </p>
+                        {prize.reward_type !== "none" && (
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-gray-500">
+                              {prize.reward_type === "points"
+                                ? "Points Value"
+                                : prize.reward_type === "merchandise"
+                                  ? "Resource"
+                                  : "Coupon Code"}
+                            </p>
 
-                          <p className="text-sm text-[#1A1A1A]">
-                            {prize.reward_type === "points"
-                              ? `${prize.points_value ?? 0} Points`
-                              : prize.reward_type === "merchandise"
-                                ? (prize.product?.name ?? "—")
-                                : (prize.coupon_code ?? "—")}
-                          </p>
-                        </div>
-
-                        <div className="space-y-1">
-                          <p className="text-xs font-medium text-gray-500">
-                            {prize.reward_type === "points"
-                              ? "Points"
-                              : "Coupon Code"}
-                          </p>
-
-                          <p className="text-sm text-[#1A1A1A]">
-                            {prize.reward_type === "points"
-                              ? `${prize.points_value ?? 0} Points`
-                              : (prize.coupon_code ?? "—")}
-                          </p>
-                        </div>
+                            <p className="text-sm text-[#1A1A1A]">
+                              {prize.reward_type === "points"
+                                ? `${prize.points_value ?? 0} Points`
+                                : prize.reward_type === "merchandise"
+                                  ? (prize.product?.name ?? "—")
+                                  : (prize.coupon_code ?? "—")}
+                            </p>
+                          </div>
+                        )}
 
                         <div className="space-y-1">
                           <p className="text-xs font-medium text-gray-500">

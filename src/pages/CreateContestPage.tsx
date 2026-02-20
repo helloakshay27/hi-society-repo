@@ -233,30 +233,10 @@ export const CreateContestPage: React.FC = () => {
   }, [currentStep]); // Re-initialize when step changes to ensure editors are visible
 
   const steps: ContestStep[] = [
-    {
-      id: 1,
-      title: "Basic Info",
-      completed: completedSteps.includes(1),
-      active: currentStep === 1,
-    },
-    {
-      id: 2,
-      title: "Offers & Vouchers",
-      completed: completedSteps.includes(2),
-      active: currentStep === 2,
-    },
-    {
-      id: 3,
-      title: "Validity & Status",
-      completed: completedSteps.includes(3),
-      active: currentStep === 3,
-    },
-    {
-      id: 4,
-      title: "Terms & Conditions",
-      completed: completedSteps.includes(4),
-      active: currentStep === 4,
-    },
+    { id: 1, title: "Basic Info", completed: completedSteps.includes(1), active: currentStep === 1 },
+    { id: 2, title: "Offers & Vouchers", completed: completedSteps.includes(2), active: currentStep === 2 },
+    { id: 3, title: "Validity & Status", completed: completedSteps.includes(3), active: currentStep === 3 },
+    { id: 4, title: "Terms & Conditions", completed: completedSteps.includes(4), active: currentStep === 4 },
   ];
 
   const contestTypes = ["Spin", "Scratch", "Flip"];
@@ -277,9 +257,7 @@ export const CreateContestPage: React.FC = () => {
     value: string | File | null
   ) => {
     setOffers((prev) =>
-      prev.map((offer) =>
-        offer.id === id ? { ...offer, [field]: value } : offer
-      )
+      prev.map((offer) => (offer.id === id ? { ...offer, [field]: value } : offer))
     );
   };
 
@@ -288,11 +266,7 @@ export const CreateContestPage: React.FC = () => {
     setOffers((prev) =>
       prev.map((offer) =>
         offer.id === id
-          ? {
-              ...offer,
-              bannerImage: file,
-              bannerImageName: file ? file.name : "",
-            }
+          ? { ...offer, bannerImage: file, bannerImageName: file ? file.name : "" }
           : offer
       )
     );
@@ -313,6 +287,10 @@ export const CreateContestPage: React.FC = () => {
           } else if (newRewardType === "Merchandise") {
             updatedOffer.couponCode = "";
             updatedOffer.pointsValue = "";
+          } else if (newRewardType === "None") {
+            updatedOffer.couponCode = "";
+            updatedOffer.pointsValue = "";
+            updatedOffer.resourceId = "";
           }
           return updatedOffer;
         }
@@ -327,13 +305,7 @@ export const CreateContestPage: React.FC = () => {
     if (!date || !time) return "";
     const [y, m, d] = date.split("-");
     const [h, min] = time.split(":");
-    const dt = new Date(
-      Number(y),
-      Number(m) - 1,
-      Number(d),
-      Number(h),
-      Number(min)
-    );
+    const dt = new Date(Number(y), Number(m) - 1, Number(d), Number(h), Number(min));
     if (isEnd) {
       dt.setHours(23, 59, 59, 999); // common pattern: end of day
     }
@@ -356,78 +328,76 @@ export const CreateContestPage: React.FC = () => {
 
     setSubmitting(true);
 
-    const baseUrl = localStorage.getItem("baseUrl") || "";
-    const token = localStorage.getItem("token") || "";
-    //     const baseUrl =  "https://uat-hi-society.lockated.com";
-    // const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI"
+    const baseUrl = localStorage.getItem('baseUrl') || '';
+    const token = localStorage.getItem('token') || '';
     const formData = new FormData();
 
-    // Basic contest fields
-    formData.append("contest[name]", contestName.trim());
-    formData.append("contest[description]", contestDescription.trim());
-    formData.append("contest[content_type]", contestType.toLowerCase());
-    formData.append("contest[active]", String(isActive));
-    formData.append("contest[start_at]", buildISO(startDate, startTime));
-    formData.append("contest[end_at]", buildISO(endDate, endTime, true));
+    // 1. Basic contest fields (Always send these as they are the core identity)
+    formData.append('contest[name]', contestName.trim());
+    formData.append('contest[description]', contestDescription.trim());
+    formData.append('contest[content_type]', contestType.toLowerCase());
+    
+    // Only send these if we are NOT in the initial step 1 creation (or if we have them)
+    // For Step 1 creation, we just need name, description, type.
+    if (!isStep1Only) {
+       formData.append('contest[active]', String(isActive));
+       
+       if (startDate && startTime) {
+          formData.append('contest[start_at]', buildISO(startDate, startTime));
+       }
+       if (endDate && endTime) {
+          formData.append('contest[end_at]', buildISO(endDate, endTime, true));
+       }
 
-    if (usersCap) {
-      formData.append("contest[user_caps]", usersCap);
-    }
-    if (attemptsRequired) {
-      formData.append("contest[user_attemp_remaining]", attemptsRequired);
-    }
+       if (usersCap) {
+         formData.append('contest[user_caps]', usersCap);
+       }
+       if (attemptsRequired) {
+         formData.append('contest[attemp_required]', attemptsRequired);
+       }
 
-    // Add prizes_attributes
-    offers.forEach((offer, index) => {
-      formData.append(
-        `contest[prizes_attributes][${index}][title]`,
-        offer.offerTitle.trim()
-      );
+       // Add prizes_attributes
+       offers.forEach((offer, index) => {
+         formData.append(`contest[prizes_attributes][${index}][title]`, offer.offerTitle.trim());
+         
+         const rewardType = offer.rewardType === "Points" ? "points" : offer.rewardType === "Merchandise" ? "merchandise" : offer.rewardType === "None" ? "none" : "coupon";
+         formData.append(`contest[prizes_attributes][${index}][reward_type]`, rewardType);
 
-      // Determine reward type based on offer.rewardType
-      const rewardType = offer.rewardType === "Points" ? "points" : "coupon";
-      formData.append(
-        `contest[prizes_attributes][${index}][reward_type]`,
-        rewardType
-      );
+         if (offer.displayName.trim()) {
+           formData.append(`contest[prizes_attributes][${index}][display_name]`, offer.displayName.trim());
+         }
 
-      // Add coupon_code only if reward type is "Coupon Code"
-      if (offer.rewardType === "Coupon Code") {
-        formData.append(
-          `contest[prizes_attributes][${index}][coupon_code]`,
-          offer.couponCode.trim()
-        );
-      }
+         if (offer.offerDescription.trim()) {
+           formData.append(`contest[prizes_attributes][${index}][terms_and_conditions]`, offer.offerDescription.trim());
+         }
 
-      // Add points_value only if reward type is "Points"
-      if (offer.rewardType === "Points") {
-        formData.append(
-          `contest[prizes_attributes][${index}][points_value]`,
-          offer.pointsValue.trim()
-        );
-      }
+         if (offer.rewardType === "Coupon Code") {
+           formData.append(`contest[prizes_attributes][${index}][coupon_code]`, offer.couponCode.trim());
+         }
 
-      // Add partner_name only if provided
-      if (offer.partner.trim()) {
-        formData.append(
-          `contest[prizes_attributes][${index}][partner_name]`,
-          offer.partner.trim()
-        );
-      }
+         if (offer.rewardType === "Points") {
+           formData.append(`contest[prizes_attributes][${index}][points_value]`, offer.pointsValue.trim());
+         }
 
-      formData.append(
-        `contest[prizes_attributes][${index}][probability_value]`,
-        offer.winningProbability || "0"
-      );
-      formData.append(
-        `contest[prizes_attributes][${index}][total_quantity]`,
-        offer.totalQuantity || "0"
-      );
-      formData.append(
-        `contest[prizes_attributes][${index}][position]`,
-        String(index + 1)
-      );
-      formData.append(`contest[prizes_attributes][${index}][active]`, "true");
+         if (offer.rewardType === "Merchandise" && offer.resourceId) {
+           formData.append(`contest[prizes_attributes][${index}][resource_id]`, offer.resourceId);
+           formData.append(`contest[prizes_attributes][${index}][resource_type]`, offer.resourceType);
+         }
+
+         if (offer.partner.trim()) {
+           formData.append(`contest[prizes_attributes][${index}][partner_name]`, offer.partner.trim());
+         }
+
+         formData.append(
+           `contest[prizes_attributes][${index}][probability_value]`,
+           offer.winningProbability || "0"
+         );
+         formData.append(
+           `contest[prizes_attributes][${index}][total_quantity]`,
+           offer.totalQuantity || "0"
+         );
+         formData.append(`contest[prizes_attributes][${index}][position]`, String(index + 1));
+         formData.append(`contest[prizes_attributes][${index}][active]`, "true");
 
          if (offer.bannerImage) {
            formData.append(
@@ -441,30 +411,38 @@ export const CreateContestPage: React.FC = () => {
          // For now, assuming standard nested attributes behavior.
        });
 
-    // Add terms and conditions text if present
-    if (termsText.trim()) {
-      formData.append("contest[terms_and_conditions]", termsText.trim());
-    }
+       if (termsText.trim()) {
+         formData.append('contest[terms_and_conditions]', termsText.trim());
+       }
 
-    // Add redemption guide text if present (for all contest types)
-    if (redemptionText.trim()) {
-      formData.append("contest[redemption_guide]", redemptionText.trim());
+       if (redemptionText.trim()) {
+         formData.append('contest[redemption_guide]', redemptionText.trim());
+       }
     }
 
     try {
-      // Ensure protocol is present
-      const url = /^https?:\/\//i.test(baseUrl)
-        ? baseUrl
-        : `https://${baseUrl}`;
+      const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+      // Logic for POST or PUT
+      let finalUrl = `${url}/contests.json`;
+      let method = "POST";
 
-      const res = await fetch(`${url}/contests.json`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          // Don't set Content-Type - browser will set it with boundary for multipart/form-data
-        },
-        body: formData,
-      });
+      if (createdContestId) {
+         // Should be PUT to update existing contest
+         finalUrl = `${url}/contests/${createdContestId}.json`;
+         method = "PUT";
+      }
+
+      console.log(`Sending ${method} request to ${finalUrl}`);
+
+      const res = await fetch(finalUrl, {
+          method: method,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // Don't set Content-Type for FormData
+          },
+          body: formData,
+        }
+      );
 
       if (!res.ok) {
         const errText = await res.text();
@@ -472,14 +450,34 @@ export const CreateContestPage: React.FC = () => {
       }
 
       const data = await res.json();
-      sonnerToast.success("Contest created successfully!");
+      console.log("Success:", data);
 
-      // Store the created contest ID for navigation
-      if (data.id) {
-        setCreatedContestId(data.id);
+      if (method === "POST" && data.id) {
+          setCreatedContestId(data.id);
       }
 
-      setShowSuccessModal(true);
+      // Success Logic
+      if (isStep1Only) {
+          sonnerToast.success("Draft created successfully!");
+          // Move to Step 2
+          if (currentStep === 1) {
+             setCompletedSteps(prev => {
+                const newSteps = [...prev];
+                if (!newSteps.includes(1)) newSteps.push(1);
+                return newSteps;
+             });
+             setCurrentStep(2);
+          }
+      } else {
+         // If we are saving from other steps or final submit
+         if (method === "PUT") {
+             // Draft update
+         } else {
+             // Created
+         }
+      }
+      return true;
+
     } catch (err: any) {
       console.error(err);
       sonnerToast.error(err.message || "Failed to save contest");
@@ -716,24 +714,24 @@ export const CreateContestPage: React.FC = () => {
                   multiline
                   rows={4}
                   // sx={textFieldSx}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      height: "auto !important",
-                      padding: "2px !important",
-                      display: "flex",
-                    },
-                    "& .MuiInputBase-input[aria-hidden='true']": {
-                      flex: 0,
-                      width: 0,
-                      height: 0,
-                      padding: "0 !important",
-                      margin: 0,
-                      display: "none",
-                    },
-                    "& .MuiInputBase-input": {
-                      resize: "none !important",
-                    },
-                  }}
+                   sx={{
+              "& .MuiOutlinedInput-root": {
+                height: "auto !important",
+                padding: "2px !important",
+                display: "flex",
+              },
+              "& .MuiInputBase-input[aria-hidden='true']": {
+                flex: 0,
+                width: 0,
+                height: 0,
+                padding: "0 !important",
+                margin: 0,
+                display: "none",
+              },
+              "& .MuiInputBase-input": {
+                resize: "none !important",
+              },
+            }}
                 />
               </div>
             </CardContent>
@@ -776,9 +774,7 @@ export const CreateContestPage: React.FC = () => {
                       fullWidth
                       label="Offer Title *"
                       value={offer.offerTitle}
-                      onChange={(e) =>
-                        updateOffer(offer.id, "offerTitle", e.target.value)
-                      }
+                      onChange={(e) => updateOffer(offer.id, "offerTitle", e.target.value)}
                       sx={textFieldSx}
                       size="small"
                     />
@@ -788,9 +784,7 @@ export const CreateContestPage: React.FC = () => {
                       <MuiSelect
                         value={offer.rewardType}
                         label="Reward Type"
-                        onChange={(e) =>
-                          handleRewardTypeChange(offer.id, e.target.value)
-                        }
+                        onChange={(e) => handleRewardTypeChange(offer.id, e.target.value)}
                       >
                         <MenuItem value="Coupon Code">Coupon Code</MenuItem>
                         <MenuItem value="Points">Points</MenuItem>
@@ -804,9 +798,7 @@ export const CreateContestPage: React.FC = () => {
                         fullWidth
                         label="Coupon Code"
                         value={offer.couponCode}
-                        onChange={(e) =>
-                          updateOffer(offer.id, "couponCode", e.target.value)
-                        }
+                        onChange={(e) => updateOffer(offer.id, "couponCode", e.target.value)}
                         sx={textFieldSx}
                         size="small"
                         required
@@ -818,9 +810,7 @@ export const CreateContestPage: React.FC = () => {
                         fullWidth
                         label="Points"
                         value={offer.pointsValue}
-                        onChange={(e) =>
-                          updateOffer(offer.id, "pointsValue", e.target.value)
-                        }
+                        onChange={(e) => updateOffer(offer.id, "pointsValue", e.target.value)}
                         sx={textFieldSx}
                         size="small"
                         type="number"
@@ -856,9 +846,7 @@ export const CreateContestPage: React.FC = () => {
                       fullWidth
                       label="Display Name"
                       value={offer.displayName}
-                      onChange={(e) =>
-                        updateOffer(offer.id, "displayName", e.target.value)
-                      }
+                      onChange={(e) => updateOffer(offer.id, "displayName", e.target.value)}
                       sx={textFieldSx}
                       size="small"
                     />
@@ -867,9 +855,7 @@ export const CreateContestPage: React.FC = () => {
                       fullWidth
                       label="Partner (if any)"
                       value={offer.partner}
-                      onChange={(e) =>
-                        updateOffer(offer.id, "partner", e.target.value)
-                      }
+                      onChange={(e) => updateOffer(offer.id, "partner", e.target.value)}
                       sx={textFieldSx}
                       size="small"
                     />
@@ -878,13 +864,7 @@ export const CreateContestPage: React.FC = () => {
                       fullWidth
                       label="Winning Probability"
                       value={offer.winningProbability}
-                      onChange={(e) =>
-                        updateOffer(
-                          offer.id,
-                          "winningProbability",
-                          e.target.value
-                        )
-                      }
+                      onChange={(e) => updateOffer(offer.id, "winningProbability", e.target.value)}
                       sx={textFieldSx}
                       size="small"
                       type="number"
@@ -896,13 +876,7 @@ export const CreateContestPage: React.FC = () => {
                       fullWidth
                       label="Total Quantity"
                       value={offer.totalQuantity}
-                      onChange={(e) =>
-                        updateOffer(
-                          offer.id,
-                          "totalQuantity",
-                          e.target.value
-                        )
-                      }
+                      onChange={(e) => updateOffer(offer.id, "totalQuantity", e.target.value)}
                       sx={textFieldSx}
                       size="small"
                       type="number"
@@ -916,13 +890,7 @@ export const CreateContestPage: React.FC = () => {
                       fullWidth
                       label="Offer Description"
                       value={offer.offerDescription}
-                      onChange={(e) =>
-                        updateOffer(
-                          offer.id,
-                          "offerDescription",
-                          e.target.value
-                        )
-                      }
+                      onChange={(e) => updateOffer(offer.id, "offerDescription", e.target.value)}
                       variant="outlined"
                       multiline
                       rows={3}
@@ -945,10 +913,7 @@ export const CreateContestPage: React.FC = () => {
                         id={`banner-${offer.id}`}
                         className="hidden"
                         onChange={(e) =>
-                          handleOfferBannerUpload(
-                            offer.id,
-                            e.target.files?.[0] || null
-                          )
+                          handleOfferBannerUpload(offer.id, e.target.files?.[0] || null)
                         }
                         accept="image/jpeg,image/png"
                       />
@@ -997,10 +962,9 @@ export const CreateContestPage: React.FC = () => {
                       "& .MuiSwitch-switchBase.Mui-checked": {
                         color: "#22c55e",
                       },
-                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                        {
-                          backgroundColor: "#22c55e",
-                        },
+                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                        backgroundColor: "#22c55e",
+                      },
                     }}
                   />
                   <span
@@ -1021,12 +985,16 @@ export const CreateContestPage: React.FC = () => {
                   size="small"
                   type="date"
                   InputLabelProps={{ shrink: true }}
-                  InputProps={{
-                    endAdornment: (
-                      <Calendar className="w-4 h-4 text-gray-400" />
-                    ),
+                  inputProps={{
+                    min: today, // ✅ Disable previous dates
                   }}
-                  sx={textFieldSx}
+                  sx={{
+                    ...textFieldSx,
+                    '& input[type="date"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
+                    '& input[type="date"]::-webkit-datetime-edit-month-field': { textTransform: 'uppercase' },
+                    '& input[type="date"]::-webkit-datetime-edit-day-field': { textTransform: 'uppercase' },
+                    '& input[type="date"]::-webkit-datetime-edit-year-field': { textTransform: 'uppercase' },
+                  }}
                 />
 
 
@@ -1040,10 +1008,18 @@ export const CreateContestPage: React.FC = () => {
                   size="small"
                   type="time"
                   InputLabelProps={{ shrink: true }}
-                  InputProps={{
-                    endAdornment: <Clock className="w-4 h-4 text-gray-400" />,
+                  inputProps={{
+                    placeholder: "HH:MM",
+                    style: { textTransform: 'uppercase' }
                   }}
-                  sx={textFieldSx}
+                  // InputProps={{ endAdornment: <Clock className="w-4 h-4 text-gray-400" /> }}
+                  sx={{
+                    ...textFieldSx,
+                    '& input[type="time"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
+                    '& input[type="time"]::-webkit-datetime-edit-hour-field': { textTransform: 'uppercase' },
+                    '& input[type="time"]::-webkit-datetime-edit-minute-field': { textTransform: 'uppercase' },
+                    '& input::placeholder': { textTransform: 'uppercase' },
+                  }}
                 />
 
                 <TextField
@@ -1056,12 +1032,17 @@ export const CreateContestPage: React.FC = () => {
                   size="small"
                   type="date"
                   InputLabelProps={{ shrink: true }}
-                  InputProps={{
-                    endAdornment: (
-                      <Calendar className="w-4 h-4 text-gray-400" />
-                    ),
+                  inputProps={{
+                    min: startDate || undefined,
                   }}
-                  sx={textFieldSx}
+                  // InputProps={{ endAdornment: <Calendar className="w-4 h-4 text-gray-400" /> }}
+                  sx={{
+                    ...textFieldSx,
+                    '& input[type="date"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
+                    '& input[type="date"]::-webkit-datetime-edit-month-field': { textTransform: 'uppercase' },
+                    '& input[type="date"]::-webkit-datetime-edit-day-field': { textTransform: 'uppercase' },
+                    '& input[type="date"]::-webkit-datetime-edit-year-field': { textTransform: 'uppercase' },
+                  }}
                 />
               </div>
 
@@ -1076,10 +1057,19 @@ export const CreateContestPage: React.FC = () => {
                   size="small"
                   type="time"
                   InputLabelProps={{ shrink: true }}
-                  InputProps={{
-                    endAdornment: <Clock className="w-4 h-4 text-gray-400" />,
+                  inputProps={{
+                    placeholder: "HH:MM",
+                    style: { textTransform: 'uppercase' },
+                    min: (startDate && endDate && startDate === endDate) ? startTime : undefined,
                   }}
-                  sx={textFieldSx}
+                  // InputProps={{ endAdornment: <Clock className="w-4 h-4 text-gray-400" /> }}
+                  sx={{
+                    ...textFieldSx,
+                    '& input[type="time"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
+                    '& input[type="time"]::-webkit-datetime-edit-hour-field': { textTransform: 'uppercase' },
+                    '& input[type="time"]::-webkit-datetime-edit-minute-field': { textTransform: 'uppercase' },
+                    '& input::placeholder': { textTransform: 'uppercase' },
+                  }}
                 />
 
                 <TextField
@@ -1136,29 +1126,31 @@ export const CreateContestPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm w-full">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
-                  <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
-                    <Trophy className="w-5 h-5 text-[#C72030]" />
+            
+              <Card className="shadow-sm w-full">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
+                    <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
+                      <Trophy className="w-5 h-5 text-[#C72030]" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                      Redemption Guide
+                    </h2>
                   </div>
-                  <h2 className="text-lg font-semibold text-[#1A1A1A]">
-                    Redemption Guide
-                  </h2>
-                </div>
 
-                <div>
-                  <div
-                    ref={redemptionEditorRef}
-                    style={{
-                      width: "100%",
-                      minHeight: "200px",
-                      backgroundColor: "white",
-                    }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+                  <div>
+                    <div
+                      ref={redemptionEditorRef}
+                      style={{
+                        width: "100%",
+                        minHeight: "200px",
+                        backgroundColor: "white",
+                      }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+          
           </div>
         );
 
@@ -1196,11 +1188,10 @@ export const CreateContestPage: React.FC = () => {
             {steps.map((step) => (
               <div
                 key={step.id}
-                className={`flex flex-col items-center ${
-                  step.id <= Math.max(...completedSteps, currentStep)
-                    ? "cursor-pointer"
-                    : "cursor-not-allowed opacity-100"
-                }`}
+                className={`flex flex-col items-center ${step.id <= Math.max(...completedSteps, currentStep)
+                  ? "cursor-pointer"
+                  : "cursor-not-allowed opacity-100"
+                  }`}
                 onClick={() => handleStepClick(step.id)}
               >
                 <div className="py-2 px-3 rounded text-white font-semibold bg-white">

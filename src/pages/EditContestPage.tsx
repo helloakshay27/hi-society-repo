@@ -190,7 +190,7 @@ export const EditContestPage: React.FC = () => {
             offerDescription: prize.description || "",
             bannerImage: null,
             bannerImageName: "",
-            rewardType: prize.reward_type === "points" ? "Points" : prize.reward_type === "merchandise" ? "Merchandise" : "Coupon Code",
+            rewardType: prize.reward_type === "points" ? "Points" : prize.reward_type === "merchandise" ? "Merchandise" : prize.reward_type === "none" ? "None" : "Coupon Code",
             pointsValue: prize.points_value?.toString() || "",
             existingImageUrl: prize.image?.url || prize.icon_url || "",
             resourceId: prize.resource_id?.toString() || "",
@@ -352,6 +352,10 @@ export const EditContestPage: React.FC = () => {
           } else if (newRewardType === "Merchandise") {
             updatedOffer.couponCode = "";
             updatedOffer.pointsValue = "";
+          } else if (newRewardType === "None") {
+            updatedOffer.couponCode = "";
+            updatedOffer.pointsValue = "";
+            updatedOffer.resourceId = "";
           }
           return updatedOffer;
         }
@@ -477,7 +481,7 @@ export const EditContestPage: React.FC = () => {
           offer.totalQuantity !== (originalPrize.total_quantity?.toString() || "") ||
           offer.offerDescription.trim() !== (originalPrize.description || "") ||
           offer.pointsValue !== (originalPrize.points_value?.toString() || "") ||
-          (offer.rewardType === "Points" ? "points" : "coupon") !== originalPrize.reward_type ||
+          (offer.rewardType === "Points" ? "points" : offer.rewardType === "Merchandise" ? "merchandise" : offer.rewardType === "None" ? "none" : "coupon") !== originalPrize.reward_type ||
           offer.bannerImage !== null
         ) {
           prizeChanged = true;
@@ -492,8 +496,16 @@ export const EditContestPage: React.FC = () => {
           formData.append(`contest[prizes_attributes][${index}][id]`, offer.prizeId.toString());
         }
 
-        const rewardType = offer.rewardType === "Points" ? "points" : offer.rewardType === "Merchandise" ? "merchandise" : "coupon";
+        const rewardType = offer.rewardType === "Points" ? "points" : offer.rewardType === "Merchandise" ? "merchandise" : offer.rewardType === "None" ? "none" : "coupon";
         formData.append(`contest[prizes_attributes][${index}][reward_type]`, rewardType);
+
+        if (offer.displayName.trim()) {
+          formData.append(`contest[prizes_attributes][${index}][display_name]`, offer.displayName.trim());
+        }
+
+        if (offer.offerDescription.trim()) {
+          formData.append(`contest[prizes_attributes][${index}][terms_and_conditions]`, offer.offerDescription.trim());
+        }
 
         if (offer.rewardType === "Coupon Code") {
           formData.append(`contest[prizes_attributes][${index}][coupon_code]`, offer.couponCode.trim());
