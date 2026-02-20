@@ -107,6 +107,7 @@ interface SnagQuestionMap {
   checklist_id: number;
   snag_question: SnagQuestion;
   snag_answers: SnagAnswer[];
+  invoice_approval_histories?: InvoiceApprovalHistory[];
 }
 
 interface InvoiceApprovalHistory {
@@ -123,6 +124,8 @@ interface InvoiceApprovalHistory {
   level_name: string;
   order: number;
   updated_by_name: string | null;
+  approval_user_name: string | null;
+  approval_user_id: number[];
 }
 
 interface FitoutResponse {
@@ -2519,7 +2522,7 @@ const FitoutRequestDetails: React.FC = () => {
                                                 {history.level_name}
                                               </p>
                                               <p className="text-xs text-gray-500">
-                                                {history.updated_by_name || 'N/A'}
+                                                {history.updated_by_name || history.approval_user_name || 'N/A'}
                                               </p>
                                             </div>
                                           </div>
@@ -2945,6 +2948,102 @@ const FitoutRequestDetails: React.FC = () => {
                                               )}
                                             </div>
                                           </div>
+
+                                          {/* Invoice Approval Histories for this Annexure */}
+                                          {questMap.invoice_approval_histories && 
+                                           questMap.invoice_approval_histories.length > 0 && (
+                                            <div className="mt-4 pt-4 border-t border-gray-200">
+                                              <h4 className="text-xs font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                                <svg className="w-4 h-4 text-[#C72030]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Approval History ({questMap.invoice_approval_histories.length})
+                                              </h4>
+                                              <div className="space-y-2">
+                                                {questMap.invoice_approval_histories
+                                                  .sort((a, b) => a.order - b.order)
+                                                  .map((history) => (
+                                                  <div
+                                                    key={history.id}
+                                                    className="bg-gray-50 rounded-lg p-3 border border-gray-200"
+                                                  >
+                                                    <div className="flex items-start justify-between mb-2">
+                                                      <div className="flex items-center gap-2">
+                                                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#C72030] text-white text-[10px] font-semibold">
+                                                          {history.order}
+                                                        </span>
+                                                        <div>
+                                                          <p className="text-xs font-semibold text-gray-900">
+                                                            {history.level_name}
+                                                          </p>
+                                                          <p className="text-[10px] text-gray-500">
+                                                            {history.updated_by_name || history.approval_user_name || 'N/A'}
+                                                          </p>
+                                                        </div>
+                                                      </div>
+                                                      <Badge
+                                                        variant="outline"
+                                                        className="text-[10px] px-1.5 py-0.5"
+                                                        style={{
+                                                          backgroundColor:
+                                                            history.approve === true
+                                                              ? '#22c55e15'
+                                                              : history.approve === false
+                                                              ? '#ef444415'
+                                                              : '#f59e0b15',
+                                                          color:
+                                                            history.approve === true
+                                                              ? '#22c55e'
+                                                              : history.approve === false
+                                                              ? '#ef4444'
+                                                              : '#f59e0b',
+                                                          borderColor:
+                                                            history.approve === true
+                                                              ? '#22c55e'
+                                                              : history.approve === false
+                                                              ? '#ef4444'
+                                                              : '#f59e0b',
+                                                        }}
+                                                      >
+                                                        {history.status_text}
+                                                      </Badge>
+                                                    </div>
+                                                    
+                                                    {history.rejection_reason && (
+                                                      <div className="mt-2 bg-red-50 border border-red-200 rounded-md p-2">
+                                                        <p className="text-[10px] font-semibold text-red-900 mb-0.5">
+                                                          Rejection Reason:
+                                                        </p>
+                                                        <p className="text-[10px] text-red-700">
+                                                          {history.rejection_reason}
+                                                        </p>
+                                                      </div>
+                                                    )}
+                                                    
+                                                    {history.rectify_comments && (
+                                                      <div className="mt-2 bg-blue-50 border border-blue-200 rounded-md p-2">
+                                                        <p className="text-[10px] font-semibold text-blue-900 mb-0.5">
+                                                          Rectification Comments:
+                                                        </p>
+                                                        <p className="text-[10px] text-blue-700">
+                                                          {history.rectify_comments}
+                                                        </p>
+                                                      </div>
+                                                    )}
+                                                    
+                                                    <div className="mt-2 flex items-center justify-between text-[10px] text-gray-500">
+                                                      <span>
+                                                        Updated: {history.status_updated_at ? formatDateTime(history.status_updated_at) : 'Pending'}
+                                                      </span>
+                                                      <span>
+                                                        Level: {history.order}
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
                                       );
                                     })}
