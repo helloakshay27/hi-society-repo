@@ -792,10 +792,10 @@ const AddFacilityBookingPage = () => {
                             <th className="px-6 py-4 font-bold tracking-wider w-1/3">
                               CATEGORY
                             </th>
-                            <th className="px-6 py-4 font-bold tracking-wider text-center w-1/3">
+                            <th className="px-16 py-4 font-bold tracking-wider w-1/3">
                               ADULT
                             </th>
-                            <th className="px-6 py-4 font-bold tracking-wider text-center w-1/3">
+                            <th className="px-16 py-4 font-bold tracking-wider w-1/3">
                               CHILD
                             </th>
                           </tr>
