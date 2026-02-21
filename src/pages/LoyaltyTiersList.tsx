@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
-import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { StatsCard } from '@/components/StatsCard';
@@ -57,10 +57,13 @@ const LoyaltyTiersList = () => {
     const storedValue = sessionStorage.getItem('selectedId');
     try {
       // Use only the token in the base URL, no Authorization header
-      const response = await fetch("https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ", {
+      const token = API_CONFIG.TOKEN || "";
+      const url = getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=${token}`);
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: getAuthHeader(),
         },
       });
 
@@ -152,9 +155,11 @@ const LoyaltyTiersList = () => {
     if (selectedTier) {
       try {
         // Fetch all tiers to check for duplicates
-        const tiersResponse = await fetch("https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ", {
+        const token = API_CONFIG.TOKEN || "";
+        const tiersUrl = getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=${token}`);
+        const tiersResponse = await fetch(tiersUrl, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: getAuthHeader() },
         });
         if (!tiersResponse.ok) {
           throw new Error('Failed to fetch tiers for validation');
@@ -176,10 +181,12 @@ const LoyaltyTiersList = () => {
           return;
         }
         // Proceed with update if no duplicate
-        const response = await fetch(`https://runwal-api.lockated.com/loyalty/tiers/${selectedTier.id}.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`, {
+        const updateUrl = getFullUrl(`/loyalty/tiers/${selectedTier.id}.json?token=${token}`);
+        const response = await fetch(updateUrl, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: getAuthHeader(),
           },
           body: JSON.stringify({ loyalty_tier: values }),
         });

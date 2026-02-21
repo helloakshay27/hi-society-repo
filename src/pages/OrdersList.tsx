@@ -12,7 +12,7 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 import SelectBox from "../components/ui/select-box";
-import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { useNavigate } from "react-router-dom";
 
 interface User {
@@ -95,11 +95,9 @@ const OrdersList = () => {
       );
       try {
         // Build query params for API
+        const token = API_CONFIG.TOKEN || "";
         const params = new URLSearchParams();
-        params.append(
-          "token",
-          "00f7c12e459b75225a07519c088edae3e9612e59d80111bb"
-        );
+        params.append("token", token);
         params.append("order_date", orderDate || "last_30_days");
         if (Array.isArray(status) && status.length > 0) {
           status.forEach((s) => params.append("status[]", s));
@@ -112,12 +110,11 @@ const OrdersList = () => {
           params.append("payment_status", paymentStatus);
         }
 
-        const url = `https://runwal-api.lockated.com/admin/orders.json?${params.toString()}`;
+        const url = getFullUrl(`/admin/orders.json?${params.toString()}`);
         const response = await fetch(url, {
           method: "GET",
           headers: {
-            Authorization:
-              "e66eeb9c080f2995b9f52d8e57a16738944d97578ed04fdb",
+            Authorization: getAuthHeader(),
             "Content-Type": "application/json",
           },
         });
@@ -196,8 +193,10 @@ const OrdersList = () => {
   useEffect(() => {
     async function fetchFilterOptions() {
       try {
+        const token = API_CONFIG.TOKEN || "";
         const response = await fetch(
-          "https://runwal-api.lockated.com//orders/filter_options.json?token=00f7c12e459b75225a07519c088edae3e9612e59d80111bb"
+          getFullUrl(`/orders/filter_options.json?token=${token}`),
+          { headers: { Authorization: getAuthHeader() } }
         );
         if (!response.ok) return;
         const data = await response.json();
@@ -233,7 +232,8 @@ const OrdersList = () => {
     setUpdatingStatus(orderId);
     try {
       // const url = getFullUrl(`/orders/${orderId}/status_update.json?status=${newStatus}&notes=${encodeURIComponent(notes)}`);
-      const url = `https://runwal-api.lockated.com/admin/orders/${orderId}/status_update.json?status=${newStatus}&notes=${encodeURIComponent(notes)}&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
+      const token = API_CONFIG.TOKEN || "";
+      const url = getFullUrl(`/admin/orders/${orderId}/status_update.json?status=${newStatus}&notes=${encodeURIComponent(notes)}&token=${token}`);
       const response = await fetch(url, {
         method: "PUT",
         headers: {

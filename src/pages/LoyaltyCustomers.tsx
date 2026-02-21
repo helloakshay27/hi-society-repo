@@ -3,7 +3,7 @@ import { Eye, Edit, Trash2 } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-// import { getFullUrl } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 export const LoyaltyCustomers = () => {
     const navigate = useNavigate();
@@ -16,9 +16,9 @@ export const LoyaltyCustomers = () => {
         const fetchCustomers = async () => {
             setLoading(true);
             try {
-                // const url = getFullUrl("/loyalty/members?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
-                const url = "https://runwal-api.lockated.com/loyalty/members?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
-                const res = await fetch(url);
+                const token = API_CONFIG.TOKEN || "";
+                const url = getFullUrl(`/loyalty/members?token=${token}`);
+                const res = await fetch(url, { headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" } });
                 const data = await res.json();
                 // Map API data to table row format
                 setCustomersData(

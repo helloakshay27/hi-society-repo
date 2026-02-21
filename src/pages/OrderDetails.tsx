@@ -10,6 +10,7 @@ import {
     ArrowLeft,
     Download,
 } from "lucide-react";
+import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
 
 const OrderDetails = () => {
     const { id } = useParams();
@@ -26,8 +27,11 @@ const OrderDetails = () => {
         setLoading(true);
         const fetchDetails = async () => {
             try {
-                const url = `https://runwal-api.lockated.com/admin/orders/${id}.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
-                const res = await fetch(url);
+                const token = API_CONFIG.TOKEN || "";
+                const url = getFullUrl(`/admin/orders/${id}.json?token=${token}`);
+                const res = await fetch(url, {
+                    headers: { Authorization: getAuthHeader() },
+                });
                 const response = await res.json();
                 const data = response.order; // Extract the order object
 
@@ -39,8 +43,11 @@ const OrderDetails = () => {
 
                 if (data.user && data.user.id) {
                     try {
-                        const userUrl = `https://runwal-api.lockated.com/loyalty/members/${data.user.id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
-                        const userRes = await fetch(userUrl);
+                        const token = API_CONFIG.TOKEN || "";
+                        const userUrl = getFullUrl(`/loyalty/members/${data.user.id}?token=${token}`);
+                        const userRes = await fetch(userUrl, {
+                            headers: { Authorization: getAuthHeader() },
+                        });
                         const userData = await userRes.json();
                         loyaltyPoints = userData.current_loyalty_points ?? "-";
                         tierName = userData.member_status?.tier_level || "Gold";

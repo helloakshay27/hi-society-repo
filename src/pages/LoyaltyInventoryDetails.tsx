@@ -6,6 +6,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 export const LoyaltyInventoryDetails = () => {
   const { id } = useParams();
@@ -22,8 +23,9 @@ export const LoyaltyInventoryDetails = () => {
 
   const fetchInventoryDetails = async (productId: string | number) => {
     try {
-      const invUrl = `https://runwal-api.lockated.com/products/${productId}/products_inventory_details?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
-      const resp = await axios.get(invUrl);
+      const token = API_CONFIG.TOKEN || "";
+      const invUrl = getFullUrl(`/products/${productId}/products_inventory_details?token=${token}`);
+      const resp = await axios.get(invUrl, { headers: { Authorization: getAuthHeader() } });
       setInventoryStats(resp.data || null);
     } catch (err) {
       console.warn("Failed to fetch inventory details:", err);
@@ -34,8 +36,9 @@ export const LoyaltyInventoryDetails = () => {
   const fetchProductDetails = async () => {
     try {
       setLoading(true);
-      const url = `https://runwal-api.lockated.com/products/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
-      const response = await axios.get(url);
+      const token = API_CONFIG.TOKEN || "";
+      const url = getFullUrl(`/products/${id}?token=${token}`);
+      const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
       const product = response.data?.product || null;
       setItem(product);
       if (product) {
@@ -61,7 +64,8 @@ export const LoyaltyInventoryDetails = () => {
       setIsUpdatingStatus(true);
       setIsActive(nextActive);
 
-      const url = `https://runwal-api.lockated.com/products/${id}.json?token=00f7c12e459b75225a07519c088edae3e9612e59d80111bb`;
+      const token = API_CONFIG.TOKEN || "";
+      const url = getFullUrl(`/products/${id}.json?token=${token}`);
       await axios.put(url, {
         product: {
           status: nextActive ? "active" : "inactive",

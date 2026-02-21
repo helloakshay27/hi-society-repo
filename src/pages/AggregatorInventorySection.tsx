@@ -32,7 +32,7 @@ import {
     PaginationPrevious,
     PaginationEllipsis,
 } from "@/components/ui/pagination";
-// import { getFullUrl, API_CONFIG } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 const AggregatorInventorySection = () => {
     // Track expanded description rows by item id
@@ -96,9 +96,9 @@ const AggregatorInventorySection = () => {
     const fetchInventoryData = async () => {
         try {
             setLoading(true);
-            // const url = getFullUrl(`/aggregator_products?token=${API_CONFIG.TOKEN}&page=${currentPage}`);
-            const url = `https://runwal-api.lockated.com/aggregator_products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ&page=${currentPage}`;
-            const response = await axios.get(url);
+            const token = API_CONFIG.TOKEN || "";
+            const url = getFullUrl(`/aggregator_products?token=${token}&page=${currentPage}`);
+            const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
             const products = response.data?.data || [];
             const meta = response.data?.meta || {};
 
@@ -306,9 +306,9 @@ const AggregatorInventorySection = () => {
 
     const fetchOrganizations = async () => {
         try {
-            // const url = getFullUrl(`/organizations.json?token=${API_CONFIG.TOKEN}`);
-            const url = "https://runwal-api.lockated.com/organizations.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
-            const response = await axios.get(url);
+            const token = API_CONFIG.TOKEN || "";
+            const url = getFullUrl(`/organizations.json?token=${token}`);
+            const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
             const orgs = response.data?.organizations || [];
             setOrganizations(orgs.map((o: any) => ({ id: o.id, name: o.name })));
         } catch (error) {
@@ -323,13 +323,14 @@ const AggregatorInventorySection = () => {
         }
         try {
             setLoading(true);
-            // const url = getFullUrl(`/aggregator_products/add_products_to_store?token=${API_CONFIG.TOKEN}`);
-            const url = "https://runwal-api.lockated.com/aggregator_products/add_products_to_store?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+            const token = API_CONFIG.TOKEN || "";
+            const url = getFullUrl(`/aggregator_products/add_products_to_store?token=${token}`);
             await axios.post(
                 url,
                 {
                     product_ids: selectedProductIds
-                }
+                },
+                { headers: { Authorization: getAuthHeader() } }
             );
             toast.success("Products added to store successfully!");
             setSelectedProductIds([]);
@@ -360,9 +361,9 @@ const AggregatorInventorySection = () => {
     const handleSyncInventory = async () => {
         try {
             setLoading(true);
-            await axios.get(
-                "https://runwal-api.lockated.com/aggregators/1/sync_products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
-            );
+            const token = API_CONFIG.TOKEN || "";
+            const url = getFullUrl(`/aggregators/1/sync_products?token=${token}`);
+            await axios.get(url, { headers: { Authorization: getAuthHeader() } });
             toast.success("Inventory sync started!");
             // Optionally, you can refresh the inventory data after sync
             fetchInventoryData();
