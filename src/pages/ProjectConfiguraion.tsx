@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { ArrowLeft, Settings } from "lucide-react";
 import { TextField } from "@mui/material";
@@ -79,10 +79,9 @@ const ProjectConfiguration = () => {
 
     try {
       await axios.post(`${baseURL}/configuration_setups.json`, formDataToSend, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          "Content-Type": "multipart/form-data",
-        },
+       headers: {
+                         Authorization: getAuthHeader(),
+                       },
       });
 
       toast.success("Project configuration created successfully!");
