@@ -99,6 +99,7 @@ export const EditBookingSetupClubPage = () => {
         shareable: "",
         linkToBilling: "",
         minGuarantee: "",
+        price: "",
         isBookable: true,
         isRequest: false,
         active: "1",
@@ -235,10 +236,12 @@ export const EditBookingSetupClubPage = () => {
         if (!formData.facilityName) {
             toast.error("Please enter Facility Name");
             return false;
-        } else if (formData.facilityBookings.length === 0 || !formData.facilityBookings.some(fb => fb.isChecked && fb.times)) {
-            toast.error("Please add at least one facility booking rule");
-            return false;
-        } else if (!formData.termsConditions) {
+        }
+        // else if (formData.facilityBookings.length === 0 || !formData.facilityBookings.some(fb => fb.isChecked && fb.times)) {
+        //     toast.error("Please add at least one facility booking rule");
+        //     return false;
+        // } 
+        else if (!formData.termsConditions) {
             toast.error("Please enter Terms and Conditions");
             return false;
         } else if (!formData.cancellationText) {
@@ -255,29 +258,29 @@ export const EditBookingSetupClubPage = () => {
         const endHour = parseInt(slot.endTime.hour);
 
         if (slot.startTime.hour !== "00") {
-            if (
-                slot.breakTimeStart.hour === "00" ||
-                slot.breakTimeEnd.hour === "00" ||
-                slot.endTime.hour === "00"
-            ) {
-                toast.error(
-                    `Slot: All subsequent time fields must be selected when Start Time is set`
-                );
-                return false;
-            }
+            // if (
+            //     slot.breakTimeStart.hour === "00" ||
+            //     slot.breakTimeEnd.hour === "00" ||
+            //     slot.endTime.hour === "00"
+            // ) {
+            //     toast.error(
+            //         `Slot: All subsequent time fields must be selected when Start Time is set`
+            //     );
+            //     return false;
+            // }
 
-            if (breakStartHour < startHour) {
-                toast.error(
-                    `Slot: Break Time Start hour must be greater than or equal to Start Time hour`
-                );
-                return false;
-            }
-            if (breakEndHour < startHour) {
-                toast.error(
-                    `Slot: Break Time End hour must be greater than or equal to Start Time hour`
-                );
-                return false;
-            }
+            // if (breakStartHour < startHour) {
+            //     toast.error(
+            //         `Slot: Break Time Start hour must be greater than or equal to Start Time hour`
+            //     );
+            //     return false;
+            // }
+            // if (breakEndHour < startHour) {
+            //     toast.error(
+            //         `Slot: Break Time End hour must be greater than or equal to Start Time hour`
+            //     );
+            //     return false;
+            // }
             if (endHour < startHour) {
                 toast.error(
                     `Slot: End Time hour must be greater than or equal to Start Time hour`
@@ -358,6 +361,10 @@ export const EditBookingSetupClubPage = () => {
                 "facility_setup[min_guarantee]",
                 formData.minGuarantee
             )
+            formDataToSend.append(
+                "facility_setup[min_guarantee_price]",
+                formData.price
+            );
             formDataToSend.append(
                 "facility_setup[sub_facility_enabled]",
                 formData.addSubFacility ? "1" : "0"
@@ -957,6 +964,7 @@ export const EditBookingSetupClubPage = () => {
                 facilityName: data.fac_name || "",
                 shareable: data.shareable || "",
                 linkToBilling: data.link_to_billing || "",
+                price: data.min_guarantee_price || "",
                 minGuarantee: data.min_guarantee || "",
                 isBookable: data.fac_type === "bookable",
                 isRequest: data.fac_type === "request",
@@ -1002,22 +1010,22 @@ export const EditBookingSetupClubPage = () => {
                     status: subFac.sub_facility.active || "true",
                     chargeSetup: {
                         member: {
-                            selected: subFac.sub_facility.facility_charge?.member === "true" || subFac.facility_charge?.member === true,
+                            selected: subFac.sub_facility.facility_charge?.member === true || subFac.facility_charge?.member === true,
                             adult: subFac.sub_facility.facility_charge?.adult_member_charge || "",
                             child: subFac.sub_facility.facility_charge?.child_member_charge || "",
                         },
                         guest: {
-                            selected: subFac.sub_facility.facility_charge?.guest === "true" || subFac.facility_charge?.guest === true,
+                            selected: subFac.sub_facility.facility_charge?.guest === true || subFac.facility_charge?.guest === true,
                             adult: subFac.sub_facility.facility_charge?.adult_guest_charge || "",
                             child: subFac.sub_facility.facility_charge?.child_guest_charge || "",
                         },
                         nonMember: {
-                            selected: subFac.sub_facility.facility_charge?.non_member === "true" || subFac.facility_charge?.non_member === true,
+                            selected: subFac.sub_facility.facility_charge?.non_member === true || subFac.facility_charge?.non_member === true,
                             adult: subFac.sub_facility.facility_charge?.adult_non_member_charge || "",
                             child: subFac.sub_facility.facility_charge?.child_non_member_charge || "",
                         },
                         tenant: {
-                            selected: subFac.sub_facility.facility_charge?.tenant === "true" || subFac.facility_charge?.tenant === true,
+                            selected: subFac.sub_facility.facility_charge?.tenant === true || subFac.facility_charge?.tenant === true,
                             adult: subFac.sub_facility.facility_charge?.adult_tenant_charge || "",
                             child: subFac.sub_facility.facility_charge?.child_tenant_charge || "",
                         },
@@ -1236,7 +1244,7 @@ export const EditBookingSetupClubPage = () => {
                         </div>
 
                         <div className="space-y-6 py-2">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <TextField
                                     label="Facility Name"
                                     placeholder="Enter Facility Name"
@@ -1257,6 +1265,22 @@ export const EditBookingSetupClubPage = () => {
                                         shrink: true,
                                     }}
                                 />
+
+                                <FormControl>
+                                    <InputLabel className="bg-[#F6F7F7]">Active</InputLabel>
+                                    <Select
+                                        value={formData.active}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, active: e.target.value })
+                                        }
+                                        label="Active"
+                                        displayEmpty
+                                    >
+                                        <MenuItem value="">Select</MenuItem>
+                                        <MenuItem value="1">Yes</MenuItem>
+                                        <MenuItem value="0">No</MenuItem>
+                                    </Select>
+                                </FormControl>
 
                                 <FormControl>
                                     <InputLabel className="bg-[#F6F7F7]">Shareable</InputLabel>
@@ -1315,6 +1339,25 @@ export const EditBookingSetupClubPage = () => {
                                         </FormControl>
                                     )
                                 }
+
+                                {formData.shareable && formData.linkToBilling === "Yes" && formData.minGuarantee === "Yes" && (
+                                    <TextField
+                                        label={<span>Price <span className="text-[#C72030]">*</span></span>}
+                                        placeholder="Price"
+                                        value={formData.price}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            // Only allow letters and spaces, no numbers
+                                            // if (/^[a-zA-Z\s]*$/.test(value)) {
+                                            setFormData({ ...formData, price: value });
+                                            // }
+                                        }}
+                                        variant="outlined"
+                                        InputLabelProps={{
+                                            shrink: true,
+                                        }}
+                                    />
+                                )}
                             </div>
 
                             <div className="flex gap-6 px-1">
@@ -1940,7 +1983,7 @@ export const EditBookingSetupClubPage = () => {
                                             {
                                                 formData.isBookable ? (
                                                     <div className="flex items-center gap-3">
-                                                        <label className="text-sm font-semibold whitespace-nowrap">GST</label>
+                                                        {/* <label className="text-sm font-semibold whitespace-nowrap">GST</label>
                                                         <TextField
                                                             size="small"
                                                             variant="outlined"
@@ -1955,7 +1998,7 @@ export const EditBookingSetupClubPage = () => {
                                                             }}
                                                             className="w-32"
                                                             placeholder="0.0"
-                                                        />
+                                                        /> */}
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center gap-3">

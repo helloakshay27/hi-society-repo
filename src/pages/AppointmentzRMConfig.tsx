@@ -50,6 +50,11 @@ const AppointmentzRMConfig = () => {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [editingUserName, setEditingUserName] = useState("");
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   // Form State
   const [formData, setFormData] = useState({
     firstName: "",
@@ -61,24 +66,28 @@ const AppointmentzRMConfig = () => {
   });
 
   // Fetch RM users on component mount
-  const fetchRMUsers = useCallback(async () => {
+  const fetchRMUsers = useCallback(async (page: number = 1) => {
     setLoading(true);
     try {
-      const response = await getRMUsers();
+      const response = await getRMUsers(page);
       // Transform API data to component format
       const transformedData: RMUser[] = response.data.map((user) => ({
         id: user.id,
         userId: `${user.user_id}`,
-        name: user.full_name || `${user.first_name || ""} ${user.last_name || ""}`.trim(),
+        name:
+          user.full_name ||
+          `${user.first_name || ""} ${user.last_name || ""}`.trim(),
         firstName: user.first_name || "",
         lastName: user.last_name || "",
         email: user.email,
         mobile: user.mobile,
-        userType: user.user_type === "cs" ? "Cs User" : "Rm User",
+        userType: user.user_type === "cs_user" ? "Customer Support" : "RM User",
         createdOn: new Date(user.created_at).toLocaleDateString("en-GB"),
         status: user.active,
       }));
       setData(transformedData);
+      setTotalPages(response.pagination.total_pages);
+      setTotalCount(response.pagination.total_count);
     } catch (error) {
       console.error("Error fetching RM users:", error);
       setTimeout(() => {
@@ -90,8 +99,12 @@ const AppointmentzRMConfig = () => {
   }, []);
 
   useEffect(() => {
-    fetchRMUsers();
-  }, [fetchRMUsers]);
+    fetchRMUsers(currentPage);
+  }, [fetchRMUsers, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const columns = [
     { key: "actions", label: "Actions", sortable: false },
@@ -114,7 +127,7 @@ const AppointmentzRMConfig = () => {
   const handleToggleStatus = async (id: number, currentStatus: boolean) => {
     try {
       await updateRMUser(id, {
-        rm_user: {
+        user: {
           active: !currentStatus,
         },
       });
@@ -163,18 +176,18 @@ const AppointmentzRMConfig = () => {
       setIsEditMode(true);
       setSelectedId(item.id);
       setEditingUserName(`${item.firstName} ${item.lastName}`);
-      
+
       // Fetch the latest user details from API
       const response = await getRMUserById(item.id);
       const user = response.data;
-      
+
       setFormData({
         firstName: user.first_name || "",
         lastName: user.last_name || "",
         email: user.email,
         mobile: user.mobile,
         password: "",
-        userType: user.user_type === "cs" ? "cs" : "rm",
+        userType: user.user_type === "cs_user" ? "cs_user" : "rm_user",
       });
       setIsAddModalOpen(true);
     } catch (error) {
@@ -203,7 +216,7 @@ const AppointmentzRMConfig = () => {
     try {
       if (isEditMode && selectedId) {
         await updateRMUser(selectedId, {
-          rm_user: {
+          user: {
             first_name: formData.firstName,
             last_name: formData.lastName,
             mobile: formData.mobile,
@@ -216,7 +229,7 @@ const AppointmentzRMConfig = () => {
         }, 0);
       } else {
         const response = await createRMUser({
-          rm_user: {
+          user: {
             first_name: formData.firstName,
             last_name: formData.lastName,
             email: formData.email,
@@ -282,6 +295,9 @@ const AppointmentzRMConfig = () => {
         columns={columns}
         renderCell={renderCell}
         pagination={true}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
         enableGlobalSearch={true}
         onGlobalSearch={handleGlobalSearch}
         searchPlaceholder="Search"
@@ -410,8 +426,8 @@ const AppointmentzRMConfig = () => {
                   <SelectValue placeholder="Select User Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cs">Cs User</SelectItem>
-                  <SelectItem value="rm">Rm User</SelectItem>
+                  <SelectItem value="cs_user">Customer Support</SelectItem>
+                  <SelectItem value="rm_user">RM User</SelectItem>
                 </SelectContent>
               </Select>
             </div>

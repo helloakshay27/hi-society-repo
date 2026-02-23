@@ -174,7 +174,7 @@ export interface RMUsersResponse {
 }
 
 export interface CreateRMUserPayload {
-  rm_user: {
+  user: {
     first_name: string;
     last_name: string;
     email: string;
@@ -186,7 +186,7 @@ export interface CreateRMUserPayload {
 }
 
 export interface UpdateRMUserPayload {
-  rm_user: {
+  user: {
     first_name?: string;
     last_name?: string;
     mobile?: string;
@@ -199,7 +199,7 @@ export interface UpdateRMUserPayload {
 /**
  * Fetch RM users list
  */
-export const getRMUsers = async (): Promise<RMUsersResponse> => {
+export const getRMUsers = async (page: number = 1): Promise<RMUsersResponse> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
 
   const token = localStorage.getItem("token");
@@ -209,6 +209,7 @@ export const getRMUsers = async (): Promise<RMUsersResponse> => {
     {
       params: {
         token,
+        page,
       },
       headers: {
         Authorization: `Bearer ${token}`,
@@ -246,7 +247,7 @@ export const getRMUserById = async (userId: number): Promise<{ success: boolean;
 export interface CreateRMUserResponse {
   success: boolean;
   message: string;
-  rm_user_ids: number;
+  rm_user_id: number;
 }
 
 /**
@@ -306,7 +307,7 @@ export const updateRMUser = async (
 export interface SiteSchedule {
   id: number;
   society_id: number;
-  rm_user_ids: number;
+  rm_user_id: number;
   start_hour: number;
   start_minute: number;
   end_hour: number;
@@ -335,7 +336,7 @@ export interface SiteSchedulesResponse {
 
 export interface CreateSiteSchedulePayload {
   site_schedule: {
-    rm_user_ids: number;
+    rm_user_ids: number[];
     start_date?: string;
     end_date?: string;
     start_hour: string | number;
@@ -491,16 +492,19 @@ export interface UpdateBlockDayResponse {
 
 
 export interface CreateBlockDayPayload {
+  blocked_dates: string;
   block_day: {
-    rm_user_ids: number;
-    blocked_date: string;
+    resource_id: number;
+    resource_type: string;
+    active: boolean;
   };
 }
 
 export interface UpdateBlockDayPayload {
+  blocked_dates?: string;
   block_day: {
-    rm_user_ids?: number;
-    blocked_date?: string;
+    resource_id?: number;
+    resource_type?: string;
     active?: boolean;
   };
 }
@@ -508,7 +512,7 @@ export interface UpdateBlockDayPayload {
 /**
  * Fetch block days list
  */
-export const getBlockDays = async (): Promise<BlockDaysResponse> => {
+export const getBlockDays = async (page: number = 1): Promise<BlockDaysResponse> => {
   const baseUrl = normalizeBaseUrl(getBaseUrl());
   const token = localStorage.getItem("token");
 
@@ -517,6 +521,7 @@ export const getBlockDays = async (): Promise<BlockDaysResponse> => {
     {
       params: {
         token,
+        page,
       },
       headers: {
         Authorization: `Bearer ${token}`,

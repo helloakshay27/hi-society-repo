@@ -434,6 +434,8 @@ const AddCMSClubMembers = () => {
             navigate(-1);
         } catch (error) {
             console.log(error);
+            const errorMessage = error.response?.data?.error || "Failed to add club members";
+            toast.error(errorMessage);
         } finally {
             setIsSubmitting(false)
         }

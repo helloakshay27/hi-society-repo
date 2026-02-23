@@ -14,8 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-// import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
-import { getAuthHeader } from "@/config/apiConfig";
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
 
 interface WalletTransaction {
@@ -62,10 +61,9 @@ export const WalletManagement = () => {
     setLoading(true);
     const fetchTransactions = async () => {
       try {
-        // const token = API_CONFIG.TOKEN || "";
-        // const url = getFullUrl(`/organization_wallet/transactions.json?token=${token}`);
-        const url =
-          "https://runwal-api.lockated.com/organization_wallet/transactions.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+        // build url using helper and stored token
+        const token = API_CONFIG.TOKEN || "";
+        const url = getFullUrl(`/organization_wallet/transactions.json?token=${token}`);
         const response = await fetch(url, {
           headers: {
             Authorization: getAuthHeader(),

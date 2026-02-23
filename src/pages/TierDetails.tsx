@@ -2,12 +2,13 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { ArrowLeft, ChevronRight, Star, Trophy, Zap, Gift, Clock } from "lucide-react";
 
 export default function TierDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const token = localStorage.getItem("access_token");
+  // token will be retrieved from API_CONFIG when needed
 
   const [tierDetails, setTierDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,9 +27,9 @@ export default function TierDetails() {
 
   const getMemberDetails = async (id) => {
     try {
-      const response = await axios.get(
-        `https://runwal-api.lockated.com/loyalty/tiers/${id}.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ&&q[loyalty_type_id_eq]=1`
-      );
+      const token = API_CONFIG.TOKEN || "";
+      const url = getFullUrl(`/loyalty/tiers/${id}.json?token=${token}&&q[loyalty_type_id_eq]=1`);
+      const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
       return response.data;
     } catch (error) {
       console.error("Error fetching member details:", error);

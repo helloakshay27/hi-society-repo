@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import axios from "axios";
 import { Eye } from "lucide-react";
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 // Use MUI TextField for date pickers
 const fieldStyles = {
@@ -72,13 +73,10 @@ const RedemptionReport = () => {
   const fetchWalletData = async () => {
     setLoading(true);
     try {
-      // Get dynamic base URL and token from localStorage
-      const baseUrl = localStorage.getItem("baseUrl") || "runwal-api.lockated.com";
-      const token = localStorage.getItem("token") || "";
-
       // const url = `https://${baseUrl}/organization_wallet/transactions?transaction_type=${transactionType}&token=${token}`;
-      const url = `https://runwal-api.lockated.com/organization_wallet/transactions.json?transaction_type=credit&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`
-      const response = await axios.get(url);
+      const token = API_CONFIG.TOKEN || "";
+      const url = getFullUrl(`/organization_wallet/transactions.json?transaction_type=${transactionType}&token=${token}`);
+      const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
 
       setWalletData(response.data.wallet);
       setTransactions(response.data.transactions || []);

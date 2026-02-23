@@ -12,6 +12,7 @@ import {
     Banknote,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 const LoyaltyCustomerDetails = () => {
     const { id } = useParams();
@@ -105,8 +106,9 @@ const LoyaltyCustomerDetails = () => {
         setLoading(true);
         const fetchDetails = async () => {
             try {
-                const url = `https://runwal-api.lockated.com/loyalty/members/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
-                const res = await fetch(url);
+                const token = API_CONFIG.TOKEN || "";
+                const url = getFullUrl(`/loyalty/members/${id}?token=${token}`);
+                const res = await fetch(url, { headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" } });
                 const data = await res.json();
                 // Calculate dynamic duration
                 let duration = "-";

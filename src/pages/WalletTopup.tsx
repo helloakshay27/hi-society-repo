@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 interface WalletData {
   id: number;
@@ -49,17 +50,18 @@ const WalletTopup: React.FC = () => {
   >([]);
   const [loadingOrgs, setLoadingOrgs] = useState(true);
 
-  const API_TOKEN = "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
-  const BASE_URL = "https://runwal-api.lockated.com";
+  // token helper from storage
+  const token = API_CONFIG.TOKEN || "";
 
   useEffect(() => {
     // Fetch organizations
     const fetchOrganizations = async () => {
       setLoadingOrgs(true);
       try {
-        const response = await fetch(
-          `${BASE_URL}/organizations.json?token=${API_TOKEN}`
-        );
+        const url = getFullUrl(`/organizations.json?token=${token}`);
+        const response = await fetch(url, {
+          headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
+        });
         if (!response.ok) throw new Error("Failed to fetch organizations");
         const data = await response.json();
         setOrganizations(data.organizations || []);
@@ -86,9 +88,10 @@ const WalletTopup: React.FC = () => {
     const fetchWalletData = async () => {
       setLoadingTransactions(true);
       try {
-        const response = await fetch(
-          `${BASE_URL}/organization_wallet/transactions?organization_id=${selectedOrgId}&token=${API_TOKEN}`
-        );
+        const url = getFullUrl(`/organization_wallet/transactions?organization_id=${selectedOrgId}&token=${token}`);
+        const response = await fetch(url, {
+          headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
+        });
         if (!response.ok) throw new Error("Failed to fetch wallet data");
         const data = await response.json();
         setWalletData(data.wallet || null);
@@ -139,20 +142,19 @@ const WalletTopup: React.FC = () => {
         throw new Error("Please enter a valid amount greater than 0");
       }
 
-      const response = await fetch(
-        `${BASE_URL}/organization_wallet/credit?token=${API_TOKEN}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            organization_id: organizationId,
-            amount: amount,
-            remarks: formData.remarks.trim(),
-          }),
-        }
-      );
+      const url = getFullUrl(`/organization_wallet/credit?token=${token}`);
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
+        },
+        body: JSON.stringify({
+          organization_id: organizationId,
+          amount: amount,
+          remarks: formData.remarks.trim(),
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
@@ -170,9 +172,10 @@ const WalletTopup: React.FC = () => {
       });
 
       // Refresh wallet data
-      const walletResponse = await fetch(
-        `${BASE_URL}/organization_wallet/transactions?organization_id=${selectedOrgId}&token=${API_TOKEN}`
-      );
+      const walletUrl = getFullUrl(`/organization_wallet/transactions?organization_id=${selectedOrgId}&token=${token}`);
+      const walletResponse = await fetch(walletUrl, {
+        headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
+      });
       const walletData = await walletResponse.json();
       setWalletData(walletData.wallet || null);
       setTransactions(walletData.transactions || []);

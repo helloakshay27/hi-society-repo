@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { StatsCard } from "@/components/StatsCard";
 import axios from "axios";
 import { toast } from "sonner";
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 interface AggregatorProduct {
     client_price: string;
@@ -63,8 +64,9 @@ export const AggregatorInventoryDetails = () => {
     const fetchProductDetails = async () => {
         try {
             setLoading(true);
-            const url = `https://runwal-api.lockated.com/aggregator_products/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
-            const response = await axios.get(url);
+            const token = API_CONFIG.TOKEN || "";
+            const url = getFullUrl(`/aggregator_products/${id}?token=${token}`);
+            const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
             const prod = response.data?.data || null;
             setProduct(prod);
             if (prod) {

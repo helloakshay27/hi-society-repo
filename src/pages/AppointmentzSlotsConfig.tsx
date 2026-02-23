@@ -92,7 +92,7 @@ const AppointmentzSlotsConfig = () => {
         return {
           id: schedule.id,
           rmUser: user
-            ? `User ID: ${user.user_id}`
+            ? user.full_name || `User ID: ${user.user_id}`
             : `User ID: ${schedule.rm_user_id}`,
           rmUserId: schedule.rm_user_id,
           startDate: schedule.start_date,
@@ -124,7 +124,7 @@ const AppointmentzSlotsConfig = () => {
       const response = await getRMUsers();
       const users = response.data.map((user) => ({
         id: user.id,
-        name: `User ID: ${user.user_id}`,
+        name: user.full_name || `User ID: ${user.user_id}`,
       }));
       setRmUsers(users);
     } catch (error) {
@@ -324,8 +324,7 @@ const AppointmentzSlotsConfig = () => {
         );
       }
       default:
-        // @ts-expect-error: accessing property by string key
-        return item[columnKey] || "N/A";
+        return item[columnKey as keyof SlotConfig] || "N/A";
     }
   };
 
@@ -517,7 +516,7 @@ const AppointmentzSlotsConfig = () => {
             <div className="space-y-2">
               <div className="flex justify-between max-w-[500px]">
                 {["M", "T", "W", "T", "F", "S"].map((day, idx) => {
-                  const dayKey = ["mon", "tue", "wed", "thur", "fri", "sat"][
+                  const dayKey = ["mon", "tue", "wed", "thu", "fri", "sat"][
                     idx
                   ] as keyof typeof formData.days;
                   return (

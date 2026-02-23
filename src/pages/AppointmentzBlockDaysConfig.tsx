@@ -46,6 +46,11 @@ const AppointmentzBlockDaysConfig = () => {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [rmUsers, setRmUsers] = useState<{ id: number; name: string }[]>([]);
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   // Form Data State
   const [formData, setFormData] = useState({
     rmUser: "",
@@ -54,10 +59,10 @@ const AppointmentzBlockDaysConfig = () => {
   });
 
   // Fetch block days and RM users on component mount
-  const fetchBlockDays = useCallback(async () => {
+  const fetchBlockDays = useCallback(async (page: number = 1) => {
     setLoading(true);
     try {
-      const response = await getBlockDays();
+      const response = await getBlockDays(page);
 
       // Transform API data to component format
       const transformedData: BlockDayConfig[] = response.data.map(
@@ -71,6 +76,8 @@ const AppointmentzBlockDaysConfig = () => {
         })
       );
       setData(transformedData);
+      setTotalPages(response.pagination.total_pages);
+      setTotalCount(response.pagination.total_count);
     } catch (error) {
       console.error("Error fetching block days:", error);
       setTimeout(() => {
@@ -81,12 +88,16 @@ const AppointmentzBlockDaysConfig = () => {
     }
   }, []);
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   const fetchRMUsers = useCallback(async () => {
     try {
       const response = await getRMUsers();
       const users = response.data.map((user) => ({
         id: user.id,
-        name: `User ID: ${user.user_id}`,
+        name: user.full_name || `User ID: ${user.user_id}`,
       }));
       setRmUsers(users);
     } catch (error) {
@@ -95,9 +106,9 @@ const AppointmentzBlockDaysConfig = () => {
   }, []);
 
   useEffect(() => {
-    fetchBlockDays();
+    fetchBlockDays(currentPage);
     fetchRMUsers();
-  }, [fetchBlockDays, fetchRMUsers]);
+  }, [fetchBlockDays, fetchRMUsers, currentPage]);
 
   const columns = [
     { key: "actions", label: "Actions", sortable: false },
@@ -131,6 +142,33 @@ const AppointmentzBlockDaysConfig = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleOpenEdit = (item: BlockDayConfig) => {
+    setIsEditMode(true);
+    setSelectedId(item.id);
+
+    // Format date from DD/MM/YYYY to YYYY-MM-DD if needed
+    // Usually input type="date" expects YYYY-MM-DD
+    let formattedDate = item.blockedDate;
+    if (formattedDate.includes("/")) {
+      const [day, month, year] = formattedDate.split("/");
+      formattedDate = `${year}-${month}-${day}`;
+    }
+
+    setFormData({
+      rmUser: item.rmUser,
+      rmUserId: item.rmUserId,
+      blockDate: formattedDate,
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const handleOpenAdd = () => {
+    setIsEditMode(false);
+    setSelectedId(null);
+    setFormData({ rmUser: "", rmUserId: 0, blockDate: "" });
+    setIsAddModalOpen(true);
+  };
+
   const handleSubmit = async () => {
     // Basic validation
     if (!formData.rmUserId || !formData.blockDate) {
@@ -141,32 +179,52 @@ const AppointmentzBlockDaysConfig = () => {
     }
 
     try {
-      const response = await createBlockDay({
-        block_day: {
-          rm_user_id: formData.rmUserId,
-          blocked_date: formData.blockDate,
-        },
-      });
+      if (isEditMode && selectedId) {
+        const item = data.find((d) => d.id === selectedId);
+        const response = await updateBlockDay(selectedId, {
+          blocked_dates: formData.blockDate,
+          block_day: {
+            resource_id: formData.rmUserId,
+            resource_type: "RmUser",
+            active: item ? item.status : true,
+          },
+        });
+        setTimeout(() => {
+          toast.success(response.message || "Block Day updated successfully!");
+        }, 0);
+      } else {
+        const response = await createBlockDay({
+          blocked_dates: formData.blockDate,
+          block_day: {
+            resource_id: formData.rmUserId,
+            resource_type: "RmUser",
+            active: true,
+          },
+        });
+        setTimeout(() => {
+          toast.success(response.message || "Block Day added successfully!");
+        }, 0);
+      }
 
       // Refresh the list
-      await fetchBlockDays();
+      await fetchBlockDays(currentPage);
       setIsAddModalOpen(false);
       setFormData({ rmUser: "", rmUserId: 0, blockDate: "" });
-      setTimeout(() => {
-        toast.success(response.message || "Block Day added successfully!");
-      }, 0);
     } catch (error) {
-      console.error("Error creating block day:", error);
+      console.error("Error saving block day:", error);
       setTimeout(() => {
-        toast.error("Failed to create block day");
+        toast.error("Failed to save block day");
       }, 0);
     }
   };
 
   const handleToggleStatus = async (id: number, currentStatus: boolean) => {
     try {
+      const item = data.find((d) => d.id === id);
       const response = await updateBlockDay(id, {
         block_day: {
+          resource_id: item?.rmUserId,
+          resource_type: "RmUser",
           active: !currentStatus,
         },
       });
@@ -195,7 +253,7 @@ const AppointmentzBlockDaysConfig = () => {
             variant="ghost"
             size="sm"
             className="text-gray-500 hover:text-blue-600"
-            onClick={() => toast.info(`Edit block day for ${item.rmUser}`)}
+            onClick={() => handleOpenEdit(item)}
           >
             <Edit className="w-4 h-4" />
           </Button>
@@ -227,12 +285,15 @@ const AppointmentzBlockDaysConfig = () => {
         columns={columns}
         renderCell={renderCell}
         pagination={true}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
         enableGlobalSearch={true}
         onGlobalSearch={handleGlobalSearch}
         searchPlaceholder="Search"
         leftActions={
           <Button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={handleOpenAdd}
             className="bg-[#1C2434] hover:bg-[#2c3a52] text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -247,7 +308,7 @@ const AppointmentzBlockDaysConfig = () => {
         <DialogContent className="sm:max-w-[700px] bg-white p-0">
           <DialogHeader className="p-4 border-b bg-[#F6F4EE]">
             <DialogTitle className="text-center font-bold text-lg">
-              Add
+              {isEditMode ? "Edit" : "Add"}
             </DialogTitle>
           </DialogHeader>
 
@@ -283,6 +344,7 @@ const AppointmentzBlockDaysConfig = () => {
                 <Input
                   type="date"
                   name="blockDate"
+                  value={formData.blockDate}
                   onChange={handleInputChange}
                   className="bg-white border-gray-300 text-gray-500 focus:border-[#C72030] focus:ring-0 h-10"
                 />
