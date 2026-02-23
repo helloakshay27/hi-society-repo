@@ -217,6 +217,8 @@ const Eventlist = () => {
     }
   };
 
+  const getShortText = (text: string, wordLimit = 10) => { if (!text) return "-"; const words = text.split(" "); if (words.length <= wordLimit) return text; return words.slice(0, wordLimit).join(" ") + "..."; };
+
   const handleToggleShowOnHome = async (id: number, currentStatus: boolean) => {
     toast.dismiss();
     try {
@@ -333,9 +335,23 @@ const Eventlist = () => {
           </span>
         );
       case "event_name":
-        return item.event_name || "-";
-      case "event_at":
-        return item.event_at || "-";
+  return (
+    <span
+      title={item.event_name}
+      className="cursor-pointer text-sm text-gray-700"
+    >
+      {getShortText(item.event_name, 5)}
+    </span>
+  );
+     case "event_at":
+  return (
+    <span
+      title={item.event_at}
+      className="cursor-pointer text-sm text-gray-700"
+    >
+      {getShortText(item.event_at, 5)}
+    </span>
+  );
       case "from_time":
         return formatDateOnly(item.from_time);
       case "to_time":
@@ -345,14 +361,15 @@ const Eventlist = () => {
           <Switch
             checked={item.show_on_home || false}
             onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
-              },
-            }}
+           sx={{
+    '& .MuiSwitch-switchBase.Mui-checked': {
+      color: '#C72030',
+      transform: 'translateX(25px)', // 👈 adjust movement properly
+    },
+    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+      backgroundColor: '#C72030',
+    },
+  }}
           />
         );
       case "active":
@@ -361,13 +378,14 @@ const Eventlist = () => {
             checked={item.active || false}
             onChange={() => handleToggle(item.id, item.active)}
             sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
-              },
-            }}
+    '& .MuiSwitch-switchBase.Mui-checked': {
+      color: '#C72030',
+      transform: 'translateX(25px)', // 👈 adjust movement properly
+    },
+    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+      backgroundColor: '#C72030',
+    },
+  }}
           />
         );
       default:
@@ -419,7 +437,7 @@ const Eventlist = () => {
               <div className="text-2xl font-semibold text-[#1A1A1A]">
                 {upcomingEventsCount}
               </div>
-              <div className="text-sm font-medium text-[#1A1A1A]">Upcoming</div>
+              <div className="text-sm font-medium text-[#1A1A1A]">Upcoming Event</div>
             </div>
           </div>
         </div>
