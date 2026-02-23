@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { ArrowLeft, Building2 } from "lucide-react";
 import { TextField } from "@mui/material";
@@ -41,53 +41,63 @@ const ConstructionStatusEdit = () => {
     active: true,
   });
 
-  useEffect(() => {
-    const fetchStatus = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(
-          `${baseURL}/construction_statuses/${id}.json`
-        );
+ useEffect(() => {
+  const fetchStatus = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `${baseURL}/construction_statuses/${id}.json`,
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+          },
+        }
+      );
 
-        setFormData({
-          construction_status: response.data.construction_status || "",
-          active: response.data.active ?? true,
-        });
-      } catch {
-        toast.error("Failed to load construction status.");
-      } finally {
-        setLoading(false);
-      }
-    };
+      setFormData({
+        construction_status: response.data.construction_status || "",
+        active: response.data.active ?? true,
+      });
+    } catch (error) {
+      toast.error("Failed to load construction status.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchStatus();
-  }, [id, baseURL]);
+  fetchStatus();
+}, [id, baseURL]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      await axios.put(
-        `${baseURL}/construction_statuses/${id}.json`,
-        {
-          construction_status: formData,
-        }
-      );
+  try {
+    await axios.put(
+      `${baseURL}/construction_statuses/${id}.json`,
+      {
+        construction_status: formData,
+      },
+      {
+        headers: {
+          Authorization: getAuthHeader(),
+        },
+      }
+    );
 
-      toast.success("Construction status updated successfully!");
-      navigate("/settings/construction-status-list");
-    } catch {
-      toast.error("Failed to update status.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    toast.success("Construction status updated successfully!");
+    navigate("/settings/construction-status-list");
+  } catch (error) {
+    toast.error("Failed to update status.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleGoBack = () => {
     navigate(-1);

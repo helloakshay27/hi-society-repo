@@ -269,7 +269,9 @@ const FaqCreate = () => {
       };
 
       await axios.post(getFullUrl('/faqs.json'), payload, {
-        headers: { Authorization: getAuthHeader() },
+         headers: {
+                           Authorization: getAuthHeader(),
+                         },
       });
 
       toast.success("FAQ created successfully!");

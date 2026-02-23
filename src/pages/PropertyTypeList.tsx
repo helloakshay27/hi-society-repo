@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { Plus, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -60,9 +60,9 @@ const PropertyTypeList = () => {
     setIsSearching(!!search);
     try {
       const response = await axios.get(`${baseURL}/property_types.json`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
+         headers: {
+                 Authorization: getAuthHeader(),
+               },
       });
 
       const propertyTypesData = response.data || [];
@@ -123,10 +123,9 @@ const PropertyTypeList = () => {
         `${baseURL}/property_types/${id}.json`,
         { property_type: { active: updatedStatus } },
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+           headers: {
+                   Authorization: getAuthHeader(),
+                 },
         }
       );
       setPropertyTypes((prev) =>

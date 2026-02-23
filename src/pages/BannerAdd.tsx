@@ -312,10 +312,9 @@ const BannerAdd = () => {
       console.log("data to be sent:", Array.from(sendData.entries()));
 
       await axios.post(getFullUrl('/banners.json'), sendData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          "Content-Type": "multipart/form-data",
-        },
+         headers: {
+                    Authorization: getAuthHeader(),
+                  },
       });
 
       toast.success("Banner created successfully");

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { TextField, Switch } from "@mui/material";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { ArrowLeft, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,33 +48,38 @@ const EditAmenities = () => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [showDarkModeTooltip, setShowDarkModeTooltip] = useState(false);
 
-  useEffect(() => {
-    const fetchAmenity = async () => {
-      try {
-        const response = await axios.get(
-          `${baseURL}/amenity_setups/${id}.json`
-        );
-
-        setName(response.data.name);
-        setAmenityType(response.data.amenity_type || "");
-        setNightMode(response.data.night_mode || false);
-
-        if (response.data.attachfile?.document_url) {
-          setPreviewImage(response.data.attachfile.document_url);
+ useEffect(() => {
+  const fetchAmenity = async () => {
+    try {
+      const response = await axios.get(
+        `${baseURL}/amenity_setups/${id}.json`,
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+          },
         }
+      );
 
-        if (response.data.dark_mode_icon?.document_url) {
-          setPreviewDarkModeImage(
-            response.data.dark_mode_icon.document_url
-          );
-        }
-      } catch {
-        toast.error("Failed to load amenity details.");
+      setName(response.data.name);
+      setAmenityType(response.data.amenity_type || "");
+      setNightMode(response.data.night_mode || false);
+
+      if (response.data.attachfile?.document_url) {
+        setPreviewImage(response.data.attachfile.document_url);
       }
-    };
 
-    if (id) fetchAmenity();
-  }, [id, baseURL]);
+      if (response.data.dark_mode_icon?.document_url) {
+        setPreviewDarkModeImage(
+          response.data.dark_mode_icon.document_url
+        );
+      }
+    } catch (error) {
+      toast.error("Failed to load amenity details.");
+    }
+  };
+
+  if (id) fetchAmenity();
+}, [id, baseURL]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -118,7 +123,11 @@ const EditAmenities = () => {
       await axios.put(
         `${baseURL}/amenity_setups/${id}.json`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { 
+         headers: {
+            Authorization: getAuthHeader(),
+          },
+        }
       );
 
       toast.success("Amenity updated successfully!");

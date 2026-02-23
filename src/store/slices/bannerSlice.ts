@@ -1,15 +1,16 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import createApiSlice from "../api/apiSlice";
+import { getAuthHeader } from "@/config/apiConfig";
 
 export const fetchBanners = createAsyncThunk(
     "fetchBanners",
     async ({ baseUrl, token, siteId }: { baseUrl: string, token: string, siteId: string }, { rejectWithValue }) => {
         try {
             const response = await axios.get(`https://${baseUrl}/banners.json?site_id=${siteId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
+               headers: {
+                          Authorization: getAuthHeader(),
+                        },
             })
             return response.data
         } catch (error) {
@@ -25,8 +26,8 @@ export const fetchBannersById = createAsyncThunk(
         try {
             const response = await axios.get(`https://${baseUrl}/banners/${id}.json`, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
-                }
+                           Authorization: getAuthHeader(),
+                         },
             })
             return response.data
         } catch (error) {
@@ -41,9 +42,9 @@ export const createBanner = createAsyncThunk(
     async ({ baseUrl, token, data }: { baseUrl: string, token: string, data: any }, { rejectWithValue }) => {
         try {
             const response = await axios.post(`https://${baseUrl}/banners.json`, data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
+                 headers: {
+                            Authorization: getAuthHeader(),
+                          },
             })
             return response.data
         } catch (error) {
@@ -59,8 +60,8 @@ export const editBanner = createAsyncThunk(
         try {
             const response = await axios.put(`https://${baseUrl}/banners/${id}.json`, data, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
-                }
+                           Authorization: getAuthHeader(),
+                         },
             })
             return response.data
         } catch (error) {

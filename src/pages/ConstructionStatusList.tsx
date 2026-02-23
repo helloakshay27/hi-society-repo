@@ -109,10 +109,9 @@ const ConstructionStatusList = () => {
       await axios.put(`${baseURL}/construction_statuses/${id}.json`, {
         construction_status: { active: updatedStatus },
       }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          "Content-Type": "application/json",
-        },
+ headers: {
+                  Authorization: getAuthHeader(),
+                },
       });
       toast.success("Status updated successfully!");
       fetchStatuses(); // Refetch to maintain consistency

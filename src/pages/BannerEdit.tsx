@@ -529,10 +529,9 @@ const BannerEdit = () => {
       });
 
       await axios.put(getFullUrl(`/banners/${id}.json`), sendData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          "Content-Type": "multipart/form-data",
-        },
+          headers: {
+            Authorization: getAuthHeader(),
+          },
       });
 
       toast.success("Banner updated successfully");

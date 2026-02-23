@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { ChevronRight, ArrowLeft, Home } from "lucide-react";
 import { TextField } from '@mui/material';
 import { Button } from "@/components/ui/button";
@@ -56,10 +56,9 @@ const PropertyType = () => {
         `${baseURL}/property_types.json`,
         payload,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "multipart/form-data", // ✅ Required for FormData
-          },
+           headers: {
+                   Authorization: getAuthHeader(),
+                 },
         }
       );
 

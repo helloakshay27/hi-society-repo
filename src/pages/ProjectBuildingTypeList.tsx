@@ -7,7 +7,7 @@ import { Plus, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
-import { API_CONFIG } from '@/config/apiConfig';
+import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
 import { Switch } from '@mui/material';
 
 interface BuildingType {
@@ -66,9 +66,9 @@ const ProjectBuildingTypeList = () => {
     setIsSearching(!!search);
     try {
       const response = await axios.get(`${baseURL}/building_types.json`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
+         headers: {
+                         Authorization: getAuthHeader(),
+                       },
       });
       
       const allBuildingTypes = response.data || [];
@@ -130,10 +130,9 @@ const ProjectBuildingTypeList = () => {
         `${baseURL}/building_types/${id}.json`,
         { building_type: { active: !currentStatus } },
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+           headers: {
+                                     Authorization: getAuthHeader(),
+                                   },
         }
       );
       toast.success("Status updated successfully");

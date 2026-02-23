@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { ArrowLeft, Home } from "lucide-react";
 import { TextField, Switch } from "@mui/material";
 import { Button } from "@/components/ui/button";
@@ -97,10 +97,8 @@ const Amenities = () => {
     try {
       await axios.post(`${baseURL}/amenity_setups.json`, formData, {
         headers: {
-          "Content-Type": "multipart/form-data",
-          Accept: "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
+                                 Authorization: getAuthHeader(),
+                               },
       });
 
       toast.success("Amenity added successfully");
