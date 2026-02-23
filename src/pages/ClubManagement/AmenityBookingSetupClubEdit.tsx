@@ -1940,7 +1940,7 @@ export const EditBookingSetupClubPage = () => {
                                             {
                                                 formData.isBookable ? (
                                                     <div className="flex items-center gap-3">
-                                                        <label className="text-sm font-semibold whitespace-nowrap">GST</label>
+                                                        {/* <label className="text-sm font-semibold whitespace-nowrap">GST</label>
                                                         <TextField
                                                             size="small"
                                                             variant="outlined"
@@ -1955,7 +1955,7 @@ export const EditBookingSetupClubPage = () => {
                                                             }}
                                                             className="w-32"
                                                             placeholder="0.0"
-                                                        />
+                                                        /> */}
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center gap-3">
