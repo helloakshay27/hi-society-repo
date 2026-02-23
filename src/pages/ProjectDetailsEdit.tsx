@@ -1015,8 +1015,17 @@ const ProjectDetailsEdit = () => {
 
         // Fetch dropdown options first to match property_type and construction_status text to IDs
         const [propertyTypesRes, statusRes] = await Promise.all([
-          axios.get(getFullUrl("/property_types.json")),
-          axios.get(getFullUrl("/construction_statuses.json")),
+          axios.get(getFullUrl("/property_types.json"),{
+             headers: {
+
+                  Authorization: getAuthHeader(),
+          },
+          }),
+          axios.get(getFullUrl("/construction_statuses.json"),{
+             headers: {
+                  Authorization: getAuthHeader(),
+                },
+          }),
         ]);
 
         // Find matching property type by name
@@ -1305,7 +1314,11 @@ const ProjectDetailsEdit = () => {
             const buildingResponse = await axios.get(
               getFullUrl(
                 `/building_types.json?q[property_type_id_eq]=${propertyTypeIdToUse}`
-              )
+              ),{
+                 headers: {
+                    Authorization: getAuthHeader(),
+                  },
+              }
             );
             const formattedBuildingTypes = buildingResponse.data.map(
               (item) => ({
@@ -1346,7 +1359,13 @@ const ProjectDetailsEdit = () => {
 
   const fetchStatusOptions = () => {
     return axios
-      .get(getFullUrl("/construction_statuses.json"))
+      .get(getFullUrl("/construction_statuses.json"),{
+          headers: {
+
+                  Authorization: getAuthHeader(),
+          },
+      }
+    )
       .then((response) => {
         const options = response.data
           .filter((status) => status.active === true)
@@ -1360,7 +1379,12 @@ const ProjectDetailsEdit = () => {
   };
 
   const fetchPropertyTypes = () => {
-    return axios.get(getFullUrl("/property_types.json")).then((response) => {
+    return axios.get(getFullUrl("/property_types.json"),{
+       headers: {
+
+                  Authorization: getAuthHeader(),
+          },
+    }).then((response) => {
       const options = response.data
         .filter((type) => type.active === true)
         .map((type) => ({
@@ -1374,7 +1398,13 @@ const ProjectDetailsEdit = () => {
 
   const fetchBuildingTypes = async () => {
     try {
-      const response = await axios.get(getFullUrl("/building_types.json"));
+      const response = await axios.get(getFullUrl("/building_types.json"),
+    {
+        headers: {
+
+                  Authorization: getAuthHeader(),
+          },
+    });
       const options = response.data
         .filter((item) => item.active === true)
         .map((type) => ({
@@ -1390,7 +1420,12 @@ const ProjectDetailsEdit = () => {
 
   const fetchConnectivityTypes = async () => {
     try {
-      const response = await axios.get(getFullUrl("/connectivity_types.json"));
+      const response = await axios.get(getFullUrl("/connectivity_types.json"),{
+         headers: {
+
+                  Authorization: getAuthHeader(),
+          },
+      });
       if (response.data && Array.isArray(response.data)) {
         // Filter only active connectivity types
         const activeTypes = response.data.filter((type) => type.active);
@@ -1456,7 +1491,11 @@ const ProjectDetailsEdit = () => {
 
     try {
       const response = await axios.get(
-        getFullUrl(`/building_types.json?q[property_type_id_eq]=${id}`)
+        getFullUrl(`/building_types.json?q[property_type_id_eq]=${id}`),{
+           headers: {
+                    Authorization: getAuthHeader(),
+                  },
+        }
       );
 
       const formattedBuildingTypes = response.data
@@ -1475,7 +1514,12 @@ const ProjectDetailsEdit = () => {
   // Fetch property types on mount
   useEffect(() => {
     axios
-      .get(getFullUrl("/property_types.json"))
+      .get(getFullUrl("/property_types.json"),{
+         headers: {
+
+                  Authorization: getAuthHeader(),
+          },
+      })
       .then((response) => {
         const options = response.data
           .filter((type) => type.active === true)
@@ -1495,7 +1539,11 @@ const ProjectDetailsEdit = () => {
   // Fetch amenities
   useEffect(() => {
     axios
-      .get(getFullUrl("/amenity_setups.json"))
+      .get(getFullUrl("/amenity_setups.json"),{
+         headers: {
+                  Authorization: getAuthHeader(),
+                },
+      })
       .then((response) => {
         const fetchedAmenities = response.data.amenities_setups || [];
         console.log("Fetched amenities from API:", fetchedAmenities);
@@ -1513,7 +1561,11 @@ const ProjectDetailsEdit = () => {
   // Fetch configurations
   useEffect(() => {
     axios
-      .get(getFullUrl("/configuration_setups.json"))
+      .get(getFullUrl("/configuration_setups.json"),{
+         headers: {
+                  Authorization: getAuthHeader(),
+                },
+      })
       .then((response) => {
         const activeConfigs = response.data.filter(
           (config) => config.active === true
@@ -1530,7 +1582,11 @@ const ProjectDetailsEdit = () => {
   // Fetch status options
   useEffect(() => {
     axios
-      .get(getFullUrl("/construction_statuses.json"))
+      .get(getFullUrl("/construction_statuses.json"),{
+         headers: {
+                  Authorization: getAuthHeader(),
+                },
+      })
       .then((response) => {
         const options = response.data
           .filter((status) => status.active === true)
@@ -1560,7 +1616,11 @@ const ProjectDetailsEdit = () => {
       const response = await axios.get(
         getFullUrl(
           "/system_constants.json?q[description_eq]=ImagesConfiguration"
-        )
+        ),{
+           headers: {
+                    Authorization: getAuthHeader(),
+                  },
+        }
       );
 
       if (response.data && Array.isArray(response.data)) {
