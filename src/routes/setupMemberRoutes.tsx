@@ -688,7 +688,6 @@ export const setupMemberRoutes = (
       path="/loyalty/offers-list"
       Component={withSuspense(LoyaltyOffersList)}
     />
-
     {/* Noticeboard Routes (Broadcast) */}
     <Route
       path="/maintenance/noticeboard-list"
