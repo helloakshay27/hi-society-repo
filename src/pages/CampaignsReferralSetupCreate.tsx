@@ -4,41 +4,100 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { getBaseUrl, getToken } from "@/utils/auth";
+import { useToast } from "@/hooks/use-toast";
 
 const CampaignsReferralSetupCreate: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     bannerEnabled: false,
     referralBannerEnabled: false,
     projectName: "",
     projectReferenceId: "",
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Generate unique ID
-    const timestamp = Date.now();
+    try {
+      setLoading(true);
+      const baseUrl = getBaseUrl();
+      const token = getToken();
+      const societyId = localStorage.getItem("selectedUserSociety");
 
-    // Use a default placeholder image
-    const defaultImage =
-      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=150&h=100&fit=crop";
+      if (!baseUrl || !token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please login again to continue.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    // Create new referral setup object
-    const newReferralSetup = {
-      id: timestamp.toString(),
-      image: defaultImage,
-      projectName: formData.projectName,
-      projectReferenceId: formData.projectReferenceId,
-      referralProgram: formData.bannerEnabled,
-      bannerStatus: formData.referralBannerEnabled,
-    };
+      if (!societyId) {
+        toast({
+          title: "Society Required",
+          description: "Please select a society first.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    // Save to localStorage to pass to list page
-    localStorage.setItem("newReferralSetup", JSON.stringify(newReferralSetup));
+      // Prepare POST data
+      const postData = {
+        project_name: formData.projectName,
+        project_reference_id: formData.projectReferenceId,
+        active: formData.bannerEnabled ? 1 : 0,
+        banner: formData.referralBannerEnabled ? "enabled" : "",
+        society_id: societyId,
+      };
 
-    // Navigate back to referral setup list
-    navigate("/campaigns/referral-setup");
+      const apiUrl = `${baseUrl}/crm/admin/referral_setups.json`;
+      console.log("📤 Creating referral setup:", apiUrl);
+      console.log("📦 POST Data:", postData);
+
+      const response = await axios.post(apiUrl, postData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("✅ Create Response:", response.data);
+
+      if (
+        response.data.code === 200 ||
+        response.status === 200 ||
+        response.status === 201
+      ) {
+        toast({
+          title: "Success",
+          description: "Referral setup created successfully!",
+        });
+
+        // Navigate back to list page
+        navigate("/campaigns/referral-setup");
+      } else {
+        throw new Error(
+          response.data.message || "Failed to create referral setup"
+        );
+      }
+    } catch (err) {
+      const error = err as Error;
+      console.error("❌ Error creating referral setup:", error);
+
+      toast({
+        title: "Error",
+        description:
+          error.message || "Failed to create referral setup. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -164,9 +223,10 @@ const CampaignsReferralSetupCreate: React.FC = () => {
             <div className="flex justify-center">
               <Button
                 type="submit"
-                className="bg-[#10b981] hover:bg-[#059669] text-white px-8"
+                disabled={loading}
+                className="bg-[#10b981] hover:bg-[#059669] text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Submit
+                {loading ? "Creating..." : "Submit"}
               </Button>
             </div>
           </form>

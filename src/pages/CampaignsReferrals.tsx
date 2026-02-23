@@ -19,6 +19,8 @@ import {
   InputLabel,
 } from "@mui/material";
 import { X } from "lucide-react";
+import axios from "axios";
+import { getBaseUrl, getToken } from "@/utils/auth";
 
 interface ReferralData {
   id: string;
@@ -42,109 +44,73 @@ const CampaignsReferrals: React.FC = () => {
     createdOn: "",
   });
 
-  // Check for newly created referral from localStorage
+  const [referralsData, setReferralsData] = useState<ReferralData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch referrals from API
   useEffect(() => {
-    const newReferral = localStorage.getItem("newReferral");
-    if (newReferral) {
+    const fetchReferrals = async () => {
       try {
-        const referralData = JSON.parse(newReferral);
-        setReferralsData((prev) => [referralData, ...prev]);
-        localStorage.removeItem("newReferral");
-      } catch (error) {
-        console.error("Failed to parse new referral:", error);
+        setLoading(true);
+        setError(null);
+
+        // Get Hi-Society token from hiSocietyAccount
+        const hiSocietyAccount = localStorage.getItem("hiSocietyAccount");
+        const token = hiSocietyAccount
+          ? JSON.parse(hiSocietyAccount).spree_api_key
+          : null;
+
+        console.log("🔎 DEBUG Referrals - Hi-Society token:", token);
+
+        if (!token) {
+          console.error("❌ Referrals: Hi-Society token missing!");
+          throw new Error(
+            "Hi-Society authentication required. Please login again."
+          );
+        }
+
+        // Hardcode Hi-Society UAT base URL (same as other Campaign pages)
+        const hiSocietyBaseUrl = "https://uat-hi-society.lockated.com";
+        const apiUrl = `${hiSocietyBaseUrl}/crm/admin/referrals.json`;
+        console.log("🔍 Fetching referrals from:", apiUrl);
+
+        const response = await axios.get(apiUrl, {
+          params: { token },
+        });
+
+        console.log("✅ Referrals API Response:", response.data);
+
+        // Map API response to component data structure
+        if (response.data.referrals && Array.isArray(response.data.referrals)) {
+          const mappedData: ReferralData[] = response.data.referrals.map(
+            (referral: any) => ({
+              id: referral.id?.toString() || "",
+              displayId: referral.display_id || `#${referral.id}`,
+              createdBy: referral.created_by || "-",
+              uniqueId: referral.unique_id || "-",
+              project: referral.project_name || "-",
+              lead: referral.lead_name || "-",
+              mobile: referral.mobile || "-",
+              status: referral.status || "",
+              createdOn: referral.created_at
+                ? new Date(referral.created_at).toLocaleDateString("en-GB")
+                : "-",
+            })
+          );
+          setReferralsData(mappedData);
+        }
+      } catch (err) {
+        const error = err as Error;
+        console.error("❌ Error fetching referrals:", error);
+        setError(error.message || "Failed to fetch referrals");
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+
+    fetchReferrals();
   }, []);
-  const [referralsData, setReferralsData] = useState<ReferralData[]>([
-    {
-      id: "1",
-      displayId: "#1553",
-      createdBy: "Deepak Gupta",
-      uniqueId: "H3IT1baa",
-      project: "GODREJ CITY",
-      lead: "Deepak Gupta",
-      mobile: "7021401252",
-      status: "ACT",
-      createdOn: "29/03/2025",
-    },
-    {
-      id: "2",
-      displayId: "#1642",
-      createdBy: "Godrej Living",
-      uniqueId: "5cV4bbaa",
-      project: "GODREJ RKS",
-      lead: "Godrej Living",
-      mobile: "2217695214",
-      status: "",
-      createdOn: "05/03/2025",
-    },
-    {
-      id: "3",
-      displayId: "#1399",
-      createdBy: "Rahul Rasal",
-      uniqueId: "1rJ5heaf",
-      project: "GODREJ HILL RK IRRAT",
-      lead: "Rahul Rasal",
-      mobile: "9870801292",
-      status: "ACT",
-      createdOn: "11/05/2025",
-    },
-    {
-      id: "4",
-      displayId: "#1289",
-      createdBy: "Samay Seth",
-      uniqueId: "CJ2acZ70",
-      project: "GODREJ HILL RETIRAT",
-      lead: "Samay Seth",
-      mobile: "8770950325",
-      status: "",
-      createdOn: "14/08/2023",
-    },
-    {
-      id: "5",
-      displayId: "#1218",
-      createdBy: "Godrej Living",
-      uniqueId: "5cV4bbaa",
-      project: "GODREJ CITY",
-      lead: "Godrej Living",
-      mobile: "2217695214",
-      status: "",
-      createdOn: "03/02/2023",
-    },
-    {
-      id: "6",
-      displayId: "#1272",
-      createdBy: "Deepak Gupta",
-      uniqueId: "H3IT1baa",
-      project: "GODREJ RKS",
-      lead: "Deepak Gupta",
-      mobile: "7021401252",
-      status: "",
-      createdOn: "05/11/2022",
-    },
-    {
-      id: "7",
-      displayId: "#1272",
-      createdBy: "Deepak Gupta",
-      uniqueId: "H3IT1baa",
-      project: "GODREJ HILL RK IRRAT",
-      lead: "Deepak Gupta",
-      mobile: "7021401252",
-      status: "",
-      createdOn: "07/11/2022",
-    },
-    {
-      id: "8",
-      displayId: "#1270",
-      createdBy: "Godrej Living",
-      uniqueId: "5cV4bbaa",
-      project: "GODREJ HILL RETIRAT",
-      lead: "Godrej Living",
-      mobile: "2217695214",
-      status: "",
-      createdOn: "06/01/2022",
-    },
-  ]);
 
   const columns: ColumnConfig[] = [
     {
@@ -271,34 +237,57 @@ const CampaignsReferrals: React.FC = () => {
   return (
     <div className="bg-gray-50 min-h-screen p-4">
       <div>
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1e3a8a]"></div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-red-600 text-sm">{error}</p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="mt-2 bg-red-600 hover:bg-red-700 text-white"
+              size="sm"
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+
         {/* Table */}
-        <div>
-          <EnhancedTable
-            data={filteredData}
-            columns={columns}
-            renderCell={renderCell}
-            pagination={true}
-            pageSize={10}
-            hideTableSearch={false}
-            hideTableExport={false}
-            hideColumnsButton={false}
-            emptyMessage="No referrals available"
-            searchPlaceholder="Search"
-            enableExport={true}
-            storageKey="campaigns-referrals-list-v2"
-            onFilterClick={() => setShowFilters(!showFilters)}
-            leftActions={
-              <div className="flex items-center gap-2">
-                <Button
-                  className="bg-[#F2EEE9] hover:bg-[#E5DDD6] text-[#BF213E] px-8"
-                  onClick={() => navigate("/campaigns/referrals/create")}
-                >
-                  Add
-                </Button>
-              </div>
-            }
-          />
-        </div>
+        {!loading && !error && (
+          <div>
+            <EnhancedTable
+              data={filteredData}
+              columns={columns}
+              renderCell={renderCell}
+              pagination={true}
+              pageSize={10}
+              hideTableSearch={false}
+              hideTableExport={false}
+              hideColumnsButton={false}
+              emptyMessage="No referrals available"
+              searchPlaceholder="Search"
+              enableExport={true}
+              storageKey="campaigns-referrals-list-v2"
+              onFilterClick={() => setShowFilters(!showFilters)}
+              leftActions={
+                <div className="flex items-center gap-2">
+                  <Button
+                    className="bg-[#F2EEE9] hover:bg-[#E5DDD6] text-[#BF213E] px-8"
+                    onClick={() => navigate("/campaigns/referrals/create")}
+                  >
+                    Add
+                  </Button>
+                </div>
+              }
+            />
+          </div>
+        )}
       </div>
 
       {/* Filter Dialog */}

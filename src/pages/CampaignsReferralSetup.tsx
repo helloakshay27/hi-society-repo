@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Edit, RefreshCw, Settings2, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { getBaseUrl, getToken } from "@/utils/auth";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +32,33 @@ interface ProjectData {
   bannerStatus: boolean;
 }
 
+interface ReferralSetupApiResponse {
+  code: number;
+  referral_setups: {
+    id: number;
+    project_name: string;
+    banner: string | null;
+    society_id: number;
+    project_reference_id: number | null;
+    title: string | null;
+    description: string | null;
+    active: number;
+    created_at: string;
+    updated_at: string;
+  }[];
+}
+
+interface ReferralSetupDetailApiResponse {
+  id: number;
+  project_name: string;
+  banner: string | null;
+  society_id: number;
+  project_reference_id: number | null;
+  active: number;
+  created_at: string;
+  updated_at: string;
+}
+
 const CampaignsReferralSetup: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,6 +68,121 @@ const CampaignsReferralSetup: React.FC = () => {
     referralNumber: "",
     createdDate: "",
   });
+  const [projectsData, setProjectsData] = useState<ProjectData[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch referral setups from API
+  useEffect(() => {
+    const fetchReferralSetups = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Get Hi-Society token from hiSocietyAccount
+        const hiSocietyAccount = localStorage.getItem("hiSocietyAccount");
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          console.error("❌ Hi-Society token is missing!");
+          throw new Error(
+            "Hi-Society authentication token not found. Please login again."
+          );
+        }
+
+        // Hardcode Hi-Society UAT base URL (same as Other Projects API)
+        const hiSocietyBaseUrl = "https://uat-hi-society.lockated.com";
+        const apiUrl = `${hiSocietyBaseUrl}/crm/admin/referral_setups.json`;
+        console.log("🔍 Fetching from URL:", apiUrl);
+        console.log("🔑 Using token:", token?.substring(0, 20) + "...");
+
+        const response = await axios.get<ReferralSetupApiResponse>(apiUrl, {
+          params: { token },
+        });
+
+        console.log("✅ API Response:", response.data);
+
+        if (response.data.code === 200 && response.data.referral_setups) {
+          // Map API response to component data structure
+          const mappedData: ProjectData[] = response.data.referral_setups.map(
+            (setup) => ({
+              id: setup.id.toString(),
+              image:
+                setup.banner ||
+                "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=150&h=100&fit=crop",
+              projectName: setup.project_name || "-",
+              projectReferenceId: setup.project_reference_id?.toString() || "-",
+              referralProgram: setup.active === 1,
+              bannerStatus: !!setup.banner,
+            })
+          );
+          setProjectsData(mappedData);
+        }
+      } catch (err) {
+        const error = err as Error;
+        console.error("❌ Error fetching referral setups:", error);
+        if (axios.isAxiosError(err)) {
+          console.error("📍 Request URL:", err.config?.url);
+          console.error("📍 Status:", err.response?.status);
+          console.error("📍 Response:", err.response?.data);
+          setError(
+            `Request failed with status code ${err.response?.status}: ${err.response?.statusText || "Unknown error"}`
+          );
+        } else {
+          setError(error.message || "Failed to fetch referral setups");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReferralSetups();
+  }, []);
+
+  // Function to fetch a single referral setup by ID
+  const fetchReferralSetupDetail = async (id: number) => {
+    try {
+      const baseUrl = getBaseUrl();
+      const token = getToken();
+
+      if (!baseUrl) {
+        throw new Error("Base URL not found. Please login again.");
+      }
+
+      if (!token) {
+        throw new Error("Authentication token not found. Please login again.");
+      }
+
+      const apiUrl = `${baseUrl}/crm/admin/referral_setups/${id}.json`;
+      console.log("🔍 Fetching referral setup detail from URL:", apiUrl);
+      console.log("🔑 Using token:", token?.substring(0, 20) + "...");
+
+      const response = await axios.get<ReferralSetupDetailApiResponse>(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("✅ Referral Setup Detail API Response:", response.data);
+
+      return response.data;
+    } catch (err) {
+      const error = err as Error;
+      console.error("❌ Error fetching referral setup detail:", error);
+      if (axios.isAxiosError(err)) {
+        console.error("📍 Request URL:", err.config?.url);
+        console.error("📍 Status:", err.response?.status);
+        console.error("📍 Response:", err.response?.data);
+        throw new Error(
+          `Request failed with status code ${err.response?.status}: ${err.response?.statusText || "Unknown error"}`
+        );
+      } else {
+        throw new Error(
+          error.message || "Failed to fetch referral setup detail"
+        );
+      }
+    }
+  };
 
   // Check for newly created referral setup from localStorage
   useEffect(() => {
@@ -69,117 +213,6 @@ const CampaignsReferralSetup: React.FC = () => {
       }
     }
   }, []);
-
-  const [projectsData, setProjectsData] = useState<ProjectData[]>([
-    {
-      id: "1",
-      image:
-        "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=150&h=100&fit=crop",
-      projectName: "Romanjee-Igatput-V-95xx",
-      projectReferenceId: "333",
-      referralProgram: false,
-      bannerStatus: false,
-    },
-    {
-      id: "2",
-      image:
-        "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=150&h=100&fit=crop",
-      projectName: "Godrej",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: false,
-    },
-    {
-      id: "3",
-      image:
-        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: true,
-    },
-    {
-      id: "4",
-      image:
-        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: false,
-    },
-    {
-      id: "5",
-      image:
-        "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: true,
-    },
-    {
-      id: "6",
-      image:
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: true,
-    },
-    {
-      id: "7",
-      image:
-        "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=150&h=100&fit=crop",
-      projectName: "Renwil-Highlands-Glodrej Ciry",
-      projectReferenceId: "Renwil-Highlands-Glodrej Ciry",
-      referralProgram: false,
-      bannerStatus: false,
-    },
-    {
-      id: "8",
-      image:
-        "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=150&h=100&fit=crop",
-      projectName: "RNS",
-      projectReferenceId: "RNS Studio",
-      referralProgram: true,
-      bannerStatus: true,
-    },
-    {
-      id: "9",
-      image:
-        "https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: false,
-      bannerStatus: false,
-    },
-    {
-      id: "10",
-      image:
-        "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: true,
-    },
-    {
-      id: "11",
-      image:
-        "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: false,
-    },
-    {
-      id: "12",
-      image:
-        "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: false,
-    },
-  ]);
 
   const handleToggleReferralProgram = (id: string) => {
     setProjectsData((prev) =>
@@ -304,7 +337,7 @@ const CampaignsReferralSetup: React.FC = () => {
           </div>
         );
       default:
-        return null;
+        return <span className="text-sm">{item[columnKey]}</span>;
     }
   };
 
@@ -327,34 +360,57 @@ const CampaignsReferralSetup: React.FC = () => {
   return (
     <div className="bg-gray-50 min-h-screen p-4">
       <div>
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1e3a8a]"></div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-red-600 text-sm">{error}</p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="mt-2 bg-red-600 hover:bg-red-700 text-white"
+              size="sm"
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+
         {/* Table */}
-        <div>
-          <EnhancedTable
-            data={filteredData}
-            columns={columns}
-            renderCell={renderCell}
-            pagination={true}
-            pageSize={10}
-            hideTableSearch={false}
-            hideTableExport={false}
-            hideColumnsButton={false}
-            emptyMessage="No projects available"
-            searchPlaceholder="Search"
-            enableExport={true}
-            storageKey="campaigns-referral-setup-table"
-            onFilterClick={() => setShowFilters(!showFilters)}
-            leftActions={
-              <div className="flex items-center gap-2">
-                <Button
-                  className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-8"
-                  onClick={() => navigate("/campaigns/referral-setup/create")}
-                >
-                  Add
-                </Button>
-              </div>
-            }
-          />
-        </div>
+        {!loading && !error && (
+          <div>
+            <EnhancedTable
+              data={filteredData}
+              columns={columns}
+              renderCell={renderCell}
+              pagination={true}
+              pageSize={10}
+              hideTableSearch={false}
+              hideTableExport={false}
+              hideColumnsButton={false}
+              emptyMessage="No projects available"
+              searchPlaceholder="Search"
+              enableExport={true}
+              storageKey="campaigns-referral-setup-table"
+              onFilterClick={() => setShowFilters(!showFilters)}
+              leftActions={
+                <div className="flex items-center gap-2">
+                  <Button
+                    className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-8"
+                    onClick={() => navigate("/campaigns/referral-setup/create")}
+                  >
+                    Add
+                  </Button>
+                </div>
+              }
+            />
+          </div>
+        )}
       </div>
 
       {/* Filter Dialog */}
