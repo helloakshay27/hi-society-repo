@@ -68,6 +68,7 @@ export const EditRequestModal: React.FC<EditRequestModalProps> = ({
                 <SelectItem value="Cancel">Cancel</SelectItem>
                 <SelectItem value="Scheduled">Scheduled</SelectItem>
                 <SelectItem value="Completed">Completed</SelectItem>
+                <SelectItem value="Resolved">Resolved</SelectItem>
               </SelectContent>
             </Select>
           </div>

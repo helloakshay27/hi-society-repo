@@ -110,6 +110,7 @@ export const AddBookingSetupClubPage = () => {
     shareable: "",
     linkToBilling: "",
     minGuarantee: "",
+    price: "",
     isBookable: true,
     isRequest: false,
     active: "1",
@@ -236,13 +237,15 @@ export const AddBookingSetupClubPage = () => {
     if (!formData.facilityName) {
       toast.error("Please enter Facility Name");
       return false;
-    } else if (
-      formData.facilityBookings.length === 0 ||
-      !formData.facilityBookings.some((fb) => fb.isChecked && fb.times)
-    ) {
-      toast.error("Please add at least one facility booking rule");
-      return false;
-    } else if (!formData.termsConditions) {
+    }
+    // else if (
+    //   formData.facilityBookings.length === 0 ||
+    //   !formData.facilityBookings.some((fb) => fb.isChecked && fb.times)
+    // ) {
+    //   toast.error("Please add at least one facility booking rule");
+    //   return false;
+    // }
+    else if (!formData.termsConditions) {
       toast.error("Please enter Terms and Conditions");
       return false;
     } else if (!formData.cancellationText) {
@@ -259,29 +262,29 @@ export const AddBookingSetupClubPage = () => {
     const endHour = parseInt(slot.endTime.hour);
 
     if (slot.startTime.hour !== "00") {
-      if (
-        slot.breakTimeStart.hour === "00" ||
-        slot.breakTimeEnd.hour === "00" ||
-        slot.endTime.hour === "00"
-      ) {
-        toast.error(
-          `Slot: All subsequent time fields must be selected when Start Time is set`
-        );
-        return false;
-      }
+      // if (
+      //   slot.breakTimeStart.hour === "00" ||
+      //   slot.breakTimeEnd.hour === "00" ||
+      //   slot.endTime.hour === "00"
+      // ) {
+      //   toast.error(
+      //     `Slot: All subsequent time fields must be selected when Start Time is set`
+      //   );
+      //   return false;
+      // }
 
-      if (breakStartHour < startHour) {
-        toast.error(
-          `Slot: Break Time Start hour must be greater than or equal to Start Time hour`
-        );
-        return false;
-      }
-      if (breakEndHour < startHour) {
-        toast.error(
-          `Slot: Break Time End hour must be greater than or equal to Start Time hour`
-        );
-        return false;
-      }
+      // if (breakStartHour < startHour) {
+      //   toast.error(
+      //     `Slot: Break Time Start hour must be greater than or equal to Start Time hour`
+      //   );
+      //   return false;
+      // }
+      // if (breakEndHour < startHour) {
+      //   toast.error(
+      //     `Slot: Break Time End hour must be greater than or equal to Start Time hour`
+      //   );
+      //   return false;
+      // }
       if (endHour < startHour) {
         toast.error(
           `Slot: End Time hour must be greater than or equal to Start Time hour`
@@ -352,6 +355,10 @@ export const AddBookingSetupClubPage = () => {
       formDataToSend.append(
         "facility_setup[min_guarantee]",
         formData.minGuarantee
+      );
+      formDataToSend.append(
+        "facility_setup[min_guarantee_price]",
+        formData.price
       );
       formDataToSend.append(
         "facility_setup[sub_facility_enabled]",
@@ -982,7 +989,7 @@ export const AddBookingSetupClubPage = () => {
             </div>
 
             <div className="space-y-6 py-2">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <TextField
                   label={<span>Facility Name <span className="text-[#C72030]">*</span></span>}
                   placeholder="Enter Facility Name"
@@ -991,7 +998,7 @@ export const AddBookingSetupClubPage = () => {
                     const value = e.target.value;
                     // Only allow letters and spaces, no numbers
                     // if (/^[a-zA-Z\s]*$/.test(value)) {
-                      setFormData({ ...formData, facilityName: value });
+                    setFormData({ ...formData, facilityName: value });
                     // }
                   }}
                   variant="outlined"
@@ -999,6 +1006,22 @@ export const AddBookingSetupClubPage = () => {
                     shrink: true,
                   }}
                 />
+
+                <FormControl>
+                  <InputLabel className="bg-[#F6F7F7]">Active</InputLabel>
+                  <Select
+                    value={formData.active}
+                    onChange={(e) =>
+                      setFormData({ ...formData, active: e.target.value })
+                    }
+                    label="Active"
+                    displayEmpty
+                  >
+                    <MenuItem value="">Select</MenuItem>
+                    <MenuItem value="1">Yes</MenuItem>
+                    <MenuItem value="0">No</MenuItem>
+                  </Select>
+                </FormControl>
 
                 <FormControl>
                   <InputLabel className="bg-[#F6F7F7]">Shareable</InputLabel>
@@ -1058,6 +1081,25 @@ export const AddBookingSetupClubPage = () => {
                       <MenuItem value="No">No</MenuItem>
                     </Select>
                   </FormControl>
+                )}
+
+                {formData.shareable && formData.linkToBilling === "Yes" && formData.minGuarantee === "Yes" && (
+                  <TextField
+                    label={<span>Price <span className="text-[#C72030]">*</span></span>}
+                    placeholder="Price"
+                    value={formData.price}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Only allow letters and spaces, no numbers
+                      // if (/^[a-zA-Z\s]*$/.test(value)) {
+                      setFormData({ ...formData, price: value });
+                      // }
+                    }}
+                    variant="outlined"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                  />
                 )}
               </div>
 
@@ -3135,7 +3177,7 @@ export const AddBookingSetupClubPage = () => {
                         })
                       }
                     />
-                    <span>Facility can be booked <span className="text-[#C72030]">*</span></span>
+                    <span>Facility can be booked </span>
                     <TextField
                       placeholder=""
                       value={booking.times}

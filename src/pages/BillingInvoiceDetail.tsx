@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 interface InvoiceItem {
   id: number;
@@ -68,7 +69,9 @@ export default function BillingInvoiceDetail() {
     setLoading(true);
     try {
       // Mock data - replace with actual API call
-      const response = await axios.get(`https://runwal-api.lockated.com/lock_account_bills/${id}/lock_account_bill_detail.json?token=00f7c12e459b75225a07519c088edae3e9612e59d80111bb&society_id=9`)
+      const token = API_CONFIG.TOKEN || "";
+      const url = getFullUrl(`/lock_account_bills/${id}/lock_account_bill_detail.json?token=${token}&society_id=9`);
+      const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
       const invoice = response.data.bill
 
       // Map items from API

@@ -144,12 +144,18 @@ const AppointmentzSiteScheduling = () => {
         );
       case "meetings":
         return (
-          <Button
-            className="bg-[#00BCD4] text-white hover:bg-[#00ACC1] h-8 px-3 text-xs"
-            onClick={() => {}}
+          <a
+            href="https://meet.lockated.com/b"
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            View Meetings
-          </Button>
+            <Button
+              className="bg-[#00BCD4] text-white hover:bg-[#00ACC1] h-8 px-3 text-xs"
+              onClick={(e) => e.stopPropagation()}
+            >
+              View Meetings
+            </Button>
+          </a>
         );
       default:
         // @ts-expect-error: Accessing key by string
@@ -165,6 +171,9 @@ const AppointmentzSiteScheduling = () => {
           columns={columns}
           renderCell={renderCell}
           pagination={true}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
           enableExport={true}
           onExport={handleExportCSV}
           exportFileName="site-visit-requests"

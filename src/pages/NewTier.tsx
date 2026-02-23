@@ -3,7 +3,7 @@ import { Formik, Form, Field, ErrorMessage, FieldArray } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { API_CONFIG, getFullUrl } from "@/config/apiConfig";
+import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { ChevronRight, ArrowLeft, X } from "lucide-react";
 
@@ -14,11 +14,8 @@ const validationSchema = Yup.object().shape({
       if (!value) return true;
       try {
         const storedValue = sessionStorage.getItem("selectedId");
-        const token = localStorage.getItem("access_token");
-        // const url = getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=1${token ? `&access_token=${token}` : ''}`);
-        // Use static baseurl and token for now:
-        const url =
-          "https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+        const token = API_CONFIG.TOKEN || "";
+        const url = getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=${token}`);
         const response = await axios.get(url, {
           headers: {
             Authorization: token ? `Bearer ${token}` : undefined,
@@ -101,10 +98,10 @@ const NewTier = () => {
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
       // Always fetch the latest tiers for uniqueness validation
-      const getTiersUrl =
-        "https://runwal-api.lockated.com/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+      const token = API_CONFIG.TOKEN || "";
+      const getTiersUrl = getFullUrl(`/loyalty/tiers.json?q[loyalty_type_id_eq]=1&token=${token}`);
       const existingTiersResponse = await axios.get(getTiersUrl, {
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: getAuthHeader() },
       });
       let existingTiers = [];
       if (Array.isArray(existingTiersResponse.data)) {
@@ -163,11 +160,9 @@ const NewTier = () => {
       };
       let postUrl = "";
       if (formattedTiers?.length > 0) {
-        postUrl =
-          "https://runwal-api.lockated.com/loyalty/tiers/bulk_create?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+        postUrl = getFullUrl(`/loyalty/tiers/bulk_create?token=${token}`);
       } else {
-        postUrl =
-          "https://runwal-api.lockated.com/loyalty/tiers.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+        postUrl = getFullUrl(`/loyalty/tiers.json?token=${token}`);
       }
       const response = await fetch(postUrl, {
         method: "POST",

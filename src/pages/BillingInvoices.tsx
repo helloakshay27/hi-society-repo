@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import axios from 'axios';
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 interface BillingInvoice {
   id: number;
@@ -49,7 +50,9 @@ export default function BillingInvoices() {
   const fetchInvoices = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`https://runwal-api.lockated.com/lock_account_bills/lock_account_bill_list.json?token=00f7c12e459b75225a07519c088edae3e9612e59d80111bb&society_id=9`)
+      const token = API_CONFIG.TOKEN || "";
+      const url = getFullUrl(`/lock_account_bills/lock_account_bill_list.json?token=${token}&society_id=9`);
+      const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
       setInvoices(response.data.bills);
     } catch (error) {
       console.error('Error fetching invoices:', error);

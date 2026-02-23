@@ -6,8 +6,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Formik, Form, Field, ErrorMessage, FieldArray } from "formik";
 import * as Yup from "yup";
 import { Link, useNavigate } from "react-router-dom";
-import { API_CONFIG } from "@/config/apiConfig";
-import {baseURL} from "../pages/baseurl/apiDomain";
+import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import Pagination from "../components/reusable/Pagination";
 import { toast } from "sonner";
 import { ChevronRight, ArrowLeft, X } from "lucide-react";
@@ -57,12 +56,11 @@ const Tiers = () => {
 
   const navigate = useNavigate();
   const storedValue = sessionStorage.getItem("selectedId");
-  const token = localStorage.getItem("access_token");
+  const token = API_CONFIG.TOKEN || "";
   const fetchTiers = async () => {
     try {
-      const response = await axios.get(
-        `${baseURL}loyalty/tiers.json?access_token=${token}&&q[loyalty_type_id_eq]=1`
-      );
+      const url = getFullUrl(`/loyalty/tiers.json?access_token=${token}&&q[loyalty_type_id_eq]=1`);
+      const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
       if (response && response.data) {
         setTiers(response.data);
         setFilteredItems(response.data);
@@ -87,11 +85,11 @@ const Tiers = () => {
   const handleFormSubmit = async (values) => {
     if (selectedTier) {
       try {
+        const url = getFullUrl(`/loyalty/tiers/${selectedTier.id}.json?access_token=${token}`);
         const response = await axios.put(
-          // @ts-ignore
-          `${baseURL}loyalty/tiers/${selectedTier.id}.json?access_token=${token}`,
+          url,
           { loyalty_tier: values },
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { "Content-Type": "application/json", Authorization: getAuthHeader() } }
         );
 
         if (response && response.data) {
@@ -235,11 +233,11 @@ const Tiers = () => {
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
       const storedValue = sessionStorage.getItem("selectedId");
-      const token = localStorage.getItem("access_token");
-      
-      const existingTiersResponse = await axios.get(
-        `${baseURL}/loyalty/tiers.json?access_token=${token}&&q[loyalty_type_id_eq]=1`
-      );
+      const token = API_CONFIG.TOKEN || "";
+      const tiersUrl = getFullUrl(`/loyalty/tiers.json?access_token=${token}&&q[loyalty_type_id_eq]=1`);
+      const existingTiersResponse = await axios.get(tiersUrl, {
+        headers: { Authorization: getAuthHeader() }
+      });
       
       const existingTiers = existingTiersResponse.data || [];
       
@@ -291,13 +289,14 @@ const Tiers = () => {
 
       const url =
         formattedTiers?.length > 0
-          ? `${baseURL}/loyalty/tiers/bulk_create?token=${token}`
-          : `${baseURL}/loyalty/tiers.json?access_token=${token}`;
+          ? getFullUrl(`/loyalty/tiers/bulk_create?token=${token}`)
+          : getFullUrl(`/loyalty/tiers.json?access_token=${token}`);
 
       const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
         },
         body: JSON.stringify(data),
       });

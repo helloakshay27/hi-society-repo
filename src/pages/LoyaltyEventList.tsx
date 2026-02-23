@@ -49,7 +49,7 @@ interface EventPermissions {
   destroy?: string;
 }
 
-const Eventlist = () => {
+const LoyaltyEventsList = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -672,4 +672,4 @@ const Eventlist = () => {
   );
 };
 
-export default Eventlist;
+export default LoyaltyEventsList;

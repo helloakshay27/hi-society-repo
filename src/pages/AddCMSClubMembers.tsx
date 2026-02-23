@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Plus, Upload, X } from "lucide-react";
+import { ArrowLeft, Loader, Plus, Upload, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
     TextField,
@@ -63,6 +63,7 @@ const AddCMSClubMembers = () => {
     const [flats, setFlats] = useState([]);
     const [flatUsers, setFlatUsers] = useState([]);
     const [membershipPlans, setMembershipPlans] = useState([]);
+    const [plansLoading, setPlansLoading] = useState(false)
     const [tower, setTower] = useState("");
     const [flat, setFlat] = useState("");
 
@@ -118,6 +119,7 @@ const AddCMSClubMembers = () => {
     };
 
     const fetchMembershipPlans = async () => {
+        setPlansLoading(true)
         try {
             const response = await axios.get(
                 `https://${baseUrl}/membership_plans.json`,
@@ -130,6 +132,8 @@ const AddCMSClubMembers = () => {
             setMembershipPlans(response.data.plans);
         } catch (error) {
             console.log(error);
+        } finally {
+            setPlansLoading(false)
         }
     };
 
@@ -295,9 +299,63 @@ const AddCMSClubMembers = () => {
         }
     };
 
-    console.log(members)
+    const validateForm = (): boolean => {
+        if (!globalMembershipPlanId) {
+            toast.error("Please select a Membership Plan");
+            return false;
+        }
+        if (!tower) {
+            toast.error("Please select a Tower");
+            return false;
+        }
+        if (!flat) {
+            toast.error("Please select a Flat");
+            return false;
+        }
+        if (!globalStartDate) {
+            toast.error("Please select a Start Date");
+            return false;
+        }
+        if (!globalEndDate) {
+            toast.error("Please select an End Date");
+            return false;
+        }
+        if (globalStartDate && globalEndDate && globalEndDate < globalStartDate) {
+            toast.error("End Date must be on or after Start Date");
+            return false;
+        }
+        for (let i = 0; i < members.length; i++) {
+            const member = members[i];
+            const num = i + 1;
+            if (member.userSelectionType === "select") {
+                if (!member.selectedUser) {
+                    toast.error(`Member ${num}: Please select a User`);
+                    return false;
+                }
+            } else {
+                if (!member.firstName.trim()) {
+                    toast.error(`Member ${num}: First Name is required`);
+                    return false;
+                }
+                if (!member.lastName.trim()) {
+                    toast.error(`Member ${num}: Last Name is required`);
+                    return false;
+                }
+            }
+            if (!member.idCard) {
+                toast.error(`Member ${num}: ID Card image is required`);
+                return false;
+            }
+            if (!member.residentPhoto) {
+                toast.error(`Member ${num}: Resident's Photo is required`);
+                return false;
+            }
+        }
+        return true;
+    };
 
     const handleSubmit = async () => {
+        if (!validateForm()) return;
         setIsSubmitting(true)
         try {
             const formData = new FormData();
@@ -376,6 +434,8 @@ const AddCMSClubMembers = () => {
             navigate(-1);
         } catch (error) {
             console.log(error);
+            const errorMessage = error.response?.data?.error || "Failed to add club members";
+            toast.error(errorMessage);
         } finally {
             setIsSubmitting(false)
         }
@@ -400,11 +460,21 @@ const AddCMSClubMembers = () => {
                     <Card>
                         <CardContent className="pt-6">
                             <div className="space-y-4">
-                                <h2 className="text-lg font-semibold text-[#1a1a1a] mb-2">Select Membership Plan</h2>
+                                <h2 className="text-lg font-semibold text-[#1a1a1a] mb-2">Select Membership Plan <span className="text-[#C72030]">*</span></h2>
                                 {membershipPlans.length === 0 ? (
-                                    <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed">
-                                        <p className="text-gray-500 text-sm">No membership plans available.</p>
-                                    </div>
+                                    <>
+                                        {
+                                            plansLoading ? (
+                                                <div>
+                                                    <Loader className="animate-spin" />
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed">
+                                                    <p className="text-gray-500 text-sm">No membership plans available.</p>
+                                                </div>
+                                            )
+                                        }
+                                    </>
                                 ) : (
                                     <div className="grid grid-cols-1 gap-4">
                                         {membershipPlans.map((plan: any) => (
@@ -460,8 +530,8 @@ const AddCMSClubMembers = () => {
                             <div className="space-y-6">
                                 <h2 className="text-lg font-semibold text-[#1a1a1a]">Membership Info</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <FormControl required sx={fieldStyles}>
-                                        <InputLabel className="bg-white px-1">Tower</InputLabel>
+                                    <FormControl sx={fieldStyles}>
+                                        <InputLabel className="bg-white px-1">Tower <span className="text-[#C72030]">*</span></InputLabel>
                                         <Select
                                             value={tower}
                                             onChange={(e) => setTower(e.target.value)}
@@ -478,8 +548,8 @@ const AddCMSClubMembers = () => {
                                             ))}
                                         </Select>
                                     </FormControl>
-                                    <FormControl required sx={fieldStyles}>
-                                        <InputLabel className="bg-white px-1">Flat</InputLabel>
+                                    <FormControl sx={fieldStyles}>
+                                        <InputLabel className="bg-white px-1">Flat <span className="text-[#C72030]">*</span></InputLabel>
                                         <Select
                                             value={flat}
                                             onChange={(e) => setFlat(e.target.value)}
@@ -498,18 +568,16 @@ const AddCMSClubMembers = () => {
                                     </FormControl>
 
                                     <TextField
-                                        required
                                         type="date"
-                                        label="Start Date (Applies to all)"
+                                        label={<span>Start Date (Applies to all) <span className="text-[#C72030]">*</span></span>}
                                         value={globalStartDate}
                                         onChange={(e) => setGlobalStartDate(e.target.value)}
                                         InputLabelProps={{ shrink: true }}
                                         sx={fieldStyles}
                                     />
                                     <TextField
-                                        required
                                         type="date"
-                                        label="End Date (Applies to all)"
+                                        label={<span>End Date (Applies to all) <span className="text-[#C72030]">*</span></span>}
                                         value={globalEndDate}
                                         onChange={(e) => setGlobalEndDate(e.target.value)}
                                         inputProps={{
@@ -708,8 +776,8 @@ const AddCMSClubMembers = () => {
                                     {/* User Input Section */}
                                     {member.userSelectionType === "select" ? (
                                         <div className="grid grid-cols-1 gap-4">
-                                            <FormControl required fullWidth sx={fieldStyles}>
-                                                <InputLabel className="bg-white px-1">User</InputLabel>
+                                            <FormControl fullWidth sx={fieldStyles}>
+                                                <InputLabel className="bg-white px-1">User <span className="text-[#C72030]">*</span></InputLabel>
                                                 <Select
                                                     value={member.selectedUser}
                                                     onChange={(e) =>
@@ -739,8 +807,7 @@ const AddCMSClubMembers = () => {
                                     ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                             <TextField
-                                                required
-                                                label="First Name"
+                                                label={<span>First Name <span className="text-[#C72030]">*</span></span>}
                                                 placeholder="Enter First Name"
                                                 value={member.firstName}
                                                 onChange={(e) =>
@@ -749,8 +816,7 @@ const AddCMSClubMembers = () => {
                                                 sx={fieldStyles}
                                             />
                                             <TextField
-                                                required
-                                                label="Last Name"
+                                                label={<span>Last Name <span className="text-[#C72030]">*</span></span>}
                                                 placeholder="Enter Last Name"
                                                 value={member.lastName}
                                                 onChange={(e) =>
@@ -889,7 +955,7 @@ const AddCMSClubMembers = () => {
                                         {/* ID Card */}
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium text-gray-700">
-                                                ID Card
+                                                ID Card <span className="text-[#C72030]">*</span>
                                             </label>
                                             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer relative group">
                                                 <input
@@ -925,7 +991,7 @@ const AddCMSClubMembers = () => {
                                         {/* Resident's Photo */}
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium text-gray-700">
-                                                Resident's Photo
+                                                Resident's Photo <span className="text-[#C72030]">*</span>
                                             </label>
                                             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer relative group">
                                                 <input

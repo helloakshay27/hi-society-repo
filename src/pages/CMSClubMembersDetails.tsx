@@ -254,6 +254,7 @@ export const CMSClubMembersDetails = () => {
     // Capture Payment State
     const [isCaptureDialogOpen, setIsCaptureDialogOpen] = useState(false);
     const [captureFormData, setCaptureFormData] = useState({
+        bill_id: "",
         total_payable: "",
         payment_mode: "",
         transaction_number: "",
@@ -274,12 +275,12 @@ export const CMSClubMembersDetails = () => {
             setRenewEndDate(membershipData.end_date ? membershipData.end_date.split("T")[0] : "");
 
             // Populate capture form data if payment details exist
-            if (membershipData.allocation_payment_detail) {
-                setCaptureFormData(prev => ({
-                    ...prev,
-                    total_payable: membershipData.allocation_payment_detail?.total_amount || "",
-                }));
-            }
+            // if (membershipData.allocation_payment_detail) {
+            //     setCaptureFormData(prev => ({
+            //         ...prev,
+            //         total_payable: membershipData.allocation_payment_detail?.total_amount || "",
+            //     }));
+            // }
         }
     }, [membershipData]);
 
@@ -622,6 +623,7 @@ export const CMSClubMembersDetails = () => {
                 `https://${baseUrl}/club_member_allocations/${id}/payment.json`,
                 {
                     lock_payment: {
+                        bill_id: captureFormData.bill_id,
                         paid_amount: captureFormData.total_payable,
                         payment_method: captureFormData.payment_mode,
                         pg_transaction_id: captureFormData.transaction_number,
@@ -1455,6 +1457,36 @@ export const CMSClubMembersDetails = () => {
                 </DialogTitle>
                 <DialogContent sx={{ p: 3 }}>
                     <Box className="space-y-4 pt-2">
+                        <div>
+                            <Typography variant="body2" color="textSecondary" gutterBottom>
+                                Select Bill
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <MuiSelect
+                                    name="bill_id"
+                                    value={captureFormData.bill_id}
+                                    onChange={(e) => {
+                                        const billId = e.target.value;
+                                        const selectedBill = membershipData?.bills?.find(b => b.id === Number(billId));
+                                        setCaptureFormData(prev => ({
+                                            ...prev,
+                                            bill_id: billId as string,
+                                            total_payable: selectedBill ? selectedBill.total_amount.toString() : ""
+                                        }));
+                                    }}
+                                    displayEmpty
+                                >
+                                    <MenuItem value="" disabled>
+                                        Select Bill
+                                    </MenuItem>
+                                    {membershipData?.bills?.map((bill) => (
+                                        <MenuItem key={bill.id} value={bill.id.toString()}>
+                                            ₹{bill.total_amount}
+                                        </MenuItem>
+                                    ))}
+                                </MuiSelect>
+                            </FormControl>
+                        </div>
                         <div>
                             <Typography variant="body2" color="textSecondary" gutterBottom>
                                 Total Payable Amount

@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 export const LoyaltyInventorySection = () => {
     const navigate = useNavigate();
@@ -126,10 +127,9 @@ export const LoyaltyInventorySection = () => {
 
     const fetchCategories = async () => {
         try {
-            // const url = getFullUrl("/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
-            const url =
-                "https://runwal-api.lockated.com/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
-            const response = await axios.get(url);
+            const token = API_CONFIG.TOKEN || "";
+            const url = getFullUrl(`/generic_categories?token=${token}`);
+            const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
             const cats = response.data?.categories || [];
             setCategories(cats.map((cat: any) => ({ id: cat.id, name: cat.name })));
         } catch (error) {
@@ -148,7 +148,8 @@ export const LoyaltyInventorySection = () => {
 
             // Update all selected products
             const updatePromises = selectedProductIds.map(async (id) => {
-                const url = `https://runwal-api.lockated.com/products/${id}.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
+                const token = API_CONFIG.TOKEN || "";
+                const url = getFullUrl(`/products/${id}.json?token=${token}`);
                 return axios.put(url, {
                     product: {
                         status: nextActive ? "active" : "inactive",
@@ -188,10 +189,9 @@ export const LoyaltyInventorySection = () => {
     const fetchInventoryData = async () => {
         try {
             setLoading(true);
-            // const url = getFullUrl("/products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
-            const url =
-                "https://runwal-api.lockated.com/products?source=admin_portal&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
-            const response = await axios.get(url);
+            const token = API_CONFIG.TOKEN || "";
+            const url = getFullUrl(`/products?source=admin_portal&token=${token}`);
+            const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
             const products = response.data?.products || [];
             setInventoryData(products);
 
@@ -554,12 +554,12 @@ export const LoyaltyInventorySection = () => {
             formData.append("product[points_required]", pointsRequired);
 
             // API expects token as query param
-            // const url = getFullUrl("/products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ");
-            const url =
-                "https://runwal-api.lockated.com/products?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+            const token = API_CONFIG.TOKEN || "";
+            const url = getFullUrl(`/products?token=${token}`);
             await axios.post(url, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
+                    Authorization: getAuthHeader(),
                 },
             });
 
