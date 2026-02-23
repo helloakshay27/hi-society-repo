@@ -116,7 +116,9 @@ const EnquiryList = lazy(() => import("@/pages/EnquiryList"));
 const EventCreate = lazy(() => import("@/pages/EventCreate"));
 const EventEdit = lazy(() => import("@/pages/EventEdit"));
 const EventList = lazy(() => import("@/pages/EventList"));
+const LoyaltyEventList = lazy(() => import("@/pages/LoyaltyEventList"));
 const OffersList = lazy(() => import("@/pages/OffersList"));
+const LoyaltyOffersList = lazy(() => import("@/pages/LoyaltyOffersList"));
 const FaqCategoryForm = lazy(() => import("@/pages/FaqCategoryForm"));
 const FaqCategoryList = lazy(() => import("@/pages/FaqCategoryList"));
 const FaqCreate = lazy(() => import("@/pages/FaqCreate"));
@@ -676,7 +678,7 @@ export const setupMemberRoutes = (
       Component={withSuspense(EventEdit)}
     />
     <Route path="/maintenance/event-list" Component={withSuspense(EventList)} />
-    <Route path="/loyalty/event-list" Component={withSuspense(EventList)} />
+    <Route path="/loyalty/event-list" Component={withSuspense(LoyaltyEventList)} />
 
     <Route
       path="/maintenance/offers-list"
@@ -684,7 +686,7 @@ export const setupMemberRoutes = (
     />
     <Route
       path="/loyalty/offers-list"
-      Component={withSuspense(OffersList)}
+      Component={withSuspense(LoyaltyOffersList)}
     />
 
     {/* Noticeboard Routes (Broadcast) */}
