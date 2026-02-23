@@ -81,7 +81,7 @@ const AppointmentzRMConfig = () => {
         lastName: user.last_name || "",
         email: user.email,
         mobile: user.mobile,
-        userType: user.user_type === "cs" ? "Cs User" : "Rm User",
+        userType: user.user_type === "cs_user" ? "Customer Support" : "RM User",
         createdOn: new Date(user.created_at).toLocaleDateString("en-GB"),
         status: user.active,
       }));
@@ -187,7 +187,7 @@ const AppointmentzRMConfig = () => {
         email: user.email,
         mobile: user.mobile,
         password: "",
-        userType: user.user_type === "cs" ? "cs" : "rm",
+        userType: user.user_type === "cs_user" ? "cs_user" : "rm_user",
       });
       setIsAddModalOpen(true);
     } catch (error) {
@@ -426,8 +426,8 @@ const AppointmentzRMConfig = () => {
                   <SelectValue placeholder="Select User Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cs">Cs User</SelectItem>
-                  <SelectItem value="rm">Rm User</SelectItem>
+                  <SelectItem value="cs_user">Customer Support</SelectItem>
+                  <SelectItem value="rm_user">RM User</SelectItem>
                 </SelectContent>
               </Select>
             </div>
