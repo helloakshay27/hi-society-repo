@@ -65,7 +65,7 @@ interface Offer {
   imageUrl: string;
 }
 
-export default function LoyaltyOffersList() {
+export default function OffersList() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('offers');
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -344,7 +344,7 @@ export default function LoyaltyOffersList() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/offer/view/${item.id}`)}
+              onClick={() => navigate(`/loyalty/offer/view/${item.id}`)}
               title="View"
             >
               <Eye className="w-4 h-4 text-gray-700" />
@@ -352,7 +352,7 @@ export default function LoyaltyOffersList() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(`/offer/add/${item.id}`)}
+              onClick={() => navigate(`/loyalty/offer/add/${item.id}`)}
               title="Edit"
             >
               <Pencil className="w-4 h-4 text-gray-700" />
@@ -370,20 +370,20 @@ export default function LoyaltyOffersList() {
     if (checkDraftExists()) {
       setShowDraftModal(true);
     } else {
-      navigate('/offer/add');
+      navigate('/loyalty/offer/add');
     }
   };
 
   const handleContinueDraft = () => {
     setShowDraftModal(false);
-    navigate('/offer/add');
+    navigate('/loyalty/offer/add');
     // The AddOfferPage will handle loading the draft
   };
 
   const handleStartFresh = () => {
     clearDraft();
     setShowDraftModal(false);
-    navigate('/offer/add');
+    navigate('/loyalty/offer/add');
     toast.info('Starting fresh! Previous draft has been cleared.', {
       duration: 3000,
     });
