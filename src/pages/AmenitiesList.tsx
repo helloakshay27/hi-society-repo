@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Plus, Edit } from "lucide-react";
@@ -46,8 +46,8 @@ const AmenitiesList = () => {
     try {
       const response = await axios.get(`${baseURL}/amenity_setups.json`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
+                                 Authorization: getAuthHeader(),
+                               },
       });
       let allAmenities = response.data.amenities_setups || [];
 
@@ -106,9 +106,8 @@ const AmenitiesList = () => {
         amenity_setup: { active: updatedStatus },
       }, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          "Content-Type": "application/json",
-        },
+                                 Authorization: getAuthHeader(),
+                               },
       });
 
       fetchAmenities();
@@ -129,8 +128,8 @@ const AmenitiesList = () => {
         },
       }, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
+                                 Authorization: getAuthHeader(),
+                               },
       });
 
       fetchAmenities();

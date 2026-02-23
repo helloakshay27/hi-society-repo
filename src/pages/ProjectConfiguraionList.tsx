@@ -107,10 +107,9 @@ const ProjectConfigurationList = () => {
       await axios.patch(`${baseURL}/configuration_setups/${id}.json`, {
         active: !currentStatus,
       }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          "Content-Type": "application/json",
-        },
+         headers: {
+                          Authorization: getAuthHeader(),
+                        },
       });
       toast.success("Status updated successfully!");
       fetchConfigurations(); // Refetch to maintain consistency

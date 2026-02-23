@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { ChevronRight, ArrowLeft, Home } from "lucide-react";
 import { TextField } from '@mui/material';
 import { Button } from "@/components/ui/button";
@@ -45,9 +45,9 @@ const PropertyTypeEdit = () => {
         const response = await axios.get(
           `${baseURL}/property_types/${id}.json`,
           {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
+          headers: {
+          Authorization: getAuthHeader(),
+        },
           }
         );
         setName(response.data.property_type || "");
@@ -75,10 +75,9 @@ const PropertyTypeEdit = () => {
         `${baseURL}/property_types/${id}.json`,
         { property_type: { property_type: name } },
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+            headers: {
+                    Authorization: getAuthHeader(),
+                  },
         }
       );
 

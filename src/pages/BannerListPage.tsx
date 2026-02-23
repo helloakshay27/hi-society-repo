@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import axios from "axios";
+import { getAuthHeader } from "@/config/apiConfig";
 
 const columns: ColumnConfig[] = [
     {
@@ -46,8 +47,8 @@ const BannerListPage = () => {
         try {
             const response = await axios.get(`https://${baseUrl}/banners.json`, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                           Authorization: getAuthHeader(),
+                         },
                 params: {
                     banner_name: true,
                     title: true,

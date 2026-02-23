@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { ArrowLeft, Building2 } from "lucide-react";
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { Button } from "@/components/ui/button";
@@ -50,9 +50,9 @@ const ProjectBuildingTypeEdit = () => {
     const fetchPropertyTypes = async () => {
       try {
         const response = await axios.get(`${baseURL}/property_types.json`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
+           headers: {
+                   Authorization: getAuthHeader(),
+                 },
         });
 
         const options = Array.isArray(response.data)
@@ -77,8 +77,8 @@ const ProjectBuildingTypeEdit = () => {
           `${baseURL}/building_types/${id}.json`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
+                                      Authorization: getAuthHeader(),
+                                    },
           }
         );
 
@@ -139,8 +139,8 @@ const ProjectBuildingTypeEdit = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
+                                    Authorization: getAuthHeader(),
+                                  },
         }
       );
 

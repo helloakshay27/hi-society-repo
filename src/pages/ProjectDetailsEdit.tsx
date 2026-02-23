@@ -1346,7 +1346,11 @@ const ProjectDetailsEdit = () => {
 
   // Fetch helpers (same as create)
   const fetchAmenities = () => {
-    return axios.get(getFullUrl("/amenity_setups.json")).then((response) => {
+    return axios.get(getFullUrl("/amenity_setups.json"),{
+      headers: {
+                  Authorization: getAuthHeader(),
+                },
+    }).then((response) => {
       setAmenities(response.data.amenities_setups || []);
     });
   };
