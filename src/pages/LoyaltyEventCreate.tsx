@@ -911,7 +911,7 @@ const EventCreate = () => {
       });
       setSelectedChannelPartners([]);
 
-      navigate("/maintenance/event-list");
+      navigate("/loyalty/event-list");
     } catch (error) {
       console.error("Error submitting the form:", error);
       if (error.response && error.response.data) {
@@ -2099,7 +2099,6 @@ const EventCreate = () => {
               </h2>
             </div>
             <div className="p-6 space-y-6">
-              {/* Channel Partners Dropdown */}
               {/* <div>
                 <FormControl
                   fullWidth
@@ -2285,12 +2284,10 @@ const EventCreate = () => {
                 )}
               </div>
 
-              {/* OR Divider */}
               <div className="flex items-center justify-center">
                 <span className="text-sm font-medium text-gray-500">Or</span>
               </div>
 
-              {/* CSV File Upload Section */}
               <div
                 className="relative"
                 onMouseEnter={() => setShowCsvTooltip(true)}
@@ -2365,7 +2362,6 @@ const EventCreate = () => {
                     </div>
                   )}
 
-                  {/* Add More Files Button when files exist */}
                   {csvFiles.length > 0 && (
                     <div className="mt-4 flex justify-center">
                       <label className="cursor-pointer">
@@ -2581,13 +2577,13 @@ const EventCreate = () => {
               >
                 Proceed to save
               </button>
-              <button
+              {/* <button
                 type="button"
                 onClick={handleSaveToDraft}
                 className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
               >
                 Save to draft
-              </button>
+              </button> */}
             </div>
             {currentStep > 0 && (
               <>
@@ -3763,7 +3759,7 @@ const EventCreate = () => {
               </div>
 
               {/* Step 3: Invite CPs Preview */}
-              <div className="mb-6">
+              {/* <div className="mb-6">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                     <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -3792,9 +3788,8 @@ const EventCreate = () => {
                     </button>
                   </div>
                   <div className="p-6 space-y-6">
-                    {/* Channel Partners */}
                     <div>
-                      {/* <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
                         <InputLabel shrink>Selected Channel Partners</InputLabel>
                         <MuiSelect
                           multiple
@@ -3821,10 +3816,9 @@ const EventCreate = () => {
                             </MenuItem>
                           ))}
                         </MuiSelect>
-                      </FormControl> */}
+                      </FormControl>
                     </div>
 
-                    {/* Share With Section */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
                       <div className="flex gap-6 mb-4">
@@ -3922,7 +3916,6 @@ const EventCreate = () => {
                       )}
                     </div>
 
-                    {/* CSV Files */}
                     {csvFiles.length > 0 && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Uploaded CSV Files</label>
@@ -3935,7 +3928,7 @@ const EventCreate = () => {
                     )}
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Step 2: Event Related Images Preview */}
               <div className="mb-6">

@@ -49,7 +49,7 @@ interface EventPermissions {
   destroy?: string;
 }
 
-const Eventlist = () => {
+const LoyaltyEventsList = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,8 +74,9 @@ const Eventlist = () => {
     scanTimeEntries: 0,
   });
 
-  // Upcoming events count (bound from API `upcomming_events` / `upcoming_events`)
+  // Upcoming/past events count (bound from API)
   const [upcomingEventsCount, setUpcomingEventsCount] = useState(0);
+  const [pastEventsCount, setPastEventsCount] = useState(0);
 
   const getEventPermissions = () => {
     try {
@@ -133,6 +134,13 @@ const Eventlist = () => {
               : (response.data.upcoming_events && Array.isArray(response.data.upcoming_events)
                 ? response.data.upcoming_events.length
                 : 0))
+          );
+
+          // Bind past events count from API
+          setPastEventsCount(
+            (response.data.past_events && Array.isArray(response.data.past_events)
+              ? response.data.past_events.length
+              : 0)
           );
         }
 
@@ -297,6 +305,8 @@ const Eventlist = () => {
     { key: "event_at", label: "Event At", sortable: true },
     { key: "from_time", label: "Event Date", sortable: false },
     { key: "to_time", label: "Event Time", sortable: false },
+    { key: "created_by", label: "Created By", sortable: false },
+    { key: "created_at", label: "Created On", sortable: false },  
     { key: "show_on_home", label: "Show on Home", sortable: false },
     { key: "active", label: "Status", sortable: false },
   ];
@@ -356,6 +366,10 @@ const Eventlist = () => {
         return formatDateOnly(item.from_time);
       case "to_time":
         return formatTimeOnly(item.from_time);
+         case "created_by":
+        return item.created_by;
+      case "created_at":
+        return formatDateOnly(item.created_at);
       case "show_on_home":
         return (
           <Switch
@@ -438,6 +452,21 @@ const Eventlist = () => {
                 {upcomingEventsCount}
               </div>
               <div className="text-sm font-medium text-[#1A1A1A]">Upcoming Event</div>
+            </div>
+          </div>
+
+          <div
+            className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => console.log('Filter by past')}
+          >
+            <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
+              <Clock className="w-6 h-6 text-[#C72030]" />
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-[#1A1A1A]">
+                {pastEventsCount}
+              </div>
+              <div className="text-sm font-medium text-[#1A1A1A]">Past Event</div>
             </div>
           </div>
         </div>
@@ -672,4 +701,4 @@ const Eventlist = () => {
   );
 };
 
-export default Eventlist;
+export default LoyaltyEventsList;

@@ -25,6 +25,13 @@ interface WalletData {
 }
 
 interface Transaction {
+  customer_name: string;
+  customer_code: string;
+  order_id: string;
+  base_price: string;
+  customer_price: string;
+  resource_type: string;
+  redirect_ur: any;
   id: number;
   transaction_type: string;
   amount: number;
@@ -191,6 +198,13 @@ const WalletTopup: React.FC = () => {
     { key: "id", label: "ID", sortable: true },
     { key: "transaction_type", label: "Type", sortable: true },
     { key: "amount", label: "Amount", sortable: true },
+    { key: "customer_name", label: "Customer", sortable: true },
+    { key: "customer_code", label: "Customer Code", sortable: true },
+    { key: "order_id", label: "Order ID", sortable: true },
+    { key: "base_price", label: "Base Price", sortable: true },
+    { key: "customer_price", label: "Customer Price", sortable: true },
+    { key: "resource_type", label: "Resource", sortable: true },
+    { key: "redirect_ur", label: "Link", sortable: false },
     { key: "remarks", label: "Remarks", sortable: false },
     { key: "created_at", label: "Date", sortable: true },
   ];
@@ -226,6 +240,31 @@ const WalletTopup: React.FC = () => {
         );
       case "remarks":
         return <span className="text-gray-600">{item.remarks || "-"}</span>;
+      case "customer_name":
+        return <span className="text-gray-700">{item.customer_name || "-"}</span>;
+      case "customer_code":
+        return <span className="text-gray-700">{item.customer_code || "-"}</span>;
+      case "order_id":
+        return <span className="text-gray-700">{item.order_id || "-"}</span>;
+      case "base_price":
+        return <span className="text-gray-700">₹{item.base_price || "0"}</span>;
+      case "customer_price":
+        return <span className="text-gray-700">₹{item.customer_price || "0"}</span>;
+      case "resource_type":
+        return <span className="text-gray-700">{item.resource_type || "-"}</span>;
+      case "redirect_ur":
+        return item.redirect_ur ? (
+          <a
+            href={item.redirect_ur}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline"
+          >
+            View
+          </a>
+        ) : (
+          <span className="text-gray-500">-</span>
+        );
       case "created_at":
         return (
           <span className="text-gray-500">
@@ -236,6 +275,174 @@ const WalletTopup: React.FC = () => {
         return null;
     }
   };
+
+// --- ThresholdAlertCard Component ---
+interface ThresholdAlertCardProps {
+  organizationId: string;
+  token: string;
+}
+
+const ThresholdAlertCard: React.FC<ThresholdAlertCardProps> = ({ organizationId, token }) => {
+  const [threshold, setThreshold] = useState<number>(50000);
+  const [emails, setEmails] = useState<string>("ops@system.com,finance@system.com");
+  const [alertEnabled, setAlertEnabled] = useState<boolean>(true);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Optionally, fetch current settings from API on mount or org change
+  useEffect(() => {
+    const fetchSettings = async () => {
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+      try {
+        const url = getFullUrl(`/admin/wallet_alert_settings?organization_id=${organizationId}&token=${token}`);
+        const response = await fetch(url, {
+          headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data) {
+            setThreshold(Number(data.super_admin_threshold) || 50000);
+            setEmails(data.super_admin_emails || "");
+            setAlertEnabled(data.alert_enabled === "true" || data.alert_enabled === true);
+          }
+        }
+      } catch (err) {
+        // ignore fetch error, use defaults
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSettings();
+  }, [organizationId, token]);
+
+  const handleThresholdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setThreshold(Number(e.target.value));
+    setSuccess(null);
+    setError(null);
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setSuccess(null);
+    setError(null);
+    try {
+      if (!threshold || threshold <= 0) throw new Error("Please enter a valid threshold amount");
+      const url = getFullUrl(`/admin/wallet_alert_settings?organization_id=${organizationId}&token=${token}`);
+      const payload = {
+        organization_id: Number(organizationId),
+        alert_enabled: alertEnabled ? "true" : "false",
+        super_admin_threshold: threshold,
+        super_admin_emails: emails,
+      };
+      const response = await fetch(url, {
+        method: "PATCH",
+        mode: "cors",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `Failed to update alert settings (${response.status})`);
+      }
+      setSuccess("Alert settings updated successfully");
+    } catch (err: any) {
+      setError(err.message || "Failed to update alert settings");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mb-6">
+      <Card className="border-[#e5e1d8] shadow-none">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+              <AlertCircle className="w-6 h-6 text-red-500" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-semibold text-[#C72030]">Threshold Alerts</span>
+                <span className="text-xs text-gray-500">Get notified when balance is low</span>
+              </div>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded">{alertEnabled ? "Active" : "Inactive"}</span>
+              <div className="relative inline-block w-10 align-middle select-none">
+                <input
+                  type="checkbox"
+                  checked={alertEnabled}
+                  onChange={() => { setAlertEnabled((v) => !v); setSuccess(null); setError(null); }}
+                  className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                  style={{ right: 0, top: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+                />
+                <span className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer" />
+              </div>
+            </div>
+          </div>
+          {success && (
+            <Alert className="bg-green-50 border-green-200 my-2">
+              <AlertDescription className="text-green-800">{success}</AlertDescription>
+            </Alert>
+          )}
+          {error && (
+            <Alert className="bg-red-50 border-red-200 my-2">
+              <AlertDescription className="text-red-800">{error}</AlertDescription>
+            </Alert>
+          )}
+          <div className="mb-4">
+            <Label htmlFor="threshold" className="text-[#1a1a1a] flex items-center gap-1">
+              Minimum Balance Threshold
+              <span className="text-gray-400 cursor-pointer" title="Get notified when balance is low">&#9432;</span>
+            </Label>
+            <div className="mt-2">
+              <div className="flex items-center border border-[#e5e1d8] rounded bg-white">
+                <span className="px-3 text-gray-500 text-lg">₹</span>
+                <input
+                  type="number"
+                  id="threshold"
+                  name="threshold"
+                  className="flex-1 py-2 px-2 text-lg outline-none bg-transparent border-0 focus:ring-0"
+                  value={threshold}
+                  min={1}
+                  onChange={handleThresholdChange}
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="mb-4">
+            <div className="bg-[#ede8df] rounded p-4 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-[#C72030] mr-2" />
+              <div>
+                <span className="font-semibold text-[#C72030]">Alert Recipients</span>
+                <div className="text-sm text-[#1a1a1a] mt-1">{emails}</div>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              className="bg-[#C72030] hover:bg-[#A01828] text-white px-8 py-2 text-base font-semibold rounded shadow-none"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? "Saving..." : "Submit"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 
   return (
     <div className="min-h-screen bg-[#f6f4ee] p-6">
@@ -311,9 +518,17 @@ const WalletTopup: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Wallet Balance Cards */}
+        {/* Threshold Alert Card - only show if org selected */}
+        {selectedOrgId && (
+          <ThresholdAlertCard
+            organizationId={selectedOrgId}
+            token={token}
+          />
+        )}
+
         {selectedOrgId && walletData && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {/* ...existing code... */}
             <Card className="border-[#e5e1d8] bg-gradient-to-br from-green-50 to-green-100">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
@@ -329,7 +544,6 @@ const WalletTopup: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-
             <Card className="border-[#e5e1d8] bg-gradient-to-br from-red-50 to-red-100">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
@@ -345,7 +559,6 @@ const WalletTopup: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-
             <Card className="border-[#e5e1d8] bg-gradient-to-br from-blue-50 to-blue-100">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">

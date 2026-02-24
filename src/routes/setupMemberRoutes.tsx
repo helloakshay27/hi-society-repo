@@ -38,6 +38,8 @@ import { AddStaffPage } from "@/pages/AddStaffPage";
 import ApprovalMatrixSetupPage from "@/pages/settings/ApprovalMatrixSetupPage";
 import Claims from "@/pages/Claims";
 import ClaimsDetails from "@/pages/ClaimsDetails";
+import LoyaltyEventCreate from "@/pages/LoyaltyEventCreate";
+import LoyaltyEventEdit from "@/pages/LoyaltyEventEdit";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
@@ -116,7 +118,9 @@ const EnquiryList = lazy(() => import("@/pages/EnquiryList"));
 const EventCreate = lazy(() => import("@/pages/EventCreate"));
 const EventEdit = lazy(() => import("@/pages/EventEdit"));
 const EventList = lazy(() => import("@/pages/EventList"));
+const LoyaltyEventList = lazy(() => import("@/pages/LoyaltyEventList"));
 const OffersList = lazy(() => import("@/pages/OffersList"));
+const LoyaltyOffersList = lazy(() => import("@/pages/LoyaltyOffersList"));
 const FaqCategoryForm = lazy(() => import("@/pages/FaqCategoryForm"));
 const FaqCategoryList = lazy(() => import("@/pages/FaqCategoryList"));
 const FaqCreate = lazy(() => import("@/pages/FaqCreate"));
@@ -143,6 +147,8 @@ const LockRoleList = lazy(() => import("@/pages/LockRoleList"));
 const LoyaltyManagersCreate = lazy(
   () => import("@/pages/LoyaltyManagersCreate")
 );
+const LoyaltyEventCreate = lazy(() => import("@/pages/LoyaltyEventCreate"));
+const LoyaltyEventEdit = lazy(() => import("@/pages/LoyaltyEventEdit"));
 const LoyaltyManagersEdit = lazy(() => import("@/pages/LoyaltyManagersEdit"));
 const LoyaltyManagersList = lazy(() => import("@/pages/LoyaltyManagersList"));
 const NewGallery = lazy(() => import("@/pages/NewGallery"));
@@ -433,6 +439,12 @@ const SmartSecureVisitorReport = lazy(
 const SmartSecureStaffReport = lazy(
   () => import("@/pages/SmartSecureStaffReport")
 );
+const SmartSecureVehicleReport = lazy(
+  () => import("@/pages/SmartSecureVehicleReport")
+);
+const SmartSecureMaterialReport = lazy(
+  () => import("@/pages/SmartSecureMaterialReport")
+);
 const VisitorsDashboard = lazy(() => import("@/pages/VisitorsDashboard"));
 const SmartSecurePatrolling = lazy(
   () => import("@/pages/SmartSecurePatrolling")
@@ -667,16 +679,16 @@ export const setupMemberRoutes = (
     />
     <Route
       path="/loyalty/event-create"
-      Component={withSuspense(EventCreate)}
+      Component={withSuspense(LoyaltyEventCreate)}
     />
     {/* <Route path="/loyalty/event-details/:id" element={<EventDetails />} /> */}
     <Route path="/loyalty/event-details/:id" element={<EventDetails />} />
     <Route
       path="/loyalty/event-edit/:id"
-      Component={withSuspense(EventEdit)}
+      Component={withSuspense(LoyaltyEventEdit)}
     />
     <Route path="/maintenance/event-list" Component={withSuspense(EventList)} />
-    <Route path="/loyalty/event-list" Component={withSuspense(EventList)} />
+    <Route path="/loyalty/event-list" Component={withSuspense(LoyaltyEventList)} />
 
     <Route
       path="/maintenance/offers-list"
@@ -684,9 +696,8 @@ export const setupMemberRoutes = (
     />
     <Route
       path="/loyalty/offers-list"
-      Component={withSuspense(OffersList)}
+      Component={withSuspense(LoyaltyOffersList)}
     />
-
     {/* Noticeboard Routes (Broadcast) */}
     <Route
       path="/maintenance/noticeboard-list"
@@ -1553,6 +1564,14 @@ export const setupMemberRoutes = (
     <Route
       path="/smartsecure/staff-report"
       Component={withSuspense(SmartSecureStaffReport)}
+    />
+    <Route
+      path="/smartsecure/vehicle-report"
+      Component={withSuspense(SmartSecureVehicleReport)}
+    />
+    <Route
+      path="/smartsecure/material-report"
+      Component={withSuspense(SmartSecureMaterialReport)}
     />
     {/* <Route
       path="/smartsecure/patrolling"

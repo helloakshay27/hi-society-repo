@@ -1278,15 +1278,15 @@ export const CMSClubMembersDetails = () => {
                                                 <span className="text-gray-500 mx-2">:</span>
                                                 <span className="text-gray-900 font-medium">{selectedMember.id}</span>
                                             </div>
-                                            <div className="flex items-start">
+                                            {/* <div className="flex items-start">
                                                 <span className="text-gray-500 min-w-[140px]">User ID</span>
                                                 <span className="text-gray-500 mx-2">:</span>
                                                 <span className="text-gray-900 font-medium">{selectedMember.user_id}</span>
-                                            </div>
+                                            </div> */}
                                             <div className="flex items-start">
                                                 <span className="text-gray-500 min-w-[140px]">Created By</span>
                                                 <span className="text-gray-500 mx-2">:</span>
-                                                <span className="text-gray-900 font-medium">{selectedMember.created_by_id || '-'}</span>
+                                                <span className="text-gray-900 font-medium">{membershipData.created_by || '-'}</span>
                                             </div>
                                             <div className="flex items-start">
                                                 <span className="text-gray-500 min-w-[140px]">Created At</span>

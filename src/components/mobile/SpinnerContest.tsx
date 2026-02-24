@@ -211,10 +211,10 @@ export const SpinnerContest: React.FC = () => {
         setContestData((prev) =>
           prev
             ? {
-                ...prev,
-                won_reward: true,
-                user_contest_reward: result.user_contest_reward,
-              }
+              ...prev,
+              won_reward: true,
+              user_contest_reward: result.user_contest_reward,
+            }
             : prev
         );
       }
@@ -277,7 +277,7 @@ export const SpinnerContest: React.FC = () => {
           const finalRot = (startRotation + finalRotation) % 360;
           setRotation(finalRot);
 
-          // Spin complete - show reward section first, then modal
+          // Spin complete - show modal immediately
           setTimeout(() => {
             spinSound.playWinSound();
 
@@ -294,10 +294,8 @@ export const SpinnerContest: React.FC = () => {
             // Decrement remaining attempts
             setRemainingAttempts((prev) => Math.max(0, prev - 1));
 
-            // Show result modal after reward section appears
-            setTimeout(() => {
-              setShowResult(true);
-            }, 800);
+            // Show result modal immediately
+            setShowResult(true);
           }, 500);
         }
       };
@@ -366,33 +364,25 @@ export const SpinnerContest: React.FC = () => {
       {/* Already Won Reward Screen */}
       {contestData.won_reward && contestData.user_contest_reward && (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#FFF8E7] via-white to-[#F5E6D3]">
-          {/* Back Button */}
-          <button
-            onClick={() => navigate(-1)}
-            className="absolute top-4 left-4 p-2 text-gray-700 hover:bg-white/50 rounded-full"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-
-          {/* Celebration Animation */}
-          <div className="mb-6 relative">
-            <div className="w-32 h-32 bg-gradient-to-br from-[#B88B15] to-[#D4A574] rounded-full flex items-center justify-center shadow-2xl animate-pulse">
-              <span className="text-6xl">🎉</span>
+          {/* Celebration Animation */
+            <div className="mb-6 relative">
+              <div className="w-32 h-32 bg-gradient-to-br from-[#B88B15] to-[#D4A574] rounded-full flex items-center justify-center shadow-2xl animate-pulse">
+                <span className="text-6xl">🎉</span>
+              </div>
+              {/* Sparkles */}
+              <span className="absolute -top-2 -left-2 text-3xl animate-bounce">
+                ✨
+              </span>
+              <span className="absolute -top-2 -right-2 text-3xl animate-bounce delay-100">
+                ✨
+              </span>
+              <span className="absolute -bottom-2 -left-2 text-3xl animate-bounce delay-200">
+                ✨
+              </span>
+              <span className="absolute -bottom-2 -right-2 text-3xl animate-bounce delay-300">
+                ✨
+              </span>
             </div>
-            {/* Sparkles */}
-            <span className="absolute -top-2 -left-2 text-3xl animate-bounce">
-              ✨
-            </span>
-            <span className="absolute -top-2 -right-2 text-3xl animate-bounce delay-100">
-              ✨
-            </span>
-            <span className="absolute -bottom-2 -left-2 text-3xl animate-bounce delay-200">
-              ✨
-            </span>
-            <span className="absolute -bottom-2 -right-2 text-3xl animate-bounce delay-300">
-              ✨
-            </span>
-          </div>
 
           {/* Message */}
           <h1 className="text-3xl font-bold text-gray-900 text-center mb-3">
@@ -572,7 +562,37 @@ export const SpinnerContest: React.FC = () => {
                 <button
                   onClick={() => {
                     setShowResult(false);
-                    setWinResult(null);
+
+                    // Check if user won a reward and update contestData
+                    if (winResult && winResult.prize.reward_type !== "none") {
+                      const rewardIdStr =
+                        localStorage.getItem("last_reward_id");
+                      if (rewardIdStr) {
+                        setContestData((prev) =>
+                          prev
+                            ? {
+                              ...prev,
+                              won_reward: true,
+                              user_contest_reward: {
+                                id: parseInt(rewardIdStr),
+                                contest_id: prev.id,
+                                prize_id: winResult.prize.id,
+                                reward_type: winResult.prize.reward_type,
+                                points_value: winResult.prize.points_value,
+                                coupon_code: winResult.prize.coupon_code,
+                                user_id: 0,
+                                status: "granted",
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString(),
+                              },
+                            }
+                            : prev
+                        );
+                      }
+                    } else {
+                      // Reset for next attempt if didn't win
+                      setWinResult(null);
+                    }
                   }}
                   className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600"
                 >
@@ -686,9 +706,8 @@ export const SpinnerContest: React.FC = () => {
                         );
                       }
                     }}
-                    className={`w-full border-2 border-[#B88B15] text-[#B88B15] py-4 rounded-lg font-semibold hover:bg-[#FFF8E7] transition-colors ${
-                      winResult.prize.coupon_code ? "" : "mt-3"
-                    }`}
+                    className={`w-full border-2 border-[#B88B15] text-[#B88B15] py-4 rounded-lg font-semibold hover:bg-[#FFF8E7] transition-colors ${winResult.prize.coupon_code ? "" : "mt-3"
+                      }`}
                   >
                     View Details
                   </button>

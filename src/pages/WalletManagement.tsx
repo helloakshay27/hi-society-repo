@@ -94,6 +94,8 @@ export const WalletManagement = () => {
     { key: "remarks", label: "Remarks" },
     { key: "created_at", label: "Date" },
     { key: "resource_type", label: "Resource Type" },
+    { key: "customer_code", label: "Customer ID" },
+    { key: "order_id", label: "Order ID" },
   ];
 
   const renderApiCell = (item: WalletTransaction, columnKey: string) => {
