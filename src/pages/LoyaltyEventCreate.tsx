@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import Select from 'react-select';
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -55,6 +56,10 @@ const EventCreate = () => {
     event_images_9_by_16: [],
     event_images_3_by_2: [],
     event_images_16_by_9: [],
+    details_image_1_by_1: [],
+    details_image_9_by_16: [],
+    details_image_3_by_2: [],
+    details_image_16_by_9: [],
     show_on_home: false,
   });
 
@@ -69,6 +74,12 @@ const EventCreate = () => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [groups, setGroups] = useState([]);
 
+  // Share With Society state
+  const [societies, setSocieties] = useState<{ id: number; name: string }[]>([]);
+  const [loadingSocieties, setLoadingSocieties] = useState(false);
+  const [selectedSocieties, setSelectedSocieties] = useState<string[]>([]);
+  const [shareWith, setShareWith] = useState<'all' | 'individual'>('all');
+
   // Enhanced reminder state
   const [reminderValue, setReminderValue] = useState("");
   const [reminderUnit, setReminderUnit] = useState("");
@@ -81,6 +92,8 @@ const EventCreate = () => {
   const [showEventUploader, setShowEventUploader] = useState(false);
   const [showCsvTooltip, setShowCsvTooltip] = useState(false);
   const [showCoverImageTooltip, setShowCoverImageTooltip] = useState(false);
+  const [showDetailsImageTooltip, setShowDetailsImageTooltip] = useState(false);
+  const [showDetailsImageUploader, setShowDetailsImageUploader] = useState(false);
   const previewUrlsRef = useRef(new Map()); // Store preview URLs for cleanup
 
   // Image configurations from API
@@ -256,9 +269,17 @@ const EventCreate = () => {
     { key: "event_images_3_by_2", label: "3:2" },
   ];
 
+  const detailsImageRatios = [
+    { key: "details_image_1_by_1", label: "1:1" },
+    { key: "details_image_16_by_9", label: "16:9" },
+    { key: "details_image_9_by_16", label: "9:16" },
+    { key: "details_image_3_by_2", label: "3:2" },
+  ];
+
   const eventUploadConfig = {
     "cover image": ["16:9", "1:1", "9:16", "3:2"],
     "event images": ["16:9", "1:1", "9:16", "3:2"],
+    "details image": ["16:9", "1:1", "9:16", "3:2"],
   };
 
   const coverImageType = "cover image";
@@ -284,6 +305,50 @@ const EventCreate = () => {
       ...prev,
       [key]: [...(prev[key] || []), ...files],
     }));
+  };
+
+  // react-select custom styles (matches AddOfferPage Applicable Projects)
+  const societySelectStyles = {
+    control: (provided: any, state: any) => ({
+      ...provided,
+      minHeight: '44px',
+      borderColor: state.isFocused ? '#C72030' : '#dcdcdc',
+      boxShadow: 'none',
+      fontSize: '14px',
+      paddingTop: '6px',
+      backgroundColor: 'transparent',
+      '&:hover': { borderColor: '#C72030' },
+    }),
+    valueContainer: (provided: any) => ({
+      ...provided,
+      padding: '4px 6px',
+      flexWrap: 'wrap' as const,
+      backgroundColor: 'transparent',
+    }),
+    dropdownIndicator: (provided: any, state: any) => ({
+      ...provided,
+      padding: '4px 8px',
+      color: state.isFocused ? '#C72030' : '#666',
+      '&:hover': { color: '#C72030' },
+    }),
+    indicatorSeparator: () => ({ display: 'none' }),
+    placeholder: (provided: any) => ({ ...provided, color: '#999', fontSize: '14px' }),
+    menu: (provided: any) => ({ ...provided, zIndex: 9999, fontSize: '14px', backgroundColor: '#fff' }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#C72030' : state.isFocused ? '#F6F4EE' : '#fff',
+      color: state.isSelected ? '#fff' : '#1A1A1A',
+      fontSize: '14px',
+      padding: '8px 12px',
+      cursor: 'pointer',
+    }),
+    multiValue: (provided: any) => ({ ...provided, backgroundColor: '#E5E0D3', borderRadius: '2px', margin: '2px 3px' }),
+    multiValueLabel: (provided: any) => ({ ...provided, color: '#333', fontSize: '13px', fontWeight: 500 }),
+    multiValueRemove: (provided: any) => ({
+      ...provided,
+      color: '#666',
+      '&:hover': { backgroundColor: '#C72030', color: '#fff' },
+    }),
   };
 
   const handleCroppedImages = (validImages, type = "cover") => {
@@ -343,6 +408,8 @@ const EventCreate = () => {
 
       if (type === "cover") {
         setShowCoverUploader(false);
+      } else if (type === "details") {
+        setShowDetailsImageUploader(false);
       } else {
         setShowEventUploader(false);
       }
@@ -373,6 +440,8 @@ const EventCreate = () => {
 
     if (type === "cover") {
       setShowCoverUploader(false);
+    } else if (type === "details") {
+      setShowDetailsImageUploader(false);
     } else {
       setShowEventUploader(false);
     }
@@ -533,7 +602,7 @@ const EventCreate = () => {
     ];
     const allowedVideoTypes = ["video/mp4", "video/webm", "video/ogg"];
 
-    for (let file of selectedFiles) {
+    for (const file of selectedFiles) {
       const isImage = allowedImageTypes.includes(file.type);
       const isVideo = allowedVideoTypes.includes(file.type);
 
@@ -855,6 +924,35 @@ const EventCreate = () => {
       });
     }
 
+    // Add details images (all ratios)
+    if (formData.details_image_1_by_1 && formData.details_image_1_by_1.length > 0) {
+      formData.details_image_1_by_1.forEach((img) => {
+        if (img.file) formDataToSend.append("event[details_image_1_by_1][]", img.file);
+      });
+    }
+    if (formData.details_image_16_by_9 && formData.details_image_16_by_9.length > 0) {
+      formData.details_image_16_by_9.forEach((img) => {
+        if (img.file) formDataToSend.append("event[details_image_16_by_9][]", img.file);
+      });
+    }
+    if (formData.details_image_9_by_16 && formData.details_image_9_by_16.length > 0) {
+      formData.details_image_9_by_16.forEach((img) => {
+        if (img.file) formDataToSend.append("event[details_image_9_by_16][]", img.file);
+      });
+    }
+    // Add selected societies (applicable project IDs) for Individual Society sharing
+    if (shareWith === 'individual' && selectedSocieties.length > 0) {
+      selectedSocieties.forEach((id) => {
+        formDataToSend.append('event[applicable_project_ids][]', id);
+      });
+    }
+
+    if (formData.details_image_3_by_2 && formData.details_image_3_by_2.length > 0) {
+      formData.details_image_3_by_2.forEach((img) => {
+        if (img.file) formDataToSend.append("event[details_image_3_by_2][]", img.file);
+      });
+    }
+
     // Add reminders
     if (preparedReminders && preparedReminders.length > 0) {
       preparedReminders.forEach((reminder, index) => {
@@ -907,6 +1005,10 @@ const EventCreate = () => {
         event_images_9_by_16: [],
         event_images_3_by_2: [],
         event_images_16_by_9: [],
+        details_image_1_by_1: [],
+        details_image_9_by_16: [],
+        details_image_3_by_2: [],
+        details_image_16_by_9: [],
         show_on_home: false,
       });
       setSelectedChannelPartners([]);
@@ -1002,6 +1104,29 @@ const EventCreate = () => {
     fetchProjects();
   }, []);
 
+  // Fetch societies for Share With dropdown
+  useEffect(() => {
+    const fetchSocieties = async () => {
+      setLoadingSocieties(true);
+      try {
+        const response = await axios.get(
+          `https://${localStorage.getItem('baseUrl')}/projects_for_dropdown.json`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          }
+        );
+        setSocieties(response.data.projects || []);
+      } catch (error) {
+        console.error('Error fetching societies:', error);
+      } finally {
+        setLoadingSocieties(false);
+      }
+    };
+    fetchSocieties();
+  }, []);
+
   const handleCancel = () => {
     navigate(-1);
   };
@@ -1069,9 +1194,9 @@ const EventCreate = () => {
       return;
     }
 
-    // Check file size (3MB limit)
-    if (file.size > 3 * 1024 * 1024) {
-      toast.error("Image size must be less than 3MB");
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be less than 5MB");
       return;
     }
 
@@ -1080,23 +1205,55 @@ const EventCreate = () => {
   };
 
   const handleAttachmentUpload = (e) => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files) as File[];
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
-    const newAttachments = files.map((file) => {
-      const isVideo = file.type.includes("video") || file.name.endsWith(".mp4");
-      return {
-        file,
-        name: file.name,
-        type: file.type || (isVideo ? "video/mp4" : "image/jpeg"),
-        preview: URL.createObjectURL(file),
-        size: file.size,
-      };
-    });
+    const newAttachments = files
+      .filter((file) => {
+        if (file.size > MAX_SIZE) {
+          toast.error(`"${file.name}" exceeds the 5MB limit and was skipped.`);
+          return false;
+        }
+        return true;
+      })
+      .map((file) => {
+        const isVideo = file.type.includes("video") || file.name.endsWith(".mp4");
+        return {
+          file,
+          name: file.name,
+          type: file.type || (isVideo ? "video/mp4" : "image/jpeg"),
+          preview: URL.createObjectURL(file),
+          size: file.size,
+        };
+      });
 
-    setFormData((prev) => ({
-      ...prev,
-      attachfile: [...(prev.attachfile || []), ...newAttachments],
-    }));
+    if (newAttachments.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        attachfile: [...(prev.attachfile || []), ...newAttachments],
+      }));
+    }
+  };
+
+  const handleDetailsImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload a valid image file for Event Details Image.");
+      e.target.value = "";
+      return;
+    }
+
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+      toast.error("Event Details Image must be less than 5MB.");
+      e.target.value = "";
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, details_image: file }));
+    e.target.value = "";
   };
 
   // CSV File Upload Handler
@@ -1945,6 +2102,75 @@ const EventCreate = () => {
           </div>
         )}
 
+        {/* Share Card */}
+        {currentStep === 0 && !isPreviewMode && (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <Avatar sx={{ width: 32, height: 32, backgroundColor: '#E5E0D3', mr: 1.5 }}>
+                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                </Avatar>
+                Share
+              </h2>
+            </div>
+            <div className="p-6">
+              {/* Radio buttons */}
+              <div className="flex items-center gap-8 mb-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="loyaltyShareWith"
+                    value="all"
+                    checked={shareWith === 'all'}
+                    onChange={() => { setShareWith('all'); setSelectedSocieties([]); }}
+                    className="w-4 h-4"
+                    style={{ accentColor: '#C72030' }}
+                  />
+                  <span className="text-sm text-gray-700 font-medium">All Society</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="loyaltyShareWith"
+                    value="individual"
+                    checked={shareWith === 'individual'}
+                    onChange={() => setShareWith('individual')}
+                    className="w-4 h-4"
+                    style={{ accentColor: '#C72030' }}
+                  />
+                  <span className="text-sm text-gray-700 font-medium">Individual Society</span>
+                </label>
+              </div>
+
+              {/* Society Multi-Select Dropdown – appears when Individual is selected */}
+              {shareWith === 'individual' && (
+                <div className="relative mt-2">
+                  <label className="absolute -top-2 left-3 bg-white px-2 text-xs font-medium text-gray-700 z-10">
+                    Select Society / Project(s)
+                  </label>
+                  <Select
+                    isMulti
+                    value={societies
+                      .filter(s => selectedSocieties.includes(s.id.toString()))
+                      .map(s => ({ value: s.id.toString(), label: s.name }))}
+                    onChange={(selected) => {
+                      setSelectedSocieties(selected ? selected.map(s => s.value) : []);
+                    }}
+                    options={societies.map(s => ({ value: s.id.toString(), label: s.name }))}
+                    styles={societySelectStyles}
+                    closeMenuOnSelect={false}
+                    placeholder="Select societies..."
+                    isDisabled={loadingSocieties}
+                    isLoading={loadingSocieties}
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Visibility Card */}
         {currentStep === 0 && !isPreviewMode && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -2494,7 +2720,7 @@ const EventCreate = () => {
                       <Info className="w-5 h-5 fill-black text-white" />
                       {showAttachmentTooltip && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                          Max Upload Size 3 MB (Images), 10 MB (Videos). Supports {getDynamicRatiosText("EventImage")} aspect ratios
+                          Max Upload Size 5 MB. Supports {getDynamicRatiosText("EventImage")} aspect ratios
                         </span>
                       )}
                     </span>
@@ -2504,9 +2730,6 @@ const EventCreate = () => {
                     type="button"
                     onClick={() => setShowEventUploader(true)}
                   >
-                    {/* <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-                    </svg> */}
                     <span>Add</span>
                   </button>
                 </div>
@@ -2547,7 +2770,6 @@ const EventCreate = () => {
                                 <TableCell className="py-3 px-4">
                                   <button
                                     type="button"
-                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                     onClick={() => handleImageRemoval(key, index)}
                                   >
                                     <Trash2 className="w-4 h-4 text-[#C72030]" />
@@ -2557,6 +2779,82 @@ const EventCreate = () => {
                             );
                           })
                           : null
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              {/* Event Details Image */}
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h5 className="text-base font-semibold inline-flex items-center gap-1">
+                    Event Details Image{" "}
+                    <span
+                      className="relative inline-block cursor-pointer"
+                      onMouseEnter={() => setShowDetailsImageTooltip(true)}
+                      onMouseLeave={() => setShowDetailsImageTooltip(false)}
+                    >
+                      <Info className="w-5 h-5 fill-black text-white" />
+                      {showDetailsImageTooltip && (
+                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                          Max Upload Size 5 MB. Supports 16:9, 1:1, 9:16, 3:2 aspect ratios.
+                        </span>
+                      )}
+                    </span>
+                  </h5>
+                  <button
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59] transition-colors"
+                    type="button"
+                    onClick={() => setShowDetailsImageUploader(true)}
+                  >
+                    <span>Add</span>
+                  </button>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 overflow-hidden">
+                  <Table className="border-separate">
+                    <TableHeader>
+                      <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Ratio</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4" style={{ borderColor: "#fff" }}>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {detailsImageRatios.map(({ key, label }) =>
+                        (formData[key] || []).length > 0
+                          ? formData[key].map((file, index) => (
+                            <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50 transition-colors">
+                              <TableCell className="py-3 px-4 font-medium">{file.name || "Unnamed File"}</TableCell>
+                              <TableCell className="py-3 px-4">
+                                <img
+                                  style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                  className="rounded border border-gray-200"
+                                  src={file.preview || file.document_url}
+                                  alt={file.name}
+                                />
+                              </TableCell>
+                              <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
+                              <TableCell className="py-3 px-4">
+                                <button
+                                  type="button"
+                                  onClick={() => handleImageRemoval(key, index)}
+                                >
+                                  <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                </button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                          : null
+                      )}
+                      {detailsImageRatios.every(({ key }) => !formData[key] || formData[key].length === 0) && (
+                        <TableRow>
+                          <TableCell colSpan={4} className="py-6 text-center text-sm text-gray-500">
+                            No details image uploaded. Click "Add" to select from the ratio modal.
+                          </TableCell>
+                        </TableRow>
                       )}
                     </TableBody>
                   </Table>
@@ -3758,6 +4056,57 @@ const EventCreate = () => {
                 </div>
               </div>
 
+              {/* Share Card Preview */}
+              <div className="mb-6">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                      <Avatar sx={{ width: 32, height: 32, backgroundColor: '#E5E0D3', mr: 1.5 }}>
+                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                      </Avatar>
+                      Share
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsPreviewMode(false);
+                        setCurrentStep(0);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                    >
+                      <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span>
+                    </button>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-sm text-gray-500 font-medium">Share With:</span>
+                      <span className="text-sm font-semibold" style={{ color: '#C72030' }}>
+                        {shareWith === 'all' ? 'All Society' : 'Individual Society'}
+                      </span>
+                    </div>
+                    {shareWith === 'individual' && selectedSocieties.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {societies
+                          .filter(s => selectedSocieties.includes(s.id.toString()))
+                          .map(s => (
+                            <span
+                              key={s.id}
+                              className="px-3 py-1 text-xs font-medium rounded"
+                              style={{ backgroundColor: '#E5E0D3', color: '#333' }}
+                            >
+                              {s.name}
+                            </span>
+                          ))}
+                      </div>
+                    )}
+                    {shareWith === 'individual' && selectedSocieties.length === 0 && (
+                      <p className="text-sm text-gray-400 italic">No societies selected.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Step 3: Invite CPs Preview */}
               {/* <div className="mb-6">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -4041,6 +4390,49 @@ const EventCreate = () => {
                         </Table>
                       </div>
                     </div>
+
+                    {/* Event Details Image - inside Event Related Images */}
+                    <div>
+                      <h5 className="text-base font-semibold mb-4">Event Details Image</h5>
+                      <div className="rounded-lg border border-gray-200 overflow-hidden">
+                        <Table className="border-separate">
+                          <TableHeader>
+                            <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4" style={{ borderColor: "#fff" }}>Ratio</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {detailsImageRatios.map(({ key, label }) =>
+                              (formData[key] || []).length > 0
+                                ? formData[key].map((file, index) => (
+                                  <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50 transition-colors">
+                                    <TableCell className="py-3 px-4 font-medium">{file.name || file.document_file_name || 'Unnamed'}</TableCell>
+                                    <TableCell className="py-3 px-4">
+                                      <img
+                                        style={{ maxWidth: 100, maxHeight: 100, objectFit: 'cover' }}
+                                        className="rounded border border-gray-200"
+                                        src={file.preview || file.document_url}
+                                        alt={file.name || label}
+                                      />
+                                    </TableCell>
+                                    <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
+                                  </TableRow>
+                                ))
+                                : null
+                            )}
+                            {detailsImageRatios.every(({ key }) => !formData[key] || formData[key].length === 0) && (
+                              <TableRow>
+                                <TableCell colSpan={3} className="py-6 text-center text-sm text-gray-500">
+                                  No details image uploaded.
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -4276,6 +4668,21 @@ const EventCreate = () => {
             handleEventCroppedImages(validImages, videoFiles, "event")
           }
           allowVideos={true}
+        />
+      )}
+
+      {showDetailsImageUploader && (
+        <ProjectImageVideoUpload
+          onClose={() => setShowDetailsImageUploader(false)}
+          includeInvalidRatios={false}
+          selectedRatioProp={["16:9", "1:1", "9:16", "3:2"]}
+          showAsModal={true}
+          label="Details Image"
+          description="Supports 16:9, 1:1, 9:16, 3:2 aspect ratios"
+          onContinue={(validImages, videoFiles) =>
+            handleEventCroppedImages(validImages, videoFiles, "details")
+          }
+          allowVideos={false}
         />
       )}
     </div>
