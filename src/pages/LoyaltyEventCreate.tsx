@@ -29,9 +29,11 @@ const EventCreate = () => {
     event_at: "",
     event_date: "",
     event_time: "",
+    end_date: "",
+    end_time: "",
     from_time: "",
     to_time: "",
-    rsvp_action: "",
+    rsvp_action: "0",
     rsvp_name: "",
     rsvp_number: "",
     description: "",
@@ -43,7 +45,7 @@ const EventCreate = () => {
     attachfile: [],
     cover_image: [],
     is_important: false,
-    email_trigger_enabled: false,
+    email_trigger_enabled: "false",
     set_reminders_attributes: [],
     cover_image_1_by_1: [],
     cover_image_9_by_16: [],
@@ -124,28 +126,28 @@ const EventCreate = () => {
           },
         }
       );
-      
+
       if (response.data && Array.isArray(response.data)) {
         const configs = {};
-        
+
         response.data.forEach((config) => {
           const { name, value } = config;
-          
+
           // Extract ratio from value (e.g., "event_images_16_by_9" -> "16:9")
           const ratioMatch = value.match(/(\d+)_by_(\d+)/);
           if (ratioMatch) {
             const ratio = `${ratioMatch[1]}:${ratioMatch[2]}`;
-            
+
             if (!configs[name]) {
               configs[name] = [];
             }
-            
+
             if (!configs[name].includes(ratio)) {
               configs[name].push(ratio);
             }
           }
         });
-        
+
         setImageConfigurations(configs);
       }
     } catch (error) {
@@ -287,8 +289,7 @@ const EventCreate = () => {
   const handleCroppedImages = (validImages, type = "cover") => {
     if (!validImages || validImages.length === 0) {
       toast.error(
-        `No valid ${type} image${
-          ["cover", "event"].includes(type) ? "" : "s"
+        `No valid ${type} image${["cover", "event"].includes(type) ? "" : "s"
         } selected.`
       );
       return;
@@ -596,23 +597,26 @@ const EventCreate = () => {
       errors.push("Event Name is required.");
     }
     if (!formData.event_date) {
-      errors.push("Event Date is required.");
+      errors.push("Start Date is required.");
     }
     if (!formData.event_time) {
-      errors.push("Event Time is required.");
+      errors.push("Start Time is required.");
     }
-    if (!formData.rsvp_action) {
-      errors.push("RSVP Action is required.");
+    if (!formData.end_date) {
+      errors.push("End Date is required.");
+    }
+    if (!formData.end_time) {
+      errors.push("End Time is required.");
     }
     if (!formData.shared) {
       errors.push("Share With is required.");
     }
-    
+
     // Validate shared with individual - require at least one user
     if (formData.shared === "individual" && (!formData.user_id || formData.user_id.length === 0)) {
       errors.push("Please select at least one user when sharing with individuals.");
     }
-    
+
     // Validate shared with group - require at least one group
     if (formData.shared === "group" && (!formData.group_id || formData.group_id.length === 0)) {
       errors.push("Please select at least one group when sharing with groups.");
@@ -644,12 +648,12 @@ const EventCreate = () => {
     if (!formData.shared) {
       errors.push("Share With is required.");
     }
-    
+
     // Validate shared with individual - require at least one user
     if (formData.shared === "individual" && (!formData.user_id || formData.user_id.length === 0)) {
       errors.push("Please select at least one user when sharing with individuals.");
     }
-    
+
     // Validate shared with group - require at least one group
     if (formData.shared === "group" && (!formData.group_id || formData.group_id.length === 0)) {
       errors.push("Please select at least one group when sharing with groups.");
@@ -722,7 +726,7 @@ const EventCreate = () => {
     formDataToSend.append("event[event_name]", formData.event_name);
     formDataToSend.append("event[description]", formData.description || "");
     formDataToSend.append("event[event_at]", formData.event_at || "");
-    
+
     // Combine date and time for from_time parameter
     let fromTime = "";
     if (formData.event_date && formData.event_time) {
@@ -731,7 +735,15 @@ const EventCreate = () => {
       fromTime = formData.event_date;
     }
     formDataToSend.append("event[from_time]", fromTime);
-    formDataToSend.append("event[to_time]", formData.to_time || "");
+
+    // Combine end date and time for to_time parameter
+    let toTime = "";
+    if (formData.end_date && formData.end_time) {
+      toTime = `${formData.end_date}T${formData.end_time}`;
+    } else if (formData.end_date) {
+      toTime = formData.end_date;
+    }
+    formDataToSend.append("event[to_time]", toTime);
     formDataToSend.append("event[shared]", formData.shared === "all" ? "0" : "1");
     formDataToSend.append("event[is_important]", formData.is_important === true ? "1" : "0");
     formDataToSend.append("event[email_trigger_enabled]", formData.email_trigger_enabled === "true" ? "1" : "0");
@@ -860,9 +872,9 @@ const EventCreate = () => {
     try {
       const response = await axios.post(getFullUrl('/crm/admin/events.json'), formDataToSend, {
         headers: {
-                      Authorization: getAuthHeader(),
-                      "Content-Type": "multipart/form-data",
-                    },
+          Authorization: getAuthHeader(),
+          "Content-Type": "multipart/form-data",
+        },
       });
       toast.success("Event created successfully!");
       setFormData({
@@ -904,7 +916,7 @@ const EventCreate = () => {
       console.error("Error submitting the form:", error);
       if (error.response && error.response.data) {
         toast.error(
-          `Error: ${error.response.data.message || "Submission failed"}`
+          `Error: ${error.response.data.error || "Submission failed"}`
         );
       } else {
         toast.error("Failed to submit the form. Please try again.");
@@ -924,9 +936,9 @@ const EventCreate = () => {
 
           {
             headers: {
-                   Authorization: getAuthHeader(),
-                   "Content-Type": "multipart/form-data",
-                 },
+              Authorization: getAuthHeader(),
+              "Content-Type": "multipart/form-data",
+            },
           }
         );
 
@@ -946,10 +958,10 @@ const EventCreate = () => {
         const response = await axios.get(
           getFullUrl('/usergroups/cp_members_list.json'),
           {
-             headers: {
-                      Authorization: getAuthHeader(),
-                      "Content-Type": "multipart/form-data",
-                    },
+            headers: {
+              Authorization: getAuthHeader(),
+              "Content-Type": "multipart/form-data",
+            },
           }
         );
 
@@ -969,10 +981,10 @@ const EventCreate = () => {
         const response = await axios.get(
           getFullUrl('/projects_for_dropdown.json'),
           {
-             headers: {
-                          Authorization: getAuthHeader(),
-                          "Content-Type": "application/json",
-                        },
+            headers: {
+              Authorization: getAuthHeader(),
+              "Content-Type": "application/json",
+            },
           }
         );
         console.log("Projects API Response:", response.data);
@@ -999,9 +1011,9 @@ const EventCreate = () => {
       try {
         const response = await axios.get(getFullUrl('/crm/usergroups.json?q[group_type_eq]=cp'), {
           headers: {
-                   Authorization: getAuthHeader(),
-                   "Content-Type": "multipart/form-data",
-                 },
+            Authorization: getAuthHeader(),
+            "Content-Type": "multipart/form-data",
+          },
         });
 
         const groupsData = response.data.usergroups || [];
@@ -1023,9 +1035,9 @@ const EventCreate = () => {
       try {
         const response = await axios.get(getFullUrl('/channel_partners.json'), {
           headers: {
-                   Authorization: getAuthHeader(),
-                   "Content-Type": "multipart/form-data",
-                 },
+            Authorization: getAuthHeader(),
+            "Content-Type": "multipart/form-data",
+          },
         });
 
         const partnersData = Array.isArray(response.data)
@@ -1090,17 +1102,17 @@ const EventCreate = () => {
   // CSV File Upload Handler
   const handleCsvFileUpload = (e) => {
     const files = Array.from(e.target.files);
-    
+
     const validFiles = files.filter(file => {
-      const isValidType = file.name.endsWith('.csv') || 
-                          file.name.endsWith('.xlsx') || 
-                          file.name.endsWith('.xls');
-      
+      const isValidType = file.name.endsWith('.csv') ||
+        file.name.endsWith('.xlsx') ||
+        file.name.endsWith('.xls');
+
       if (!isValidType) {
         toast.error(`${file.name} is not a valid CSV/Excel file`);
         return false;
       }
-      
+
       return true;
     });
 
@@ -1108,7 +1120,7 @@ const EventCreate = () => {
       setCsvFiles(prev => [...prev, ...validFiles]);
       toast.success(`${validFiles.length} file(s) uploaded successfully`);
     }
-    
+
     // Reset input
     e.target.value = '';
   };
@@ -1490,10 +1502,10 @@ const EventCreate = () => {
                 Event Details
               </h2>
             </div>
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Project Select */}
-              {/* <FormControl
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Project Select */}
+                {/* <FormControl
                 fullWidth
                 variant="outlined"
                 sx={{ '& .MuiInputBase-root': fieldStyles }}
@@ -1522,8 +1534,8 @@ const EventCreate = () => {
                 </MuiSelect>
               </FormControl> */}
 
-              {/* Event Type */}
-              {/* <TextField
+                {/* Event Type */}
+                {/* <TextField
                 label="Event Type"
                 placeholder="Enter Event Type"
                 value={formData.event_type}
@@ -1539,80 +1551,133 @@ const EventCreate = () => {
                 InputProps={{
                   sx: fieldStyles,
                 }}
-              /> */}
-
-              {/* Event Name */}
-              <TextField
-                label="Event Name"
-                placeholder="Enter Event Name"
-                value={formData.event_name}
-                onChange={handleChange}
-                name="event_name"
-                required
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
               />
+               */}
 
-              {/* Event At */}
-              <TextField
-                label="Event At"
-                placeholder="Enter Event At"
-                value={formData.event_at}
-                onChange={handleChange}
-                name="event_at"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-              <TextField
-                label="Event Date"
-                type="date"
-                value={formData.event_date}
-                onChange={handleChange}
-                name="event_date"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-
-              <div className="md:col-span-2">            
-               <TextField
-                  label="Event Description"
-                  placeholder="Enter Description"
-                  value={formData.description}
+                {/* Event Name */}
+                <TextField
+                  label={<>Event Name<span className="text-red-500">*</span></>}
+                  placeholder="Enter Event Name"
+                  value={formData.event_name}
                   onChange={handleChange}
-                  name="description"
+                  name="event_name"
                   fullWidth
-                  // multiline
-                  rows={3}
                   variant="outlined"
                   slotProps={{
                     inputLabel: {
                       shrink: true,
                     },
                   }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+
+                {/* Event At */}
+                <TextField
+                  label={<>Event At <span className="text-red-500">*</span></>}
+                  placeholder="Enter Event At"
+                  value={formData.event_at}
+                  onChange={handleChange}
+                  name="event_at"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+                <TextField
+                  label={<>Start Date <span className="text-red-500">*</span></>}
+                  type="date"
+                  value={formData.event_date}
+                  onChange={handleChange}
+                  name="event_date"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+
+                <TextField
+                  label={<>Start Time <span className="text-red-500">*</span></>}
+                  type="time"
+                  value={formData.event_time}
+                  onChange={handleChange}
+                  name="event_time"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+
+                <TextField
+                  label={<>End Date <span className="text-red-500">*</span></>}
+                  type="date"
+                  value={formData.end_date}
+                  onChange={handleChange}
+                  name="end_date"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+                <TextField
+                  label={<>End Time <span className="text-red-500">*</span></>}
+                  type="time"
+                  value={formData.end_time}
+                  onChange={handleChange}
+                  name="end_time"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+
+                <div className="md:col-span-2">
+                  <TextField
+                    label="Event Description"
+                    placeholder="Enter Description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    name="description"
+                    fullWidth
+                    // multiline
+                    rows={3}
+                    variant="outlined"
+                    slotProps={{
+                      inputLabel: {
+                        shrink: true,
+                      },
+                    }}
                   // sx={{
                   //   '& .MuiOutlinedInput-root': {
                   //     minHeight: '90px',
@@ -1633,37 +1698,21 @@ const EventCreate = () => {
                   //     },
                   //   },
                   // }}
-                />
+                  />
                 </div>
 
-              {/* Event From */}
-              <TextField
-                label="Event Time"
-                type="time"
-                value={formData.event_time}
-                onChange={handleChange}
-                name="event_time"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-             
-            </div>
+                {/* Event From */}
 
-            {/* 4-column grid for Event To, Mark Important, Send Email, RSVP Action */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {/* Event To */}
-              
 
-              {/* Mark Important */}
-              {/* <div>
+              </div>
+
+              {/* 4-column grid for Event To, Mark Important, Send Email, RSVP Action */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {/* Event To */}
+
+
+                {/* Mark Important */}
+                {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important</label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
@@ -1701,83 +1750,83 @@ const EventCreate = () => {
                 </div>
               </div> */}
 
-              {/* Send Email */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="email_trigger_enabled"
-                      value="true"
-                      checked={formData.email_trigger_enabled === "true"}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          email_trigger_enabled: e.target.value,
-                        }))
-                      }
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Yes</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="email_trigger_enabled"
-                      value="false"
-                      checked={formData.email_trigger_enabled === "false"}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          email_trigger_enabled: e.target.value,
-                        }))
-                      }
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">No</span>
-                  </label>
+                {/* Send Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="email_trigger_enabled"
+                        value="true"
+                        checked={formData.email_trigger_enabled === "true"}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            email_trigger_enabled: e.target.value,
+                          }))
+                        }
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: '#C72030' }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Yes</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="email_trigger_enabled"
+                        value="false"
+                        checked={formData.email_trigger_enabled === "false"}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            email_trigger_enabled: e.target.value,
+                          }))
+                        }
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: '#C72030' }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">No</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* RSVP Action */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="rsvp_action"
+                        value="1"
+                        checked={formData.rsvp_action === "1"}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: '#C72030' }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Yes</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="rsvp_action"
+                        value="0"
+                        checked={formData.rsvp_action === "0"}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                        style={{ accentColor: '#C72030' }}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">No</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
-              {/* RSVP Action */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="rsvp_action"
-                      value="1"
-                      checked={formData.rsvp_action === "1"}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Yes</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="rsvp_action"
-                      value="0"
-                      checked={formData.rsvp_action === "0"}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
-                    />
-                    <span className="ml-2 text-sm text-gray-700">No</span>
-                  </label>
-                </div>
-              </div>
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-             
-              {/* <div className="md:col-span-3">
+                {/* <div className="md:col-span-3">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Set Reminders</label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
                   <FormControl
@@ -1889,11 +1938,11 @@ const EventCreate = () => {
                   ))}
               </div> */}
 
-              
-              {/* Share With section moved to Step 2: Invite CPs */}
+
+                {/* Share With section moved to Step 2: Invite CPs */}
+              </div>
             </div>
           </div>
-        </div>
         )}
 
         {/* Visibility Card */}
@@ -1933,7 +1982,7 @@ const EventCreate = () => {
                     },
                   }}
                 />
-                    {/* <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
+                {/* <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
                     <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                     <g filter="url(#filter0_dd_2611_3818)">
                       <path fillRule="evenodd" clipRule="evenodd" d="M6.1308 11.2396C8.95246 11.2396 11.2399 8.95222 11.2399 6.13055C11.2399 3.30889 8.95246 1.02148 6.1308 1.02148C3.30914 1.02148 1.02173 3.30889 1.02173 6.13055C1.02173 8.95222 3.30914 11.2396 6.1308 11.2396Z" fill="#C72030"/>
@@ -2050,7 +2099,6 @@ const EventCreate = () => {
               </h2>
             </div>
             <div className="p-6 space-y-6">
-              {/* Channel Partners Dropdown */}
               {/* <div>
                 <FormControl
                   fullWidth
@@ -2236,13 +2284,11 @@ const EventCreate = () => {
                 )}
               </div>
 
-              {/* OR Divider */}
               <div className="flex items-center justify-center">
                 <span className="text-sm font-medium text-gray-500">Or</span>
               </div>
 
-              {/* CSV File Upload Section */}
-              <div 
+              <div
                 className="relative"
                 onMouseEnter={() => setShowCsvTooltip(true)}
                 onMouseLeave={() => setShowCsvTooltip(false)}
@@ -2315,8 +2361,7 @@ const EventCreate = () => {
                       </label>
                     </div>
                   )}
-                  
-                  {/* Add More Files Button when files exist */}
+
                   {csvFiles.length > 0 && (
                     <div className="mt-4 flex justify-center">
                       <label className="cursor-pointer">
@@ -2425,7 +2470,7 @@ const EventCreate = () => {
                                 // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                                 onClick={() => handleImageRemoval(key, index, file.id)}
                               >
-                               <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                <Trash2 className="w-4 h-4 text-[#C72030]" />
                               </button>
                             </TableCell>
                           </TableRow>
@@ -2480,37 +2525,37 @@ const EventCreate = () => {
                       {eventImageRatios.map(({ key, label }) =>
                         (formData[key] || []).length > 0
                           ? formData[key].map((file, index) => {
-                              const isVideo = file.type === "video" || (file.file && file.file.type.startsWith("video/"));
-                              return (
-                                <TableRow key={`${key}-${file.id}`} className="hover:bg-gray-50 transition-colors">
-                                  <TableCell className="py-3 px-4 font-medium">{file.name || "Unnamed File"}</TableCell>
-                                  <TableCell className="py-3 px-4">
-                                    {isVideo ? (
-                                      <video controls style={{ maxWidth: 100, maxHeight: 100 }} className="rounded border border-gray-200">
-                                        <source src={file.preview} type={file.file?.type || "video/mp4"} />
-                                      </video>
-                                    ) : (
-                                      <img
-                                        style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                        className="rounded border border-gray-200"
-                                        src={file.preview}
-                                        alt={file.name}
-                                      />
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
-                                  <TableCell className="py-3 px-4">
-                                    <button
-                                      type="button"
-                                      // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                      onClick={() => handleImageRemoval(key, index)}
-                                    >
-                                      <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                    </button>
-                                  </TableCell>
-                                </TableRow>
-                              );
-                            })
+                            const isVideo = file.type === "video" || (file.file && file.file.type.startsWith("video/"));
+                            return (
+                              <TableRow key={`${key}-${file.id}`} className="hover:bg-gray-50 transition-colors">
+                                <TableCell className="py-3 px-4 font-medium">{file.name || "Unnamed File"}</TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {isVideo ? (
+                                    <video controls style={{ maxWidth: 100, maxHeight: 100 }} className="rounded border border-gray-200">
+                                      <source src={file.preview} type={file.file?.type || "video/mp4"} />
+                                    </video>
+                                  ) : (
+                                    <img
+                                      style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                      className="rounded border border-gray-200"
+                                      src={file.preview}
+                                      alt={file.name}
+                                    />
+                                  )}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
+                                <TableCell className="py-3 px-4">
+                                  <button
+                                    type="button"
+                                    // className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    onClick={() => handleImageRemoval(key, index)}
+                                  >
+                                    <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                  </button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })
                           : null
                       )}
                     </TableBody>
@@ -2532,13 +2577,13 @@ const EventCreate = () => {
               >
                 Proceed to save
               </button>
-              <button
+              {/* <button
                 type="button"
                 onClick={handleSaveToDraft}
                 className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
               >
                 Save to draft
-              </button>
+              </button> */}
             </div>
             {currentStep > 0 && (
               <>
@@ -2581,13 +2626,13 @@ const EventCreate = () => {
                         }}
                         className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                       >
-                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span>
                       </button>
                     </div>
                     <div className="p-6 space-y-6 opacity-75 pointer-events-none">
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {/* Project */}
-                            {/* <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Project */}
+                        {/* <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
                               <InputLabel shrink>Project</InputLabel>
                               <MuiSelect
                                 value={selectedProjectId || ""}
@@ -2605,86 +2650,124 @@ const EventCreate = () => {
                               </MuiSelect>
                             </FormControl> */}
 
-                            {/* Event Name */}
-                            <TextField
-                              label="Event Name"
-                              value={formData.event_name}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
+                        {/* Event Name */}
+                        <TextField
+                          label="Event Name"
+                          value={formData.event_name}
+                          fullWidth
+                          variant="outlined"
+                          disabled
+                          slotProps={{ inputLabel: { shrink: true } }}
+                          InputProps={{ sx: fieldStyles }}
+                        />
 
-                            {/* Event At */}
-                            <TextField
-                              label="Event At"
-                              value={formData.event_at}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
-                             <TextField
-                label="Event Date"
-                type="date"
-                value={formData.event_date}
-                onChange={handleChange}
-                name="event_date"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
+                        {/* Event At */}
+                        <TextField
+                          label="Event At"
+                          value={formData.event_at}
+                          fullWidth
+                          variant="outlined"
+                          disabled
+                          slotProps={{ inputLabel: { shrink: true } }}
+                          InputProps={{ sx: fieldStyles }}
+                        />
+                        <TextField
+                          label="Start Date"
+                          type="date"
+                          value={formData.event_date}
+                          onChange={handleChange}
+                          name="event_date"
+                          fullWidth
+                          variant="outlined"
+                          slotProps={{
+                            inputLabel: {
+                              shrink: true,
+                            },
+                          }}
+                          InputProps={{
+                            sx: fieldStyles,
+                          }}
+                        />
 
-                            {/* Event Description */}
-                            <div className="md:col-span-2">
-                              <TextField
-                                label="Event Description"
-                                value={formData.description}
-                                fullWidth
-                                variant="outlined"
-                                disabled
-                                slotProps={{ inputLabel: { shrink: true } }}
-                              />
-                            </div>
+                        <TextField
+                          label="Start Time"
+                          type="time"
+                          value={formData.event_time}
+                          onChange={handleChange}
+                          name="event_time"
+                          fullWidth
+                          variant="outlined"
+                          slotProps={{
+                            inputLabel: {
+                              shrink: true,
+                            },
+                          }}
+                          InputProps={{
+                            sx: fieldStyles,
+                          }}
+                        />
 
-                             <TextField
-                label="Event Time"
-                type="time"
-                value={formData.event_time}
-                onChange={handleChange}
-                name="event_time"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
+                        <TextField
+                          label="End Date"
+                          type="date"
+                          value={formData.event_date}
+                          onChange={handleChange}
+                          name="event_date"
+                          fullWidth
+                          variant="outlined"
+                          slotProps={{
+                            inputLabel: {
+                              shrink: true,
+                            },
+                          }}
+                          InputProps={{
+                            sx: fieldStyles,
+                          }}
+                        />
 
-                            {/* Event From */}
-                          
-                          </div>
+                        <TextField
+                          label="End Time"
+                          type="time"
+                          value={formData.event_time}
+                          onChange={handleChange}
+                          name="event_time"
+                          fullWidth
+                          variant="outlined"
+                          slotProps={{
+                            inputLabel: {
+                              shrink: true,
+                            },
+                          }}
+                          InputProps={{
+                            sx: fieldStyles,
+                          }}
+                        />
 
-                          {/* 4-column grid for Event To, Mark Important, Send Email, RSVP Action */}
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            {/* Event To */}
-                          
+                        {/* Event Description */}
+                        <div className="md:col-span-2">
+                          <TextField
+                            label="Event Description"
+                            value={formData.description}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                          />
+                        </div>
 
-                            {/* Mark Important */}
-                            {/* <div>
+
+
+                        {/* Event From */}
+
+                      </div>
+
+                      {/* 4-column grid for Event To, Mark Important, Send Email, RSVP Action */}
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        {/* Event To */}
+
+
+                        {/* Mark Important */}
+                        {/* <div>
                               <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important</label>
                               <div className="flex gap-4">
                                 <label className="flex items-center">
@@ -2710,63 +2793,63 @@ const EventCreate = () => {
                               </div>
                             </div> */}
 
-                            {/* Send Email */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
-                              <div className="flex gap-4">
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    checked={formData.email_trigger_enabled === "true"}
-                                    disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">Yes</span>
-                                </label>
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    checked={formData.email_trigger_enabled === "false"}
-                                    disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">No</span>
-                                </label>
-                              </div>
-                            </div>
-
-                            {/* RSVP Action */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action</label>
-                              <div className="flex gap-4">
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    checked={formData.rsvp_action === "1"}
-                                    disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">Yes</span>
-                                </label>
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    checked={formData.rsvp_action === "0"}
-                                    disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">No</span>
-                                </label>
-                              </div>
-                            </div>
+                        {/* Send Email */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
+                          <div className="flex gap-4">
+                            <label className="flex items-center">
+                              <input
+                                type="radio"
+                                checked={formData.email_trigger_enabled === "true"}
+                                disabled
+                                className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                style={{ accentColor: '#C72030' }}
+                              />
+                              <span className="ml-2 text-sm text-gray-700">Yes</span>
+                            </label>
+                            <label className="flex items-center">
+                              <input
+                                type="radio"
+                                checked={formData.email_trigger_enabled === "false"}
+                                disabled
+                                className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                style={{ accentColor: '#C72030' }}
+                              />
+                              <span className="ml-2 text-sm text-gray-700">No</span>
+                            </label>
                           </div>
+                        </div>
 
-                          {/* Share With */}
-                          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* RSVP Action */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action</label>
+                          <div className="flex gap-4">
+                            <label className="flex items-center">
+                              <input
+                                type="radio"
+                                checked={formData.rsvp_action === "1"}
+                                disabled
+                                className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                style={{ accentColor: '#C72030' }}
+                              />
+                              <span className="ml-2 text-sm text-gray-700">Yes</span>
+                            </label>
+                            <label className="flex items-center">
+                              <input
+                                type="radio"
+                                checked={formData.rsvp_action === "0"}
+                                disabled
+                                className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                style={{ accentColor: '#C72030' }}
+                              />
+                              <span className="ml-2 text-sm text-gray-700">No</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Share With */}
+                      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="md:col-span-3">
                               <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
                               <div className="flex gap-6 mb-4">
@@ -2864,10 +2947,10 @@ const EventCreate = () => {
                               )}
                             </div>
                           </div> */}
-                        </div>
-                      </div>
-                    // </div>
-                  )}
+                    </div>
+                  </div>
+                  // </div>
+                )}
 
                 {/* Visibility Card - Completed */}
                 {stepIndex === 0 && (
@@ -2894,7 +2977,7 @@ const EventCreate = () => {
                         }}
                         className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                       >
-                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span>
                       </button>
                     </div>
                     <div className="p-6 space-y-4 opacity-75 pointer-events-none">
@@ -3040,7 +3123,7 @@ const EventCreate = () => {
                         }}
                         className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                       >
-                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span>
                       </button>
                     </div>
                     <div className="p-6 opacity-75 pointer-events-none">
@@ -3073,7 +3156,7 @@ const EventCreate = () => {
                         }}
                         className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                       >
-                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span>
                       </button>
                     </div>
                     <div className="p-6 space-y-6 opacity-75 pointer-events-none">
@@ -3259,8 +3342,8 @@ const EventCreate = () => {
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
                       className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
-                      >
-                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                    >
+                      <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-6">
@@ -3286,72 +3369,72 @@ const EventCreate = () => {
 
                       {/* Event Name */}
                       <TextField
-                              label="Event Name"
-                              value={formData.event_name}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
+                        label="Event Name"
+                        value={formData.event_name}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
 
-                            {/* Event At */}
-                            <TextField
-                              label="Event At"
-                              value={formData.event_at}
-                              fullWidth
-                              variant="outlined"
-                              disabled
-                              slotProps={{ inputLabel: { shrink: true } }}
-                              InputProps={{ sx: fieldStyles }}
-                            />
-                             <TextField
-                label="Event Date"
-                type="date"
-                value={formData.event_date}
-                onChange={handleChange}
-                name="event_date"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
+                      {/* Event At */}
+                      <TextField
+                        label="Event At"
+                        value={formData.event_at}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
+                      <TextField
+                        label="Event Date"
+                        type="date"
+                        value={formData.event_date}
+                        onChange={handleChange}
+                        name="event_date"
+                        fullWidth
+                        variant="outlined"
+                        slotProps={{
+                          inputLabel: {
+                            shrink: true,
+                          },
+                        }}
+                        InputProps={{
+                          sx: fieldStyles,
+                        }}
+                      />
 
-                            {/* Event Description */}
-                            <div className="md:col-span-2">
-                              <TextField
-                                label="Event Description"
-                                value={formData.description}
-                                fullWidth
-                                variant="outlined"
-                                disabled
-                                slotProps={{ inputLabel: { shrink: true } }}
-                              />
-                            </div>
+                      {/* Event Description */}
+                      <div className="md:col-span-2">
+                        <TextField
+                          label="Event Description"
+                          value={formData.description}
+                          fullWidth
+                          variant="outlined"
+                          disabled
+                          slotProps={{ inputLabel: { shrink: true } }}
+                        />
+                      </div>
 
-                             <TextField
-                label="Event Time"
-                type="time"
-                value={formData.event_time}
-                onChange={handleChange}
-                name="event_time"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
+                      <TextField
+                        label="Event Time"
+                        type="time"
+                        value={formData.event_time}
+                        onChange={handleChange}
+                        name="event_time"
+                        fullWidth
+                        variant="outlined"
+                        slotProps={{
+                          inputLabel: {
+                            shrink: true,
+                          },
+                        }}
+                        InputProps={{
+                          sx: fieldStyles,
+                        }}
+                      />
 
                       {/* Mark Important */}
                       {/* <div>
@@ -3588,7 +3671,7 @@ const EventCreate = () => {
                       }}
                       className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                     >
-                      <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                      <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-4">
@@ -3676,7 +3759,7 @@ const EventCreate = () => {
               </div>
 
               {/* Step 3: Invite CPs Preview */}
-              <div className="mb-6">
+              {/* <div className="mb-6">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                     <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -3699,15 +3782,14 @@ const EventCreate = () => {
                         setCurrentStep(2);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                     className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
-                      >
-                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                    >
+                      <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-6">
-                    {/* Channel Partners */}
                     <div>
-                      {/* <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
+                      <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
                         <InputLabel shrink>Selected Channel Partners</InputLabel>
                         <MuiSelect
                           multiple
@@ -3734,10 +3816,9 @@ const EventCreate = () => {
                             </MenuItem>
                           ))}
                         </MuiSelect>
-                      </FormControl> */}
+                      </FormControl>
                     </div>
 
-                    {/* Share With Section */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
                       <div className="flex gap-6 mb-4">
@@ -3835,7 +3916,6 @@ const EventCreate = () => {
                       )}
                     </div>
 
-                    {/* CSV Files */}
                     {csvFiles.length > 0 && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Uploaded CSV Files</label>
@@ -3848,7 +3928,7 @@ const EventCreate = () => {
                     )}
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Step 2: Event Related Images Preview */}
               <div className="mb-6">
@@ -3875,8 +3955,8 @@ const EventCreate = () => {
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
                       className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
-                      >
-                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                    >
+                      <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-6">
@@ -3933,28 +4013,28 @@ const EventCreate = () => {
                             {eventImageRatios.map(({ key, label }) =>
                               (formData[key] || []).length > 0
                                 ? formData[key].map((file, index) => {
-                                    const isVideo = file.type === "video" || (file.file && file.file.type.startsWith("video/"));
-                                    return (
-                                      <TableRow key={`${key}-${file.id}`} className="hover:bg-gray-50 transition-colors">
-                                        <TableCell className="py-3 px-4 font-medium">{file.name || "Unnamed File"}</TableCell>
-                                        <TableCell className="py-3 px-4">
-                                          {isVideo ? (
-                                            <video controls style={{ maxWidth: 100, maxHeight: 100 }} className="rounded border border-gray-200">
-                                              <source src={file.preview} type={file.file?.type || "video/mp4"} />
-                                            </video>
-                                          ) : (
-                                            <img
-                                              style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                              className="rounded border border-gray-200"
-                                              src={file.preview}
-                                              alt={file.name}
-                                            />
-                                          )}
-                                        </TableCell>
-                                        <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
-                                      </TableRow>
-                                    );
-                                  })
+                                  const isVideo = file.type === "video" || (file.file && file.file.type.startsWith("video/"));
+                                  return (
+                                    <TableRow key={`${key}-${file.id}`} className="hover:bg-gray-50 transition-colors">
+                                      <TableCell className="py-3 px-4 font-medium">{file.name || "Unnamed File"}</TableCell>
+                                      <TableCell className="py-3 px-4">
+                                        {isVideo ? (
+                                          <video controls style={{ maxWidth: 100, maxHeight: 100 }} className="rounded border border-gray-200">
+                                            <source src={file.preview} type={file.file?.type || "video/mp4"} />
+                                          </video>
+                                        ) : (
+                                          <img
+                                            style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                            className="rounded border border-gray-200"
+                                            src={file.preview}
+                                            alt={file.name}
+                                          />
+                                        )}
+                                      </TableCell>
+                                      <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
+                                    </TableRow>
+                                  );
+                                })
                                 : null
                             )}
                           </TableBody>
@@ -4171,33 +4251,33 @@ const EventCreate = () => {
         )}
       </form>
 
-        {/* Modals */}
-        {showCoverUploader && (
-          <ProjectBannerUpload
-            onClose={() => setShowCoverUploader(false)}
-            includeInvalidRatios={false}
-            selectedRatioProp={selectedCoverRatios}
-            showAsModal={true}
-            label={coverImageLabel}
-            description={dynamicCoverDescription}
-            onContinue={(validImages) => handleCroppedImages(validImages, "cover")}
-          />
-        )}
+      {/* Modals */}
+      {showCoverUploader && (
+        <ProjectBannerUpload
+          onClose={() => setShowCoverUploader(false)}
+          includeInvalidRatios={false}
+          selectedRatioProp={selectedCoverRatios}
+          showAsModal={true}
+          label={coverImageLabel}
+          description={dynamicCoverDescription}
+          onContinue={(validImages) => handleCroppedImages(validImages, "cover")}
+        />
+      )}
 
-        {showEventUploader && (
-          <ProjectImageVideoUpload
-            onClose={() => setShowEventUploader(false)}
-            includeInvalidRatios={false}
-            selectedRatioProp={selectedEventRatios}
-            showAsModal={true}
-            label={eventImageLabel}
-            description={dynamicEventDescription}
-            onContinue={(validImages, videoFiles) =>
-              handleEventCroppedImages(validImages, videoFiles, "event")
-            }
-            allowVideos={true}
-          />
-        )}
+      {showEventUploader && (
+        <ProjectImageVideoUpload
+          onClose={() => setShowEventUploader(false)}
+          includeInvalidRatios={false}
+          selectedRatioProp={selectedEventRatios}
+          showAsModal={true}
+          label={eventImageLabel}
+          description={dynamicEventDescription}
+          onContinue={(validImages, videoFiles) =>
+            handleEventCroppedImages(validImages, videoFiles, "event")
+          }
+          allowVideos={true}
+        />
+      )}
     </div>
   );
 };

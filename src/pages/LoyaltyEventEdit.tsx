@@ -1515,16 +1515,8 @@ const EventEdit = () => {
       return;
     }
 
-    // If on Step 1 (Event Images) and RSVP is Yes, go to Step 2 (Invite CPs)
-    if (currentStep === 1 && formData.rsvp_action === "1") {
-      setCurrentStep(2);
-      setShowPreviousSections(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    // If on Step 1 (Event Images) and RSVP is No, go directly to preview
-    if (currentStep === 1 && formData.rsvp_action === "0") {
+    // If on Step 1 (Event Images), go directly to preview (Invite CPs hidden for Loyalty)
+    if (currentStep === 1) {
       setIsPreviewMode(true);
       setShowPreviousSections(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1549,8 +1541,8 @@ const EventEdit = () => {
       setCompletedSteps(prev => [...prev, currentStep]);
     }
 
-    // If on Step 0 (Event Details) and RSVP is No, skip to Step 1 (Event Images)
-    if (currentStep === 0 && formData.rsvp_action === "0") {
+    // Step 0 -> Step 1
+    if (currentStep === 0) {
       setCurrentStep(1);
       setShowPreviousSections(true);
       toast.success("Progress saved to draft successfully!");
@@ -1558,9 +1550,15 @@ const EventEdit = () => {
       return;
     }
 
-    if (currentStep < totalSteps - 1) {
-      setCurrentStep(currentStep + 1);
+    // Step 1 -> Preview (Invite CPs hidden for Loyalty)
+    if (currentStep === 1) {
+      setIsPreviewMode(true);
+      setShowPreviousSections(true);
+      toast.success("Progress saved to draft successfully!");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
+
     setShowPreviousSections(true);
     toast.success("Progress saved to draft successfully!");
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1568,9 +1566,7 @@ const EventEdit = () => {
 
   // Stepper component
   const StepperComponent = () => {
-    const steps = formData.rsvp_action === "1" 
-      ? ['Event Details', 'Event Related Images', 'Invite CPs']
-      : ['Event Details', 'Event Related Images'];
+    const steps = ['Event Details', 'Event Related Images'];
 
     return (
      <Box sx={{ mb: 4, width: '100%' }}>
@@ -2147,7 +2143,7 @@ const EventEdit = () => {
           </div>
         )}
 
-        {/* Step 3: Invite CPs */}
+        {/* Step 3: Invite CPs - Hidden for Loyalty Event Edit
         {currentStep === 2 && !isPreviewMode && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
@@ -2166,7 +2162,7 @@ const EventEdit = () => {
               </h2>
             </div>
             <div className="p-6 space-y-6">
-              {/* Channel Partners Dropdown */}
+              Channel Partners Dropdown
               {/* <div>
                 <FormControl
                   fullWidth
@@ -2353,12 +2349,12 @@ const EventEdit = () => {
                 )}
               </div>
 
-              {/* OR Divider */}
+             
               <div className="flex items-center justify-center">
                 <span className="text-sm font-medium text-gray-500">Or</span>
               </div>
 
-              {/* CSV File Upload Section */}
+              
               <div 
                 className="relative"
                 onMouseEnter={() => setShowCsvTooltip(true)}
@@ -2830,13 +2826,13 @@ const EventEdit = () => {
               >
                 Proceed to save
               </button>
-              <button
+              {/* <button
                 type="button"
                 onClick={handleSaveToDraft}
                 className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
               >
                 Save to draft
-              </button>
+              </button> */}
               <button
                 type="button"
                 onClick={handleCancel}
@@ -3240,7 +3236,7 @@ const EventEdit = () => {
                   </div>
                 )}
 
-                {/* Step 2: Invite CPs - Completed */}
+                {/* Step 2: Invite CPs - Hidden for Loyalty
                 {stepIndex === 2 && (
                   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                     <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
@@ -3743,114 +3739,8 @@ const EventEdit = () => {
                 </div>
               </div>
             </div>
-            </div>            {/* Step 3: Invite CPs Preview */}
-            <div className="mb-6">
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                  <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                    <Avatar
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        backgroundColor: '#E5E0D3',
-                        mr: 1.5
-                      }}
-                    >
-                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-                    </Avatar>
-                    Invite CPs
-                  </h2>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsPreviewMode(false);
-                      setCurrentStep(2);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
-                  >
-                    <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
-                  </button>
-                </div>
-                <div className="p-6 space-y-6">
-                  {/* <div>
-                    <FormControl fullWidth variant="outlined" sx={{ '& .MuiInputBase-root': fieldStyles }}>
-                      <InputLabel shrink>Selected Channel Partners</InputLabel>
-                      <MuiSelect
-                        multiple
-                        value={selectedChannelPartners}
-                        label="Selected Channel Partners"
-                        notched
-                        displayEmpty
-                        disabled
-                        renderValue={(selected) => {
-                          if (!selected || selected.length === 0) {
-                            return <span style={{ color: '#999' }}>No Channel Partners Selected</span>;
-                          }
-                          return selected
-                            .map((id) => {
-                              const partner = channelPartners.find((cp) => cp.id === id || cp.id.toString() === id.toString());
-                              return partner ? partner.name || partner.company_name || `Partner ${id}` : id;
-                            })
-                            .join(", ");
-                        }}
-                      >
-                        {channelPartners.map((partner) => (
-                          <MenuItem key={partner.id} value={partner.id}>
-                            {partner.name || partner.company_name || `Partner ${partner.id}`}
-                          </MenuItem>
-                        ))}
-                      </MuiSelect>
-                    </FormControl>
-                  </div> */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
-                    <div className="flex gap-6 mb-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          checked={formData.shared === "all"}
-                          disabled
-                          className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                          style={{ accentColor: '#C72030' }}
-                        />
-                        <span className="ml-2 text-sm text-gray-700">All</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          checked={formData.shared === "individual"}
-                          disabled
-                          className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                          style={{ accentColor: '#C72030' }}
-                        />
-                        <span className="ml-2 text-sm text-gray-700">Individuals</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          checked={formData.shared === "group"}
-                          disabled
-                          className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                          style={{ accentColor: '#C72030' }}
-                        />
-                        <span className="ml-2 text-sm text-gray-700">Groups</span>
-                      </label>
-                    </div>
-                  </div>
-                  {csvFiles.length > 0 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Uploaded CSV Files</label>
-                      <div className="border-2 border-dashed border-[#D9D9D9] rounded-lg p-6 text-center">
-                        <p className="text-sm text-gray-600">
-                          {csvFiles.length} file(s) uploaded
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            {/* Step 3: Invite CPs Preview - Hidden for Loyalty */}
+            {/* Invite CPs section intentionally hidden for loyalty events */}
 
               <div className="flex gap-4 justify-center pt-6">
                 <button

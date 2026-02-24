@@ -38,6 +38,8 @@ import { AddStaffPage } from "@/pages/AddStaffPage";
 import ApprovalMatrixSetupPage from "@/pages/settings/ApprovalMatrixSetupPage";
 import Claims from "@/pages/Claims";
 import ClaimsDetails from "@/pages/ClaimsDetails";
+import LoyaltyEventCreate from "@/pages/LoyaltyEventCreate";
+import LoyaltyEventEdit from "@/pages/LoyaltyEventEdit";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
@@ -145,6 +147,8 @@ const LockRoleList = lazy(() => import("@/pages/LockRoleList"));
 const LoyaltyManagersCreate = lazy(
   () => import("@/pages/LoyaltyManagersCreate")
 );
+const LoyaltyEventCreate = lazy(() => import("@/pages/LoyaltyEventCreate"));
+const LoyaltyEventEdit = lazy(() => import("@/pages/LoyaltyEventEdit"));
 const LoyaltyManagersEdit = lazy(() => import("@/pages/LoyaltyManagersEdit"));
 const LoyaltyManagersList = lazy(() => import("@/pages/LoyaltyManagersList"));
 const NewGallery = lazy(() => import("@/pages/NewGallery"));
@@ -675,13 +679,13 @@ export const setupMemberRoutes = (
     />
     <Route
       path="/loyalty/event-create"
-      Component={withSuspense(EventCreate)}
+      Component={withSuspense(LoyaltyEventCreate)}
     />
     {/* <Route path="/loyalty/event-details/:id" element={<EventDetails />} /> */}
     <Route path="/loyalty/event-details/:id" element={<EventDetails />} />
     <Route
       path="/loyalty/event-edit/:id"
-      Component={withSuspense(EventEdit)}
+      Component={withSuspense(LoyaltyEventEdit)}
     />
     <Route path="/maintenance/event-list" Component={withSuspense(EventList)} />
     <Route path="/loyalty/event-list" Component={withSuspense(LoyaltyEventList)} />
