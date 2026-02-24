@@ -435,6 +435,12 @@ const SmartSecureVisitorReport = lazy(
 const SmartSecureStaffReport = lazy(
   () => import("@/pages/SmartSecureStaffReport")
 );
+const SmartSecureVehicleReport = lazy(
+  () => import("@/pages/SmartSecureVehicleReport")
+);
+const SmartSecureMaterialReport = lazy(
+  () => import("@/pages/SmartSecureMaterialReport")
+);
 const VisitorsDashboard = lazy(() => import("@/pages/VisitorsDashboard"));
 const SmartSecurePatrolling = lazy(
   () => import("@/pages/SmartSecurePatrolling")
@@ -1554,6 +1560,14 @@ export const setupMemberRoutes = (
     <Route
       path="/smartsecure/staff-report"
       Component={withSuspense(SmartSecureStaffReport)}
+    />
+    <Route
+      path="/smartsecure/vehicle-report"
+      Component={withSuspense(SmartSecureVehicleReport)}
+    />
+    <Route
+      path="/smartsecure/material-report"
+      Component={withSuspense(SmartSecureMaterialReport)}
     />
     {/* <Route
       path="/smartsecure/patrolling"
