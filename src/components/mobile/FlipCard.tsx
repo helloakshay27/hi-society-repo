@@ -119,10 +119,10 @@ export const FlipCard: React.FC = () => {
         setContestData((prev) =>
           prev
             ? {
-                ...prev,
-                won_reward: true,
-                user_contest_reward: result.user_contest_reward,
-              }
+              ...prev,
+              won_reward: true,
+              user_contest_reward: result.user_contest_reward,
+            }
             : prev
         );
       }
@@ -139,7 +139,7 @@ export const FlipCard: React.FC = () => {
       // Update remaining attempts
       setRemainingAttempts((prev) => prev - 1);
 
-      // Show reward section first, then modal after animation
+      // Show modal immediately after animation
       setTimeout(() => {
         setWonPrize(result.prize!);
         setFlippingCard(null);
@@ -152,10 +152,8 @@ export const FlipCard: React.FC = () => {
           );
         }
 
-        // Show result modal after reward section appears
-        setTimeout(() => {
-          setShowResult(true);
-        }, 800);
+        // Show result modal immediately
+        setShowResult(true);
       }, 600);
     } catch (error) {
       console.error("❌ Error flipping card:", error);
@@ -210,33 +208,25 @@ export const FlipCard: React.FC = () => {
       {/* Already Won Reward Screen */}
       {contestData.won_reward && contestData.user_contest_reward && (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#FFF8E7] via-white to-[#F5E6D3]">
-          {/* Back Button */}
-          <button
-            onClick={() => navigate(-1)}
-            className="absolute top-4 left-4 p-2 text-gray-700 hover:bg-white/50 rounded-full"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-
-          {/* Celebration Animation */}
-          <div className="mb-6 relative">
-            <div className="w-32 h-32 bg-gradient-to-br from-[#B88B15] to-[#D4A574] rounded-full flex items-center justify-center shadow-2xl animate-pulse">
-              <span className="text-6xl">🎉</span>
+          {/* Celebration Animation */
+            <div className="mb-6 relative">
+              <div className="w-32 h-32 bg-gradient-to-br from-[#B88B15] to-[#D4A574] rounded-full flex items-center justify-center shadow-2xl animate-pulse">
+                <span className="text-6xl">🎉</span>
+              </div>
+              {/* Sparkles */}
+              <span className="absolute -top-2 -left-2 text-3xl animate-bounce">
+                ✨
+              </span>
+              <span className="absolute -top-2 -right-2 text-3xl animate-bounce delay-100">
+                ✨
+              </span>
+              <span className="absolute -bottom-2 -left-2 text-3xl animate-bounce delay-200">
+                ✨
+              </span>
+              <span className="absolute -bottom-2 -right-2 text-3xl animate-bounce delay-300">
+                ✨
+              </span>
             </div>
-            {/* Sparkles */}
-            <span className="absolute -top-2 -left-2 text-3xl animate-bounce">
-              ✨
-            </span>
-            <span className="absolute -top-2 -right-2 text-3xl animate-bounce delay-100">
-              ✨
-            </span>
-            <span className="absolute -bottom-2 -left-2 text-3xl animate-bounce delay-200">
-              ✨
-            </span>
-            <span className="absolute -bottom-2 -right-2 text-3xl animate-bounce delay-300">
-              ✨
-            </span>
-          </div>
 
           {/* Message */}
           <h1 className="text-3xl font-bold text-gray-900 text-center mb-3">
@@ -355,9 +345,8 @@ export const FlipCard: React.FC = () => {
                   className="w-full perspective-1000"
                 >
                   <div
-                    className={`relative transition-all duration-600 transform-style-3d ${
-                      flippingCard === card.id ? "rotate-y-180" : ""
-                    }`}
+                    className={`relative transition-all duration-600 transform-style-3d ${flippingCard === card.id ? "rotate-y-180" : ""
+                      }`}
                   >
                     {/* Card */}
                     <div className="relative rounded-2xl overflow-hidden shadow-lg">
@@ -380,7 +369,7 @@ export const FlipCard: React.FC = () => {
                               {card.prize.reward_type === "coupon"
                                 ? card.prize.partner_name || "Coupon"
                                 : card.prize.reward_type === "points" &&
-                                    card.prize.points_value
+                                  card.prize.points_value
                                   ? `${card.prize.points_value} Points`
                                   : card.prize.reward_type === "marchandise"
                                     ? "Merchandise Prize"
@@ -444,7 +433,37 @@ export const FlipCard: React.FC = () => {
                 <button
                   onClick={() => {
                     setShowResult(false);
-                    setWonPrize(null);
+
+                    // Check if user won a reward and update contestData
+                    if (wonPrize && wonPrize.reward_type !== "none") {
+                      const rewardIdStr =
+                        localStorage.getItem("last_reward_id");
+                      if (rewardIdStr) {
+                        setContestData((prev) =>
+                          prev
+                            ? {
+                              ...prev,
+                              won_reward: true,
+                              user_contest_reward: {
+                                id: parseInt(rewardIdStr),
+                                contest_id: prev.id,
+                                prize_id: wonPrize.id,
+                                reward_type: wonPrize.reward_type,
+                                points_value: wonPrize.points_value,
+                                coupon_code: wonPrize.coupon_code,
+                                user_id: 0,
+                                status: "granted",
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString(),
+                              },
+                            }
+                            : prev
+                        );
+                      }
+                    } else {
+                      // Reset for next attempt if didn't win
+                      setWonPrize(null);
+                    }
                   }}
                   className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600"
                 >
