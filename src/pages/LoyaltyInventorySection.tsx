@@ -5,25 +5,42 @@ import axios from "axios";
 import { toast } from "sonner";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Switch as MuiSwitch } from "@mui/material";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 export const LoyaltyInventorySection = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
+    // Tab and category data for product categories (Runwal API)
+    const productCategories = [
+        { value: "gift_card", label: "Gift Card", apiCategory: "voucher_category" },
+        { value: "lounge", label: "Lounge", apiCategory: "indian_lounge" },
+        { value: "miles", label: "Miles", apiCategory: "mile_category" },
+        { value: "merchandise", label: "Marchandise", apiCategory: "merchandise" },
+    ];
+
+    const [activeTab, setActiveTab] = useState("gift_card");
+
     const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
     const [inventoryData, setInventoryData] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [perPage, setPerPage] = useState(100);
     // Track expanded description rows by item id
     const [expandedDescRows, setExpandedDescRows] = useState<Set<number>>(
         new Set()
@@ -40,9 +57,6 @@ export const LoyaltyInventorySection = () => {
         setSearchTerm(term);
     };
 
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const [selectedDiscount, setSelectedDiscount] = useState<string>("");
-    const [selectedRows, setSelectedRows] = useState<number[]>([]);
     const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
     const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -86,11 +100,6 @@ export const LoyaltyInventorySection = () => {
         { key: "max_value", label: "Max Value", sortable: true },
         // { key: "value_denominations", label: "Value Denominations", sortable: true },
         { key: "validity", label: "Validity", sortable: true },
-        // { key: "usage_type", label: "Usage Type", sortable: true },
-        // { key: "phone_required", label: "Phone Required", sortable: true },
-        // { key: "redemption_fee", label: "Redemption Fee", sortable: true },
-        // { key: "redemption_fee_type", label: "Redemption Fee Type", sortable: true },
-        // { key: "redemption_fee_borne_by_user", label: "Fee Borne By User", sortable: true },
         {
             key: "terms_and_conditions",
             label: "Terms & Conditions",
@@ -123,7 +132,7 @@ export const LoyaltyInventorySection = () => {
     useEffect(() => {
         fetchInventoryData();
         fetchCategories();
-    }, []);
+    }, [activeTab, currentPage]);
 
     const fetchCategories = async () => {
         try {
@@ -186,17 +195,60 @@ export const LoyaltyInventorySection = () => {
         }
     };
 
+    const handleRemoveFromStore = async () => {
+        if (selectedProductIds.length === 0) {
+            toast.error("Please select at least one product to remove from store.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const token = localStorage.getItem("token");
+            const baseUrl = localStorage.getItem("baseUrl");
+
+            const url = `https://${baseUrl}/aggregator_products/remove_products_from_store?token=${token}`;
+
+            await axios.delete(url, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                data: {
+                    product_ids: selectedProductIds,
+                }
+            });
+
+            toast.success(`${selectedProductIds.length} product(s) removed from store!`);
+            setIsSelectionModalOpen(false);
+            setSelectedProductIds([]);
+            fetchInventoryData();
+        } catch (error) {
+            console.error("Error removing products from store:", error);
+            toast.error("Failed to remove products from store.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const fetchInventoryData = async () => {
         try {
             setLoading(true);
-            const token = API_CONFIG.TOKEN || "";
-            const url = getFullUrl(`/products?source=admin_portal&token=${token}`);
-            const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
+            const category = productCategories.find(c => c.value === activeTab);
+            const token = localStorage.getItem("token");
+            const baseUrl = localStorage.getItem("baseUrl")
+            const url = `https://${baseUrl}/products.json?token=${token}&category=${category?.apiCategory}&page=${currentPage}`;
+
+            const response = await axios.get(url);
             const products = response.data?.products || [];
+            const pagination = response.data?.pagination || {};
+
             setInventoryData(products);
+            setTotalCount(pagination.total_count || 0);
+            setTotalPages(pagination.total_pages || 1);
+            setPerPage(pagination.per_page || 100);
 
             // Calculate stats
-            const totalItems = products.length;
+            const totalItems = pagination.total_count || products.length;
             const inStock = products.filter((p) => p.stock_quantity > 0).length;
             const outOfStock = products.filter((p) => p.stock_quantity === 0).length;
 
@@ -208,6 +260,7 @@ export const LoyaltyInventorySection = () => {
         } catch (error) {
             console.error("Error fetching inventory data:", error);
             toast.error("Failed to load inventory data");
+            setInventoryData([]);
         } finally {
             setLoading(false);
         }
@@ -594,65 +647,119 @@ export const LoyaltyInventorySection = () => {
         </div>
     );
 
+    const handlePageChange = (page: number) => {
+        if (page < 1 || page > totalPages || page === currentPage || loading) {
+            return;
+        }
+        setCurrentPage(page);
+    };
+
+    const handleTabChange = (value: string) => {
+        setActiveTab(value);
+        setCurrentPage(1); // Reset to first page when changing tabs
+    };
+
     return (
         <div className="p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                <div className="bg-[#eeeae3] p-4 rounded-lg border border-gray-200 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-[#e5e0d4] rounded flex items-center justify-center">
-                        <Package className="w-6 h-6 text-[#C72030]" />
-                    </div>
-                    <div>
-                        <div className="text-2xl font-bold text-[#1A1A1A]">{stats.totalItems}</div>
-                        <div className="text-sm text-gray-600">Total Items</div>
-                    </div>
-                </div>
+            {/* Category Tabs */}
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full mb-6">
+                <TabsList className="grid w-full grid-cols-4 gap-4 bg-transparent">
+                    {productCategories.map((category) => (
+                        <TabsTrigger
+                            key={category.value}
+                            value={category.value}
+                            className="data-[state=active]:bg-[#C72030] data-[state=active]:text-white data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-700 border border-gray-300 rounded-md px-4 py-2"
+                        >
+                            {category.label}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
 
-                <div className="bg-[#eeeae3] p-4 rounded-lg border border-gray-200 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-[#e5e0d4] rounded flex items-center justify-center">
-                        <CheckCircle className="w-6 h-6 text-[#C72030]" />
-                    </div>
-                    <div>
-                        <div className="text-2xl font-bold text-[#1A1A1A]">{stats.inStock}</div>
-                        <div className="text-sm text-gray-600">In Stock</div>
-                    </div>
-                </div>
+                {/* Tab Content */}
+                {productCategories.map((category) => (
+                    <TabsContent key={category.value} value={category.value} className="space-y-4 mt-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                            <div className="bg-[#eeeae3] p-4 rounded-lg border border-gray-200 flex items-center gap-4">
+                                <div className="w-12 h-12 bg-[#e5e0d4] rounded flex items-center justify-center">
+                                    <Package className="w-6 h-6 text-[#C72030]" />
+                                </div>
+                                <div>
+                                    <div className="text-2xl font-bold text-[#1A1A1A]">{stats.totalItems}</div>
+                                    <div className="text-sm text-gray-600">Total Items</div>
+                                </div>
+                            </div>
 
-                <div className="bg-[#eeeae3] p-4 rounded-lg border border-gray-200 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-[#e5e0d4] rounded flex items-center justify-center">
-                        <AlertCircle className="w-6 h-6 text-[#C72030]" />
-                    </div>
-                    <div>
-                        <div className="text-2xl font-bold text-[#1A1A1A]">{stats.outOfStock}</div>
-                        <div className="text-sm text-gray-600">Out of Stock</div>
-                    </div>
-                </div>
-            </div>
-            {/* <div className="bg-[#eeeae3] p-4 rounded-lg border border-gray-200 flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-[#FEF3C7] rounded flex items-center justify-center">
-                    <AlertCircle className="w-6 h-6 text-[#F59E0B]" />
-                </div>
-                <div>
-                    <div className="text-2xl font-bold text-[#1A1A1A]">
-                        {stats.outOfStock}
-                    </div>
-                    <div className="text-sm text-gray-600">Out of Stock</div>
-                </div>
-            </div> */}
+                            <div className="bg-[#eeeae3] p-4 rounded-lg border border-gray-200 flex items-center gap-4">
+                                <div className="w-12 h-12 bg-[#e5e0d4] rounded flex items-center justify-center">
+                                    <CheckCircle className="w-6 h-6 text-[#C72030]" />
+                                </div>
+                                <div>
+                                    <div className="text-2xl font-bold text-[#1A1A1A]">{stats.inStock}</div>
+                                    <div className="text-sm text-gray-600">In Stock</div>
+                                </div>
+                            </div>
 
-            <div className="space-y-4">
-                <EnhancedTable
-                    data={inventoryData}
-                    columns={columns}
-                    renderCell={renderCell}
-                    enableExport={false}
-                    handleExport={handleExport}
-                    leftActions={renderLeftActions()}
-                    loading={loading}
-                    loadingMessage="Loading inventory..."
-                    emptyMessage="No inventory items found"
-                    storageKey="loyalty-inventory-table"
-                />
-            </div>
+                            <div className="bg-[#eeeae3] p-4 rounded-lg border border-gray-200 flex items-center gap-4">
+                                <div className="w-12 h-12 bg-[#e5e0d4] rounded flex items-center justify-center">
+                                    <AlertCircle className="w-6 h-6 text-[#C72030]" />
+                                </div>
+                                <div>
+                                    <div className="text-2xl font-bold text-[#1A1A1A]">{stats.outOfStock}</div>
+                                    <div className="text-sm text-gray-600">Out of Stock</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <EnhancedTable
+                                data={inventoryData}
+                                columns={columns}
+                                renderCell={renderCell}
+                                enableExport={false}
+                                handleExport={handleExport}
+                                leftActions={renderLeftActions()}
+                                loading={loading}
+                                loadingMessage="Loading inventory..."
+                                emptyMessage="No inventory items found"
+                                storageKey={`loyalty-inventory-table-${activeTab}`}
+                            />
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="flex justify-center mt-6 pb-6">
+                                <Pagination>
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <PaginationPrevious
+                                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                                className={currentPage === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                            <PaginationItem key={page} className="cursor-pointer">
+                                                <PaginationLink
+                                                    onClick={() => handlePageChange(page)}
+                                                    isActive={currentPage === page}
+                                                    className={loading ? "pointer-events-none opacity-50" : ""}
+                                                >
+                                                    {page}
+                                                </PaginationLink>
+                                            </PaginationItem>
+                                        ))}
+                                        <PaginationItem>
+                                            <PaginationNext
+                                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                                className={currentPage === totalPages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                            </div>
+                        )}
+                    </TabsContent>
+                ))}
+            </Tabs>
 
             {/* Selection Floating Bar */}
             {
@@ -702,6 +809,19 @@ export const LoyaltyInventorySection = () => {
                                 </svg>
                                 <span className="text-sm mt-2 font-medium text-gray-900">Deactivate</span>
                             </button>
+                            <button
+                                onClick={handleRemoveFromStore}
+                                disabled={loading}
+                                className="flex flex-col items-center gap-1 px-5 py-2 hover:bg-gray-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                                <span className="text-sm mt-2 font-medium text-red-600">Remove</span>
+                            </button>
                         </div>
 
                         {/* Divider + Close */}
@@ -721,10 +841,10 @@ export const LoyaltyInventorySection = () => {
 
             {/* Add Item Modal */}
             <Dialog open={isAddItemModalOpen} onOpenChange={setIsAddItemModalOpen}>
-                <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+                <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
 
                     <DialogHeader>
-                        <div className="flex justify-between items-start">
+                        <div className="flex justify-between items-start relative">
                             <div>
                                 <DialogTitle className="text-xl font-semibold text-[#1A1A1A]">
                                     Add New Item
@@ -736,7 +856,7 @@ export const LoyaltyInventorySection = () => {
                             <button
                                 type="button"
                                 onClick={() => setIsAddItemModalOpen(false)}
-                                className="ml-4 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#C72030]"
+                                className="absolute -right-2 -top-1 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#C72030]"
                                 aria-label="Close"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-gray-500">
@@ -752,17 +872,25 @@ export const LoyaltyInventorySection = () => {
                             <Label className="text-sm font-medium text-[#1A1A1A]">Status</Label>
                             <div className="flex items-center gap-3">
                                 <span
-                                    className={`text-xs font-medium px-3 py-1 rounded-md ${isActive
+                                    className={`text-xs px-3 py-1 rounded-md ${isActive
                                         ? "bg-[#D1FAE5] text-[#065F46]"
                                         : "bg-red-100 text-red-800"
                                         }`}
                                 >
                                     {isActive ? "Active" : "Inactive"}
                                 </span>
-                                <Switch
+                                <MuiSwitch
                                     checked={isActive}
-                                    onCheckedChange={setIsActive}
-                                    className="h-6 w-11 data-[state=checked]:!bg-[#10b981] data-[state=unchecked]:!bg-gray-300 [&>span]:h-5 [&>span]:w-5 [&>span]:data-[state=checked]:translate-x-5"
+                                    onChange={(e) => setIsActive(e.target.checked)}
+                                    sx={{
+                                        "& .MuiSwitch-switchBase.Mui-checked": {
+                                            color: "#10b981",
+                                        },
+                                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                                            backgroundColor: "#10b981",
+                                        },
+                                    }}
+                                    size="small"
                                 />
                             </div>
                         </div>

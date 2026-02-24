@@ -28,7 +28,8 @@ const OrderDetails = () => {
         const fetchDetails = async () => {
             try {
                 const token = API_CONFIG.TOKEN || "";
-                const url = getFullUrl(`/admin/orders/${id}.json?token=${token}`);
+                const baseUrl = localStorage.getItem("baseUrl")
+                const url = `https://${baseUrl}/admin/orders/${id}.json?token=${token}`;
                 const res = await fetch(url, {
                     headers: { Authorization: getAuthHeader() },
                 });
@@ -44,7 +45,8 @@ const OrderDetails = () => {
                 if (data.user && data.user.id) {
                     try {
                         const token = API_CONFIG.TOKEN || "";
-                        const userUrl = getFullUrl(`/loyalty/members/${data.user.id}?token=${token}`);
+                        const baseUrl = localStorage.getItem("baseUrl")
+                        const userUrl = `https://${baseUrl}/loyalty/members/${data.user.id}.json?token=${token}`;
                         const userRes = await fetch(userUrl, {
                             headers: { Authorization: getAuthHeader() },
                         });
@@ -201,207 +203,207 @@ const OrderDetails = () => {
                 <div className="flex items-center justify-between mb-4">
                     <button
                         onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                    <span className="font-medium">Back to Orders</span>
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-[#C72030] rounded-md text-sm font-medium hover:bg-gray-50">
-                    <Download className="w-4 h-4" />
-                    Download Invoice
-                </button>
-            </div>
-
-
-
-            {/* Main Grid Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column - Main Content */}
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Order Items */}
-                    <div className="bg-white rounded-lg shadow-sm border">
-                        <div className="px-6 py-6">
-                            <h1 className="text-[#C72030] font-semibold mb-6">Order Items</h1>
-
-                            {/* Items List */}
-                            <div className="space-y-4 mb-6">
-                                {orderItems.map((item) => (
-                                    <div key={item.id} className="flex gap-4">
-                                        {/* Image Placeholder */}
-                                        <div className="w-20 h-20 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
-                                            <span className="text-xs text-gray-400">No image</span>
-                                        </div>
-
-                                        {/* Item Details */}
-                                        <div className="flex-1">
-                                            <p className="text-xs text-gray-500 mb-1">SKU: {item.sku}</p>
-                                            <p className="font-semibold text-gray-900 mb-1">{item.productName}</p>
-                                            <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
-                                        </div>
-
-                                        {/* Price */}
-                                        <div className="text-right">
-                                            <p className="font-semibold text-gray-900">₹{parseFloat(item.total || 0).toFixed(0)}</p>
-                                            <p className="text-xs text-gray-500">₹{parseFloat(item.price || 0).toFixed(0)} each</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Summary */}
-                            <div className="border-t pt-4 space-y-2">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-700">Subtotal</span>
-                                    <span className="text-gray-900">₹{parseFloat(orderData?.subtotal || 0).toFixed(0)}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-700">Tax</span>
-                                    <span className="text-gray-900">₹{parseFloat(orderData?.taxAmount || 0).toFixed(0)}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-700">Shipping</span>
-                                    <span className="text-gray-900">₹{parseFloat(orderData?.shippingCost || 0).toFixed(0)}</span>
-                                </div>
-                                {parseFloat(orderData?.loyaltyPointsRedeemed || 0) > 0 && (
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-[#C72030]">Points Redeemed</span>
-                                        <span className="text-[#C72030]">-{orderData?.loyaltyPointsRedeemed}</span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between pt-3 border-t">
-                                    <span className="font-semibold text-gray-900">Total</span>
-                                    <span className="font-bold text-2xl text-gray-900">₹{parseFloat(orderData?.totalAmount || 0).toFixed(2)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Order Timeline */}
-                    <div className="bg-white rounded-lg shadow-sm border">
-                        <div className="px-6 py-6">
-                            <h1 className="font-semibold text-[#C72030] mb-6">Order Timeline</h1>
-
-                            {/* Timeline Items */}
-                            <div className="relative">
-                                <div className="space-y-0">
-                                    {timelineEvents.map((event, index) => {
-                                        const isLast = index === timelineEvents.length - 1;
-                                        const dateObj = new Date(event.date);
-                                        const formattedDate = dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-                                        const formattedTime = dateObj.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-
-                                        return (
-                                            <div key={event.id || index} className="relative flex items-start justify-between py-4">
-                                                <div className="flex items-start gap-4">
-                                                    {/* Status Indicator */}
-                                                    <div className="w-6 h-6 rounded-full border-2 border-green-500 bg-white flex items-center justify-center flex-shrink-0 z-10 relative">
-                                                        <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <h3 className="font-semibold text-gray-900 mb-1">{event.status}</h3>
-                                                        <p className="text-sm text-gray-600">{event.description}</p>
-                                                    </div>
-                                                </div>
-                                                <span className="text-sm text-gray-500 ml-4 whitespace-nowrap">
-                                                    {formattedDate}, {formattedTime}
-                                                </span>
-                                                {/* Connecting line to next item */}
-                                                {!isLast && (
-                                                    <div className="absolute left-[11px] top-[calc(0%+40px)] w-[2px] h-[calc(100%-24px)] bg-[#B9F8CF]"></div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-
-                                    {timelineEvents.length === 0 && (
-                                        <p className="text-gray-500 text-center py-4">No status updates available.</p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                        <span className="font-medium">Back to Orders</span>
+                    </button>
+                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-[#C72030] rounded-md text-sm font-medium hover:bg-gray-50">
+                        <Download className="w-4 h-4" />
+                        Download Invoice
+                    </button>
                 </div>
 
-                {/* Right Column - Sidebar */}
-                <div className="lg:col-span-1 space-y-6">
-                    {/* Customer Information */}
-                    <div className="bg-white rounded-lg shadow-sm border">
-                        <div className="px-6 py-6">
-                            <h1 className="font-semibold text-[#C72030] mb-6">Customer Information</h1>
 
-                            {/* Customer Details */}
-                            <div className="space-y-4">
-                                {/* Avatar and Name */}
-                                <div className="flex items-start gap-3">
-                                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
-                                        {orderData?.customerName ? orderData.customerName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'NA'}
+
+                {/* Main Grid Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left Column - Main Content */}
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* Order Items */}
+                        <div className="bg-white rounded-lg shadow-sm border">
+                            <div className="px-6 py-6">
+                                <h1 className="text-[#C72030] font-semibold mb-6">Order Items</h1>
+
+                                {/* Items List */}
+                                <div className="space-y-4 mb-6">
+                                    {orderItems.map((item) => (
+                                        <div key={item.id} className="flex gap-4">
+                                            {/* Image Placeholder */}
+                                            <div className="w-20 h-20 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                                                <img src={item.image_url} alt={item.productName} className="w-full h-full object-cover rounded" />
+                                            </div>
+
+                                            {/* Item Details */}
+                                            <div className="flex-1">
+                                                <p className="text-xs text-gray-500 mb-1">SKU: {item.sku}</p>
+                                                <p className="font-semibold text-gray-900 mb-1">{item.productName}</p>
+                                                <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                                            </div>
+
+                                            {/* Price */}
+                                            <div className="text-right">
+                                                <p className="font-semibold text-gray-900">₹{parseFloat(item.total || 0).toFixed(0)}</p>
+                                                <p className="text-xs text-gray-500">₹{parseFloat(item.price || 0).toFixed(0)} each</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Summary */}
+                                <div className="border-t pt-4 space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-700">Subtotal</span>
+                                        <span className="text-gray-900">₹{parseFloat(orderData?.subtotal || 0).toFixed(0)}</span>
                                     </div>
-                                    <div className="flex-1">
-                                        <h3 className="font-semibold text-gray-900">{orderData?.customerName || "-"}</h3>
-                                        <div className="flex items-center gap-1 mt-1 border-1 p-1 border-gray-900">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                                <path d="M19.3588 9.67942C19.3588 15.0251 15.0252 19.3588 9.67938 19.3588C4.3336 19.3588 0 15.0251 0 9.67942C0 4.33361 4.3336 0 9.67938 0C15.0252 0 19.3588 4.33361 19.3588 9.67942Z" fill="url(#paint0_linear_714_3143)" />
-                                                <path d="M17.2343 9.67865C17.2343 13.8515 13.8515 17.2344 9.67872 17.2344C5.50582 17.2344 2.12305 13.8515 2.12305 9.67865C2.12305 5.50581 5.50582 2.12305 9.67872 2.12305C13.8515 2.12305 17.2343 5.50581 17.2343 9.67865Z" fill="#A88300" />
-                                                <path d="M16.7656 9.88248C16.7656 13.9759 13.6316 17.2942 9.76563 17.2942C5.89964 17.2942 2.76562 13.9759 2.76562 9.88248C2.76562 5.78906 5.89964 2.4707 9.76563 2.4707C13.6316 2.4707 16.7656 5.78906 16.7656 9.88248Z" fill="#C28B37" />
-                                                <path d="M17.2519 9.67866C17.2519 13.8613 13.8613 17.2519 9.67872 17.2519C5.49612 17.2519 2.10547 13.8613 2.10547 9.67866C2.10547 5.49612 5.49612 2.10547 9.67872 2.10547C13.8613 2.10547 17.2519 5.49612 17.2519 9.67866Z" fill="#E9B631" />
-                                                <path d="M9.71931 4.41016L11.3529 7.67746L14.6203 8.08587L12.3767 10.6017L12.9867 14.212L9.71931 12.5784L6.45201 14.212L7.06735 10.6017L4.81836 8.08587L8.08569 7.67746L9.71931 4.41016Z" fill="url(#paint1_linear_714_3143)" />
-                                                <defs>
-                                                    <linearGradient id="paint0_linear_714_3143" x1="9.02226" y1="3.52793" x2="10.3355" y2="27.9694" gradientUnits="userSpaceOnUse">
-                                                        <stop stop-color="#FFC600" />
-                                                        <stop offset="1" stop-color="#FFDE69" />
-                                                    </linearGradient>
-                                                    <linearGradient id="paint1_linear_714_3143" x1="9.71949" y1="4.41016" x2="9.71949" y2="14.212" gradientUnits="userSpaceOnUse">
-                                                        <stop stop-color="#FFFCDD" />
-                                                        <stop offset="1" stop-color="#FFE896" />
-                                                    </linearGradient>
-                                                </defs>
-                                            </svg>
-                                            <span className="text-sm text-gray-600">Gold Member</span>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-700">Tax</span>
+                                        <span className="text-gray-900">₹{parseFloat(orderData?.taxAmount || 0).toFixed(0)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-700">Shipping</span>
+                                        <span className="text-gray-900">₹{parseFloat(orderData?.shippingCost || 0).toFixed(0)}</span>
+                                    </div>
+                                    {parseFloat(orderData?.loyaltyPointsRedeemed || 0) > 0 && (
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-[#C72030]">Points Redeemed</span>
+                                            <span className="text-[#C72030]">-{orderData?.loyaltyPointsRedeemed}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between pt-3 border-t">
+                                        <span className="font-semibold text-gray-900">Total</span>
+                                        <span className="font-bold text-2xl text-gray-900">₹{parseFloat(orderData?.totalAmount || 0).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Order Timeline */}
+                        <div className="bg-white rounded-lg shadow-sm border">
+                            <div className="px-6 py-6">
+                                <h1 className="font-semibold text-[#C72030] mb-6">Order Timeline</h1>
+
+                                {/* Timeline Items */}
+                                <div className="relative">
+                                    <div className="space-y-0">
+                                        {timelineEvents.map((event, index) => {
+                                            const isLast = index === timelineEvents.length - 1;
+                                            const dateObj = new Date(event.date);
+                                            const formattedDate = dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                                            const formattedTime = dateObj.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+
+                                            return (
+                                                <div key={event.id || index} className="relative flex items-start justify-between py-4">
+                                                    <div className="flex items-start gap-4">
+                                                        {/* Status Indicator */}
+                                                        <div className="w-6 h-6 rounded-full border-2 border-green-500 bg-white flex items-center justify-center flex-shrink-0 z-10 relative">
+                                                            <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <h3 className="font-semibold text-gray-900 mb-1">{event.status}</h3>
+                                                            <p className="text-sm text-gray-600">{event.description}</p>
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-sm text-gray-500 ml-4 whitespace-nowrap">
+                                                        {formattedDate}, {formattedTime}
+                                                    </span>
+                                                    {/* Connecting line to next item */}
+                                                    {!isLast && (
+                                                        <div className="absolute left-[11px] top-[calc(0%+40px)] w-[2px] h-[calc(100%-24px)] bg-[#B9F8CF]"></div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+
+                                        {timelineEvents.length === 0 && (
+                                            <p className="text-gray-500 text-center py-4">No status updates available.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column - Sidebar */}
+                    <div className="lg:col-span-1 space-y-6">
+                        {/* Customer Information */}
+                        <div className="bg-white rounded-lg shadow-sm border">
+                            <div className="px-6 py-6">
+                                <h1 className="font-semibold text-[#C72030] mb-6">Customer Information</h1>
+
+                                {/* Customer Details */}
+                                <div className="space-y-4">
+                                    {/* Avatar and Name */}
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold flex-shrink-0">
+                                            {orderData?.customerName ? orderData.customerName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'NA'}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="font-semibold text-gray-900">{orderData?.customerName || "-"}</h3>
+                                            <div className="flex items-center gap-1 mt-1 border-1 p-1 border-gray-900">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                                    <path d="M19.3588 9.67942C19.3588 15.0251 15.0252 19.3588 9.67938 19.3588C4.3336 19.3588 0 15.0251 0 9.67942C0 4.33361 4.3336 0 9.67938 0C15.0252 0 19.3588 4.33361 19.3588 9.67942Z" fill="url(#paint0_linear_714_3143)" />
+                                                    <path d="M17.2343 9.67865C17.2343 13.8515 13.8515 17.2344 9.67872 17.2344C5.50582 17.2344 2.12305 13.8515 2.12305 9.67865C2.12305 5.50581 5.50582 2.12305 9.67872 2.12305C13.8515 2.12305 17.2343 5.50581 17.2343 9.67865Z" fill="#A88300" />
+                                                    <path d="M16.7656 9.88248C16.7656 13.9759 13.6316 17.2942 9.76563 17.2942C5.89964 17.2942 2.76562 13.9759 2.76562 9.88248C2.76562 5.78906 5.89964 2.4707 9.76563 2.4707C13.6316 2.4707 16.7656 5.78906 16.7656 9.88248Z" fill="#C28B37" />
+                                                    <path d="M17.2519 9.67866C17.2519 13.8613 13.8613 17.2519 9.67872 17.2519C5.49612 17.2519 2.10547 13.8613 2.10547 9.67866C2.10547 5.49612 5.49612 2.10547 9.67872 2.10547C13.8613 2.10547 17.2519 5.49612 17.2519 9.67866Z" fill="#E9B631" />
+                                                    <path d="M9.71931 4.41016L11.3529 7.67746L14.6203 8.08587L12.3767 10.6017L12.9867 14.212L9.71931 12.5784L6.45201 14.212L7.06735 10.6017L4.81836 8.08587L8.08569 7.67746L9.71931 4.41016Z" fill="url(#paint1_linear_714_3143)" />
+                                                    <defs>
+                                                        <linearGradient id="paint0_linear_714_3143" x1="9.02226" y1="3.52793" x2="10.3355" y2="27.9694" gradientUnits="userSpaceOnUse">
+                                                            <stop stop-color="#FFC600" />
+                                                            <stop offset="1" stop-color="#FFDE69" />
+                                                        </linearGradient>
+                                                        <linearGradient id="paint1_linear_714_3143" x1="9.71949" y1="4.41016" x2="9.71949" y2="14.212" gradientUnits="userSpaceOnUse">
+                                                            <stop stop-color="#FFFCDD" />
+                                                            <stop offset="1" stop-color="#FFE896" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                </svg>
+                                                <span className="text-sm text-gray-600">Gold Member</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Email */}
-                                <div className="flex items-start gap-3">
-                                    <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                    </svg>
-                                    <div>
-                                        <p className="text-sm text-gray-500">Email</p>
-                                        <p className="text-sm text-gray-900">{orderData?.customerEmail || "-"}</p>
-                                    </div>
-                                </div>
-
-                                {/* Phone */}
-                                <div className="flex items-start gap-3">
-                                    <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                    </svg>
-                                    <div>
-                                        <p className="text-sm text-gray-500">Phone</p>
-                                        <p className="text-sm text-gray-900">{orderData?.customerPhone || "-"}</p>
-                                    </div>
-                                </div>
-
-                                {/* Address */}
-                                <div className="flex items-start gap-3">
-                                    <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm text-gray-500">Address</p>
-                                        <p className="text-sm text-gray-900">{orderData?.shippingAddress || "-"}</p>
-                                    </div>
-                                </div>
-
-                                {/* Total Loyalty Points */}
-                                <div className="pt-4 border-t">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <span className="text-sm text-gray-700">Total Loyalty Points</span>
-                                        <span className="font-bold text-[#C72030] text-lg">{orderData?.wallet_balance || 1250} pts</span>
+                                    {/* Email */}
+                                    <div className="flex items-start gap-3">
+                                        <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                        <div>
+                                            <p className="text-sm text-gray-500">Email</p>
+                                            <p className="text-sm text-gray-900">{orderData?.customerEmail || "-"}</p>
+                                        </div>
                                     </div>
 
-                                    {/* <div className="border rounded-lg">
+                                    {/* Phone */}
+                                    <div className="flex items-start gap-3">
+                                        <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                        </svg>
+                                        <div>
+                                            <p className="text-sm text-gray-500">Phone</p>
+                                            <p className="text-sm text-gray-900">{orderData?.customerPhone || "-"}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Address */}
+                                    <div className="flex items-start gap-3">
+                                        <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm text-gray-500">Address</p>
+                                            <p className="text-sm text-gray-900">{orderData?.shippingAddress || "-"}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Total Loyalty Points */}
+                                    <div className="pt-4 border-t">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <span className="text-sm text-gray-700">Total Loyalty Points</span>
+                                            <span className="font-bold text-[#C72030] text-lg">{orderData?.wallet_balance || 1250} pts</span>
+                                        </div>
+
+                                        {/* <div className="border rounded-lg">
                                         <button className="w-full py-3 px-4 flex items-center justify-start gap-2 text-sm font-medium text-gray-900 hover:bg-gray-50">
                                             <Award className="w-5 h-5 text-purple-600" />
                                             <span className="text-lg text-gray-700">Loyalty Points Summary</span>
@@ -457,12 +459,12 @@ const OrderDetails = () => {
                                             </div>
                                         </div>
                                     </div> */}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* <div className="bg-white rounded-lg shadow-sm border">
+                        {/* <div className="bg-white rounded-lg shadow-sm border">
                         <div className="px-6 py-4 border-b">
                             <div className="flex items-center gap-2">
                                 <MapPin className="w-5 h-5 text-gray-600" />
@@ -529,11 +531,11 @@ const OrderDetails = () => {
                             </div>
                         </div>
                     </div> */}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-);
+    );
 };
 
 export default OrderDetails;
