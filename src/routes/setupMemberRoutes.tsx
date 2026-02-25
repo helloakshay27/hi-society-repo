@@ -40,6 +40,8 @@ import Claims from "@/pages/Claims";
 import ClaimsDetails from "@/pages/ClaimsDetails";
 import LoyaltyEventCreate from "@/pages/LoyaltyEventCreate";
 import LoyaltyEventEdit from "@/pages/LoyaltyEventEdit";
+import LoyaltyAddOfferPage from "@/pages/LoyaltyAddOfferPage";
+import LoyaltyOfferViewPage from "@/pages/LoyaltyOfferViewPage";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
@@ -149,6 +151,8 @@ const LoyaltyManagersCreate = lazy(
 );
 const LoyaltyEventCreate = lazy(() => import("@/pages/LoyaltyEventCreate"));
 const LoyaltyEventEdit = lazy(() => import("@/pages/LoyaltyEventEdit"));
+const LoyaltyEventDetails = lazy(() => import("@/pages/LoyaltyEventDetails"));
+const LoyaltyAddOfferPage = lazy(() => import("@/pages/LoyaltyAddOfferPage"));
 const LoyaltyManagersEdit = lazy(() => import("@/pages/LoyaltyManagersEdit"));
 const LoyaltyManagersList = lazy(() => import("@/pages/LoyaltyManagersList"));
 const NewGallery = lazy(() => import("@/pages/NewGallery"));
@@ -682,7 +686,7 @@ export const setupMemberRoutes = (
       Component={withSuspense(LoyaltyEventCreate)}
     />
     {/* <Route path="/loyalty/event-details/:id" element={<EventDetails />} /> */}
-    <Route path="/loyalty/event-details/:id" element={<EventDetails />} />
+    <Route path="/loyalty/event-details/:id" element={<LoyaltyEventDetails />} />
     <Route
       path="/loyalty/event-edit/:id"
       Component={withSuspense(LoyaltyEventEdit)}
@@ -1639,9 +1643,9 @@ export const setupMemberRoutes = (
     <Route path="/offer/add/:id" Component={withSuspense(AddOfferPage)} />
     <Route path="/offer/view/:id" Component={withSuspense(OfferViewPage)} />
     <Route path="/loyalty/offers/add" Component={withSuspense(AddOffersPage)} />
-    <Route path="/loyalty/offer/add" Component={withSuspense(AddOfferPage)} />
-    <Route path="/loyalty/offer/add/:id" Component={withSuspense(AddOfferPage)} />
-    <Route path="/loyalty/offer/view/:id" Component={withSuspense(OfferViewPage)} />
+    <Route path="/loyalty/offer/add" Component={withSuspense(LoyaltyAddOfferPage)} />
+    <Route path="/loyalty/offer/add/:id" Component={withSuspense(LoyaltyAddOfferPage)} />
+    <Route path="/loyalty/offer/view/:id" Component={withSuspense(LoyaltyOfferViewPage)} />
     <Route
       path="/business-directory/add"
       Component={withSuspense(AddBusinessDirectoryPage)}
