@@ -1,32 +1,23 @@
-import { getBaseUrl, getToken } from '@/utils/auth';
+import { getBaseUrl, getToken } from "@/utils/auth";
 
 // Hi-Society API Configuration
 export const HI_SOCIETY_CONFIG = {
   get BASE_URL() {
-      const savedBaseUrl = getBaseUrl();
+    const savedBaseUrl = getBaseUrl();
 
-    const hostname = window.location.hostname;
-    // Use production URL for web.hisociety.lockated.com (strict check)
-    if (hostname === 'web.hisociety.lockated.com') {
-      return savedBaseUrl || 'https://hi-society.lockated.com';
-    }
-    // Use UAT URL for ui-hisociety.lockated.com
-    if (hostname === 'ui-hisociety.lockated.com') {
-      return savedBaseUrl || 'https://uat-hi-society.lockated.com';
-    }
     // Default to UAT for other environments
-    return savedBaseUrl || 'https://uat-hi-society.lockated.com';
+    return savedBaseUrl || "https://uat-hi-society.lockated.com";
   },
   get TOKEN() {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    return user?.spree_api_key || '';
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    return user?.spree_api_key || "";
   },
   ENDPOINTS: {
-    ACCOUNT: '/api/users/account.json',
-    USER_APPROVED_SOCIETIES: '/user_approved_societies.json',
-    CHANGE_USER_SOCIETY: '/change_user_society.json',
-    USER_CATEGORIES: '/crm/admin/user_categories.json',
-    USER_CATEGORY_DETAILS: '/crm/admin/user_categories', // Base path, will append /{id}.json
+    ACCOUNT: "/api/users/account.json",
+    USER_APPROVED_SOCIETIES: "/user_approved_societies.json",
+    CHANGE_USER_SOCIETY: "/change_user_society.json",
+    USER_CATEGORIES: "/crm/admin/user_categories.json",
+    USER_CATEGORY_DETAILS: "/crm/admin/user_categories", // Base path, will append /{id}.json
   },
 };
 
@@ -36,7 +27,7 @@ const getApiConfig = () => {
   const savedBaseUrl = getBaseUrl();
 
   // Use saved base URL or fallback to UAT Hi-Society
-  const finalBaseUrl = savedBaseUrl || 'https://uat-hi-society.lockated.com';
+  const finalBaseUrl = savedBaseUrl || "https://uat-hi-society.lockated.com";
 
   console.log("API Config Debug:", {
     savedToken: savedToken ? "Present" : "Missing",
@@ -349,11 +340,13 @@ export const getFullUrl = (endpoint: string): string => {
   }
   const hostname = window.location.hostname;
   // Force UAT baseUrl for localhost
-  if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-    resolvedBaseUrl = 'https://uat-hi-society.lockated.com';
+  if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
+    resolvedBaseUrl = "https://uat-hi-society.lockated.com";
   }
   // Ensure endpoint starts with '/'
-  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const normalizedEndpoint = endpoint.startsWith("/")
+    ? endpoint
+    : `/${endpoint}`;
   return `${resolvedBaseUrl}${normalizedEndpoint}`;
 };
 
