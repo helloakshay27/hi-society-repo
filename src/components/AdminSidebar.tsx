@@ -13,6 +13,7 @@ import {
   Building,
   UserCheck,
   Database,
+  Percent,
 } from "lucide-react";
 
 const adminNavigationStructure = {
@@ -70,6 +71,11 @@ const adminNavigationStructure = {
         name: "Modules Management",
         icon: Shield,
         href: "/ops-console/settings/modules",
+      },
+      {
+        name: "Loyalty TDS",
+        icon: Percent,
+        href: "/ops-console/admin/loyalty-tds",
       }
     ],
   },

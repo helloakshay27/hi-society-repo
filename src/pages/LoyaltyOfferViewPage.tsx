@@ -170,14 +170,14 @@ export default function OfferViewPage() {
                   </div>
                 </div>
                 
-                <div className="flex items-start">
+                {/* <div className="flex items-start">
                   <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
                     Legal Policies
                   </div>
                   <div className="text-[14px] font-semibold text-gray-900 flex-1">
                     {offer.offer_template_name || '-'}
                   </div>
-                </div>
+                </div> */}
 
                 <div className="flex items-start">
                   <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
@@ -419,14 +419,14 @@ export default function OfferViewPage() {
                   </div>
                 </div>
                 
-                <div className="flex items-start">
+                {/* <div className="flex items-start">
                   <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
                     Featured Offer
                   </div>
                   <div className="text-[14px] font-semibold text-gray-900 flex-1">
                     {getFeatured()}
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

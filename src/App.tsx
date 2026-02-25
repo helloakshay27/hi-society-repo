@@ -1112,6 +1112,7 @@ import { OccupantUserListWrapper } from "./components/OccupantUserListWrapper";
 import { OccupantUserDetailWrapper } from "./components/OccupantUserDetailWrapper";
 import { LoginPageWrapper } from "./components/LoginPageWrapper";
 import ModulesManagement from "./pages/settings/ModulesManagement";
+import { LoyaltyTDS } from "./pages/ops-console/admin/LoyaltyTDS";
 import { InvoiceAdd } from "./pages/ClubManagement/InvoiceAdd";
 import { InvoiceDashboardAccounting } from "./pages/ClubManagement/InvoiceDashboard";
 import { QuotesDashboard } from "./pages/ClubManagement/QuotesDashboard";
@@ -1382,6 +1383,10 @@ function App() {
                       <Route
                         path="settings/modules"
                         element={<ModulesManagement />}
+                      />
+                      <Route
+                        path="admin/loyalty-tds"
+                        element={<LoyaltyTDS />}
                       />
 
                       {/* <Route

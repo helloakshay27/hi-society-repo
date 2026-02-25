@@ -415,7 +415,7 @@ export const UIHiSocietySidebar: React.FC = () => {
         },
         {
           id: "offers",
-          label: "Offers",
+          label: "Curated Offers",
           subItems: [
             {
               id: "offers-list",
