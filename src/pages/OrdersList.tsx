@@ -295,7 +295,7 @@ const OrdersList = () => {
     { key: "status", label: "Status", sortable: true },
     { key: "payment_status", label: "Payment Status", sortable: true },
     { key: "total_amount", label: "Total Amount", sortable: true },
-    // { key: 'loyalty_points_redeemed', label: 'Points Used', sortable: true },
+    { key: 'loyalty_points_redeemed', label: 'Points Redeemed', sortable: true },
     { key: "items", label: "Items", sortable: false },
     { key: "created_at", label: "Created At", sortable: true },
   ];
@@ -443,58 +443,58 @@ const OrdersList = () => {
     }),
   };
 
-const renderListTab = () => (
-  <div className="space-y-4">
-    {renderCustomFilters()}
-    <EnhancedTable
-      data={orders}
-      columns={columns}
-      renderCell={renderCell}
-      pagination={false}
-      enableExport={true}
-      exportFileName="orders"
-      storageKey="orders-table"
-      enableGlobalSearch={true}
-      onGlobalSearch={handleGlobalSearch}
-      searchPlaceholder="Search orders (ID, number, customer name/email)..."
-      loading={isSearching || loading}
-      loadingMessage={isSearching ? "Searching orders..." : "Loading orders..."}
-    />
-    {!searchTerm && !statusFilter && !paymentStatusFilter && totalPages > 1 && (
-      <div className="mt-6 flex justify-center">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-              <PaginationItem key={page}>
-                <PaginationLink
+  const renderListTab = () => (
+    <div className="space-y-4">
+      {renderCustomFilters()}
+      <EnhancedTable
+        data={orders}
+        columns={columns}
+        renderCell={renderCell}
+        pagination={false}
+        enableExport={true}
+        exportFileName="orders"
+        storageKey="orders-table"
+        enableGlobalSearch={true}
+        onGlobalSearch={handleGlobalSearch}
+        searchPlaceholder="Search orders (ID, number, customer name/email)..."
+        loading={isSearching || loading}
+        loadingMessage={isSearching ? "Searching orders..." : "Loading orders..."}
+      />
+      {!searchTerm && !statusFilter && !paymentStatusFilter && totalPages > 1 && (
+        <div className="mt-6 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
                   href="#"
-                  onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-                  isActive={currentPage === page}
-                >
-                  {page}
-                </PaginationLink>
+                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                />
               </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
-    )}
-  </div>
-);
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
+                    isActive={currentPage === page}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+    </div>
+  );
 
   const renderCell = (item: Order, columnKey: string) => {
     switch (columnKey) {
@@ -674,17 +674,17 @@ const renderListTab = () => (
       </div>
     </div>)
   // --- CustomMultiValue and customStyles for filter dropdowns (copied from AddOfferPage) ---
-  
 
-return (
-  <div className="p-2 sm:p-4 lg:p-6">
-    <Toaster position="top-right" richColors closeButton />
-    <div className="mb-4">
-      <h1 className="text-2xl font-bold text-gray-900">ORDERS ({totalCount} total)</h1>
+
+  return (
+    <div className="p-2 sm:p-4 lg:p-6">
+      <Toaster position="top-right" richColors closeButton />
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-gray-900">ORDERS ({totalCount} total)</h1>
+      </div>
+      {renderListTab()}
     </div>
-    {renderListTab()}
-  </div>
-);
+  );
 };
 
 export default OrdersList;

@@ -119,6 +119,7 @@ const OrderDetails = () => {
                             taxAmount: "0.0",
                             total: item.total_price ?? "-",
                             loyaltyPointsEarned: item.loyalty_points_earned ?? "-",
+                            primary_image: item.product?.primary_image || "",
                         }))
                         : []
                 );
@@ -231,7 +232,7 @@ const OrderDetails = () => {
                                         <div key={item.id} className="flex gap-4">
                                             {/* Image Placeholder */}
                                             <div className="w-20 h-20 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
-                                                <img src={item.image_url} alt={item.productName} className="w-full h-full object-cover rounded" />
+                                                <img src={item?.primary_image} alt={item.productName} className="w-full h-full object-cover rounded" />
                                             </div>
 
                                             {/* Item Details */}
