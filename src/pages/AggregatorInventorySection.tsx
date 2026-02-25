@@ -133,9 +133,9 @@ const AggregatorInventorySection = () => {
             case "id":
                 return <span className="font-medium">{item.id}</span>;
             case "image_url":
-                return item.image_url ? (
+                return item.banner_image_url ? (
                     <img
-                        src={item.image_url}
+                        src={item.banner_image_url}
                         alt={item.name}
                         className="w-16 h-16 object-cover rounded"
                         onError={(e) => {
@@ -263,14 +263,29 @@ const AggregatorInventorySection = () => {
     };
 
     const handleAddToStore = async () => {
-        const { notAddedToStore } = getSelectedProductsStatus();
-        if (notAddedToStore.length === 0) {
-            toast.error("Please select at least one product that is not already added to store.");
+        if (selectedProductIds.length === 0) {
+            toast.error("Please select at least one product.");
             return;
         }
-        toast.success(`${notAddedToStore.length} product(s) added to store!`);
-        // Implement your add to store logic here
-        setSelectedProductIds([]);
+        try {
+            setLoading(true);
+            const token = API_CONFIG.TOKEN || "";
+            const url = getFullUrl(`/aggregator_products/add_products_to_store?token=${token}`);
+            await axios.post(
+                url,
+                {
+                    product_ids: selectedProductIds
+                },
+                { headers: { Authorization: getAuthHeader() } }
+            );
+            toast.success("Products added to store successfully!");
+            setSelectedProductIds([]);
+            fetchInventoryData();
+        } catch (error) {
+            toast.error("Failed to add products to store.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleRemoveFromStore = async () => {
@@ -288,7 +303,7 @@ const AggregatorInventorySection = () => {
 
             const url = `https://${baseUrl}/aggregator_products/remove_products_from_store?token=${token}`;
 
-            await axios.delete(url, {
+            await axios.post(url, {
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
