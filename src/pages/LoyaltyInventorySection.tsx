@@ -30,7 +30,7 @@ export const LoyaltyInventorySection = () => {
         { value: "gift_card", label: "Gift Card", apiCategory: "voucher_category" },
         { value: "lounge", label: "Lounge", apiCategory: "indian_lounge" },
         { value: "miles", label: "Miles", apiCategory: "mile_category" },
-        { value: "merchandise", label: "Marchandise", apiCategory: "merchandise" },
+        { value: "merchandise", label: "Merchandise", apiCategory: "merchandise" },
     ];
 
     const [activeTab, setActiveTab] = useState("gift_card");
