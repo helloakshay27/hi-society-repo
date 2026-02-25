@@ -304,12 +304,11 @@ const AggregatorInventorySection = () => {
             const url = `https://${baseUrl}/aggregator_products/remove_products_from_store?token=${token}`;
 
             await axios.post(url, {
+                aggregator_product_ids: aggregatorProductIds,
+            }, {
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
-                },
-                data: {
-                    aggregator_product_ids: aggregatorProductIds,
                 }
             });
 
