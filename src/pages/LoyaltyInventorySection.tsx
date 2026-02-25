@@ -437,19 +437,18 @@ export const LoyaltyInventorySection = () => {
                 return (
                     <div
                         className="text-sm truncate max-w-xs"
-                        title={item.terms_and_conditions}
-                    >
-                        {item.terms_and_conditions || "-"}
-                    </div>
+                        // title={item.terms_and_conditions}
+                        dangerouslySetInnerHTML={{ __html: item.terms_and_conditions ? item.terms_and_conditions.substring(0, 50) + (item.terms_and_conditions.length > 50 ? '...' : '') : "-" }}
+                    />
+
                 );
             case "redemption_instructions":
                 return (
                     <div
                         className="text-sm truncate max-w-xs"
-                        title={item.redemption_instructions}
-                    >
-                        {item.redemption_instructions || "-"}
-                    </div>
+                        // title={item.redemption_instructions}
+                        dangerouslySetInnerHTML={{ __html: item.redemption_instructions ? item.redemption_instructions.substring(0, 50) + (item.redemption_instructions.length > 50 ? '...' : '') : "-" }}
+                    />
                 );
             case "stock_quantity":
                 return (

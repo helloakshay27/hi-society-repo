@@ -25,6 +25,8 @@ interface HomeLoan {
 }
 
 const HomeLoanList = () => {
+  const baseUrl = localStorage.getItem('baseUrl')
+  const token = localStorage.getItem('token')
   const navigate = useNavigate();
   const [homeLoans, setHomeLoans] = useState<HomeLoan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ const HomeLoanList = () => {
     setIsSearching(!!searchTerm);
     try {
       // const response = await fetch(getFullUrl('/home_loans.json'), {
-      const response = await fetch('https://runwal-api.lockated.com/home_loans.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ', {
+      const response = await fetch(`https://${baseUrl}/home_loans.json?token=${token}`, {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),
@@ -72,7 +74,7 @@ const HomeLoanList = () => {
       // Client-side pagination
       const startIndex = (currentPage - 1) * itemsPerPage;
       const paginatedLoans = filteredLoans.slice(startIndex, startIndex + itemsPerPage);
-      
+
       setHomeLoans(paginatedLoans);
       setTotalCount(filteredLoans.length);
       setTotalPages(Math.ceil(filteredLoans.length / itemsPerPage) || 1);
@@ -197,7 +199,7 @@ const HomeLoanList = () => {
                   className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>
-              
+
               {/* First page */}
               {currentPage > 3 && (
                 <>
@@ -216,7 +218,7 @@ const HomeLoanList = () => {
                   )}
                 </>
               )}
-              
+
               {/* Pages around current */}
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter(page => {
@@ -228,7 +230,7 @@ const HomeLoanList = () => {
                 })
                 .map(page => (
                   <PaginationItem key={page}>
-                    <PaginationLink 
+                    <PaginationLink
                       href="#"
                       onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
                       isActive={currentPage === page}
@@ -237,7 +239,7 @@ const HomeLoanList = () => {
                     </PaginationLink>
                   </PaginationItem>
                 ))}
-              
+
               {/* Last page */}
               {currentPage < totalPages - 2 && (
                 <>
@@ -256,7 +258,7 @@ const HomeLoanList = () => {
                   </PaginationItem>
                 </>
               )}
-              
+
               <PaginationItem>
                 <PaginationNext
                   href="#"

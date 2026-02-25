@@ -18,6 +18,8 @@ interface Referral {
 }
 
 const LoyaltyReferralList = () => {
+  const baseUrl = localStorage.getItem('baseUrl')
+  const token = localStorage.getItem('token')
   const navigate = useNavigate();
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,7 @@ const LoyaltyReferralList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  
+
   const itemsPerPage = 10;
 
   const fetchReferrals = useCallback(async (page: number, search: string) => {
@@ -34,7 +36,7 @@ const LoyaltyReferralList = () => {
     setIsSearching(!!search);
     try {
       // const response = await fetch(getFullUrl('/referrals/get_all_referrals'), {
-      const response = await fetch('https://runwal-api.lockated.com/referrals/get_all_referrals?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ', {
+      const response = await fetch(`https://${baseUrl}/referrals/get_all_referrals?token=${token}`, {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),
@@ -48,7 +50,7 @@ const LoyaltyReferralList = () => {
 
       const data = await response.json();
       const referralsData = data?.referrals || [];
-      
+
       // Client-side search filtering
       let filteredReferrals = referralsData;
       if (search) {
@@ -61,12 +63,12 @@ const LoyaltyReferralList = () => {
           referral.project_name?.toLowerCase().includes(searchLower)
         );
       }
-      
+
       // Client-side pagination
       const startIndex = (page - 1) * itemsPerPage;
       const endIndex = startIndex + itemsPerPage;
       const paginatedReferrals = filteredReferrals.slice(startIndex, endIndex);
-      
+
       setReferrals(paginatedReferrals);
       setCurrentPage(page);
       setTotalPages(Math.ceil(filteredReferrals.length / itemsPerPage));

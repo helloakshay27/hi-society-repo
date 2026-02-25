@@ -124,6 +124,7 @@ const AggregatorInventorySection = () => {
                             variant="ghost"
                             size="sm"
                             title="View Details"
+                            onClick={() => navigate(`/loyalty/aggregator-inventory/${item.id}`)}
                         >
                             <Eye className="w-4 h-4 text-gray-700" />
                         </Button>

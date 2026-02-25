@@ -121,6 +121,8 @@ interface PricingRule {
 }
 
 export const PricingRuleEdit: React.FC = () => {
+  const baseUrl = localStorage.getItem('baseUrl')
+  const token = localStorage.getItem('token')
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
@@ -134,17 +136,17 @@ export const PricingRuleEdit: React.FC = () => {
   const [categoryId, setCategoryId] = useState<string>("");
   const [organizations, setOrganizations] = useState([]);
   const [categories, setCategories] = useState([]);
-console.log("id", id)
+  console.log("id", id)
   const fetchPricingRule = async () => {
     setLoading(true);
     try {
-      const url = `https://runwal-api.lockated.com/pricing_rules/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
+      const url = `https://${baseUrl}/pricing_rules/${id}?token=${token}`;
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch pricing rule");
       }
-      
+
       const data = await response.json();
       setPricingRule(data);
       setMarginType(data.margin_type || "percentage");
@@ -165,13 +167,13 @@ console.log("id", id)
 
   useEffect(() => {
     // Fetch organizations
-    fetch("https://runwal-api.lockated.com/organizations.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
+    fetch(`https://${baseUrl}/organizations.json?token=${token}`)
       .then((res) => res.json())
       .then((data) => setOrganizations(data.organizations || []))
       .catch(() => setOrganizations([]));
 
     // Fetch categories
-    fetch("https://runwal-api.lockated.com/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
+    fetch(`https://${baseUrl}/generic_categories?token=${token}`)
       .then((res) => res.json())
       .then((data) => setCategories(data.categories || []))
       .catch(() => setCategories([]));
@@ -179,7 +181,7 @@ console.log("id", id)
     fetchPricingRule();
   }, [id]);
 
-  
+
 
   const validateForm = (): boolean => {
     if (!marginValue.trim()) {
@@ -201,7 +203,7 @@ console.log("id", id)
 
     setSubmitting(true);
     try {
-      const url = `https://runwal-api.lockated.com/pricing_rules/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
+      const url = `https://${baseUrl}/pricing_rules/${id}?token=${token}`;
       const payload = {
         pricing_rule: {
           margin_type: marginType,
@@ -210,7 +212,7 @@ console.log("id", id)
           platform_fee_value: platformFeeValue ? parseFloat(platformFeeValue) : null,
         },
       };
-      
+
       const response = await fetch(url, {
         method: "PUT",
         headers: {
@@ -218,11 +220,11 @@ console.log("id", id)
         },
         body: JSON.stringify(payload),
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to update pricing rule");
       }
-      
+
       toast.success("Pricing rule updated successfully!");
       setTimeout(() => {
         navigate("/settings/pricing-rule-list");

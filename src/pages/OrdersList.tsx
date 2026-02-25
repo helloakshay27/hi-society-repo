@@ -528,7 +528,7 @@ const OrdersList = () => {
         );
       case "status":
         return (
-          <div>
+          <div className="w-[170px]">
             <SelectBox
               label=""
               options={statusOptions.filter((opt) => opt.value !== "")}
