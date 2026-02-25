@@ -26,6 +26,8 @@ interface LoyaltyMember {
 }
 
 const LoyaltyMembersList = () => {
+  const baseUrl = localStorage.getItem('baseUrl')
+  const token = localStorage.getItem('token')
   const navigate = useNavigate();
   const [members, setMembers] = useState<LoyaltyMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,7 @@ const LoyaltyMembersList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  
+
   const itemsPerPage = 10;
 
   const formatDate = (dateString: string | null | undefined): string => {
@@ -52,7 +54,7 @@ const LoyaltyMembersList = () => {
     try {
       // const token = API_CONFIG.TOKEN || ""; // fallback if needed
       // const url = getFullUrl(`/loyalty/members.json?token=${token}`);
-      const url = "https://runwal-api.lockated.com/loyalty/members.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+      const url = `https://${baseUrl}/loyalty/members.json?token=${token}`;
       const response = await fetch(url, {
         method: 'GET',
         headers: {

@@ -22,6 +22,8 @@ interface PricingRule {
 }
 
 const PricingRuleList: React.FC = () => {
+  const baseUrl = localStorage.getItem('baseUrl')
+  const token = localStorage.getItem('token')
   const navigate = useNavigate();
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +32,7 @@ const PricingRuleList: React.FC = () => {
   const fetchPricingRules = useCallback(async () => {
     setLoading(true);
     try {
-      const url = "https://runwal-api.lockated.com/pricing_rules.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+      const url = `https://${baseUrl}/pricing_rules.json?token=${token}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to fetch pricing rules");
@@ -79,18 +81,18 @@ const PricingRuleList: React.FC = () => {
     }
 
     try {
-      const url = `https://runwal-api.lockated.com/pricing_rules/${id}?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`;
+      const url = `https://${baseUrl}/pricing_rules/${id}?token=${token}`;
       const response = await fetch(url, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to delete pricing rule");
       }
-      
+
       toast.success("Pricing rule deleted successfully");
       fetchPricingRules();
     } catch (error) {

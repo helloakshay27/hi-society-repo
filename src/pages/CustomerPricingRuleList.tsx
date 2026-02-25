@@ -9,10 +9,9 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { getFullUrl } from "@/config/apiConfig";
 
-const API_URL = "https://runwal-api.lockated.com/pricing_rules.json?type=customer&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
 
 const columns = [
-    { key: "actions", label: "Actions", sortable: true },
+  { key: "actions", label: "Actions", sortable: true },
   { key: "id", label: "Sr No", sortable: true },
   { key: "organization_id", label: "Organization", sortable: true },
   { key: "generic_category_id", label: "Category", sortable: true },
@@ -22,14 +21,19 @@ const columns = [
 ];
 
 export const CustomerPricingRuleList = () => {
-    const handleAdd = () => {
-      setEditId(null);
-      setEditOrgId("");
-      setEditCatId("");
-      setEditMarginType("percentage");
-      setEditMarginValue("");
-      setEditOpen(true);
-    };
+  const baseUrl = localStorage.getItem('baseUrl')
+  const token = localStorage.getItem('token')
+
+  const API_URL = `https://${baseUrl}/pricing_rules.json?type=customer&token=${token}`;
+
+  const handleAdd = () => {
+    setEditId(null);
+    setEditOrgId("");
+    setEditCatId("");
+    setEditMarginType("percentage");
+    setEditMarginValue("");
+    setEditOpen(true);
+  };
   const [pricingRules, setPricingRules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [organizations, setOrganizations] = useState([]);
@@ -45,14 +49,14 @@ export const CustomerPricingRuleList = () => {
   const [editLoading, setEditLoading] = useState(false);
   useEffect(() => {
     setLoadingOrgs(true);
-    fetch("https://runwal-api.lockated.com/organizations.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
+    fetch(`https://${baseUrl}/organizations.json?token=${token}`)
       .then((res) => res.json())
       .then((data) => setOrganizations(data.organizations || []))
       .catch(() => setOrganizations([]))
       .finally(() => setLoadingOrgs(false));
 
     setLoadingCats(true);
-    fetch("https://runwal-api.lockated.com/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
+    fetch(`https://${baseUrl}/generic_categories?token=${token}`)
       .then((res) => res.json())
       .then((data) => setCategories(data.categories || []))
       .catch(() => setCategories([]))
@@ -116,10 +120,10 @@ export const CustomerPricingRuleList = () => {
         },
       };
       if (editId) {
-        url = `https://runwal-api.lockated.com/pricing_rules/${editId}`;
+        url = `https://${baseUrl}/pricing_rules/${editId}`;
         method = "PATCH";
       } else {
-        url = "https://runwal-api.lockated.com/pricing_rules.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+        url = `https://${baseUrl}/pricing_rules.json?token=${token}`;
         method = "POST";
       }
       const response = await fetch(url, {
