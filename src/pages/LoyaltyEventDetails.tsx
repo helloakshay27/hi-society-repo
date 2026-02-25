@@ -526,7 +526,7 @@ const LoyaltyEventDetails = () => {
   const tabs = [
     { label: "Event Details", value: "event-details" },
     { label: "Events Related Images", value: "images" },
-    { label: "Participants Details", value: "participants-details" },
+    // { label: "Participants Details", value: "participants-details" },
   ];
 
   return (

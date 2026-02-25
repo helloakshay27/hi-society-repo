@@ -2138,7 +2138,7 @@ const EventEdit = () => {
         )}
 
         {/* Share Card */}
-        {currentStep === 0 && !isPreviewMode && (
+        {/* {currentStep === 0 && !isPreviewMode && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -2149,7 +2149,6 @@ const EventEdit = () => {
               </h2>
             </div>
             <div className="p-6">
-              {/* Radio buttons */}
               <div className="flex items-center gap-8 mb-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -2177,7 +2176,6 @@ const EventEdit = () => {
                 </label>
               </div>
 
-              {/* Society Multi-Select Dropdown */}
               {shareWith === 'individual' && (
                 <div className="relative mt-2">
                   <label className="absolute -top-2 left-3 bg-white px-2 text-xs font-medium text-gray-700 z-10">
@@ -2212,7 +2210,7 @@ const EventEdit = () => {
               )}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Visibility Card */}
         {currentStep === 0 && !isPreviewMode && (
@@ -2781,7 +2779,7 @@ const EventEdit = () => {
                   <div className="mb-6">
                     <div className="flex justify-between items-center mb-4">
                       <h5 className="text-base font-semibold inline-flex items-center gap-1">
-                        Event Attachment Images{" "}
+                        Event Thumbnail Images{" "}
                         <span
                           className="relative inline-block cursor-pointer"
                           onMouseEnter={() => setShowAttachmentTooltip(true)}
@@ -2985,7 +2983,7 @@ const EventEdit = () => {
                 </div>
 
                 {/* Event Details Image */}
-                <div className="mb-6">
+                {/* <div className="mb-6">
                   <div className="flex justify-between items-center mb-4">
                     <h5 className="text-base font-semibold inline-flex items-center gap-1">
                       Event Details Image{" "}
@@ -3060,7 +3058,7 @@ const EventEdit = () => {
                       </Table>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -3429,7 +3427,7 @@ const EventEdit = () => {
 
                       {/* Event Attachment Images */}
                       <div>
-                        <h5 className="text-base font-semibold mb-4">Event Attachment Images</h5>
+                        <h5 className="text-base font-semibold mb-4">Event Thumbnail Images</h5>
                         <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
@@ -3986,7 +3984,7 @@ const EventEdit = () => {
 
                 {/* Event Attachment Images */}
                 <div>
-                  <h5 className="text-base font-semibold mb-4">Event Attachment Images</h5>
+                  <h5 className="text-base font-semibold mb-4">Event Thumbnail Images</h5>
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
@@ -4042,7 +4040,7 @@ const EventEdit = () => {
                 </div>
 
                 {/* Event Details Image - inside Event Related Images card */}
-                <div>
+                {/* <div>
                   <h5 className="text-base font-semibold mb-4">Event Details Image</h5>
                   <div className="overflow-x-auto">
                     <Table>
@@ -4084,7 +4082,7 @@ const EventEdit = () => {
                       </TableBody>
                     </Table>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
             {/* Step 3: Invite CPs Preview - Hidden for Loyalty */}
