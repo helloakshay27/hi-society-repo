@@ -419,6 +419,9 @@ const SmartSecureStaffsHistory = lazy(
 const SmartSecureVehiclesOut = lazy(
   () => import("@/pages/SmartSecureVehiclesOut")
 );
+const SmartSecureVehiclesIn = lazy(
+  () => import("@/pages/SmartSecureVehiclesIn")
+);
 const SmartSecureVehiclesHistory = lazy(
   () => import("@/pages/SmartSecureVehiclesHistory")
 );
@@ -1532,6 +1535,10 @@ export const setupMemberRoutes = (
     <Route
       path="/smartsecure/staffs/history"
       Component={withSuspense(SmartSecureStaffsHistory)}
+    />
+    <Route
+      path="/smartsecure/vehicles/in"
+      Component={withSuspense(SmartSecureVehiclesIn)}
     />
     <Route
       path="/smartsecure/vehicles/out"
