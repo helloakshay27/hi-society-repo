@@ -208,13 +208,12 @@ export const LoyaltyInventorySection = () => {
 
             const url = `https://${baseUrl}/aggregator_products/remove_products_from_store?token=${token}`;
 
-            await axios.delete(url, {
+            await axios.post(url, {
+                product_ids: selectedProductIds,
+            }, {
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
-                },
-                data: {
-                    product_ids: selectedProductIds,
                 }
             });
 
