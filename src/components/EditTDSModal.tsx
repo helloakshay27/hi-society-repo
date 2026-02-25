@@ -19,7 +19,7 @@ interface EditTDSModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  organizationId: number;
+  tdsSettingsId: number;
 }
 
 interface TDSSettings {
@@ -33,7 +33,7 @@ export const EditTDSModal: React.FC<EditTDSModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
-  organizationId,
+  tdsSettingsId,
 }) => {
   const { getFullUrl, getAuthHeader } = useApiConfig();
   const [loading, setLoading] = useState(false);
@@ -46,62 +46,36 @@ export const EditTDSModal: React.FC<EditTDSModalProps> = ({
   const [tdsLimit, setTdsLimit] = useState<string>("");
 
   useEffect(() => {
-    if (isOpen && organizationId) {
+    if (isOpen && tdsSettingsId) {
       fetchOrganizationAndTDS();
     }
-  }, [isOpen, organizationId]);
+  }, [isOpen, tdsSettingsId]);
 
   const fetchOrganizationAndTDS = async () => {
     setLoading(true);
     try {
-      // Fetch organization details
+      // Fetch TDS settings first to get organization_id
       const storedBaseUrl = getBaseUrl();
       const storedToken = localStorage.getItem("token");
 
-      let orgUrl: string;
+      let tdsUrl: string;
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
         Accept: "application/json",
       };
 
       if (storedBaseUrl) {
-        orgUrl = `${storedBaseUrl}/organizations/${organizationId}.json`;
+        tdsUrl = `${storedBaseUrl}/admin/organization_tds_settings/${tdsSettingsId}`;
       } else {
-        orgUrl = getFullUrl(`/organizations/${organizationId}.json`);
-      }
-
-      if (storedToken) {
-        headers["Authorization"] = `Bearer ${storedToken}`;
-      } else {
-        try {
-          headers["Authorization"] = getAuthHeader();
-        } catch (e) {
-          console.warn("No token available:", e);
-        }
-      }
-
-      const orgResponse = await fetch(orgUrl, {
-        method: "GET",
-        headers,
-      });
-
-      if (orgResponse.ok) {
-        const orgData = await orgResponse.json();
-        setOrganizationName(orgData.name || "");
-      }
-
-      // Fetch TDS settings
-      let tdsUrl: string;
-      if (storedBaseUrl) {
-        tdsUrl = `${storedBaseUrl}/admin/organization_tds_settings/${organizationId}`;
-      } else {
-        tdsUrl = getFullUrl(`/admin/organization_tds_settings/${organizationId}`);
+        tdsUrl = getFullUrl(`/admin/organization_tds_settings/${tdsSettingsId}`);
       }
 
       if (storedToken) {
         tdsUrl += `?token=${storedToken}`;
+        headers["Authorization"] = `Bearer ${storedToken}`;
       } else {
         try {
+          headers["Authorization"] = getAuthHeader();
           const token = getAuthHeader().replace("Bearer ", "");
           tdsUrl += `?token=${token}`;
         } catch (e) {
@@ -119,6 +93,26 @@ export const EditTDSModal: React.FC<EditTDSModalProps> = ({
         setTdsApplicable(tdsData.tds_applicable || false);
         setTdsPercentage(tdsData.tds_percentage?.toString() || "");
         setTdsLimit(tdsData.tds_limit?.toString() || "");
+        
+        // Now fetch organization details using organization_id from TDS data
+        const orgId = tdsData.organization_id;
+        let orgUrl: string;
+        
+        if (storedBaseUrl) {
+          orgUrl = `${storedBaseUrl}/organizations/${orgId}.json`;
+        } else {
+          orgUrl = getFullUrl(`/organizations/${orgId}.json`);
+        }
+        
+        const orgResponse = await fetch(orgUrl, {
+          method: "GET",
+          headers,
+        });
+        
+        if (orgResponse.ok) {
+          const orgData = await orgResponse.json();
+          setOrganizationName(orgData.name || "");
+        }
       } else {
         // No TDS settings found, set defaults
         setTdsApplicable(false);
@@ -189,8 +183,45 @@ export const EditTDSModal: React.FC<EditTDSModalProps> = ({
         }
       }
 
+      // We need to get organization_id from the current TDS settings
+      // Fetch it first if not already stored
+      let orgId: number | undefined;
+      
+      // Fetch current TDS data to get organization_id
+      let tdsGetUrl: string;
+      if (storedBaseUrl) {
+        tdsGetUrl = `${storedBaseUrl}/admin/organization_tds_settings/${tdsSettingsId}`;
+      } else {
+        tdsGetUrl = getFullUrl(`/admin/organization_tds_settings/${tdsSettingsId}`);
+      }
+      
+      if (storedToken) {
+        tdsGetUrl += `?token=${storedToken}`;
+      } else {
+        try {
+          const token = getAuthHeader().replace("Bearer ", "");
+          tdsGetUrl += `?token=${token}`;
+        } catch (e) {
+          console.warn("No token available:", e);
+        }
+      }
+      
+      const getCurrentTDS = await fetch(tdsGetUrl, {
+        method: "GET",
+        headers,
+      });
+      
+      if (getCurrentTDS.ok) {
+        const currentData = await getCurrentTDS.json();
+        orgId = currentData.organization_id;
+      }
+      
+      if (!orgId) {
+        throw new Error("Could not determine organization ID");
+      }
+      
       const payload: TDSSettings = {
-        organization_id: organizationId,
+        organization_id: orgId,
         tds_applicable: tdsApplicable,
         tds_percentage: tdsApplicable ? percentage : 0,
         tds_limit: tdsApplicable ? limit : 0,
