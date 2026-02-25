@@ -16,9 +16,9 @@ const validationSchema = Yup.object({
   exit_points: Yup.number()
     .required('Exit Points are required')
     .positive('Exit Points must be a positive number'),
-  multipliers: Yup.number()
-    .required('Multipliers are required')
-    .positive('Multipliers must be a positive number'),
+  // multipliers: Yup.number()
+  //   .required('Multipliers are required')
+  //   .positive('Multipliers must be a positive number'),
   welcome_bonus: Yup.number()
     .required('Welcome Bonus is required')
     .positive('Welcome Bonus must be a positive number'),
@@ -48,7 +48,7 @@ const LoyaltyTiersList = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [selectedTier, setSelectedTier] = useState<LoyaltyTier | null>(null);
   const [showModal, setShowModal] = useState(false);
-  
+
   const itemsPerPage = 10;
 
   const fetchTiers = useCallback(async (page: number, search: string) => {
@@ -80,7 +80,7 @@ const LoyaltyTiersList = () => {
       } else if (data?.data && Array.isArray(data.data)) {
         tiersData = data.data;
       }
-      
+
       // Client-side search filtering
       let filteredTiers = tiersData;
       if (search) {
@@ -88,23 +88,23 @@ const LoyaltyTiersList = () => {
         filteredTiers = tiersData.filter((tier: LoyaltyTier) =>
           tier.name?.toLowerCase().includes(searchLower) ||
           String(tier.exit_points || '').toLowerCase().includes(searchLower) ||
-          String(tier.multipliers || '').toLowerCase().includes(searchLower) ||
-          (String(tier.multipliers || '') + 'x').toLowerCase().includes(searchLower) ||
+          // String(tier.multipliers || '').toLowerCase().includes(searchLower) ||
+          // (String(tier.multipliers || '') + 'x').toLowerCase().includes(searchLower) ||
           String(tier.welcome_bonus || '').toLowerCase().includes(searchLower) ||
           tier.point_type?.toLowerCase().includes(searchLower)
         );
       }
-      
+
       // Client-side pagination
       const startIndex = (page - 1) * itemsPerPage;
       const endIndex = startIndex + itemsPerPage;
       const paginatedTiers = filteredTiers.slice(startIndex, endIndex);
-      
+
       setTiers(paginatedTiers);
       setCurrentPage(page);
       setTotalPages(Math.ceil(filteredTiers.length / itemsPerPage));
       setTotalCount(filteredTiers.length);
-      
+
       // Store all tiers for stats calculation
       sessionStorage.setItem('all_tiers', JSON.stringify(tiersData));
     } catch (error) {
@@ -211,7 +211,7 @@ const LoyaltyTiersList = () => {
   const columns = [
     { key: 'name', label: 'Tier Name', sortable: true },
     { key: 'exit_points', label: 'Exit Points', sortable: true },
-    { key: 'multipliers', label: 'Multipliers', sortable: true },
+    // { key: 'multipliers', label: 'Multipliers', sortable: true },
     { key: 'welcome_bonus', label: 'Welcome Bonus', sortable: true },
     { key: 'member_count', label: 'Member Count', sortable: true },
     { key: 'actions', label: 'Actions', sortable: false },
@@ -319,7 +319,7 @@ const LoyaltyTiersList = () => {
   return (
     <div className="p-2 sm:p-4 lg:p-6">
       <Toaster position="top-right" richColors closeButton />
-      
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <StatsCard
@@ -409,7 +409,7 @@ const LoyaltyTiersList = () => {
                     initialValues={{
                       name: selectedTier.name || '',
                       exit_points: selectedTier.exit_points || 0,
-                      multipliers: selectedTier.multipliers || 0,
+                      // multipliers: selectedTier.multipliers || 0,
                       welcome_bonus: selectedTier.welcome_bonus || 0,
                       point_type: selectedTier.point_type || '',
                     }}
@@ -450,7 +450,7 @@ const LoyaltyTiersList = () => {
                           </div>
 
                           {/* Multipliers */}
-                          <div className="space-y-2">
+                          {/* <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
                               Multipliers
                               <span className="text-red-500 ml-1">*</span>
@@ -463,7 +463,7 @@ const LoyaltyTiersList = () => {
                               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c72030] focus:border-transparent outline-none transition-all"
                             />
                             <ErrorMessage name="multipliers" component="div" className="text-red-500 text-xs mt-1" />
-                          </div>
+                          </div> */}
 
                           {/* Welcome Bonus */}
                           <div className="space-y-2">

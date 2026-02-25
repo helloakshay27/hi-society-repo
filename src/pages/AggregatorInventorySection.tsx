@@ -4,25 +4,10 @@ import { StatsCard } from "@/components/StatsCard";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import axios from "axios";
 import { toast } from "sonner";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Plus, Package, Warehouse, Eye, RefreshCwIcon } from "lucide-react";
+import { Plus, Eye, RefreshCwIcon } from "lucide-react";
 import {
     Pagination,
     PaginationContent,
@@ -35,9 +20,19 @@ import {
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 const AggregatorInventorySection = () => {
-    // Track expanded description rows by item id
-    const [expandedDescRows, setExpandedDescRows] = useState<Set<number>>(new Set());
     const navigate = useNavigate();
+    const baseUrl = localStorage.getItem("baseUrl")
+
+    // Tab and category data
+    const categories = [
+        { value: "gift_card", label: "Gift Card", apiCategory: "voucher_category" },
+        { value: "lounge", label: "Lounge", apiCategory: "indian_lounge" },
+        { value: "miles", label: "Miles", apiCategory: "mile_category" },
+        { value: "merchandise", label: "Marchandise", apiCategory: "merchandise" },
+    ];
+
+    const [activeTab, setActiveTab] = useState("gift_card");
+    const [expandedDescRows, setExpandedDescRows] = useState<Set<number>>(new Set());
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [inventoryData, setInventoryData] = useState([]);
@@ -50,37 +45,25 @@ const AggregatorInventorySection = () => {
         totalStock: "0",
     });
 
-    // Define columns for EnhancedTable - ALL FIELDS
+    // Define columns for EnhancedTable
     const columns = [
         { key: "action", label: "Action", sortable: false },
-        // { key: "checkbox", label: "Select", sortable: false },
         { key: "id", label: "ID", sortable: true },
-        { key: "banner_image_url", label: "Image", sortable: false },
+        { key: "image_url", label: "Image", sortable: false },
         { key: "name", label: "Product Name", sortable: true },
         { key: "sku", label: "SKU / Item Name", sortable: true },
+        { key: "added_to_store", label: "Added to Store", sortable: true },
         { key: "aggr_product_id", label: "Aggregator Product ID", sortable: true },
         { key: "description", label: "Description", sortable: false },
         { key: "brand", label: "Brand", sortable: true },
-        // { key: "base_price", label: "Base Price", sortable: true },
-        { key: "client_price", label: "Price", sortable: true },
+        { key: "price", label: "Price", sortable: true },
         { key: "customer_price", label: "Customer Price", sortable: true },
         { key: "stock_quantity", label: "Stock Quantity", sortable: true },
         { key: "min_stock_level", label: "Min Stock Level", sortable: true },
-        // { key: "value_type", label: "Value Type", sortable: false },
         { key: "min_value", label: "Min Value", sortable: true },
         { key: "max_value", label: "Max Value", sortable: true },
-        // { key: "value_denominations", label: "Denominations", sortable: false },
         { key: "validity", label: "Validity", sortable: false },
-        // { key: "usage_type", label: "Usage Type", sortable: false },
-        // { key: "phone_required", label: "Phone Required", sortable: true },
-        // { key: "redemption_fee", label: "Redemption Fee", sortable: true },
-        // { key: "redemption_fee_type", label: "Fee Type", sortable: false },
-        // { key: "redemption_fee_borne_by_user", label: "Fee by User", sortable: true },
-        // { key: "published", label: "Published", sortable: true },
-        // { key: "featured", label: "Featured", sortable: true },
-        // { key: "is_recommended", label: "Recommended", sortable: true },
-        { key: "categories", label: "Category", sortable: false },
-        // { key: "filter_group_code", label: "Filter Group", sortable: false },
+        { key: "category", label: "Category", sortable: false },
         { key: "shipping_info", label: "Shipping Info", sortable: false },
         { key: "origin_country", label: "Origin Country", sortable: true },
         { key: "aggregator_id", label: "Aggregator ID", sortable: true },
@@ -88,35 +71,33 @@ const AggregatorInventorySection = () => {
         { key: "updated_at", label: "Updated At", sortable: true },
     ];
 
-    // Fetch inventory data
+    // Fetch inventory data from Runwal API by category
     useEffect(() => {
         fetchInventoryData();
-    }, [currentPage]);
+    }, [activeTab, currentPage]);
 
     const fetchInventoryData = async () => {
         try {
             setLoading(true);
-            const token = API_CONFIG.TOKEN || "";
-            const url = getFullUrl(`/aggregator_products?token=${token}&page=${currentPage}`);
-            const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
+            const category = categories.find(c => c.value === activeTab);
+            const token = localStorage.getItem("token");
+            const url = `https://${baseUrl}/aggregator_products.json?token=${token}&category=${category?.apiCategory}&page=${currentPage}`;
+
+            const response = await axios.get(url);
             const products = response.data?.data || [];
-            const meta = response.data?.meta || {};
 
             setInventoryData(products);
-            setCurrentPage(meta.page || 1);
-            setTotalPages(meta.total_pages || 1);
-            setTotalCount(meta.total_count || 0);
-
-            // Calculate stats from meta
-            const totalStock = products.reduce((sum: number, p: any) => sum + (p.stock_quantity || 0), 0);
+            setTotalPages(response.data?.meta?.total_pages || 1);
+            setTotalCount(response.data?.meta?.total_count || 0);
 
             setStats({
-                totalProducts: (meta.total_count || 0).toString(),
-                totalStock: totalStock.toString(),
+                totalProducts: products.length.toString(),
+                totalStock: products.reduce((sum, item) => sum + (item.stock_quantity || 0), 0).toString(),
             });
         } catch (error) {
-            console.error("Error fetching aggregator products data:", error);
-            toast.error("Failed to load aggregator products data");
+            console.error("Error fetching products data:", error);
+            toast.error("Failed to load products data");
+            setInventoryData([]);
         } finally {
             setLoading(false);
         }
@@ -142,7 +123,6 @@ const AggregatorInventorySection = () => {
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/loyalty/aggregator-inventory/${item.id}`)}
                             title="View Details"
                         >
                             <Eye className="w-4 h-4 text-gray-700" />
@@ -151,10 +131,10 @@ const AggregatorInventorySection = () => {
                 );
             case "id":
                 return <span className="font-medium">{item.id}</span>;
-            case "banner_image_url":
-                return item.banner_image_url ? (
+            case "image_url":
+                return item.image_url ? (
                     <img
-                        src={item.banner_image_url}
+                        src={item.image_url}
                         alt={item.name}
                         className="w-16 h-16 object-cover rounded"
                         onError={(e) => {
@@ -170,8 +150,10 @@ const AggregatorInventorySection = () => {
                 return <span className="font-medium">{item.name || "-"}</span>;
             case "sku":
                 return <span className="text-sm">{item.sku || "-"}</span>;
+            case "added_to_store":
+                return <span className="text-sm">{item.added_to_store ? "Yes" : "No"}</span>;
             case "aggr_product_id":
-                return <span className="text-sm">{item.aggr_product_id || "-"}</span>;
+                return <span className="text-sm">{item.aggr_product_id || item.id || "-"}</span>;
             case "description": {
                 const desc = item.description || "-";
                 const isExpanded = expandedDescRows.has(item.id);
@@ -205,12 +187,10 @@ const AggregatorInventorySection = () => {
             }
             case "brand":
                 return <span>{item?.brand || "-"}</span>;
-            case "base_price":
-                return <span className="font-medium">₹{parseFloat(item.base_price || 0).toFixed(2)}</span>;
+            case "price":
+                return <span className="font-medium">₹{parseFloat(item.price || 0).toFixed(2)}</span>;
             case "customer_price":
                 return <span className="font-medium text-green-600">₹{parseFloat(item.customer_price || 0).toFixed(2)}</span>;
-            case "client_price":
-                return <span>₹{item.client_price || 0}</span>;
             case "stock_quantity":
                 return (
                     <span className={item.stock_quantity > 0 ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
@@ -219,56 +199,14 @@ const AggregatorInventorySection = () => {
                 );
             case "min_stock_level":
                 return <span className="text-sm">{item.min_stock_level || 0}</span>;
-            case "value_type":
-                return <span className="text-sm">{item.value_type || "-"}</span>;
             case "min_value":
                 return <span className="text-sm">{item.min_value || "-"}</span>;
             case "max_value":
                 return <span className="text-sm">{item.max_value || "-"}</span>;
-            case "value_denominations":
-                return <span className="text-sm">{item.value_denominations || "-"}</span>;
             case "validity":
                 return <span className="text-sm">{item.validity || "-"}</span>;
-            case "usage_type":
-                return <span className="text-sm">{item.usage_type || "-"}</span>;
-            case "phone_required":
-                return (
-                    <span className={`text-xs px-2 py-1 rounded ${item.phone_required ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {item.phone_required ? "Yes" : "No"}
-                    </span>
-                );
-            case "redemption_fee":
-                return <span className="text-sm">₹{parseFloat(item.redemption_fee || 0).toFixed(2)}</span>;
-            case "redemption_fee_type":
-                return <span className="text-sm">{item.redemption_fee_type || "-"}</span>;
-            case "redemption_fee_borne_by_user":
-                return (
-                    <span className={`text-xs px-2 py-1 rounded ${item.redemption_fee_borne_by_user ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {item.redemption_fee_borne_by_user ? "Yes" : "No"}
-                    </span>
-                );
-            case "published":
-                return (
-                    <span className={`text-xs px-2 py-1 rounded ${item.published ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {item.published ? "Yes" : "No"}
-                    </span>
-                );
-            case "featured":
-                return (
-                    <span className={`text-xs px-2 py-1 rounded ${item.featured ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {item.featured ? "Yes" : "No"}
-                    </span>
-                );
-            case "is_recommended":
-                return (
-                    <span className={`text-xs px-2 py-1 rounded ${item.is_recommended ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {item.is_recommended ? "Yes" : "No"}
-                    </span>
-                );
-            case "categories":
-                return <span className="text-sm">{item.categories || "-"}</span>;
-            case "filter_group_code":
-                return <span className="text-sm">{item.filter_group_code || "-"}</span>;
+            case "category":
+                return <span className="text-sm">{item.category || "-"}</span>;
             case "shipping_info":
                 return <span className="text-sm">{item.shipping_info || "-"}</span>;
             case "origin_country":
@@ -289,7 +227,7 @@ const AggregatorInventorySection = () => {
     };
 
     const handleExport = () => {
-        console.log("Exporting aggregator products data...");
+        console.log("Exporting products data...");
     };
 
     // Add Panel Modal States
@@ -316,54 +254,63 @@ const AggregatorInventorySection = () => {
         }
     };
 
+    const getSelectedProductsStatus = () => {
+        const selectedProducts = inventoryData.filter(p => selectedProductIds.includes(p.id));
+        const addedToStore = selectedProducts.filter(p => p.added_to_store);
+        const notAddedToStore = selectedProducts.filter(p => !p.added_to_store);
+        return { addedToStore, notAddedToStore };
+    };
+
     const handleAddToStore = async () => {
-        if (selectedProductIds.length === 0) {
-            toast.error("Please select at least one product.");
+        const { notAddedToStore } = getSelectedProductsStatus();
+        if (notAddedToStore.length === 0) {
+            toast.error("Please select at least one product that is not already added to store.");
             return;
         }
+        toast.success(`${notAddedToStore.length} product(s) added to store!`);
+        // Implement your add to store logic here
+        setSelectedProductIds([]);
+    };
+
+    const handleRemoveFromStore = async () => {
+        const { addedToStore } = getSelectedProductsStatus();
+        if (addedToStore.length === 0) {
+            toast.error("Please select at least one product that is already added to store.");
+            return;
+        }
+
         try {
             setLoading(true);
-            const token = API_CONFIG.TOKEN || "";
-            const url = getFullUrl(`/aggregator_products/add_products_to_store?token=${token}`);
-            await axios.post(
-                url,
-                {
-                    product_ids: selectedProductIds
+            const token = localStorage.getItem("token");
+            const baseUrl = localStorage.getItem("baseUrl");
+            const aggregatorProductIds = addedToStore.map(p => p.id);
+
+            const url = `https://${baseUrl}/aggregator_products/remove_products_from_store?token=${token}`;
+
+            await axios.delete(url, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
                 },
-                { headers: { Authorization: getAuthHeader() } }
-            );
-            toast.success("Products added to store successfully!");
+                data: {
+                    aggregator_product_ids: aggregatorProductIds,
+                }
+            });
+
+            toast.success(`${addedToStore.length} product(s) removed from store!`);
             setSelectedProductIds([]);
             fetchInventoryData();
         } catch (error) {
-            toast.error("Failed to add products to store.");
+            console.error("Error removing products from store:", error);
+            toast.error("Failed to remove products from store.");
         } finally {
             setLoading(false);
         }
-
-        // Previous implementation with organization selection
-        // if (selectedOrgIds.length === 0) {
-        //     toast.error("Please select at least one organization.");
-        //     return;
-        // }
-        // const url = getFullUrl(`/aggregator_products/add_to_store?token=${API_CONFIG.TOKEN}`);
-        // await axios.post(
-        //     url,
-        //     { 
-        //         product_ids: selectedProductIds,
-        //         organization_ids: selectedOrgIds 
-        //     }
-        // );
-        // setIsAddModalOpen(false);
-        // setSelectedOrgIds([]);
     };
 
     const handleSyncInventory = async () => {
         try {
             setLoading(true);
-            const token = API_CONFIG.TOKEN || "";
-            const url = getFullUrl(`/aggregators/1/sync_products?token=${token}`);
-            await axios.get(url, { headers: { Authorization: getAuthHeader() } });
             toast.success("Inventory sync started!");
             // Optionally, you can refresh the inventory data after sync
             fetchInventoryData();
@@ -513,142 +460,99 @@ const AggregatorInventorySection = () => {
                 </div>
             </div>
 
-            {/* Stats Cards */}
-            {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                <StatsCard
-                    icon={<Package />}
-                    label="Total Products"
-                    value={stats.totalProducts}
-                    bgColor="bg-[#F6F4EE]"
-                    iconBg="bg-[#C4B89D54]"
-                />
-                <StatsCard
-                    icon={<Warehouse />}
-                    label="Total Stock"
-                    value={stats.totalStock}
-                    bgColor="bg-[#F6F4EE]"
-                    iconBg="bg-[#C4B89D54]"
-                />
-            </div> */}
+            {/* Category Tabs */}
+            <Tabs value={activeTab} onValueChange={(value) => {
+                setActiveTab(value);
+                setCurrentPage(1);
+            }} className="w-full">
+                <TabsList className="grid w-full grid-cols-4 gap-4 bg-transparent">
+                    {categories.map((category) => (
+                        <TabsTrigger
+                            key={category.value}
+                            value={category.value}
+                            className="data-[state=active]:bg-[#C72030] data-[state=active]:text-white data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-700 border border-gray-300 rounded-md px-4 py-2"
+                        >
+                            {category.label}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
 
-            {/* Add to Store Button */}
-            <div className="flex justify-end">
-                <Button
-                    onClick={handleAddToStore}
-                    className="bg-[#C72030] hover:bg-[#A01828] text-white"
-                    disabled={selectedProductIds.length === 0 || loading}
-                >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add to Store ({selectedProductIds.length})
-                </Button>
-            </div>
-
-            {/* Inventory Table */}
-            <div className="space-y-4 mui-scrollbar-x">
-                <EnhancedTable
-                    data={inventoryData}
-                    columns={columns}
-                    renderCell={renderCell}
-                    enableExport={false}
-                    enableGlobalSearch={true}
-                    // onGlobalSearch={handleGlobalSearch}
-                    leftActions={
-                        // Sync Inventory Button
-                        <div className="mb-2">
-                            <Button
-                                onClick={handleSyncInventory}
-                                className="bg-[#F6F4EE] text-[#C72030] border border-[#E5E1D8] rounded-none px-6 py-2 font-medium text-base hover:bg-[#f3e9e9]"
-                                disabled={loading}
-                            >
-                                <RefreshCwIcon className="mr-2 h-4 w-4" />
-                                Sync Inventory
-                            </Button>
-                        </div>
-                    }
-                    handleExport={handleExport}
-                    loading={loading}
-                    loadingMessage="Loading aggregator products..."
-                    emptyMessage="No aggregator products found"
-                    // pagination={true}
-                    // manualPagination={true}
-                    // currentPage={currentPage}
-                    // totalPages={totalPages}
-                    // onPageChange={(page) => setCurrentPage(page)}
-                    exportFileName="aggregator-products"
-                    storageKey="aggregator-products-table"
-                />
-            </div>
-
-            <div className="flex justify-center mt-6 pb-6">
-                <Pagination>
-                    <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious
-                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                                className={currentPage === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                            />
-                        </PaginationItem>
-                        {renderPaginationItems()}
-                        <PaginationItem>
-                            <PaginationNext
-                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                                className={currentPage === totalPages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                            />
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
-            </div>
-            {/* <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-                <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="text-xl font-semibold text-[#1A1A1A]">
-                            Add Products to Store
-                        </DialogTitle>
-                        <DialogDescription className="text-sm text-gray-500 mt-1">
-                            Select one or more organizations to add {selectedProductIds.length} selected product(s) to their store.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 mt-4 pb-4">
-                        <div className="space-y-2">
-                            <Label className="text-sm font-medium text-[#1A1A1A]">
-                                Organizations <span className="text-red-500">*</span>
-                            </Label>
-                            <div className="bg-gray-50 border border-[#e5e1d8] rounded px-2 py-1 max-h-40 overflow-y-auto">
-                                {organizations.length === 0 ? (
-                                    <div className="px-3 py-2 text-gray-400">No organizations found</div>
-                                ) : (
-                                    organizations.map((org) => (
-                                        <label key={org.id} className="flex items-center gap-2 py-1 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedOrgIds.includes(org.id)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setSelectedOrgIds([...selectedOrgIds, org.id]);
-                                                    } else {
-                                                        setSelectedOrgIds(selectedOrgIds.filter(id => id !== org.id));
-                                                    }
-                                                }}
-                                            />
-                                            <span>{org.name}</span>
-                                        </label>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                        <div className="flex justify-center pt-4">
+                {/* Tab Content */}
+                {categories.map((category) => (
+                    <TabsContent key={category.value} value={category.value} className="space-y-4 mt-6">
+                        {/* Add to Store / Remove from Store Buttons */}
+                        <div className="flex justify-end gap-2">
                             <Button
                                 onClick={handleAddToStore}
-                                className="bg-[#C72030] hover:bg-[#A01828] text-white px-12"
-                                disabled={loading}
+                                className="bg-[#C72030] hover:bg-[#A01828] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={loading || getSelectedProductsStatus().notAddedToStore.length === 0}
                             >
-                                Submit
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add to Store ({getSelectedProductsStatus().notAddedToStore.length})
+                            </Button>
+                            <Button
+                                onClick={handleRemoveFromStore}
+                                className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={loading || getSelectedProductsStatus().addedToStore.length === 0}
+                            >
+                                <Plus className="mr-2 h-4 w-4" />
+                                Remove from Store ({getSelectedProductsStatus().addedToStore.length})
                             </Button>
                         </div>
-                    </div>
-                </DialogContent>
-            </Dialog> */}
-        </div >
+
+                        {/* Inventory Table */}
+                        <div className="space-y-4 mui-scrollbar-x">
+                            <EnhancedTable
+                                data={inventoryData}
+                                columns={columns}
+                                renderCell={renderCell}
+                                enableExport={false}
+                                enableGlobalSearch={true}
+                                leftActions={
+                                    <div className="mb-2">
+                                        <Button
+                                            onClick={handleSyncInventory}
+                                            className="bg-[#F6F4EE] text-[#C72030] border border-[#E5E1D8] rounded-none px-6 py-2 font-medium text-base hover:bg-[#f3e9e9]"
+                                            disabled={loading}
+                                        >
+                                            <RefreshCwIcon className="mr-2 h-4 w-4" />
+                                            Sync Inventory
+                                        </Button>
+                                    </div>
+                                }
+                                handleExport={handleExport}
+                                loading={loading}
+                                loadingMessage="Loading products..."
+                                emptyMessage="No products found"
+                                exportFileName="products"
+                                storageKey={`products-table-${activeTab}`}
+                            />
+                        </div>
+
+                        {/* Pagination */}
+                        <div className="flex justify-center mt-6 pb-6">
+                            <Pagination>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                            className={currentPage === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                        />
+                                    </PaginationItem>
+                                    {renderPaginationItems()}
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                            className={currentPage === totalPages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
+                    </TabsContent>
+                ))}
+            </Tabs>
+        </div>
     )
 }
 
