@@ -236,7 +236,7 @@ export const LoyaltyInventorySection = () => {
             const category = productCategories.find(c => c.value === activeTab);
             const token = localStorage.getItem("token");
             const baseUrl = localStorage.getItem("baseUrl")
-            const url = `https://${baseUrl}/products.json?token=${token}&category=${category?.apiCategory}&page=${currentPage}`;
+            const url = `https://${baseUrl}/products.json?token=${token}&category=${category?.apiCategory}&page=${currentPage}&source=admin_portal`;
 
             const response = await axios.get(url);
             const products = response.data?.products || [];
