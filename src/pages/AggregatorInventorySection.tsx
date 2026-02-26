@@ -56,7 +56,7 @@ const AggregatorInventorySection = () => {
         { key: "aggr_product_id", label: "Aggregator Product ID", sortable: true },
         { key: "description", label: "Description", sortable: false },
         { key: "brand", label: "Brand", sortable: true },
-        { key: "price", label: "Price", sortable: true },
+        // { key: "price", label: "Price", sortable: true },
         { key: "customer_price", label: "Customer Price", sortable: true },
         { key: "stock_quantity", label: "Stock Quantity", sortable: true },
         { key: "min_stock_level", label: "Min Stock Level", sortable: true },
