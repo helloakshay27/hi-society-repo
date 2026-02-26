@@ -73,7 +73,7 @@ export const FlipCard: React.FC = () => {
         setContestData(data);
 
         // Convert prizes to cards based on attempt_required
-        const attemptsRequired = data.user_attemp_remaining || 3;
+        const attemptsRequired = data.user_attemp_remaining || 0;
         const flipCards = newFlipCardApi.convertPrizesToCards(
           data.prizes,
           attemptsRequired
@@ -119,10 +119,10 @@ export const FlipCard: React.FC = () => {
         setContestData((prev) =>
           prev
             ? {
-                ...prev,
-                won_reward: true,
-                user_contest_reward: result.user_contest_reward,
-              }
+              ...prev,
+              won_reward: true,
+              user_contest_reward: result.user_contest_reward,
+            }
             : prev
         );
       }
@@ -345,9 +345,8 @@ export const FlipCard: React.FC = () => {
                   className="w-full perspective-1000"
                 >
                   <div
-                    className={`relative transition-all duration-600 transform-style-3d ${
-                      flippingCard === card.id ? "rotate-y-180" : ""
-                    }`}
+                    className={`relative transition-all duration-600 transform-style-3d ${flippingCard === card.id ? "rotate-y-180" : ""
+                      }`}
                   >
                     {/* Card */}
                     <div className="relative rounded-2xl overflow-hidden shadow-lg">
@@ -370,7 +369,7 @@ export const FlipCard: React.FC = () => {
                               {card.prize.reward_type === "coupon"
                                 ? card.prize.partner_name || "Coupon"
                                 : card.prize.reward_type === "points" &&
-                                    card.prize.points_value
+                                  card.prize.points_value
                                   ? `${card.prize.points_value} Points`
                                   : card.prize.reward_type === "marchandise"
                                     ? "Merchandise Prize"
@@ -443,21 +442,21 @@ export const FlipCard: React.FC = () => {
                         setContestData((prev) =>
                           prev
                             ? {
-                                ...prev,
-                                won_reward: true,
-                                user_contest_reward: {
-                                  id: parseInt(rewardIdStr),
-                                  contest_id: prev.id,
-                                  prize_id: wonPrize.id,
-                                  reward_type: wonPrize.reward_type,
-                                  points_value: wonPrize.points_value,
-                                  coupon_code: wonPrize.coupon_code,
-                                  user_id: 0,
-                                  status: "granted",
-                                  created_at: new Date().toISOString(),
-                                  updated_at: new Date().toISOString(),
-                                },
-                              }
+                              ...prev,
+                              won_reward: true,
+                              user_contest_reward: {
+                                id: parseInt(rewardIdStr),
+                                contest_id: prev.id,
+                                prize_id: wonPrize.id,
+                                reward_type: wonPrize.reward_type,
+                                points_value: wonPrize.points_value,
+                                coupon_code: wonPrize.coupon_code,
+                                user_id: 0,
+                                status: "granted",
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString(),
+                              },
+                            }
                             : prev
                         );
                       }
