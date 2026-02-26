@@ -140,7 +140,7 @@ export const ContestDetailsPage: React.FC = () => {
   };
 
   const getProbability = (prize: Prize) => {
-    return `${prize.probability_value}/${prize.probability_out_of}`;
+    return `${prize.probability_value}`;
   };
 
   const handleEdit = (section: string) => {
@@ -195,11 +195,10 @@ export const ContestDetailsPage: React.FC = () => {
                 {contest.name}
               </h1>
               <span
-                className={`px-3 py-1 rounded-md text-sm font-medium ${
-                  contest.active
+                className={`px-3 py-1 rounded-md text-sm font-medium ${contest.active
                     ? "bg-green-100 text-green-800"
                     : "bg-gray-100 text-gray-800"
-                }`}
+                  }`}
               >
                 {contest.active ? "Active" : "Inactive"}
               </span>
@@ -287,11 +286,10 @@ export const ContestDetailsPage: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
               <span
-                className={`px-3 py-1 rounded-md text-sm font-medium ${
-                  contest.active
+                className={`px-3 py-1 rounded-md text-sm font-medium ${contest.active
                     ? "bg-green-100 text-green-800"
                     : "bg-gray-100 text-gray-800"
-                }`}
+                  }`}
               >
                 {contest.active ? "Active" : "Inactive"}
               </span>
@@ -471,7 +469,7 @@ export const ContestDetailsPage: React.FC = () => {
                             {getProbability(prize)}
                           </p>
                         </div>
-                         <div className="space-y-1">
+                        <div className="space-y-1">
                           <p className="text-xs font-medium text-gray-500">
                             Total Quantity
                           </p>

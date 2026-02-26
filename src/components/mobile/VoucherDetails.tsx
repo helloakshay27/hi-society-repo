@@ -252,7 +252,7 @@ export const VoucherDetails: React.FC = () => {
             <div className="w-full h-48 bg-white rounded-lg flex items-center justify-center">
               <div className="text-center">
                 <div className="text-6xl mb-2">🎁</div>
-                <p className="text-gray-500 text-sm">No Image Available</p>
+                {/* <p className="text-gray-500 text-sm">No Image Available</p> */}
               </div>
             </div>
           )}
