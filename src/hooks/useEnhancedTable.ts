@@ -8,6 +8,11 @@ export interface ColumnConfig {
   defaultVisible?: boolean;
   hideable?: boolean;
   /**
+   * Exclude this column when exporting to CSV/Excel.
+   * Useful for action/link columns that aren't meaningful in a file.
+   */
+  excludeFromExport?: boolean;
+  /**
    * Optional formatter used when exporting data (CSV/Excel).
    * If provided the function will be called with the raw value and
    * the entire row object and its return value will be written to the

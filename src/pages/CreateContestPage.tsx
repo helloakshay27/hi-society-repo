@@ -1324,7 +1324,7 @@ export const CreateContestPage: React.FC = () => {
             </Card>
 
             {/* Share With Card */}
-            <Card className="shadow-sm w-full">
+            {/* <Card className="shadow-sm w-full">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
                   <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
@@ -1335,7 +1335,6 @@ export const CreateContestPage: React.FC = () => {
                   </h2>
                 </div>
 
-                {/* Radio Buttons */}
                 <div className="mb-6">
                   <div className="flex items-center gap-6">
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -1366,7 +1365,6 @@ export const CreateContestPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Societies Dropdown - Show only when "Individuals" is selected */}
                 {shareType === "individuals" && (
                   <div>
                     <label className="block text-sm font-medium text-[#1A1A1A] mb-2">
@@ -1401,7 +1399,7 @@ export const CreateContestPage: React.FC = () => {
                   </div>
                 )}
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         );
 
