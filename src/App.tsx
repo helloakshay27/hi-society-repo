@@ -743,7 +743,7 @@ import { isAuthenticated } from "@/utils/auth";
 import BookingDetailsPage from "./pages/BookingDetailsPage";
 import { RestaurantOrdersTable } from "./components/RestaurantOrdersTable";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { getCurrency } from "./store/slices/currencySlice";
 import { EditBookingSetupPage } from "./pages/setup/EditBookingSetupPage";
 import { MobileAdminOrdersPage } from "./pages/MobileAdminOrdersPage";
@@ -1174,7 +1174,6 @@ function App() {
         const currency =
           Array.isArray(response) &&
           (response[0]?.currency as string | undefined)
-          (response[0]?.currency as string | undefined)
             ? response[0].currency
             : "INR";
         const currencySymbol =
@@ -1268,6 +1267,14 @@ function App() {
           <LayoutProvider>
             <PermissionsProvider>
               <ActionLayoutProvider>
+                <Suspense fallback={
+                  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-[#C72030] border-r-[#C72030] border-b-gray-200 border-l-gray-200"></div>
+                      <p className="text-gray-600">Loading...</p>
+                    </div>
+                  </div>
+                }>
                 <Routes>
                   {/* Setup Member Routes - wrapped in Layout */}
                   <Route
@@ -7060,6 +7067,7 @@ function App() {
                     element={<FitoutRequestCategoryApprovalRequestMobile />}
                   />
                 </Routes>
+                </Suspense>
                 {/* Mail Inbound Routes */}
                 {/* <Toaster /> */}
                 <SonnerToaster

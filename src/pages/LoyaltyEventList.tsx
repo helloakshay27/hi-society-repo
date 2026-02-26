@@ -93,11 +93,11 @@ const LoyaltyEventsList = () => {
 
   // Cleanup body overflow styles when component mounts (fixes scroll-lock from modals)
   useEffect(() => {
-    document.body.style.overflow = 'unset';
-    document.body.style.paddingRight = '0px';
+    document.body.style.overflow = "unset";
+    document.body.style.paddingRight = "0px";
     return () => {
-      document.body.style.overflow = 'unset';
-      document.body.style.paddingRight = '0px';
+      document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "0px";
     };
   }, []);
 
@@ -105,86 +105,84 @@ const LoyaltyEventsList = () => {
     setEventPermissions(getEventPermissions());
   }, []);
 
-  const fetchEvents = useCallback(
-    async (page: number, search: string) => {
-      setLoading(true);
-      setIsSearching(!!search);
-      try {
-        const response = await axios.get(getFullUrl('/crm/admin/events.json'), {
-          headers: {
-            Authorization: getAuthHeader(),
-          },
+  const fetchEvents = useCallback(async (page: number, search: string) => {
+    setLoading(true);
+    setIsSearching(!!search);
+    try {
+      const response = await axios.get(getFullUrl("/crm/admin/events.json"), {
+        headers: {
+          Authorization: getAuthHeader(),
+        },
+      });
+
+      const eventsData = response.data.classifieds || [];
+
+      // Extract statistics from API response
+      if (response.data) {
+        setEventStats({
+          totalInvitedCPs: response.data.total_invited || 0,
+          attendedCPs: response.data.attended_count || 0,
+          notAttendedCPs: response.data.not_attended_count || 0,
+          scanTimeEntries: 0, // This may need to be added to the API response
         });
 
-        const eventsData = response.data.classifieds || [];
+        // Bind upcoming events count from API (support both spellings)
+        setUpcomingEventsCount(
+          response.data.upcomming_events &&
+            Array.isArray(response.data.upcomming_events)
+            ? response.data.upcomming_events.length
+            : response.data.upcoming_events &&
+                Array.isArray(response.data.upcoming_events)
+              ? response.data.upcoming_events.length
+              : 0
+        );
 
-        // Extract statistics from API response
-        if (response.data) {
-          setEventStats({
-            totalInvitedCPs: response.data.total_invited || 0,
-            attendedCPs: response.data.attended_count || 0,
-            notAttendedCPs: response.data.not_attended_count || 0,
-            scanTimeEntries: 0, // This may need to be added to the API response
-          });
-
-          // Bind upcoming events count from API (support both spellings)
-          setUpcomingEventsCount(
-            (response.data.upcomming_events && Array.isArray(response.data.upcomming_events)
-              ? response.data.upcomming_events.length
-              : (response.data.upcoming_events && Array.isArray(response.data.upcoming_events)
-                ? response.data.upcoming_events.length
-                : 0))
-          );
-
-          // Bind past events count from API
-          setPastEventsCount(
-            (response.data.past_events && Array.isArray(response.data.past_events)
-              ? response.data.past_events.length
-              : 0)
-          );
-        }
-
-        // Client-side search filtering
-        let filteredEvents = eventsData;
-        if (search) {
-          const searchLower = search.toLowerCase();
-          filteredEvents = eventsData.filter(
-            (event: Event) =>
-              event.event_name?.toLowerCase().includes(searchLower) ||
-              event.event_at?.toLowerCase().includes(searchLower)
-          );
-        }
-
-        // Client-side pagination
-        const itemsPerPage = 10;
-        const startIndex = (page - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
-
-        setEvents(paginatedEvents);
-        setCurrentPage(page);
-        setTotalPages(Math.ceil(filteredEvents.length / itemsPerPage));
-        setTotalCount(filteredEvents.length);
-
-        // Cache all events
-        sessionStorage.setItem("cached_events", JSON.stringify(eventsData));
-      } catch (error) {
-        toast.error("Failed to fetch events.");
-        console.error("Error fetching events:", error);
-      } finally {
-        setLoading(false);
-        setIsSearching(false);
+        // Bind past events count from API
+        setPastEventsCount(
+          response.data.past_events && Array.isArray(response.data.past_events)
+            ? response.data.past_events.length
+            : 0
+        );
       }
-    },
-    []
-  );
+
+      // Client-side search filtering
+      let filteredEvents = eventsData;
+      if (search) {
+        const searchLower = search.toLowerCase();
+        filteredEvents = eventsData.filter(
+          (event: Event) =>
+            event.event_name?.toLowerCase().includes(searchLower) ||
+            event.event_at?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      // Client-side pagination
+      const itemsPerPage = 10;
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
+
+      setEvents(paginatedEvents);
+      setCurrentPage(page);
+      setTotalPages(Math.ceil(filteredEvents.length / itemsPerPage));
+      setTotalCount(filteredEvents.length);
+
+      // Cache all events
+      sessionStorage.setItem("cached_events", JSON.stringify(eventsData));
+    } catch (error) {
+      toast.error("Failed to fetch events.");
+      console.error("Error fetching events:", error);
+    } finally {
+      setLoading(false);
+      setIsSearching(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchEvents(currentPage, searchTerm);
   }, [currentPage, searchTerm, fetchEvents]);
 
   // `upcomingEventsCount` is populated from API in `fetchEvents` (see response.data.upcomming_events)
-
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
@@ -197,9 +195,18 @@ const LoyaltyEventsList = () => {
     }
   };
 
-  const handleAddEvent = () => location.pathname.includes("/loyalty") ? navigate("/loyalty/event-create") : navigate("/maintenance/event-create");
-  const handleEditEvent = (id: number) => location.pathname.includes("/loyalty") ? navigate(`/loyalty/event-edit/${id}`) : navigate(`/maintenance/event-edit/${id}`);
-  const handleViewEvent = (id: number) => location.pathname.includes("/loyalty") ? navigate(`/loyalty/event-details/${id}`) : navigate(`/maintenance/event-details/${id}`);
+  const handleAddEvent = () =>
+    location.pathname.includes("/loyalty")
+      ? navigate("/loyalty/event-create")
+      : navigate("/maintenance/event-create");
+  const handleEditEvent = (id: number) =>
+    location.pathname.includes("/loyalty")
+      ? navigate(`/loyalty/event-edit/${id}`)
+      : navigate(`/maintenance/event-edit/${id}`);
+  const handleViewEvent = (id: number) =>
+    location.pathname.includes("/loyalty")
+      ? navigate(`/loyalty/event-details/${id}`)
+      : navigate(`/maintenance/event-details/${id}`);
   const handleClearSelection = () => {
     setShowActionPanel(false);
   };
@@ -225,17 +232,20 @@ const LoyaltyEventsList = () => {
     }
   };
 
-  const getShortText = (text: string, wordLimit = 10) => { if (!text) return "-"; const words = text.split(" "); if (words.length <= wordLimit) return text; return words.slice(0, wordLimit).join(" ") + "..."; };
+  const getShortText = (text: string, wordLimit = 10) => {
+    if (!text) return "-";
+    const words = text.split(" ");
+    if (words.length <= wordLimit) return text;
+    return words.slice(0, wordLimit).join(" ") + "...";
+  };
 
   const handleToggleShowOnHome = async (id: number, currentStatus: boolean) => {
     toast.dismiss();
     try {
       // Update local state immediately for better UX
-      setEvents(prevEvents =>
-        prevEvents.map(event =>
-          event.id === id
-            ? { ...event, show_on_home: !currentStatus }
-            : event
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event.id === id ? { ...event, show_on_home: !currentStatus } : event
         )
       );
 
@@ -255,11 +265,9 @@ const LoyaltyEventsList = () => {
       console.error("Error toggling show on home:", error);
       toast.error("Failed to update Show on Home.");
       // Revert the change on error
-      setEvents(prevEvents =>
-        prevEvents.map(event =>
-          event.id === id
-            ? { ...event, show_on_home: currentStatus }
-            : event
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event.id === id ? { ...event, show_on_home: currentStatus } : event
         )
       );
     }
@@ -302,11 +310,11 @@ const LoyaltyEventsList = () => {
     { key: "actions", label: "Action", sortable: false },
     { key: "id", label: "Sr No", sortable: true },
     { key: "event_name", label: "Event Name", sortable: true },
-    { key: "event_at", label: "Event At", sortable: true },
+    { key: "event_at", label: "Event Venue", sortable: true },
     { key: "from_time", label: "Event Date", sortable: false },
     { key: "to_time", label: "Event Time", sortable: false },
     { key: "created_by", label: "Created By", sortable: false },
-    { key: "created_at", label: "Created On", sortable: false },  
+    { key: "created_at", label: "Created On", sortable: false },
     { key: "show_on_home", label: "Show on Home", sortable: false },
     { key: "active", label: "Status", sortable: false },
   ];
@@ -345,28 +353,28 @@ const LoyaltyEventsList = () => {
           </span>
         );
       case "event_name":
-  return (
-    <span
-      title={item.event_name}
-      className="cursor-pointer text-sm text-gray-700"
-    >
-      {getShortText(item.event_name, 5)}
-    </span>
-  );
-     case "event_at":
-  return (
-    <span
-      title={item.event_at}
-      className="cursor-pointer text-sm text-gray-700"
-    >
-      {getShortText(item.event_at, 5)}
-    </span>
-  );
+        return (
+          <span
+            title={item.event_name}
+            className="cursor-pointer text-sm text-gray-700"
+          >
+            {getShortText(item.event_name, 5)}
+          </span>
+        );
+      case "event_at":
+        return (
+          <span
+            title={item.event_at}
+            className="cursor-pointer text-sm text-gray-700"
+          >
+            {getShortText(item.event_at, 5)}
+          </span>
+        );
       case "from_time":
         return formatDateOnly(item.from_time);
       case "to_time":
         return formatTimeOnly(item.from_time);
-         case "created_by":
+      case "created_by":
         return item.created_by;
       case "created_at":
         return formatDateOnly(item.created_at);
@@ -375,15 +383,15 @@ const LoyaltyEventsList = () => {
           <Switch
             checked={item.show_on_home || false}
             onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
-           sx={{
-    '& .MuiSwitch-switchBase.Mui-checked': {
-      color: '#C72030',
-      transform: 'translateX(25px)', // 👈 adjust movement properly
-    },
-    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-      backgroundColor: '#C72030',
-    },
-  }}
+            sx={{
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "#C72030",
+                transform: "translateX(25px)", // 👈 adjust movement properly
+              },
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                backgroundColor: "#C72030",
+              },
+            }}
           />
         );
       case "active":
@@ -392,14 +400,14 @@ const LoyaltyEventsList = () => {
             checked={item.active || false}
             onChange={() => handleToggle(item.id, item.active)}
             sx={{
-    '& .MuiSwitch-switchBase.Mui-checked': {
-      color: '#C72030',
-      transform: 'translateX(25px)', // 👈 adjust movement properly
-    },
-    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-      backgroundColor: '#C72030',
-    },
-  }}
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "#C72030",
+                transform: "translateX(25px)", // 👈 adjust movement properly
+              },
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                backgroundColor: "#C72030",
+              },
+            }}
           />
         );
       default:
@@ -424,9 +432,7 @@ const LoyaltyEventsList = () => {
       {/* Event Statistics Cards */}
       {location.pathname.includes("/loyalty") && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 mb-6">
-          <div
-            className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4"
-          >
+          <div className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4">
             <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
               <Settings className="w-6 h-6 text-[#C72030]" />
             </div>
@@ -442,7 +448,7 @@ const LoyaltyEventsList = () => {
 
           <div
             className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => console.log('Filter by upcoming')}
+            onClick={() => console.log("Filter by upcoming")}
           >
             <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
               <Clock className="w-6 h-6 text-[#C72030]" />
@@ -451,13 +457,15 @@ const LoyaltyEventsList = () => {
               <div className="text-2xl font-semibold text-[#1A1A1A]">
                 {upcomingEventsCount}
               </div>
-              <div className="text-sm font-medium text-[#1A1A1A]">Upcoming Event</div>
+              <div className="text-sm font-medium text-[#1A1A1A]">
+                Upcoming Event
+              </div>
             </div>
           </div>
 
           <div
             className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => console.log('Filter by past')}
+            onClick={() => console.log("Filter by past")}
           >
             <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
               <Clock className="w-6 h-6 text-[#C72030]" />
@@ -466,7 +474,9 @@ const LoyaltyEventsList = () => {
               <div className="text-2xl font-semibold text-[#1A1A1A]">
                 {pastEventsCount}
               </div>
-              <div className="text-sm font-medium text-[#1A1A1A]">Past Event</div>
+              <div className="text-sm font-medium text-[#1A1A1A]">
+                Past Event
+              </div>
             </div>
           </div>
         </div>
@@ -508,10 +518,11 @@ const LoyaltyEventsList = () => {
             return (
               <div
                 key={i}
-                className={`bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 ${item.clickable
-                  ? "cursor-pointer hover:shadow-lg transition-shadow"
-                  : ""
-                  }`}
+                className={`bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 ${
+                  item.clickable
+                    ? "cursor-pointer hover:shadow-lg transition-shadow"
+                    : ""
+                }`}
               >
                 <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center rounded">
                   <IconComponent className="w-6 h-6 text-[#C72030]" />
@@ -527,7 +538,8 @@ const LoyaltyEventsList = () => {
               </div>
             );
           })}
-        </div>)}
+        </div>
+      )}
 
       {/* {showActionPanel && (
         <SelectionPanel
