@@ -415,7 +415,7 @@ export const UIHiSocietySidebar: React.FC = () => {
         },
         {
           id: "offers",
-          label: "Offers",
+          label: "Curated Offers",
           subItems: [
             {
               id: "offers-list",
@@ -686,13 +686,13 @@ export const UIHiSocietySidebar: React.FC = () => {
               id: "vehicle-in",
               label: "Vehicle In",
               icon: LogIn,
-              path: "/smartsecure/vehicle-in",
+              path: "/smartsecure/vehicles/in",
             },
             {
               id: "vehicle-out",
               label: "Vehicle Out",
               icon: LogOut,
-              path: "/smartsecure/vehicle-out",
+              path: "/smartsecure/vehicles/out",
             },
           ],
         },

@@ -51,7 +51,7 @@ export default function SelectBox({
     }),
     option: (base, state) => ({
       ...base,
-      backgroundColor: state.isSelected ? "#ccc" : state.isFocused ? "var(--red)" : base.backgroundColor,
+      backgroundColor: state.isSelected ? "#ccc" : state.isFocused ? "#c72030" : base.backgroundColor,
       color: state.isSelected ? "#000" : state.isFocused ? "#fff" : "#000", // Set text color to black
       cursor: "pointer",
       padding: "10px",

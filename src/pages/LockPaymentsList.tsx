@@ -23,6 +23,8 @@ interface LockPayment {
 }
 
 const LockPaymentsList = () => {
+  const baseUrl = localStorage.getItem('baseUrl')
+  const token = localStorage.getItem('token')
   const navigate = useNavigate();
   const [payments, setPayments] = useState<LockPayment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,7 @@ const LockPaymentsList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  
+
   const itemsPerPage = 10;
 
   const formatDate = (dateString: string): string => {
@@ -49,7 +51,7 @@ const LockPaymentsList = () => {
     setIsSearching(!!search);
     try {
       // const response = await fetch(getFullUrl('/lock_payments'), {
-      const response = await fetch('https://runwal-api.lockated.com/lock_payments?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ', {
+      const response = await fetch(`https://${baseUrl}/lock_payments?token=${token}`, {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),
@@ -62,7 +64,7 @@ const LockPaymentsList = () => {
       }
 
       const data = await response.json();
-      
+
       // Ensure we always have an array
       let paymentsData: LockPayment[] = [];
       if (Array.isArray(data)) {
@@ -72,7 +74,7 @@ const LockPaymentsList = () => {
       } else if (data?.lock_payments && Array.isArray(data.lock_payments)) {
         paymentsData = data.lock_payments;
       }
-      
+
       // Client-side search filtering
       let filteredPayments = paymentsData;
       if (search) {
@@ -89,12 +91,12 @@ const LockPaymentsList = () => {
           payment.payment_gateway?.toLowerCase().includes(searchLower)
         );
       }
-      
+
       // Client-side pagination
       const startIndex = (page - 1) * itemsPerPage;
       const endIndex = startIndex + itemsPerPage;
       const paginatedPayments = filteredPayments.slice(startIndex, endIndex);
-      
+
       setPayments(paginatedPayments);
       setCurrentPage(page);
       setTotalPages(Math.ceil(filteredPayments.length / itemsPerPage));
@@ -146,12 +148,12 @@ const LockPaymentsList = () => {
         return item.paid_amount ? `₹${item.paid_amount.toLocaleString()}` : '-';
       case 'payment_status':
         const status = item.payment_status || '-';
-        const statusClass = 
+        const statusClass =
           status === 'success' || status === 'completed'
             ? 'bg-green-100 text-green-800'
             : status === 'pending'
-            ? 'bg-yellow-100 text-yellow-800'
-            : 'bg-red-100 text-red-800';
+              ? 'bg-yellow-100 text-yellow-800'
+              : 'bg-red-100 text-red-800';
         return (
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}`}>
             {status}
@@ -193,7 +195,7 @@ const LockPaymentsList = () => {
                   className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>
-              
+
               {/* First page */}
               {currentPage > 3 && (
                 <>
@@ -212,7 +214,7 @@ const LockPaymentsList = () => {
                   )}
                 </>
               )}
-              
+
               {/* Pages around current */}
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter(page => {
@@ -233,7 +235,7 @@ const LockPaymentsList = () => {
                     </PaginationLink>
                   </PaginationItem>
                 ))}
-              
+
               {/* Last page */}
               {currentPage < totalPages - 2 && (
                 <>
@@ -252,7 +254,7 @@ const LockPaymentsList = () => {
                   </PaginationItem>
                 </>
               )}
-              
+
               <PaginationItem>
                 <PaginationNext
                   href="#"

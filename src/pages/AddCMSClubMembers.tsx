@@ -341,6 +341,16 @@ const AddCMSClubMembers = () => {
                     toast.error(`Member ${num}: Last Name is required`);
                     return false;
                 }
+                if (!member.email.trim()) {
+                    toast.error(`Member ${num}: Email is required`);
+                    return false;
+                }
+                // Simple email format validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(member.email)) {
+                    toast.error(`Member ${num}: Invalid Email format`);
+                    return false;
+                }
             }
             if (!member.idCard) {
                 toast.error(`Member ${num}: ID Card image is required`);
@@ -434,7 +444,7 @@ const AddCMSClubMembers = () => {
             navigate(-1);
         } catch (error) {
             console.log(error);
-            const errorMessage = error.response?.data?.error || "Failed to add club members";
+            const errorMessage = error.response?.data?.errors[0] || "Failed to add club members";
             toast.error(errorMessage);
         } finally {
             setIsSubmitting(false)
@@ -574,6 +584,9 @@ const AddCMSClubMembers = () => {
                                         onChange={(e) => setGlobalStartDate(e.target.value)}
                                         InputLabelProps={{ shrink: true }}
                                         sx={fieldStyles}
+                                        inputProps={{
+                                            min: new Date().toISOString().split("T")[0],   // 👈 disables previous dates
+                                        }}
                                     />
                                     <TextField
                                         type="date"
@@ -810,22 +823,31 @@ const AddCMSClubMembers = () => {
                                                 label={<span>First Name <span className="text-[#C72030]">*</span></span>}
                                                 placeholder="Enter First Name"
                                                 value={member.firstName}
-                                                onChange={(e) =>
-                                                    updateMember(member.id, "firstName", e.target.value)
-                                                }
+                                                onChange={(e) =>{
+                                                   const value = e.target.value;
+
+                                                    if (/^[A-Za-z\s]*$/.test(value)) {
+                                                        updateMember(member.id, "firstName", value);
+                                                    }
+                                                }}
                                                 sx={fieldStyles}
                                             />
                                             <TextField
                                                 label={<span>Last Name <span className="text-[#C72030]">*</span></span>}
                                                 placeholder="Enter Last Name"
                                                 value={member.lastName}
-                                                onChange={(e) =>
-                                                    updateMember(member.id, "lastName", e.target.value)
-                                                }
+                                                onChange={(e) =>{
+                                                    const value = e.target.value;
+
+                                                    if (/^[A-Za-z\s]*$/.test(value)) {
+                                                        updateMember(member.id, "lastName", value);
+                                                    }
+                                                }}
                                                 sx={fieldStyles}
                                             />
                                             <TextField
                                                 label="Email"
+                                                type="email"
                                                 placeholder="Enter Email"
                                                 value={member.email}
                                                 onChange={(e) =>

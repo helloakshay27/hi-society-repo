@@ -7,6 +7,13 @@ export interface ColumnConfig {
   draggable?: boolean;
   defaultVisible?: boolean;
   hideable?: boolean;
+  /**
+   * Optional formatter used when exporting data (CSV/Excel).
+   * If provided the function will be called with the raw value and
+   * the entire row object and its return value will be written to the
+   * exported file instead of the plain cell value.
+   */
+  exportFormatter?: (value: any, row?: Record<string, any>) => string;
 }
 
 interface UseEnhancedTableProps<T> {

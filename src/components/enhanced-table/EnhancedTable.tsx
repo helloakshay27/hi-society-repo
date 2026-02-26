@@ -77,7 +77,16 @@ const exportToExcel = <T extends Record<string, any>>(
     ...data.map((row) =>
       columns
         .map((col) => {
-          const value = row[col.key];
+          // use exportFormatter if provided, otherwise raw value
+          let value = row[col.key];
+          if (col.exportFormatter) {
+            try {
+              value = col.exportFormatter(value, row);
+            } catch (err) {
+              // formatter error; fall back to raw value
+              console.warn("exportFormatter error for column", col.key, err);
+            }
+          }
           // Handle values that might contain commas or quotes
           const stringValue = String(value || "").replace(/"/g, '""');
           return stringValue.includes(",") ||

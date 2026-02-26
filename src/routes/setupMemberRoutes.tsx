@@ -38,6 +38,10 @@ import { AddStaffPage } from "@/pages/AddStaffPage";
 import ApprovalMatrixSetupPage from "@/pages/settings/ApprovalMatrixSetupPage";
 import Claims from "@/pages/Claims";
 import ClaimsDetails from "@/pages/ClaimsDetails";
+import LoyaltyEventCreate from "@/pages/LoyaltyEventCreate";
+import LoyaltyEventEdit from "@/pages/LoyaltyEventEdit";
+import LoyaltyAddOfferPage from "@/pages/LoyaltyAddOfferPage";
+import LoyaltyOfferViewPage from "@/pages/LoyaltyOfferViewPage";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
@@ -145,6 +149,10 @@ const LockRoleList = lazy(() => import("@/pages/LockRoleList"));
 const LoyaltyManagersCreate = lazy(
   () => import("@/pages/LoyaltyManagersCreate")
 );
+const LoyaltyEventCreate = lazy(() => import("@/pages/LoyaltyEventCreate"));
+const LoyaltyEventEdit = lazy(() => import("@/pages/LoyaltyEventEdit"));
+const LoyaltyEventDetails = lazy(() => import("@/pages/LoyaltyEventDetails"));
+const LoyaltyAddOfferPage = lazy(() => import("@/pages/LoyaltyAddOfferPage"));
 const LoyaltyManagersEdit = lazy(() => import("@/pages/LoyaltyManagersEdit"));
 const LoyaltyManagersList = lazy(() => import("@/pages/LoyaltyManagersList"));
 const NewGallery = lazy(() => import("@/pages/NewGallery"));
@@ -411,6 +419,9 @@ const SmartSecureStaffsHistory = lazy(
 const SmartSecureVehiclesOut = lazy(
   () => import("@/pages/SmartSecureVehiclesOut")
 );
+const SmartSecureVehiclesIn = lazy(
+  () => import("@/pages/SmartSecureVehiclesIn")
+);
 const SmartSecureVehiclesHistory = lazy(
   () => import("@/pages/SmartSecureVehiclesHistory")
 );
@@ -434,6 +445,12 @@ const SmartSecureVisitorReport = lazy(
 );
 const SmartSecureStaffReport = lazy(
   () => import("@/pages/SmartSecureStaffReport")
+);
+const SmartSecureVehicleReport = lazy(
+  () => import("@/pages/SmartSecureVehicleReport")
+);
+const SmartSecureMaterialReport = lazy(
+  () => import("@/pages/SmartSecureMaterialReport")
 );
 const VisitorsDashboard = lazy(() => import("@/pages/VisitorsDashboard"));
 const SmartSecurePatrolling = lazy(
@@ -669,13 +686,13 @@ export const setupMemberRoutes = (
     />
     <Route
       path="/loyalty/event-create"
-      Component={withSuspense(EventCreate)}
+      Component={withSuspense(LoyaltyEventCreate)}
     />
     {/* <Route path="/loyalty/event-details/:id" element={<EventDetails />} /> */}
-    <Route path="/loyalty/event-details/:id" element={<EventDetails />} />
+    <Route path="/loyalty/event-details/:id" element={<LoyaltyEventDetails />} />
     <Route
       path="/loyalty/event-edit/:id"
-      Component={withSuspense(EventEdit)}
+      Component={withSuspense(LoyaltyEventEdit)}
     />
     <Route path="/maintenance/event-list" Component={withSuspense(EventList)} />
     <Route path="/loyalty/event-list" Component={withSuspense(LoyaltyEventList)} />
@@ -1520,6 +1537,10 @@ export const setupMemberRoutes = (
       Component={withSuspense(SmartSecureStaffsHistory)}
     />
     <Route
+      path="/smartsecure/vehicles/in"
+      Component={withSuspense(SmartSecureVehiclesIn)}
+    />
+    <Route
       path="/smartsecure/vehicles/out"
       Component={withSuspense(SmartSecureVehiclesOut)}
     />
@@ -1554,6 +1575,14 @@ export const setupMemberRoutes = (
     <Route
       path="/smartsecure/staff-report"
       Component={withSuspense(SmartSecureStaffReport)}
+    />
+    <Route
+      path="/smartsecure/vehicle-report"
+      Component={withSuspense(SmartSecureVehicleReport)}
+    />
+    <Route
+      path="/smartsecure/material-report"
+      Component={withSuspense(SmartSecureMaterialReport)}
     />
     {/* <Route
       path="/smartsecure/patrolling"
@@ -1621,9 +1650,9 @@ export const setupMemberRoutes = (
     <Route path="/offer/add/:id" Component={withSuspense(AddOfferPage)} />
     <Route path="/offer/view/:id" Component={withSuspense(OfferViewPage)} />
     <Route path="/loyalty/offers/add" Component={withSuspense(AddOffersPage)} />
-    <Route path="/loyalty/offer/add" Component={withSuspense(AddOfferPage)} />
-    <Route path="/loyalty/offer/add/:id" Component={withSuspense(AddOfferPage)} />
-    <Route path="/loyalty/offer/view/:id" Component={withSuspense(OfferViewPage)} />
+    <Route path="/loyalty/offer/add" Component={withSuspense(LoyaltyAddOfferPage)} />
+    <Route path="/loyalty/offer/add/:id" Component={withSuspense(LoyaltyAddOfferPage)} />
+    <Route path="/loyalty/offer/view/:id" Component={withSuspense(LoyaltyOfferViewPage)} />
     <Route
       path="/business-directory/add"
       Component={withSuspense(AddBusinessDirectoryPage)}

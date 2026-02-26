@@ -13,6 +13,7 @@ import {
   Clock,
 } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
+import Select from 'react-select';
 import {
   TextField,
   FormControl,
@@ -39,6 +40,7 @@ interface OfferData {
   partner: string;
   winningProbability: string;
   totalQuantity: string;
+  validity: string;
   offerDescription: string;
   bannerImage: File | null;
   bannerImageName: string;
@@ -77,6 +79,7 @@ export const CreateContestPage: React.FC = () => {
     partner: "",
     winningProbability: "",
     totalQuantity: "",
+    validity: "",
     offerDescription: "",
     bannerImage: null,
     bannerImageName: "",
@@ -137,16 +140,16 @@ export const CreateContestPage: React.FC = () => {
         const baseUrl = localStorage.getItem('baseUrl') || '';
         const token = localStorage.getItem('token') || '';
         const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
-        
+
         const response = await fetch(`${url}/products?source=admin_portal`, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
-        
+
         if (!response.ok) throw new Error('Failed to fetch products');
-        
+
         const data = await response.json();
         setProducts(data.products || []);
       } catch (error) {
@@ -156,7 +159,7 @@ export const CreateContestPage: React.FC = () => {
         setLoadingProducts(false);
       }
     };
-    
+
     fetchProducts();
   }, []);
 
@@ -168,6 +171,43 @@ export const CreateContestPage: React.FC = () => {
   const [usersCap, setUsersCap] = useState("");
   const [attemptsRequired, setAttemptsRequired] = useState("");
   const [isActive, setIsActive] = useState(true);
+
+  // Share With
+  const [shareType, setShareType] = useState("all");
+  const [selectedSocieties, setSelectedSocieties] = useState<string[]>([]);
+  const [societies, setSocieties] = useState<Array<{ id: string; name: string }>>([]);
+  const [loadingSocieties, setLoadingSocieties] = useState(false);
+
+  // Fetch societies for sharing
+  useEffect(() => {
+    const fetchSocieties = async () => {
+      try {
+        setLoadingSocieties(true);
+        const baseUrl = localStorage.getItem('baseUrl') || '';
+        const token = localStorage.getItem('token') || '';
+        const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+
+        const response = await fetch(`${url}/projects_for_dropdown.json`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch societies');
+
+        const data = await response.json();
+        setSocieties(data.projects || []);
+      } catch (error) {
+        console.error('Error fetching societies:', error);
+        sonnerToast.error('Failed to load societies');
+      } finally {
+        setLoadingSocieties(false);
+      }
+    };
+
+    fetchSocieties();
+  }, []);
 
   // Documents - now text inputs instead of file uploads
   const [termsText, setTermsText] = useState("");
@@ -316,10 +356,10 @@ export const CreateContestPage: React.FC = () => {
   const saveContest = async (isStep1Only: boolean = false) => {
     // Basic validation for the fields we are about to send
     if (isStep1Only) {
-       if (!contestName.trim() || !contestDescription.trim() || !contestType) {
-         sonnerToast.error("Please fill in all basic info fields");
-         return false;
-       }
+      if (!contestName.trim() || !contestDescription.trim() || !contestType) {
+        sonnerToast.error("Please fill in all basic info fields");
+        return false;
+      }
     } else {
       // Validate current step before saving, unless it's a "save as draft" from a later step which might be partial? 
       // Actually, let's stick to validating current step to ensure data integrity.
@@ -336,88 +376,100 @@ export const CreateContestPage: React.FC = () => {
     formData.append('contest[name]', contestName.trim());
     formData.append('contest[description]', contestDescription.trim());
     formData.append('contest[content_type]', contestType.toLowerCase());
-    
+
     // Only send these if we are NOT in the initial step 1 creation (or if we have them)
     // For Step 1 creation, we just need name, description, type.
     if (!isStep1Only) {
-       formData.append('contest[active]', String(isActive));
-       
-       if (startDate && startTime) {
-          formData.append('contest[start_at]', buildISO(startDate, startTime));
-       }
-       if (endDate && endTime) {
-          formData.append('contest[end_at]', buildISO(endDate, endTime, true));
-       }
+      formData.append('contest[active]', String(isActive));
 
-       if (usersCap) {
-         formData.append('contest[user_caps]', usersCap);
-       }
-       if (attemptsRequired) {
-         formData.append('contest[attemp_required]', attemptsRequired);
-       }
+      if (startDate && startTime) {
+        formData.append('contest[start_at]', buildISO(startDate, startTime));
+      }
+      if (endDate && endTime) {
+        formData.append('contest[end_at]', buildISO(endDate, endTime, true));
+      }
 
-       // Add prizes_attributes
-       offers.forEach((offer, index) => {
-         formData.append(`contest[prizes_attributes][${index}][title]`, offer.offerTitle.trim());
-         
-         const rewardType = offer.rewardType === "Points" ? "points" : offer.rewardType === "Merchandise" ? "merchandise" : offer.rewardType === "None" ? "none" : "coupon";
-         formData.append(`contest[prizes_attributes][${index}][reward_type]`, rewardType);
+      if (usersCap) {
+        formData.append('contest[user_caps]', usersCap);
+      }
+      if (attemptsRequired) {
+        formData.append('contest[attemp_required]', attemptsRequired);
+      }
 
-         if (offer.displayName.trim()) {
-           formData.append(`contest[prizes_attributes][${index}][display_name]`, offer.displayName.trim());
-         }
+      // Add access_type and society_ids for share with
+      formData.append('contest[access_type]', shareType === 'all' ? 'all_sites' : 'multiple_sites');
+      if (shareType === 'individuals' && selectedSocieties.length > 0) {
+        selectedSocieties.forEach((id) => {
+          formData.append(`contest[society_ids][]`, id);
+        });
+      }
 
-         if (offer.offerDescription.trim()) {
-           formData.append(`contest[prizes_attributes][${index}][terms_and_conditions]`, offer.offerDescription.trim());
-         }
+      // Add prizes_attributes
+      offers.forEach((offer, index) => {
+        formData.append(`contest[prizes_attributes][${index}][title]`, offer.offerTitle.trim());
 
-         if (offer.rewardType === "Coupon Code") {
-           formData.append(`contest[prizes_attributes][${index}][coupon_code]`, offer.couponCode.trim());
-         }
+        const rewardType = offer.rewardType === "Points" ? "points" : offer.rewardType === "Merchandise" ? "merchandise" : offer.rewardType === "None" ? "none" : "coupon";
+        formData.append(`contest[prizes_attributes][${index}][reward_type]`, rewardType);
 
-         if (offer.rewardType === "Points") {
-           formData.append(`contest[prizes_attributes][${index}][points_value]`, offer.pointsValue.trim());
-         }
+        if (offer.displayName.trim()) {
+          formData.append(`contest[prizes_attributes][${index}][display_name]`, offer.displayName.trim());
+        }
 
-         if (offer.rewardType === "Merchandise" && offer.resourceId) {
-           formData.append(`contest[prizes_attributes][${index}][resource_id]`, offer.resourceId);
-           formData.append(`contest[prizes_attributes][${index}][resource_type]`, offer.resourceType);
-         }
+        if (offer.offerDescription.trim()) {
+          formData.append(`contest[prizes_attributes][${index}][terms_and_conditions]`, offer.offerDescription.trim());
+        }
 
-         if (offer.partner.trim()) {
-           formData.append(`contest[prizes_attributes][${index}][partner_name]`, offer.partner.trim());
-         }
+        if (offer.rewardType === "Coupon Code") {
+          formData.append(`contest[prizes_attributes][${index}][coupon_code]`, offer.couponCode.trim());
+        }
 
-         formData.append(
-           `contest[prizes_attributes][${index}][probability_value]`,
-           offer.winningProbability || "0"
-         );
-         formData.append(
-           `contest[prizes_attributes][${index}][total_quantity]`,
-           offer.totalQuantity || "0"
-         );
-         formData.append(`contest[prizes_attributes][${index}][position]`, String(index + 1));
-         formData.append(`contest[prizes_attributes][${index}][active]`, "true");
+        if (offer.rewardType === "Points") {
+          formData.append(`contest[prizes_attributes][${index}][points_value]`, offer.pointsValue.trim());
+        }
 
-         if (offer.bannerImage) {
-           formData.append(
-             `contest[prizes_attributes][${index}][image_attributes][document]`,
-             offer.bannerImage
-           );
-         }
-         // Important: If updating an existing prize, backend might need ID. 
-         // But here we are just sending attributes. Rails usually handles nested attributes if ID is provided.
-         // Since we don't store prize IDs from backend yet, we might be recreating prizes on every save or the backend handles it.
-         // For now, assuming standard nested attributes behavior.
-       });
+        if (offer.rewardType === "Merchandise" && offer.resourceId) {
+          formData.append(`contest[prizes_attributes][${index}][resource_id]`, offer.resourceId);
+          formData.append(`contest[prizes_attributes][${index}][resource_type]`, offer.resourceType);
+        }
 
-       if (termsText.trim()) {
-         formData.append('contest[terms_and_conditions]', termsText.trim());
-       }
+        if (offer.partner.trim()) {
+          formData.append(`contest[prizes_attributes][${index}][partner_name]`, offer.partner.trim());
+        }
 
-       if (redemptionText.trim()) {
-         formData.append('contest[redemption_guide]', redemptionText.trim());
-       }
+        formData.append(
+          `contest[prizes_attributes][${index}][probability_value]`,
+          offer.winningProbability || "0"
+        );
+        formData.append(
+          `contest[prizes_attributes][${index}][total_quantity]`,
+          offer.totalQuantity || "0"
+        );
+        formData.append(`contest[prizes_attributes][${index}][position]`, String(index + 1));
+        formData.append(`contest[prizes_attributes][${index}][active]`, "true");
+
+        if (offer.validity) {
+          formData.append(`contest[prizes_attributes][${index}][validity]`, offer.validity);
+        }
+
+        if (offer.bannerImage) {
+          formData.append(
+            `contest[prizes_attributes][${index}][image_attributes][document]`,
+            offer.bannerImage
+          );
+        }
+        // Important: If updating an existing prize, backend might need ID. 
+        // But here we are just sending attributes. Rails usually handles nested attributes if ID is provided.
+        // Since we don't store prize IDs from backend yet, we might be recreating prizes on every save or the backend handles it.
+        // For now, assuming standard nested attributes behavior.
+      });
+
+      if (termsText.trim()) {
+        formData.append('contest[terms_and_conditions]', termsText.trim());
+      }
+
+      if (redemptionText.trim()) {
+        formData.append('contest[redemption_guide]', redemptionText.trim());
+      }
     }
 
     try {
@@ -427,21 +479,21 @@ export const CreateContestPage: React.FC = () => {
       let method = "POST";
 
       if (createdContestId) {
-         // Should be PUT to update existing contest
-         finalUrl = `${url}/contests/${createdContestId}.json`;
-         method = "PUT";
+        // Should be PUT to update existing contest
+        finalUrl = `${url}/contests/${createdContestId}.json`;
+        method = "PUT";
       }
 
       console.log(`Sending ${method} request to ${finalUrl}`);
 
       const res = await fetch(finalUrl, {
-          method: method,
-          headers: {
-            Authorization: `Bearer ${token}`,
-            // Don't set Content-Type for FormData
-          },
-          body: formData,
-        }
+        method: method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Don't set Content-Type for FormData
+        },
+        body: formData,
+      }
       );
 
       if (!res.ok) {
@@ -453,28 +505,28 @@ export const CreateContestPage: React.FC = () => {
       console.log("Success:", data);
 
       if (method === "POST" && data.id) {
-          setCreatedContestId(data.id);
+        setCreatedContestId(data.id);
       }
 
       // Success Logic
       if (isStep1Only) {
-          sonnerToast.success("Draft created successfully!");
-          // Move to Step 2
-          if (currentStep === 1) {
-             setCompletedSteps(prev => {
-                const newSteps = [...prev];
-                if (!newSteps.includes(1)) newSteps.push(1);
-                return newSteps;
-             });
-             setCurrentStep(2);
-          }
+        sonnerToast.success("Draft created successfully!");
+        // Move to Step 2
+        if (currentStep === 1) {
+          setCompletedSteps(prev => {
+            const newSteps = [...prev];
+            if (!newSteps.includes(1)) newSteps.push(1);
+            return newSteps;
+          });
+          setCurrentStep(2);
+        }
       } else {
-         // If we are saving from other steps or final submit
-         if (method === "PUT") {
-             // Draft update
-         } else {
-             // Created
-         }
+        // If we are saving from other steps or final submit
+        if (method === "PUT") {
+          // Draft update
+        } else {
+          // Created
+        }
       }
       return true;
 
@@ -495,37 +547,37 @@ export const CreateContestPage: React.FC = () => {
 
     // If Step 1, create draft (POST)
     if (currentStep === 1 && !createdContestId) {
-        success = await saveContest(true);
+      success = await saveContest(true);
     } else {
-        // If updating existing draft (PUT) - save current step stuff
-        // For Step > 1, pass false to include all partial data
-        success = await saveContest(false);
-        if (success) {
-          sonnerToast.success("Draft updated successfully!");
-          
-          // Mark current step as completed
-          if (!completedSteps.includes(currentStep)) {
-            setCompletedSteps([...completedSteps, currentStep]);
-          }
-          
-          // Move to next step if not on the last step
-          if (currentStep < 4) {
-            setCurrentStep(currentStep + 1);
-          }
+      // If updating existing draft (PUT) - save current step stuff
+      // For Step > 1, pass false to include all partial data
+      success = await saveContest(false);
+      if (success) {
+        sonnerToast.success("Draft updated successfully!");
+
+        // Mark current step as completed
+        if (!completedSteps.includes(currentStep)) {
+          setCompletedSteps([...completedSteps, currentStep]);
         }
+
+        // Move to next step if not on the last step
+        if (currentStep < 4) {
+          setCurrentStep(currentStep + 1);
+        }
+      }
     }
   };
 
   const handleSubmit = async () => {
-     // Final submission from Step 4
+    // Final submission from Step 4
     if (!validateCurrentStep()) return;
-    
+
     // Call saveContest with full data
     const success = await saveContest(false);
-    
+
     if (success) {
-        sonnerToast.success("Contest submitted successfully!");
-        setShowSuccessModal(true);
+      sonnerToast.success("Contest submitted successfully!");
+      setShowSuccessModal(true);
     }
   };
 
@@ -660,6 +712,149 @@ export const CreateContestPage: React.FC = () => {
     "& .MuiInputLabel-root.Mui-focused": { color: "#C72030" },
   };
 
+  // CustomMultiValue Component for react-select
+  const CustomMultiValue = (props: any) => (
+    <div
+      style={{
+        position: "relative",
+        backgroundColor: "#E5E0D3",
+        borderRadius: "2px",
+        margin: "3px",
+        marginTop: "10px",
+        padding: "4px 10px 6px 10px",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        paddingRight: "28px",
+      }}
+    >
+      <span
+        style={{
+          color: "#1a1a1a8a",
+          fontSize: "13px",
+          fontWeight: "500",
+        }}
+      >
+        {props.data.label}
+      </span>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          props.removeProps.onClick(e);
+        }}
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          props.removeProps.onMouseDown(e);
+        }}
+        onTouchEnd={(e) => {
+          e.stopPropagation();
+          props.removeProps.onTouchEnd(e);
+        }}
+        style={{
+          position: "absolute",
+          right: "-10px",
+          top: "-5px",
+          transform: "translateY(-50%), translateX(-50%)",
+          background: "transparent",
+          border: "1px solid #ccc",
+          borderRadius: "50%",
+          cursor: "pointer",
+          padding: "0",
+          display: "flex",
+          alignItems: "start",
+          justifyContent: "center",
+          color: "#666",
+          fontSize: "12px",
+          lineHeight: "1",
+          width: "16px",
+          height: "16px",
+          transition: "background 0.2s, color 0.2s, border-color 0.2s",
+        }}
+        type="button"
+        onMouseOver={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background = "#f6f4ee";
+          (e.currentTarget as HTMLButtonElement).style.color = "#C72030";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "#C72030";
+        }}
+        onMouseOut={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+          (e.currentTarget as HTMLButtonElement).style.color = "#666";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "#ccc";
+        }}
+      >
+        ×
+      </button>
+    </div>
+  );
+
+  // Custom Styles for react-select
+  const customStyles = {
+    control: (provided: any, state: any) => ({
+      ...provided,
+      minHeight: "44px",
+      borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
+      boxShadow: "none",
+      fontSize: "14px",
+      paddingTop: "6px",
+      backgroundColor: "transparent",
+      "&:hover": { borderColor: "#C72030" },
+    }),
+    valueContainer: (provided: any) => ({
+      ...provided,
+      padding: "4px 6px",
+      flexWrap: "wrap",
+      backgroundColor: "transparent",
+    }),
+    dropdownIndicator: (provided: any, state: any) => ({
+      ...provided,
+      padding: "4px 8px",
+      color: state.isFocused ? "#C72030" : "#666",
+      "&:hover": { color: "#C72030" },
+    }),
+    indicatorSeparator: () => ({ display: "none" }),
+    placeholder: (provided: any) => ({
+      ...provided,
+      color: "#999",
+      fontSize: "14px",
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      zIndex: 9999,
+      fontSize: "14px",
+      backgroundColor: "#fff",
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? "#C72030"
+        : state.isFocused
+          ? "#F6F4EE"
+          : "#fff",
+      color: state.isSelected ? "#fff" : "#1A1A1A",
+      fontSize: "14px",
+      padding: "8px 12px",
+      cursor: "pointer",
+      "&:hover": {
+        backgroundColor: "#F6F4EE",
+        color: "#1A1A1A",
+      },
+      "&:active": {
+        backgroundColor: "#C72030",
+        color: "#fff",
+      },
+    }),
+    multiValue: (provided: any) => ({
+      ...provided,
+      backgroundColor: "transparent",
+    }),
+    multiValueLabel: (provided: any) => ({
+      ...provided,
+      color: "#1a1a1a8a",
+      fontSize: "13px",
+      fontWeight: "500",
+    }),
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -714,24 +909,24 @@ export const CreateContestPage: React.FC = () => {
                   multiline
                   rows={4}
                   // sx={textFieldSx}
-                   sx={{
-              "& .MuiOutlinedInput-root": {
-                height: "auto !important",
-                padding: "2px !important",
-                display: "flex",
-              },
-              "& .MuiInputBase-input[aria-hidden='true']": {
-                flex: 0,
-                width: 0,
-                height: 0,
-                padding: "0 !important",
-                margin: 0,
-                display: "none",
-              },
-              "& .MuiInputBase-input": {
-                resize: "none !important",
-              },
-            }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: "auto !important",
+                      padding: "2px !important",
+                      display: "flex",
+                    },
+                    "& .MuiInputBase-input[aria-hidden='true']": {
+                      flex: 0,
+                      width: 0,
+                      height: 0,
+                      padding: "0 !important",
+                      margin: 0,
+                      display: "none",
+                    },
+                    "& .MuiInputBase-input": {
+                      resize: "none !important",
+                    },
+                  }}
                 />
               </div>
             </CardContent>
@@ -883,6 +1078,18 @@ export const CreateContestPage: React.FC = () => {
                       inputProps={{ min: 0 }}
                       required
                     />
+
+                    <TextField
+                      fullWidth
+                      label="Validity"
+                      value={offer.validity}
+                      onChange={(e) => updateOffer(offer.id, "validity", e.target.value)}
+                      sx={textFieldSx}
+                      size="small"
+                      type="date"
+                      inputProps={{ min: 0 }}
+                      required
+                    />
                   </div>
 
                   <div className="mt-4">
@@ -894,7 +1101,24 @@ export const CreateContestPage: React.FC = () => {
                       variant="outlined"
                       multiline
                       rows={3}
-                      sx={textFieldSx}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          height: "auto !important",
+                          padding: "2px !important",
+                          display: "flex",
+                        },
+                        "& .MuiInputBase-input[aria-hidden='true']": {
+                          flex: 0,
+                          width: 0,
+                          height: 0,
+                          padding: "0 !important",
+                          margin: 0,
+                          display: "none",
+                        },
+                        "& .MuiInputBase-input": {
+                          resize: "none !important",
+                        },
+                      }}
                     />
                   </div>
 
@@ -941,162 +1165,246 @@ export const CreateContestPage: React.FC = () => {
         );
 
       case 3:
-        // ... (your original validity step remains 100% unchanged)
+        // Validity & Status and Share With section
         return (
-          <Card className="shadow-sm w-full">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-6 bg-[#F6F4EE] p-4 rounded-lg">
-                <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-6 w-full">
+            {/* Validity & Status Card */}
+            <Card className="shadow-sm w-full">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-6 bg-[#F6F4EE] p-4 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
+                      <Trophy className="w-5 h-5 text-[#C72030]" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                      Validity & Status
+                    </h2>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Switch
+                      checked={isActive}
+                      onChange={() => setIsActive(!isActive)}
+                      sx={{
+                        "& .MuiSwitch-switchBase.Mui-checked": {
+                          color: "#22c55e",
+                        },
+                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                          backgroundColor: "#22c55e",
+                        },
+                      }}
+                    />
+                    <span
+                      className={`px-4 py-2 rounded-md text-sm font-medium ${isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+                    >
+                      {isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <TextField
+                    fullWidth
+                    label="Start Date *"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    variant="outlined"
+                    size="small"
+                    type="date"
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{
+                      min: today, // ✅ Disable previous dates
+                    }}
+                    sx={{
+                      ...textFieldSx,
+                      '& input[type="date"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
+                      '& input[type="date"]::-webkit-datetime-edit-month-field': { textTransform: 'uppercase' },
+                      '& input[type="date"]::-webkit-datetime-edit-day-field': { textTransform: 'uppercase' },
+                      '& input[type="date"]::-webkit-datetime-edit-year-field': { textTransform: 'uppercase' },
+                    }}
+                  />
+
+
+                  <TextField
+                    fullWidth
+                    label="Start Time *"
+                    placeholder="HH:MM"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    variant="outlined"
+                    size="small"
+                    type="time"
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{
+                      placeholder: "HH:MM",
+                      style: { textTransform: 'uppercase' },
+                    }}
+                    // InputProps={{ endAdornment: <Clock className="w-4 h-4 text-gray-400" /> }}
+                    sx={{
+                      ...textFieldSx,
+                      '& input[type="time"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
+                      '& input[type="time"]::-webkit-datetime-edit-hour-field': { textTransform: 'uppercase' },
+                      '& input[type="time"]::-webkit-datetime-edit-minute-field': { textTransform: 'uppercase' },
+                      '& input::placeholder': { textTransform: 'uppercase' },
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="End Date *"
+                    placeholder="DD/MM/YYYY"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    variant="outlined"
+                    size="small"
+                    type="date"
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{
+                      min: startDate || undefined,
+                    }}
+                    // InputProps={{ endAdornment: <Calendar className="w-4 h-4 text-gray-400" /> }}
+                    sx={{
+                      ...textFieldSx,
+                      '& input[type="date"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
+                      '& input[type="date"]::-webkit-datetime-edit-month-field': { textTransform: 'uppercase' },
+                      '& input[type="date"]::-webkit-datetime-edit-day-field': { textTransform: 'uppercase' },
+                      '& input[type="date"]::-webkit-datetime-edit-year-field': { textTransform: 'uppercase' },
+                    }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <TextField
+                    fullWidth
+                    label="End Time *"
+                    placeholder="HH:MM"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    variant="outlined"
+                    size="small"
+                    type="time"
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{
+                      placeholder: "HH:MM",
+                      style: { textTransform: 'uppercase' },
+                      min: (startDate && endDate && startDate === endDate) ? startTime : undefined,
+                    }}
+                    // InputProps={{ endAdornment: <Clock className="w-4 h-4 text-gray-400" /> }}
+                    sx={{
+                      ...textFieldSx,
+                      '& input[type="time"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
+                      '& input[type="time"]::-webkit-datetime-edit-hour-field': { textTransform: 'uppercase' },
+                      '& input[type="time"]::-webkit-datetime-edit-minute-field': { textTransform: 'uppercase' },
+                      '& input::placeholder': { textTransform: 'uppercase' },
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Users Cap"
+                    value={usersCap}
+                    onChange={(e) => setUsersCap(e.target.value)}
+                    variant="outlined"
+                    size="small"
+                    type="number"
+                    sx={textFieldSx}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Attempts Required"
+                    value={attemptsRequired}
+                    onChange={(e) => setAttemptsRequired(e.target.value)}
+                    variant="outlined"
+                    size="small"
+                    type="number"
+                    sx={textFieldSx}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Share With Card */}
+            <Card className="shadow-sm w-full">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
                   <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
                     <Trophy className="w-5 h-5 text-[#C72030]" />
                   </div>
                   <h2 className="text-lg font-semibold text-[#1A1A1A]">
-                    Validity & Status
+                    Share With
                   </h2>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={isActive}
-                    onChange={() => setIsActive(!isActive)}
-                    sx={{
-                      "& .MuiSwitch-switchBase.Mui-checked": {
-                        color: "#22c55e",
-                      },
-                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                        backgroundColor: "#22c55e",
-                      },
-                    }}
-                  />
-                  <span
-                    className={`px-4 py-2 rounded-md text-sm font-medium ${isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
-                  >
-                    {isActive ? "Active" : "Inactive"}
-                  </span>
+
+                {/* Radio Buttons */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-6">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="shareType"
+                        value="all"
+                        checked={shareType === "all"}
+                        onChange={(e) => {
+                          setShareType(e.target.value);
+                          setSelectedSocieties([]);
+                        }}
+                        className="w-4 h-4 accent-[#C72030]"
+                      />
+                      <span className="text-[#1A1A1A] font-medium">All</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="shareType"
+                        value="individuals"
+                        checked={shareType === "individuals"}
+                        onChange={(e) => setShareType(e.target.value)}
+                        className="w-4 h-4 accent-[#C72030]"
+                      />
+                      <span className="text-[#1A1A1A] font-medium">Individuals</span>
+                    </label>
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <TextField
-                  fullWidth
-                  label="Start Date *"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  variant="outlined"
-                  size="small"
-                  type="date"
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{
-                    min: today, // ✅ Disable previous dates
-                  }}
-                  sx={{
-                    ...textFieldSx,
-                    '& input[type="date"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
-                    '& input[type="date"]::-webkit-datetime-edit-month-field': { textTransform: 'uppercase' },
-                    '& input[type="date"]::-webkit-datetime-edit-day-field': { textTransform: 'uppercase' },
-                    '& input[type="date"]::-webkit-datetime-edit-year-field': { textTransform: 'uppercase' },
-                  }}
-                />
-
-
-                <TextField
-                  fullWidth
-                  label="Start Time *"
-                  placeholder="HH:MM"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  variant="outlined"
-                  size="small"
-                  type="time"
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{
-                    placeholder: "HH:MM",
-                    style: { textTransform: 'uppercase' }
-                  }}
-                  // InputProps={{ endAdornment: <Clock className="w-4 h-4 text-gray-400" /> }}
-                  sx={{
-                    ...textFieldSx,
-                    '& input[type="time"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
-                    '& input[type="time"]::-webkit-datetime-edit-hour-field': { textTransform: 'uppercase' },
-                    '& input[type="time"]::-webkit-datetime-edit-minute-field': { textTransform: 'uppercase' },
-                    '& input::placeholder': { textTransform: 'uppercase' },
-                  }}
-                />
-
-                <TextField
-                  fullWidth
-                  label="End Date *"
-                  placeholder="DD/MM/YYYY"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  variant="outlined"
-                  size="small"
-                  type="date"
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{
-                    min: startDate || undefined,
-                  }}
-                  // InputProps={{ endAdornment: <Calendar className="w-4 h-4 text-gray-400" /> }}
-                  sx={{
-                    ...textFieldSx,
-                    '& input[type="date"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
-                    '& input[type="date"]::-webkit-datetime-edit-month-field': { textTransform: 'uppercase' },
-                    '& input[type="date"]::-webkit-datetime-edit-day-field': { textTransform: 'uppercase' },
-                    '& input[type="date"]::-webkit-datetime-edit-year-field': { textTransform: 'uppercase' },
-                  }}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                <TextField
-                  fullWidth
-                  label="End Time *"
-                  placeholder="HH:MM"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  variant="outlined"
-                  size="small"
-                  type="time"
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{
-                    placeholder: "HH:MM",
-                    style: { textTransform: 'uppercase' },
-                    min: (startDate && endDate && startDate === endDate) ? startTime : undefined,
-                  }}
-                  // InputProps={{ endAdornment: <Clock className="w-4 h-4 text-gray-400" /> }}
-                  sx={{
-                    ...textFieldSx,
-                    '& input[type="time"]::-webkit-datetime-edit-text': { textTransform: 'uppercase' },
-                    '& input[type="time"]::-webkit-datetime-edit-hour-field': { textTransform: 'uppercase' },
-                    '& input[type="time"]::-webkit-datetime-edit-minute-field': { textTransform: 'uppercase' },
-                    '& input::placeholder': { textTransform: 'uppercase' },
-                  }}
-                />
-
-                <TextField
-                  fullWidth
-                  label="Users Cap"
-                  value={usersCap}
-                  onChange={(e) => setUsersCap(e.target.value)}
-                  variant="outlined"
-                  size="small"
-                  type="number"
-                  sx={textFieldSx}
-                />
-
-                <TextField
-                  fullWidth
-                  label="Attempts Required"
-                  value={attemptsRequired}
-                  onChange={(e) => setAttemptsRequired(e.target.value)}
-                  variant="outlined"
-                  size="small"
-                  type="number"
-                  sx={textFieldSx}
-                />
-              </div>
-            </CardContent>
-          </Card>
+                {/* Societies Dropdown - Show only when "Individuals" is selected */}
+                {shareType === "individuals" && (
+                  <div>
+                    <label className="block text-sm font-medium text-[#1A1A1A] mb-2">
+                      Societies
+                    </label>
+                    <Select
+                      isMulti
+                      options={societies.map(s => ({
+                        value: s.id.toString(),
+                        label: s.name
+                      }))}
+                      value={selectedSocieties
+                        .map(id => {
+                          const society = societies.find(s => s.id.toString() === id);
+                          return society ? {
+                            value: id,
+                            label: society.name
+                          } : null;
+                        })
+                        .filter((item): item is { value: string; label: string } => item !== null)
+                      }
+                      onChange={(selected) => {
+                        setSelectedSocieties(
+                          selected ? selected.map((s: any) => s.value) : []
+                        );
+                      }}
+                      styles={customStyles}
+                      components={{ MultiValue: CustomMultiValue }}
+                      placeholder="Select Societies"
+                      isLoading={loadingSocieties}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         );
+
 
       case 4:
         // ... your original terms & redemption step (unchanged)
@@ -1126,31 +1434,31 @@ export const CreateContestPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            
-              <Card className="shadow-sm w-full">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
-                    <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
-                      <Trophy className="w-5 h-5 text-[#C72030]" />
-                    </div>
-                    <h2 className="text-lg font-semibold text-[#1A1A1A]">
-                      Redemption Guide
-                    </h2>
-                  </div>
 
-                  <div>
-                    <div
-                      ref={redemptionEditorRef}
-                      style={{
-                        width: "100%",
-                        minHeight: "200px",
-                        backgroundColor: "white",
-                      }}
-                    />
+            <Card className="shadow-sm w-full">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-6 bg-[#F6F4EE] p-4 rounded-lg">
+                  <div className="w-10 h-10 bg-[#C4B89D54] flex items-center justify-center rounded">
+                    <Trophy className="w-5 h-5 text-[#C72030]" />
                   </div>
-                </CardContent>
-              </Card>
-          
+                  <h2 className="text-lg font-semibold text-[#1A1A1A]">
+                    Redemption Guide
+                  </h2>
+                </div>
+
+                <div>
+                  <div
+                    ref={redemptionEditorRef}
+                    style={{
+                      width: "100%",
+                      minHeight: "200px",
+                      backgroundColor: "white",
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
           </div>
         );
 

@@ -23,6 +23,9 @@ interface EncashRequest {
 }
 
 const EncashList = () => {
+  const baseUrl = localStorage.getItem('baseUrl')
+  const token = localStorage.getItem('token')
+
   const [encashRequests, setEncashRequests] = useState<EncashRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,7 +51,7 @@ const EncashList = () => {
     setIsSearching(!!search);
     try {
       // const response = await fetch(getFullUrl('/encash_requests.json?is_admin=true'), {
-      const response = await fetch('https://runwal-api.lockated.com/encash_requests.json?is_admin=true&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ', {
+      const response = await fetch(`https://${baseUrl}/encash_requests.json?is_admin=true&token=${token}`, {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),
@@ -126,7 +129,7 @@ const EncashList = () => {
 
     try {
       // const response = await fetch(getFullUrl(`/encash_requests/${selectedRequest.id}.json`), {
-      const response = await fetch(`https://runwal-api.lockated.com/encash_requests/${selectedRequest.id}.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ`, {
+      const response = await fetch(`https://${baseUrl}/encash_requests/${selectedRequest.id}.json?token=${token}`, {
         method: 'PUT',
         headers: {
           'Authorization': getAuthHeader(),
@@ -215,11 +218,10 @@ const EncashList = () => {
       case 'status':
         return (
           <select
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg border outline-none transition-colors ${
-              item.status === "completed"
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg border outline-none transition-colors ${item.status === "completed"
                 ? "bg-green-100 text-green-800 border-green-300"
                 : "bg-yellow-100 text-yellow-800 border-yellow-300"
-            }`}
+              }`}
             value={item.status}
             onChange={(e) => handleStatusChange(item.id, e.target.value)}
           >
@@ -269,7 +271,7 @@ const EncashList = () => {
                   className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>
-              
+
               {/* First page */}
               {currentPage > 3 && (
                 <>
@@ -288,7 +290,7 @@ const EncashList = () => {
                   )}
                 </>
               )}
-              
+
               {/* Pages around current */}
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter(page => {
@@ -300,7 +302,7 @@ const EncashList = () => {
                 })
                 .map(page => (
                   <PaginationItem key={page}>
-                    <PaginationLink 
+                    <PaginationLink
                       href="#"
                       onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
                       isActive={currentPage === page}
@@ -309,7 +311,7 @@ const EncashList = () => {
                     </PaginationLink>
                   </PaginationItem>
                 ))}
-              
+
               {/* Last page */}
               {currentPage < totalPages - 2 && (
                 <>
@@ -328,7 +330,7 @@ const EncashList = () => {
                   </PaginationItem>
                 </>
               )}
-              
+
               <PaginationItem>
                 <PaginationNext
                   href="#"

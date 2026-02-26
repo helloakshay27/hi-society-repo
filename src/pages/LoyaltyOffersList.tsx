@@ -184,7 +184,12 @@ export default function OffersList() {
             showOnHome: apiOffer.show_on_home || false,
             createdAt: formatDate(apiOffer.created_at),
             lastDateUpdated: formatDate(apiOffer.updated_at),
-            imageUrl: apiOffer.image_1_by_1?.document_url || ''
+              imageUrl:
+      apiOffer.image_16_by_9?.document_url ||
+      apiOffer.image_3_by_2?.document_url ||
+      apiOffer.image_1_by_1?.document_url ||
+      apiOffer.image_9_by_16?.document_url ||
+      ''
           };
         });
 

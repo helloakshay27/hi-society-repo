@@ -23,6 +23,9 @@ interface DemandNote {
 }
 
 const DemandNotesList = () => {
+  const baseUrl = localStorage.getItem('baseUrl')
+  const token = localStorage.getItem('token')
+
   const [demandNotes, setDemandNotes] = useState<DemandNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,7 +39,7 @@ const DemandNotesList = () => {
     setIsSearching(!!search);
     try {
       // const response = await fetch(getFullUrl('/demand_notes'), {
-      const response = await fetch('https://runwal-api.lockated.com/demand_notes?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ', {
+      const response = await fetch(`https://${baseUrl}/demand_notes?token=${token}`, {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),
@@ -186,7 +189,7 @@ const DemandNotesList = () => {
                   className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>
-              
+
               {/* First page */}
               {currentPage > 3 && (
                 <>
@@ -205,7 +208,7 @@ const DemandNotesList = () => {
                   )}
                 </>
               )}
-              
+
               {/* Pages around current */}
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter(page => {
@@ -217,7 +220,7 @@ const DemandNotesList = () => {
                 })
                 .map(page => (
                   <PaginationItem key={page}>
-                    <PaginationLink 
+                    <PaginationLink
                       href="#"
                       onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
                       isActive={currentPage === page}
@@ -226,7 +229,7 @@ const DemandNotesList = () => {
                     </PaginationLink>
                   </PaginationItem>
                 ))}
-              
+
               {/* Last page */}
               {currentPage < totalPages - 2 && (
                 <>
@@ -245,7 +248,7 @@ const DemandNotesList = () => {
                   </PaginationItem>
                 </>
               )}
-              
+
               <PaginationItem>
                 <PaginationNext
                   href="#"

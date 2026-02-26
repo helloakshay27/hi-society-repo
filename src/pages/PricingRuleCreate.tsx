@@ -113,6 +113,8 @@ interface PricingRuleForm {
 }
 
 const PricingRuleCreate: React.FC = () => {
+  const baseUrl = localStorage.getItem('baseUrl')
+  const token = localStorage.getItem('token')
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [organizations, setOrganizations] = useState([]);
@@ -131,7 +133,7 @@ const PricingRuleCreate: React.FC = () => {
   useEffect(() => {
     // Fetch organizations
     setLoadingOrgs(true);
-    fetch("https://runwal-api.lockated.com/organizations.json?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
+    fetch(`https://${baseUrl}/organizations.json?token=${token}`)
       .then((res) => res.json())
       .then((data) => setOrganizations(data.organizations || []))
       .catch(() => setOrganizations([]))
@@ -139,7 +141,7 @@ const PricingRuleCreate: React.FC = () => {
 
     // Fetch categories
     setLoadingCats(true);
-    fetch("https://runwal-api.lockated.com/generic_categories?token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ")
+    fetch(`https://${baseUrl}/generic_categories?token=${token}`)
       .then((res) => res.json())
       .then((data) => setCategories(data.categories || []))
       .catch(() => setCategories([]))
@@ -176,7 +178,7 @@ const PricingRuleCreate: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const url = "https://runwal-api.lockated.com/pricing_rules.json?rule_for=customer&token=QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ";
+      const url = `https://${baseUrl}/pricing_rules.json?rule_for=customer&token=${token}`;
       const payload = {
         pricing_rule: {
           organization_id: parseInt(formData.organization_id),
@@ -187,7 +189,7 @@ const PricingRuleCreate: React.FC = () => {
           platform_fee_value: formData.platform_fee_value ? parseFloat(formData.platform_fee_value) : null,
         },
       };
-      
+
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -195,11 +197,11 @@ const PricingRuleCreate: React.FC = () => {
         },
         body: JSON.stringify(payload),
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to create pricing rule");
       }
-      
+
       toast.success("Pricing rule created successfully!");
       setTimeout(() => {
         navigate("/settings/pricing-rule-list");
@@ -295,7 +297,7 @@ const PricingRuleCreate: React.FC = () => {
                 )}
               </Select>
             </FormControl>
-            
+
             <FormControl fullWidth sx={fieldStyles} required>
               <InputLabel id="category-label">Category</InputLabel>
               <Select

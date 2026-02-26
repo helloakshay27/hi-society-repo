@@ -88,14 +88,44 @@ export const WalletManagement = () => {
   // Show all columns in the API transactions table
   const apiColumns = [
     { key: "id", label: "Transaction ID" },
-    { key: "transaction_type", label: "Type" },
-    { key: "amount", label: "Amount" },
+    {
+      key: "transaction_type",
+      label: "Type",
+      exportFormatter: (val: any) => {
+        if (!val && val !== 0) return "";
+        const str = String(val);
+        const type =
+          str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        // convert common abbreviations
+        if (type === "Dr") return "Debit";
+        if (type === "Cr") return "Credit";
+        return type;
+      },
+    },
+    {
+      key: "amount",
+      label: "Amount",
+      exportFormatter: (val: any) => {
+        if (val === null || val === undefined || val === "") return "";
+        const num = Number(val);
+        if (isNaN(num)) return String(val);
+        // show decimals only when they exist, otherwise plain integer
+        if (num % 1 === 0) {
+          return num.toLocaleString();
+        }
+        return num.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      },
+    },
     { key: "category", label: "Category" },
     { key: "remarks", label: "Remarks" },
     { key: "created_at", label: "Date" },
     { key: "resource_type", label: "Resource Type" },
     { key: "customer_code", label: "Customer ID" },
     { key: "order_id", label: "Order ID" },
+    { key: "link", label: "Link" },
   ];
 
   const renderApiCell = (item: WalletTransaction, columnKey: string) => {
@@ -123,6 +153,19 @@ export const WalletManagement = () => {
       case "resource_type":
         // Remove hyperlink, just show plain text
         return <span>{item.resource_type}</span>;
+      case "link":
+        return item.redirect_ur ? (
+          <a
+            href={item.redirect_ur}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline"
+          >
+            View
+          </a>
+        ) : (
+          <span className="text-gray-500">-</span>
+        );
       default:
         return item[columnKey as keyof WalletTransaction] ?? "";
     }
