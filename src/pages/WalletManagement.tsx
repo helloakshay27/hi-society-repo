@@ -21,6 +21,7 @@ interface WalletTransaction {
   id: number;
   transaction_type?: string;
   amount?: number;
+  category?: string;
   remarks?: string;
   created_at?: string;
   redirect_ur?: string;
@@ -93,13 +94,18 @@ export const WalletManagement = () => {
       label: "Type",
       exportFormatter: (val: any) => {
         if (!val && val !== 0) return "";
-        const str = String(val);
-        const type =
-          str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        let str = String(val).trim();
+        // collapse repeated words (e.g. "Debit Debit")
+        const parts = str.split(/\s+/);
+        if (parts.length > 1 && parts[0].toLowerCase() === parts[1].toLowerCase()) {
+          str = parts[0];
+        }
+        // normalise casing
+        str = str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
         // convert common abbreviations
-        if (type === "Dr") return "Debit";
-        if (type === "Cr") return "Credit";
-        return type;
+        if (str === "Dr") return "Debit";
+        if (str === "Cr") return "Credit";
+        return str;
       },
     },
     {
@@ -119,24 +125,50 @@ export const WalletManagement = () => {
         });
       },
     },
-    { key: "category", label: "Category" },
+    {
+      key: "category",
+      label: "Category",
+      exportFormatter: (val: any) => {
+        if (!val && val !== 0) return "";
+        const s = String(val).toLowerCase();
+        return s.charAt(0).toUpperCase() + s.slice(1);
+      },
+    },
     { key: "remarks", label: "Remarks" },
-    { key: "created_at", label: "Date" },
+    { 
+      key: "created_at", 
+      label: "Date",
+      exportFormatter: (val: any) => {
+        if (!val) return "";
+        try {
+          const d = new Date(val);
+          return d.toLocaleString();
+        } catch {
+          return String(val);
+        }
+      },
+    },
     { key: "resource_type", label: "Resource Type" },
     { key: "customer_code", label: "Customer ID" },
     { key: "order_id", label: "Order ID" },
-    { key: "link", label: "Link" },
+    { key: "link", label: "Link", excludeFromExport: true },
   ];
 
   const renderApiCell = (item: WalletTransaction, columnKey: string) => {
     switch (columnKey) {
       case "transaction_type": {
-        const type =
-          item.transaction_type.charAt(0).toUpperCase() +
-          item.transaction_type.slice(1) || "";
+        let str = item.transaction_type || "";
+        str = str.trim();
+        // collapse duplicate words
+        const parts = str.split(/\s+/);
+        if (parts.length > 1 && parts[0].toLowerCase() === parts[1].toLowerCase()) {
+          str = parts[0];
+        }
+        // normalise casing
+        const type = str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
         let color = "";
-        if (type === "Debit" || type === "DR") color = "text-red-600 font-bold";
-        if (type === "Credit" || type === "CR")
+        if (type === "Debit" || type === "Dr") color = "text-red-600 font-bold";
+        if (type === "Credit" || type === "Cr")
           color = "text-green-600 font-bold";
         return <span className={color}>{type}</span>;
       }
@@ -153,6 +185,10 @@ export const WalletManagement = () => {
       case "resource_type":
         // Remove hyperlink, just show plain text
         return <span>{item.resource_type}</span>;
+      case "category":
+        if (!item.category) return "";
+        const cat = String(item.category).toLowerCase();
+        return cat.charAt(0).toUpperCase() + cat.slice(1);
       case "link":
         return item.redirect_ur ? (
           <a

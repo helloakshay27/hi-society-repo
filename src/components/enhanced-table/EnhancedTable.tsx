@@ -70,12 +70,15 @@ const exportToExcel = <T extends Record<string, any>>(
     return;
   }
 
-  // Create CSV content
-  const headers = columns.map((col) => col.label).join(",");
+  // filter out any columns that should be excluded from export
+  const exportColumns = columns.filter((col) => !col.excludeFromExport);
+
+  // Create CSV content using the filtered columns
+  const headers = exportColumns.map((col) => col.label).join(",");
   const csvContent = [
     headers,
     ...data.map((row) =>
-      columns
+      exportColumns
         .map((col) => {
           // use exportFormatter if provided, otherwise raw value
           let value = row[col.key];
