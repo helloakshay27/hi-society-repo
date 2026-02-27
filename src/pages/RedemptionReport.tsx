@@ -68,7 +68,7 @@ const RedemptionReport = () => {
   const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [transactionType, setTransactionType] = useState("credit");
+  const [transactionType, setTransactionType] = useState("debit");
 
   const fetchWalletData = async () => {
     setLoading(true);
