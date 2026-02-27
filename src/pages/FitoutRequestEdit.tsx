@@ -725,7 +725,7 @@ const FitoutRequestEdit: React.FC = () => {
               />
 
                <TextField
-              label="Description"
+              label={<>Description<span className='text-red-600'> *</span> </>}
               name="description"
               value={formData.description}
               onChange={handleInputChange}

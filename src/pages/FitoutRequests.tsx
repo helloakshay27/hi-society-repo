@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Eye, Settings, Mail } from "lucide-react";
+import { Plus, Edit, Eye, Settings, Mail, Users, UserCheck, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
@@ -41,11 +41,19 @@ interface FitoutRequestItem {
   flat_no?: string;
 }
 
+interface FitoutCards {
+  total: number;
+  pending: number;
+  work_in_progress: number;
+  closed: number;
+}
+
 const FitoutRequests: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [fitoutRequests, setFitoutRequests] = useState<FitoutRequestItem[]>([]);
   const [allRequests, setAllRequests] = useState<FitoutRequestItem[]>([]);
+  const [cards, setCards] = useState<FitoutCards | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -67,6 +75,7 @@ const FitoutRequests: React.FC = () => {
       
       console.log("Fitout Requests response:", response.data);
       const requestsData = response.data.fitout_requests || [];
+      setCards(response.data?.cards || null);
 
       // The API already returns user_name, tower, and flat fields
       // Just map the data to ensure flat_no field is set from flat field
@@ -83,6 +92,7 @@ const FitoutRequests: React.FC = () => {
       console.error("Error fetching Fitout Requests data:", error);
       setAllRequests([]);
       setFitoutRequests([]);
+      setCards(null);
       toast.error("Failed to fetch Fitout Requests data", {
         position: 'top-right',
         duration: 3000,
@@ -543,14 +553,76 @@ const FitoutRequests: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-        <div className="text-center py-8">Loading fitout requests...</div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030]"></div>
       </div>
     );
   }
 
+  const fitoutStats = {
+    total: cards?.total ?? allRequests.length,
+    pending: cards?.pending ?? allRequests.filter((r) => r.status_name?.toLowerCase() === "pending").length,
+    work_in_progress: cards?.work_in_progress ?? allRequests.filter((r) => r.status_name?.toLowerCase() === "work in progress").length,
+    closed: cards?.closed ?? allRequests.filter((r) => r.status_name?.toLowerCase() === "completed").length,
+  };
+
+  const statCards = [
+    {
+      label: "Total",
+      value: fitoutStats.total,
+      icon: Users,
+      clickable: false,
+    },
+    {
+      label: "Pending",
+      value: fitoutStats.pending,
+      icon: Clock,
+      clickable: false,
+    },
+     {
+      label: "Work In Progress",
+      value: fitoutStats.work_in_progress,
+      icon: Clock,
+      clickable: false,
+    },
+    {
+      label: "Closed",
+      value: fitoutStats.closed,
+      icon: UserCheck,
+      clickable: false,
+    },
+    
+  ];
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+
+      {/* Fitout Request Statistics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 mb-6">
+        {statCards.map((item, i) => {
+          const IconComponent = item.icon;
+          return (
+            <div
+              key={i}
+              className={`bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 ${
+                item.clickable ? "cursor-pointer hover:shadow-lg transition-shadow" : ""
+              }`}
+            >
+              <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center rounded">
+                <IconComponent className="w-6 h-6 text-[#C72030]" />
+              </div>
+              <div>
+                <div className="text-2xl font-semibold text-[#1A1A1A]">
+                  {item.value.toLocaleString()}
+                </div>
+                <div className="text-sm font-medium text-[#1A1A1A]">
+                  {item.label}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       <div>
         <EnhancedTable

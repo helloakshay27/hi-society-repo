@@ -365,7 +365,7 @@ const FitoutRequestAdd: React.FC = () => {
     e.preventDefault();
     
     if (!formData.site_id || !formData.unit_id || !formData.user_id || !formData.fitout_type || !formData.requested_date) {
-      toast.error('Please fill in all required fields (Tower/Site, Flat, User, Fitout Type, and Requested Date)', {
+      toast.error('Please fill in all required fields (Tower/Site, Flat, User, Fitout Type, Description and Requested Date)', {
         position: 'top-right',
         duration: 3000,
         style: {
@@ -573,7 +573,7 @@ const FitoutRequestAdd: React.FC = () => {
                 }}
               />
                 <TextField
-              label="Description"
+              label={<>Description<span className='text-red-600'> *</span> </>}
               name="description"
               value={formData.description}
               onChange={handleInputChange}
