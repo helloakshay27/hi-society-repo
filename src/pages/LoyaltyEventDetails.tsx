@@ -84,7 +84,10 @@ const ParticipantTable = ({
           </Button>
         );
       case "full_name":
-        return `${item?.user?.firstname ?? ""} ${item?.user?.lastname ?? ""}`.trim() || "-";
+        return (
+          `${item?.user?.firstname ?? ""} ${item?.user?.lastname ?? ""}`.trim() ||
+          "-"
+        );
       case "mobile":
         return item?.user?.mobile || "-";
       case "email":
@@ -131,7 +134,11 @@ const ParticipantTable = ({
           {loading ? (
             <TableRow>
               <TableCell
-                colSpan={selectable ? participantColumns.length + 1 : participantColumns.length}
+                colSpan={
+                  selectable
+                    ? participantColumns.length + 1
+                    : participantColumns.length
+                }
                 className="text-center py-12"
               >
                 <Loader2 className="w-7 h-7 animate-spin text-[#C72030] mx-auto" />
@@ -140,7 +147,11 @@ const ParticipantTable = ({
           ) : data.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={selectable ? participantColumns.length + 1 : participantColumns.length}
+                colSpan={
+                  selectable
+                    ? participantColumns.length + 1
+                    : participantColumns.length
+                }
                 className="text-center py-10 text-gray-500"
               >
                 No records found
@@ -162,7 +173,10 @@ const ParticipantTable = ({
                   </TableCell>
                 )}
                 {participantColumns.map((col) => (
-                  <TableCell key={col.key} className="py-3 px-4 text-sm text-gray-800">
+                  <TableCell
+                    key={col.key}
+                    className="py-3 px-4 text-sm text-gray-800"
+                  >
                     {renderValue(item, col.key)}
                   </TableCell>
                 ))}
@@ -209,7 +223,9 @@ const WaitingListTab = ({ eventId }: { eventId: string }) => {
         <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center text-[#C72030]">
           <FileText size={16} />
         </div>
-        <span className="font-semibold text-lg text-gray-800">Requestor Details</span>
+        <span className="font-semibold text-lg text-gray-800">
+          Requestor Details
+        </span>
       </div>
       <ParticipantTable
         data={data}
@@ -254,7 +270,9 @@ const ApprovedTab = ({ eventId }: { eventId: string }) => {
         <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center text-[#C72030]">
           <FileText size={16} />
         </div>
-        <span className="font-semibold text-lg text-gray-800">Requestor Details</span>
+        <span className="font-semibold text-lg text-gray-800">
+          Requestor Details
+        </span>
       </div>
       <ParticipantTable
         data={data}
@@ -268,7 +286,15 @@ const ApprovedTab = ({ eventId }: { eventId: string }) => {
 // ─────────────────────────────────────────────
 // Pending sub-tab (with approve / deny)
 // ─────────────────────────────────────────────
-const PendingTab = ({ eventId, eventCapacity, totalRegistered }: { eventId: string; eventCapacity: number; totalRegistered: number }) => {
+const PendingTab = ({
+  eventId,
+  eventCapacity,
+  totalRegistered,
+}: {
+  eventId: string;
+  eventCapacity: number;
+  totalRegistered: number;
+}) => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const baseUrl = localStorage.getItem("baseUrl");
@@ -335,7 +361,9 @@ const PendingTab = ({ eventId, eventCapacity, totalRegistered }: { eventId: stri
           <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center text-[#C72030]">
             <FileText size={16} />
           </div>
-          <span className="font-semibold text-lg text-gray-800">Requestor Details</span>
+          <span className="font-semibold text-lg text-gray-800">
+            Requestor Details
+          </span>
         </div>
         {data.length > 0 && (
           <div className="flex gap-3">
@@ -345,7 +373,9 @@ const PendingTab = ({ eventId, eventCapacity, totalRegistered }: { eventId: stri
               onClick={() => handleStatusUpdate("rejected")}
               disabled={selectedItems.length === 0 || isUpdating || atCapacity}
             >
-              {isUpdating && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />}
+              {isUpdating && (
+                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+              )}
               Deny
             </Button>
             <Button
@@ -353,7 +383,9 @@ const PendingTab = ({ eventId, eventCapacity, totalRegistered }: { eventId: stri
               onClick={() => handleStatusUpdate("approved")}
               disabled={selectedItems.length === 0 || isUpdating || atCapacity}
             >
-              {isUpdating && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />}
+              {isUpdating && (
+                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+              )}
               Approve
             </Button>
           </div>
@@ -390,7 +422,8 @@ const ParticipantsDetailsTab = ({
   eventCapacity: number;
   totalRegistered: number;
 }) => {
-  const [activeParticipantTab, setActiveParticipantTab] = useState("waitingList");
+  const [activeParticipantTab, setActiveParticipantTab] =
+    useState("waitingList");
 
   return (
     <div className="space-y-4">
@@ -448,10 +481,38 @@ const LoyaltyEventDetails = () => {
 
   // QR Code mock data
   const [qrCodeData] = useState([
-    { id: 1, srNo: 1, cpName: "Kshitij Rasal", companyName: "ABD Tech", emailId: "kshitij.r@demomail.com", qrCodeId: "QR-EVT-1767003965366-cp2-176700403055" },
-    { id: 2, srNo: 2, cpName: "Sohail Ansari", companyName: "XYZ Ltd", emailId: "sohail.a@demomail.com", qrCodeId: "QR-EVT-1767003965366-cp3-176700403056" },
-    { id: 3, srNo: 3, cpName: "Hamza Quazi", companyName: "XYZ Ltd", emailId: "hamza.q@demomail.com", qrCodeId: "QR-EVT-1767003965366-cp4-176700403057" },
-    { id: 4, srNo: 4, cpName: "Shahab Mirza", companyName: "XYZ Ltd", emailId: "shahab.m@demomail.com", qrCodeId: "QR-EVT-1767003965366-cp4-176700403058" },
+    {
+      id: 1,
+      srNo: 1,
+      cpName: "Kshitij Rasal",
+      companyName: "ABD Tech",
+      emailId: "kshitij.r@demomail.com",
+      qrCodeId: "QR-EVT-1767003965366-cp2-176700403055",
+    },
+    {
+      id: 2,
+      srNo: 2,
+      cpName: "Sohail Ansari",
+      companyName: "XYZ Ltd",
+      emailId: "sohail.a@demomail.com",
+      qrCodeId: "QR-EVT-1767003965366-cp3-176700403056",
+    },
+    {
+      id: 3,
+      srNo: 3,
+      cpName: "Hamza Quazi",
+      companyName: "XYZ Ltd",
+      emailId: "hamza.q@demomail.com",
+      qrCodeId: "QR-EVT-1767003965366-cp4-176700403057",
+    },
+    {
+      id: 4,
+      srNo: 4,
+      cpName: "Shahab Mirza",
+      companyName: "XYZ Ltd",
+      emailId: "shahab.m@demomail.com",
+      qrCodeId: "QR-EVT-1767003965366-cp4-176700403058",
+    },
   ]);
 
   const eventId = id as string;
@@ -490,7 +551,10 @@ const LoyaltyEventDetails = () => {
 
   const formatTime = (dateString: string) => {
     if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+    return new Date(dateString).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const formatDateTime = (isoString: string) => {
@@ -498,14 +562,23 @@ const LoyaltyEventDetails = () => {
     try {
       const date = new Date(isoString);
       if (isNaN(date.getTime())) return "—";
-      return date.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true });
+      return date.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
     } catch {
       return "—";
     }
   };
 
-  const handleDownloadQRCode = (qrCodeId: string, cpName: string) => toast.success(`Downloading QR Code for ${cpName}`);
-  const handleSendQRCodeEmail = (email: string, cpName: string) => toast.success(`Sending QR Code to ${email}`);
+  const handleDownloadQRCode = (qrCodeId: string, cpName: string) =>
+    toast.success(`Downloading QR Code for ${cpName}`);
+  const handleSendQRCodeEmail = (email: string, cpName: string) =>
+    toast.success(`Sending QR Code to ${email}`);
 
   if (loading) {
     return (
@@ -544,7 +617,11 @@ const LoyaltyEventDetails = () => {
 
       <div
         className="rounded-lg border-r border-b border-gray-200 shadow-sm"
-        style={{ borderTop: "none", borderLeft: "none", backgroundColor: "rgba(250, 250, 250, 1)" }}
+        style={{
+          borderTop: "none",
+          borderLeft: "none",
+          backgroundColor: "rgba(250, 250, 250, 1)",
+        }}
       >
         <style>{`
           .top-level-tabs button[data-state="active"] {
@@ -557,7 +634,13 @@ const LoyaltyEventDetails = () => {
           {/* Top-level tab bar */}
           <TabsList
             className="top-level-tabs w-full flex flex-nowrap rounded-t-lg p-0 overflow-x-auto"
-            style={{ gap: 0, padding: 0, backgroundColor: "rgba(246, 247, 247, 1)", height: "50px", marginBottom: "0" }}
+            style={{
+              gap: 0,
+              padding: 0,
+              backgroundColor: "rgba(246, 247, 247, 1)",
+              height: "50px",
+              marginBottom: "0",
+            }}
           >
             {tabs.map((tab) => (
               <TabsTrigger
@@ -587,57 +670,119 @@ const LoyaltyEventDetails = () => {
           </TabsList>
 
           {/* ── Event Details ── */}
-          <TabsContent value="event-details" className="p-6 space-y-6" style={{ backgroundColor: "rgba(250, 249, 247, 1)" }}>
+          <TabsContent
+            value="event-details"
+            className="p-6 space-y-6"
+            style={{ backgroundColor: "rgba(250, 249, 247, 1)" }}
+          >
             {/* Event Details Card */}
             <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                   <FileText className="w-5 h-5 text-[#C72030]" />
                 </div>
-                <h3 className="text-lg font-semibold text-black">Event Details</h3>
+                <h3 className="text-lg font-semibold text-black">
+                  Event Details
+                </h3>
               </div>
               <div className="bg-[#FBFBFA] px-6 py-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event Name</p>
-                    <p className="text-base font-medium text-gray-900">{eventData?.event_name || "N/A"}</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event Shared</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Event Name
+                    </p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.shared === "0" || eventData?.shared === 0 ? "All" : "Individual"}
+                      {eventData?.event_name || "N/A"}
+                    </p>
+                  </div>
+                  {/* <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Event Shared
+                    </p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.shared === "0" || eventData?.shared === 0
+                        ? "All"
+                        : "Individual"}
+                    </p>
+                  </div> */}
+                    <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Event Venue
+                    </p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.event_at || "-"}
                     </p>
                   </div>
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event Description</p>
-                    <p className="text-base font-medium text-gray-900 flex-1 break-words">{eventData?.description || "-"}</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event At</p>
-                    <p className="text-base font-medium text-gray-900">{eventData?.event_at || "-"}</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Send Email</p>
-                    <p className="text-base font-medium text-gray-900">
-                      {eventData?.email_trigger_enabled === "1" || eventData?.email_trigger_enabled === 1 || eventData?.email_trigger_enabled === true ? "Yes" : "No"}
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Event Description
                     </p>
-                  </div>
+                    <p className="text-base font-medium text-gray-900 flex-1 break-words">
+                      {eventData?.description || "-"}
+                    </p>
+                  </div>               
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event Date</p>
-                    <p className="text-base font-medium text-gray-900">{eventData?.from_time ? formatDate(eventData.from_time) : "N/A"}</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event Time</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Start Date
+                    </p>
                     <p className="text-base font-medium text-gray-900">
                       {eventData?.from_time
-                        ? `${formatTime(eventData.from_time)}${eventData?.to_time ? ` - ${formatTime(eventData.to_time)}` : ""}`
+                        ? formatDate(eventData.from_time)
                         : "N/A"}
                     </p>
                   </div>
-                  <div className="lg:col-span-3 flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">RSVP Action</p>
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Start Time
+                    </p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.rsvp_action === "1" || eventData?.rsvp_action === 1 || eventData?.rsvp_action_int === 1 ? "Yes" : "No"}
+                      {eventData?.from_time
+                        ? `${formatTime(eventData.from_time)}`
+                        : "N/A"}
+                    </p>
+                  </div>
+                   <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      End Date
+                    </p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.to_time
+                        ? formatDate(eventData.to_time)
+                        : "N/A"}
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      End Time
+                    </p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.to_time
+                        ? `${formatTime(eventData.to_time)}`
+                        : "N/A"}
+                    </p>
+                  </div>
+                    <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Send Email
+                    </p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.email_trigger_enabled === "1" ||
+                      eventData?.email_trigger_enabled === 1 ||
+                      eventData?.email_trigger_enabled === true
+                        ? "Yes"
+                        : "No"}
+                    </p>
+                  </div>
+                   <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      RSVP Action
+                    </p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.rsvp_action === "1" ||
+                      eventData?.rsvp_action === 1 ||
+                      eventData?.rsvp_action_int === 1
+                        ? "Yes"
+                        : "No"}
                     </p>
                   </div>
                 </div>
@@ -655,9 +800,15 @@ const LoyaltyEventDetails = () => {
               <div className="bg-[#FBFBFA] px-6 py-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Show on Home Page</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">
+                      Show on Home Page
+                    </p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.show_on_home_page === "1" || eventData?.show_on_home === 1 || eventData?.show_on_home === true ? "Yes" : "No"}
+                      {eventData?.show_on_home_page === "1" ||
+                      eventData?.show_on_home === 1 ||
+                      eventData?.show_on_home === true
+                        ? "Yes"
+                        : "No"}
                     </p>
                   </div>
                 </div>
@@ -666,49 +817,91 @@ const LoyaltyEventDetails = () => {
           </TabsContent>
 
           {/* ── Events Related Images ── */}
-          <TabsContent value="images" className="p-6 space-y-6" style={{ backgroundColor: "rgba(250, 249, 247, 1)" }}>
+          <TabsContent
+            value="images"
+            className="p-6 space-y-6"
+            style={{ backgroundColor: "rgba(250, 249, 247, 1)" }}
+          >
             <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center gap-3 bg-[#F6F4EE] py-3 px-4 border-b border-[#D9D9D9]">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
                   <ImageIcon className="w-6 h-6 text-[#C72030]" />
                 </div>
-                <h3 className="text-lg font-semibold text-black">Event Related Images</h3>
+                <h3 className="text-lg font-semibold text-black">
+                  Event Related Images
+                </h3>
               </div>
               <div className="bg-[#FBFBFA] px-6 py-6 space-y-6">
                 {/* Cover Images */}
                 <div>
-                  <h4 className="text-base font-semibold text-gray-900 mb-3">Cover Images</h4>
+                  <h4 className="text-base font-semibold text-gray-900 mb-3">
+                    Cover Images
+                  </h4>
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow style={{ backgroundColor: "#E6E2D8" }}>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            File Name
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            File Type
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            Updated At
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                            Image
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody className="bg-white">
                         {(() => {
-                          const coverGroups = [eventData.cover_image_1_by_1, eventData.cover_image_9_by_16, eventData.cover_image_3_by_2, eventData.cover_image_16_by_9];
+                          const coverGroups = [
+                            eventData.cover_image_1_by_1,
+                            eventData.cover_image_9_by_16,
+                            eventData.cover_image_3_by_2,
+                            eventData.cover_image_16_by_9,
+                          ];
                           const images = coverGroups
-                            .map((g) => (Array.isArray(g) ? g : g && typeof g === "object" ? [g] : []))
+                            .map((g) =>
+                              Array.isArray(g)
+                                ? g
+                                : g && typeof g === "object"
+                                  ? [g]
+                                  : []
+                            )
                             .flat()
                             .filter((img) => img?.document_url);
                           return images.length > 0 ? (
                             images.map((file, i) => (
                               <TableRow key={i} className="hover:bg-gray-50">
-                                <TableCell className="py-3 px-4">{file.document_file_name}</TableCell>
-                                <TableCell className="py-3 px-4">{file.document_content_type}</TableCell>
-                                <TableCell className="py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
                                 <TableCell className="py-3 px-4">
-                                  <img src={file.document_url} alt={`Cover ${i}`} className="w-20 h-20 object-cover rounded" />
+                                  {file.document_file_name}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {file.document_content_type}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {formatDateTime(file.document_updated_at)}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  <img
+                                    src={file.document_url}
+                                    alt={`Cover ${i}`}
+                                    className="w-20 h-20 object-cover rounded"
+                                  />
                                 </TableCell>
                               </TableRow>
                             ))
                           ) : (
                             <TableRow>
-                              <TableCell colSpan={4} className="text-center py-8 text-gray-600">No Cover Images</TableCell>
+                              <TableCell
+                                colSpan={4}
+                                className="text-center py-8 text-gray-600"
+                              >
+                                No Cover Images
+                              </TableCell>
                             </TableRow>
                           );
                         })()}
@@ -719,35 +912,68 @@ const LoyaltyEventDetails = () => {
 
                 {/* Event Gallery */}
                 <div>
-                  <h4 className="text-base font-semibold text-gray-900 mb-3">Event Gallery</h4>
+                  <h4 className="text-base font-semibold text-gray-900 mb-3">
+                    Event Gallery
+                  </h4>
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow style={{ backgroundColor: "#E6E2D8" }}>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            File Name
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            File Type
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            Updated At
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                            Image
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody className="bg-white">
                         {(() => {
-                          const groups = [eventData.event_images_1_by_1, eventData.event_images_9_by_16, eventData.event_images_3_by_2, eventData.event_images_16_by_9];
-                          const images = groups.filter(Array.isArray).flat().filter((img) => img?.document_url);
+                          const groups = [
+                            eventData.event_images_1_by_1,
+                            eventData.event_images_9_by_16,
+                            eventData.event_images_3_by_2,
+                            eventData.event_images_16_by_9,
+                          ];
+                          const images = groups
+                            .filter(Array.isArray)
+                            .flat()
+                            .filter((img) => img?.document_url);
                           return images.length > 0 ? (
                             images.map((file, i) => (
                               <TableRow key={i} className="hover:bg-gray-50">
-                                <TableCell className="py-3 px-4">{file.document_file_name}</TableCell>
-                                <TableCell className="py-3 px-4">{file.document_content_type}</TableCell>
-                                <TableCell className="py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
                                 <TableCell className="py-3 px-4">
-                                  <img src={file.document_url} alt={`Event ${i}`} className="w-20 h-20 object-cover rounded" />
+                                  {file.document_file_name}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {file.document_content_type}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {formatDateTime(file.document_updated_at)}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  <img
+                                    src={file.document_url}
+                                    alt={`Event ${i}`}
+                                    className="w-20 h-20 object-cover rounded"
+                                  />
                                 </TableCell>
                               </TableRow>
                             ))
                           ) : (
                             <TableRow>
-                              <TableCell colSpan={4} className="text-center py-8 text-gray-600">No Event Images</TableCell>
+                              <TableCell
+                                colSpan={4}
+                                className="text-center py-8 text-gray-600"
+                              >
+                                No Event Images
+                              </TableCell>
                             </TableRow>
                           );
                         })()}
@@ -760,7 +986,11 @@ const LoyaltyEventDetails = () => {
           </TabsContent>
 
           {/* ── Participants Details ── */}
-          <TabsContent value="participants-details" className="p-6 space-y-4" style={{ backgroundColor: "rgba(250, 249, 247, 1)" }}>
+          <TabsContent
+            value="participants-details"
+            className="p-6 space-y-4"
+            style={{ backgroundColor: "rgba(250, 249, 247, 1)" }}
+          >
             <ParticipantsDetailsTab
               eventId={eventId}
               eventCapacity={Number(eventData?.capacity ?? 0)}

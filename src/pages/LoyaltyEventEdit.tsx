@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import Select from 'react-select';
+import Select from "react-select";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
@@ -9,7 +9,22 @@ import { ImageUploadingButton } from "../components/reusable/ImageUploadingButto
 import { ImageCropper } from "../components/reusable/ImageCropper";
 import ProjectBannerUpload from "../components/reusable/ProjectBannerUpload";
 import ProjectImageVideoUpload from "../components/reusable/ProjectImageVideoUpload";
-import { ArrowLeft, FileText, Calendar, Users, Plus, X, FileSpreadsheet, Upload, Download, Mail, Edit, Trash, Trash2, Info } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Calendar,
+  Users,
+  Plus,
+  X,
+  FileSpreadsheet,
+  Upload,
+  Download,
+  Mail,
+  Edit,
+  Trash,
+  Trash2,
+  Info,
+} from "lucide-react";
 import {
   TextField,
   FormControl,
@@ -44,6 +59,10 @@ const EventEdit = () => {
     event_type: "",
     event_name: "",
     event_at: "",
+    event_date: "",
+    event_time: "",
+    end_date: "",
+    end_time: "",
     from_time: "",
     to_time: "",
     rsvp_action: "",
@@ -100,7 +119,8 @@ const EventEdit = () => {
   const [showCsvTooltip, setShowCsvTooltip] = useState(false);
   const [showCoverImageTooltip, setShowCoverImageTooltip] = useState(false);
   const [showDetailsImageTooltip, setShowDetailsImageTooltip] = useState(false);
-  const [showDetailsImageUploader, setShowDetailsImageUploader] = useState(false);
+  const [showDetailsImageUploader, setShowDetailsImageUploader] =
+    useState(false);
   const baseURL = API_CONFIG.BASE_URL;
 
   // Image configurations from API
@@ -122,10 +142,12 @@ const EventEdit = () => {
   const [csvFiles, setCsvFiles] = useState([]);
 
   // Share With Society state
-  const [societies, setSocieties] = useState<{ id: number; name: string }[]>([]);
+  const [societies, setSocieties] = useState<{ id: number; name: string }[]>(
+    []
+  );
   const [loadingSocieties, setLoadingSocieties] = useState(false);
   const [selectedSocieties, setSelectedSocieties] = useState<string[]>([]);
-  const [shareWith, setShareWith] = useState<'all' | 'individual'>('all');
+  const [shareWith, setShareWith] = useState<"all" | "individual">("all");
 
   // QR Code Generation state
   const [qrCodeData, setQrCodeData] = useState([
@@ -135,7 +157,7 @@ const EventEdit = () => {
       cpName: "Kshitij Rasal",
       companyName: "ABD Tech",
       emailId: "kshitij.r@demomail.com",
-      qrCodeId: "QR-EVT-1767003965366-cp2-176700403055"
+      qrCodeId: "QR-EVT-1767003965366-cp2-176700403055",
     },
     {
       id: 2,
@@ -143,7 +165,7 @@ const EventEdit = () => {
       cpName: "Sohail Ansari",
       companyName: "XYZ Ltd",
       emailId: "sohail.a@demomail.com",
-      qrCodeId: "QR-EVT-1767003965366-cp3-176700403056"
+      qrCodeId: "QR-EVT-1767003965366-cp3-176700403056",
     },
     {
       id: 3,
@@ -151,7 +173,7 @@ const EventEdit = () => {
       cpName: "Hamza Quazi",
       companyName: "XYZ Ltd",
       emailId: "hamza.q@demomail.com",
-      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056"
+      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056",
     },
     {
       id: 4,
@@ -159,8 +181,8 @@ const EventEdit = () => {
       cpName: "Shahab Mirza",
       companyName: "XYZ Ltd",
       emailId: "shahab.m@demomail.com",
-      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056"
-    }
+      qrCodeId: "QR-EVT-1767003965366-cp4-176700403056",
+    },
   ]);
 
   // Visibility state
@@ -182,36 +204,36 @@ const EventEdit = () => {
           },
         }
       );
-      
+
       if (response.data && Array.isArray(response.data)) {
         const configs = {};
-        
+
         response.data.forEach((config) => {
           const { name, value } = config;
-          
+
           // Extract ratio from value (e.g., "event_images_16_by_9" -> "16:9")
           const ratioMatch = value.match(/(\d+)_by_(\d+)/);
           if (ratioMatch) {
             const ratio = `${ratioMatch[1]}:${ratioMatch[2]}`;
-            
+
             if (!configs[name]) {
               configs[name] = [];
             }
-            
+
             if (!configs[name].includes(ratio)) {
               configs[name].push(ratio);
             }
           }
         });
-        
+
         setImageConfigurations(configs);
       }
     } catch (error) {
-      console.error('Error fetching image configurations:', error);
+      console.error("Error fetching image configurations:", error);
       // Set default configurations if API fails
       setImageConfigurations({
-        EventImage: ['16:9', '1:1', '9:16', '3:2'],
-        EventCoverImage: ['16:9', '1:1', '9:16', '3:2'],
+        EventImage: ["16:9", "1:1", "9:16", "3:2"],
+        EventCoverImage: ["16:9", "1:1", "9:16", "3:2"],
       });
     }
   };
@@ -225,24 +247,24 @@ const EventEdit = () => {
 
   // Field styles for Material-UI components
   const fieldStyles = {
-    height: '45px',
-    backgroundColor: '#fff',
-    borderRadius: '4px',
-    '& .MuiOutlinedInput-root': {
-      height: '45px',
-      '& fieldset': {
-        borderColor: '#ddd',
+    height: "45px",
+    backgroundColor: "#fff",
+    borderRadius: "4px",
+    "& .MuiOutlinedInput-root": {
+      height: "45px",
+      "& fieldset": {
+        borderColor: "#ddd",
       },
-      '&:hover fieldset': {
-        borderColor: '#C72030',
+      "&:hover fieldset": {
+        borderColor: "#C72030",
       },
-      '&.Mui-focused fieldset': {
-        borderColor: '#C72030',
+      "&.Mui-focused fieldset": {
+        borderColor: "#C72030",
       },
     },
-    '& .MuiInputLabel-root': {
-      '&.Mui-focused': {
-        color: '#C72030',
+    "& .MuiInputLabel-root": {
+      "&.Mui-focused": {
+        color: "#C72030",
       },
     },
   };
@@ -398,7 +420,12 @@ const EventEdit = () => {
     if (videoFiles && videoFiles.length > 0) {
       videoFiles.forEach((video) => {
         const formattedRatio = video.ratio.replace(":", "_by_");
-        const prefix = type === "cover" ? "cover_image" : type === "details" ? "details_image" : "event_images";
+        const prefix =
+          type === "cover"
+            ? "cover_image"
+            : type === "details"
+              ? "details_image"
+              : "event_images";
         const key = `${prefix}_${formattedRatio}`;
 
         setFormData((prev) => ({
@@ -431,7 +458,12 @@ const EventEdit = () => {
 
     validImages.forEach((img) => {
       const formattedRatio = img.ratio.replace(":", "_by_");
-      const prefix = type === "cover" ? "cover_image" : type === "details" ? "details_image" : "event_images";
+      const prefix =
+        type === "cover"
+          ? "cover_image"
+          : type === "details"
+            ? "details_image"
+            : "event_images";
       const key = `${prefix}_${formattedRatio}`;
 
       setFormData((prev) => ({
@@ -568,12 +600,15 @@ const EventEdit = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const response = await axios.get(`${baseURL}/crm/admin/events/${id}.json`, {
-          headers: {
-            Authorization: getAuthHeader(),
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await axios.get(
+          `${baseURL}/crm/admin/events/${id}.json`,
+          {
+            headers: {
+              Authorization: getAuthHeader(),
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         const data = response.data;
 
@@ -624,15 +659,15 @@ const EventEdit = () => {
         const userIds = Array.isArray(data.user_id)
           ? data.user_id
           : data.user_id
-          ? [data.user_id]
-          : [];
+            ? [data.user_id]
+            : [];
 
         // Normalize group_id
         const groupIds = Array.isArray(data.group_id)
           ? data.group_id
           : data.group_id
-          ? [data.group_id]
-          : [];
+            ? [data.group_id]
+            : [];
 
         // Determine share type
         let shared = "";
@@ -647,135 +682,180 @@ const EventEdit = () => {
         }
 
         // Prepare cover image previews for all ratios
-        const coverImage1by1 = data.cover_image_1_by_1 ? [{
-          url: data.cover_image_1_by_1.document_url,
-          document_url: data.cover_image_1_by_1.document_url,
-          document_file_name: data.cover_image_1_by_1.document_file_name,
-          id: data.cover_image_1_by_1.id,
-          ratio: '1:1',
-          isExisting: true,
-          type: 'image'
-        }] : [];
+        const coverImage1by1 = data.cover_image_1_by_1
+          ? [
+              {
+                url: data.cover_image_1_by_1.document_url,
+                document_url: data.cover_image_1_by_1.document_url,
+                document_file_name: data.cover_image_1_by_1.document_file_name,
+                id: data.cover_image_1_by_1.id,
+                ratio: "1:1",
+                isExisting: true,
+                type: "image",
+              },
+            ]
+          : [];
 
-        const coverImage9by16 = data.cover_image_9_by_16 ? [{
-          url: data.cover_image_9_by_16.document_url,
-          document_url: data.cover_image_9_by_16.document_url,
-          document_file_name: data.cover_image_9_by_16.document_file_name,
-          id: data.cover_image_9_by_16.id,
-          ratio: '9:16',
-          isExisting: true,
-          type: 'image'
-        }] : [];
+        const coverImage9by16 = data.cover_image_9_by_16
+          ? [
+              {
+                url: data.cover_image_9_by_16.document_url,
+                document_url: data.cover_image_9_by_16.document_url,
+                document_file_name: data.cover_image_9_by_16.document_file_name,
+                id: data.cover_image_9_by_16.id,
+                ratio: "9:16",
+                isExisting: true,
+                type: "image",
+              },
+            ]
+          : [];
 
-        const coverImage3by2 = data.cover_image_3_by_2 ? [{
-          url: data.cover_image_3_by_2.document_url,
-          document_url: data.cover_image_3_by_2.document_url,
-          document_file_name: data.cover_image_3_by_2.document_file_name,
-          id: data.cover_image_3_by_2.id,
-          ratio: '3:2',
-          isExisting: true,
-          type: 'image'
-        }] : [];
+        const coverImage3by2 = data.cover_image_3_by_2
+          ? [
+              {
+                url: data.cover_image_3_by_2.document_url,
+                document_url: data.cover_image_3_by_2.document_url,
+                document_file_name: data.cover_image_3_by_2.document_file_name,
+                id: data.cover_image_3_by_2.id,
+                ratio: "3:2",
+                isExisting: true,
+                type: "image",
+              },
+            ]
+          : [];
 
-        const coverImage16by9 = data.cover_image_16_by_9 ? [{
-          url: data.cover_image_16_by_9.document_url,
-          document_url: data.cover_image_16_by_9.document_url,
-          document_file_name: data.cover_image_16_by_9.document_file_name,
-          id: data.cover_image_16_by_9.id,
-          ratio: '16:9',
-          isExisting: true,
-          type: 'image'
-        }] : [];
+        const coverImage16by9 = data.cover_image_16_by_9
+          ? [
+              {
+                url: data.cover_image_16_by_9.document_url,
+                document_url: data.cover_image_16_by_9.document_url,
+                document_file_name: data.cover_image_16_by_9.document_file_name,
+                id: data.cover_image_16_by_9.id,
+                ratio: "16:9",
+                isExisting: true,
+                type: "image",
+              },
+            ]
+          : [];
 
         // Prepare event image previews for all ratios
-        const eventImages1by1 = Array.isArray(data.event_images_1_by_1) 
-          ? data.event_images_1_by_1.map(img => ({
+        const eventImages1by1 = Array.isArray(data.event_images_1_by_1)
+          ? data.event_images_1_by_1.map((img) => ({
               url: img.document_url,
               document_url: img.document_url,
               document_file_name: img.document_file_name,
               id: img.id,
-              ratio: '1:1',
+              ratio: "1:1",
               isExisting: true,
-              type: img.document_content_type?.startsWith('video') ? 'video' : 'image'
+              type: img.document_content_type?.startsWith("video")
+                ? "video"
+                : "image",
             }))
-          : data.event_images_1_by_1 ? [{
-              url: data.event_images_1_by_1.document_url,
-              document_url: data.event_images_1_by_1.document_url,
-              document_file_name: data.event_images_1_by_1.document_file_name,
-              id: data.event_images_1_by_1.id,
-              ratio: '1:1',
-              isExisting: true,
-              type: 'image'
-            }] : [];
+          : data.event_images_1_by_1
+            ? [
+                {
+                  url: data.event_images_1_by_1.document_url,
+                  document_url: data.event_images_1_by_1.document_url,
+                  document_file_name:
+                    data.event_images_1_by_1.document_file_name,
+                  id: data.event_images_1_by_1.id,
+                  ratio: "1:1",
+                  isExisting: true,
+                  type: "image",
+                },
+              ]
+            : [];
 
         const eventImages9by16 = Array.isArray(data.event_images_9_by_16)
-          ? data.event_images_9_by_16.map(img => ({
+          ? data.event_images_9_by_16.map((img) => ({
               url: img.document_url,
               document_url: img.document_url,
               document_file_name: img.document_file_name,
               id: img.id,
-              ratio: '9:16',
+              ratio: "9:16",
               isExisting: true,
-              type: img.document_content_type?.startsWith('video') ? 'video' : 'image'
+              type: img.document_content_type?.startsWith("video")
+                ? "video"
+                : "image",
             }))
-          : data.event_images_9_by_16 ? [{
-              url: data.event_images_9_by_16.document_url,
-              document_url: data.event_images_9_by_16.document_url,
-              document_file_name: data.event_images_9_by_16.document_file_name,
-              id: data.event_images_9_by_16.id,
-              ratio: '9:16',
-              isExisting: true,
-              type: 'image'
-            }] : [];
+          : data.event_images_9_by_16
+            ? [
+                {
+                  url: data.event_images_9_by_16.document_url,
+                  document_url: data.event_images_9_by_16.document_url,
+                  document_file_name:
+                    data.event_images_9_by_16.document_file_name,
+                  id: data.event_images_9_by_16.id,
+                  ratio: "9:16",
+                  isExisting: true,
+                  type: "image",
+                },
+              ]
+            : [];
 
         const eventImages3by2 = Array.isArray(data.event_images_3_by_2)
-          ? data.event_images_3_by_2.map(img => ({
+          ? data.event_images_3_by_2.map((img) => ({
               url: img.document_url,
               document_url: img.document_url,
               document_file_name: img.document_file_name,
               id: img.id,
-              ratio: '3:2',
+              ratio: "3:2",
               isExisting: true,
-              type: img.document_content_type?.startsWith('video') ? 'video' : 'image'
+              type: img.document_content_type?.startsWith("video")
+                ? "video"
+                : "image",
             }))
-          : data.event_images_3_by_2 ? [{
-              url: data.event_images_3_by_2.document_url,
-              document_url: data.event_images_3_by_2.document_url,
-              document_file_name: data.event_images_3_by_2.document_file_name,
-              id: data.event_images_3_by_2.id,
-              ratio: '3:2',
-              isExisting: true,
-              type: 'image'
-            }] : [];
+          : data.event_images_3_by_2
+            ? [
+                {
+                  url: data.event_images_3_by_2.document_url,
+                  document_url: data.event_images_3_by_2.document_url,
+                  document_file_name:
+                    data.event_images_3_by_2.document_file_name,
+                  id: data.event_images_3_by_2.id,
+                  ratio: "3:2",
+                  isExisting: true,
+                  type: "image",
+                },
+              ]
+            : [];
 
         const eventImages16by9 = Array.isArray(data.event_images_16_by_9)
-          ? data.event_images_16_by_9.map(img => ({
+          ? data.event_images_16_by_9.map((img) => ({
               url: img.document_url,
               document_url: img.document_url,
               document_file_name: img.document_file_name,
               id: img.id,
-              ratio: '16:9',
+              ratio: "16:9",
               isExisting: true,
-              type: img.document_content_type?.startsWith('video') ? 'video' : 'image'
+              type: img.document_content_type?.startsWith("video")
+                ? "video"
+                : "image",
             }))
-          : data.event_images_16_by_9 ? [{
-              url: data.event_images_16_by_9.document_url,
-              document_url: data.event_images_16_by_9.document_url,
-              document_file_name: data.event_images_16_by_9.document_file_name,
-              id: data.event_images_16_by_9.id,
-              ratio: '16:9',
-              isExisting: true,
-              type: 'image'
-            }] : [];
+          : data.event_images_16_by_9
+            ? [
+                {
+                  url: data.event_images_16_by_9.document_url,
+                  document_url: data.event_images_16_by_9.document_url,
+                  document_file_name:
+                    data.event_images_16_by_9.document_file_name,
+                  id: data.event_images_16_by_9.id,
+                  ratio: "16:9",
+                  isExisting: true,
+                  type: "image",
+                },
+              ]
+            : [];
 
         // Prepare home cover image (16:9 is used for home)
-        const existingCoverImage = data.home_cover_image && data.home_cover_image.document_url
-          ? {
-              url: data.home_cover_image.document_url,
-              id: data.home_cover_image.id,
-              isExisting: true,
-            }
-          : null;
+        const existingCoverImage =
+          data.home_cover_image && data.home_cover_image.document_url
+            ? {
+                url: data.home_cover_image.document_url,
+                id: data.home_cover_image.id,
+                isExisting: true,
+              }
+            : null;
 
         // Prepare existing event image previews from home_event_images
         const existingImages = Array.isArray(data.home_event_images)
@@ -789,6 +869,18 @@ const EventEdit = () => {
 
         const attachfileData = [];
         const coverImageData = data.home_cover_image || null;
+
+        // Parse from_time ISO string into separate date + time fields
+        const parseDateTime = (isoString) => {
+          if (!isoString) return { date: "", time: "" };
+          const parts = isoString.split("T");
+          return {
+            date: parts[0] || "",
+            time: parts[1] ? parts[1].substring(0, 5) : "",
+          };
+        };
+        const startParsed = parseDateTime(data.from_time);
+        const endParsed = parseDateTime(data.to_time);
 
         setFormData((prev) => ({
           ...prev,
@@ -812,6 +904,11 @@ const EventEdit = () => {
           event_images_9_by_16: eventImages9by16,
           event_images_3_by_2: eventImages3by2,
           event_images_16_by_9: eventImages16by9,
+          // Populate separate date/time fields from the API's ISO strings
+          event_date: startParsed.date,
+          event_time: startParsed.time,
+          end_date: endParsed.date,
+          end_time: endParsed.time,
         }));
 
         console.log("Fetched event data:", data);
@@ -891,16 +988,16 @@ const EventEdit = () => {
       setLoadingSocieties(true);
       try {
         const response = await axios.get(
-          `https://${localStorage.getItem('baseUrl')}/projects_for_dropdown.json`,
+          `https://${localStorage.getItem("baseUrl")}/projects_for_dropdown.json`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           }
         );
         setSocieties(response.data.projects || []);
       } catch (error) {
-        console.error('Error fetching societies:', error);
+        console.error("Error fetching societies:", error);
       } finally {
         setLoadingSocieties(false);
       }
@@ -911,12 +1008,15 @@ const EventEdit = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${baseURL}/usergroups/cp_members_list.json`, {
-          headers: {
-            Authorization: getAuthHeader(),
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        const response = await axios.get(
+          `${baseURL}/usergroups/cp_members_list.json`,
+          {
+            headers: {
+              Authorization: getAuthHeader(),
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
         setEventUserID(response.data || []);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -929,12 +1029,15 @@ const EventEdit = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get(`${baseURL}/crm/usergroups.json?q[group_type_eq]=cp`, {
-          headers: {
-                   Authorization: getAuthHeader(),
-                   "Content-Type": "multipart/form-data",
-                 },
-        });
+        const response = await axios.get(
+          `${baseURL}/crm/usergroups.json?q[group_type_eq]=cp`,
+          {
+            headers: {
+              Authorization: getAuthHeader(),
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
         const groupsData = response.data.usergroups || [];
         setGroups(groupsData);
       } catch (error) {
@@ -1280,29 +1383,33 @@ const EventEdit = () => {
     // Add details images (all ratios)
     if (formData.details_image_1_by_1?.length > 0) {
       formData.details_image_1_by_1.forEach((img) => {
-        if (img?.file instanceof File) data.append("event[details_image_1_by_1][]", img.file);
+        if (img?.file instanceof File)
+          data.append("event[details_image_1_by_1][]", img.file);
       });
     }
     if (formData.details_image_16_by_9?.length > 0) {
       formData.details_image_16_by_9.forEach((img) => {
-        if (img?.file instanceof File) data.append("event[details_image_16_by_9][]", img.file);
+        if (img?.file instanceof File)
+          data.append("event[details_image_16_by_9][]", img.file);
       });
     }
     if (formData.details_image_9_by_16?.length > 0) {
       formData.details_image_9_by_16.forEach((img) => {
-        if (img?.file instanceof File) data.append("event[details_image_9_by_16][]", img.file);
+        if (img?.file instanceof File)
+          data.append("event[details_image_9_by_16][]", img.file);
       });
     }
     if (formData.details_image_3_by_2?.length > 0) {
       formData.details_image_3_by_2.forEach((img) => {
-        if (img?.file instanceof File) data.append("event[details_image_3_by_2][]", img.file);
+        if (img?.file instanceof File)
+          data.append("event[details_image_3_by_2][]", img.file);
       });
     }
 
     // === SHARE WITH SOCIETY (applicable project IDs) ===
-    if (shareWith === 'individual' && selectedSocieties.length > 0) {
+    if (shareWith === "individual" && selectedSocieties.length > 0) {
       selectedSocieties.forEach((id) => {
-        data.append('event[applicable_project_ids][]', id);
+        data.append("event[applicable_project_ids][]", id);
       });
     }
 
@@ -1368,7 +1475,10 @@ const EventEdit = () => {
     }
 
     // === SHOW ON HOME ===
-    data.append("event[show_on_home]", formData.show_on_home === true ? "1" : "0");
+    data.append(
+      "event[show_on_home]",
+      formData.show_on_home === true ? "1" : "0"
+    );
 
     // === REMOVED EXISTING IMAGES ===
     const originalIds = formData.existingImages?.map((img) => img.id) || [];
@@ -1381,22 +1491,29 @@ const EventEdit = () => {
     removedIds.forEach((id) => data.append("event[removed_image_ids][]", id));
 
     // === DATE AND TIME HANDLING ===
-    // Combine date and time for from_time parameter if we have separate fields
+    // Combine separate date + time fields into ISO strings for from_time / to_time
     let fromTime = "";
     if (formData.event_date && formData.event_time) {
       fromTime = `${formData.event_date}T${formData.event_time}`;
-    } else if (formData.from_time) {
-      fromTime = formData.from_time;
     } else if (formData.event_date) {
       fromTime = formData.event_date;
+    } else if (formData.from_time) {
+      fromTime = formData.from_time;
     }
-    
     if (fromTime) {
       data.append("event[from_time]", fromTime);
     }
-    
-    if (formData.to_time) {
-      data.append("event[to_time]", formData.to_time);
+
+    let toTime = "";
+    if (formData.end_date && formData.end_time) {
+      toTime = `${formData.end_date}T${formData.end_time}`;
+    } else if (formData.end_date) {
+      toTime = formData.end_date;
+    } else if (formData.to_time) {
+      toTime = formData.to_time;
+    }
+    if (toTime) {
+      data.append("event[to_time]", toTime);
     }
 
     // === EVERYTHING ELSE (Primitive values only) ===
@@ -1417,8 +1534,10 @@ const EventEdit = () => {
           "event_images",
           "from_time", // Skip from_time as we handle it above
           "to_time", // Skip to_time as we handle it above
-          "event_date", // Skip event_date as it's combined into from_time
-          "event_time", // Skip event_time as it's combined into from_time
+          "event_date", // Skip — combined into from_time above
+          "event_time", // Skip — combined into from_time above
+          "end_date", // Skip — combined into to_time above
+          "end_time", // Skip — combined into to_time above
           "show_on_home", // Skip show_on_home as we handle it above
         ].includes(key)
       ) {
@@ -1432,19 +1551,26 @@ const EventEdit = () => {
 
     // === SEND REQUEST ===
     try {
-      const response = await axios.put(`${baseURL}/crm/admin/events/${id}.json`, data, {
-        headers: {
-          Authorization: getAuthHeader(),
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axios.put(
+        `${baseURL}/crm/admin/events/${id}.json`,
+        data,
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       toast.success("Event updated successfully!");
-      
-      location.pathname.includes("/loyalty") ? navigate("/loyalty/event-list") : navigate("/maintenance/event-list");
+
+      location.pathname.includes("/loyalty")
+        ? navigate("/loyalty/event-list")
+        : navigate("/maintenance/event-list");
     } catch (error) {
       console.error("Submit error:", error);
-      const errorMessage = error.response?.data?.message || "Failed to update event.";
+      const errorMessage =
+        error.response?.data?.message || "Failed to update event.";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -1524,9 +1650,12 @@ const EventEdit = () => {
   // CSV File Upload Handler
   const handleCsvFileUpload = (e) => {
     const files = Array.from(e.target.files);
-    
-    const validFiles = files.filter(file => {
-      const isValid = file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+    const validFiles = files.filter((file) => {
+      const isValid =
+        file.name.endsWith(".csv") ||
+        file.name.endsWith(".xlsx") ||
+        file.name.endsWith(".xls");
       if (!isValid) {
         toast.error(`${file.name} is not a valid CSV/Excel file`);
       }
@@ -1534,38 +1663,38 @@ const EventEdit = () => {
     });
 
     if (validFiles.length > 0) {
-      setCsvFiles(prev => [...prev, ...validFiles]);
+      setCsvFiles((prev) => [...prev, ...validFiles]);
       toast.success(`${validFiles.length} file(s) added successfully`);
     }
-    
+
     // Reset input
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const removeCsvFile = (index) => {
-    setCsvFiles(prev => prev.filter((_, i) => i !== index));
-    toast.success('File removed');
+    setCsvFiles((prev) => prev.filter((_, i) => i !== index));
+    toast.success("File removed");
   };
 
   // QR Code handlers
   const handleDownloadQRCode = (qrCodeId, cpName) => {
     toast.success(`Downloading QR Code for ${cpName}`);
-    console.log('Download QR Code:', qrCodeId);
+    console.log("Download QR Code:", qrCodeId);
   };
 
   const handleSendQRCodeEmail = (email, cpName) => {
     toast.success(`Sending QR Code to ${email}`);
-    console.log('Send QR Code to:', email);
+    console.log("Send QR Code to:", email);
   };
 
   const handleDownloadAllQRCodes = () => {
-    toast.success('Downloading all QR Codes');
-    console.log('Download All QR Codes');
+    toast.success("Downloading all QR Codes");
+    console.log("Download All QR Codes");
   };
 
   const handleSendAllQRCodesEmail = () => {
-    toast.success('Sending QR Codes to all channel partners');
-    console.log('Send All QR Codes via Email');
+    toast.success("Sending QR Codes to all channel partners");
+    console.log("Send All QR Codes via Email");
   };
 
   // Step navigation functions
@@ -1574,32 +1703,34 @@ const EventEdit = () => {
       const sectionId = `section-step-${step}`;
       const element = document.getElementById(sectionId);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
       }
       return;
     }
 
     if (step > currentStep) {
-      toast.error(`Please complete Step ${currentStep + 1} before proceeding to Step ${step + 1}`);
+      toast.error(
+        `Please complete Step ${currentStep + 1} before proceeding to Step ${step + 1}`
+      );
       return;
     }
     setCurrentStep(step);
     setShowPreviousSections(false);
     setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }, 100);
   };
 
   const handleProceedToSave = () => {
     if (!completedSteps.includes(currentStep)) {
-      setCompletedSteps(prev => [...prev, currentStep]);
+      setCompletedSteps((prev) => [...prev, currentStep]);
     }
 
     // If on Step 0 (Event Details) and RSVP is No, skip to Step 1 (Event Images)
     if (currentStep === 0 && formData.rsvp_action === "0") {
       setCurrentStep(1);
       setShowPreviousSections(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -1607,7 +1738,7 @@ const EventEdit = () => {
     if (currentStep === 0 && formData.rsvp_action === "1") {
       setCurrentStep(1);
       setShowPreviousSections(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -1615,7 +1746,7 @@ const EventEdit = () => {
     if (currentStep === 1) {
       setIsPreviewMode(true);
       setShowPreviousSections(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -1629,12 +1760,12 @@ const EventEdit = () => {
       }
       setShowPreviousSections(false);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSaveToDraft = () => {
     if (!completedSteps.includes(currentStep)) {
-      setCompletedSteps(prev => [...prev, currentStep]);
+      setCompletedSteps((prev) => [...prev, currentStep]);
     }
 
     // Step 0 -> Step 1
@@ -1642,7 +1773,7 @@ const EventEdit = () => {
       setCurrentStep(1);
       setShowPreviousSections(true);
       toast.success("Progress saved to draft successfully!");
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -1651,120 +1782,156 @@ const EventEdit = () => {
       setIsPreviewMode(true);
       setShowPreviousSections(true);
       toast.success("Progress saved to draft successfully!");
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
     setShowPreviousSections(true);
     toast.success("Progress saved to draft successfully!");
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Stepper component
   const StepperComponent = () => {
-    const steps = ['Event Details', 'Event Related Images'];
+    const steps = ["Event Details", "Event Related Images"];
 
     return (
-     <Box sx={{ mb: 4, width: '100%' }}>
-             <Box sx={{
-               display: 'flex',
-               alignItems: 'center',
-               justifyContent: 'flex-start',
-               width: '100%',
-               gap: 0
-             }}>
-               {steps.map((label, index) => (
-                 <Box key={`step-${index}`} sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                   <Box
-                     sx={{
-                       width: '100%',
-                       height: '50px',
-                       padding: '5px',
-                       borderRadius: '4px',
-                       boxShadow: '0px 4px 14.2px 0px rgba(0, 0, 0, 0.1)',
-                       backgroundColor: 'rgba(255, 255, 255, 1)',
-                       display: 'flex',
-                       alignItems: 'center',
-                       justifyContent: 'center'
-                     }}
-                   >
-                     <Box
-                       onClick={() => handleStepClick(index)}
-                       sx={{
-                         cursor: (index > currentStep && !completedSteps.includes(index - 1)) ? 'not-allowed' : 'pointer',
-                         width: '100%',
-                         height: '40px',
-                         backgroundColor: (index === currentStep || completedSteps.includes(index)) ? '#C72030' :
-                           (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(245, 245, 245, 1)' : 'rgba(255, 255, 255, 1)',
-                         color: (index === currentStep || completedSteps.includes(index)) ? 'white' :
-                           (index > currentStep && !completedSteps.includes(index - 1)) ? 'rgba(150, 150, 150, 1)' : 'rgba(196, 184, 157, 1)',
-                         border: (index === currentStep || completedSteps.includes(index)) ? '2px solid #C72030' :
-                           (index > currentStep && !completedSteps.includes(index - 1)) ? '1px solid rgba(200, 200, 200, 1)' : '1px solid rgba(196, 184, 157, 1)',
-                         padding: '12px 20px',
-                         fontSize: '13px',
-                         fontWeight: 500,
-                         textAlign: 'center',
-                         display: 'flex',
-                         alignItems: 'center',
-                         justifyContent: 'center',
-                         boxShadow: index === currentStep ? '0 2px 4px rgba(199, 32, 48, 0.3)' : 'none',
-                         transition: 'all 0.2s ease',
-                         fontFamily: 'Work Sans, sans-serif',
-                         position: 'relative',
-                         borderRadius: '4px',
-                         '&:hover': {
-                           opacity: (index > currentStep && !completedSteps.includes(index - 1)) ? 1 : 0.9
-                         },
-                         '&::before': completedSteps.includes(index) && index !== currentStep ? {
-                           content: '"✓"',
-                           position: 'absolute',
-                           right: '8px',
-                           top: '50%',
-                           transform: 'translateY(-50%)',
-                           fontSize: '12px',
-                           fontWeight: 'bold'
-                         } : {}
-                       }}
-                     >
-                       {label}
-                     </Box>
-                   </Box>
-                   {index < steps.length - 1 && (
-                     <Box
-                       sx={{
-                         width: '60px',
-                         minWidth: '60px',
-                         height: '0px',
-                         border: '1px dashed rgba(196, 184, 157, 1)',
-                         borderWidth: '1px',
-                         borderStyle: 'dashed',
-                         borderColor: 'rgba(196, 184, 157, 1)',
-                         opacity: 1,
-                         margin: '0',
-                         '@media (max-width: 1200px)': {
-                           width: '40px',
-                           minWidth: '40px'
-                         },
-                         '@media (max-width: 900px)': {
-                           width: '30px',
-                           minWidth: '30px'
-                         },
-                         '@media (max-width: 600px)': {
-                           width: '20px',
-                           minWidth: '20px'
-                         }
-                       }}
-                     />
-                   )}
-                 </Box>
-               ))}
-             </Box>
-           </Box>
+      <Box sx={{ mb: 4, width: "100%" }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            width: "100%",
+            gap: 0,
+          }}
+        >
+          {steps.map((label, index) => (
+            <Box
+              key={`step-${index}`}
+              sx={{ display: "flex", alignItems: "center", flex: 1 }}
+            >
+              <Box
+                sx={{
+                  width: "100%",
+                  height: "50px",
+                  padding: "5px",
+                  borderRadius: "4px",
+                  boxShadow: "0px 4px 14.2px 0px rgba(0, 0, 0, 0.1)",
+                  backgroundColor: "rgba(255, 255, 255, 1)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Box
+                  onClick={() => handleStepClick(index)}
+                  sx={{
+                    cursor:
+                      index > currentStep && !completedSteps.includes(index - 1)
+                        ? "not-allowed"
+                        : "pointer",
+                    width: "100%",
+                    height: "40px",
+                    backgroundColor:
+                      index === currentStep || completedSteps.includes(index)
+                        ? "#C72030"
+                        : index > currentStep &&
+                            !completedSteps.includes(index - 1)
+                          ? "rgba(245, 245, 245, 1)"
+                          : "rgba(255, 255, 255, 1)",
+                    color:
+                      index === currentStep || completedSteps.includes(index)
+                        ? "white"
+                        : index > currentStep &&
+                            !completedSteps.includes(index - 1)
+                          ? "rgba(150, 150, 150, 1)"
+                          : "rgba(196, 184, 157, 1)",
+                    border:
+                      index === currentStep || completedSteps.includes(index)
+                        ? "2px solid #C72030"
+                        : index > currentStep &&
+                            !completedSteps.includes(index - 1)
+                          ? "1px solid rgba(200, 200, 200, 1)"
+                          : "1px solid rgba(196, 184, 157, 1)",
+                    padding: "12px 20px",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    textAlign: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow:
+                      index === currentStep
+                        ? "0 2px 4px rgba(199, 32, 48, 0.3)"
+                        : "none",
+                    transition: "all 0.2s ease",
+                    fontFamily: "Work Sans, sans-serif",
+                    position: "relative",
+                    borderRadius: "4px",
+                    "&:hover": {
+                      opacity:
+                        index > currentStep &&
+                        !completedSteps.includes(index - 1)
+                          ? 1
+                          : 0.9,
+                    },
+                    "&::before":
+                      completedSteps.includes(index) && index !== currentStep
+                        ? {
+                            content: '"✓"',
+                            position: "absolute",
+                            right: "8px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                          }
+                        : {},
+                  }}
+                >
+                  {label}
+                </Box>
+              </Box>
+              {index < steps.length - 1 && (
+                <Box
+                  sx={{
+                    width: "60px",
+                    minWidth: "60px",
+                    height: "0px",
+                    border: "1px dashed rgba(196, 184, 157, 1)",
+                    borderWidth: "1px",
+                    borderStyle: "dashed",
+                    borderColor: "rgba(196, 184, 157, 1)",
+                    opacity: 1,
+                    margin: "0",
+                    "@media (max-width: 1200px)": {
+                      width: "40px",
+                      minWidth: "40px",
+                    },
+                    "@media (max-width: 900px)": {
+                      width: "30px",
+                      minWidth: "30px",
+                    },
+                    "@media (max-width: 600px)": {
+                      width: "20px",
+                      minWidth: "20px",
+                    },
+                  }}
+                />
+              )}
+            </Box>
+          ))}
+        </Box>
+      </Box>
     );
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
+    <div
+      className="p-6 bg-gray-50 min-h-screen"
+      style={{ backgroundColor: "#FAF9F7" }}
+    >
       <div className="mb-8">
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
           <button
@@ -1777,100 +1944,49 @@ const EventEdit = () => {
           <span>Back to Event List</span>
         </div>
       </div>
-      
+
       {!isPreviewMode && <StepperComponent />}
-      
-      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(e);
+        }}
+        className="space-y-6"
+      >
         {/* Step 1: Event Information */}
         {currentStep === 0 && !isPreviewMode && (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <Avatar
-                sx={{
-                  width: 32,
-                  height: 32,
-                  backgroundColor: '#E5E0D3',
-                  mr: 1.5
-                }}
-              >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-              </Avatar>
-              Event Details
-            </h2>
-          </div>
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Event Name */}
-              <TextField
-                label="Event Name"
-                placeholder="Enter Event Name"
-                value={formData.event_name}
-                onChange={handleChange}
-                name="event_name"
-                required
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-
-              {/* Event At */}
-              <TextField
-                label="Event At"
-                placeholder="Enter Event At"
-                value={formData.event_at}
-                onChange={handleChange}
-                name="event_at"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-
-              {/* Event Date */}
-              <TextField
-                label="Event Date"
-                type="date"
-                value={formData.from_time ? formData.from_time.split('T')[0] : ""}
-                onChange={(e) => {
-                  const newDate = e.target.value;
-                  const currentTime = formData.from_time ? formData.from_time.split('T')[1] : '00:00';
-                  handleChange({ target: { name: 'from_time', value: `${newDate}T${currentTime}` } });
-                }}
-                name="event_date"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-
-              {/* Event Description */}
-              <div className="md:col-span-2">
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div
+              className="px-6 py-3 border-b border-gray-200"
+              style={{ backgroundColor: "#F6F4EE" }}
+            >
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    backgroundColor: "#E5E0D3",
+                    mr: 1.5,
+                  }}
+                >
+                  <SettingsOutlinedIcon
+                    sx={{ fontSize: 18, color: "#C72030" }}
+                  />
+                </Avatar>
+                Event Details
+              </h2>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Event Name */}
                 <TextField
-                  label="Event Description"
-                  placeholder="Enter Description"
-                  value={formData.description}
+                  label="Event Name"
+                  placeholder="Enter Event Name"
+                  value={formData.event_name}
                   onChange={handleChange}
-                  name="description"
+                  name="event_name"
+                  required
                   fullWidth
                   variant="outlined"
                   slotProps={{
@@ -1882,37 +1998,167 @@ const EventEdit = () => {
                     sx: fieldStyles,
                   }}
                 />
+
+                {/* Event At */}
+                <TextField
+                  label="Event Venue"
+                  placeholder="Enter Event Venue"
+                  value={formData.event_at}
+                  onChange={handleChange}
+                  name="event_at"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+
+                {/* Start Date */}
+                <TextField
+                  label={
+                    <>
+                      Start Date <span className="text-red-500">*</span>
+                    </>
+                  }
+                  type="date"
+                  value={formData.event_date}
+                  onChange={handleChange}
+                  name="event_date"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+
+                {/* Start Time */}
+                <TextField
+                  label={
+                    <>
+                      Start Time <span className="text-red-500">*</span>
+                    </>
+                  }
+                  type="time"
+                  value={formData.event_time}
+                  onChange={handleChange}
+                  name="event_time"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+
+                {/* End Date */}
+                <TextField
+                  label={
+                    <>
+                      End Date <span className="text-red-500">*</span>
+                    </>
+                  }
+                  type="date"
+                  value={formData.end_date}
+                  onChange={handleChange}
+                  name="end_date"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+
+                {/* End Time */}
+                <TextField
+                  label={
+                    <>
+                      End Time <span className="text-red-500">*</span>
+                    </>
+                  }
+                  type="time"
+                  value={formData.end_time}
+                  onChange={handleChange}
+                  name="end_time"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+
+                {/* Event Description */}
+                <div className="md:col-span-3 mt-1">
+                  <div className="relative w-full">
+                    {/* Floating Label */}
+                    <label
+                      className="
+         absolute
+      -top-2
+      left-3
+      bg-white
+      px-1
+      text-[12.5px]
+      text-black
+      pointer-events-none
+      "
+                    >
+                      Event Description{" "}
+                      <span className="text-[#C72030]">*</span>
+                    </label>
+
+                    {/* Textarea */}
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      placeholder="Enter Description"
+                      rows={6}
+                      className="
+        w-full
+      rounded-[5px]
+      border
+      border-gray-300
+      p-4
+      text-sm
+      outline-none
+      resize-none
+      "
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Event Time */}
-              <TextField
-                label="Event Time"
-                type="time"
-                value={formData.from_time ? formData.from_time.split('T')[1]?.substring(0, 5) : ""}
-                onChange={(e) => {
-                  const newTime = e.target.value;
-                  const currentDate = formData.from_time ? formData.from_time.split('T')[0] : new Date().toISOString().split('T')[0];
-                  handleChange({ target: { name: 'from_time', value: `${currentDate}T${newTime}` } });
-                }}
-                name="event_time"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-            </div>
-
-            {/* Radio Button Groups in a Row */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* Radio Button Groups in a Row */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {/* Send Email */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Send Email
+                  </label>
                   <div className="flex gap-4">
                     <label className="flex items-center">
                       <input
@@ -1926,7 +2172,7 @@ const EventEdit = () => {
                           }))
                         }
                         className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                        style={{ accentColor: '#C72030' }}
+                        style={{ accentColor: "#C72030" }}
                       />
                       <span className="ml-2 text-sm text-gray-700">Yes</span>
                     </label>
@@ -1942,7 +2188,7 @@ const EventEdit = () => {
                           }))
                         }
                         className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                        style={{ accentColor: '#C72030' }}
+                        style={{ accentColor: "#C72030" }}
                       />
                       <span className="ml-2 text-sm text-gray-700">No</span>
                     </label>
@@ -1951,7 +2197,9 @@ const EventEdit = () => {
 
                 {/* RSVP Action */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    RSVP Action
+                  </label>
                   <div className="flex gap-4">
                     <label className="flex items-center">
                       <input
@@ -1961,7 +2209,7 @@ const EventEdit = () => {
                         checked={formData.rsvp_action === "1"}
                         onChange={handleChange}
                         className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                        style={{ accentColor: '#C72030' }}
+                        style={{ accentColor: "#C72030" }}
                       />
                       <span className="ml-2 text-sm text-gray-700">Yes</span>
                     </label>
@@ -1973,7 +2221,7 @@ const EventEdit = () => {
                         checked={formData.rsvp_action === "0"}
                         onChange={handleChange}
                         className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                        style={{ accentColor: '#C72030' }}
+                        style={{ accentColor: "#C72030" }}
                       />
                       <span className="ml-2 text-sm text-gray-700">No</span>
                     </label>
@@ -2215,17 +2463,22 @@ const EventEdit = () => {
         {/* Visibility Card */}
         {currentStep === 0 && !isPreviewMode && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+            <div
+              className="px-6 py-3 border-b border-gray-200"
+              style={{ backgroundColor: "#F6F4EE" }}
+            >
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <Avatar
                   sx={{
                     width: 32,
                     height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
+                    backgroundColor: "#E5E0D3",
+                    mr: 1.5,
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon
+                    sx={{ fontSize: 18, color: "#C72030" }}
+                  />
                 </Avatar>
                 Visibility
               </h2>
@@ -2234,18 +2487,27 @@ const EventEdit = () => {
               {/* Show on Home Page */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
-                  <p className="text-sm text-gray-500">Display this event on the home page</p>
+                  <h3 className="text-sm font-medium text-gray-900">
+                    Show on Home Page
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Display this event on the home page
+                  </p>
                 </div>
                 <Switch
                   checked={formData.show_on_home}
-                  onChange={(e) => setFormData(prev => ({ ...prev, show_on_home: e.target.checked }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      show_on_home: e.target.checked,
+                    }))
+                  }
                   sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: '#C72030',
+                    "& .MuiSwitch-switchBase.Mui-checked": {
+                      color: "#C72030",
                     },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: '#C72030',
+                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                      backgroundColor: "#C72030",
                     },
                   }}
                 />
@@ -2317,17 +2579,22 @@ const EventEdit = () => {
         {/* Step 3: Invite CPs - Hidden for Loyalty Event Edit */}
         {false && currentStep === 2 && !isPreviewMode && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
+            <div
+              className="px-6 py-3 border-b border-gray-200"
+              style={{ backgroundColor: "#F6F4EE" }}
+            >
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <Avatar
                   sx={{
                     width: 32,
                     height: 32,
-                    backgroundColor: '#E5E0D3',
-                    mr: 1.5
+                    backgroundColor: "#E5E0D3",
+                    mr: 1.5,
                   }}
                 >
-                  <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                  <SettingsOutlinedIcon
+                    sx={{ fontSize: 18, color: "#C72030" }}
+                  />
                 </Avatar>
                 Invite CPs
               </h2>
@@ -2371,10 +2638,11 @@ const EventEdit = () => {
                   </MuiSelect>
                 </FormControl>
               </div> */}
-
               {/* Share With Section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Share With
+                </label>
                 <div className="flex gap-6 mb-4">
                   <label className="flex items-center">
                     <input
@@ -2391,7 +2659,7 @@ const EventEdit = () => {
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
+                      style={{ accentColor: "#C72030" }}
                     />
                     <span className="ml-2 text-sm text-gray-700">All</span>
                   </label>
@@ -2409,9 +2677,11 @@ const EventEdit = () => {
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
+                      style={{ accentColor: "#C72030" }}
                     />
-                    <span className="ml-2 text-sm text-gray-700">Individuals</span>
+                    <span className="ml-2 text-sm text-gray-700">
+                      Individuals
+                    </span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -2427,7 +2697,7 @@ const EventEdit = () => {
                         }))
                       }
                       className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                      style={{ accentColor: '#C72030' }}
+                      style={{ accentColor: "#C72030" }}
                     />
                     <span className="ml-2 text-sm text-gray-700">Groups</span>
                   </label>
@@ -2437,17 +2707,23 @@ const EventEdit = () => {
                   <FormControl
                     fullWidth
                     variant="outlined"
-                    sx={{ '& .MuiInputBase-root': fieldStyles }}
+                    sx={{ "& .MuiInputBase-root": fieldStyles }}
                   >
                     <InputLabel shrink>Event User ID</InputLabel>
                     <MuiSelect
                       multiple
-                      value={Array.isArray(formData.user_id) ? formData.user_id.map(id => id.toString()) : []}
+                      value={
+                        Array.isArray(formData.user_id)
+                          ? formData.user_id.map((id) => id.toString())
+                          : []
+                      }
                       onChange={(e) => {
                         const selectedIds = e.target.value;
                         setFormData((prev) => ({
                           ...prev,
-                          user_id: Array.isArray(selectedIds) ? selectedIds.map(id => parseInt(id)) : [],
+                          user_id: Array.isArray(selectedIds)
+                            ? selectedIds.map((id) => parseInt(id))
+                            : [],
                         }));
                       }}
                       label="Event User ID"
@@ -2455,12 +2731,18 @@ const EventEdit = () => {
                       displayEmpty
                       renderValue={(selected) => {
                         if (!selected || selected.length === 0) {
-                          return <span style={{ color: '#999' }}>Select Users</span>;
+                          return (
+                            <span style={{ color: "#999" }}>Select Users</span>
+                          );
                         }
                         return selected
                           .map((id) => {
-                            const user = eventUserID.find((u) => u.id.toString() === id);
-                            return user ? `${user.firstname} ${user.lastname}` : id;
+                            const user = eventUserID.find(
+                              (u) => u.id.toString() === id
+                            );
+                            return user
+                              ? `${user.firstname} ${user.lastname}`
+                              : id;
                           })
                           .join(", ");
                       }}
@@ -2480,12 +2762,16 @@ const EventEdit = () => {
                   <FormControl
                     fullWidth
                     variant="outlined"
-                    sx={{ '& .MuiInputBase-root': fieldStyles }}
+                    sx={{ "& .MuiInputBase-root": fieldStyles }}
                   >
                     <InputLabel shrink>Share with Groups</InputLabel>
                     <MuiSelect
                       multiple
-                      value={Array.isArray(formData.group_id) ? formData.group_id : []}
+                      value={
+                        Array.isArray(formData.group_id)
+                          ? formData.group_id
+                          : []
+                      }
                       onChange={(e) => {
                         setFormData((prev) => ({
                           ...prev,
@@ -2497,11 +2783,16 @@ const EventEdit = () => {
                       displayEmpty
                       renderValue={(selected) => {
                         if (!selected || selected.length === 0) {
-                          return <span style={{ color: '#999' }}>Select Groups</span>;
+                          return (
+                            <span style={{ color: "#999" }}>Select Groups</span>
+                          );
                         }
                         return selected
                           .map((id) => {
-                            const group = groups.find((g) => g.id === id || g.id.toString() === id.toString());
+                            const group = groups.find(
+                              (g) =>
+                                g.id === id || g.id.toString() === id.toString()
+                            );
                             return group ? group.name : id;
                           })
                           .join(", ");
@@ -2519,14 +2810,10 @@ const EventEdit = () => {
                   </FormControl>
                 )}
               </div>
-
-             
               <div className="flex items-center justify-center">
                 <span className="text-sm font-medium text-gray-500">Or</span>
               </div>
-
-              
-              <div 
+              <div
                 className="relative"
                 onMouseEnter={() => setShowCsvTooltip(true)}
                 onMouseLeave={() => setShowCsvTooltip(false)}
@@ -2540,8 +2827,10 @@ const EventEdit = () => {
                   {csvFiles.length > 0 ? (
                     <div className="flex flex-wrap gap-3">
                       {csvFiles.map((file, index) => {
-                        const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
-                        const isCsv = file.name.endsWith('.csv');
+                        const isExcel =
+                          file.name.endsWith(".xlsx") ||
+                          file.name.endsWith(".xls");
+                        const isCsv = file.name.endsWith(".csv");
 
                         return (
                           <div
@@ -2561,7 +2850,9 @@ const EventEdit = () => {
                                 <FileText className="w-8 h-8" />
                               </div>
                             )}
-                            <span className="text-[10px] text-center truncate max-w-[100px] mb-1">{file.name}</span>
+                            <span className="text-[10px] text-center truncate max-w-[100px] mb-1">
+                              {file.name}
+                            </span>
                             <button
                               type="button"
                               className="absolute top-1 right-1 h-6 w-6 p-0 text-gray-600 bg-white rounded-full border border-gray-300 flex items-center justify-center hover:bg-red-100 hover:text-red-600"
@@ -2579,8 +2870,12 @@ const EventEdit = () => {
                         <Upload className="w-12 h-12" />
                       </div>
                       <div className="text-center">
-                        <p className="text-sm font-semibold text-[#C72030] mb-1">Choose CSV File</p>
-                        <p className="text-xs text-gray-500">CSV should include: Name, Email, Company</p>
+                        <p className="text-sm font-semibold text-[#C72030] mb-1">
+                          Choose CSV File
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          CSV should include: Name, Email, Company
+                        </p>
                       </div>
                       <label className="cursor-pointer">
                         <input
@@ -2597,7 +2892,7 @@ const EventEdit = () => {
                       </label>
                     </div>
                   )}
-                  
+
                   {/* Add More Files Button when files exist */}
                   {csvFiles.length > 0 && (
                     <div className="mt-4 flex justify-center">
@@ -2617,7 +2912,9 @@ const EventEdit = () => {
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">CSV should include: Name, Email, Company</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  CSV should include: Name, Email, Company
+                </p>
               </div>
             </div>
           </div>
@@ -2625,189 +2922,212 @@ const EventEdit = () => {
 
         {/* Step 2: Event Related Images */}
         {currentStep === 1 && !isPreviewMode && (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: '#F6F4EE' }}>
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <Avatar
-                sx={{
-                  width: 32,
-                  height: 32,
-                  backgroundColor: '#E5E0D3',
-                  mr: 1.5
-                }}
-              >
-                <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-              </Avatar>
-              Event Related Images
-            </h2>
-          </div>
-          
-          <div className="p-6 space-y-6">
-            {/* Event Cover Image */}
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-4">
-                <h5 className="text-base font-semibold inline-flex items-center gap-1">
-                  Event Cover Image{" "}
-                  <span
-                    className="relative inline-block cursor-pointer"
-                    onMouseEnter={() => setShowCoverImageTooltip(true)}
-                    onMouseLeave={() => setShowCoverImageTooltip(false)}
-                  >
-                    <Info className="w-5 h-5 fill-black text-white" />
-                    {showCoverImageTooltip && (
-                      <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                        Max Upload Size 3 MB. Supports {getDynamicRatiosText("EventCoverImage")} aspect ratios
-                      </span>
-                    )}
-                  </span>
-                </h5>
-
-                <button
-                  className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59] transition-colors"
-                  type="button"
-                  onClick={() => setShowCoverUploader(true)}
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div
+              className="px-6 py-3 border-b border-gray-200"
+              style={{ backgroundColor: "#F6F4EE" }}
+            >
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    backgroundColor: "#E5E0D3",
+                    mr: 1.5,
+                  }}
                 >
-                  <span>Add</span>
-                </button>
-              </div>
+                  <SettingsOutlinedIcon
+                    sx={{ fontSize: 18, color: "#C72030" }}
+                  />
+                </Avatar>
+                Event Related Images
+              </h2>
+            </div>
 
-              {showCoverUploader && (
-                    <ProjectBannerUpload
-                      onClose={() => setShowCoverUploader(false)}
-                      includeInvalidRatios={false}
-                      selectedRatioProp={selectedCoverRatios}
-                      showAsModal={true}
-                      label={coverImageLabel}
-                      description={dynamicCoverDescription}
-                      onContinue={(validImages) =>
-                        handleCoverImageCropComplete(validImages, "cover_image")
-                      }
-                    />
-                  )}
+            <div className="p-6 space-y-6">
+              {/* Event Cover Image */}
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h5 className="text-base font-semibold inline-flex items-center gap-1">
+                    Event Cover Image{" "}
+                    <span
+                      className="relative inline-block cursor-pointer"
+                      onMouseEnter={() => setShowCoverImageTooltip(true)}
+                      onMouseLeave={() => setShowCoverImageTooltip(false)}
+                    >
+                      <Info className="w-5 h-5 fill-black text-white" />
+                      {showCoverImageTooltip && (
+                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                          Max Upload Size 3 MB. Supports{" "}
+                          {getDynamicRatiosText("EventCoverImage")} aspect
+                          ratios
+                        </span>
+                      )}
+                    </span>
+                  </h5>
 
-              <div className="mt-4">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Ratio</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                          {coverImageRatios.flatMap(({ key, label }) => {
-                            const files = Array.isArray(formData[key])
-                              ? formData[key]
-                              : formData[key]
+                  <button
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59] transition-colors"
+                    type="button"
+                    onClick={() => setShowCoverUploader(true)}
+                  >
+                    <span>Add</span>
+                  </button>
+                </div>
+
+                {showCoverUploader && (
+                  <ProjectBannerUpload
+                    onClose={() => setShowCoverUploader(false)}
+                    includeInvalidRatios={false}
+                    selectedRatioProp={selectedCoverRatios}
+                    showAsModal={true}
+                    label={coverImageLabel}
+                    description={dynamicCoverDescription}
+                    onContinue={(validImages) =>
+                      handleCoverImageCropComplete(validImages, "cover_image")
+                    }
+                  />
+                )}
+
+                <div className="mt-4">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow style={{ backgroundColor: "#E6E2D8" }}>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            File Name
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            Preview
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            Ratio
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                            Action
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {coverImageRatios.flatMap(({ key, label }) => {
+                          const files = Array.isArray(formData[key])
+                            ? formData[key]
+                            : formData[key]
                               ? [formData[key]]
                               : [];
 
-                            if (files.length === 0) return [];
+                          if (files.length === 0) return [];
 
-                            return files.map((file, index) => {
-                              const preview =
-                                file.preview || file.document_url || "";
-                              const name =
-                                file.name ||
-                                file.document_file_name ||
-                                `Image ${index + 1}`;
-                              const ratio = file.ratio || label;
+                          return files.map((file, index) => {
+                            const preview =
+                              file.preview || file.document_url || "";
+                            const name =
+                              file.name ||
+                              file.document_file_name ||
+                              `Image ${index + 1}`;
+                            const ratio = file.ratio || label;
 
-                              return (
-                                <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
-                                  <TableCell>{name}</TableCell>
-                                  <TableCell>
-                                    {preview ? (
-                                      <img
-                                        style={{
-                                          maxWidth: 100,
-                                          maxHeight: 100,
-                                          objectFit: "cover",
-                                        }}
-                                        className="img-fluid rounded"
-                                        src={preview}
-                                        alt={name}
-                                        onError={(e) => {
-                                          console.error(
-                                            `Failed to load image: ${preview}`
-                                          );
-                                          e.target.src =
-                                            "https://via.placeholder.com/100?text=Preview+Failed";
-                                        }}
-                                      />
-                                    ) : (
-                                      <span>No Preview Available</span>
-                                    )}
-                                  </TableCell>
-                                  <TableCell>{ratio}</TableCell>
-                                  <TableCell>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleFetchedDiscardGallery(
-                                          key,
-                                          index,
-                                          file.id
-                                        )
-                                      }
-                                    >
-                                      <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                    </button>
-                                  </TableCell>
-                                </TableRow>
-                              );
-                            });
-                          })}
+                            return (
+                              <TableRow
+                                key={`${key}-${file.id || index}`}
+                                className="hover:bg-gray-50"
+                              >
+                                <TableCell>{name}</TableCell>
+                                <TableCell>
+                                  {preview ? (
+                                    <img
+                                      style={{
+                                        maxWidth: 100,
+                                        maxHeight: 100,
+                                        objectFit: "cover",
+                                      }}
+                                      className="img-fluid rounded"
+                                      src={preview}
+                                      alt={name}
+                                      onError={(e) => {
+                                        console.error(
+                                          `Failed to load image: ${preview}`
+                                        );
+                                        e.target.src =
+                                          "https://via.placeholder.com/100?text=Preview+Failed";
+                                      }}
+                                    />
+                                  ) : (
+                                    <span>No Preview Available</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>{ratio}</TableCell>
+                                <TableCell>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleFetchedDiscardGallery(
+                                        key,
+                                        index,
+                                        file.id
+                                      )
+                                    }
+                                  >
+                                    <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                  </button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          });
+                        })}
 
-                          {coverImageRatios.every(
-                            ({ key }) =>
-                              !(formData[key] && formData[key].length > 0)
-                          ) && (
-                            <TableRow>
-                              <TableCell colSpan={4} className="text-center text-gray-500">
-                                No cover images uploaded
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
+                        {coverImageRatios.every(
+                          ({ key }) =>
+                            !(formData[key] && formData[key].length > 0)
+                        ) && (
+                          <TableRow>
+                            <TableCell
+                              colSpan={4}
+                              className="text-center text-gray-500"
+                            >
+                              No cover images uploaded
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
                   </div>
+                </div>
 
-                  <div className="mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <h5 className="text-base font-semibold inline-flex items-center gap-1">
-                        Event Thumbnail Images{" "}
-                        <span
-                          className="relative inline-block cursor-pointer"
-                          onMouseEnter={() => setShowAttachmentTooltip(true)}
-                          onMouseLeave={() => setShowAttachmentTooltip(false)}
-                        >
-                          <Info className="w-5 h-5 fill-black text-white" />
-                          {showAttachmentTooltip && (
-                            <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                              Max Upload Size 3 MB (Images), 10 MB (Videos). Supports {getDynamicRatiosText("EventImage")} aspect ratios
-                            </span>
-                          )}
-                        </span>
-                      </h5>
-                      <button
-                        className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59] transition-colors"
-                        type="button"
-                        onClick={() => setShowEventUploader(true)}
+                <div className="mb-6 mt-5">
+                  <div className="flex justify-between items-center mb-4">
+                    <h5 className="text-base font-semibold inline-flex items-center gap-1">
+                      Event Thumbnail Images{" "}
+                      <span
+                        className="relative inline-block cursor-pointer"
+                        onMouseEnter={() => setShowAttachmentTooltip(true)}
+                        onMouseLeave={() => setShowAttachmentTooltip(false)}
                       >
-                        <span>Add</span>
-                      </button>
-                      {showEventUploader && (
-                        <ProjectImageVideoUpload
-                          onClose={() => setShowEventUploader(false)}
-                          includeInvalidRatios={false}
-                          selectedRatioProp={selectedEventRatios}
-                          showAsModal={true}
-                          label={eventImageLabel}
-                          description={dynamicEventDescription}
+                        <Info className="w-5 h-5 fill-black text-white" />
+                        {showAttachmentTooltip && (
+                          <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
+                            Max Upload Size 3 MB (Images), 10 MB (Videos).
+                            Supports {getDynamicRatiosText("EventImage")} aspect
+                            ratios
+                          </span>
+                        )}
+                      </span>
+                    </h5>
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 bg-[#C4B89D59] text-[#C72030] rounded-lg hover:bg-[#C4B89D59] transition-colors"
+                      type="button"
+                      onClick={() => setShowEventUploader(true)}
+                    >
+                      <span>Add</span>
+                    </button>
+                    {showEventUploader && (
+                      <ProjectImageVideoUpload
+                        onClose={() => setShowEventUploader(false)}
+                        includeInvalidRatios={false}
+                        selectedRatioProp={selectedEventRatios}
+                        showAsModal={true}
+                        label={eventImageLabel}
+                        description={dynamicEventDescription}
                         onContinue={(validImages, videoFiles) =>
                           handleEventCroppedImages(
                             validImages,
@@ -2824,23 +3144,41 @@ const EventEdit = () => {
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
-                          <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                            <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                            <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
-                            <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Ratio</TableHead>
-                            <TableHead className="font-semibold text-gray-900 py-3 px-4">Action</TableHead>
+                          <TableRow style={{ backgroundColor: "#E6E2D8" }}>
+                            <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                              File Name
+                            </TableHead>
+                            <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                              Preview
+                            </TableHead>
+                            <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                              Ratio
+                            </TableHead>
+                            <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                              Action
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {Array.isArray(formData.attachfile) &&
                             formData.attachfile.length > 0 &&
                             formData.attachfile.map((file, idx) => {
-                              const preview = file.document_url || file.url || file.preview || "";
-                              const fileName = file.document_file_name || file.name || `File ${idx + 1}`;
+                              const preview =
+                                file.document_url ||
+                                file.url ||
+                                file.preview ||
+                                "";
+                              const fileName =
+                                file.document_file_name ||
+                                file.name ||
+                                `File ${idx + 1}`;
                               const fileId = file.id || `temp-${idx}`;
-                              
+
                               return (
-                                <TableRow key={`attachfile-${fileId}`} className="hover:bg-gray-50">
+                                <TableRow
+                                  key={`attachfile-${fileId}`}
+                                  className="hover:bg-gray-50"
+                                >
                                   <TableCell>{fileName}</TableCell>
                                   <TableCell>
                                     {preview && (
@@ -2854,7 +3192,8 @@ const EventEdit = () => {
                                         src={preview}
                                         alt={fileName}
                                         onError={(e) => {
-                                          e.target.src = "https://via.placeholder.com/100?text=No+Preview";
+                                          e.target.src =
+                                            "https://via.placeholder.com/100?text=No+Preview";
                                         }}
                                       />
                                     )}
@@ -2864,7 +3203,11 @@ const EventEdit = () => {
                                     <button
                                       type="button"
                                       onClick={() =>
-                                        handleFetchedDiscardGallery("attachfile", idx, file.id)
+                                        handleFetchedDiscardGallery(
+                                          "attachfile",
+                                          idx,
+                                          file.id
+                                        )
                                       }
                                       title="Remove attached file"
                                     >
@@ -2878,14 +3221,17 @@ const EventEdit = () => {
                             const files = Array.isArray(formData[key])
                               ? formData[key]
                               : formData[key]
-                              ? [formData[key]]
-                              : [];
+                                ? [formData[key]]
+                                : [];
 
                             if (files.length === 0) return [];
 
                             return files.map((file, index) => {
                               const preview =
-                                file.url || file.preview || file.document_url || "";
+                                file.url ||
+                                file.preview ||
+                                file.document_url ||
+                                "";
                               const name =
                                 file.name ||
                                 file.document_file_name ||
@@ -2901,7 +3247,10 @@ const EventEdit = () => {
                                   ));
 
                               return (
-                                <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
+                                <TableRow
+                                  key={`${key}-${file.id || index}`}
+                                  className="hover:bg-gray-50"
+                                >
                                   <TableCell>{name}</TableCell>
                                   <TableCell>
                                     {preview ? (
@@ -2917,10 +3266,12 @@ const EventEdit = () => {
                                         >
                                           <source
                                             src={preview}
-                                            type={file.file?.type || "video/mp4"}
+                                            type={
+                                              file.file?.type || "video/mp4"
+                                            }
                                           />
-                                          Your browser does not support the video
-                                          tag.
+                                          Your browser does not support the
+                                          video tag.
                                         </video>
                                       ) : (
                                         <img
@@ -2942,7 +3293,9 @@ const EventEdit = () => {
                                         />
                                       )
                                     ) : (
-                                      <span className="text-gray-500 text-sm">No Preview Available</span>
+                                      <span className="text-gray-500 text-sm">
+                                        No Preview Available
+                                      </span>
                                     )}
                                   </TableCell>
                                   <TableCell>{ratio}</TableCell>
@@ -2969,9 +3322,13 @@ const EventEdit = () => {
                             ({ key }) =>
                               !(formData[key] && formData[key].length > 0)
                           ) &&
-                            (!Array.isArray(formData.attachfile) || formData.attachfile.length === 0) && (
+                            (!Array.isArray(formData.attachfile) ||
+                              formData.attachfile.length === 0) && (
                               <TableRow>
-                                <TableCell colSpan={4} className="text-center text-gray-500">
+                                <TableCell
+                                  colSpan={4}
+                                  className="text-center text-gray-500"
+                                >
                                   No event attachments uploaded
                                 </TableCell>
                               </TableRow>
@@ -3092,9 +3449,13 @@ const EventEdit = () => {
             </div>
             {currentStep > 0 && (
               <>
-                <div className="w-full border-t border-[#C4B89D] my-4" style={{ borderTopWidth: '0.5px' }}></div>
+                <div
+                  className="w-full border-t border-[#C4B89D] my-4"
+                  style={{ borderTopWidth: "0.5px" }}
+                ></div>
                 <div className="text-center text-sm text-gray-600">
-                  You've completed {completedSteps.length} out of {totalSteps} steps.
+                  You've completed {completedSteps.length} out of {totalSteps}{" "}
+                  steps.
                 </div>
               </>
             )}
@@ -3104,190 +3465,280 @@ const EventEdit = () => {
         {/* Completed Sections - Show completed steps below current step */}
         {!isPreviewMode && completedSteps.length > 0 && currentStep > 0 && (
           <div className="mt-8 space-y-6">
-            {completedSteps.filter(step => step < currentStep).map((stepIndex) => (
-              <div key={`completed-section-${stepIndex}`}>
-                {/* Step 0: Event Details - Completed */}
-                {stepIndex === 0 && (
-                  <>
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                      <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                          <Avatar
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              backgroundColor: '#E5E0D3',
-                              mr: 1.5
-                            }}
-                          >
-                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-                          </Avatar>
-                          Event Details
-                        </h2>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCurrentStep(0);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+            {completedSteps
+              .filter((step) => step < currentStep)
+              .map((stepIndex) => (
+                <div key={`completed-section-${stepIndex}`}>
+                  {/* Step 0: Event Details - Completed */}
+                  {stepIndex === 0 && (
+                    <>
+                      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <div
+                          className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                          style={{ backgroundColor: "#F6F4EE" }}
                         >
-                          <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
-                        </button>
-                      </div>
-                      <div className="p-6 space-y-6 opacity-75 pointer-events-none">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <TextField
-                            label="Event Name"
-                            value={formData.event_name}
-                            fullWidth
-                            variant="outlined"
-                            disabled
-                            slotProps={{ inputLabel: { shrink: true } }}
-                            InputProps={{ sx: fieldStyles }}
-                          />
-                          <TextField
-                            label="Event At"
-                            value={formData.event_at}
-                            fullWidth
-                            variant="outlined"
-                            disabled
-                            slotProps={{ inputLabel: { shrink: true } }}
-                            InputProps={{ sx: fieldStyles }}
-                          />
-                          <TextField
-                            label="Event Date"
-                            type="date"
-                            value={formData.from_time ? formData.from_time.split('T')[0] : ""}
-                            fullWidth
-                            variant="outlined"
-                            disabled
-                            slotProps={{ inputLabel: { shrink: true } }}
-                            InputProps={{ sx: fieldStyles }}
-                          />
-                          <div className="md:col-span-2">
+                          <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                            <Avatar
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                backgroundColor: "#E5E0D3",
+                                mr: 1.5,
+                              }}
+                            >
+                              <SettingsOutlinedIcon
+                                sx={{ fontSize: 18, color: "#C72030" }}
+                              />
+                            </Avatar>
+                            Event Details
+                          </h2>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCurrentStep(0);
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                          >
+                            <Edit className="w-4 h-4 text-[#bf213e]" />{" "}
+                            <span className="text-[#bf213e]">Edit</span>
+                          </button>
+                        </div>
+                        <div className="p-6 space-y-6 opacity-75 pointer-events-none">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <TextField
-                              label="Event Description"
-                              value={formData.description}
+                              label="Event Name"
+                              value={formData.event_name}
                               fullWidth
                               variant="outlined"
                               disabled
                               slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
+                            <TextField
+                              label="Event Venue"
+                              value={formData.event_at}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
+                            <TextField
+                              label="Start Date"
+                              type="date"
+                              value={formData.event_date}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
+                            <TextField
+                              label="Start Time"
+                              type="time"
+                              value={formData.event_time}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
+                            <TextField
+                              label="End Date"
+                              type="date"
+                              value={formData.end_date}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
+                            <TextField
+                              label="End Time"
+                              type="time"
+                              value={formData.end_time}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
+                            <div className="md:col-span-3 mt-1">
+                              <div className="relative w-full">
+                                {/* Floating Label */}
+                                <label
+                                  className="
+         absolute
+      -top-2
+      left-3
+      bg-white
+      px-1
+      text-[12.5px]
+      text-black
+      pointer-events-none
+      "
+                                >
+                                  Event Description{" "}
+                                  <span className="text-[#C72030]">*</span>
+                                </label>
+
+                                {/* Textarea */}
+                                <textarea
+                                  name="description"
+                                  value={formData.description}
+                                  onChange={handleChange}
+                                  placeholder="Enter Description"
+                                  rows={6}
+                                  className="
+        w-full
+      rounded-[5px]
+      border
+      border-gray-300
+      p-4
+      text-sm
+      outline-none
+      resize-none
+      "
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Send Email
+                              </label>
+                              <div className="flex gap-4">
+                                <label className="flex items-center">
+                                  <input
+                                    type="radio"
+                                    checked={
+                                      formData.email_trigger_enabled === true
+                                    }
+                                    disabled
+                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                    style={{ accentColor: "#C72030" }}
+                                  />
+                                  <span className="ml-2 text-sm text-gray-700">
+                                    Yes
+                                  </span>
+                                </label>
+                                <label className="flex items-center">
+                                  <input
+                                    type="radio"
+                                    checked={
+                                      formData.email_trigger_enabled === false
+                                    }
+                                    disabled
+                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                    style={{ accentColor: "#C72030" }}
+                                  />
+                                  <span className="ml-2 text-sm text-gray-700">
+                                    No
+                                  </span>
+                                </label>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                RSVP Action
+                              </label>
+                              <div className="flex gap-4">
+                                <label className="flex items-center">
+                                  <input
+                                    type="radio"
+                                    checked={formData.rsvp_action === "1"}
+                                    disabled
+                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                    style={{ accentColor: "#C72030" }}
+                                  />
+                                  <span className="ml-2 text-sm text-gray-700">
+                                    Yes
+                                  </span>
+                                </label>
+                                <label className="flex items-center">
+                                  <input
+                                    type="radio"
+                                    checked={formData.rsvp_action === "0"}
+                                    disabled
+                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                    style={{ accentColor: "#C72030" }}
+                                  />
+                                  <span className="ml-2 text-sm text-gray-700">
+                                    No
+                                  </span>
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Visibility Card - Completed */}
+                      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mt-6">
+                        <div
+                          className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                          style={{ backgroundColor: "#F6F4EE" }}
+                        >
+                          <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                            <Avatar
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                backgroundColor: "#E5E0D3",
+                                mr: 1.5,
+                              }}
+                            >
+                              <SettingsOutlinedIcon
+                                sx={{ fontSize: 18, color: "#C72030" }}
+                              />
+                            </Avatar>
+                            Visibility
+                          </h2>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCurrentStep(0);
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                          >
+                            <Edit className="w-4 h-4 text-[#bf213e]" />{" "}
+                            <span className="text-[#bf213e]">Edit</span>
+                          </button>
+                        </div>
+                        <div className="p-6 space-y-4 opacity-75 pointer-events-none">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="text-sm font-medium text-gray-900">
+                                Show on Home Page
+                              </h3>
+                              <p className="text-sm text-gray-500">
+                                Display this event on the home page
+                              </p>
+                            </div>
+                            <Switch
+                              checked={formData.show_on_home || false}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "show_on_home",
+                                  e.target.checked
+                                )
+                              }
+                              disabled
+                              sx={{
+                                "& .MuiSwitch-switchBase.Mui-checked": {
+                                  color: "#C72030",
+                                },
+                                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                                  {
+                                    backgroundColor: "#C72030",
+                                  },
+                              }}
                             />
                           </div>
-                          <TextField
-                            label="Event Time"
-                            type="time"
-                            value={formData.from_time ? formData.from_time.split('T')[1]?.substring(0, 5) : ""}
-                            fullWidth
-                            variant="outlined"
-                            disabled
-                            slotProps={{ inputLabel: { shrink: true } }}
-                            InputProps={{ sx: fieldStyles }}
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
-                            <div className="flex gap-4">
-                              <label className="flex items-center">
-                                <input
-                                  type="radio"
-                                  checked={formData.email_trigger_enabled === true}
-                                  disabled
-                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                  style={{ accentColor: '#C72030' }}
-                                />
-                                <span className="ml-2 text-sm text-gray-700">Yes</span>
-                              </label>
-                              <label className="flex items-center">
-                                <input
-                                  type="radio"
-                                  checked={formData.email_trigger_enabled === false}
-                                  disabled
-                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                  style={{ accentColor: '#C72030' }}
-                                />
-                                <span className="ml-2 text-sm text-gray-700">No</span>
-                              </label>
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action</label>
-                            <div className="flex gap-4">
-                              <label className="flex items-center">
-                                <input
-                                  type="radio"
-                                  checked={formData.rsvp_action === "1"}
-                                  disabled
-                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                  style={{ accentColor: '#C72030' }}
-                                />
-                                <span className="ml-2 text-sm text-gray-700">Yes</span>
-                              </label>
-                              <label className="flex items-center">
-                                <input
-                                  type="radio"
-                                  checked={formData.rsvp_action === "0"}
-                                  disabled
-                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                  style={{ accentColor: '#C72030' }}
-                                />
-                                <span className="ml-2 text-sm text-gray-700">No</span>
-                              </label>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Visibility Card - Completed */}
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mt-6">
-                      <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                          <Avatar
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              backgroundColor: '#E5E0D3',
-                              mr: 1.5
-                            }}
-                          >
-                            <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-                          </Avatar>
-                          Visibility
-                        </h2>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCurrentStep(0);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
-                        >
-                          <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
-                        </button>
-                      </div>
-                      <div className="p-6 space-y-4 opacity-75 pointer-events-none">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
-                            <p className="text-sm text-gray-500">Display this event on the home page</p>
-                          </div>
-                          <Switch
-                            checked={visibility.showOnHomePage}
-                            disabled
-                            sx={{
-                              '& .MuiSwitch-switchBase.Mui-checked': {
-                                color: '#C72030',
-                              },
-                              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                backgroundColor: '#C72030',
-                              },
-                            }}
-                          />
-                        </div>
-                        {/* <div className="flex items-center justify-between">
+                          {/* <div className="flex items-center justify-between">
                           <div>
                             <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
                             <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
@@ -3305,7 +3756,7 @@ const EventEdit = () => {
                             }}
                           />
                         </div> */}
-                        {/* <div className="flex items-center justify-between">
+                          {/* <div className="flex items-center justify-between">
                           <div>
                             <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
                             <p className="text-sm text-gray-500">Display this event on the home page</p>
@@ -3323,7 +3774,7 @@ const EventEdit = () => {
                             }}
                           />
                         </div> */}
-                        {/* <div className="flex items-center justify-between">
+                          {/* <div className="flex items-center justify-between">
                           <div>
                             <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
                             <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
@@ -3341,151 +3792,240 @@ const EventEdit = () => {
                             }}
                           />
                         </div> */}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Step 1: Event Related Images - Completed */}
-                {stepIndex === 1 && (
-                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                      <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            backgroundColor: '#E5E0D3',
-                            mr: 1.5
-                          }}
-                        >
-                          <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-                        </Avatar>
-                        Event Related Images
-                      </h2>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCurrentStep(1);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
-                      >
-                        <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
-                      </button>
-                    </div>
-                    <div className="p-6 space-y-6 opacity-75 pointer-events-none">
-                      {/* Cover Images */}
-                      <div>
-                        <h5 className="text-base font-semibold mb-4">Event Cover Images</h5>
-                        <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
-                                <TableHead className="font-semibold text-gray-900 py-3 px-4">Ratio</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {coverImageRatios.flatMap(({ key, label }) => {
-                                const files = Array.isArray(formData[key]) ? formData[key] : formData[key] ? [formData[key]] : [];
-                                if (files.length === 0) return [];
-                                return files.map((file, index) => {
-                                  const preview = file.url || file.preview || file.document_url || "";
-                                  const name = file.name || file.document_file_name || `File ${index + 1}`;
-                                  const ratio = file.ratio || label;
-                                  return (
-                                    <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
-                                      <TableCell>{name}</TableCell>
-                                      <TableCell>
-                                        {preview && (
-                                          <img
-                                            style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                            className="img-fluid rounded"
-                                            src={preview}
-                                            alt={name}
-                                          />
-                                        )}
-                                      </TableCell>
-                                      <TableCell>{ratio}</TableCell>
-                                    </TableRow>
-                                  );
-                                });
-                              })}
-                              {coverImageRatios.every(({ key }) => !(formData[key] && formData[key].length > 0)) && (
-                                <TableRow>
-                                  <TableCell colSpan={3} className="text-center text-gray-500">
-                                    No cover images uploaded
-                                  </TableCell>
-                                </TableRow>
-                              )}
-                            </TableBody>
-                          </Table>
                         </div>
                       </div>
+                    </>
+                  )}
 
-                      {/* Event Attachment Images */}
-                      <div>
-                        <h5 className="text-base font-semibold mb-4">Event Thumbnail Images</h5>
-                        <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
-                                <TableHead className="font-semibold text-gray-900 py-3 px-4">Ratio</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {eventImageRatios.flatMap(({ key, label }) => {
-                                const files = Array.isArray(formData[key]) ? formData[key] : formData[key] ? [formData[key]] : [];
-                                if (files.length === 0) return [];
-                                return files.map((file, index) => {
-                                  const preview = file.url || file.preview || file.document_url || "";
-                                  const name = file.name || file.document_file_name || `File ${index + 1}`;
-                                  const ratio = file.ratio || label;
-                                  const isVideo = file.type === "video" || (preview && ['.mp4', '.webm', '.ogg'].some(ext => preview.toLowerCase().endsWith(ext)));
-                                  return (
-                                    <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
-                                      <TableCell>{name}</TableCell>
-                                      <TableCell>
-                                        {preview && (
-                                          isVideo ? (
-                                            <video controls style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }} className="img-fluid rounded">
-                                              <source src={preview} type="video/mp4" />
-                                            </video>
-                                          ) : (
+                  {/* Step 1: Event Related Images - Completed */}
+                  {stepIndex === 1 && (
+                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                      <div
+                        className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                        style={{ backgroundColor: "#F6F4EE" }}
+                      >
+                        <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              backgroundColor: "#E5E0D3",
+                              mr: 1.5,
+                            }}
+                          >
+                            <SettingsOutlinedIcon
+                              sx={{ fontSize: 18, color: "#C72030" }}
+                            />
+                          </Avatar>
+                          Event Related Images
+                        </h2>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentStep(1);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                          className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                        >
+                          <Edit className="w-4 h-4 text-[#bf213e]" />{" "}
+                          <span className="text-[#bf213e]">Edit</span>
+                        </button>
+                      </div>
+                      <div className="p-6 space-y-6 opacity-75 pointer-events-none">
+                        {/* Cover Images */}
+                        <div>
+                          <h5 className="text-base font-semibold mb-4">
+                            Event Cover Images
+                          </h5>
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow
+                                  style={{ backgroundColor: "#E6E2D8" }}
+                                >
+                                  <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                    File Name
+                                  </TableHead>
+                                  <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                    Preview
+                                  </TableHead>
+                                  <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                                    Ratio
+                                  </TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {coverImageRatios.flatMap(({ key, label }) => {
+                                  const files = Array.isArray(formData[key])
+                                    ? formData[key]
+                                    : formData[key]
+                                      ? [formData[key]]
+                                      : [];
+                                  if (files.length === 0) return [];
+                                  return files.map((file, index) => {
+                                    const preview =
+                                      file.url ||
+                                      file.preview ||
+                                      file.document_url ||
+                                      "";
+                                    const name =
+                                      file.name ||
+                                      file.document_file_name ||
+                                      `File ${index + 1}`;
+                                    const ratio = file.ratio || label;
+                                    return (
+                                      <TableRow
+                                        key={`${key}-${file.id || index}`}
+                                        className="hover:bg-gray-50"
+                                      >
+                                        <TableCell>{name}</TableCell>
+                                        <TableCell>
+                                          {preview && (
                                             <img
-                                              style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                              style={{
+                                                maxWidth: 100,
+                                                maxHeight: 100,
+                                                objectFit: "cover",
+                                              }}
                                               className="img-fluid rounded"
                                               src={preview}
                                               alt={name}
                                             />
-                                          )
-                                        )}
-                                      </TableCell>
-                                      <TableCell>{ratio}</TableCell>
-                                    </TableRow>
-                                  );
-                                });
-                              })}
-                              {eventImageRatios.every(({ key }) => !(formData[key] && formData[key].length > 0)) && (
-                                <TableRow>
-                                  <TableCell colSpan={3} className="text-center text-gray-500">
-                                    No event images uploaded
-                                  </TableCell>
+                                          )}
+                                        </TableCell>
+                                        <TableCell>{ratio}</TableCell>
+                                      </TableRow>
+                                    );
+                                  });
+                                })}
+                                {coverImageRatios.every(
+                                  ({ key }) =>
+                                    !(formData[key] && formData[key].length > 0)
+                                ) && (
+                                  <TableRow>
+                                    <TableCell
+                                      colSpan={3}
+                                      className="text-center text-gray-500"
+                                    >
+                                      No cover images uploaded
+                                    </TableCell>
+                                  </TableRow>
+                                )}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
+
+                        {/* Event Attachment Images */}
+                        <div>
+                          <h5 className="text-base font-semibold mb-4">
+                            Event Thumbnail Images
+                          </h5>
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow
+                                  style={{ backgroundColor: "#E6E2D8" }}
+                                >
+                                  <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                    File Name
+                                  </TableHead>
+                                  <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                    Preview
+                                  </TableHead>
+                                  <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                                    Ratio
+                                  </TableHead>
                                 </TableRow>
-                              )}
-                            </TableBody>
-                          </Table>
+                              </TableHeader>
+                              <TableBody>
+                                {eventImageRatios.flatMap(({ key, label }) => {
+                                  const files = Array.isArray(formData[key])
+                                    ? formData[key]
+                                    : formData[key]
+                                      ? [formData[key]]
+                                      : [];
+                                  if (files.length === 0) return [];
+                                  return files.map((file, index) => {
+                                    const preview =
+                                      file.url ||
+                                      file.preview ||
+                                      file.document_url ||
+                                      "";
+                                    const name =
+                                      file.name ||
+                                      file.document_file_name ||
+                                      `File ${index + 1}`;
+                                    const ratio = file.ratio || label;
+                                    const isVideo =
+                                      file.type === "video" ||
+                                      (preview &&
+                                        [".mp4", ".webm", ".ogg"].some((ext) =>
+                                          preview.toLowerCase().endsWith(ext)
+                                        ));
+                                    return (
+                                      <TableRow
+                                        key={`${key}-${file.id || index}`}
+                                        className="hover:bg-gray-50"
+                                      >
+                                        <TableCell>{name}</TableCell>
+                                        <TableCell>
+                                          {preview &&
+                                            (isVideo ? (
+                                              <video
+                                                controls
+                                                style={{
+                                                  maxWidth: 100,
+                                                  maxHeight: 100,
+                                                  objectFit: "cover",
+                                                }}
+                                                className="img-fluid rounded"
+                                              >
+                                                <source
+                                                  src={preview}
+                                                  type="video/mp4"
+                                                />
+                                              </video>
+                                            ) : (
+                                              <img
+                                                style={{
+                                                  maxWidth: 100,
+                                                  maxHeight: 100,
+                                                  objectFit: "cover",
+                                                }}
+                                                className="img-fluid rounded"
+                                                src={preview}
+                                                alt={name}
+                                              />
+                                            ))}
+                                        </TableCell>
+                                        <TableCell>{ratio}</TableCell>
+                                      </TableRow>
+                                    );
+                                  });
+                                })}
+                                {eventImageRatios.every(
+                                  ({ key }) =>
+                                    !(formData[key] && formData[key].length > 0)
+                                ) && (
+                                  <TableRow>
+                                    <TableCell
+                                      colSpan={3}
+                                      className="text-center text-gray-500"
+                                    >
+                                      No event images uploaded
+                                    </TableCell>
+                                  </TableRow>
+                                )}
+                              </TableBody>
+                            </Table>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Step 2: Invite CPs - Hidden for Loyalty
+                  {/* Step 2: Invite CPs - Hidden for Loyalty
                 {stepIndex === 2 && (
                   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                     <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
@@ -3593,8 +4133,8 @@ const EventEdit = () => {
                   </div>
                 )}
                 */}
-              </div>
-            ))}
+                </div>
+              ))}
           </div>
         )}
 
@@ -3605,17 +4145,22 @@ const EventEdit = () => {
               {/* Step 1: Event Details Preview */}
               <div className="mb-6">
                 <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
+                  <div
+                    className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                    style={{ backgroundColor: "#F6F4EE" }}
+                  >
                     <h2 className="text-lg font-medium text-gray-900 flex items-center">
                       <Avatar
                         sx={{
                           width: 32,
                           height: 32,
-                          backgroundColor: '#E5E0D3',
-                          mr: 1.5
+                          backgroundColor: "#E5E0D3",
+                          mr: 1.5,
                         }}
                       >
-                        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
+                        <SettingsOutlinedIcon
+                          sx={{ fontSize: 18, color: "#C72030" }}
+                        />
                       </Avatar>
                       Event Details
                     </h2>
@@ -3624,11 +4169,12 @@ const EventEdit = () => {
                       onClick={() => {
                         setIsPreviewMode(false);
                         setCurrentStep(0);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                       className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
                     >
-                      <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
+                      <Edit className="w-4 h-4 text-[#bf213e]" />{" "}
+                      <span className="text-[#bf213e]">Edit</span>
                     </button>
                   </div>
                   <div className="p-6 space-y-6">
@@ -3643,7 +4189,7 @@ const EventEdit = () => {
                         InputProps={{ sx: fieldStyles }}
                       />
                       <TextField
-                        label="Event At"
+                        label="Event Venue"
                         value={formData.event_at}
                         fullWidth
                         variant="outlined"
@@ -3652,39 +4198,89 @@ const EventEdit = () => {
                         InputProps={{ sx: fieldStyles }}
                       />
                       <TextField
-                        label="Event Date"
+                        label="Start Date"
                         type="date"
-                        value={formData.from_time ? formData.from_time.split('T')[0] : ""}
+                        value={formData.event_date}
                         fullWidth
                         variant="outlined"
                         disabled
                         slotProps={{ inputLabel: { shrink: true } }}
                         InputProps={{ sx: fieldStyles }}
                       />
-                      <div className="md:col-span-2">
-                        <TextField
-                          label="Event Description"
-                          value={formData.description}
-                          fullWidth
-                          variant="outlined"
-                          disabled
-                          slotProps={{ inputLabel: { shrink: true } }}
-                        />
-                      </div>
                       <TextField
-                        label="Event Time"
+                        label="Start Time"
                         type="time"
-                        value={formData.from_time ? formData.from_time.split('T')[1]?.substring(0, 5) : ""}
+                        value={formData.event_time}
                         fullWidth
                         variant="outlined"
                         disabled
                         slotProps={{ inputLabel: { shrink: true } }}
                         InputProps={{ sx: fieldStyles }}
                       />
+                      <TextField
+                        label="End Date"
+                        type="date"
+                        value={formData.end_date}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
+                      <TextField
+                        label="End Time"
+                        type="time"
+                        value={formData.end_time}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
+                      <div className="md:col-span-3 mt-1">
+                        <div className="relative w-full">
+                          {/* Floating Label */}
+                          <label
+                            className="
+        absolute
+        -top-2
+        left-3
+        px-1
+        text-[12.5px]
+        text-gray-400
+        pointer-events-none
+      "
+                          >
+                            Event Description{" "}
+                            <span className="text-[#C72030]">*</span>
+                          </label>
+
+                          <textarea
+                            name="description"
+                            value={formData.description}
+                            disabled
+                            rows={6}
+                            className="
+        w-full
+        rounded-[5px]
+        border
+        border-gray-200
+        p-4
+        text-sm
+        text-gray-500
+        outline-none
+        resize-none
+        overflow-hidden
+      "
+                          />
+                        </div>
+                      </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Send Email
+                        </label>
                         <div className="flex gap-4">
                           <label className="flex items-center">
                             <input
@@ -3692,9 +4288,11 @@ const EventEdit = () => {
                               checked={formData.email_trigger_enabled === true}
                               disabled
                               className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              style={{ accentColor: "#C72030" }}
                             />
-                            <span className="ml-2 text-sm text-gray-700">Yes</span>
+                            <span className="ml-2 text-sm text-gray-700">
+                              Yes
+                            </span>
                           </label>
                           <label className="flex items-center">
                             <input
@@ -3702,14 +4300,18 @@ const EventEdit = () => {
                               checked={formData.email_trigger_enabled === false}
                               disabled
                               className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              style={{ accentColor: "#C72030" }}
                             />
-                            <span className="ml-2 text-sm text-gray-700">No</span>
+                            <span className="ml-2 text-sm text-gray-700">
+                              No
+                            </span>
                           </label>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          RSVP Action
+                        </label>
                         <div className="flex gap-4">
                           <label className="flex items-center">
                             <input
@@ -3717,9 +4319,11 @@ const EventEdit = () => {
                               checked={formData.rsvp_action === "1"}
                               disabled
                               className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              style={{ accentColor: "#C72030" }}
                             />
-                            <span className="ml-2 text-sm text-gray-700">Yes</span>
+                            <span className="ml-2 text-sm text-gray-700">
+                              Yes
+                            </span>
                           </label>
                           <label className="flex items-center">
                             <input
@@ -3727,9 +4331,11 @@ const EventEdit = () => {
                               checked={formData.rsvp_action === "0"}
                               disabled
                               className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                              style={{ accentColor: '#C72030' }}
+                              style={{ accentColor: "#C72030" }}
                             />
-                            <span className="ml-2 text-sm text-gray-700">No</span>
+                            <span className="ml-2 text-sm text-gray-700">
+                              No
+                            </span>
                           </label>
                         </div>
                       </div>
@@ -3740,56 +4346,70 @@ const EventEdit = () => {
 
               {/* Visibility Card Preview */}
               <div className="mb-6">
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                  <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                    <Avatar
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        backgroundColor: '#E5E0D3',
-                        mr: 1.5
-                      }}
-                    >
-                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-                    </Avatar>
-                    Visibility
-                  </h2>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsPreviewMode(false);
-                      setCurrentStep(0);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div
+                    className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                    style={{ backgroundColor: "#F6F4EE" }}
                   >
-                    <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
-                  </button>
-                </div>
-                <div className="p-6 space-y-4">
-                  {/* Show on Home Page */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
-                      <p className="text-sm text-gray-500">Display this event on the home page</p>
-                    </div>
-                    <Switch
-                      checked={formData.showOnHomePage || false}
-                      onChange={(e) => handleInputChange('showOnHomePage', e.target.checked)}
-                      sx={{
-                        '& .MuiSwitch-switchBase.Mui-checked': {
-                          color: '#C72030',
-                        },
-                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                          backgroundColor: '#C72030',
-                        },
+                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                      <Avatar
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          backgroundColor: "#E5E0D3",
+                          mr: 1.5,
+                        }}
+                      >
+                        <SettingsOutlinedIcon
+                          sx={{ fontSize: 18, color: "#C72030" }}
+                        />
+                      </Avatar>
+                      Visibility
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsPreviewMode(false);
+                        setCurrentStep(0);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
-                    />
+                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                    >
+                      <Edit className="w-4 h-4 text-[#bf213e]" />{" "}
+                      <span className="text-[#bf213e]">Edit</span>
+                    </button>
                   </div>
+                  <div className="p-6 space-y-4">
+                    {/* Show on Home Page */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900">
+                          Show on Home Page
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Display this event on the home page
+                        </p>
+                      </div>
+                      <Switch
+                        checked={formData.show_on_home || false}
+                        onChange={(e) =>
+                          handleInputChange("show_on_home", e.target.checked)
+                        }
+                        disabled
+                        sx={{
+                          "& .MuiSwitch-switchBase.Mui-checked": {
+                            color: "#C72030",
+                          },
+                          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                            {
+                              backgroundColor: "#C72030",
+                            },
+                        }}
+                      />
+                    </div>
 
-                  {/* Show on Project Detail Page */}
-                  {/* <div className="flex items-center justify-between">
+                    {/* Show on Project Detail Page */}
+                    {/* <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-sm font-medium text-gray-900">Show on Project Detail Page</h3>
                       <p className="text-sm text-gray-500">Display this event on individual project detail pages</p>
@@ -3808,8 +4428,8 @@ const EventEdit = () => {
                     />
                   </div> */}
 
-                  {/* Show on Booking Page */}
-                  {/* <div className="flex items-center justify-between">
+                    {/* Show on Booking Page */}
+                    {/* <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-sm font-medium text-gray-900">Show on Booking Page</h3>
                       <p className="text-sm text-gray-500">Display this event on the home page</p>
@@ -3828,8 +4448,8 @@ const EventEdit = () => {
                     />
                   </div> */}
 
-                  {/* Featured Event */}
-                  {/* <div className="flex items-center justify-between">
+                    {/* Featured Event */}
+                    {/* <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-sm font-medium text-gray-900">Featured Event</h3>
                       <p className="text-sm text-gray-500">Mark as a featured event for priority display</p>
@@ -3847,12 +4467,12 @@ const EventEdit = () => {
                       }}
                     />
                   </div> */}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Share Card Preview */}
-            <div className="mb-6">
+              {/* Share Card Preview */}
+              {/* <div className="mb-6">
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
                   <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -3900,147 +4520,232 @@ const EventEdit = () => {
                   )}
                 </div>
               </div>
-            </div>
+            </div> */}
 
-            {/* Step 2: Event Related Images Preview */}
-            <div className="mb-6">
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                  <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                    <Avatar
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        backgroundColor: '#E5E0D3',
-                        mr: 1.5
-                      }}
-                    >
-                      <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#C72030' }} />
-                    </Avatar>
-                    Event Related Images
-                  </h2>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsPreviewMode(false);
-                      setCurrentStep(1);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+              {/* Step 2: Event Related Images Preview */}
+              <div className="mb-6">
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div
+                    className="px-6 py-3 border-b border-gray-200 flex items-center justify-between"
+                    style={{ backgroundColor: "#F6F4EE" }}
                   >
-                  <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
-                </button>
-              </div>
-              <div className="p-6 space-y-6">
-                {/* Cover Images */}
-                <div>
-                  <h5 className="text-base font-semibold mb-4">Event Cover Images</h5>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4">Ratio</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {coverImageRatios.flatMap(({ key, label }) => {
-                          const files = Array.isArray(formData[key]) ? formData[key] : formData[key] ? [formData[key]] : [];
-                          if (files.length === 0) return [];
-                          return files.map((file, index) => {
-                            const preview = file.url || file.preview || file.document_url || "";
-                            const name = file.name || file.document_file_name || `File ${index + 1}`;
-                            const ratio = file.ratio || label;
-                            return (
-                              <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
-                                <TableCell>{name}</TableCell>
-                                <TableCell>
-                                  {preview && (
-                                    <img
-                                      style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                      className="img-fluid rounded"
-                                      src={preview}
-                                      alt={name}
-                                    />
-                                  )}
-                                </TableCell>
-                                <TableCell>{ratio}</TableCell>
-                              </TableRow>
-                            );
-                          });
-                        })}
-                        {coverImageRatios.every(({ key }) => !(formData[key] && formData[key].length > 0)) && (
-                          <TableRow>
-                            <TableCell colSpan={3} className="text-center text-gray-500">
-                              No cover images uploaded
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
+                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                      <Avatar
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          backgroundColor: "#E5E0D3",
+                          mr: 1.5,
+                        }}
+                      >
+                        <SettingsOutlinedIcon
+                          sx={{ fontSize: 18, color: "#C72030" }}
+                        />
+                      </Avatar>
+                      Event Related Images
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsPreviewMode(false);
+                        setCurrentStep(1);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="h-8 px-3 text-[12px] border border-[#bf213e] hover:bg-[#F6F4EE] flex items-center gap-1 bg-white"
+                    >
+                      <Edit className="w-4 h-4 text-[#bf213e]" />{" "}
+                      <span className="text-[#bf213e]">Edit</span>
+                    </button>
                   </div>
-                </div>
-
-                {/* Event Attachment Images */}
-                <div>
-                  <h5 className="text-base font-semibold mb-4">Event Thumbnail Images</h5>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4">Ratio</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {eventImageRatios.flatMap(({ key, label }) => {
-                          const files = Array.isArray(formData[key]) ? formData[key] : formData[key] ? [formData[key]] : [];
-                          if (files.length === 0) return [];
-                          return files.map((file, index) => {
-                            const preview = file.url || file.preview || file.document_url || "";
-                            const name = file.name || file.document_file_name || `File ${index + 1}`;
-                            const ratio = file.ratio || label;
-                            const isVideo = file.type === "video" || (preview && ['.mp4', '.webm', '.ogg'].some(ext => preview.toLowerCase().endsWith(ext)));
-                            return (
-                              <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
-                                <TableCell>{name}</TableCell>
-                                <TableCell>
-                                  {preview && (
-                                    isVideo ? (
-                                      <video controls style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }} className="img-fluid rounded">
-                                        <source src={preview} type="video/mp4" />
-                                      </video>
-                                    ) : (
-                                      <img
-                                        style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
-                                        className="img-fluid rounded"
-                                        src={preview}
-                                        alt={name}
-                                      />
-                                    )
-                                  )}
+                  <div className="p-6 space-y-6">
+                    {/* Cover Images */}
+                    <div>
+                      <h5 className="text-base font-semibold mb-4">
+                        Event Cover Images
+                      </h5>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow style={{ backgroundColor: "#E6E2D8" }}>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                File Name
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                Preview
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                                Ratio
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {coverImageRatios.flatMap(({ key, label }) => {
+                              const files = Array.isArray(formData[key])
+                                ? formData[key]
+                                : formData[key]
+                                  ? [formData[key]]
+                                  : [];
+                              if (files.length === 0) return [];
+                              return files.map((file, index) => {
+                                const preview =
+                                  file.url ||
+                                  file.preview ||
+                                  file.document_url ||
+                                  "";
+                                const name =
+                                  file.name ||
+                                  file.document_file_name ||
+                                  `File ${index + 1}`;
+                                const ratio = file.ratio || label;
+                                return (
+                                  <TableRow
+                                    key={`${key}-${file.id || index}`}
+                                    className="hover:bg-gray-50"
+                                  >
+                                    <TableCell>{name}</TableCell>
+                                    <TableCell>
+                                      {preview && (
+                                        <img
+                                          style={{
+                                            maxWidth: 100,
+                                            maxHeight: 100,
+                                            objectFit: "cover",
+                                          }}
+                                          className="img-fluid rounded"
+                                          src={preview}
+                                          alt={name}
+                                        />
+                                      )}
+                                    </TableCell>
+                                    <TableCell>{ratio}</TableCell>
+                                  </TableRow>
+                                );
+                              });
+                            })}
+                            {coverImageRatios.every(
+                              ({ key }) =>
+                                !(formData[key] && formData[key].length > 0)
+                            ) && (
+                              <TableRow>
+                                <TableCell
+                                  colSpan={3}
+                                  className="text-center text-gray-500"
+                                >
+                                  No cover images uploaded
                                 </TableCell>
-                                <TableCell>{ratio}</TableCell>
                               </TableRow>
-                            );
-                          });
-                        })}
-                        {eventImageRatios.every(({ key }) => !(formData[key] && formData[key].length > 0)) && (
-                          <TableRow>
-                            <TableCell colSpan={3} className="text-center text-gray-500">
-                              No event images uploaded
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
 
-                {/* Event Details Image - inside Event Related Images card */}
-                {/* <div>
+                    {/* Event Attachment Images */}
+                    <div>
+                      <h5 className="text-base font-semibold mb-4">
+                        Event Thumbnail Images
+                      </h5>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow style={{ backgroundColor: "#E6E2D8" }}>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                File Name
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                                Preview
+                              </TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                                Ratio
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {eventImageRatios.flatMap(({ key, label }) => {
+                              const files = Array.isArray(formData[key])
+                                ? formData[key]
+                                : formData[key]
+                                  ? [formData[key]]
+                                  : [];
+                              if (files.length === 0) return [];
+                              return files.map((file, index) => {
+                                const preview =
+                                  file.url ||
+                                  file.preview ||
+                                  file.document_url ||
+                                  "";
+                                const name =
+                                  file.name ||
+                                  file.document_file_name ||
+                                  `File ${index + 1}`;
+                                const ratio = file.ratio || label;
+                                const isVideo =
+                                  file.type === "video" ||
+                                  (preview &&
+                                    [".mp4", ".webm", ".ogg"].some((ext) =>
+                                      preview.toLowerCase().endsWith(ext)
+                                    ));
+                                return (
+                                  <TableRow
+                                    key={`${key}-${file.id || index}`}
+                                    className="hover:bg-gray-50"
+                                  >
+                                    <TableCell>{name}</TableCell>
+                                    <TableCell>
+                                      {preview &&
+                                        (isVideo ? (
+                                          <video
+                                            controls
+                                            style={{
+                                              maxWidth: 100,
+                                              maxHeight: 100,
+                                              objectFit: "cover",
+                                            }}
+                                            className="img-fluid rounded"
+                                          >
+                                            <source
+                                              src={preview}
+                                              type="video/mp4"
+                                            />
+                                          </video>
+                                        ) : (
+                                          <img
+                                            style={{
+                                              maxWidth: 100,
+                                              maxHeight: 100,
+                                              objectFit: "cover",
+                                            }}
+                                            className="img-fluid rounded"
+                                            src={preview}
+                                            alt={name}
+                                          />
+                                        ))}
+                                    </TableCell>
+                                    <TableCell>{ratio}</TableCell>
+                                  </TableRow>
+                                );
+                              });
+                            })}
+                            {eventImageRatios.every(
+                              ({ key }) =>
+                                !(formData[key] && formData[key].length > 0)
+                            ) && (
+                              <TableRow>
+                                <TableCell
+                                  colSpan={3}
+                                  className="text-center text-gray-500"
+                                >
+                                  No event images uploaded
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+
+                    {/* Event Details Image - inside Event Related Images card */}
+                    {/* <div>
                   <h5 className="text-base font-semibold mb-4">Event Details Image</h5>
                   <div className="overflow-x-auto">
                     <Table>
@@ -4083,29 +4788,29 @@ const EventEdit = () => {
                     </Table>
                   </div>
                 </div> */}
-              </div>
-            </div>
-            {/* Step 3: Invite CPs Preview - Hidden for Loyalty */}
-            {/* Invite CPs section intentionally hidden for loyalty events */}
+                  </div>
+                </div>
+                {/* Step 3: Invite CPs Preview - Hidden for Loyalty */}
+                {/* Invite CPs section intentionally hidden for loyalty events */}
 
-              <div className="flex gap-4 justify-center pt-6">
-                <button
-                  type="submit"
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Submitting...' : 'Submit Event'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
-                >
-                  Cancel
-                </button>
+                <div className="flex gap-4 justify-center pt-6">
+                  <button
+                    type="submit"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Submitting..." : "Submit Event"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-            </div>
             </div>
           </>
         )}
@@ -4119,7 +4824,9 @@ const EventEdit = () => {
           showAsModal={true}
           label={coverImageLabel}
           description={dynamicCoverDescription}
-          onContinue={(validImages) => handleCoverImageCropComplete(validImages)}
+          onContinue={(validImages) =>
+            handleCoverImageCropComplete(validImages)
+          }
         />
       )}
 
@@ -4152,9 +4859,8 @@ const EventEdit = () => {
           allowVideos={false}
         />
       )}
-      </div>
-
-    );
-  };
+    </div>
+  );
+};
 
 export default EventEdit;

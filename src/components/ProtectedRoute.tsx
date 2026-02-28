@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, startTransition } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import {
   isAuthenticated,
@@ -96,7 +96,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         }
 
         // Token is valid, user is authorized
-        setIsAuthorized(true);
+        startTransition(() => {
+          setIsAuthorized(true);
+        });
         return;
       }
 
@@ -108,10 +110,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         console.log(
           "ProtectedRoute: No authentication found, redirecting to login"
         );
-        setIsAuthorized(false);
+        startTransition(() => {
+          setIsAuthorized(false);
+        });
       } else {
         console.log("ProtectedRoute: User is authenticated");
-        setIsAuthorized(true);
+        startTransition(() => {
+          setIsAuthorized(true);
+        });
       }
     };
 
