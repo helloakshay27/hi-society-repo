@@ -89,6 +89,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const org_id = localStorage.getItem("org_id");
 
   const hostname = window.location.hostname;
 
@@ -101,7 +102,7 @@ export const LoginPage = ({ setBaseUrl, setToken }) => {
   const isHiSocietySite = hostname === "web.hisociety.lockated.com";
 
     const isUIHiSocietySite =
-    hostname.includes("ui-hisociety.lockated.com") ;
+    hostname.includes("ui-hisociety.lockated.com") || org_id ==="9" ;
 
 
   // Check if it's Runwal site

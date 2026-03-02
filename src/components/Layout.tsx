@@ -109,7 +109,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Detect Hi-Society site - used for fallback when no API role exists
   const isUIHiSocietySite =
     hostname.includes("ui-hisociety.lockated.com") ||
-    hostname.includes("localhost");
+    hostname.includes("localhost") || org_id ==="9";
 
   const isLocalhost =
     hostname.includes("lockated.gophygital.work") ||

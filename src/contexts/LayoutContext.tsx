@@ -170,11 +170,8 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
     return "Dashboard";
   };
 
-  // Get initial collapsed state from localStorage, default to false if not set
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
-    const savedState = localStorage.getItem("sidebarCollapsed");
-    return savedState ? JSON.parse(savedState) : false;
-  });
+  // Get initial collapsed state from localStorage, default to false (open) if not set
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
   // Get initial layout mode from localStorage
   // On first visit, auto-detect based on hostname
