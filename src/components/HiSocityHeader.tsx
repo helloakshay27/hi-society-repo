@@ -82,11 +82,14 @@ export const HiSocityHeader = () => {
   } = useSelector((state: RootState) => state.site);
 
   const hostname = window.location.hostname;
+  const org_id = localStorage.getItem("org_id");
 
   // Check if it's Oman site
   const isOmanSite = hostname.includes("oig.gophygital.work");
   // Treat vi-web prod and localhost as VI for dev account fetch
-  
+  const isViSite = hostname.includes("vi-web.gophygital.work");
+  const isWebSite = hostname.includes("web.gophygital.work");
+  const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com") || hostname.includes("localhost") || org_id ==="9";
 
   const isLocalhost =
     hostname.includes("localhost") ||

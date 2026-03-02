@@ -9,6 +9,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { userRole, loading } = usePermissions();
   const { selectedCompany } = useSelector((state: RootState) => state.project);
+  const org_id = localStorage.getItem("org_id");
 
   useEffect(() => {
     // Wait for permissions to load
@@ -16,7 +17,7 @@ const Index = () => {
 
     const hostname = window.location.hostname;
     const isViSite = hostname.includes("vi-web.gophygital.work");
-    const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com");
+    const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com") || org_id === "9";
     const isHiSocietySite = hostname === "web.hisociety.lockated.com";
     const userType = localStorage.getItem("userType");
     const isLocalhost =
