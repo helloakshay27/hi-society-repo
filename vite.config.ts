@@ -78,13 +78,21 @@ export default defineConfig(({ mode }) => ({
     // Add hash to filenames for cache busting
     rollupOptions: {
       output: {
-        manualChunks: undefined,
+        // Keep chunks split for better caching strategy
+        manualChunks: (id) => {
+          // Vendor chunks for better caching
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        },
         // Add hash to generated files for better cache invalidation
         entryFileNames: `assets/[name].[hash].js`,
         chunkFileNames: `assets/[name].[hash].js`,
         assetFileNames: `assets/[name].[hash].[ext]`,
       },
     },
+    // Improve chunk size warnings
+    chunkSizeWarningLimit: 1000,
   },
   // Disable caching in development
   cacheDir: mode === 'development' ? '.vite-no-cache' : '.vite',
