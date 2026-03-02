@@ -1041,6 +1041,77 @@ const LoyaltyEventDetails = () => {
                     </Table>
                   </div>
                 </div>
+
+                 <div>
+                  <h4 className="text-base font-semibold text-gray-900 mb-3">
+                    Event Thumbnail Image
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow style={{ backgroundColor: "#E6E2D8" }}>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            File Name
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            File Type
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            Updated At
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                            Image
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody className="bg-white">
+                        {(() => {
+                          const groups = [
+                            eventData.thumbnail_image_1_by_1,
+                            eventData.thumbnail_image_9_by_16,
+                            eventData.thumbnail_image_3_by_2,
+                            eventData.thumbnail_image_16_by_9,
+                          ];
+                          const images = groups
+                            .filter(Array.isArray)
+                            .flat()
+                            .filter((img) => img?.document_url);
+                          return images.length > 0 ? (
+                            images.map((file, i) => (
+                              <TableRow key={i} className="hover:bg-gray-50">
+                                <TableCell className="py-3 px-4">
+                                  {file.document_file_name}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {file.document_content_type}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {formatDateTime(file.document_updated_at)}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  <img
+                                    src={file.document_url}
+                                    alt={`Event ${i}`}
+                                    className="w-20 h-20 object-cover rounded"
+                                  />
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                              <TableCell
+                                colSpan={4}
+                                className="text-center py-8 text-gray-600"
+                              >
+                                No Event Images
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })()}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
               </div>
             </div>
           </TabsContent>
