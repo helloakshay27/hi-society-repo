@@ -550,6 +550,28 @@ const FitoutRequestDetails: React.FC = () => {
         ...Object.keys(editedAnnexureSignaturesByMapId).map((k) => Number(k)),
       ]);
 
+      const MAX_ANS_DESCR_LENGTH = 255;
+
+      const validateAnsDescr = (value: unknown, mapIdNum: number) => {
+        const text = (value ?? '').toString();
+        if (text.length > MAX_ANS_DESCR_LENGTH) {
+          toast.error(
+            `Answer text must be ${MAX_ANS_DESCR_LENGTH} characters or less. (Answer ID: ${mapIdNum})`,
+            {
+              position: 'top-right',
+              duration: 4000,
+              style: {
+                background: '#fff',
+                color: 'black',
+                border: 'none',
+              },
+            }
+          );
+          return false;
+        }
+        return true;
+      };
+
       if (editedMapIds.size === 0) {
         toast.error('No changes to save', {
           position: 'top-right',
@@ -599,13 +621,25 @@ const FitoutRequestDetails: React.FC = () => {
               `${qKeyBase}[snag_quest_option_id]`,
               edited.quest_option_id ? String(edited.quest_option_id) : ''
             );
-            formData.append(`${qKeyBase}[ans_descr]`, (edited.ans_descr ?? '').toString());
+            const ans = (edited.ans_descr ?? '').toString();
+            if (!validateAnsDescr(ans, mapIdNum)) {
+              throw new Error('VALIDATION_ANS_DESCR_TOO_LONG');
+            }
+            formData.append(`${qKeyBase}[ans_descr]`, ans);
           } else if (existingAnswer?.quest_option_id) {
             formData.append(`${qKeyBase}[snag_quest_option_id]`, String(existingAnswer.quest_option_id));
-            formData.append(`${qKeyBase}[ans_descr]`, (existingAnswer.ans_descr ?? '').toString());
+            const ans = (existingAnswer.ans_descr ?? '').toString();
+            if (!validateAnsDescr(ans, mapIdNum)) {
+              throw new Error('VALIDATION_ANS_DESCR_TOO_LONG');
+            }
+            formData.append(`${qKeyBase}[ans_descr]`, ans);
           } else {
             formData.append(`${qKeyBase}[snag_quest_option_id]`, '');
-            formData.append(`${qKeyBase}[ans_descr]`, (edited?.ans_descr ?? '').toString());
+            const ans = (edited?.ans_descr ?? '').toString();
+            if (!validateAnsDescr(ans, mapIdNum)) {
+              throw new Error('VALIDATION_ANS_DESCR_TOO_LONG');
+            }
+            formData.append(`${qKeyBase}[ans_descr]`, ans);
           }
         } else if (question.qtype === 'file') {
           formData.append(`${qKeyBase}[snag_quest_option_id]`, '');
@@ -620,7 +654,11 @@ const FitoutRequestDetails: React.FC = () => {
             formData.append(`${qKeyBase}[docs][]`, signatureFile);
           }
         } else {
-          formData.append(`${qKeyBase}[ans_descr]`, (edited?.ans_descr ?? '').toString());
+          const ans = (edited?.ans_descr ?? '').toString();
+          if (!validateAnsDescr(ans, mapIdNum)) {
+            throw new Error('VALIDATION_ANS_DESCR_TOO_LONG');
+          }
+          formData.append(`${qKeyBase}[ans_descr]`, ans);
         }
       });
 
@@ -649,6 +687,9 @@ const FitoutRequestDetails: React.FC = () => {
         fetchFitoutRequestDetails(parseInt(id));
       }
     } catch (error: any) {
+      if (error?.message === 'VALIDATION_ANS_DESCR_TOO_LONG') {
+        return;
+      }
       console.error('Error updating responses:', error);
       toast.error(`Failed to update responses: ${error.message || 'Unknown error'}`, {
         position: 'top-right',
