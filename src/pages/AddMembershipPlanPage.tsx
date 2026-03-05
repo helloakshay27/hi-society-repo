@@ -118,7 +118,7 @@ export const AddMembershipPlanPage = () => {
       price: string;
       allowMultipleSlots: boolean;
       multipleSlots: string;
-    }> ,
+    }>,
   });
 
   const getAmenities = async () => {
@@ -165,20 +165,12 @@ export const AddMembershipPlanPage = () => {
       toast.error("Please enter Price");
       return false;
     }
-    if (!formData.userLimit) {
-      toast.error("Please enter User Limit");
-      return false;
-    }
     if (!formData.renewalTerms) {
       toast.error("Please select Membership Type");
       return false;
     }
     if (!formData.payment_plan_id) {
       toast.error("Please select Payment Plan");
-      return false;
-    }
-    if (!formData.hsnCode) {
-      toast.error("Please enter HSN Code");
       return false;
     }
     if (formData.amenities.length === 0) {
@@ -206,12 +198,12 @@ export const AddMembershipPlanPage = () => {
           name: formData.name,
           site_id: localStorage.getItem("selectedSiteId"),
           price: formData.price,
-          user_limit: formData.userLimit,
+          // user_limit: formData.userLimit,
           renewal_terms: formData.renewalTerms,
           payment_plan_id: formData.payment_plan_id ? parseInt(formData.payment_plan_id) : null,
-          hsn_code: formData.hsnCode,
-          usage_limits: formData.usageLimits,
-          discount_eligibility: formData.discountEligibility,
+          // hsn_code: formData.hsnCode,
+          // usage_limits: formData.usageLimits,
+          // discount_eligibility: formData.discountEligibility,
           active: true,
           plan_amenities_attributes: formData.amenities.map(amenityId => {
             const details = formData.amenityDetails[amenityId];
@@ -308,7 +300,7 @@ export const AddMembershipPlanPage = () => {
                 placeholder="0.00"
               />
 
-              <TextField
+              {/* <TextField
                 label="User Limit*"
                 type="text"
                 value={formData.userLimit}
@@ -321,9 +313,9 @@ export const AddMembershipPlanPage = () => {
                 }}
                 variant="outlined"
                 placeholder="0"
-              />
+              /> */}
 
-              
+
 
               <FormControl variant="outlined">
                 <InputLabel>Membership Type*</InputLabel>
@@ -364,7 +356,7 @@ export const AddMembershipPlanPage = () => {
                 </Select>
               </FormControl>
 
-              <TextField
+              {/* <TextField
                 label="HSN Code*"
                 value={formData.hsnCode}
                 onChange={(e) => {
@@ -376,7 +368,7 @@ export const AddMembershipPlanPage = () => {
                 }}
                 variant="outlined"
                 placeholder="Enter HSN Code"
-              />
+              /> */}
             </div>
           </div>
 
