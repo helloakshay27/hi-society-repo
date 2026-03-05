@@ -345,12 +345,12 @@ export const CMSClubMembersDetails = () => {
 
             // baseUrl already includes protocol (https://)
             const url = new URL(`https://${baseUrl}/club_member_allocations/${id}.json`);
-            url.searchParams.append('token', token || '');
 
             const response = await fetch(url.toString(), {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
                 },
             });
 

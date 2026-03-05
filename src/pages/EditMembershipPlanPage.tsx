@@ -296,7 +296,7 @@ export const EditMembershipPlanPage = () => {
   };
 
   const handleClose = () => {
-    navigate("/settings/vas/membership-plan/setup");
+    navigate(-1);
   };
 
   const handleAmenityToggle = (amenityValue: string) => {
@@ -396,7 +396,7 @@ export const EditMembershipPlanPage = () => {
                 variant="outlined"
               />
 
-              <TextField
+              {/* <TextField
                 label="User Limit*"
                 type="number"
                 value={formData.userLimit}
@@ -404,7 +404,7 @@ export const EditMembershipPlanPage = () => {
                   setFormData({ ...formData, userLimit: e.target.value })
                 }
                 variant="outlined"
-              />
+              /> */}
 
               <FormControl variant="outlined">
                 <InputLabel>Membership Type*</InputLabel>
@@ -446,7 +446,7 @@ export const EditMembershipPlanPage = () => {
                 </Select>
               </FormControl>
 
-              <TextField
+              {/* <TextField
                 label="HSN Code*"
                 value={formData.hsnCode}
                 onChange={(e) => {
@@ -458,7 +458,7 @@ export const EditMembershipPlanPage = () => {
                 }}
                 variant="outlined"
                 placeholder="Enter HSN Code"
-              />
+              /> */}
             </div>
           </div>
 
