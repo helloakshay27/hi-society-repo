@@ -86,7 +86,7 @@ baseClient.interceptors.request.use(
 
       // Hi-Society specific hosts and their API base URLs (strict equality check)
       const isHiSocietyWebHost = hostname === "web.hisociety.lockated.com" ||
-        hostname === "localhost";;
+        hostname === "localhost";
       const isHiSocietyUIHost = hostname === "ui-hisociety.lockated.com";
       const isHiSocietyUATHost = hostname === "uat-hi-society.lockated.com";
       const isHiSocietySite = isHiSocietyWebHost || isHiSocietyUIHost || isHiSocietyUATHost;

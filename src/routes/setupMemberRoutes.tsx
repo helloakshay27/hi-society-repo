@@ -42,6 +42,8 @@ import LoyaltyEventCreate from "@/pages/LoyaltyEventCreate";
 import LoyaltyEventEdit from "@/pages/LoyaltyEventEdit";
 import LoyaltyAddOfferPage from "@/pages/LoyaltyAddOfferPage";
 import LoyaltyOfferViewPage from "@/pages/LoyaltyOfferViewPage";
+import { AddMembershipPlanPage } from "@/pages/AddMembershipPlanPage";
+import { EditMembershipPlanPage } from "@/pages/EditMembershipPlanPage";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
@@ -1280,6 +1282,14 @@ export const setupMemberRoutes = (
     <Route
       path="/cms/membership-plan-setup"
       Component={withSuspense(CMSMembershipPlanSetup)}
+    />
+    <Route
+      path="/cms/membership-plan-setup/add"
+      Component={withSuspense(AddMembershipPlanPage)}
+    />
+    <Route
+      path="/cms/membership-plan-setup/edit/:id"
+      Component={withSuspense(EditMembershipPlanPage)}
     />
     <Route
       path="/cms/payment-plan-setup"
