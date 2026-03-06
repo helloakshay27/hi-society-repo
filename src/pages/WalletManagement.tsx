@@ -24,7 +24,7 @@ interface WalletTransaction {
   category?: string;
   remarks?: string;
   created_at?: string;
-  redirect_ur?: string;
+  redirect_url?: string;
   resource_type?: string;
 }
 
@@ -135,8 +135,8 @@ export const WalletManagement = () => {
       },
     },
     { key: "remarks", label: "Remarks" },
-    { 
-      key: "created_at", 
+    {
+      key: "created_at",
       label: "Date",
       exportFormatter: (val: any) => {
         if (!val) return "";
@@ -190,9 +190,9 @@ export const WalletManagement = () => {
         const cat = String(item.category).toLowerCase();
         return cat.charAt(0).toUpperCase() + cat.slice(1);
       case "link":
-        return item.redirect_ur ? (
+        return item.redirect_url ? (
           <a
-            href={item.redirect_ur}
+            href={item.redirect_url}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 underline"
