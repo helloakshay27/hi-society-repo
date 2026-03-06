@@ -103,13 +103,19 @@ interface Log {
     id: number;
     log_of: string;
     log_of_id: number;
-    changed_attr: string | null;
+    changed_attr?: string | null;
     changed_by: number;
-    about: string;
-    about_id: number;
+    about?: string;
+    about_id?: number;
     log_type: string;
-    question_id: number | null;
-    room_type_id: number | null;
+    question_id?: number | null;
+    room_type_id?: number | null;
+    user_name?: string;
+    created_at?: string;
+    details?: Array<{
+        type: string;
+        payload: { [key: string]: any };
+    }>;
 }
 
 interface GroupMembershipDetail {
@@ -120,6 +126,7 @@ interface GroupMembershipDetail {
     end_date: string | null;
     preferred_start_date?: string | null;
     referred_by?: string;
+    created_by?: string;
     club_members: ClubMember[];
     bills?: Bill[];
     logs?: Log[];
@@ -426,6 +433,20 @@ export const CMSClubMembersDetails = () => {
         const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12 || 12;
         return `${day}/${month}/${year}, ${hours}:${minutes} ${ampm}`;
+    };
+
+    const formatLogDateTime = (dateString: string | undefined) => {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        const options: Intl.DateTimeFormatOptions = {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+        };
+        return date.toLocaleDateString('en-US', options);
     };
 
     const renderStatusBadge = () => {
@@ -1324,11 +1345,33 @@ export const CMSClubMembersDetails = () => {
                         {membershipData.logs && membershipData.logs.length > 0 ? (
                             <div className="overflow-x-auto px-3">
                                 <LogsTimeline
-                                    logs={membershipData.logs.map((log, index) => ({
-                                        id: log.id.toString(),
-                                        description: log.log_type || 'Activity logged',
-                                        timestamp: `Log ID: ${log.id}`,
-                                    }))}
+                                    logs={membershipData.logs.map((log) => {
+                                        let description = `${log.log_type}`;
+
+                                        // Add payload details if available
+                                        if (log.details && log.details.length > 0) {
+                                            const detail = log.details[0];
+                                            if (detail.type === 'meta' && detail.payload) {
+                                                const changes = Object.entries(detail.payload)
+                                                    .map(([fieldName, values]: any) => {
+                                                        const oldValue = Array.isArray(values) ? values[0] : values;
+                                                        const newValue = Array.isArray(values) ? values[1] : values;
+                                                        const displayOld = oldValue === 'nil' ? 'null' : String(oldValue).substring(0, 30);
+                                                        const displayNew = newValue === 'nil' ? 'null' : String(newValue).substring(0, 30);
+                                                        return `${fieldName.replace(/_/g, ' ')}: ${displayOld} → ${displayNew}`;
+                                                    })
+                                                    .join(' | ');
+
+                                                description += `\n${changes}`;
+                                            }
+                                        }
+
+                                        return {
+                                            id: log.id.toString(),
+                                            description: description,
+                                            timestamp: `${log.user_name} • ${formatLogDateTime(log.created_at)}`,
+                                        };
+                                    })}
                                 />
                             </div>
                         ) : (
