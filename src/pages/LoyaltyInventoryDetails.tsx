@@ -131,8 +131,8 @@ export const LoyaltyInventoryDetails = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-        <StatsCard
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+        {/* <StatsCard
           title="Current Stock"
           value={inventoryStats?.current_stock ?? item.stock_quantity ?? 0}
           icon={<svg xmlns="http://www.w3.org/2000/svg" width="28" height="25" viewBox="0 0 28 25" fill="none">
@@ -140,7 +140,7 @@ export const LoyaltyInventoryDetails = () => {
           </svg>}
           iconRounded={true}
           valueColor="text-[#1A1A1A]"
-        />
+        /> */}
         <StatsCard
           title="Total Sold"
           value={inventoryStats?.total_sold ?? item.total_sold ?? 0}
@@ -171,9 +171,9 @@ export const LoyaltyInventoryDetails = () => {
       <div className="flex flex-col md:flex-row gap-6">
         {/* Left Column - Images */}
         <div className="flex flex-col w-full md:w-[30%]">
-          {item.banner_image?.url ? (
+          {item.banner_image ? (
             <img
-              src={item.banner_image.url}
+              src={item.banner_image}
               alt={item.name}
               className="w-full h-96 object-contain"
               onError={(e) => {

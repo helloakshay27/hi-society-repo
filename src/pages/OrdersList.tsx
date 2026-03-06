@@ -561,7 +561,7 @@ const OrdersList = () => {
       case "loyalty_points_redeemed":
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-            {(item.loyalty_points_redeemed || 0).toLocaleString()} pts
+            {parseFloat(item.total_amount?.toString() || "0").toFixed(2)} pts
           </span>
         );
       case "items":
