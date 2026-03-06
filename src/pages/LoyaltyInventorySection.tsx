@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, X, Eye, ChevronDown, AlertCircle, Upload, Package, CheckCircle } from "lucide-react";
+import { Plus, X, Eye, ChevronDown, AlertCircle, Upload, Package, CheckCircle, Filter } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -18,7 +18,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Switch as MuiSwitch } from "@mui/material";
+import { Switch as MuiSwitch, Dialog as MuiDialog, DialogTitle as MuiDialogTitle, DialogContent as MuiDialogContent, DialogActions as MuiDialogActions, TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 export const LoyaltyInventorySection = () => {
@@ -60,6 +60,13 @@ export const LoyaltyInventorySection = () => {
     const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
     const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+    // Filter Modal States
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [filterSubCategory, setFilterSubCategory] = useState("");
+    const [filterDiscount, setFilterDiscount] = useState("");
+    const [filterPrice, setFilterPrice] = useState("");
+    const [subCategories, setSubCategories] = useState<{ value: number; label: string }[]>([]);
 
     // Add Item Form States
     const [isActive, setIsActive] = useState(true);
@@ -146,6 +153,29 @@ export const LoyaltyInventorySection = () => {
             toast.error("Failed to load categories");
         }
     };
+
+    const fetchSubCategories = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const baseUrl = localStorage.getItem("baseUrl");
+            const category = productCategories.find(c => c.value === activeTab);
+            const url = `https://${baseUrl}/products/sub_categories.json?token=${token}&page=1&category=${category?.apiCategory}`;
+
+            const response = await axios.get(url);
+            const subCats = response.data?.data || [];
+            setSubCategories(subCats.map((cat: any) => ({ value: cat.value, label: cat.label })));
+        } catch (error) {
+            console.error("Error fetching sub categories:", error);
+            toast.error("Failed to load sub categories");
+        }
+    };
+
+    // Fetch subcategories when filter modal opens
+    useEffect(() => {
+        if (isFilterModalOpen) {
+            fetchSubCategories();
+        }
+    }, [isFilterModalOpen, activeTab]);
 
     const handleToggleActive = async (nextActive: boolean) => {
         if (selectedProductIds.length === 0 || isUpdatingStatus) {
@@ -652,6 +682,18 @@ export const LoyaltyInventorySection = () => {
         setCurrentPage(page);
     };
 
+    const handleApplyFilters = () => {
+        toast.success("Filters applied successfully!");
+        setIsFilterModalOpen(false);
+    };
+
+    const handleClearFilters = () => {
+        setFilterSubCategory("");
+        setFilterDiscount("");
+        setFilterPrice("");
+        toast.info("Filters cleared!");
+    };
+
     const handleTabChange = (value: string) => {
         setActiveTab(value);
         setCurrentPage(1); // Reset to first page when changing tabs
@@ -717,6 +759,7 @@ export const LoyaltyInventorySection = () => {
                                 handleExport={handleExport}
                                 leftActions={renderLeftActions()}
                                 loading={loading}
+                                onFilterClick={() => setIsFilterModalOpen(true)}
                                 loadingMessage="Loading inventory..."
                                 emptyMessage="No inventory items found"
                                 storageKey={`loyalty-inventory-table-${activeTab}`}
@@ -1006,6 +1049,143 @@ export const LoyaltyInventorySection = () => {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Filter Modal */}
+            <MuiDialog open={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} maxWidth="sm" fullWidth>
+                <MuiDialogTitle sx={{ fontWeight: 600, fontSize: "20px", color: "#1A1A1A" }}>
+                    Filter Inventory
+                </MuiDialogTitle>
+                <MuiDialogContent dividers sx={{ display: "flex", flexDirection: "column", gap: 3, py: 3 }}>
+                    {/* Sub Category Filter */}
+                    <FormControl fullWidth size="small">
+                        <InputLabel id="filter-subcategory-label" sx={{ color: "#1A1A1A", fontWeight: 500 }}>
+                            Sub Category
+                        </InputLabel>
+                        <MuiSelect
+                            labelId="filter-subcategory-label"
+                            id="filter-subcategory"
+                            value={filterSubCategory}
+                            onChange={(e) => setFilterSubCategory(e.target.value)}
+                            label="Sub Category"
+                            sx={{
+                                backgroundColor: "white",
+                                "& .MuiOutlinedInput-root": {
+                                    "& fieldset": {
+                                        borderColor: "#e5e1d8",
+                                    },
+                                    "&:hover fieldset": {
+                                        borderColor: "#d4cfc6",
+                                    },
+                                    "&.Mui-focused fieldset": {
+                                        borderColor: "#C72030",
+                                    },
+                                },
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "#C72030",
+                                },
+                            }}
+                        >
+                            <MenuItem value="">All Sub Categories</MenuItem>
+                            {subCategories.map((cat) => (
+                                <MenuItem key={cat.value} value={cat.value.toString()}>
+                                    {cat.label}
+                                </MenuItem>
+                            ))}
+                        </MuiSelect>
+                    </FormControl>
+
+                    {/* Discount Filter */}
+                    <FormControl fullWidth size="small">
+                        <InputLabel id="filter-discount-label" sx={{ color: "#1A1A1A", fontWeight: 500 }}>
+                            Discount Range
+                        </InputLabel>
+                        <MuiSelect
+                            labelId="filter-discount-label"
+                            id="filter-discount"
+                            value={filterDiscount}
+                            onChange={(e) => setFilterDiscount(e.target.value)}
+                            label="Discount Range"
+                            sx={{
+                                backgroundColor: "white",
+                                "& .MuiOutlinedInput-root": {
+                                    "& fieldset": {
+                                        borderColor: "#e5e1d8",
+                                    },
+                                    "&:hover fieldset": {
+                                        borderColor: "#d4cfc6",
+                                    },
+                                    "&.Mui-focused fieldset": {
+                                        borderColor: "#C72030",
+                                    },
+                                },
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "#C72030",
+                                },
+                            }}
+                        >
+                            <MenuItem value="">Any Discount</MenuItem>
+                            <MenuItem value="0-5">0% - 5%</MenuItem>
+                            <MenuItem value="5-10">5% - 10%</MenuItem>
+                            <MenuItem value="10-15">10% - 15%</MenuItem>
+                            <MenuItem value="15">15% and above</MenuItem>
+                        </MuiSelect>
+                    </FormControl>
+
+                    {/* Price Filter */}
+                    <FormControl fullWidth size="small">
+                        <InputLabel id="filter-price-label" sx={{ color: "#1A1A1A", fontWeight: 500 }}>
+                            Price Range
+                        </InputLabel>
+                        <MuiSelect
+                            labelId="filter-price-label"
+                            id="filter-price"
+                            value={filterPrice}
+                            onChange={(e) => setFilterPrice(e.target.value)}
+                            label="Price Range"
+                            sx={{
+                                backgroundColor: "white",
+                                "& .MuiOutlinedInput-root": {
+                                    "& fieldset": {
+                                        borderColor: "#e5e1d8",
+                                    },
+                                    "&:hover fieldset": {
+                                        borderColor: "#d4cfc6",
+                                    },
+                                    "&.Mui-focused fieldset": {
+                                        borderColor: "#C72030",
+                                    },
+                                },
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "#C72030",
+                                },
+                            }}
+                        >
+                            <MenuItem value="">Any Price</MenuItem>
+                            <MenuItem value="0-100">₹0 - ₹100</MenuItem>
+                            <MenuItem value="100-500">₹100 - ₹500</MenuItem>
+                            <MenuItem value="500-1000">₹500 - ₹1000</MenuItem>
+                            <MenuItem value="1000-5000">₹1000 - ₹5000</MenuItem>
+                            <MenuItem value="5000-10000">₹5000 - ₹10000</MenuItem>
+                            <MenuItem value="10000">₹10000 and above</MenuItem>
+                        </MuiSelect>
+                    </FormControl>
+                </MuiDialogContent>
+                <MuiDialogActions sx={{ p: 2, gap: 1 }}>
+                    <Button
+                        variant="outline"
+                        onClick={handleClearFilters}
+                        className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                    >
+                        Clear
+                    </Button>
+                    <Button
+                        onClick={handleApplyFilters}
+                        className="bg-[#C72030] hover:bg-[#A01828] text-white"
+                    >
+                        Apply
+                    </Button>
+                </MuiDialogActions>
+            </MuiDialog>
         </div>
     );
 };
