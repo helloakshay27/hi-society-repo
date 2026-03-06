@@ -64,8 +64,12 @@ export const LoyaltyInventorySection = () => {
     // Filter Modal States
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [filterSubCategory, setFilterSubCategory] = useState("");
-    const [filterDiscount, setFilterDiscount] = useState("");
-    const [filterPrice, setFilterPrice] = useState("");
+    const [filterMinDiscount, setFilterMinDiscount] = useState("");
+    const [filterMaxDiscount, setFilterMaxDiscount] = useState("");
+    const [filterMinPrice, setFilterMinPrice] = useState("");
+    const [filterMaxPrice, setFilterMaxPrice] = useState("");
+    // Applied filters (used in fetch)
+    const [appliedFilters, setAppliedFilters] = useState({ subCategory: "", minDiscount: "", maxDiscount: "", minPrice: "", maxPrice: "" });
     const [subCategories, setSubCategories] = useState<{ value: number; label: string }[]>([]);
 
     // Add Item Form States
@@ -139,7 +143,7 @@ export const LoyaltyInventorySection = () => {
     useEffect(() => {
         fetchInventoryData();
         fetchCategories();
-    }, [activeTab, currentPage]);
+    }, [activeTab, currentPage, appliedFilters]);
 
     const fetchCategories = async () => {
         try {
@@ -264,8 +268,13 @@ export const LoyaltyInventorySection = () => {
             setLoading(true);
             const category = productCategories.find(c => c.value === activeTab);
             const token = localStorage.getItem("token");
-            const baseUrl = localStorage.getItem("baseUrl")
-            const url = `https://${baseUrl}/products.json?token=${token}&category=${category?.apiCategory}&page=${currentPage}&source=admin_portal`;
+            const baseUrl = localStorage.getItem("baseUrl");
+            let url = `https://${baseUrl}/products.json?token=${token}&category=${category?.apiCategory}&page=${currentPage}&source=admin_portal`;
+            if (appliedFilters.subCategory) url += `&q[categories_in]=${encodeURIComponent(appliedFilters.subCategory)}`;
+            if (appliedFilters.minDiscount) url += `&min_discount=${appliedFilters.minDiscount}`;
+            if (appliedFilters.maxDiscount) url += `&max_discount=${appliedFilters.maxDiscount}`;
+            if (appliedFilters.minPrice) url += `&min_price=${appliedFilters.minPrice}`;
+            if (appliedFilters.maxPrice) url += `&max_price=${appliedFilters.maxPrice}`;
 
             const response = await axios.get(url);
             const products = response.data?.products || [];
@@ -683,14 +692,26 @@ export const LoyaltyInventorySection = () => {
     };
 
     const handleApplyFilters = () => {
+        setAppliedFilters({
+            subCategory: filterSubCategory,
+            minDiscount: filterMinDiscount,
+            maxDiscount: filterMaxDiscount,
+            minPrice: filterMinPrice,
+            maxPrice: filterMaxPrice,
+        });
+        setCurrentPage(1);
         toast.success("Filters applied successfully!");
         setIsFilterModalOpen(false);
     };
 
     const handleClearFilters = () => {
         setFilterSubCategory("");
-        setFilterDiscount("");
-        setFilterPrice("");
+        setFilterMinDiscount("");
+        setFilterMaxDiscount("");
+        setFilterMinPrice("");
+        setFilterMaxPrice("");
+        setAppliedFilters({ subCategory: "", minDiscount: "", maxDiscount: "", minPrice: "", maxPrice: "" });
+        setCurrentPage(1);
         toast.info("Filters cleared!");
     };
 
@@ -1102,8 +1123,14 @@ export const LoyaltyInventorySection = () => {
                         <MuiSelect
                             labelId="filter-discount-label"
                             id="filter-discount"
-                            value={filterDiscount}
-                            onChange={(e) => setFilterDiscount(e.target.value)}
+                            value={filterMinDiscount ? `${filterMinDiscount}-${filterMaxDiscount}` : ""}
+                            onChange={(e) => {
+                                const val = e.target.value as string;
+                                if (!val) { setFilterMinDiscount(""); setFilterMaxDiscount(""); return; }
+                                const [min, max] = val.split("-");
+                                setFilterMinDiscount(min || "");
+                                setFilterMaxDiscount(max || "");
+                            }}
                             label="Discount Range"
                             sx={{
                                 backgroundColor: "white",
@@ -1127,7 +1154,7 @@ export const LoyaltyInventorySection = () => {
                             <MenuItem value="0-5">0% - 5%</MenuItem>
                             <MenuItem value="5-10">5% - 10%</MenuItem>
                             <MenuItem value="10-15">10% - 15%</MenuItem>
-                            <MenuItem value="15">15% and above</MenuItem>
+                            <MenuItem value="15-">15% and above</MenuItem>
                         </MuiSelect>
                     </FormControl>
 
@@ -1139,8 +1166,14 @@ export const LoyaltyInventorySection = () => {
                         <MuiSelect
                             labelId="filter-price-label"
                             id="filter-price"
-                            value={filterPrice}
-                            onChange={(e) => setFilterPrice(e.target.value)}
+                            value={filterMinPrice ? `${filterMinPrice}-${filterMaxPrice}` : ""}
+                            onChange={(e) => {
+                                const val = e.target.value as string;
+                                if (!val) { setFilterMinPrice(""); setFilterMaxPrice(""); return; }
+                                const [min, max] = val.split("-");
+                                setFilterMinPrice(min || "");
+                                setFilterMaxPrice(max || "");
+                            }}
                             label="Price Range"
                             sx={{
                                 backgroundColor: "white",
@@ -1166,7 +1199,7 @@ export const LoyaltyInventorySection = () => {
                             <MenuItem value="500-1000">₹500 - ₹1000</MenuItem>
                             <MenuItem value="1000-5000">₹1000 - ₹5000</MenuItem>
                             <MenuItem value="5000-10000">₹5000 - ₹10000</MenuItem>
-                            <MenuItem value="10000">₹10000 and above</MenuItem>
+                            <MenuItem value="10000-">₹10000 and above</MenuItem>
                         </MuiSelect>
                     </FormControl>
                 </MuiDialogContent>

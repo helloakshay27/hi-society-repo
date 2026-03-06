@@ -881,6 +881,12 @@ export const UIHiSocietySidebar: React.FC = () => {
               icon: CreditCard,
               path: "/settings/wallet-topup",
             },
+                         {
+                          id: "threshold-alerts",
+                          label: "Threshold Alerts",
+                          icon: CreditCard,
+                          path: "/settings/threshold-alerts",
+                        },
           ],
         },
         {

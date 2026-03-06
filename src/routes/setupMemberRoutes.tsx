@@ -491,6 +491,10 @@ const AppointmentzBlockDaysConfig = lazy(
 // Wallet Topup Page
 const WalletTopup = lazy(() => import("@/pages/WalletTopup"));
 
+// Threshold Alerts Pages
+const ThresholdAlerts = lazy(() => import("@/pages/ThresholdAlerts"));
+const ThresholdAlertDetail = lazy(() => import("@/pages/ThresholdAlertDetail"));
+
 // Loading fallback component
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -518,6 +522,8 @@ export const setupMemberRoutes = (
     <Route path="/loyalty/dashboard" element={<LoyaltyDashboard />} />
     <Route path="/loyalty/wallet-management" element={<WalletManagement />} />
     <Route path="/settings/wallet-topup" element={<WalletTopup />} />
+    <Route path="/settings/threshold-alerts" Component={withSuspense(ThresholdAlerts)} />
+    <Route path="/settings/threshold-alerts/:id" Component={withSuspense(ThresholdAlertDetail)} />
     <Route path="/loyalty/customers" element={<LoyaltyCustomers />} />
     <Route path="/loyalty/customers/:id" element={<LoyaltyCustomerDetails />} />
     <Route
