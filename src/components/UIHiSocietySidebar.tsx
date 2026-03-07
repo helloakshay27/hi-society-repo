@@ -43,6 +43,7 @@ import {
   ChevronLeft,
   Settings,
   DollarSign,
+  Palette,
 } from "lucide-react";
 
 interface MenuItem {
@@ -329,6 +330,12 @@ export const UIHiSocietySidebar: React.FC = () => {
           label: "Press Releases",
           icon: FileText,
           path: "/maintenance/press-releases-list",
+        },
+        {
+          id: "design-insights",
+          label: "Design Insights",
+          icon: Palette,
+          path: "/transitioning/design-insight",
         },
         {
           id: "faq",
@@ -850,13 +857,13 @@ export const UIHiSocietySidebar: React.FC = () => {
     settings: {
       title: "Settings",
       items: [
-     
+
         {
           id: "setup-member",
           label: "Setup Member",
           icon: Users,
           subItems: [
-         
+
             {
               id: "image-configuration-list",
               label: "Image Configuration",
@@ -894,7 +901,7 @@ export const UIHiSocietySidebar: React.FC = () => {
           label: "Application Setup",
           icon: SettingsIcon,
           subItems: [
-           
+
             {
               id: "tax-setup",
               label: "Tax Setup",
@@ -907,10 +914,10 @@ export const UIHiSocietySidebar: React.FC = () => {
               icon: Calendar,
               path: "/accounting/payment-terms",
             },
-          
+
           ],
         },
-     
+
       ],
     },
   };
