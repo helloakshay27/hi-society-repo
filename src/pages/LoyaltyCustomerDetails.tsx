@@ -198,8 +198,8 @@ const LoyaltyCustomerDetails = () => {
                 </div>
                 <div
                     className={`text-[14px] font-semibold text-gray-900 flex-1 min-w-0 ${!isExpanded && hasLongValue
-                            ? "truncate"
-                            : "break-all whitespace-normal"
+                        ? "truncate"
+                        : "break-all whitespace-normal"
                         } ${hasLongValue ? "cursor-pointer hover:text-[#C72030] transition-colors" : ""}`}
                     onClick={() => hasLongValue && toggleFieldExpansion(fieldKey)}
                     title={hasLongValue && !isExpanded ? value : undefined}
@@ -258,7 +258,8 @@ const LoyaltyCustomerDetails = () => {
                 let color = "";
                 if (type === "debit") color = "text-red-600 font-medium";
                 if (type === "credit") color = "text-green-600 font-medium";
-                return <span className={color}>{item.transactionType}</span>;
+                // return <span className={color}>{item.transactionType}</span>;
+                return <span className={color}>{item.transactionType?.charAt(0).toUpperCase() + item.transactionType?.slice(1).toLowerCase()}</span>;
             }
             case "resourceType":
                 return <span>{item.resource_type || "-"}</span>;
