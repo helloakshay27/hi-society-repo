@@ -343,7 +343,7 @@ const OrderDetails = () => {
                                         </div>
                                         <div className="flex-1">
                                             <h3 className="font-semibold text-gray-900">{orderData?.customerName || "-"}</h3>
-                                            <div className="flex items-center gap-1 mt-1 border-1 p-1 border-gray-900">
+                                            <div className="flex items-center gap-1 mt-1 p-1" style={{ border: '2px solid #99999957', borderRadius:"2px", width: 'fit-content' }}>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                                     <path d="M19.3588 9.67942C19.3588 15.0251 15.0252 19.3588 9.67938 19.3588C4.3336 19.3588 0 15.0251 0 9.67942C0 4.33361 4.3336 0 9.67938 0C15.0252 0 19.3588 4.33361 19.3588 9.67942Z" fill="url(#paint0_linear_714_3143)" />
                                                     <path d="M17.2343 9.67865C17.2343 13.8515 13.8515 17.2344 9.67872 17.2344C5.50582 17.2344 2.12305 13.8515 2.12305 9.67865C2.12305 5.50581 5.50582 2.12305 9.67872 2.12305C13.8515 2.12305 17.2343 5.50581 17.2343 9.67865Z" fill="#A88300" />
@@ -361,7 +361,7 @@ const OrderDetails = () => {
                                                         </linearGradient>
                                                     </defs>
                                                 </svg>
-                                                <span className="text-sm text-gray-600">Gold Member</span>
+                                                <span className="text-sm text-gray-600 font-semibold">Gold Member</span>
                                             </div>
                                         </div>
                                     </div>
