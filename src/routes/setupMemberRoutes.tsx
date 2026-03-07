@@ -42,6 +42,8 @@ import LoyaltyEventCreate from "@/pages/LoyaltyEventCreate";
 import LoyaltyEventEdit from "@/pages/LoyaltyEventEdit";
 import LoyaltyAddOfferPage from "@/pages/LoyaltyAddOfferPage";
 import LoyaltyOfferViewPage from "@/pages/LoyaltyOfferViewPage";
+import { AddMembershipPlanPage } from "@/pages/AddMembershipPlanPage";
+import { EditMembershipPlanPage } from "@/pages/EditMembershipPlanPage";
 
 const ViewUserPage = lazy(() => import("@/pages/ViewUserPage"));
 const BroadcastCreate = lazy(() => import("@/pages/BroadcastCreate"));
@@ -489,6 +491,10 @@ const AppointmentzBlockDaysConfig = lazy(
 // Wallet Topup Page
 const WalletTopup = lazy(() => import("@/pages/WalletTopup"));
 
+// Threshold Alerts Pages
+const ThresholdAlerts = lazy(() => import("@/pages/ThresholdAlerts"));
+const ThresholdAlertDetail = lazy(() => import("@/pages/ThresholdAlertDetail"));
+
 // Loading fallback component
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -516,6 +522,8 @@ export const setupMemberRoutes = (
     <Route path="/loyalty/dashboard" element={<LoyaltyDashboard />} />
     <Route path="/loyalty/wallet-management" element={<WalletManagement />} />
     <Route path="/settings/wallet-topup" element={<WalletTopup />} />
+    <Route path="/settings/threshold-alerts" Component={withSuspense(ThresholdAlerts)} />
+    <Route path="/settings/threshold-alerts/:id" Component={withSuspense(ThresholdAlertDetail)} />
     <Route path="/loyalty/customers" element={<LoyaltyCustomers />} />
     <Route path="/loyalty/customers/:id" element={<LoyaltyCustomerDetails />} />
     <Route
@@ -1280,6 +1288,14 @@ export const setupMemberRoutes = (
     <Route
       path="/cms/membership-plan-setup"
       Component={withSuspense(CMSMembershipPlanSetup)}
+    />
+    <Route
+      path="/cms/membership-plan-setup/add"
+      Component={withSuspense(AddMembershipPlanPage)}
+    />
+    <Route
+      path="/cms/membership-plan-setup/edit/:id"
+      Component={withSuspense(EditMembershipPlanPage)}
     />
     <Route
       path="/cms/payment-plan-setup"
