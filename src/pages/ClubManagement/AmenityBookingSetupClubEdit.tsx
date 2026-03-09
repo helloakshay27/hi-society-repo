@@ -162,6 +162,7 @@ export const EditBookingSetupClubPage = () => {
             id: string;
             name: string;
             status: string;
+            isNew: boolean;
             chargeSetup: {
                 member: { selected: boolean; adult: string; child: string };
                 guest: { selected: boolean; adult: string; child: string };
@@ -452,10 +453,13 @@ export const EditBookingSetupClubPage = () => {
 
             if (formData.addSubFacility) {
                 formData.subFacilities.forEach((subFacility, idx) => {
-                    formDataToSend.append(
-                        `facility_setup[sub_facilities_attributes][${idx}][id]`,
-                        subFacility.id
-                    )
+                    // Only append ID for existing subfacilities, not new ones
+                    if (!subFacility.isNew) {
+                        formDataToSend.append(
+                            `facility_setup[sub_facilities_attributes][${idx}][id]`,
+                            subFacility.id
+                        );
+                    }
                     formDataToSend.append(
                         `facility_setup[sub_facilities_attributes][${idx}][name]`,
                         subFacility.name
@@ -1008,6 +1012,7 @@ export const EditBookingSetupClubPage = () => {
                     id: subFac.sub_facility?.id?.toString() || Date.now().toString(),
                     name: subFac.sub_facility.name || "",
                     status: subFac.sub_facility.active || "true",
+                    isNew: false,
                     chargeSetup: {
                         member: {
                             selected: subFac.sub_facility.facility_charge?.member === true || subFac.facility_charge?.member === true,
@@ -1109,6 +1114,7 @@ export const EditBookingSetupClubPage = () => {
             id: Date.now().toString(),
             name: "",
             status: "true",
+            isNew: true,
             chargeSetup: {
                 member: { selected: false, adult: "", child: "" },
                 guest: { selected: false, adult: "", child: "" },
@@ -1407,6 +1413,7 @@ export const EditBookingSetupClubPage = () => {
                                                         id: Date.now().toString(),
                                                         name: "",
                                                         status: "true",
+                                                        isNew: true,
                                                         chargeSetup: {
                                                             member: { selected: false, adult: "", child: "" },
                                                             guest: { selected: false, adult: "", child: "" },
@@ -3517,7 +3524,7 @@ export const EditBookingSetupClubPage = () => {
                                 <div className="flex items-center space-x-2">
                                     <Checkbox
                                         id="prepaid"
-                                        checked={formData.prepaid === true || formData.prepaid === 1 || formData.prepaid === "1" || formData.prepaid === "true"}
+                                        checked={formData.prepaid === true}
                                         onCheckedChange={(checked) =>
                                             setFormData({ ...formData, prepaid: !!checked })
                                         }
@@ -3527,7 +3534,7 @@ export const EditBookingSetupClubPage = () => {
                                 <div className="flex items-center space-x-2">
                                     <Checkbox
                                         id="payOnFacility"
-                                        checked={formData.payOnFacility === true || formData.payOnFacility === 1 || formData.payOnFacility === "1" || formData.payOnFacility === "true"}
+                                        checked={formData.payOnFacility === true}
                                         onCheckedChange={(checked) =>
                                             setFormData({ ...formData, payOnFacility: !!checked })
                                         }
@@ -3537,7 +3544,7 @@ export const EditBookingSetupClubPage = () => {
                                 <div className="flex items-center space-x-2">
                                     <Checkbox
                                         id="complimentary"
-                                        checked={formData.complimentary === true || formData.complimentary === 1 || formData.complimentary === "1" || formData.complimentary === "true"}
+                                        checked={formData.complimentary === true}
                                         onCheckedChange={(checked) =>
                                             setFormData({ ...formData, complimentary: !!checked })
                                         }
