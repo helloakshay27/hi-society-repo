@@ -6,7 +6,7 @@ import {
   fetchBookingDetails,
   getLogs,
 } from "@/store/slices/facilityBookingsSlice";
-import { ArrowLeft, Logs, Pencil } from "lucide-react";
+import { ArrowLeft, Logs, Pencil, Download, Loader } from "lucide-react";
 import { CustomTabs } from "@/components/CustomTabs";
 import { LogsTimeline } from "@/components/LogTimeline";
 import {
@@ -65,6 +65,7 @@ const BookingDetailsPage = () => {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
+  const [downloadingReceipt, setDownloadingReceipt] = useState(false)
   const [error, setError] = useState("")
   const [refundFormData, setRefundFormData] = useState({
     refundable_amount: "",
@@ -326,6 +327,32 @@ const BookingDetailsPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  const handleDownloadReceipt = async (id) => {
+    setDownloadingReceipt(true);
+    try {
+      const response = await axios.get(`https://${baseUrl}/crm_facility_bookings/payment_details_pdf?lock_payment_id=${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        responseType: 'blob'
+      })
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "payment_details.pdf");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to download receipt");
+    } finally {
+      setDownloadingReceipt(false);
+    }
+  }
 
   const handleCaptureChange = (e: any) => {
     const { name, value } = e.target;
@@ -686,6 +713,79 @@ const BookingDetailsPage = () => {
                       </tr>
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {/* Payment Details Card */}
+            {bookings?.lock_payment && (
+              <div className="mt-10">
+                <h3 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-2 mb-4">
+                  Payment Details
+                </h3>
+                <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                  {/* Header with Payment ID and Status */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                        Payment #{bookings.lock_payment.id || bookings.lock_payment.pg_transaction_id}
+                      </h4>
+                      <p className="text-xs text-gray-500">Status: {bookings.lock_payment.payment_status || 'Pending'}</p>
+                    </div>
+                    <Badge
+                      className={cn(
+                        "px-3 py-1 text-xs font-semibold rounded-full border capitalize",
+                        bookings.lock_payment.payment_status?.toLowerCase() === 'success'
+                          ? 'bg-green-100 text-green-800 border-green-200'
+                          : bookings.lock_payment.payment_status?.toLowerCase() === 'pending'
+                            ? 'bg-orange-100 text-orange-800 border-orange-200'
+                            : 'bg-red-100 text-red-800 border-red-200'
+                      )}
+                    >
+                      {bookings.lock_payment.payment_status || 'Pending'}
+                    </Badge>
+                  </div>
+
+                  {/* Payment Details Grid */}
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Transaction ID</span>
+                      <span className="text-gray-900 font-medium">{bookings.lock_payment.pg_transaction_id || '-'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Payment Method</span>
+                      <span className="text-gray-900 font-medium">{bookings.lock_payment.payment_method || '-'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Paid Amount</span>
+                      <span className="text-lg font-bold text-[#C72030]">
+                        ₹{(bookings.lock_payment.paid_amount || 0).toLocaleString('en-IN', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}
+                      </span>
+                    </div>
+                    {bookings.lock_payment.notes && (
+                      <div className="flex items-start justify-between text-sm pt-3 border-t border-gray-100">
+                        <span className="text-gray-600">Notes</span>
+                        <span className="text-gray-900 font-medium">{bookings.lock_payment.notes}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Download Button */}
+                  <Button
+                    disabled={downloadingReceipt}
+                    onClick={() => handleDownloadReceipt(bookings.lock_payment.id || bookings.lock_payment.pg_transaction_id)}
+                    variant="outline"
+                    className="w-full border-[#C72030] text-[#C72030] hover:bg-[#C72030] hover:text-white"
+                    size="sm"
+                  >
+                    {
+                      downloadingReceipt ? <Loader className="w-4 h-4 animate-spin mr-2" /> : <Download className="w-3 h-3 mr-2" />
+                    }
+                    Download Receipt
+                  </Button>
                 </div>
               </div>
             )}
