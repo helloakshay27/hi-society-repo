@@ -38,7 +38,13 @@ export interface FacilityBookingDetails {
   return_percentage?: number | null;
   returned_amount?: number | null;
   lock_payment?: {
+    id?: string;
     pg_transaction_id?: string;
+    payment_status?: string;
+    payment_method?: string;
+    paid_amount?: number;
+    total_amount?: number;
+    notes?: string;
   };
 }
 
