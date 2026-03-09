@@ -390,8 +390,8 @@ const BookingListDashboard = () => {
       : null;
 
     const filterParams = {
-      "q[facility_id_in]": filters.facilityName,
-      "q[current_status_cont]": filters.status,
+      ...(filters.facilityName && { "q[facility_id_in]": filters.facilityName }),
+      ...(filters.status && { "q[current_status_cont]": filters.status }),
       ...(formatedCreatedStartDate &&
         formatedCreatedEndDate && {
         "q[date_range]": `${formatedCreatedStartDate} - ${formatedCreatedEndDate}`,
@@ -408,34 +408,56 @@ const BookingListDashboard = () => {
       const response = await dispatch(
         filterBookings({ baseUrl, token, queryString })
       ).unwrap();
-      const updatedResponse = response.facility_bookings.map((item: any) => ({
-        bookedBy: item.book_by,
-        bookedFor: item.book_for || "-",
-        bookingStatus: item.current_status,
-        companyName: item.company_name,
-        createdOn: item.created_at.split(" ")[0],
-        facility: item.facility_name,
-        facilityType: item.fac_type,
+      const formatDate = (dateString: string): string => {
+        if (!dateString) return '-';
+        try {
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) return '-';
+          return date.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          });
+        } catch (error) {
+          return '-';
+        }
+      };
+
+      const safeValue = (value: any): string => {
+        if (value === 0) return "0";
+        return value?.toString().trim() ? value.toString() : "-";
+      };
+
+      const updatedResponse = response.data.map((item: any) => ({
         id: item.id,
-        scheduledDate: item.startdate.split("T")[0],
-        scheduledTime: item.show_schedule_24_hour,
-        source: item.source,
-        subFacilityName: item.sub_facility_name,
-        totalAmount: item.amount_full,
-        refundableAmount: item.refunded_amount,
-        gst: item.gst,
-        amountPaid: item.amount_paid,
-        paymentStatus: item.pg_state,
-        member: item.member_count,
-        nonMember: item.non_member_count,
-        guest: item.guest_count,
-        tenant: item.tenant_count,
+        bookedBy: safeValue(item.booked_by_name || item.book_by),
+        tower: safeValue(item.tower),
+        flat: safeValue(item.flat),
+        bookedFor: safeValue(item.booked_by_name || item.book_for),
+        companyName: safeValue(item.company_name),
+        facility: safeValue(item.facility_name),
+        subFacilityName: safeValue(item.sub_facility_name),
+        facilityType: safeValue(item.fac_type),
+        scheduledDate: formatDate(item.startdate),
+        scheduledTime: safeValue(item.show_schedule_24_hour || item.show_schedule),
+        createdOn: formatDate(item.created_at),
+        source: safeValue(item.source),
+        totalAmount: safeValue(item.amount_full),
+        refundableAmount: safeValue(item.refunded_amount),
+        gst: safeValue(item.gst),
+        amountPaid: safeValue(item.amount_paid),
+        paymentStatus: safeValue(item.pg_state),
+        bookingStatus: (item.current_status as 'Confirmed' | 'Pending' | 'Cancelled') || 'Pending',
+        member: safeValue(item.member_count),
+        nonMember: safeValue(item.non_member_count),
+        guest: safeValue(item.guest_count),
+        tenant: safeValue(item.tenant_count),
       }));
       setBookingData(updatedResponse);
       setPagination({
-        current_page: response.pagination.current_page || 1,
-        total_count: response.pagination.total_count || 0,
-        total_pages: response.pagination.total_pages || 0,
+        current_page: response.meta.current_page || 1,
+        total_count: response.meta.total_count || 0,
+        total_pages: response.meta.total_pages || 0,
       });
       setIsFilterModalOpen(false);
       toast.success("Filters applied successfully");
@@ -534,28 +556,50 @@ const BookingListDashboard = () => {
         const response = await dispatch(
           filterBookings({ baseUrl, token, queryString })
         ).unwrap();
+        const formatDate = (dateString: string): string => {
+          if (!dateString) return '-';
+          try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '-';
+            return date.toLocaleDateString('en-GB', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric'
+            });
+          } catch (error) {
+            return '-';
+          }
+        };
+
+        const safeValue = (value: any): string => {
+          if (value === 0) return "0";
+          return value?.toString().trim() ? value.toString() : "-";
+        };
+
         const updatedResponse = response.facility_bookings.map((item: any) => ({
-          bookedBy: item.book_by,
-          bookedFor: item.book_for || "-",
-          bookingStatus: item.current_status,
-          companyName: item.company_name,
-          createdOn: item.created_at.split(" ")[0],
-          facility: item.facility_name,
-          facilityType: item.fac_type,
           id: item.id,
-          scheduledDate: item.startdate.split("T")[0],
-          scheduledTime: item.show_schedule_24_hour,
-          source: item.source,
-          subFacilityName: item.sub_facility_name,
-          totalAmount: item.amount_full,
-          refundableAmount: item.refunded_amount,
-          gst: item.gst,
-          amountPaid: item.amount_paid,
-          paymentStatus: item.pg_state,
-          member: item.member_count,
-          nonMember: item.non_member_count,
-          guest: item.guest_count,
-          tenant: item.tenant_count,
+          bookedBy: safeValue(item.booked_by_name || item.book_by),
+          tower: safeValue(item.tower),
+          flat: safeValue(item.flat),
+          bookedFor: safeValue(item.booked_by_name || item.book_for),
+          companyName: safeValue(item.company_name),
+          facility: safeValue(item.facility_name),
+          subFacilityName: safeValue(item.sub_facility_name),
+          facilityType: safeValue(item.fac_type),
+          scheduledDate: formatDate(item.startdate),
+          scheduledTime: safeValue(item.show_schedule_24_hour || item.show_schedule),
+          createdOn: formatDate(item.created_at),
+          source: safeValue(item.source),
+          totalAmount: safeValue(item.amount_full),
+          refundableAmount: safeValue(item.refunded_amount),
+          gst: safeValue(item.gst),
+          amountPaid: safeValue(item.amount_paid),
+          paymentStatus: safeValue(item.pg_state),
+          bookingStatus: (item.current_status as 'Confirmed' | 'Pending' | 'Cancelled') || 'Pending',
+          member: safeValue(item.member_count),
+          nonMember: safeValue(item.non_member_count),
+          guest: safeValue(item.guest_count),
+          tenant: safeValue(item.tenant_count),
         }));
 
         setBookingData(updatedResponse);
