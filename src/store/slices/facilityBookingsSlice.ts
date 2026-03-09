@@ -176,7 +176,7 @@ export const filterBookings = createAsyncThunk(
   ) => {
     try {
       const response = await axios.get(
-        `https://${baseUrl}/pms/admin/facility_bookings.json?${queryString}`,
+        `https://${baseUrl}/crm/admin/facility_bookings.json?${queryString}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
