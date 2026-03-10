@@ -22,6 +22,7 @@ import axios from "axios";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { CMSPaymentsFilterModal } from "@/components/CMSPaymentsFilterModal";
 import { format, parse } from "date-fns";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 const columns: ColumnConfig[] = [
   {
@@ -143,17 +144,24 @@ const CMSPayments = () => {
     fromDate: '',
     toDate: '',
   });
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    total_count: 0,
+    total_pages: 0,
+  });
+  const [loading, setLoading] = useState(false);
 
-  const fetchPayments = async (filters = appliedFilters) => {
+  const fetchPayments = async (filterParams = appliedFilters, pageNum: number = 1) => {
+    setLoading(true);
     try {
-      const params: any = {};
+      const params: any = { page: pageNum };
 
-      if (filters.status) {
-        params["q[payment_status_in]"] = filters.status;
+      if (filterParams.status) {
+        params["q[payment_status_in]"] = filterParams.status;
       }
-      if (filters.fromDate && filters.toDate) {
-        const fromDate = format(parse(filters.fromDate, "yyyy-MM-dd", new Date()), "MM/dd/yyyy");
-        const toDate = format(parse(filters.toDate, "yyyy-MM-dd", new Date()), "MM/dd/yyyy");
+      if (filterParams.fromDate && filterParams.toDate) {
+        const fromDate = format(parse(filterParams.fromDate, "yyyy-MM-dd", new Date()), "MM/dd/yyyy");
+        const toDate = format(parse(filterParams.toDate, "yyyy-MM-dd", new Date()), "MM/dd/yyyy");
         params["q[date_range]"] = `${fromDate} - ${toDate}`;
       }
 
@@ -163,15 +171,26 @@ const CMSPayments = () => {
         },
         params
       })
-      setPayments(response.data.payments)
+      setPayments(response.data.payments);
+      if (response.data.meta) {
+        setPagination({
+          current_page: response.data.meta.current_page || 1,
+          total_count: response.data.meta.total_entries || 0,
+          total_pages: response.data.meta.total_pages || 0,
+        });
+      }
     } catch (error) {
-      console.log(error)
+      console.log(error);
+      toast.error("Failed to fetch payments");
+    } finally {
+      setLoading(false);
     }
   }
 
   const handleFilterApply = (filters: any) => {
     setAppliedFilters(filters);
-    fetchPayments(filters);
+    setPagination((prev) => ({ ...prev, current_page: 1 }));
+    fetchPayments(filters, 1);
   };
 
   useEffect(() => {
@@ -339,7 +358,7 @@ const CMSPayments = () => {
       )
       toast.success("Payment record updated successfully")
       setIsEditDialogOpen(false)
-      fetchPayments()
+      fetchPayments(appliedFilters, pagination.current_page)
     } catch (error) {
       console.error("Error updating payment record:", error)
       toast.error("Failed to update payment record")
@@ -347,6 +366,142 @@ const CMSPayments = () => {
       setIsSubmitting(false)
     }
   }
+
+  const handlePageChange = async (page: number) => {
+    if (page < 1 || page > pagination.total_pages || page === pagination.current_page || loading) {
+      return;
+    }
+
+    try {
+      setPagination((prev) => ({ ...prev, current_page: page }));
+      await fetchPayments(appliedFilters, page);
+    } catch (error) {
+      console.error("Error changing page:", error);
+      toast.error("Failed to load page data. Please try again.");
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!pagination.total_pages || pagination.total_pages <= 0) {
+      return null;
+    }
+    const items = [];
+    const totalPages = pagination.total_pages;
+    const currentPage = pagination.current_page;
+    const showEllipsis = totalPages > 7;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink
+            onClick={() => handlePageChange(1)}
+            isActive={currentPage === 1}
+            aria-disabled={loading}
+            className={loading ? "pointer-events-none opacity-50" : ""}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+                aria-disabled={loading}
+                className={loading ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+                aria-disabled={loading}
+                className={loading ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink
+                  onClick={() => handlePageChange(i)}
+                  isActive={currentPage === i}
+                  aria-disabled={loading}
+                  className={loading ? "pointer-events-none opacity-50" : ""}
+                >
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+              aria-disabled={loading}
+              className={loading ? "pointer-events-none opacity-50" : ""}
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+              aria-disabled={loading}
+              className={loading ? "pointer-events-none opacity-50" : ""}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
 
   const renderActions = (item: any) => (
     <div>
@@ -394,7 +549,28 @@ const CMSPayments = () => {
         enableExport
         handleExport={handleExport}
         onFilterClick={() => setIsFilterModalOpen(true)}
+        loading={loading}
       />
+
+      <div className="flex justify-center mt-6">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(Math.max(1, pagination.current_page - 1))}
+                className={pagination.current_page === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            {renderPaginationItems()}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(Math.min(pagination.total_pages, pagination.current_page + 1))}
+                className={pagination.current_page === pagination.total_pages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
 
       <CMSPaymentsFilterModal
         open={isFilterModalOpen}

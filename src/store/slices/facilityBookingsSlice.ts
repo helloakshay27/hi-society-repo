@@ -38,7 +38,13 @@ export interface FacilityBookingDetails {
   return_percentage?: number | null;
   returned_amount?: number | null;
   lock_payment?: {
+    id?: string;
     pg_transaction_id?: string;
+    payment_status?: string;
+    payment_method?: string;
+    paid_amount?: number;
+    total_amount?: number;
+    notes?: string;
   };
 }
 
@@ -176,7 +182,7 @@ export const filterBookings = createAsyncThunk(
   ) => {
     try {
       const response = await axios.get(
-        `https://${baseUrl}/pms/admin/facility_bookings.json?${queryString}`,
+        `https://${baseUrl}/crm/admin/facility_bookings.json?${queryString}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
