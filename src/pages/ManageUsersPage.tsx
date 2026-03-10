@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Eye, Plus, Download, Users, UserCheck, UserX, Clock, MonitorSmartphone, Calendar, Filter, X } from "lucide-react";
+import { Eye, Plus, Download, Users, UserCheck, UserX, Clock, MonitorSmartphone, Calendar, Filter, X, Edit } from "lucide-react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
@@ -20,6 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { toast } from "sonner";
+import axios from "axios";
 
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
@@ -50,326 +53,54 @@ const columns: ColumnConfig[] = [
   { key: "updatedOn", label: "Updated On", sortable: true, draggable: true },
 ];
 
-// Sample data matching the images
-const sampleUsers = [
-  {
-    id: "1",
-    actions: "view",
-    flat: "#<SocietyBlock:0x00007efdc8f6fa1>/11-1302",
-    occupancy: "Vacant",
-    title: "",
-    name: "Janhavi Tawde",
-    mobileNumber: "7013837542",
-    email: "janhavi.runwal15@gmail.com",
-    residentType: "",
-    phase: "Post Sales",
-    livesHere: "",
-    membershipType: "Primary",
-    status: "Approved",
-    staff: "0",
-    vehicle: "0",
-    appDownloaded: "-",
-    alternateEmail1: "-",
-    alternateEmail2: "-",
-    alternateAddress: "Na",
-    landlineNumber: "",
-    intercomNumber: "",
-    gstNumber: "",
-    panNumber: "",
-    clubMembership: "No",
-    createdOn: "12/08/2024",
-    updatedOn: "12/08/2024",
-  },
-  {
-    id: "2",
-    actions: "view",
-    flat: "A1/A1-103",
-    occupancy: "Vacant",
-    title: "",
-    name: "Rahul Atak",
-    mobileNumber: "7507153191",
-    email: "atakrahul143@gmail.com",
-    residentType: "",
-    phase: "Post Sales",
-    livesHere: "",
-    membershipType: "Primary",
-    status: "Approved",
-    staff: "0",
-    vehicle: "0",
-    appDownloaded: "-",
-    alternateEmail1: "-",
-    alternateEmail2: "-",
-    alternateAddress: "Na",
-    landlineNumber: "",
-    intercomNumber: "",
-    gstNumber: "",
-    panNumber: "",
-    clubMembership: "No",
-    createdOn: "14/09/2023",
-    updatedOn: "14/09/2023",
-  },
-  {
-    id: "3",
-    actions: "view",
-    flat: "A1/A1-1601",
-    occupancy: "Vacant",
-    title: "Mr.",
-    name: "Kiran Mailaram",
-    mobileNumber: "9930790213",
-    email: "anjum.mailaram@gmail.com",
-    residentType: "",
-    phase: "Post Sales",
-    livesHere: "",
-    membershipType: "Primary",
-    status: "Approved",
-    staff: "0",
-    vehicle: "0",
-    appDownloaded: "-",
-    alternateEmail1: "-",
-    alternateEmail2: "-",
-    alternateAddress: "Na",
-    landlineNumber: "",
-    intercomNumber: "",
-    gstNumber: "",
-    panNumber: "",
-    clubMembership: "No",
-    createdOn: "14/09/2023",
-    updatedOn: "14/09/2023",
-  },
-  {
-    id: "4",
-    actions: "view",
-    flat: "A1/A1-2202",
-    occupancy: "Vacant",
-    title: "",
-    name: "Shubham Shukla",
-    mobileNumber: "7208487600",
-    email: "shubham.shukla1041@gmail.com",
-    residentType: "",
-    phase: "Post Sales",
-    livesHere: "",
-    membershipType: "Primary",
-    status: "Approved",
-    staff: "0",
-    vehicle: "0",
-    appDownloaded: "-",
-    alternateEmail1: "-",
-    alternateEmail2: "-",
-    alternateAddress: "Na",
-    landlineNumber: "",
-    intercomNumber: "",
-    gstNumber: "",
-    panNumber: "",
-    clubMembership: "No",
-    createdOn: "14/09/2023",
-    updatedOn: "14/09/2023",
-  },
-  {
-    id: "5",
-    actions: "view",
-    flat: "A1/A1-2402",
-    occupancy: "Vacant",
-    title: "",
-    name: "RITA SINGH",
-    mobileNumber: "7860840162",
-    email: "singhsaurabhjnp@gmail.com",
-    residentType: "",
-    phase: "Post Sales",
-    livesHere: "",
-    membershipType: "Primary",
-    status: "Approved",
-    staff: "0",
-    vehicle: "0",
-    appDownloaded: "-",
-    alternateEmail1: "-",
-    alternateEmail2: "-",
-    alternateAddress: "Na",
-    landlineNumber: "",
-    intercomNumber: "",
-    gstNumber: "",
-    panNumber: "",
-    clubMembership: "No",
-    createdOn: "14/09/2023",
-    updatedOn: "14/09/2023",
-  },
-  {
-    id: "6",
-    actions: "view",
-    flat: "A1/A1-2704",
-    occupancy: "Vacant",
-    title: "",
-    name: "Sneha Patil",
-    mobileNumber: "7021104564",
-    email: "patil95435@gmail.com",
-    residentType: "",
-    phase: "Post Sales",
-    livesHere: "",
-    membershipType: "Primary",
-    status: "Approved",
-    staff: "0",
-    vehicle: "0",
-    appDownloaded: "-",
-    alternateEmail1: "-",
-    alternateEmail2: "-",
-    alternateAddress: "Na",
-    landlineNumber: "",
-    intercomNumber: "",
-    gstNumber: "",
-    panNumber: "",
-    clubMembership: "No",
-    createdOn: "25/11/2023",
-    updatedOn: "25/11/2023",
-  },
-  {
-    id: "7",
-    actions: "view",
-    flat: "A1/A1-2705",
-    occupancy: "Vacant",
-    title: "",
-    name: "Shailesh Shashidharan",
-    mobileNumber: "7718807758",
-    email: "shylesh1234@gmail.com",
-    residentType: "",
-    phase: "Post Sales",
-    livesHere: "",
-    membershipType: "Primary",
-    status: "Approved",
-    staff: "0",
-    vehicle: "0",
-    appDownloaded: "-",
-    alternateEmail1: "-",
-    alternateEmail2: "-",
-    alternateAddress: "Na",
-    landlineNumber: "",
-    intercomNumber: "",
-    gstNumber: "",
-    panNumber: "",
-    clubMembership: "No",
-    createdOn: "14/09/2023",
-    updatedOn: "14/09/2023",
-  },
-  {
-    id: "8",
-    actions: "view",
-    flat: "A1/A1-505",
-    occupancy: "Vacant",
-    title: "Mr.",
-    name: "Anand Vishwanathrao Khadilkar",
-    mobileNumber: "9642706274",
-    email: "anandvk@hpcl.co.in",
-    residentType: "",
-    phase: "Post Sales",
-    livesHere: "",
-    membershipType: "Primary",
-    status: "Approved",
-    staff: "0",
-    vehicle: "0",
-    appDownloaded: "-",
-    alternateEmail1: "-",
-    alternateEmail2: "-",
-    alternateAddress: "Na",
-    landlineNumber: "",
-    intercomNumber: "",
-    gstNumber: "",
-    panNumber: "",
-    clubMembership: "No",
-    createdOn: "14/09/2023",
-    updatedOn: "14/09/2023",
-  },
-  {
-    id: "9",
-    actions: "view",
-    flat: "A1/A1-902",
-    occupancy: "Vacant",
-    title: "Mrs.",
-    name: "Priyanka Shailesh Mandal",
-    mobileNumber: "9833831076",
-    email: "sbalajiclothing@gmail.com",
-    residentType: "",
-    phase: "Post Sales",
-    livesHere: "",
-    membershipType: "Primary",
-    status: "Approved",
-    staff: "0",
-    vehicle: "0",
-    appDownloaded: "-",
-    alternateEmail1: "-",
-    alternateEmail2: "-",
-    alternateAddress: "Na",
-    landlineNumber: "",
-    intercomNumber: "",
-    gstNumber: "",
-    panNumber: "",
-    clubMembership: "No",
-    createdOn: "14/09/2023",
-    updatedOn: "14/09/2023",
-  },
-  {
-    id: "10",
-    actions: "view",
-    flat: "A2/A2-2702",
-    occupancy: "Vacant",
-    title: "",
-    name: "Fatima Akhtar",
-    mobileNumber: "9334982078",
-    email: "f.a@gmail.com",
-    residentType: "",
-    phase: "Post Sales",
-    livesHere: "",
-    membershipType: "Primary",
-    status: "Approved",
-    staff: "0",
-    vehicle: "0",
-    appDownloaded: "-",
-    alternateEmail1: "-",
-    alternateEmail2: "-",
-    alternateAddress: "Na",
-    landlineNumber: "",
-    intercomNumber: "",
-    gstNumber: "",
-    panNumber: "",
-    clubMembership: "No",
-    createdOn: "13/02/2025",
-    updatedOn: "13/02/2025",
-  },
-  {
-    id: "11",
-    actions: "view",
-    flat: "A2/A2-2704",
-    occupancy: "Vacant",
-    title: "",
-    name: "Dilip Sahu",
-    mobileNumber: "7304540249",
-    email: "dilipsahu8080@gmail.com",
-    residentType: "",
-    phase: "Post Sales",
-    livesHere: "",
-    membershipType: "Primary",
-    status: "Approved",
-    staff: "0",
-    vehicle: "0",
-    appDownloaded: "-",
-    alternateEmail1: "-",
-    alternateEmail2: "-",
-    alternateAddress: "Na",
-    landlineNumber: "",
-    intercomNumber: "",
-    gstNumber: "",
-    panNumber: "",
-    clubMembership: "No",
-    createdOn: "11/11/2024",
-    updatedOn: "11/11/2024",
-  },
-];
+const formattedResponse = (data) => {
+  return data.map((item) => ({
+    id: item.id,
+    flat: item.flat_no || "-",
+    occupancy: item.occupancy == "Yes" ? "Occupied" : "Vacant",
+    title: item.title || "-",
+    name: item.full_name || "-",
+    mobileNumber: item.mobile || "-",
+    email: item.email || "-",
+    residentType: item.resident_type || "-",
+    phase: item.display_view || "-",
+    livesHere: item.lives_here || "-",
+    membershipType: item?.membership_type || "-",
+    status: item.approve ? "Approved" : "Not Approved",
+    staff: item.staff || "-",
+    vehicle: item.vehicle || "-",
+    appDownloaded: item.app_downloaded ? "Yes" : "No",
+    alternateEmail1: item.alternate_email_1 || "-",
+    alternateEmail2: item.alternate_email_2 || "-",
+    alternateAddress: item.alternate_address || "-",
+    landlineNumber: item.landline_number || "-",
+    intercomNumber: item.intercom_number || "-",
+    gstNumber: item.gst_number || "-",
+    panNumber: item.pan_number || "-",
+    clubMembership: item.club_membership || "-",
+    createdOn: item.created_at ? item.created_at.split("T")[0] : "-",
+    updatedOn: item.updated_at ? item.updated_at.split("T")[0] : "-",
+  }));
+}
 
 const ManageUsersPage = () => {
+  const baseUrl = localStorage.getItem('baseUrl')
+  const token = localStorage.getItem('token')
+
   const navigate = useNavigate();
-  const [users, setUsers] = useState(sampleUsers);
+  const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [showActionPanel, setShowActionPanel] = useState(false);
   const [showFiltersDialog, setShowFiltersDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    total_count: 0,
+    total_pages: 0,
+    per_page: 20,
+  });
+
   // Filter states
   const [filters, setFilters] = useState({
     tower: "",
@@ -380,13 +111,63 @@ const ManageUsersPage = () => {
     dateRange: "",
   });
 
+  const [dashboardData, setDashboardData] = useState({
+    pending_users: 0,
+    rejected_users: 0,
+    approved_users: 0,
+    total_users: 0,
+    app_downloads: 0,
+    total_flat_downloads: 0,
+    total_owner_downloads: 0,
+    total_tenant_downloads: 0,
+    post_sale_downloads: 0,
+    post_possession_downloads: 0,
+  });
+
+  const fetchUsers = async (page = 1, filterParams = {}) => {
+    try {
+      setLoading(true);
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        ...filterParams,
+      });
+
+      const response = await axios.get(`https://${baseUrl}/crm/admin/user_societies.json?${queryParams}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      setUsers(formattedResponse(response.data.user_societies));
+      if (response.data.pagination) {
+        setPagination(response.data.pagination);
+      }
+      if (response.data.dashboard) {
+        setDashboardData(response.data.dashboard);
+      }
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to fetch users. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchUsers(1);
+  }, []);
+
   const handleViewUser = (userId: string) => {
-    navigate(`/settings/manage-users/view-user/${userId}`);
+    navigate(`/settings/manage-users/${userId}`);
   };
 
   const handleAddUser = () => {
-    navigate("/settings/add-user");
+    navigate("/settings/manage-users/add");
     setShowActionPanel(false);
+  };
+
+  const handleEditUser = (userId: string) => {
+    navigate(`/settings/manage-users/edit/${userId}`);
   };
 
   const handleImport = () => {
@@ -407,7 +188,16 @@ const ManageUsersPage = () => {
 
   const handleApplyFilters = () => {
     console.log("Applying filters:", filters);
-    // Apply filter logic here
+    setPagination((prev) => ({ ...prev, current_page: 1 }));
+    const filterParams: any = {};
+    if (filters.tower) filterParams.tower = filters.tower;
+    if (filters.flat) filterParams.flat = filters.flat;
+    if (filters.status) filterParams.status = filters.status;
+    if (filters.residentType) filterParams.resident_type = filters.residentType;
+    if (filters.appDownloaded) filterParams.app_downloaded = filters.appDownloaded;
+    if (filters.dateRange) filterParams.date_range = filters.dateRange;
+
+    fetchUsers(1, filterParams);
     setShowFiltersDialog(false);
   };
 
@@ -420,6 +210,153 @@ const ManageUsersPage = () => {
       appDownloaded: "",
       dateRange: "",
     });
+    setPagination({ ...pagination, current_page: 1 });
+    fetchUsers(1, {});
+  };
+
+  const handlePageChange = async (page: number) => {
+    if (page < 1 || page > pagination.total_pages || page === pagination.current_page || loading) {
+      return;
+    }
+
+    try {
+      const filterParams: any = {};
+      if (filters.tower) filterParams.tower = filters.tower;
+      if (filters.flat) filterParams.flat = filters.flat;
+      if (filters.status) filterParams.status = filters.status;
+      if (filters.residentType) filterParams.resident_type = filters.residentType;
+      if (filters.appDownloaded) filterParams.app_downloaded = filters.appDownloaded;
+      if (filters.dateRange) filterParams.date_range = filters.dateRange;
+      if (searchTerm) filterParams.search = searchTerm;
+
+      setPagination((prev) => ({ ...prev, current_page: page }));
+      await fetchUsers(page, filterParams);
+    } catch (error) {
+      console.error("Error changing page:", error);
+      toast.error("Failed to load page data. Please try again.");
+    }
+  };
+
+  const renderPaginationItems = () => {
+    if (!pagination.total_pages || pagination.total_pages <= 0) {
+      return null;
+    }
+    const items = [];
+    const totalPages = pagination.total_pages;
+    const currentPage = pagination.current_page;
+    const showEllipsis = totalPages > 7;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink
+            onClick={() => handlePageChange(1)}
+            isActive={currentPage === 1}
+            aria-disabled={loading}
+            className={loading ? "pointer-events-none opacity-50" : ""}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+                aria-disabled={loading}
+                className={loading ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+                aria-disabled={loading}
+                className={loading ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink
+                  onClick={() => handlePageChange(i)}
+                  isActive={currentPage === i}
+                  aria-disabled={loading}
+                  className={loading ? "pointer-events-none opacity-50" : ""}
+                >
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+              aria-disabled={loading}
+              className={loading ? "pointer-events-none opacity-50" : ""}
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+              aria-disabled={loading}
+              className={loading ? "pointer-events-none opacity-50" : ""}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -452,8 +389,16 @@ const ManageUsersPage = () => {
             <button
               onClick={() => handleViewUser(user.id)}
               className="p-1 hover:bg-gray-100 rounded"
+              title="View"
             >
               <Eye className="w-4 h-4 text-[#1A1A1A]" />
+            </button>
+            <button
+              onClick={() => handleEditUser(user.id)}
+              className="p-1 hover:bg-gray-100 rounded"
+              title="Edit"
+            >
+              <Edit className="w-4 h-4 text-[#C72030]" />
             </button>
           </div>
         );
@@ -473,42 +418,35 @@ const ManageUsersPage = () => {
   return (
     <div className="min-h-screen bg-[#fafafa] p-6">
       <div className="max-w-full mx-auto">
-        {/* Header */}
-        <div className="bg-[#F6F4EE] rounded-lg shadow-sm mb-6">
-          <div className="px-6 py-4">
-            <h1 className="text-2xl font-semibold text-[#1A1A1A]">Manage Users</h1>
-          </div>
-        </div>
-
         {/* Stats Cards - First Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-4">
           <StatsCard
             title="Total Users"
-            value="1406"
+            value={dashboardData.total_users.toString()}
             icon={<Users className="w-6 h-6 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Pending Users"
-            value="2"
+            value={dashboardData.pending_users.toString()}
             icon={<Clock className="w-6 h-6 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Approved Users"
-            value="1368"
+            value={dashboardData.approved_users.toString()}
             icon={<UserCheck className="w-6 h-6 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Rejected Users"
-            value="36"
+            value={dashboardData.rejected_users.toString()}
             icon={<UserX className="w-6 h-6 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Total No. Of Downloads"
-            value="656"
+            value={dashboardData.app_downloads.toString()}
             icon={<MonitorSmartphone className="w-6 h-6 text-[#C72030]" />}
             downloadData={[]}
           />
@@ -518,31 +456,31 @@ const ManageUsersPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
           <StatsCard
             title="Total No. Of Flat Downloads"
-            value="656"
+            value={dashboardData.total_flat_downloads.toString()}
             icon={<Download className="w-6 h-6 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Total No. Of Owners Downloads"
-            value="348"
+            value={dashboardData.total_owner_downloads.toString()}
             icon={<Download className="w-6 h-6 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Total No. Of Tenants Downloads"
-            value="7"
+            value={dashboardData.total_tenant_downloads.toString()}
             icon={<Download className="w-6 h-6 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Post Sale Downloads"
-            value="188"
+            value={dashboardData.post_sale_downloads.toString()}
             icon={<Download className="w-6 h-6 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Post Possession Downloads"
-            value="467"
+            value={dashboardData.post_possession_downloads.toString()}
             icon={<Download className="w-6 h-6 text-[#C72030]" />}
             downloadData={[]}
           />
@@ -758,7 +696,29 @@ const ManageUsersPage = () => {
                 Action
               </Button>
             }
+            loading={loading}
           />
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(Math.max(1, pagination.current_page - 1))}
+                  className={pagination.current_page === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(Math.min(pagination.total_pages, pagination.current_page + 1))}
+                  className={pagination.current_page === pagination.total_pages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       </div>
     </div>

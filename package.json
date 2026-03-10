@@ -81,6 +81,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "country-data": "^0.0.31",
     "date-fns": "^3.6.0",
     "dhtmlx-gantt": "^9.1.0",
     "embla-carousel-react": "^8.3.0",
