@@ -79,10 +79,10 @@ const EventCreate = () => {
     event_images_9_by_16: [],
     event_images_3_by_2: [],
     event_images_16_by_9: [],
-    details_image_1_by_1: [],
-    details_image_9_by_16: [],
-    details_image_3_by_2: [],
-    details_image_16_by_9: [],
+    thumbnail_image_1_by_1: [],
+    thumbnail_image_9_by_16: [],
+    thumbnail_image_3_by_2: [],
+    thumbnail_image_16_by_9: [],
     show_on_home: false,
   });
 
@@ -298,10 +298,10 @@ const EventCreate = () => {
   ];
 
   const detailsImageRatios = [
-    { key: "details_image_1_by_1", label: "1:1" },
-    { key: "details_image_16_by_9", label: "16:9" },
-    { key: "details_image_9_by_16", label: "9:16" },
-    { key: "details_image_3_by_2", label: "3:2" },
+    { key: "thumbnail_image_1_by_1", label: "1:1" },
+    { key: "thumbnail_image_16_by_9", label: "16:9" },
+    { key: "thumbnail_image_9_by_16", label: "9:16" },
+    { key: "thumbnail_image_3_by_2", label: "3:2" },
   ];
 
   const eventUploadConfig = {
@@ -476,7 +476,12 @@ const EventCreate = () => {
 
     validImages.forEach((img) => {
       const formattedRatio = img.ratio.replace(":", "_by_");
-      const prefix = type === "cover" ? "cover_image" : "event_images";
+      const prefix =
+        type === "cover"
+          ? "cover_image"
+          : type === "details"
+            ? "thumbnail_image"
+            : "event_images";
       const key = `${prefix}_${formattedRatio}`;
       updateFormData(key, [
         {
@@ -1043,30 +1048,30 @@ const EventCreate = () => {
 
     // Add details images (all ratios)
     if (
-      formData.details_image_1_by_1 &&
-      formData.details_image_1_by_1.length > 0
+      formData.thumbnail_image_1_by_1 &&
+      formData.thumbnail_image_1_by_1.length > 0
     ) {
-      formData.details_image_1_by_1.forEach((img) => {
+      formData.thumbnail_image_1_by_1.forEach((img) => {
         if (img.file)
-          formDataToSend.append("event[details_image_1_by_1][]", img.file);
+          formDataToSend.append("event[thumbnail_image_1_by_1][]", img.file);
       });
     }
     if (
-      formData.details_image_16_by_9 &&
-      formData.details_image_16_by_9.length > 0
+      formData.thumbnail_image_16_by_9 &&
+      formData.thumbnail_image_16_by_9.length > 0
     ) {
-      formData.details_image_16_by_9.forEach((img) => {
+      formData.thumbnail_image_16_by_9.forEach((img) => {
         if (img.file)
-          formDataToSend.append("event[details_image_16_by_9][]", img.file);
+          formDataToSend.append("event[thumbnail_image_16_by_9][]", img.file);
       });
     }
     if (
-      formData.details_image_9_by_16 &&
-      formData.details_image_9_by_16.length > 0
+      formData.thumbnail_image_9_by_16 &&
+      formData.thumbnail_image_9_by_16.length > 0
     ) {
-      formData.details_image_9_by_16.forEach((img) => {
+      formData.thumbnail_image_9_by_16.forEach((img) => {
         if (img.file)
-          formDataToSend.append("event[details_image_9_by_16][]", img.file);
+          formDataToSend.append("event[thumbnail_image_9_by_16][]", img.file);
       });
     }
     // Add selected societies (applicable project IDs) for Individual Society sharing
@@ -1077,12 +1082,12 @@ const EventCreate = () => {
     }
 
     if (
-      formData.details_image_3_by_2 &&
-      formData.details_image_3_by_2.length > 0
+      formData.thumbnail_image_3_by_2 &&
+      formData.thumbnail_image_3_by_2.length > 0
     ) {
-      formData.details_image_3_by_2.forEach((img) => {
+      formData.thumbnail_image_3_by_2.forEach((img) => {
         if (img.file)
-          formDataToSend.append("event[details_image_3_by_2][]", img.file);
+          formDataToSend.append("event[thumbnail_image_3_by_2][]", img.file);
       });
     }
 
@@ -1145,10 +1150,10 @@ const EventCreate = () => {
         event_images_9_by_16: [],
         event_images_3_by_2: [],
         event_images_16_by_9: [],
-        details_image_1_by_1: [],
-        details_image_9_by_16: [],
-        details_image_3_by_2: [],
-        details_image_16_by_9: [],
+        thumbnail_image_1_by_1: [],
+        thumbnail_image_9_by_16: [],
+        thumbnail_image_3_by_2: [],
+        thumbnail_image_16_by_9: [],
         show_on_home: false,
       });
       setSelectedChannelPartners([]);
@@ -1387,14 +1392,14 @@ const EventCreate = () => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Please upload a valid image file for Event Details Image.");
+      toast.error("Please upload a valid image file for Event Thumbnail Image.");
       e.target.value = "";
       return;
     }
 
     const MAX_SIZE = 5 * 1024 * 1024; // 5MB
     if (file.size > MAX_SIZE) {
-      toast.error("Event Details Image must be less than 5MB.");
+      toast.error("Event Thumbnail Image must be less than 5MB.");
       e.target.value = "";
       return;
     }
@@ -3035,7 +3040,7 @@ const EventCreate = () => {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h5 className="text-base font-semibold inline-flex items-center gap-1">
-                    Event Thumbnail Images{" "}
+                    Event Details Images{" "}
                     <span
                       className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowAttachmentTooltip(true)}
@@ -3160,10 +3165,10 @@ const EventCreate = () => {
               </div>
 
               {/* Event Details Image */}
-              {/* <div>
+              <div>
                 <div className="flex justify-between items-center mb-4">
                   <h5 className="text-base font-semibold inline-flex items-center gap-1">
-                    Event Details Image{" "}
+                    Event Thumbnail Image{" "}
                     <span
                       className="relative inline-block cursor-pointer"
                       onMouseEnter={() => setShowDetailsImageTooltip(true)}
@@ -3233,7 +3238,7 @@ const EventCreate = () => {
                     </TableBody>
                   </Table>
                 </div>
-              </div> */}
+              </div>
             </div>
           </div>
         )}
@@ -5023,7 +5028,7 @@ const EventCreate = () => {
                     {/* Event Attachments */}
                     <div>
                       <h5 className="text-base font-semibold mb-4">
-                        Event Thumbnail Images
+                        Event Details Images
                       </h5>
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <Table className="border-separate">
@@ -5112,8 +5117,8 @@ const EventCreate = () => {
                     </div>
 
                     {/* Event Details Image - inside Event Related Images */}
-                    {/* <div>
-                      <h5 className="text-base font-semibold mb-4">Event Details Image</h5>
+                    <div>
+                      <h5 className="text-base font-semibold mb-4">Event Thumbnail Image</h5>
                       <div className="rounded-lg border border-gray-200 overflow-hidden">
                         <Table className="border-separate">
                           <TableHeader>
@@ -5152,7 +5157,7 @@ const EventCreate = () => {
                           </TableBody>
                         </Table>
                       </div>
-                    </div> */}
+                    </div>
                   </div>
                 </div>
               </div>

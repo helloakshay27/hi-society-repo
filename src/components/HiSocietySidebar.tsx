@@ -976,6 +976,18 @@ export const HiSocietySidebar: React.FC = () => {
               icon: CreditCard,
               path: "/settings/wallet-topup",
             },
+             {
+              id: "threshold-alerts",
+              label: "Threshold Alerts",
+              icon: CreditCard,
+              path: "/settings/threshold-alerts",
+            },
+             {
+              id: "generic-categories",
+              label: "Generic Categories",
+              icon: CreditCard,
+              path: "/settings/generic-categories",
+            },
           ],
         },
         {

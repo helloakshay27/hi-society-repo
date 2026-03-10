@@ -30,13 +30,14 @@ import { toast } from "sonner";
 // Shared helpers
 // ─────────────────────────────────────────────
 const participantColumns = [
-  { key: "action", label: "Action" },
+  // { key: "action", label: "Action" },
   { key: "full_name", label: "Requestor Name" },
   { key: "mobile", label: "Requestor Number" },
   { key: "email", label: "Requestor Mail" },
   { key: "organisation", label: "Organisation" },
   { key: "created_at", label: "Request Date" },
   { key: "status", label: "Status" },
+  { key: "qr_code", label: "QR Code"},
 ];
 
 const formatRequestDate = (dateStr: string) => {
@@ -77,7 +78,7 @@ const ParticipantTable = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onNavigate(item.id)}
+            onClick={() => onNavigate(item?.user?.id ?? item.id)}
             className="text-[#C72030] hover:bg-red-50"
           >
             <Eye className="w-4 h-4" />
@@ -100,6 +101,24 @@ const ParticipantTable = ({
         return item.status
           ? item.status.charAt(0).toUpperCase() + item.status.slice(1)
           : "-";
+      case "qr_code":
+  return item.qr_code?.document_url ? (
+    <img
+      src={item.qr_code.document_url}
+      alt="QR Code"
+      style={{
+        width: 60,
+        height: 60,
+        objectFit: "contain",
+        cursor: "pointer",
+      }}
+      onClick={() =>
+        window.open(item.qr_code.document_url, "_blank")
+      }
+    />
+  ) : (
+    "-"
+  );
       default:
         return item[key] || "-";
     }
@@ -196,7 +215,7 @@ const WaitingListTab = ({ eventId }: { eventId: string }) => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const baseUrl = localStorage.getItem("baseUrl");
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -243,7 +262,7 @@ const ApprovedTab = ({ eventId }: { eventId: string }) => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const baseUrl = localStorage.getItem("baseUrl");
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -298,7 +317,7 @@ const PendingTab = ({
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const baseUrl = localStorage.getItem("baseUrl");
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -415,56 +434,97 @@ const PendingTab = ({
 // ─────────────────────────────────────────────
 const ParticipantsDetailsTab = ({
   eventId,
-  eventCapacity,
-  totalRegistered,
 }: {
   eventId: string;
-  eventCapacity: number;
-  totalRegistered: number;
 }) => {
-  const [activeParticipantTab, setActiveParticipantTab] =
-    useState("waitingList");
+  const navigate = useNavigate();
+  const [data, setData] = useState<unknown[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchRegisteredUsers = useCallback(
+    async (page: number) => {
+      setLoading(true);
+      try {
+        const res = await axios.get(
+          `${API_CONFIG.BASE_URL}/crm/admin/events/${eventId}/registered_users.json`,
+          {
+            params: { page },
+            headers: {
+              Authorization: getAuthHeader(),
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        setData(res.data?.registered_users || []);
+        const pagination = res.data?.pagination;
+        setCurrentPage(Number(pagination?.current_page ?? page));
+        setTotalPages(Number(pagination?.total_pages ?? 1));
+      } catch (err) {
+        console.error("Failed to load registered users:", err);
+        toast.error("Failed to load participants");
+        setData([]);
+        setTotalPages(1);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [eventId]
+  );
+
+  useEffect(() => {
+    if (!eventId) return;
+    fetchRegisteredUsers(1);
+  }, [eventId, fetchRegisteredUsers]);
+
+  const handlePageChange = (nextPage: number) => {
+    if (nextPage < 1 || nextPage > totalPages) return;
+    fetchRegisteredUsers(nextPage);
+  };
 
   return (
     <div className="space-y-4">
-      {/* Sub-tabs bar */}
-      <Tabs
-        value={activeParticipantTab}
-        onValueChange={setActiveParticipantTab}
-        className="w-full"
-      >
-        <TabsList className="w-full grid grid-cols-3 bg-white border border-gray-200 rounded-none h-10 p-0">
-          {[
-            { value: "waitingList", label: "Waiting List" },
-            { value: "approved", label: "Approved" },
-            { value: "pending", label: "Pending" },
-          ].map((tab) => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className="h-full rounded-none border-r border-gray-200 last:border-r-0 font-medium text-sm
-                data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030]
-                data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700"
-            >
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <div className="bg-[#F6F4EE] p-4 flex items-center gap-3 border-b border-gray-200">
+          <div className="w-8 h-8 rounded-full bg-[#E5E0D3] flex items-center justify-center text-[#C72030]">
+            <Users size={16} />
+          </div>
+          <span className="font-semibold text-lg text-gray-800">
+            Participants Details
+          </span>
+        </div>
+        <ParticipantTable
+          data={data}
+          loading={loading}
+          onNavigate={(userId) => navigate(`users/${userId}`)}
+        />
 
-        <TabsContent value="waitingList" className="mt-4">
-          <WaitingListTab eventId={eventId} />
-        </TabsContent>
-        <TabsContent value="approved" className="mt-4">
-          <ApprovedTab eventId={eventId} />
-        </TabsContent>
-        <TabsContent value="pending" className="mt-4">
-          <PendingTab
-            eventId={eventId}
-            eventCapacity={eventCapacity}
-            totalRegistered={totalRegistered}
-          />
-        </TabsContent>
-      </Tabs>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-end gap-2 p-4 border-t border-gray-200">
+            <Button
+              variant="outline"
+              className="h-9"
+              disabled={loading || currentPage <= 1}
+              onClick={() => handlePageChange(currentPage - 1)}
+            >
+              Prev
+            </Button>
+            <div className="text-sm text-gray-700">
+              Page {currentPage} of {totalPages}
+            </div>
+            <Button
+              variant="outline"
+              className="h-9"
+              disabled={loading || currentPage >= totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -475,7 +535,7 @@ const ParticipantsDetailsTab = ({
 const LoyaltyEventDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [eventData, setEventData] = useState<any>(null);
+  const [eventData, setEventData] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -599,7 +659,7 @@ const LoyaltyEventDetails = () => {
   const tabs = [
     { label: "Event Details", value: "event-details" },
     { label: "Events Related Images", value: "images" },
-    // { label: "Participants Details", value: "participants-details" },
+    { label: "Participants Details", value: "participants-details" },
   ];
 
   return (
@@ -981,6 +1041,77 @@ const LoyaltyEventDetails = () => {
                     </Table>
                   </div>
                 </div>
+
+                 <div>
+                  <h4 className="text-base font-semibold text-gray-900 mb-3">
+                    Event Thumbnail Image
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow style={{ backgroundColor: "#E6E2D8" }}>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            File Name
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            File Type
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">
+                            Updated At
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-900 py-3 px-4">
+                            Image
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody className="bg-white">
+                        {(() => {
+                          const groups = [
+                            eventData.thumbnail_image_1_by_1,
+                            eventData.thumbnail_image_9_by_16,
+                            eventData.thumbnail_image_3_by_2,
+                            eventData.thumbnail_image_16_by_9,
+                          ];
+                          const images = groups
+                            .filter(Array.isArray)
+                            .flat()
+                            .filter((img) => img?.document_url);
+                          return images.length > 0 ? (
+                            images.map((file, i) => (
+                              <TableRow key={i} className="hover:bg-gray-50">
+                                <TableCell className="py-3 px-4">
+                                  {file.document_file_name}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {file.document_content_type}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {formatDateTime(file.document_updated_at)}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  <img
+                                    src={file.document_url}
+                                    alt={`Event ${i}`}
+                                    className="w-20 h-20 object-cover rounded"
+                                  />
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                              <TableCell
+                                colSpan={4}
+                                className="text-center py-8 text-gray-600"
+                              >
+                                No Event Images
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })()}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
               </div>
             </div>
           </TabsContent>
@@ -993,8 +1124,6 @@ const LoyaltyEventDetails = () => {
           >
             <ParticipantsDetailsTab
               eventId={eventId}
-              eventCapacity={Number(eventData?.capacity ?? 0)}
-              totalRegistered={Number(eventData?.total_registed_count ?? 0)}
             />
           </TabsContent>
         </Tabs>
