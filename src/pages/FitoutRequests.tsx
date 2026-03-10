@@ -51,20 +51,25 @@ interface FitoutCards {
 const FitoutRequests: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [fitoutRequests, setFitoutRequests] = useState<FitoutRequestItem[]>([]);
   const [allRequests, setAllRequests] = useState<FitoutRequestItem[]>([]);
   const [cards, setCards] = useState<FitoutCards | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const itemsPerPage = 10;
+  const [totalEntries, setTotalEntries] = useState(0);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  const fetchFitoutRequestsData = useCallback(async () => {
+  const fetchFitoutRequestsData = useCallback(async (page: number = 1, statusFilter: string | null = null) => {
     try {
       setLoading(true);
-      
+
+      let url = `/crm/admin/fitout_requests.json?page=${page}`;
+      if (statusFilter) {
+        url += `&status_filter=${encodeURIComponent(statusFilter)}`;
+      }
+
       const response = await axios.get(
-        getFullUrl("/crm/admin/fitout_requests.json"),
+        getFullUrl(url),
         {
           headers: {
             Authorization: getAuthHeader(),
@@ -72,13 +77,13 @@ const FitoutRequests: React.FC = () => {
           },
         }
       );
-      
+
       console.log("Fitout Requests response:", response.data);
       const requestsData = response.data.fitout_requests || [];
       setCards(response.data?.cards || null);
+      setTotalPages(response.data?.total_pages ?? 1);
+      setTotalEntries(response.data?.total_entries ?? 0);
 
-      // The API already returns user_name, tower, and flat fields
-      // Just map the data to ensure flat_no field is set from flat field
       const enrichedRequests = requestsData.map((request: any) => ({
         ...request,
         flat_no: request.flat || request.flat_no || '',
@@ -87,11 +92,9 @@ const FitoutRequests: React.FC = () => {
       }));
 
       setAllRequests(enrichedRequests);
-      setTotalPages(Math.ceil(enrichedRequests.length / itemsPerPage));
     } catch (error) {
       console.error("Error fetching Fitout Requests data:", error);
       setAllRequests([]);
-      setFitoutRequests([]);
       setCards(null);
       toast.error("Failed to fetch Fitout Requests data", {
         position: 'top-right',
@@ -105,21 +108,31 @@ const FitoutRequests: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast, itemsPerPage]);
+  }, []);
 
   useEffect(() => {
-    fetchFitoutRequestsData();
-  }, [fetchFitoutRequestsData]);
+    fetchFitoutRequestsData(currentPage, activeFilter);
+  }, [fetchFitoutRequestsData, currentPage, activeFilter]);
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
-    setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
     }
+  };
+
+  const handleCardFilter = (statusFilter: string | null) => {
+    if (statusFilter === null) {
+      // Total card always clears the filter
+      setActiveFilter(null);
+    } else {
+      // Non-total card: toggle off if already active, else activate
+      setActiveFilter(prev => prev === statusFilter ? null : statusFilter);
+    }
+    setCurrentPage(1);
   };
 
   const handleAddRequest = () => {
@@ -515,55 +528,27 @@ const FitoutRequests: React.FC = () => {
   );
 
   const filteredRequests = useMemo(() => {
-    let filtered = allRequests;
-    
-    // Apply search filter
-    if (searchTerm) {
-      filtered = allRequests.filter((request) => {
-        const matchesSearch =
-          request.category_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.status_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.fitout_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.contactor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.contactor_no?.includes(searchTerm) ||
-          request.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.tower?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.flat_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.id?.toString().includes(searchTerm);
-        return matchesSearch;
-      });
-    }
-    
-    // Update total pages based on filtered results
-    const pages = Math.ceil(filtered.length / itemsPerPage);
-    if (pages !== totalPages) {
-      setTotalPages(pages);
-    }
-    
-    // Apply pagination only when not searching
-    if (!searchTerm) {
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      return filtered.slice(startIndex, endIndex);
-    }
-    
-    return filtered;
-  }, [allRequests, searchTerm, currentPage, itemsPerPage, totalPages]);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C72030]"></div>
-      </div>
+    if (!searchTerm) return allRequests;
+    const term = searchTerm.toLowerCase();
+    return allRequests.filter((request) =>
+      request.category_name?.toLowerCase().includes(term) ||
+      request.description?.toLowerCase().includes(term) ||
+      request.status_name?.toLowerCase().includes(term) ||
+      request.fitout_type?.toLowerCase().includes(term) ||
+      request.contactor_name?.toLowerCase().includes(term) ||
+      request.contactor_no?.includes(searchTerm) ||
+      request.user_name?.toLowerCase().includes(term) ||
+      request.tower?.toLowerCase().includes(term) ||
+      request.flat_no?.toLowerCase().includes(term) ||
+      request.id?.toString().includes(searchTerm)
     );
-  }
+  }, [allRequests, searchTerm]);
 
   const fitoutStats = {
-    total: cards?.total ?? allRequests.length,
-    pending: cards?.pending ?? allRequests.filter((r) => r.status_name?.toLowerCase() === "pending").length,
-    work_in_progress: cards?.work_in_progress ?? allRequests.filter((r) => r.status_name?.toLowerCase() === "work in progress").length,
-    closed: cards?.closed ?? allRequests.filter((r) => r.status_name?.toLowerCase() === "completed").length,
+    total: cards?.total ?? 0,
+    pending: cards?.pending ?? 0,
+    work_in_progress: cards?.work_in_progress ?? 0,
+    closed: cards?.closed ?? 0,
   };
 
   const statCards = [
@@ -571,27 +556,26 @@ const FitoutRequests: React.FC = () => {
       label: "Total",
       value: fitoutStats.total,
       icon: Users,
-      clickable: false,
+      filterKey: null as string | null,
     },
     {
       label: "Pending",
       value: fitoutStats.pending,
       icon: Clock,
-      clickable: false,
+      filterKey: "Pending" as string | null,
     },
-     {
+    {
       label: "Work In Progress",
       value: fitoutStats.work_in_progress,
       icon: Clock,
-      clickable: false,
+      filterKey: "Work In Progress" as string | null,
     },
     {
       label: "Closed",
       value: fitoutStats.closed,
       icon: UserCheck,
-      clickable: false,
+      filterKey: "Closed" as string | null,
     },
-    
   ];
 
   return (
@@ -601,21 +585,25 @@ const FitoutRequests: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 mb-6">
         {statCards.map((item, i) => {
           const IconComponent = item.icon;
+          const isActive = activeFilter === item.filterKey;
           return (
             <div
               key={i}
-              className={`bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 ${
-                item.clickable ? "cursor-pointer hover:shadow-lg transition-shadow" : ""
+              onClick={() => handleCardFilter(item.filterKey)}
+              className={`p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 cursor-pointer transition-all ${
+                isActive
+                  ? "bg-[#F6F4EE] text-black"
+                  : "bg-[#F6F4EE] hover:shadow-lg"
               }`}
             >
-              <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center rounded">
-                <IconComponent className="w-6 h-6 text-[#C72030]" />
+              <div className="w-14 h-14 flex items-center justify-center rounded bg-[#C4B89D54]">
+                <IconComponent className={`w-6 h-6 ${isActive ? "text-[#C72030]" : "text-[#C72030]"}`} />
               </div>
               <div>
-                <div className="text-2xl font-semibold text-[#1A1A1A]">
+                <div className={`text-2xl font-semibold ${isActive ? "text-black" : "text-[#1A1A1A]"}`}>
                   {item.value.toLocaleString()}
                 </div>
-                <div className="text-sm font-medium text-[#1A1A1A]">
+                <div className={`text-sm font-medium ${isActive ? "text-black" : "text-[#1A1A1A]"}`}>
                   {item.label}
                 </div>
               </div>
@@ -659,7 +647,7 @@ const FitoutRequests: React.FC = () => {
           handleExport={handleExportRequests}
           loading={loading}
         />
-        {!searchTerm && totalPages > 1 && (
+        {totalPages > 1 && (
           <div className="mt-3 flex justify-center">
             <Pagination>
               <PaginationContent>
@@ -670,17 +658,34 @@ const FitoutRequests: React.FC = () => {
                     className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                   />
                 </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <PaginationItem key={page}>
-                    <PaginationLink 
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-                      isActive={currentPage === page}
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
+                {(() => {
+                  const pages: number[] = [];
+                  const delta = 2;
+                  const left = Math.max(1, currentPage - delta);
+                  const right = Math.min(totalPages, currentPage + delta);
+                  if (left > 1) pages.push(1);
+                  if (left > 2) pages.push(-1); // ellipsis
+                  for (let p = left; p <= right; p++) pages.push(p);
+                  if (right < totalPages - 1) pages.push(-2); // ellipsis
+                  if (right < totalPages) pages.push(totalPages);
+                  return pages.map((page, idx) =>
+                    page < 0 ? (
+                      <PaginationItem key={`ellipsis-${idx}`}>
+                        <span className="px-2 text-gray-400">…</span>
+                      </PaginationItem>
+                    ) : (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
+                          isActive={currentPage === page}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  );
+                })()}
                 <PaginationItem>
                   <PaginationNext
                     href="#"
