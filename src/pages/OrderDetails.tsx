@@ -227,7 +227,7 @@ const OrderDetails = () => {
                     {/* Left Column - Main Content */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Order Items */}
-                        <div className="bg-white rounded-lg shadow-sm border">
+                        <div className="bg-[#fbfbf8] rounded-lg shadow-sm border">
                             <div className="px-6 py-6">
                                 <h1 className="text-[#C72030] font-semibold mb-6">Order Items</h1>
 
@@ -270,12 +270,12 @@ const OrderDetails = () => {
                                         <span className="text-gray-700">Shipping</span>
                                         <span className="text-gray-900">₹{parseFloat(orderData?.shippingCost || 0).toFixed(0)}</span>
                                     </div>
-                                    {parseFloat(orderData?.loyaltyPointsRedeemed || 0) > 0 && (
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-[#C72030]">Points Redeemed</span>
-                                            <span className="text-[#C72030]">-{orderData?.loyaltyPointsRedeemed}</span>
-                                        </div>
-                                    )}
+
+                                    {/* show points redeemed unconditionally below shipping */}
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-[#C72030]">Points Redeemed</span>
+                                        <span className="text-[#C72030]">-{parseFloat(orderData?.loyaltyPointsRedeemed || 0)}</span>
+                                    </div>
                                     <div className="flex justify-between pt-3 border-t">
                                         <span className="font-semibold text-gray-900">Total</span>
                                         <span className="font-bold text-2xl text-gray-900">₹{parseFloat(orderData?.totalAmount || 0).toFixed(2)}</span>
@@ -285,7 +285,7 @@ const OrderDetails = () => {
                         </div>
 
                         {/* Order Timeline */}
-                        <div className="bg-white rounded-lg shadow-sm border">
+                        <div className="bg-[#fbfbf8] rounded-lg shadow-sm border">
                             <div className="px-6 py-6">
                                 <h1 className="font-semibold text-[#C72030] mb-6">Order Timeline</h1>
 
@@ -335,7 +335,7 @@ const OrderDetails = () => {
                     {/* Right Column - Sidebar */}
                     <div className="lg:col-span-1 space-y-6">
                         {/* Customer Information */}
-                        <div className="bg-white rounded-lg shadow-sm border">
+                        <div className="bg-[#fbfbf8] rounded-lg shadow-sm border">
                             <div className="px-6 py-6">
                                 <h1 className="font-semibold text-[#C72030] mb-6">Customer Information</h1>
 

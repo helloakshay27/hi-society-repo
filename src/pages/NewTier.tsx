@@ -177,9 +177,15 @@ const NewTier = () => {
         }, 1500);
       } else {
         const errorData = await response.json();
-        throw new Error(
-          errorData.message || `Unexpected response: ${response.status}`
-        );
+        let errorMsg = errorData.message || `Unexpected response: ${response.status}`;
+        if (response.status === 422) {
+          // API might return validation errors keyed by field
+          if (errorData.exit_points && Array.isArray(errorData.exit_points) && errorData.exit_points.length > 0) {
+            errorMsg = "Exit points already exist";
+          }
+          // you can extend for other fields later
+        }
+        throw new Error(errorMsg);
       }
     } catch (error) {
       toast.error(error.message || "Failed to create tier. Please try again.");
