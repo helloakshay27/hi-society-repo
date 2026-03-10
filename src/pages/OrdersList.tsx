@@ -10,6 +10,7 @@ import {
   PaginationPrevious,
   PaginationLink,
   PaginationNext,
+  PaginationEllipsis,
 } from "@/components/ui/pagination";
 import SelectBox from "../components/ui/select-box";
 import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
@@ -40,11 +41,13 @@ interface Order {
 const OrdersList = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    per_page: 20,
+    total_count: 0,
+    pagination_available: false,
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
@@ -98,12 +101,19 @@ const OrdersList = () => {
         const token = API_CONFIG.TOKEN || "";
         const params = new URLSearchParams();
         params.append("token", token);
+        params.append("page", page.toString());
         params.append("order_date", orderDate || "last_30_days");
+
+        if (search) {
+          params.append("search", search);
+        }
+
         if (Array.isArray(status) && status.length > 0) {
           status.forEach((s) => params.append("status[]", s));
         } else if (typeof status === "string" && status) {
           params.append("status", status);
         }
+
         if (Array.isArray(paymentStatus) && paymentStatus.length > 0) {
           paymentStatus.forEach((s) => params.append("payment_status[]", s));
         } else if (typeof paymentStatus === "string" && paymentStatus) {
@@ -125,42 +135,20 @@ const OrdersList = () => {
 
         const data = await response.json();
         const ordersData = data.orders || [];
-        setAllOrders(ordersData);
 
-        // Client-side search filter (if API does not support search param)
-        let filteredOrders: Order[] = ordersData;
-        if (search) {
-          const searchLower = search.toLowerCase();
-          filteredOrders = filteredOrders.filter((order: Order) =>
-            order.order_number?.toLowerCase().includes(searchLower) ||
-            order.user?.name?.toLowerCase().includes(searchLower) ||
-            order.user?.email?.toLowerCase().includes(searchLower) ||
-            order.id?.toString().toLowerCase().includes(searchLower)
-          );
-        }
+        // Calculate total_pages from API response
+        const totalPages = Math.ceil(
+          (data.pagination?.total_count || data.total_count || 0) /
+          (data.pagination?.per_page || data.per_page || 20)
+        );
 
-        // Filter by status and payment status (client-side for multi-select)
-        if (Array.isArray(status) && status.length > 0) {
-          filteredOrders = filteredOrders.filter((order: Order) =>
-            status.includes(order.status)
-          );
-        }
-        if (Array.isArray(paymentStatus) && paymentStatus.length > 0) {
-          filteredOrders = filteredOrders.filter((order: Order) =>
-            paymentStatus.includes(order.payment_status)
-          );
-        }
-
-        // Client-side pagination
-        const itemsPerPage = 10;
-        const startIndex = (page - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
-
-        setOrders(paginatedOrders);
-        setCurrentPage(page);
-        setTotalPages(Math.ceil(filteredOrders.length / itemsPerPage));
-        setTotalCount(filteredOrders.length);
+        setOrders(ordersData);
+        setPagination({
+          current_page: data.pagination?.current_page || data.current_page || page,
+          per_page: data.pagination?.per_page || data.per_page || 20,
+          total_count: data.pagination?.total_count || data.total_count || 0,
+          pagination_available: data.pagination?.pagination_available || data.pagination_available || false,
+        });
       } catch (error) {
         toast.error("Failed to fetch orders");
         console.error("Error fetching orders:", error);
@@ -174,14 +162,14 @@ const OrdersList = () => {
 
   useEffect(() => {
     fetchOrders(
-      currentPage,
+      pagination.current_page,
       searchTerm,
       statusFilter,
       paymentStatusFilter,
       orderDateFilter
     );
   }, [
-    currentPage,
+    pagination.current_page,
     searchTerm,
     statusFilter,
     paymentStatusFilter,
@@ -215,13 +203,142 @@ const OrdersList = () => {
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
-    setCurrentPage(1);
+    setPagination((prev) => ({ ...prev, current_page: 1 }));
+  };
+
+  const calculateTotalPages = () => {
+    return Math.ceil(pagination.total_count / pagination.per_page) || 1;
   };
 
   const handlePageChange = (page: number) => {
-    if (page > 0 && page <= totalPages) {
-      setCurrentPage(page);
+    const totalPages = calculateTotalPages();
+    if (page < 1 || page > totalPages || page === pagination.current_page || loading) {
+      return;
     }
+    setPagination((prev) => ({ ...prev, current_page: page }));
+  };
+
+  const renderPaginationItems = () => {
+    const totalPages = calculateTotalPages();
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+
+    const items = [];
+    const currentPage = pagination.current_page;
+    const showEllipsis = totalPages > 7;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink
+            onClick={() => handlePageChange(1)}
+            isActive={currentPage === 1}
+            aria-disabled={loading}
+            className={loading ? "pointer-events-none opacity-50" : ""}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+                aria-disabled={loading}
+                className={loading ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+                aria-disabled={loading}
+                className={loading ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink
+                  onClick={() => handlePageChange(i)}
+                  isActive={currentPage === i}
+                  aria-disabled={loading}
+                  className={loading ? "pointer-events-none opacity-50" : ""}
+                >
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+              aria-disabled={loading}
+              className={loading ? "pointer-events-none opacity-50" : ""}
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+              aria-disabled={loading}
+              className={loading ? "pointer-events-none opacity-50" : ""}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
   };
 
   const updateOrderStatus = async (
@@ -249,7 +366,7 @@ const OrdersList = () => {
       }
 
       toast.success('Order status updated successfully!');
-      fetchOrders(currentPage, searchTerm, statusFilter, paymentStatusFilter, orderDateFilter);
+      fetchOrders(pagination.current_page, searchTerm, statusFilter, paymentStatusFilter, orderDateFilter);
     } catch (error) {
       console.error("Error updating order status:", error);
       toast.error("Failed to update order status");
@@ -460,39 +577,25 @@ const OrdersList = () => {
         loading={isSearching || loading}
         loadingMessage={isSearching ? "Searching orders..." : "Loading orders..."}
       />
-      {!searchTerm && !statusFilter && !paymentStatusFilter && totalPages > 1 && (
-        <div className="mt-6 flex justify-center">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
-                    isActive={currentPage === page}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
+      <div className="flex justify-center mt-6">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(Math.max(1, pagination.current_page - 1))}
+                className={pagination.current_page === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            {renderPaginationItems()}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(Math.min(calculateTotalPages(), pagination.current_page + 1))}
+                className={pagination.current_page === calculateTotalPages() || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     </div>
   );
 
@@ -599,7 +702,7 @@ const OrdersList = () => {
             setPaymentStatusFilter([]);
             setOrderDateFilter("last_30_days");
             setSearchTerm("");
-            setCurrentPage(1);
+            setPagination((prev) => ({ ...prev, current_page: 1 }));
           }}
         >
           Clear Filter
@@ -613,7 +716,7 @@ const OrdersList = () => {
           onChange={selected => {
             const values = selected ? selected.map(s => s.value) : [];
             setStatusFilter(values);
-            setCurrentPage(1);
+            setPagination((prev) => ({ ...prev, current_page: 1 }));
           }}
           options={statusOptions.filter(opt => opt.value !== "")}
           styles={customStyles}
@@ -637,7 +740,7 @@ const OrdersList = () => {
           onChange={selected => {
             const values = selected ? selected.map(s => s.value) : [];
             setPaymentStatusFilter(values);
-            setCurrentPage(1);
+            setPagination((prev) => ({ ...prev, current_page: 1 }));
           }}
           options={paymentStatusOptions.filter(opt => opt.value !== "")}
           styles={customStyles}
@@ -661,7 +764,7 @@ const OrdersList = () => {
           value={orderDateOptions.find((opt) => opt.value === orderDateFilter)}
           onChange={(opt) => {
             setOrderDateFilter(opt?.value || "last_30_days");
-            setCurrentPage(1);
+            setPagination((prev) => ({ ...prev, current_page: 1 }));
           }}
           options={orderDateOptions}
           isSearchable={false}
@@ -680,7 +783,7 @@ const OrdersList = () => {
     <div className="p-2 sm:p-4 lg:p-6">
       <Toaster position="top-right" richColors closeButton />
       <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">ORDERS ({totalCount} total)</h1>
+        <h1 className="text-2xl font-bold text-gray-900">ORDERS ({pagination.total_count} total)</h1>
       </div>
       {renderListTab()}
     </div>
