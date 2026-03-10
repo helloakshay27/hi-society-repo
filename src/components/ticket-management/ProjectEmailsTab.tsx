@@ -5,13 +5,23 @@ import { Input } from '@/components/ui/input';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
-import { Trash2, Edit } from 'lucide-react';
+import { Trash2, Edit, X } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 interface ProjectEmail {
   id: number;
   society_id: number;
   email: string;
   active: boolean | null;
+  created_by?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const ProjectEmailsTab: React.FC = () => {
@@ -20,11 +30,17 @@ export const ProjectEmailsTab: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailInput, setEmailInput] = useState('');
 
-  // Fetch project emails from consolidated API
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingEmail, setEditingEmail] = useState<ProjectEmail | null>(null);
+  const [editEmailInput, setEditEmailInput] = useState('');
+  const [isEditSubmitting, setIsEditSubmitting] = useState(false);
+
+  // Fetch project emails
   const fetchProjectEmails = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
+      const response = await fetch(getFullUrl('/crm/admin/helpdesk_email_index.json'), {
         headers: {
           'Authorization': getAuthHeader(),
           'Content-Type': 'application/json',
@@ -33,7 +49,8 @@ export const ProjectEmailsTab: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setEmails(data.helpdesk_project_email || []);
+        // API returns array directly
+        setEmails(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error('Error fetching project emails:', error);
@@ -53,7 +70,7 @@ export const ProjectEmailsTab: React.FC = () => {
     return emailRegex.test(email);
   };
 
-  // Handle submit
+  // Handle add
   const handleSubmit = async () => {
     if (!emailInput.trim()) {
       toast.error('Please enter email address');
@@ -67,17 +84,19 @@ export const ProjectEmailsTab: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('helpdesk_project_email[email]', emailInput.trim());
-
       const response = await fetch(
-        getFullUrl('/crm/admin/helpdesk_categories/create_project_email.json'),
+        getFullUrl('/crm/admin/create_helpdesk_email.json'),
         {
           method: 'POST',
           headers: {
             'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
           },
-          body: formData,
+          body: JSON.stringify({
+            helpdesk_project_email: {
+              email: emailInput.trim(),
+            },
+          }),
         }
       );
 
@@ -97,6 +116,64 @@ export const ProjectEmailsTab: React.FC = () => {
     }
   };
 
+  // Open edit dialog
+  const handleEdit = (email: ProjectEmail) => {
+    setEditingEmail(email);
+    setEditEmailInput(email.email);
+    setEditDialogOpen(true);
+  };
+
+  // Handle edit submit
+  const handleEditSubmit = async () => {
+    if (!editEmailInput.trim()) {
+      toast.error('Please enter email address');
+      return;
+    }
+
+    if (!isValidEmail(editEmailInput.trim())) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    if (!editingEmail) return;
+
+    setIsEditSubmitting(true);
+    try {
+      const response = await fetch(
+        getFullUrl('/crm/admin/update_helpdesk_email.json'),
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: editingEmail.id,
+            helpdesk_project_email: {
+              email: editEmailInput.trim(),
+            },
+          }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success('Email updated successfully!');
+        setEditDialogOpen(false);
+        setEditingEmail(null);
+        setEditEmailInput('');
+        fetchProjectEmails();
+      } else {
+        const errorData = await response.json().catch(() => null);
+        toast.error(errorData?.message || 'Failed to update email');
+      }
+    } catch (error) {
+      console.error('Error updating email:', error);
+      toast.error('Failed to update email');
+    } finally {
+      setIsEditSubmitting(false);
+    }
+  };
+
   // Handle delete
   const handleDelete = async (email: ProjectEmail) => {
     if (!confirm('Are you sure you want to delete this email?')) {
@@ -104,17 +181,14 @@ export const ProjectEmailsTab: React.FC = () => {
     }
 
     try {
-      const formData = new FormData();
-      formData.append('helpdesk_project_email[active]', '0');
-
       const response = await fetch(
-        getFullUrl(`/crm/admin/helpdesk_categories/update_project_email.json?id=${email.id}`),
+        getFullUrl(`/crm/admin/delete_helpdesk_email/${email.id}.json`),
         {
-          method: 'POST',
+          method: 'DELETE',
           headers: {
             'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
           },
-          body: formData,
         }
       );
 
@@ -128,11 +202,6 @@ export const ProjectEmailsTab: React.FC = () => {
       console.error('Error deleting email:', error);
       toast.error('Failed to delete email');
     }
-  };
-
-  // Handle edit (optional - opens email client)
-  const handleEdit = (email: ProjectEmail) => {
-    window.location.href = `mailto:${email.email}`;
   };
 
   // Table columns
@@ -167,6 +236,46 @@ export const ProjectEmailsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Edit Email Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Email</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <Input
+              type="email"
+              placeholder="Enter Email Id"
+              value={editEmailInput}
+              onChange={(e) => setEditEmailInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleEditSubmit();
+              }}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditDialogOpen(false);
+                setEditingEmail(null);
+                setEditEmailInput('');
+              }}
+              disabled={isEditSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleEditSubmit}
+              disabled={isEditSubmitting}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              {isEditSubmitting ? 'Updating...' : 'Update'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Card>
         <CardHeader>
           <CardTitle>Add Project Email</CardTitle>
@@ -180,7 +289,7 @@ export const ProjectEmailsTab: React.FC = () => {
                 placeholder="Enter Email Id"
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleSubmit();
                   }
