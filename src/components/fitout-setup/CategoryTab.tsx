@@ -78,36 +78,16 @@ export const CategoryTab: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      
-      // Get selected user_society ID from localStorage
-      const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
-      
-      if (!selectedUserSocietyId) {
+
+      // Read the society ID directly — set by HiSocietyHeader as 'selectedSocietyId'
+      const societyIdRaw = localStorage.getItem('selectedSocietyId') || '';
+
+      if (!societyIdRaw) {
         toast.error('Please select a society from the header dropdown.');
         return;
       }
-      
-      // Get societies data from localStorage (already fetched by header)
-      const societiesData = localStorage.getItem('hiSocietyApprovedSocieties');
-      
-      if (!societiesData) {
-        toast.error('Society data not found. Please refresh the page.');
-        return;
-      }
-      
-      const userSocieties = JSON.parse(societiesData);
-      
-      // Find the selected user_society record
-      const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
-      
-      if (!selectedSociety || !selectedSociety.id_society) {
-        toast.error('Society information not found. Please select a valid society.');
-        return;
-      }
-      
-      const societyId = parseInt(selectedSociety.id_society);
-      
-      console.log('Creating category with society_id:', societyId, 'for user_society:', selectedUserSocietyId);
+
+      const societyId = parseInt(societyIdRaw);
 
       const response = await apiClient.post('/crm/admin/fitout_categories.json', {
         fitout_category: {
