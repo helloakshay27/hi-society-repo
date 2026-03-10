@@ -132,7 +132,6 @@ export const LoyaltyCustomers = () => {
                     renderCell={renderCell}
                     enableExport={false}
                     enableGlobalSearch={true}
-                    onGlobalSearch={handleGlobalSearch}
                     handleExport={handleExport}
                     loading={loading}
                     loadingMessage="Loading customers..."
