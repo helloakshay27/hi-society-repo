@@ -64,7 +64,7 @@ const formattedResponse = (data) => {
     email: item.email || "-",
     residentType: item.resident_type || "-",
     phase: item.display_view || "-",
-    livesHere: item.lives_here || "-",
+    livesHere: (item.lives_here === "1" || item.lives_here === "true") ? "Yes" : "No",
     membershipType: item?.membership_type || "-",
     status: item.approve ? "Approved" : "Not Approved",
     staff: item.staff || "-",
@@ -176,11 +176,28 @@ const ManageUsersPage = () => {
     setShowActionPanel(false);
   };
 
-  const handleExport = () => {
-    console.log("Export users");
-    // Handle export functionality
-    setShowActionPanel(false);
-  };
+  const handleExport = async () => {
+    try {
+      const response = await axios.get(`https://${baseUrl}/crm/admin/user_societies.xlsx`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        responseType: 'blob'
+      })
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "user_societies.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to export users")
+    }
+  }
 
   const handleFilters = () => {
     setShowFiltersDialog(true);
@@ -491,7 +508,6 @@ const ManageUsersPage = () => {
           <SelectionPanel
             onAdd={handleAddUser}
             onImport={handleImport}
-            onExport={handleExport}
             onClearSelection={() => setShowActionPanel(false)}
             actions={[
               { label: 'Filters', icon: Filter, onClick: handleFilters }
@@ -683,6 +699,8 @@ const ManageUsersPage = () => {
             onSelectAll={handleSelectAll}
             onSelectItem={handleSelectUser}
             enableSelection={true}
+            enableExport={true}
+            handleExport={handleExport}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             searchPlaceholder="Search users..."
