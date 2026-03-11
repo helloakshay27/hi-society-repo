@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, X, Eye, ChevronDown, AlertCircle, Upload, Package, CheckCircle, Filter } from "lucide-react";
 import axios from "axios";
@@ -30,7 +30,7 @@ export const LoyaltyInventorySection = () => {
     const productCategories = [
         { value: "gift_card", label: "Gift Card", apiCategory: "voucher_category" },
         { value: "lounge", label: "Lounge", apiCategory: "indian_lounge" },
-        { value: "miles", label: "Miles", apiCategory: "mile_category" },
+        { value: "miles", label: "Miles", apiCategory: "miles" },
         { value: "merchandise", label: "Merchandise", apiCategory: "merchandise" },
     ];
 
@@ -54,9 +54,23 @@ export const LoyaltyInventorySection = () => {
 
     // Filter & UI states
     const [searchTerm, setSearchTerm] = useState("");
-    const handleGlobalSearch = (term: string) => {
+    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleGlobalSearch = useCallback((term: string) => {
         setSearchTerm(term);
-    };
+        setCurrentPage(1);
+
+        // Clear existing debounce timer
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+
+        // Set new debounce timer
+        debounceTimerRef.current = setTimeout(() => {
+            // Fetch will be triggered by the searchTerm change
+            debounceTimerRef.current = null;
+        }, 500);
+    }, []);
 
     const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
     const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
@@ -108,8 +122,8 @@ export const LoyaltyInventorySection = () => {
         { key: "customer_price", label: "Customer Price", sortable: true },
         // { key: "discount", label: "Discount", sortable: true },
         // { key: "value_type", label: "Value Type", sortable: true },
-        { key: "min_value", label: "Min Value", sortable: true },
-        { key: "max_value", label: "Max Value", sortable: true },
+        // { key: "min_value", label: "Min Value", sortable: true },
+        // { key: "max_value", label: "Max Value", sortable: true },
         // { key: "value_denominations", label: "Value Denominations", sortable: true },
         { key: "validity", label: "Validity", sortable: true },
         {
@@ -122,8 +136,8 @@ export const LoyaltyInventorySection = () => {
             label: "Redemption Instructions",
             sortable: true,
         },
-        { key: "stock_quantity", label: "Stock Quantity", sortable: true },
-        { key: "min_stock_level", label: "Min Stock Level", sortable: true },
+        // { key: "stock_quantity", label: "Stock Quantity", sortable: true },
+        // { key: "min_stock_level", label: "Min Stock Level", sortable: true },
         // { key: "published", label: "Published", sortable: true },
         // { key: "featured", label: "Featured", sortable: true },
         // { key: "is_trending", label: "Is Trending", sortable: true },
@@ -144,11 +158,11 @@ export const LoyaltyInventorySection = () => {
     useEffect(() => {
         fetchInventoryData();
         fetchCategories();
-    }, [activeTab, currentPage, appliedFilters]);
+    }, [activeTab, currentPage, appliedFilters, searchTerm]);
 
     const fetchCategories = async () => {
         try {
-            const token = API_CONFIG.TOKEN || "";
+            const token = localStorage.getItem("token") || "";
             const url = getFullUrl(`/generic_categories?token=${token}`);
             const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
             const cats = response.data?.categories || [];
@@ -271,6 +285,13 @@ export const LoyaltyInventorySection = () => {
             const token = localStorage.getItem("token");
             const baseUrl = localStorage.getItem("baseUrl");
             let url = `https://${baseUrl}/products.json?token=${token}&category=${category?.apiCategory}&page=${currentPage}&source=admin_portal`;
+
+            // Add ransack search parameters for global search
+            if (searchTerm.trim()) {
+                const encodedSearch = encodeURIComponent(searchTerm.trim());
+                url += `&q[name_or_sku_or_description_or_brand_cont]=${encodedSearch}`;
+            }
+
             if (appliedFilters.subCategory) url += `&q[categories_in]=${encodeURIComponent(appliedFilters.subCategory)}`;
             if (appliedFilters.minDiscount) url += `&min_discount=${appliedFilters.minDiscount}`;
             if (appliedFilters.maxDiscount) url += `&max_discount=${appliedFilters.maxDiscount}`;
@@ -877,7 +898,7 @@ export const LoyaltyInventorySection = () => {
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#1A1A1A]">{stats.inStock}</div>
-                                    <div className="text-sm text-gray-600">In Stock</div>
+                                    <div className="text-sm text-gray-600">Active</div>
                                 </div>
                             </div>
 
@@ -887,7 +908,7 @@ export const LoyaltyInventorySection = () => {
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#1A1A1A]">{stats.outOfStock}</div>
-                                    <div className="text-sm text-gray-600">Out of Stock</div>
+                                    <div className="text-sm text-gray-600">Inactive</div>
                                 </div>
                             </div>
                         </div>
@@ -905,6 +926,10 @@ export const LoyaltyInventorySection = () => {
                                 loadingMessage="Loading inventory..."
                                 emptyMessage="No inventory items found"
                                 storageKey={`loyalty-inventory-table-${activeTab}`}
+                                searchTerm={searchTerm}
+                                onSearchChange={handleGlobalSearch}
+                                searchPlaceholder="Search by name, SKU, description, brand..."
+                                enableSearch={true}
                             />
                         </div>
 

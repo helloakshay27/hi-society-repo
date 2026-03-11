@@ -38,10 +38,14 @@ interface WalletTransaction {
 }
 
 export const WalletManagement = () => {
+  const ITEMS_PER_PAGE = 10; // fixed page size used only for UI
+
   const [timeRange, setTimeRange] = useState("10");
   const [loading, setLoading] = useState(false);
   const [cardsData, setCardsData] = useState<any>([]);
   const [activeTab, setActiveTab] = useState("wallet-management");
+  const [allTransactions, setAllTransactions] = useState<WalletTransaction[]>([]);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -75,14 +79,14 @@ export const WalletManagement = () => {
     "90": "last_90_days",
   };
 
-  // Wallet transactions from API
-  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  // Wallet transactions from API (full list stored in allTransactions)
   const fetchTransactions = async (page: number = 1, range: string = timeRange) => {
     setLoading(true);
     try {
       const token = API_CONFIG.TOKEN || "";
       const rangeParam = rangeParamMap[range] || "last_10_days";
-      const url = getFullUrl(`/organization_wallet/transactions.json?token=${token}&page=${page}&range=${rangeParam}`);
+      // fetch all transactions regardless of page; pagination is done locally
+      const url = getFullUrl(`/organization_wallet/transactions.json?token=${token}&range=${rangeParam}`);
       const response = await fetch(url, {
         headers: {
           Authorization: getAuthHeader(),
@@ -92,12 +96,13 @@ export const WalletManagement = () => {
       if (!response.ok) throw new Error("Failed to fetch transactions");
       const data = await response.json();
       setCardsData(data.wallet);
-      setTransactions(data.transactions || []);
-      if (data.meta) {
-        setCurrentPage(data.meta.page || 1);
-        setTotalPages(data.meta.total_pages || 1);
-        setTotalCount(data.meta.total_count || 0);
-      }
+      const all = data.transactions || [];
+      setAllTransactions(all);
+
+      const count = data.meta?.total_count ?? all.length;
+      setTotalCount(count);
+      setTotalPages(Math.ceil(count / ITEMS_PER_PAGE));
+      setCurrentPage(1);
     } catch (error) {
       toast.error("Failed to load wallet transactions");
       setTransactions([]);
@@ -113,9 +118,16 @@ export const WalletManagement = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, timeRange]);
 
+  // whenever allTransactions or currentPage changes, update visible slice
+  useEffect(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    setTransactions(allTransactions.slice(start, start + ITEMS_PER_PAGE));
+  }, [allTransactions, currentPage]);
+
   const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages || page === currentPage) return;
-    fetchTransactions(page, timeRange);
+    if (page < 1 || page > totalPages || page === currentPage || loading) return;
+    // only change page locally; data already loaded
+    setCurrentPage(page);
   };
 
   const renderPaginationItems = () => {

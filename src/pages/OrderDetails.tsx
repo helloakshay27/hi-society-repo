@@ -272,10 +272,10 @@ const OrderDetails = () => {
                                     </div>
 
                                     {/* show points redeemed unconditionally below shipping */}
-                                    <div className="flex justify-between text-sm">
+                                    {/* <div className="flex justify-between text-sm">
                                         <span className="text-[#C72030]">Points Redeemed</span>
                                         <span className="text-[#C72030]">-{parseFloat(orderData?.loyaltyPointsRedeemed || 0)}</span>
-                                    </div>
+                                    </div> */}
                                     <div className="flex justify-between pt-3 border-t">
                                         <span className="font-semibold text-gray-900">Total</span>
                                         <span className="font-bold text-2xl text-gray-900">₹{parseFloat(orderData?.totalAmount || 0).toFixed(2)}</span>
