@@ -159,6 +159,7 @@ const LoyaltyCustomerDetails = () => {
                             id: o.id, // This is the order ID (e.g., 41)
                             orderNumber: o.order_number || "-", // This is the order number (e.g., "ORD20260202145820C526B9")
                             totalAmount: o.total_amount ?? "-",
+                            item_name: o.item_name ?? "-",
                             status: o.status || "-",
                             createdAt: o.created_at || "-",
                         }))
@@ -227,6 +228,7 @@ const LoyaltyCustomerDetails = () => {
     const ordersColumns = [
         { key: "actions", label: "Actions", sortable: false },
         { key: "orderNumber", label: "Order Number", sortable: true },
+        { key: "item_name", label: "Item Name", sortable: true },
         { key: "totalAmount", label: "Total Amount", sortable: true },
         { key: "status", label: "Status", sortable: true },
         { key: "createdAt", label: "Created At", sortable: true },
@@ -323,6 +325,8 @@ const LoyaltyCustomerDetails = () => {
         switch (columnKey) {
             case "orderNumber":
                 return <span>{item.orderNumber}</span>;
+            case "item_name":
+                return <span>{item.item_name}</span>;
             case "totalAmount":
                 return <span>₹{parseFloat(item.totalAmount || 0).toFixed(2)}</span>;
             case "status":
@@ -348,7 +352,7 @@ const LoyaltyCustomerDetails = () => {
                     </button>
                 );
             default:
-                return null;
+                return item[columnKey] || "-";
         }
     };
 
