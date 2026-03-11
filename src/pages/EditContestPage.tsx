@@ -187,7 +187,7 @@ export const EditContestPage: React.FC = () => {
             partner: prize.partner_name || "",
             winningProbability: prize.probability_value?.toString() || "",
             totalQuantity: prize.total_quantity?.toString() || "",
-            offerDescription: prize.description || "",
+            offerDescription: prize.terms_and_conditions || "",
             bannerImage: null,
             bannerImageName: "",
             rewardType: prize.reward_type === "points" ? "Points" : prize.reward_type === "merchandise" ? "Merchandise" : prize.reward_type === "none" ? "None" : "Coupon Code",
@@ -266,7 +266,7 @@ export const EditContestPage: React.FC = () => {
     } else if (redemptionQuillRef.current && redemptionText) {
       redemptionQuillRef.current.root.innerHTML = redemptionText;
     }
-  }, [currentStep, loading, termsText, redemptionText]);
+  }, [currentStep, loading]);
 
   // Fetch products for merchandise
   useEffect(() => {
@@ -276,16 +276,16 @@ export const EditContestPage: React.FC = () => {
         const baseUrl = localStorage.getItem('baseUrl') || '';
         const token = localStorage.getItem('token') || '';
         const url = /^https?:\/\//i.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
-        
+
         const response = await fetch(`${url}/products?source=admin_portal`, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
-        
+
         if (!response.ok) throw new Error('Failed to fetch products');
-        
+
         const data = await response.json();
         setProducts(data.products || []);
       } catch (error) {
@@ -295,7 +295,7 @@ export const EditContestPage: React.FC = () => {
         setLoadingProducts(false);
       }
     };
-    
+
     fetchProducts();
   }, []);
 
@@ -421,7 +421,7 @@ export const EditContestPage: React.FC = () => {
     // Check if dates/times changed
     const newStartISO = buildISO(startDate, startTime);
     const newEndISO = buildISO(endDate, endTime, true);
-    
+
     if (newStartISO !== originalData?.start_at) {
       formData.append('contest[start_at]', newStartISO);
       hasChanges = true;
@@ -491,7 +491,7 @@ export const EditContestPage: React.FC = () => {
       if (prizeChanged) {
         hasChanges = true;
         formData.append(`contest[prizes_attributes][${index}][title]`, offer.offerTitle.trim());
-        
+
         if (offer.prizeId) {
           formData.append(`contest[prizes_attributes][${index}][id]`, offer.prizeId.toString());
         }
@@ -952,18 +952,18 @@ export const EditContestPage: React.FC = () => {
                       Upload Banner Image
                       <span className="text-[#C72030]">*</span>
                     </Typography>
-                    
+
                     {offer.existingImageUrl && !offer.bannerImage && (
                       <div className="mb-3">
-                        <img 
-                          src={offer.existingImageUrl} 
-                          alt="Current banner" 
+                        <img
+                          src={offer.existingImageUrl}
+                          alt="Current banner"
                           className="w-32 h-20 object-cover rounded border"
                         />
                         <p className="text-xs text-gray-500 mt-1">Current image</p>
                       </div>
                     )}
-                    
+
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                       <p className="text-sm text-gray-600 mb-2">
                         {offer.bannerImageName ||
