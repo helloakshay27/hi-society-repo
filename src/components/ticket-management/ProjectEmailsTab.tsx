@@ -184,7 +184,7 @@ export const ProjectEmailsTab: React.FC = () => {
       const response = await fetch(
         getFullUrl(`/crm/admin/delete_helpdesk_email/${email.id}.json`),
         {
-          method: 'DELETE',
+          method: 'POST',
           headers: {
             'Authorization': getAuthHeader(),
             'Content-Type': 'application/json',
