@@ -286,13 +286,13 @@ export const WalletManagement = () => {
         // normalise casing
         const type = str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
         // determine text and background colours
-        let classes = "px-2 py-1 rounded text-sm font-semibold";
+        let classes = "pl-4 pr-4 py-1 text-sm font-[400] rounded-[2px]"; // explicit left/right padding and 3px radius
         if (type === "Debit" || type === "Dr") {
-          classes += " text-red-600 bg-[#efcac4]";
+          classes += " bg-[#efcac4]";
         } else if (type === "Credit" || type === "Cr") {
-          classes += " text-green-600 bg-[#c6e9d7]";
+          classes += " bg-[#c6e9d7]";
         }
-        return <span className={classes}>{type}</span>;
+        return <p className={classes} style={{marginLeft:'5px'}}>{type}</p>;
       }
       case "created_at":
         return item.created_at
