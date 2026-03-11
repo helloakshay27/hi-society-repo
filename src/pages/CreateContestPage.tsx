@@ -376,6 +376,9 @@ export const CreateContestPage: React.FC = () => {
     formData.append('contest[name]', contestName.trim());
     formData.append('contest[description]', contestDescription.trim());
     formData.append('contest[content_type]', contestType.toLowerCase());
+    if (isStep1Only) {
+      formData.append('contest[status]', "draft");
+    }
 
     // Only send these if we are NOT in the initial step 1 creation (or if we have them)
     // For Step 1 creation, we just need name, description, type.

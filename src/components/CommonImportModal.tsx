@@ -10,10 +10,11 @@ interface CommonImportModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     title: string;
-    entityType: "projects" | "milestones" | "tasks";
+    entityType: string;
     onSampleDownload?: () => void;
     onImport?: () => void;
     isUploading?: boolean;
+    isDownloading?: boolean;
 }
 
 export const CommonImportModal: React.FC<CommonImportModalProps> = ({
@@ -25,33 +26,10 @@ export const CommonImportModal: React.FC<CommonImportModalProps> = ({
     entityType,
     onSampleDownload,
     onImport,
-    isUploading
+    isUploading,
+    isDownloading
 }) => {
     const [dragOver, setDragOver] = useState(false);
-
-    // Dynamic configuration based on entity type
-    const getEntityConfig = () => {
-        const configs = {
-            projects: {
-                endpoint: '/project_managements/import.json',
-                formFieldName: 'projects_file',
-                sampleFileName: 'sample_project.csv',
-            },
-            milestones: {
-                endpoint: '/milestones/import.json',
-                formFieldName: 'milestones_file',
-                sampleFileName: 'sample_milestone.csv',
-            },
-            tasks: {
-                endpoint: '/task_managements/import.json',
-                formFieldName: 'tasks_file',
-                sampleFileName: 'sample_task.csv',
-            },
-        };
-        return configs[entityType];
-    };
-
-    const config = getEntityConfig();
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -191,9 +169,9 @@ export const CommonImportModal: React.FC<CommonImportModalProps> = ({
                             onClick={onSampleDownload}
                             variant="outline"
                             className="flex-1 border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
-                            disabled={isUploading}
+                            disabled={isDownloading || isUploading}
                         >
-                            Download Sample Format
+                            {isDownloading ? 'Downloading...' : 'Download Sample Format'}
                         </Button>
                         <Button
                             onClick={onImport}
