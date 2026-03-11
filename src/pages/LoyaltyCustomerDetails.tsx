@@ -218,7 +218,7 @@ const LoyaltyCustomerDetails = () => {
         { key: "id", label: "Reference ID", sortable: true },
         { key: "transactionType", label: "Type", sortable: true },
         { key: "resourceType", label: "Resource Type", sortable: false },
-        { key: "amount", label: "Amount", sortable: true },
+        { key: "amount", label: "Points", sortable: true },
         { key: "createdAt", label: "Date", sortable: true },
         { key: "remarks", label: "Remarks", sortable: false },
     ];
