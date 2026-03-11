@@ -292,7 +292,7 @@ export const WalletManagement = () => {
         } else if (type === "Credit" || type === "Cr") {
           classes += " bg-[#c6e9d7]";
         }
-        return <p className={classes} style={{marginLeft:'5px'}}>{type}</p>;
+        return <p className={classes}>{type}</p>;
       }
       case "created_at":
         return item.created_at
