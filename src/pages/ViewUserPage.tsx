@@ -4,6 +4,7 @@ import { Paper, Box, Avatar, Typography, Grid, Divider, Tabs, Tab } from "@mui/m
 import { ArrowLeft, User as UserIcon, Mail, Phone, Home, Calendar, Info, FileText, Edit } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AddToAnotherFlatModal } from "@/components/AddToAnotherFlatModal";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -29,6 +30,7 @@ export const ViewUserPage = () => {
   const [user, setUser] = useState<any>(null);
   const [tabValue, setTabValue] = useState(0);
   const [members, setMembers] = useState<any[]>([]);
+  const [isAddToAnotherFlatModalOpen, setIsAddToAnotherFlatModalOpen] = useState(false);
 
   useEffect(() => {
     if (!userId || !baseUrl || !token) return;
@@ -119,7 +121,10 @@ export const ViewUserPage = () => {
 
           {/* Add to Another Flat Button */}
           <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-            <Button className="bg-teal-500 hover:bg-teal-600 text-white text-sm">
+            <Button
+              className="bg-teal-500 hover:bg-teal-600 text-white text-sm"
+              onClick={() => setIsAddToAnotherFlatModalOpen(true)}
+            >
               Add to Another Flat
             </Button>
           </Box>
@@ -221,6 +226,13 @@ export const ViewUserPage = () => {
           )
         }
       </Paper >
+
+      {/* Add to Another Flat Modal */}
+      <AddToAnotherFlatModal
+        isOpen={isAddToAnotherFlatModalOpen}
+        onClose={() => setIsAddToAnotherFlatModalOpen(false)}
+        userData={user}
+      />
     </Box >
   );
 };
