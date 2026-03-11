@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, X, Eye, ChevronDown, AlertCircle, Upload, Package, CheckCircle } from "lucide-react";
+import { Plus, X, Eye, ChevronDown, AlertCircle, Upload, Package, CheckCircle, Filter } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
@@ -17,8 +17,9 @@ import {
     PaginationLink,
     PaginationNext,
     PaginationPrevious,
+    PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { Switch as MuiSwitch } from "@mui/material";
+import { Switch as MuiSwitch, Dialog as MuiDialog, DialogTitle as MuiDialogTitle, DialogContent as MuiDialogContent, DialogActions as MuiDialogActions, TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 
 export const LoyaltyInventorySection = () => {
@@ -29,7 +30,7 @@ export const LoyaltyInventorySection = () => {
     const productCategories = [
         { value: "gift_card", label: "Gift Card", apiCategory: "voucher_category" },
         { value: "lounge", label: "Lounge", apiCategory: "indian_lounge" },
-        { value: "miles", label: "Miles", apiCategory: "mile_category" },
+        { value: "miles", label: "Miles", apiCategory: "miles" },
         { value: "merchandise", label: "Merchandise", apiCategory: "merchandise" },
     ];
 
@@ -53,13 +54,38 @@ export const LoyaltyInventorySection = () => {
 
     // Filter & UI states
     const [searchTerm, setSearchTerm] = useState("");
-    const handleGlobalSearch = (term: string) => {
+    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleGlobalSearch = useCallback((term: string) => {
         setSearchTerm(term);
-    };
+        setCurrentPage(1);
+
+        // Clear existing debounce timer
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+
+        // Set new debounce timer
+        debounceTimerRef.current = setTimeout(() => {
+            // Fetch will be triggered by the searchTerm change
+            debounceTimerRef.current = null;
+        }, 500);
+    }, []);
 
     const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
     const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+    // Filter Modal States
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [filterSubCategory, setFilterSubCategory] = useState("");
+    const [filterMinDiscount, setFilterMinDiscount] = useState("");
+    const [filterMaxDiscount, setFilterMaxDiscount] = useState("");
+    const [filterMinPrice, setFilterMinPrice] = useState("");
+    const [filterMaxPrice, setFilterMaxPrice] = useState("");
+    // Applied filters (used in fetch)
+    const [appliedFilters, setAppliedFilters] = useState({ subCategory: "", minDiscount: "", maxDiscount: "", minPrice: "", maxPrice: "" });
+    const [subCategories, setSubCategories] = useState<{ value: number; label: string }[]>([]);
 
     // Add Item Form States
     const [isActive, setIsActive] = useState(true);
@@ -96,8 +122,8 @@ export const LoyaltyInventorySection = () => {
         { key: "customer_price", label: "Customer Price", sortable: true },
         // { key: "discount", label: "Discount", sortable: true },
         // { key: "value_type", label: "Value Type", sortable: true },
-        { key: "min_value", label: "Min Value", sortable: true },
-        { key: "max_value", label: "Max Value", sortable: true },
+        // { key: "min_value", label: "Min Value", sortable: true },
+        // { key: "max_value", label: "Max Value", sortable: true },
         // { key: "value_denominations", label: "Value Denominations", sortable: true },
         { key: "validity", label: "Validity", sortable: true },
         {
@@ -110,8 +136,8 @@ export const LoyaltyInventorySection = () => {
             label: "Redemption Instructions",
             sortable: true,
         },
-        { key: "stock_quantity", label: "Stock Quantity", sortable: true },
-        { key: "min_stock_level", label: "Min Stock Level", sortable: true },
+        // { key: "stock_quantity", label: "Stock Quantity", sortable: true },
+        // { key: "min_stock_level", label: "Min Stock Level", sortable: true },
         // { key: "published", label: "Published", sortable: true },
         // { key: "featured", label: "Featured", sortable: true },
         // { key: "is_trending", label: "Is Trending", sortable: true },
@@ -132,11 +158,11 @@ export const LoyaltyInventorySection = () => {
     useEffect(() => {
         fetchInventoryData();
         fetchCategories();
-    }, [activeTab, currentPage]);
+    }, [activeTab, currentPage, appliedFilters, searchTerm]);
 
     const fetchCategories = async () => {
         try {
-            const token = API_CONFIG.TOKEN || "";
+            const token = localStorage.getItem("token") || "";
             const url = getFullUrl(`/generic_categories?token=${token}`);
             const response = await axios.get(url, { headers: { Authorization: getAuthHeader() } });
             const cats = response.data?.categories || [];
@@ -146,6 +172,29 @@ export const LoyaltyInventorySection = () => {
             toast.error("Failed to load categories");
         }
     };
+
+    const fetchSubCategories = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const baseUrl = localStorage.getItem("baseUrl");
+            const category = productCategories.find(c => c.value === activeTab);
+            const url = `https://${baseUrl}/products/sub_categories.json?token=${token}&page=1&category=${category?.apiCategory}`;
+
+            const response = await axios.get(url);
+            const subCats = response.data?.data || [];
+            setSubCategories(subCats.map((cat: any) => ({ value: cat.value, label: cat.label })));
+        } catch (error) {
+            console.error("Error fetching sub categories:", error);
+            toast.error("Failed to load sub categories");
+        }
+    };
+
+    // Fetch subcategories when filter modal opens
+    useEffect(() => {
+        if (isFilterModalOpen) {
+            fetchSubCategories();
+        }
+    }, [isFilterModalOpen, activeTab]);
 
     const handleToggleActive = async (nextActive: boolean) => {
         if (selectedProductIds.length === 0 || isUpdatingStatus) {
@@ -234,8 +283,20 @@ export const LoyaltyInventorySection = () => {
             setLoading(true);
             const category = productCategories.find(c => c.value === activeTab);
             const token = localStorage.getItem("token");
-            const baseUrl = localStorage.getItem("baseUrl")
-            const url = `https://${baseUrl}/products.json?token=${token}&category=${category?.apiCategory}&page=${currentPage}&source=admin_portal`;
+            const baseUrl = localStorage.getItem("baseUrl");
+            let url = `https://${baseUrl}/products.json?token=${token}&category=${category?.apiCategory}&page=${currentPage}&source=admin_portal`;
+
+            // Add ransack search parameters for global search
+            if (searchTerm.trim()) {
+                const encodedSearch = encodeURIComponent(searchTerm.trim());
+                url += `&q[name_or_sku_or_description_or_brand_cont]=${encodedSearch}`;
+            }
+
+            if (appliedFilters.subCategory) url += `&q[categories_in]=${encodeURIComponent(appliedFilters.subCategory)}`;
+            if (appliedFilters.minDiscount) url += `&min_discount=${appliedFilters.minDiscount}`;
+            if (appliedFilters.maxDiscount) url += `&max_discount=${appliedFilters.maxDiscount}`;
+            if (appliedFilters.minPrice) url += `&min_price=${appliedFilters.minPrice}`;
+            if (appliedFilters.maxPrice) url += `&max_price=${appliedFilters.maxPrice}`;
 
             const response = await axios.get(url);
             const products = response.data?.products || [];
@@ -652,6 +713,150 @@ export const LoyaltyInventorySection = () => {
         setCurrentPage(page);
     };
 
+    const renderPaginationItems = () => {
+        if (!totalPages || totalPages <= 0) {
+            return null;
+        }
+        const items = [];
+        const showEllipsis = totalPages > 7;
+
+        if (showEllipsis) {
+            items.push(
+                <PaginationItem key={1} className="cursor-pointer">
+                    <PaginationLink
+                        onClick={() => handlePageChange(1)}
+                        isActive={currentPage === 1}
+                        aria-disabled={loading}
+                        className={loading ? "pointer-events-none opacity-50" : ""}
+                    >
+                        1
+                    </PaginationLink>
+                </PaginationItem>
+            );
+
+            if (currentPage > 4) {
+                items.push(
+                    <PaginationItem key="ellipsis1">
+                        <PaginationEllipsis />
+                    </PaginationItem>
+                );
+            } else {
+                for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+                    items.push(
+                        <PaginationItem key={i} className="cursor-pointer">
+                            <PaginationLink
+                                onClick={() => handlePageChange(i)}
+                                isActive={currentPage === i}
+                                aria-disabled={loading}
+                                className={loading ? "pointer-events-none opacity-50" : ""}
+                            >
+                                {i}
+                            </PaginationLink>
+                        </PaginationItem>
+                    );
+                }
+            }
+
+            if (currentPage > 3 && currentPage < totalPages - 2) {
+                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                    items.push(
+                        <PaginationItem key={i} className="cursor-pointer">
+                            <PaginationLink
+                                onClick={() => handlePageChange(i)}
+                                isActive={currentPage === i}
+                                aria-disabled={loading}
+                                className={loading ? "pointer-events-none opacity-50" : ""}
+                            >
+                                {i}
+                            </PaginationLink>
+                        </PaginationItem>
+                    );
+                }
+            }
+
+            if (currentPage < totalPages - 3) {
+                items.push(
+                    <PaginationItem key="ellipsis2">
+                        <PaginationEllipsis />
+                    </PaginationItem>
+                );
+            } else {
+                for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+                    if (!items.find((item) => item.key === i.toString())) {
+                        items.push(
+                            <PaginationItem key={i} className="cursor-pointer">
+                                <PaginationLink
+                                    onClick={() => handlePageChange(i)}
+                                    isActive={currentPage === i}
+                                    aria-disabled={loading}
+                                    className={loading ? "pointer-events-none opacity-50" : ""}
+                                >
+                                    {i}
+                                </PaginationLink>
+                            </PaginationItem>
+                        );
+                    }
+                }
+            }
+
+            if (totalPages > 1) {
+                items.push(
+                    <PaginationItem key={totalPages} className="cursor-pointer">
+                        <PaginationLink
+                            onClick={() => handlePageChange(totalPages)}
+                            isActive={currentPage === totalPages}
+                            aria-disabled={loading}
+                            className={loading ? "pointer-events-none opacity-50" : ""}
+                        >
+                            {totalPages}
+                        </PaginationLink>
+                    </PaginationItem>
+                );
+            }
+        } else {
+            for (let i = 1; i <= totalPages; i++) {
+                items.push(
+                    <PaginationItem key={i} className="cursor-pointer">
+                        <PaginationLink
+                            onClick={() => handlePageChange(i)}
+                            isActive={currentPage === i}
+                            aria-disabled={loading}
+                            className={loading ? "pointer-events-none opacity-50" : ""}
+                        >
+                            {i}
+                        </PaginationLink>
+                    </PaginationItem>
+                );
+            }
+        }
+
+        return items;
+    };
+
+    const handleApplyFilters = () => {
+        setAppliedFilters({
+            subCategory: filterSubCategory,
+            minDiscount: filterMinDiscount,
+            maxDiscount: filterMaxDiscount,
+            minPrice: filterMinPrice,
+            maxPrice: filterMaxPrice,
+        });
+        setCurrentPage(1);
+        toast.success("Filters applied successfully!");
+        setIsFilterModalOpen(false);
+    };
+
+    const handleClearFilters = () => {
+        setFilterSubCategory("");
+        setFilterMinDiscount("");
+        setFilterMaxDiscount("");
+        setFilterMinPrice("");
+        setFilterMaxPrice("");
+        setAppliedFilters({ subCategory: "", minDiscount: "", maxDiscount: "", minPrice: "", maxPrice: "" });
+        setCurrentPage(1);
+        toast.info("Filters cleared!");
+    };
+
     const handleTabChange = (value: string) => {
         setActiveTab(value);
         setCurrentPage(1); // Reset to first page when changing tabs
@@ -693,7 +898,7 @@ export const LoyaltyInventorySection = () => {
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#1A1A1A]">{stats.inStock}</div>
-                                    <div className="text-sm text-gray-600">In Stock</div>
+                                    <div className="text-sm text-gray-600">Active</div>
                                 </div>
                             </div>
 
@@ -703,7 +908,7 @@ export const LoyaltyInventorySection = () => {
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold text-[#1A1A1A]">{stats.outOfStock}</div>
-                                    <div className="text-sm text-gray-600">Out of Stock</div>
+                                    <div className="text-sm text-gray-600">Inactive</div>
                                 </div>
                             </div>
                         </div>
@@ -717,44 +922,37 @@ export const LoyaltyInventorySection = () => {
                                 handleExport={handleExport}
                                 leftActions={renderLeftActions()}
                                 loading={loading}
+                                onFilterClick={() => setIsFilterModalOpen(true)}
                                 loadingMessage="Loading inventory..."
                                 emptyMessage="No inventory items found"
                                 storageKey={`loyalty-inventory-table-${activeTab}`}
+                                searchTerm={searchTerm}
+                                onSearchChange={handleGlobalSearch}
+                                searchPlaceholder="Search by name, SKU, description, brand..."
+                                enableSearch={true}
                             />
                         </div>
 
                         {/* Pagination Controls */}
-                        {totalPages > 1 && (
-                            <div className="flex justify-center mt-6 pb-6">
-                                <Pagination>
-                                    <PaginationContent>
-                                        <PaginationItem>
-                                            <PaginationPrevious
-                                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                                                className={currentPage === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                            <PaginationItem key={page} className="cursor-pointer">
-                                                <PaginationLink
-                                                    onClick={() => handlePageChange(page)}
-                                                    isActive={currentPage === page}
-                                                    className={loading ? "pointer-events-none opacity-50" : ""}
-                                                >
-                                                    {page}
-                                                </PaginationLink>
-                                            </PaginationItem>
-                                        ))}
-                                        <PaginationItem>
-                                            <PaginationNext
-                                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                                                className={currentPage === totalPages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                            />
-                                        </PaginationItem>
-                                    </PaginationContent>
-                                </Pagination>
-                            </div>
-                        )}
+                        <div className="flex justify-center mt-6 pb-6">
+                            <Pagination>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                            className={currentPage === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                        />
+                                    </PaginationItem>
+                                    {renderPaginationItems()}
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                            className={currentPage === totalPages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
                     </TabsContent>
                 ))}
             </Tabs>
@@ -1006,6 +1204,155 @@ export const LoyaltyInventorySection = () => {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Filter Modal */}
+            <MuiDialog open={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} maxWidth="sm" fullWidth>
+                <MuiDialogTitle sx={{ fontWeight: 600, fontSize: "20px", color: "#1A1A1A" }}>
+                    Filter Inventory
+                </MuiDialogTitle>
+                <MuiDialogContent dividers sx={{ display: "flex", flexDirection: "column", gap: 3, py: 3 }}>
+                    {/* Sub Category Filter */}
+                    <FormControl fullWidth size="small">
+                        <InputLabel id="filter-subcategory-label" sx={{ color: "#1A1A1A", fontWeight: 500 }}>
+                            Sub Category
+                        </InputLabel>
+                        <MuiSelect
+                            labelId="filter-subcategory-label"
+                            id="filter-subcategory"
+                            value={filterSubCategory}
+                            onChange={(e) => setFilterSubCategory(e.target.value)}
+                            label="Sub Category"
+                            sx={{
+                                backgroundColor: "white",
+                                "& .MuiOutlinedInput-root": {
+                                    "& fieldset": {
+                                        borderColor: "#e5e1d8",
+                                    },
+                                    "&:hover fieldset": {
+                                        borderColor: "#d4cfc6",
+                                    },
+                                    "&.Mui-focused fieldset": {
+                                        borderColor: "#C72030",
+                                    },
+                                },
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "#C72030",
+                                },
+                            }}
+                        >
+                            <MenuItem value="">All Sub Categories</MenuItem>
+                            {subCategories.map((cat) => (
+                                <MenuItem key={cat.value} value={cat.value.toString()}>
+                                    {cat.label}
+                                </MenuItem>
+                            ))}
+                        </MuiSelect>
+                    </FormControl>
+
+                    {/* Discount Filter */}
+                    <FormControl fullWidth size="small">
+                        <InputLabel id="filter-discount-label" sx={{ color: "#1A1A1A", fontWeight: 500 }}>
+                            Discount Range
+                        </InputLabel>
+                        <MuiSelect
+                            labelId="filter-discount-label"
+                            id="filter-discount"
+                            value={filterMinDiscount ? `${filterMinDiscount}-${filterMaxDiscount}` : ""}
+                            onChange={(e) => {
+                                const val = e.target.value as string;
+                                if (!val) { setFilterMinDiscount(""); setFilterMaxDiscount(""); return; }
+                                const [min, max] = val.split("-");
+                                setFilterMinDiscount(min || "");
+                                setFilterMaxDiscount(max || "");
+                            }}
+                            label="Discount Range"
+                            sx={{
+                                backgroundColor: "white",
+                                "& .MuiOutlinedInput-root": {
+                                    "& fieldset": {
+                                        borderColor: "#e5e1d8",
+                                    },
+                                    "&:hover fieldset": {
+                                        borderColor: "#d4cfc6",
+                                    },
+                                    "&.Mui-focused fieldset": {
+                                        borderColor: "#C72030",
+                                    },
+                                },
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "#C72030",
+                                },
+                            }}
+                        >
+                            <MenuItem value="">Any Discount</MenuItem>
+                            <MenuItem value="0-5">0% - 5%</MenuItem>
+                            <MenuItem value="5-10">5% - 10%</MenuItem>
+                            <MenuItem value="10-15">10% - 15%</MenuItem>
+                            <MenuItem value="15-">15% and above</MenuItem>
+                        </MuiSelect>
+                    </FormControl>
+
+                    {/* Price Filter */}
+                    <FormControl fullWidth size="small">
+                        <InputLabel id="filter-price-label" sx={{ color: "#1A1A1A", fontWeight: 500 }}>
+                            Price Range
+                        </InputLabel>
+                        <MuiSelect
+                            labelId="filter-price-label"
+                            id="filter-price"
+                            value={filterMinPrice ? `${filterMinPrice}-${filterMaxPrice}` : ""}
+                            onChange={(e) => {
+                                const val = e.target.value as string;
+                                if (!val) { setFilterMinPrice(""); setFilterMaxPrice(""); return; }
+                                const [min, max] = val.split("-");
+                                setFilterMinPrice(min || "");
+                                setFilterMaxPrice(max || "");
+                            }}
+                            label="Price Range"
+                            sx={{
+                                backgroundColor: "white",
+                                "& .MuiOutlinedInput-root": {
+                                    "& fieldset": {
+                                        borderColor: "#e5e1d8",
+                                    },
+                                    "&:hover fieldset": {
+                                        borderColor: "#d4cfc6",
+                                    },
+                                    "&.Mui-focused fieldset": {
+                                        borderColor: "#C72030",
+                                    },
+                                },
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "#C72030",
+                                },
+                            }}
+                        >
+                            <MenuItem value="">Any Price</MenuItem>
+                            <MenuItem value="0-100">₹0 - ₹100</MenuItem>
+                            <MenuItem value="100-500">₹100 - ₹500</MenuItem>
+                            <MenuItem value="500-1000">₹500 - ₹1000</MenuItem>
+                            <MenuItem value="1000-5000">₹1000 - ₹5000</MenuItem>
+                            <MenuItem value="5000-10000">₹5000 - ₹10000</MenuItem>
+                            <MenuItem value="10000-">₹10000 and above</MenuItem>
+                        </MuiSelect>
+                    </FormControl>
+                </MuiDialogContent>
+                <MuiDialogActions sx={{ p: 2, gap: 1 }}>
+                    <Button
+                        variant="outline"
+                        onClick={handleClearFilters}
+                        className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                    >
+                        Clear
+                    </Button>
+                    <Button
+                        onClick={handleApplyFilters}
+                        className="bg-[#C72030] hover:bg-[#A01828] text-white"
+                    >
+                        Apply
+                    </Button>
+                </MuiDialogActions>
+            </MuiDialog>
         </div>
     );
 };

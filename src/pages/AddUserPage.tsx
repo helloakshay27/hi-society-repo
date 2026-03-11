@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { countries } from "country-data";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { Camera, User as UserIcon, Info } from "lucide-react";
+import { Camera, User as UserIcon, Info, Plus, X, FileText, FileSpreadsheet, File as GenericFile } from "lucide-react";
 import {
   Box,
   Paper,
@@ -21,6 +22,7 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { getFullUrl } from "@/config/apiConfig";
+import axios from "axios";
 
 // Styled Components
 const SectionCard = styled(Paper)(({ theme }) => ({
@@ -121,52 +123,57 @@ const CameraButton = styled(IconButton)(({ theme }) => ({
 }));
 
 const getCreateApiUrl = () => {
+  const baseUrl = localStorage.getItem('baseUrl') || '';
   const token = localStorage.getItem('token') || '';
-  return getFullUrl(`/crm/admin/user_societies.json?token=${token}`);
+  return `https://${baseUrl}/crm/admin/user_societies.json?token=${token}`;
 };
 
 const getEditApiUrl = (id: string) => {
+  const baseUrl = localStorage.getItem('baseUrl') || '';
   const token = localStorage.getItem('token') || '';
-  return getFullUrl(`/crm/admin/user_societies/${id}.json?token=${token}`);
+  return `https://${baseUrl}/crm/admin/user_societies/${id}.json?token=${token}`;
 };
 
-const mapFormDataToApiPayload = (formData: any) => ({
-  email: formData.email,
-  number: formData.mobile,
-  password: formData.password,
-  user_title: formData.title,
-  firstname: formData.firstName,
-  lastname: formData.lastName,
-  country_code: formData.countryCode,
-  country_code_name: "IN",
-  alternate_email1: formData.alternateEmail1,
-  alternate_email2: formData.alternateEmail2,
-  alternate_address: formData.alternateAddress,
-  company_name: formData.companyName || "",
-  pan_number: formData.panNumber,
-  gst_number: formData.gstNumber,
-  flat: formData.flat,
-  ownership: formData.residentType,
-  lives_here: formData.livesHere === "Yes" ? true : false,
-  allow_fitout: formData.allowFitout === "Yes" ? true : false,
-  intercom: formData.intercomNumber,
-  landline: formData.landlineNumber,
-  agreement_start_date: formData.agreementStartDate || "",
-  agreement_expire_date: formData.agreementExpireDate || "",
-  document: null,
-  status: formData.status === "Active" || formData.status === true,
-  is_primary: formData.membershipType === "Primary" ? 1 : 0,
-  birthday: formData.birthDate,
-  anniversary: formData.anniversary,
-  spouse_birthday: formData.spouseBirthDate,
-  differently_abled: formData.differentlyAbled === "Yes" ? true : false,
-  ev_connection: formData.evConnection === "Yes" ? true : false,
-  adults: Number(formData.noOfAdults) || 0,
-  children: Number(formData.noOfChildren) || 0,
-  pets: Number(formData.noOfPets) || 0,
-  user_category_id: formData.category === "Resident" ? 3 : formData.category === "Staff" ? 2 : 1,
-  name_on_bill: `${formData.firstName} ${formData.lastName}`,
-});
+const mapFormDataToApiPayload = (formData: any) => {
+  const payload: any = {
+    email: formData.email,
+    mobile: formData.mobile,
+    password: formData.password,
+    title: formData.title,
+    full_name: `${formData.firstName} ${formData.lastName}`,
+    country_code: formData.countryCode,
+    country_code_name: "IN",
+    alternate_email_1: formData.alternateEmail1,
+    alternate_email_2: formData.alternateEmail2,
+    alternate_address: formData.alternateAddress,
+    company_name: formData.companyName || "",
+    pan_number: formData.panNumber,
+    gst_number: formData.gstNumber,
+    flat_no: formData.flat,
+    society_block_id: formData.tower,
+    resident_type: formData.residentType,
+    lives_here: formData.livesHere === "Yes",
+    allow_fitout: formData.allowFitout === "Yes",
+    intercom_number: formData.intercomNumber,
+    landline_number: formData.landlineNumber,
+    agreement_start_date: formData.agreementStartDate || "",
+    agreement_expire_date: formData.agreementExpireDate || "",
+    approve: formData.status === "1",
+    is_primary: formData.membershipType === "Primary" ? 1 : 0,
+    birthday: formData.birthDate,
+    anniversary: formData.anniversary,
+    spouse_birthday: formData.spouseBirthDate,
+    differently_abled: formData.differentlyAbled === "Yes",
+    ev_connection: formData.evConnection === "Yes",
+    adults: Number(formData.noOfAdults) || 0,
+    children: Number(formData.noOfChildren) || 0,
+    pets: Number(formData.noOfPets) || 0,
+    user_category_id: formData.category,
+    display_view: formData.phase,
+    membership_type: formData.membershipType,
+  };
+  return payload;
+};
 
 const defaultFormData = {
   title: "",
@@ -203,6 +210,7 @@ const defaultFormData = {
   companyName: "",
   agreementStartDate: "",
   agreementExpireDate: "",
+  agreementDocuments: [] as File[],
 };
 
 export const AddUserPage = () => {
@@ -214,6 +222,7 @@ export const AddUserPage = () => {
   const [formData, setFormData] = useState(defaultFormData);
   const [towerOptions, setTowerOptions] = useState<{ id: number; name: string }[]>([]);
   const [flatOptions, setFlatOptions] = useState<{ id: number; flat_no: string }[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -232,11 +241,24 @@ export const AddUserPage = () => {
         return;
       }
       const url = getFullUrl(`/get_society_flats.json?token=${token}&society_id=${societyId}&society_block_id=${blockId}`);
-      const res = await fetch(url);
-      const data = await res.json();
-      setFlatOptions(Array.isArray(data.society_flats) ? data.society_flats : []);
+      const res = await axios.get(url);
+      setFlatOptions(Array.isArray(res.data.society_flats) ? res.data.society_flats : []);
     } catch (e) {
       setFlatOptions([]);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const baseUrl = localStorage.getItem('baseUrl') || '';
+      const token = localStorage.getItem('token') || '';
+      if (!baseUrl || !token) return;
+      const url = `https://${baseUrl}/crm/admin/user_categories.json?token=${token}`;
+      const res = await axios.get(url);
+      setCategoryOptions(Array.isArray(res.data) ? res.data : []);
+    } catch (e) {
+      console.error("Error fetching categories:", e);
+      setCategoryOptions([]);
     }
   };
 
@@ -252,48 +274,48 @@ export const AddUserPage = () => {
           return;
         }
         const url = getFullUrl(`/get_society_blocks.json?token=${token}&society_id=${societyId}`);
-        const res = await fetch(url);
-        const data = await res.json();
-        setTowerOptions(Array.isArray(data.society_blocks) ? data.society_blocks : []);
+        const res = await axios.get(url);
+        setTowerOptions(Array.isArray(res.data.society_blocks) ? res.data.society_blocks : []);
       } catch (e) {
         setTowerOptions([]);
       }
     };
     fetchTowers();
+    fetchCategories();
 
     if (isEdit && userId) {
       setLoading(true);
-      fetch(getEditApiUrl(userId), { method: "GET" })
-        .then(res => res.json())
-        .then(data => {
-          // Map API response to formData shape
-          const user = data?.data || {};
-          setFormData({
+      axios.get(getEditApiUrl(userId))
+        .then(response => {
+          const data = response.data;
+          // Map API response to formData shape - using correct API key names
+          const user = data || {};
+          const formDataState = {
             ...defaultFormData,
-            title: user.user_title || "",
-            firstName: user.firstname || "",
-            lastName: user.lastname || "",
+            title: user.title || "",
+            firstName: user.full_name?.split(" ")[0] || user.firstname || "",
+            lastName: user.full_name?.split(" ").slice(1).join(" ") || user.lastname || "",
             email: user.email || "",
             countryCode: user.country_code || "+91",
-            mobile: user.number || "",
+            mobile: user.mobile_number || "",
             password: "", // don't prefill password
-            phase: user.phase || "",
-            status: user.status ? "Active" : "Inactive",
-            tower: user.tower || "",
-            flat: user.flat || "",
-            category: user.user_category_id === 3 ? "Resident" : user.user_category_id === 2 ? "Staff" : "Vendor",
+            phase: user.display_view || "",
+            status: user.approved ? "1" : "",
+            tower: user.society_block_id ? user.society_block_id.toString() : "",
+            flat: user.society_flat_id || "",
+            category: user.user_category_id || "",
             alternateAddress: user.alternate_address || "",
-            residentType: user.ownership || "Owner",
+            residentType: user.resident_type || "Owner",
             membershipType: user.is_primary === 1 ? "Primary" : "Secondary",
-            livesHere: user.lives_here ? "Yes" : "No",
-            allowFitout: user.allow_fitout ? "Yes" : "No",
+            livesHere: user.user_flat?.lives_here === "true" ? "Yes" : "No",
+            allowFitout: user.user_flat?.allow_fitout ? "Yes" : "No",
             birthDate: user.birthday || "",
             anniversary: user.anniversary || "",
             spouseBirthDate: user.spouse_birthday || "",
-            alternateEmail1: user.alternate_email1 || "",
-            alternateEmail2: user.alternate_email2 || "",
-            landlineNumber: user.landline || "",
-            intercomNumber: user.intercom || "",
+            alternateEmail1: user.alternate_email_1 || "",
+            alternateEmail2: user.alternate_email_2 || "",
+            landlineNumber: user.landline_number || "",
+            intercomNumber: user.intercom_number || "",
             gstNumber: user.gst_number || "",
             panNumber: user.pan_number || "",
             evConnection: user.ev_connection ? "Yes" : "No",
@@ -302,9 +324,16 @@ export const AddUserPage = () => {
             noOfChildren: user.children?.toString() || "",
             differentlyAbled: user.differently_abled ? "Yes" : "No",
             companyName: user.company_name || "",
-            agreementStartDate: user.agreement_start_date || "",
-            agreementExpireDate: user.agreement_expire_date || "",
-          });
+            agreementStartDate: user.user_flat?.agreement_start_date.split("T")[0] || "",
+            agreementExpireDate: user.user_flat?.agreement_expire_date.split("T")[0] || "",
+            agreementDocuments: [], // Set appropriately if editing
+          };
+          setFormData(formDataState);
+
+          // Fetch flats if tower is available
+          if (formDataState.tower) {
+            fetchFlats(parseInt(formDataState.tower));
+          }
         })
         .catch(() => setError("Failed to load user data."))
         .finally(() => setLoading(false));
@@ -314,6 +343,11 @@ export const AddUserPage = () => {
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
+    if (error) setError(null);
+  };
+
+  const handleFileChange = (files: File[]) => {
+    setFormData((prev) => ({ ...prev, agreementDocuments: files }));
     if (error) setError(null);
   };
 
@@ -378,16 +412,38 @@ export const AddUserPage = () => {
     setLoading(true);
     setError(null);
     const payload = mapFormDataToApiPayload(formData);
-    try {
-      const res = await fetch(isEdit && userId ? getEditApiUrl(userId) : getCreateApiUrl(), {
-        method: isEdit ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+    const url = isEdit && userId ? getEditApiUrl(userId) : getCreateApiUrl();
+    const method = isEdit ? "patch" : "post";
+
+    const formDataToSubmit = new FormData();
+
+    // Append all non-file fields from payload
+    Object.keys(payload).forEach((key) => {
+      const value = payload[key];
+      if (value !== null && value !== undefined) {
+        formDataToSubmit.append(key, typeof value === 'boolean' ? String(value) : value);
+      }
+    });
+
+    // Append multiple agreement documents
+    if (formData.agreementDocuments && formData.agreementDocuments.length > 0) {
+      formData.agreementDocuments.forEach((file: File) => {
+        formDataToSubmit.append("user_flat[documents][]", file);
       });
-      if (!res.ok) throw new Error("API error");
-      // Optionally handle response
-      navigate("/setup/manage-users");
+      // For backward compatibility or if backend expects a single 'document' field
+      // formDataToSubmit.append("document", formData.agreementDocuments[0]);
+    }
+
+    try {
+      await axios({
+        method,
+        url,
+        data: formDataToSubmit,
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      navigate("/settings/manage-users");
     } catch (e) {
+      console.error("Submission error:", e);
       setError("Failed to submit. Please try again.");
     } finally {
       setLoading(false);
@@ -405,6 +461,13 @@ export const AddUserPage = () => {
       console.log("Image uploaded:", file);
     }
   };
+  const countryCodes = countries.all
+    .map((country) => ({
+      name: country.alpha3,
+      code: country.countryCallingCodes[0]
+    }))
+    .filter((c) => c.code);
+
 
   return (
     <Box
@@ -542,10 +605,13 @@ export const AddUserPage = () => {
                       value={formData.countryCode}
                       label="Code"
                       onChange={(e) => handleInputChange("countryCode", e.target.value)}
+                      renderValue={(selected) => selected}
                     >
-                      <MenuItem value="+91">🇮🇳 +91</MenuItem>
-                      <MenuItem value="+1">🇺🇸 +1</MenuItem>
-                      <MenuItem value="+44">🇬🇧 +44</MenuItem>
+                      {countryCodes.map((country, index) => (
+                        <MenuItem key={index} value={country.code}>
+                          {country.name} ({country.code})
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                   <TextField
@@ -605,8 +671,7 @@ export const AddUserPage = () => {
                     label="Select Status"
                     onChange={(e) => handleInputChange("status", e.target.value)}
                   >
-                    <MenuItem value="Active">Active</MenuItem>
-                    <MenuItem value="Inactive">Inactive</MenuItem>
+                    <MenuItem value="1">Approved</MenuItem>
                   </Select>
                 </FormControl>
 
@@ -617,7 +682,7 @@ export const AddUserPage = () => {
                     value={formData.tower}
                     label="Select Tower"
                     onChange={(e) => {
-                      const selectedTower = towerOptions.find(t => t.name === e.target.value);
+                      const selectedTower = towerOptions.find(t => t.id.toString() === e.target.value);
                       handleInputChange("tower", e.target.value);
                       handleInputChange("flat", ""); // Reset flat when tower changes
                       if (selectedTower) {
@@ -629,7 +694,7 @@ export const AddUserPage = () => {
                   >
                     <MenuItem value="">Select Tower</MenuItem>
                     {towerOptions.map((block) => (
-                      <MenuItem key={block.id} value={block.name}>{block.name}</MenuItem>
+                      <MenuItem key={block.id} value={block.id.toString()}>{block.name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -644,7 +709,7 @@ export const AddUserPage = () => {
                   >
                     <MenuItem value="">Select Flat</MenuItem>
                     {flatOptions.map((flat) => (
-                      <MenuItem key={flat.id} value={flat.flat_no}>{flat.flat_no}</MenuItem>
+                      <MenuItem key={flat.id} value={flat.id}>{flat.flat_no}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -657,9 +722,10 @@ export const AddUserPage = () => {
                     label="Select Category"
                     onChange={(e) => handleInputChange("category", e.target.value)}
                   >
-                    <MenuItem value="Resident">Resident</MenuItem>
-                    <MenuItem value="Staff">Staff</MenuItem>
-                    <MenuItem value="Vendor">Vendor</MenuItem>
+                    <MenuItem value="">Select Category</MenuItem>
+                    {categoryOptions.map((cat) => (
+                      <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
 
@@ -769,6 +835,162 @@ export const AddUserPage = () => {
                     <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
                   </RadioGroup>
                 </FormControl>
+
+                {formData.residentType === "Tenant" && (
+                  <>
+                    <Box sx={{ gridColumn: { md: 'span 1' } }}>
+                      <FormLabel
+                        sx={{
+                          fontSize: '14px',
+                          color: 'rgba(0, 0, 0, 0.6)',
+                          marginBottom: '8px',
+                          display: 'block',
+                        }}
+                      >
+                        Agreement Start Date
+                      </FormLabel>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="date"
+                        value={formData.agreementStartDate}
+                        onChange={(e) => handleInputChange("agreementStartDate", e.target.value)}
+                        sx={fieldStyles}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Box>
+
+                    <Box sx={{ gridColumn: { md: 'span 1' } }}>
+                      <FormLabel
+                        sx={{
+                          fontSize: '14px',
+                          color: 'rgba(0, 0, 0, 0.6)',
+                          marginBottom: '8px',
+                          display: 'block',
+                        }}
+                      >
+                        Agreement Expire Date
+                      </FormLabel>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="date"
+                        value={formData.agreementExpireDate}
+                        onChange={(e) => handleInputChange("agreementExpireDate", e.target.value)}
+                        sx={fieldStyles}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Box>
+
+                    <Box sx={{ gridColumn: 'span 3', mt: 2 }}>
+                      <FormLabel
+                        sx={{
+                          fontSize: '14px',
+                          color: 'rgba(0, 0, 0, 0.6)',
+                          marginBottom: '8px',
+                          display: 'block',
+                        }}
+                      >
+                        Document
+                      </FormLabel>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                        {formData.agreementDocuments.map((file, index) => {
+                          const isImage = file.type.startsWith('image/');
+                          const isExcel = file.name.includes('.xls') || file.name.includes('.xlsx') || file.name.includes('.csv');
+                          const isPDF = file.name.includes('.pdf');
+
+                          return (
+                            <Box
+                              key={index}
+                              sx={{
+                                width: '80px',
+                                height: '80px',
+                                border: '1px solid #ddd',
+                                borderRadius: '4px',
+                                position: 'relative',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: '#fff',
+                                overflow: 'hidden',
+                              }}
+                            >
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  position: 'absolute',
+                                  top: 0,
+                                  right: 0,
+                                  backgroundColor: '#fff',
+                                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                  padding: '2px',
+                                  '&:hover': { backgroundColor: '#f5f5f5' },
+                                  zIndex: 1,
+                                }}
+                                onClick={() => {
+                                  const newDocs = [...formData.agreementDocuments];
+                                  newDocs.splice(index, 1);
+                                  handleFileChange(newDocs);
+                                }}
+                              >
+                                <X size={12} color="#C72030" />
+                              </IconButton>
+
+                              {isImage ? (
+                                <img
+                                  src={URL.createObjectURL(file)}
+                                  alt="preview"
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                              ) : isExcel ? (
+                                <FileSpreadsheet size={32} color="#1D6F42" />
+                              ) : isPDF ? (
+                                <FileText size={32} color="#C72030" />
+                              ) : (
+                                <GenericFile size={32} color="#666" />
+                              )}
+                            </Box>
+                          );
+                        })}
+
+                        <Box
+                          sx={{
+                            width: '80px',
+                            height: '80px',
+                            border: '1px dashed #ccc',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            backgroundColor: '#fff',
+                            '&:hover': {
+                              borderColor: '#C72030',
+                              backgroundColor: '#fafafa',
+                            },
+                          }}
+                          onClick={() => document.getElementById('agreement-document-upload').click()}
+                        >
+                          <Plus size={24} color="#666" />
+                        </Box>
+                      </Box>
+                      <input
+                        type="file"
+                        id="agreement-document-upload"
+                        style={{ display: 'none' }}
+                        multiple
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          if (files.length > 0) {
+                            handleFileChange([...formData.agreementDocuments, ...files]);
+                          }
+                          // Reset input so same file can be selected again if removed
+                          e.target.value = '';
+                        }}
+                      />
+                    </Box>
+                  </>
+                )}
               </Box>
             </Box>
           </Box>

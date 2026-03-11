@@ -16,6 +16,15 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
 import { toast } from "sonner";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface WalletTransaction {
   id: number;
@@ -29,10 +38,17 @@ interface WalletTransaction {
 }
 
 export const WalletManagement = () => {
+  const ITEMS_PER_PAGE = 10; // fixed page size used only for UI
+
   const [timeRange, setTimeRange] = useState("10");
   const [loading, setLoading] = useState(false);
   const [cardsData, setCardsData] = useState<any>([]);
   const [activeTab, setActiveTab] = useState("wallet-management");
+  const [allTransactions, setAllTransactions] = useState<WalletTransaction[]>([]);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Auto Top-Up states
   const [autoTopUpActive, setAutoTopUpActive] = useState(true);
@@ -55,35 +71,138 @@ export const WalletManagement = () => {
     closingBalance: "1,21,800.00",
   };
 
-  // Wallet transactions from API
-  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  // range → API query param map
+  const rangeParamMap: Record<string, string> = {
+    "7": "last_7_days",
+    "10": "last_10_days",
+    "30": "last_30_days",
+    "90": "last_90_days",
+  };
+
+  // Wallet transactions from API (full list stored in allTransactions)
+  const fetchTransactions = async (page: number = 1, range: string = timeRange) => {
+    setLoading(true);
+    try {
+      const token = API_CONFIG.TOKEN || "";
+      const rangeParam = rangeParamMap[range] || "last_10_days";
+      // fetch all transactions regardless of page; pagination is done locally
+      const url = getFullUrl(`/organization_wallet/transactions.json?token=${token}&range=${rangeParam}`);
+      const response = await fetch(url, {
+        headers: {
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error("Failed to fetch transactions");
+      const data = await response.json();
+      setCardsData(data.wallet);
+      const all = data.transactions || [];
+      setAllTransactions(all);
+
+      const count = data.meta?.total_count ?? all.length;
+      setTotalCount(count);
+      setTotalPages(Math.ceil(count / ITEMS_PER_PAGE));
+      setCurrentPage(1);
+    } catch (error) {
+      toast.error("Failed to load wallet transactions");
+      setTransactions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab !== "wallet-management") return;
-    setLoading(true);
-    const fetchTransactions = async () => {
-      try {
-        // build url using helper and stored token
-        const token = API_CONFIG.TOKEN || "";
-        const url = getFullUrl(`/organization_wallet/transactions.json?token=${token}`);
-        const response = await fetch(url, {
-          headers: {
-            Authorization: getAuthHeader(),
-            "Content-Type": "application/json",
-          },
-        });
-        if (!response.ok) throw new Error("Failed to fetch transactions");
-        const data = await response.json();
-        setCardsData(data.wallet);
-        setTransactions(data.transactions || []);
-      } catch (error) {
-        toast.error("Failed to load wallet transactions");
-        setTransactions([]);
-      } finally {
-        setLoading(false);
+    setCurrentPage(1);
+    fetchTransactions(1, timeRange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, timeRange]);
+
+  // whenever allTransactions or currentPage changes, update visible slice
+  useEffect(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    setTransactions(allTransactions.slice(start, start + ITEMS_PER_PAGE));
+  }, [allTransactions, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage || loading) return;
+    // only change page locally; data already loaded
+    setCurrentPage(page);
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = totalPages > 7;
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => !loading && handlePageChange(1)} isActive={currentPage === 1} className={loading ? "pointer-events-none opacity-50" : ""}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+      if (currentPage > 4) {
+        items.push(<PaginationItem key="ellipsis1"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => !loading && handlePageChange(i)} isActive={currentPage === i} className={loading ? "pointer-events-none opacity-50" : ""}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
       }
-    };
-    fetchTransactions();
-  }, [activeTab]);
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => !loading && handlePageChange(i)} isActive={currentPage === i} className={loading ? "pointer-events-none opacity-50" : ""}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (currentPage < totalPages - 3) {
+        items.push(<PaginationItem key="ellipsis2"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => !loading && handlePageChange(i)} isActive={currentPage === i} className={loading ? "pointer-events-none opacity-50" : ""}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => !loading && handlePageChange(totalPages)} isActive={currentPage === totalPages} className={loading ? "pointer-events-none opacity-50" : ""}>
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => !loading && handlePageChange(i)} isActive={currentPage === i} className={loading ? "pointer-events-none opacity-50" : ""}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
 
   // Table columns for API data
   // Show all columns in the API transactions table
@@ -166,11 +285,14 @@ export const WalletManagement = () => {
         }
         // normalise casing
         const type = str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-        let color = "";
-        if (type === "Debit" || type === "Dr") color = "text-red-600 font-bold";
-        if (type === "Credit" || type === "Cr")
-          color = "text-green-600 font-bold";
-        return <span className={color}>{type}</span>;
+        // determine text and background colours
+        let classes = "pl-4 pr-4 py-1 text-sm font-[400] rounded-[2px]"; // explicit left/right padding and 3px radius
+        if (type === "Debit" || type === "Dr") {
+          classes += " bg-[#efcac4]";
+        } else if (type === "Credit" || type === "Cr") {
+          classes += " bg-[#c6e9d7]";
+        }
+        return <p className={classes}>{type}</p>;
       }
       case "created_at":
         return item.created_at
@@ -421,7 +543,13 @@ export const WalletManagement = () => {
           <div className="space-y-4">
             <div className="flex align-items-center justify-between w-full bg-[#f6f4ee] p-3">
               <p className="text-lg font-bold my-auto ">Recent Transactions</p>
-              <Select value={timeRange} onValueChange={setTimeRange}>
+              <Select
+                value={timeRange}
+                onValueChange={(val) => {
+                  setTimeRange(val);
+                  setCurrentPage(1);
+                }}
+              >
                 <SelectTrigger className="w-[150px] border-[#e5e1d8] bg-white">
                   <SelectValue placeholder="Select range" />
                 </SelectTrigger>
@@ -444,6 +572,30 @@ export const WalletManagement = () => {
               exportFileName="wallet-transactions"
               storageKey="wallet-management-table"
             />
+            {totalPages > 1 && (
+              <div className="flex flex-col items-center gap-2 mt-4">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                        className={currentPage === 1 || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                    {renderPaginationItems()}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                        className={currentPage === totalPages || loading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+                <p className="text-sm text-gray-600">
+                  Showing page {currentPage} of {totalPages} ({totalCount} total transactions)
+                </p>
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -642,7 +794,7 @@ export const WalletManagement = () => {
         </TabsContent>
         <TabsContent value="alerts" className="space-y-6 mt-6">
           <div className="max-w-2xl">
-            {/* Header with Toggle */}
+            
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-[#f1c7cb] rounded-lg flex items-center justify-center">
@@ -669,9 +821,8 @@ export const WalletManagement = () => {
               </div>
             </div>
 
-            {/* Form Fields */}
             <div className="space-y-4">
-              {/* Minimum Balance Threshold */}
+           
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-[#1A1A1A] flex items-center gap-1">
                   Minimum Balance Threshold
@@ -691,7 +842,7 @@ export const WalletManagement = () => {
                 </div>
               </div>
 
-              {/* Alert Recipients */}
+             
               <div className="space-y-2 bg-[#eae6dd] p-4">
                 <div className="flex items-start gap-3">
                   <Bell className="w-5 h-5 text-[#c72030] mt-0.5" />
@@ -704,7 +855,7 @@ export const WalletManagement = () => {
                 </div>
               </div>
 
-              {/* Submit Button */}
+        
               <div className="flex justify-end mt-6">
                 <Button
                   className="bg-[#C72030] hover:bg-[#A01828] text-white px-8"

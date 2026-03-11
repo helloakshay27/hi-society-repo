@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,15 @@ import {
 } from "@/components/ui/select";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { getFullUrl, getAuthHeader, API_CONFIG } from "@/config/apiConfig";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface WalletData {
   id: number;
@@ -39,6 +48,13 @@ interface Transaction {
   created_at: string;
 }
 
+const TX_RANGE_PARAM_MAP: Record<string, string> = {
+  "7": "last_7_days",
+  "10": "last_10_days",
+  "30": "last_30_days",
+  "90": "last_90_days",
+};
+
 const WalletTopup: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -48,6 +64,10 @@ const WalletTopup: React.FC = () => {
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
   const [walletData, setWalletData] = useState<WalletData | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [txCurrentPage, setTxCurrentPage] = useState(1);
+  const [txTotalPages, setTxTotalPages] = useState(1);
+  const [txTotalCount, setTxTotalCount] = useState(0);
+  const [txTimeRange, setTxTimeRange] = useState("10");
   const [formData, setFormData] = useState({
     amount: "",
     remarks: "",
@@ -84,36 +104,131 @@ const WalletTopup: React.FC = () => {
     fetchOrganizations();
   }, []);
 
+  // range → API query param map is defined at module level (TX_RANGE_PARAM_MAP)
+
   // Fetch wallet data and transactions when organization is selected
-  useEffect(() => {
-    if (!selectedOrgId) {
+  const fetchWalletData = useCallback(async (orgId: string, page: number = 1, range: string = "10") => {
+    if (!orgId) {
       setWalletData(null);
       setTransactions([]);
       return;
     }
-
-    const fetchWalletData = async () => {
-      setLoadingTransactions(true);
-      try {
-        const url = getFullUrl(`/organization_wallet/transactions?organization_id=${selectedOrgId}&token=${token}`);
-        const response = await fetch(url, {
-          headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
-        });
-        if (!response.ok) throw new Error("Failed to fetch wallet data");
-        const data = await response.json();
-        setWalletData(data.wallet || null);
-        setTransactions(data.transactions || []);
-      } catch (err) {
-        console.error("Error fetching wallet data:", err);
-        setWalletData(null);
-        setTransactions([]);
-      } finally {
-        setLoadingTransactions(false);
+    setLoadingTransactions(true);
+    try {
+      const rangeParam = TX_RANGE_PARAM_MAP[range] || "last_10_days";
+      const url = getFullUrl(`/organization_wallet/transactions?organization_id=${orgId}&token=${token}&page=${page}&range=${rangeParam}`);
+      const response = await fetch(url, {
+        headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
+      });
+      if (!response.ok) throw new Error("Failed to fetch wallet data");
+      const data = await response.json();
+      setWalletData(data.wallet || null);
+      setTransactions(data.transactions || []);
+      if (data.meta) {
+        setTxCurrentPage(data.meta.page || 1);
+        setTxTotalPages(data.meta.total_pages || 1);
+        setTxTotalCount(data.meta.total_count || 0);
       }
-    };
+    } catch (err) {
+      console.error("Error fetching wallet data:", err);
+      setWalletData(null);
+      setTransactions([]);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  }, [token]);
 
-    fetchWalletData();
-  }, [selectedOrgId]);
+  useEffect(() => {
+    if (!selectedOrgId) {
+      setWalletData(null);
+      setTransactions([]);
+      setTxCurrentPage(1);
+      setTxTotalPages(1);
+      setTxTotalCount(0);
+      return;
+    }
+    setTxCurrentPage(1);
+    fetchWalletData(selectedOrgId, 1, txTimeRange);
+  }, [selectedOrgId, txTimeRange, fetchWalletData]);
+
+  const handleTxPageChange = (page: number) => {
+    if (page < 1 || page > txTotalPages || page === txCurrentPage) return;
+    fetchWalletData(selectedOrgId, page, txTimeRange);
+  };
+
+  const renderTxPaginationItems = () => {
+    if (!txTotalPages || txTotalPages <= 0) return null;
+    const items = [];
+    const showEllipsis = txTotalPages > 7;
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink onClick={() => !loadingTransactions && handleTxPageChange(1)} isActive={txCurrentPage === 1} className={loadingTransactions ? "pointer-events-none opacity-50" : ""}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+      if (txCurrentPage > 4) {
+        items.push(<PaginationItem key="ellipsis1"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = 2; i <= Math.min(3, txTotalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => !loadingTransactions && handleTxPageChange(i)} isActive={txCurrentPage === i} className={loadingTransactions ? "pointer-events-none opacity-50" : ""}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (txCurrentPage > 3 && txCurrentPage < txTotalPages - 2) {
+        for (let i = txCurrentPage - 1; i <= txCurrentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink onClick={() => !loadingTransactions && handleTxPageChange(i)} isActive={txCurrentPage === i} className={loadingTransactions ? "pointer-events-none opacity-50" : ""}>
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+      if (txCurrentPage < txTotalPages - 3) {
+        items.push(<PaginationItem key="ellipsis2"><PaginationEllipsis /></PaginationItem>);
+      } else {
+        for (let i = Math.max(txTotalPages - 2, 2); i < txTotalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink onClick={() => !loadingTransactions && handleTxPageChange(i)} isActive={txCurrentPage === i} className={loadingTransactions ? "pointer-events-none opacity-50" : ""}>
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+      if (txTotalPages > 1) {
+        items.push(
+          <PaginationItem key={txTotalPages} className="cursor-pointer">
+            <PaginationLink onClick={() => !loadingTransactions && handleTxPageChange(txTotalPages)} isActive={txCurrentPage === txTotalPages} className={loadingTransactions ? "pointer-events-none opacity-50" : ""}>
+              {txTotalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= txTotalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink onClick={() => !loadingTransactions && handleTxPageChange(i)} isActive={txCurrentPage === i} className={loadingTransactions ? "pointer-events-none opacity-50" : ""}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+    return items;
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -178,14 +293,8 @@ const WalletTopup: React.FC = () => {
         remarks: "",
       });
 
-      // Refresh wallet data
-      const walletUrl = getFullUrl(`/organization_wallet/transactions?organization_id=${selectedOrgId}&token=${token}`);
-      const walletResponse = await fetch(walletUrl, {
-        headers: { Authorization: getAuthHeader(), "Content-Type": "application/json" },
-      });
-      const walletData = await walletResponse.json();
-      setWalletData(walletData.wallet || null);
-      setTransactions(walletData.transactions || []);
+      // Refresh wallet data (go back to page 1)
+      await fetchWalletData(selectedOrgId, 1, txTimeRange);
     } catch (err: any) {
       setError(err.message || "Failed to process top-up");
       console.error("Top-up error:", err);
@@ -359,7 +468,7 @@ const WalletTopup: React.FC = () => {
 
     return (
       <div className="mb-6">
-        <Card className="border-[#e5e1d8] shadow-none">
+        {/* <Card className="border-[#e5e1d8] shadow-none">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
@@ -436,7 +545,7 @@ const WalletTopup: React.FC = () => {
               </Button>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     );
   };
@@ -578,10 +687,29 @@ const WalletTopup: React.FC = () => {
         {/* Transactions Table */}
         {selectedOrgId && (
           <Card className="border-[#e5e1d8] mb-6">
-            <CardHeader className="bg-gradient-to-r from-[#f6f4ee] to-[#e5e1d8]">
-              <CardTitle className="flex items-center gap-2 text-[#1a1a1a]">
-                Transaction History
-              </CardTitle>
+            <CardHeader className="bg-gradient-to-r from-[#f6f4ee] to-[#e5e1d8] pb-0">
+              <div className="flex items-center justify-between w-full">
+                <CardTitle className="flex items-center gap-2 text-[#1a1a1a]">
+                  Transaction History
+                </CardTitle>
+                <Select
+                  value={txTimeRange}
+                  onValueChange={(val) => {
+                    setTxTimeRange(val);
+                    setTxCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[150px] border-[#e5e1d8] bg-white">
+                    <SelectValue placeholder="Select range" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7">Last 7 days</SelectItem>
+                    <SelectItem value="10">Last 10 days</SelectItem>
+                    <SelectItem value="30">Last 30 days</SelectItem>
+                    <SelectItem value="90">Last 90 days</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent className="p-6">
               <EnhancedTable
@@ -597,6 +725,30 @@ const WalletTopup: React.FC = () => {
                 hideTableExport={false}
                 hideColumnsButton={false}
               />
+              {txTotalPages > 1 && (
+                <div className="flex flex-col items-center gap-2 mt-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => handleTxPageChange(Math.max(1, txCurrentPage - 1))}
+                          className={txCurrentPage === 1 || loadingTransactions ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                      {renderTxPaginationItems()}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => handleTxPageChange(Math.min(txTotalPages, txCurrentPage + 1))}
+                          className={txCurrentPage === txTotalPages || loadingTransactions ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                  <p className="text-sm text-gray-600">
+                    Showing page {txCurrentPage} of {txTotalPages} ({txTotalCount} total transactions)
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

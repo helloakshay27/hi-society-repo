@@ -383,6 +383,7 @@ const FitoutRequestAdd: React.FC = () => {
       const formDataToSend = new FormData();
       
       // Add main fitout request fields
+      formDataToSend.append('fitout_request[active]', 'true');
       formDataToSend.append('fitout_request[site_id]', formData.site_id);
       formDataToSend.append('fitout_request[unit_id]', formData.unit_id);
       

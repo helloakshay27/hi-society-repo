@@ -75,10 +75,10 @@ const EventEdit = () => {
     shared: "",
     group_id: [], // Changed to array
     attachfile: [],
-    details_image_1_by_1: [],
-    details_image_9_by_16: [],
-    details_image_3_by_2: [],
-    details_image_16_by_9: [],
+    thumbnail_image_1_by_1: [],
+    thumbnail_image_9_by_16: [],
+    thumbnail_image_3_by_2: [],
+    thumbnail_image_16_by_9: [],
     previewImage: [],
     is_important: "false",
     email_trigger_enabled: "false",
@@ -299,10 +299,10 @@ const EventEdit = () => {
   ];
 
   const detailsImageRatios = [
-    { key: "details_image_1_by_1", label: "1:1" },
-    { key: "details_image_16_by_9", label: "16:9" },
-    { key: "details_image_9_by_16", label: "9:16" },
-    { key: "details_image_3_by_2", label: "3:2" },
+    { key: "thumbnail_image_1_by_1", label: "1:1" },
+    { key: "thumbnail_image_16_by_9", label: "16:9" },
+    { key: "thumbnail_image_9_by_16", label: "9:16" },
+    { key: "thumbnail_image_3_by_2", label: "3:2" },
   ];
 
   const eventUploadConfig = {
@@ -424,7 +424,7 @@ const EventEdit = () => {
           type === "cover"
             ? "cover_image"
             : type === "details"
-              ? "details_image"
+              ? "thumbnail_image"
               : "event_images";
         const key = `${prefix}_${formattedRatio}`;
 
@@ -462,7 +462,7 @@ const EventEdit = () => {
         type === "cover"
           ? "cover_image"
           : type === "details"
-            ? "details_image"
+            ? "thumbnail_image"
             : "event_images";
       const key = `${prefix}_${formattedRatio}`;
 
@@ -847,6 +847,114 @@ const EventEdit = () => {
               ]
             : [];
 
+        const thumbnailImages1by1 = Array.isArray(data.thumbnail_image_1_by_1)
+          ? data.thumbnail_image_1_by_1.map((img) => ({
+              url: img.document_url,
+              document_url: img.document_url,
+              document_file_name: img.document_file_name,
+              id: img.id,
+              ratio: "1:1",
+              isExisting: true,
+              type: img.document_content_type?.startsWith("video")
+                ? "video"
+                : "image",
+            }))
+          : data.thumbnail_image_1_by_1
+            ? [
+                {
+                  url: data.thumbnail_image_1_by_1.document_url,
+                  document_url: data.thumbnail_image_1_by_1.document_url,
+                  document_file_name:
+                    data.thumbnail_image_1_by_1.document_file_name,
+                  id: data.thumbnail_image_1_by_1.id,
+                  ratio: "1:1",
+                  isExisting: true,
+                  type: "image",
+                },
+              ]
+            : [];
+
+        const thumbnailImages9by16 = Array.isArray(data.thumbnail_image_9_by_16)
+          ? data.thumbnail_image_9_by_16.map((img) => ({
+              url: img.document_url,
+              document_url: img.document_url,
+              document_file_name: img.document_file_name,
+              id: img.id,
+              ratio: "9:16",
+              isExisting: true,
+              type: img.document_content_type?.startsWith("video")
+                ? "video"
+                : "image",
+            }))
+          : data.thumbnail_image_9_by_16
+            ? [
+                {
+                  url: data.thumbnail_image_9_by_16.document_url,
+                  document_url: data.thumbnail_image_9_by_16.document_url,
+                  document_file_name:
+                    data.thumbnail_image_9_by_16.document_file_name,
+                  id: data.thumbnail_image_9_by_16.id,
+                  ratio: "9:16",
+                  isExisting: true,
+                  type: "image",
+                },
+              ]
+            : [];
+
+        const thumbnailImages3by2 = Array.isArray(data.thumbnail_image_3_by_2)
+          ? data.thumbnail_image_3_by_2.map((img) => ({
+              url: img.document_url,
+              document_url: img.document_url,
+              document_file_name: img.document_file_name,
+              id: img.id,
+              ratio: "3:2",
+              isExisting: true,
+              type: img.document_content_type?.startsWith("video")
+                ? "video"
+                : "image",
+            }))
+          : data.thumbnail_image_3_by_2
+            ? [
+                {
+                  url: data.thumbnail_image_3_by_2.document_url,
+                  document_url: data.thumbnail_image_3_by_2.document_url,
+                  document_file_name:
+                    data.thumbnail_image_3_by_2.document_file_name,
+                  id: data.thumbnail_image_3_by_2.id,
+                  ratio: "3:2",
+                  isExisting: true,
+                  type: "image",
+                },
+              ]
+            : [];
+
+        const thumbnailImages16by9 = Array.isArray(data.thumbnail_image_16_by_9)
+          ? data.thumbnail_image_16_by_9.map((img) => ({
+              url: img.document_url,
+              document_url: img.document_url,
+              document_file_name: img.document_file_name,
+              id: img.id,
+              ratio: "16:9",
+              isExisting: true,
+              type: img.document_content_type?.startsWith("video")
+                ? "video"
+                : "image",
+            }))
+          : data.thumbnail_image_16_by_9
+            ? [
+                {
+                  url: data.thumbnail_image_16_by_9.document_url,
+                  document_url: data.thumbnail_image_16_by_9.document_url,
+                  document_file_name:
+                    data.thumbnail_image_16_by_9.document_file_name,
+                  id: data.thumbnail_image_16_by_9.id,
+                  ratio: "16:9",
+                  isExisting: true,
+                  type: "image",
+                },
+              ]
+            : [];
+
         // Prepare home cover image (16:9 is used for home)
         const existingCoverImage =
           data.home_cover_image && data.home_cover_image.document_url
@@ -904,6 +1012,10 @@ const EventEdit = () => {
           event_images_9_by_16: eventImages9by16,
           event_images_3_by_2: eventImages3by2,
           event_images_16_by_9: eventImages16by9,
+          thumbnail_image_1_by_1: thumbnailImages1by1,
+          thumbnail_image_9_by_16: thumbnailImages9by16,
+          thumbnail_image_3_by_2: thumbnailImages3by2,
+          thumbnail_image_16_by_9: thumbnailImages16by9,
           // Populate separate date/time fields from the API's ISO strings
           event_date: startParsed.date,
           event_time: startParsed.time,
@@ -1381,28 +1493,28 @@ const EventEdit = () => {
     }
 
     // Add details images (all ratios)
-    if (formData.details_image_1_by_1?.length > 0) {
-      formData.details_image_1_by_1.forEach((img) => {
+    if (formData.thumbnail_image_1_by_1?.length > 0) {
+      formData.thumbnail_image_1_by_1.forEach((img) => {
         if (img?.file instanceof File)
-          data.append("event[details_image_1_by_1][]", img.file);
+          data.append("event[thumbnail_image_1_by_1][]", img.file);
       });
     }
-    if (formData.details_image_16_by_9?.length > 0) {
-      formData.details_image_16_by_9.forEach((img) => {
+    if (formData.thumbnail_image_16_by_9?.length > 0) {
+      formData.thumbnail_image_16_by_9.forEach((img) => {
         if (img?.file instanceof File)
-          data.append("event[details_image_16_by_9][]", img.file);
+          data.append("event[thumbnail_image_16_by_9][]", img.file);
       });
     }
-    if (formData.details_image_9_by_16?.length > 0) {
-      formData.details_image_9_by_16.forEach((img) => {
+    if (formData.thumbnail_image_9_by_16?.length > 0) {
+      formData.thumbnail_image_9_by_16.forEach((img) => {
         if (img?.file instanceof File)
-          data.append("event[details_image_9_by_16][]", img.file);
+          data.append("event[thumbnail_image_9_by_16][]", img.file);
       });
     }
-    if (formData.details_image_3_by_2?.length > 0) {
-      formData.details_image_3_by_2.forEach((img) => {
+    if (formData.thumbnail_image_3_by_2?.length > 0) {
+      formData.thumbnail_image_3_by_2.forEach((img) => {
         if (img?.file instanceof File)
-          data.append("event[details_image_3_by_2][]", img.file);
+          data.append("event[thumbnail_image_3_by_2][]", img.file);
       });
     }
 
@@ -1564,9 +1676,11 @@ const EventEdit = () => {
 
       toast.success("Event updated successfully!");
 
-      location.pathname.includes("/loyalty")
-        ? navigate("/loyalty/event-list")
-        : navigate("/maintenance/event-list");
+      if (location.pathname.includes("/loyalty")) {
+        navigate("/loyalty/event-list");
+      } else {
+        navigate("/maintenance/event-list");
+      }
     } catch (error) {
       console.error("Submit error:", error);
       const errorMessage =
@@ -1631,14 +1745,14 @@ const EventEdit = () => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Please upload a valid image file for Event Details Image.");
+      toast.error("Please upload a valid image file for Event Thumbnail Image.");
       e.target.value = "";
       return;
     }
 
     const MAX_SIZE = 5 * 1024 * 1024; // 5MB
     if (file.size > MAX_SIZE) {
-      toast.error("Event Details Image must be less than 5MB.");
+      toast.error("Event Thumbnail Image must be less than 5MB.");
       e.target.value = "";
       return;
     }
@@ -2458,7 +2572,7 @@ const EventEdit = () => {
               )}
             </div>
           </div>
-        )} */}
+        )}  */}
 
         {/* Visibility Card */}
         {currentStep === 0 && !isPreviewMode && (
@@ -3097,7 +3211,7 @@ const EventEdit = () => {
                 <div className="mb-6 mt-5">
                   <div className="flex justify-between items-center mb-4">
                     <h5 className="text-base font-semibold inline-flex items-center gap-1">
-                      Event Thumbnail Images{" "}
+                      Event Details Images{" "}
                       <span
                         className="relative inline-block cursor-pointer"
                         onMouseEnter={() => setShowAttachmentTooltip(true)}
@@ -3340,10 +3454,10 @@ const EventEdit = () => {
                 </div>
 
                 {/* Event Details Image */}
-                {/* <div className="mb-6">
+                 <div className="mb-6">
                   <div className="flex justify-between items-center mb-4">
                     <h5 className="text-base font-semibold inline-flex items-center gap-1">
-                      Event Details Image{" "}
+                      Event Thumbnail Image{" "}
                       <span
                         className="relative inline-block cursor-pointer"
                         onMouseEnter={() => setShowDetailsImageTooltip(true)}
@@ -3415,7 +3529,7 @@ const EventEdit = () => {
                       </Table>
                     </div>
                   </div>
-                </div> */}
+                </div> 
               </div>
             </div>
           </div>
@@ -3919,7 +4033,7 @@ const EventEdit = () => {
                         {/* Event Attachment Images */}
                         <div>
                           <h5 className="text-base font-semibold mb-4">
-                            Event Thumbnail Images
+                            Event Details Images
                           </h5>
                           <div className="overflow-x-auto">
                             <Table>
@@ -4643,7 +4757,7 @@ const EventEdit = () => {
                     {/* Event Attachment Images */}
                     <div>
                       <h5 className="text-base font-semibold mb-4">
-                        Event Thumbnail Images
+                        Event Details Images
                       </h5>
                       <div className="overflow-x-auto">
                         <Table>
@@ -4745,8 +4859,8 @@ const EventEdit = () => {
                     </div>
 
                     {/* Event Details Image - inside Event Related Images card */}
-                    {/* <div>
-                  <h5 className="text-base font-semibold mb-4">Event Details Image</h5>
+                     <div>
+                  <h5 className="text-base font-semibold mb-4">Event Thumbnail Image</h5>
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
@@ -4787,7 +4901,7 @@ const EventEdit = () => {
                       </TableBody>
                     </Table>
                   </div>
-                </div> */}
+                </div> 
                   </div>
                 </div>
                 {/* Step 3: Invite CPs Preview - Hidden for Loyalty */}

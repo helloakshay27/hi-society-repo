@@ -20,26 +20,42 @@ interface LocationLevel {
   placeholder: string;
 }
 
-interface LocationItem {
+interface SocietyLocation {
   id: number;
-  society_id?: number;
-  society_location_id?: number;
   name: string;
-  active: boolean | null;
+  society_id?: number;
+  active: boolean | number | null;
   level?: number;
 }
 
-interface LocationData {
-  society_locations: LocationItem[];
-  pms_wings: LocationItem[];
-  pms_areas: LocationItem[];
+interface PmsWing {
+  id: number;
+  name: string;
+  society_location_id?: number | null;
+  building_id?: string | null;
+  active: boolean | number | null;
+  level?: number;
 }
+
+interface PmsArea {
+  id: number;
+  name: string;
+  society_location_id?: number | null;
+  wing_id?: string | null;
+  active: boolean | number | null;
+  level?: number;
+}
+
+type LocationItem = SocietyLocation | PmsWing | PmsArea;
 
 export const LocationTab: React.FC = () => {
   const [activeLevel, setActiveLevel] = useState<1 | 2 | 3>(1);
-  const [locations, setLocations] = useState<LocationItem[]>([]);
-  const [level1Items, setLevel1Items] = useState<LocationItem[]>([]);
-  const [level2Items, setLevel2Items] = useState<LocationItem[]>([]);
+
+  // Separate state for each level's data
+  const [level1Items, setLevel1Items] = useState<SocietyLocation[]>([]);
+  const [level2Items, setLevel2Items] = useState<PmsWing[]>([]);
+  const [level3Items, setLevel3Items] = useState<PmsArea[]>([]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -49,67 +65,89 @@ export const LocationTab: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
 
   const levels: LocationLevel[] = [
-    { level: 1, label: 'Level 1', placeholder: 'Enter Level 1' },
-    { level: 2, label: 'Level 2', placeholder: 'Enter Level 2' },
-    { level: 3, label: 'Level 3', placeholder: 'Enter Level 3' },
+    { level: 1, label: 'Level 1', placeholder: 'Enter Level 1 name' },
+    { level: 2, label: 'Level 2', placeholder: 'Enter Level 2 name' },
+    { level: 3, label: 'Level 3', placeholder: 'Enter Level 3 name' },
   ];
 
-  // Fetch locations from consolidated API
-  const fetchLocations = useCallback(async () => {
+  // ─── Fetch Level 1 (society_locations) ───────────────────────────────────────
+  const fetchLevel1 = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
-        headers: {
-          'Authorization': getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-      });
-
+      const response = await fetch(
+        getFullUrl('/crm/admin/fetch_pms_records.json?type=society_location'),
+        { headers: { Authorization: getAuthHeader(), 'Content-Type': 'application/json' } }
+      );
       if (response.ok) {
-        const data: LocationData = await response.json();
-        
-        // Level 1: society_locations
-        const level1Data = (data.society_locations || []).map(item => ({
-          ...item,
-          level: 1,
-        }));
-        setLevel1Items(level1Data);
-
-        // Level 2: pms_wings
-        const level2Data = (data.pms_wings || []).map(item => ({
-          ...item,
-          level: 2,
-        }));
-        setLevel2Items(level2Data);
-
-        // Level 3: pms_areas
-        const level3Data = (data.pms_areas || []).map(item => ({
-          ...item,
-          level: 3,
-        }));
-
-        // Set locations based on active level
-        if (activeLevel === 1) {
-          setLocations(level1Data);
-        } else if (activeLevel === 2) {
-          setLocations(level2Data);
-        } else {
-          setLocations(level3Data);
-        }
+        const data = await response.json();
+        setLevel1Items((data.society_locations || []).map((i: SocietyLocation) => ({ ...i, level: 1 })));
+      } else {
+        toast.error('Failed to fetch Level 1 data');
       }
-    } catch (error) {
-      console.error('Error fetching locations:', error);
-      toast.error('Failed to fetch locations');
+    } catch {
+      toast.error('Failed to fetch Level 1 data');
     } finally {
       setIsLoading(false);
     }
-  }, [activeLevel]);
+  }, []);
 
+  // ─── Fetch Level 2 (pms_wings) ────────────────────────────────────────────────
+  const fetchLevel2 = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        getFullUrl('/crm/admin/fetch_pms_records.json?type=pms_wing'),
+        { headers: { Authorization: getAuthHeader(), 'Content-Type': 'application/json' } }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setLevel2Items((data.pms_wings || []).map((i: PmsWing) => ({ ...i, level: 2 })));
+      } else {
+        toast.error('Failed to fetch Level 2 data');
+      }
+    } catch {
+      toast.error('Failed to fetch Level 2 data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // ─── Fetch Level 3 (pms_areas) ────────────────────────────────────────────────
+  const fetchLevel3 = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        getFullUrl('/crm/admin/fetch_pms_records.json?type=pms_area'),
+        { headers: { Authorization: getAuthHeader(), 'Content-Type': 'application/json' } }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setLevel3Items((data.pms_areas || []).map((i: PmsArea) => ({ ...i, level: 3 })));
+      } else {
+        toast.error('Failed to fetch Level 3 data');
+      }
+    } catch {
+      toast.error('Failed to fetch Level 3 data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Fetch all levels once on mount so dropdowns are always populated
   useEffect(() => {
-    fetchLocations();
-  }, [fetchLocations]);
+    fetchLevel1();
+    fetchLevel2();
+    fetchLevel3();
+  }, [fetchLevel1, fetchLevel2, fetchLevel3]);
 
-  // Handle level change
+  // Re-fetch current level's data when activeLevel changes
+  const refetchCurrentLevel = useCallback(() => {
+    if (activeLevel === 1) fetchLevel1();
+    else if (activeLevel === 2) fetchLevel2();
+    else fetchLevel3();
+  }, [activeLevel, fetchLevel1, fetchLevel2, fetchLevel3]);
+
+  // Handle level tab change
   const handleLevelChange = (level: 1 | 2 | 3) => {
     setActiveLevel(level);
     setSelectedLevel1('');
@@ -117,44 +155,71 @@ export const LocationTab: React.FC = () => {
     setInputValue('');
   };
 
-  // Handle submit
+  // Reset level2 selection when level1 changes
+  const handleLevel1Change = (val: string) => {
+    setSelectedLevel1(val);
+    setSelectedLevel2('');
+  };
+
+  // Filtered level2 items for level3 dropdown (by selected level1)
+  const filteredLevel2ForDropdown = selectedLevel1
+    ? level2Items.filter(w => w.society_location_id === parseInt(selectedLevel1))
+    : level2Items;
+
+  // ─── Handle Add ───────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (activeLevel === 2 && !selectedLevel1) {
       toast.error('Please select Level 1');
       return;
     }
-    if (activeLevel === 3 && (!selectedLevel1 || !selectedLevel2)) {
-      toast.error('Please select Level 1 and Level 2');
+    if (activeLevel === 3 && !selectedLevel1) {
+      toast.error('Please select Level 1');
+      return;
+    }
+    if (activeLevel === 3 && !selectedLevel2) {
+      toast.error('Please select Level 2');
       return;
     }
     if (!inputValue.trim()) {
-      toast.error(`Please enter ${levels[activeLevel - 1].label}`);
+      toast.error(`Please enter a name for ${levels[activeLevel - 1].label}`);
       return;
     }
 
     setIsSubmitting(true);
     try {
       let endpoint = '';
-      const formData = new FormData();
+      let body: object = {};
 
       if (activeLevel === 1) {
-        endpoint = '/crm/admin/helpdesk_categories/create_society_location.json';
-        formData.append('society_location[name]', inputValue.trim());
+        endpoint = '/crm/admin/create_society_location.json';
+        body = { society_location: { name: inputValue.trim(), active: true } };
       } else if (activeLevel === 2) {
-        endpoint = '/crm/admin/helpdesk_categories/create_pms_wing.json';
-        formData.append('pms_wing[name]', inputValue.trim());
-        formData.append('pms_wing[society_location_id]', selectedLevel1);
+        endpoint = '/crm/admin/create_pms_wing.json';
+        body = {
+          pms_wing: {
+            name: inputValue.trim(),
+            society_location_id: parseInt(selectedLevel1),
+            active: true,
+          },
+        };
       } else {
-        endpoint = '/crm/admin/helpdesk_categories/create_pms_area.json';
-        formData.append('pms_area[name]', inputValue.trim());
+        endpoint = '/crm/admin/create_pms_area.json';
+        body = {
+          pms_area: {
+            name: inputValue.trim(),
+            society_location_id: parseInt(selectedLevel1),
+            wing_id: parseInt(selectedLevel2),
+          },
+        };
       }
 
       const response = await fetch(getFullUrl(endpoint), {
         method: 'POST',
         headers: {
-          'Authorization': getAuthHeader(),
+          Authorization: getAuthHeader(),
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
@@ -162,115 +227,107 @@ export const LocationTab: React.FC = () => {
         setInputValue('');
         setSelectedLevel1('');
         setSelectedLevel2('');
-        fetchLocations();
+        refetchCurrentLevel();
+        // Also re-fetch all so dropdowns stay fresh
+        if (activeLevel === 1) fetchLevel1();
+        if (activeLevel === 2) { fetchLevel2(); fetchLevel1(); }
+        if (activeLevel === 3) { fetchLevel3(); fetchLevel2(); }
       } else {
         const errorData = await response.json().catch(() => null);
         toast.error(errorData?.message || `Failed to create ${levels[activeLevel - 1].label}`);
       }
-    } catch (error) {
-      console.error('Error creating location:', error);
+    } catch {
       toast.error(`Failed to create ${levels[activeLevel - 1].label}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle delete
-  const handleDelete = async (item: LocationItem) => {
-    if (!confirm('Are you sure you want to delete this location?')) {
-      return;
-    }
+  // ─── Handle Delete (set active=false) ────────────────────────────────────────
+  const handleDelete = async (item: LocationItem & { level?: number }) => {
+    if (!confirm('Are you sure you want to delete this location?')) return;
 
     try {
       let endpoint = '';
-      const formData = new FormData();
+      let body: object = {};
 
       if (item.level === 1) {
-        endpoint = `/crm/admin/helpdesk_categories/update_society_location.json?id=${item.id}`;
-        formData.append('society_location[active]', '0');
+        endpoint = `/crm/admin/create_society_location.json?id=${item.id}`;
+        body = { society_location: { active: false } };
       } else if (item.level === 2) {
-        endpoint = `/crm/admin/helpdesk_categories/update_pms_wing.json?id=${item.id}`;
-        formData.append('pms_wing[active]', '0');
+        endpoint = `/crm/admin/create_pms_wing.json?id=${item.id}`;
+        body = { pms_wing: { active: false } };
       } else {
-        endpoint = `/crm/admin/helpdesk_categories/update_pms_area.json?id=${item.id}`;
-        formData.append('pms_area[active]', '0');
+        endpoint = `/crm/admin/create_pms_area.json?id=${item.id}`;
+        body = { pms_area: { active: false } };
       }
 
       const response = await fetch(getFullUrl(endpoint), {
         method: 'POST',
         headers: {
-          'Authorization': getAuthHeader(),
+          Authorization: getAuthHeader(),
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
         toast.success('Location deleted successfully!');
-        fetchLocations();
+        refetchCurrentLevel();
       } else {
         toast.error('Failed to delete location');
       }
-    } catch (error) {
-      console.error('Error deleting location:', error);
+    } catch {
       toast.error('Failed to delete location');
     }
   };
 
-  // Get Level 1 name by ID
-  const getLevel1Name = (locationId: number) => {
-    const location = level1Items.find(item => item.id === locationId);
-    return location?.name || '--';
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+  const getLevel1Name = (id?: number | null): string => {
+    if (!id) return '--';
+    return level1Items.find(i => i.id === id)?.name || '--';
   };
 
-  // Get Level 2 name by ID
-  const getLevel2Name = (wingId: number) => {
-    const wing = level2Items.find(item => item.id === wingId);
-    return wing?.name || '--';
+  const getLevel2Name = (wingId?: string | null): string => {
+    if (!wingId) return '--';
+    const numId = parseInt(wingId);
+    return level2Items.find(i => i.id === numId)?.name || '--';
   };
 
-  // Table columns
+  // ─── Table columns ───────────────────────────────────────────────────────────
   const getColumns = () => {
-    const baseColumns = [
-      { key: 'srno', label: 'Sr.No', sortable: false },
-    ];
-
+    const base = [{ key: 'srno', label: 'Sr.No', sortable: false }];
     if (activeLevel === 1) {
-      return [
-        ...baseColumns,
-        { key: 'name', label: 'Level 1', sortable: true },
-      ];
+      return [...base, { key: 'name', label: 'Level 1 Name', sortable: true }];
     } else if (activeLevel === 2) {
       return [
-        ...baseColumns,
+        ...base,
         { key: 'level1', label: 'Level 1', sortable: true },
-        { key: 'name', label: 'Level 2', sortable: true },
+        { key: 'name', label: 'Level 2 Name', sortable: true },
       ];
     } else {
       return [
-        ...baseColumns,
+        ...base,
         { key: 'level1', label: 'Level 1', sortable: true },
         { key: 'level2', label: 'Level 2', sortable: true },
-        { key: 'name', label: 'Level 3', sortable: true },
+        { key: 'name', label: 'Level 3 Name', sortable: true },
       ];
     }
   };
 
-  const renderCell = (item: LocationItem, columnKey: string) => {
-    const index = locations.findIndex(loc => loc.id === item.id);
+  // Current list displayed in the table
+  const currentLocations: LocationItem[] =
+    activeLevel === 1 ? level1Items : activeLevel === 2 ? level2Items : level3Items;
 
+  const renderCell = (item: LocationItem & { level?: number; society_location_id?: number | null; wing_id?: string | null }, columnKey: string) => {
+    const index = currentLocations.findIndex(loc => loc.id === item.id);
     switch (columnKey) {
       case 'srno':
         return index + 1;
       case 'level1':
-        if (activeLevel === 2) {
-          return getLevel1Name(item.society_location_id || 0);
-        } else if (activeLevel === 3) {
-          // For level 3, we need to find the parent chain
-          return '--'; // This would require additional parent tracking
-        }
-        return '--';
+        return getLevel1Name(item.society_location_id);
       case 'level2':
-        return '--'; // Would need parent wing tracking
+        return getLevel2Name((item as PmsArea).wing_id);
       case 'name':
         return item.name || '--';
       default:
@@ -278,7 +335,7 @@ export const LocationTab: React.FC = () => {
     }
   };
 
-  const renderActions = (item: LocationItem) => (
+  const renderActions = (item: LocationItem & { level?: number }) => (
     <div className="flex gap-2">
       <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
         <Trash2 className="h-4 w-4 text-red-500" />
@@ -288,6 +345,7 @@ export const LocationTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Add Form Card */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-4">
@@ -307,11 +365,12 @@ export const LocationTab: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-end gap-3">
-            {/* Level 1 Dropdown (for Level 2 and 3) */}
+          <div className="flex items-end gap-3 flex-wrap">
+            {/* Level 1 Dropdown — shown for Level 2 and Level 3 */}
             {activeLevel >= 2 && (
-              <div className="flex-1">
-                <Select value={selectedLevel1} onValueChange={setSelectedLevel1}>
+              <div className="flex-1 min-w-[180px]">
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Level 1</label>
+                <Select value={selectedLevel1} onValueChange={handleLevel1Change}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Level 1" />
                   </SelectTrigger>
@@ -326,32 +385,35 @@ export const LocationTab: React.FC = () => {
               </div>
             )}
 
-            {/* Level 2 Dropdown (for Level 3) */}
+            {/* Level 2 Dropdown — shown only for Level 3 */}
             {activeLevel === 3 && (
-              <div className="flex-1">
-                <Select value={selectedLevel2} onValueChange={setSelectedLevel2}>
+              <div className="flex-1 min-w-[180px]">
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Level 2</label>
+                <Select value={selectedLevel2} onValueChange={setSelectedLevel2} disabled={!selectedLevel1}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Level 2" />
+                    <SelectValue placeholder={selectedLevel1 ? 'Select Level 2' : 'Select Level 1 first'} />
                   </SelectTrigger>
                   <SelectContent>
-                    {level2Items
-                      .filter(item => !selectedLevel1 || item.society_location_id === parseInt(selectedLevel1))
-                      .map((item) => (
-                        <SelectItem key={item.id} value={item.id.toString()}>
-                          {item.name}
-                        </SelectItem>
-                      ))}
+                    {filteredLevel2ForDropdown.map((item) => (
+                      <SelectItem key={item.id} value={item.id.toString()}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             )}
 
-            {/* Input Field */}
-            <div className="flex-1">
+            {/* Name Input */}
+            <div className="flex-1 min-w-[180px]">
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                {levels[activeLevel - 1].label} Name
+              </label>
               <Input
                 placeholder={levels[activeLevel - 1].placeholder}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
               />
             </div>
 
@@ -359,7 +421,7 @@ export const LocationTab: React.FC = () => {
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="bg-green-600 hover:bg-green-700 text-white px-8"
+              className="bg-green-600 hover:bg-green-700 text-white px-8 self-end"
             >
               {isSubmitting ? 'Adding...' : 'Add'}
             </Button>
@@ -367,18 +429,19 @@ export const LocationTab: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Table Card */}
       <Card>
         <CardHeader>
-          <CardTitle>{levels[activeLevel - 1].label}</CardTitle>
+          <CardTitle>{levels[activeLevel - 1].label} List</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading locations...</div>
+              <div className="text-gray-500">Loading...</div>
             </div>
           ) : (
             <EnhancedTable
-              data={locations}
+              data={currentLocations}
               columns={getColumns()}
               renderCell={renderCell}
               renderActions={renderActions}

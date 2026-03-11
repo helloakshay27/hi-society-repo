@@ -106,6 +106,11 @@ const OrderDetails = () => {
                     createdAt: data.created_at || "-",
                     updatedAt: data.updated_at || "-",
                     notes: data.notes || "-",
+                    // the API returns a `total_amount` field which we want to
+                    // display in the "Total Redeemed Points" section above.
+                    // map it on to a more descriptive key so the UI logic can
+                    // remain unchanged.
+                    wallet_balance: data.total_amount ?? 0,
                 });
                 setOrderItems(
                     Array.isArray(data.order_items)
@@ -209,10 +214,10 @@ const OrderDetails = () => {
                         <ArrowLeft className="w-5 h-5" />
                         <span className="font-medium">Back to Orders</span>
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-[#C72030] rounded-md text-sm font-medium hover:bg-gray-50">
+                    {/* <button className="flex items-center gap-2 px-4 py-2 bg-white border border-[#C72030] rounded-md text-sm font-medium hover:bg-gray-50">
                         <Download className="w-4 h-4" />
                         Download Invoice
-                    </button>
+                    </button> */}
                 </div>
 
 
@@ -222,7 +227,7 @@ const OrderDetails = () => {
                     {/* Left Column - Main Content */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Order Items */}
-                        <div className="bg-white rounded-lg shadow-sm border">
+                        <div className="bg-[#fbfbf8] rounded-lg shadow-sm border">
                             <div className="px-6 py-6">
                                 <h1 className="text-[#C72030] font-semibold mb-6">Order Items</h1>
 
@@ -265,12 +270,12 @@ const OrderDetails = () => {
                                         <span className="text-gray-700">Shipping</span>
                                         <span className="text-gray-900">₹{parseFloat(orderData?.shippingCost || 0).toFixed(0)}</span>
                                     </div>
-                                    {parseFloat(orderData?.loyaltyPointsRedeemed || 0) > 0 && (
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-[#C72030]">Points Redeemed</span>
-                                            <span className="text-[#C72030]">-{orderData?.loyaltyPointsRedeemed}</span>
-                                        </div>
-                                    )}
+
+                                    {/* show points redeemed unconditionally below shipping */}
+                                    {/* <div className="flex justify-between text-sm">
+                                        <span className="text-[#C72030]">Points Redeemed</span>
+                                        <span className="text-[#C72030]">-{parseFloat(orderData?.loyaltyPointsRedeemed || 0)}</span>
+                                    </div> */}
                                     <div className="flex justify-between pt-3 border-t">
                                         <span className="font-semibold text-gray-900">Total</span>
                                         <span className="font-bold text-2xl text-gray-900">₹{parseFloat(orderData?.totalAmount || 0).toFixed(2)}</span>
@@ -280,7 +285,7 @@ const OrderDetails = () => {
                         </div>
 
                         {/* Order Timeline */}
-                        <div className="bg-white rounded-lg shadow-sm border">
+                        <div className="bg-[#fbfbf8] rounded-lg shadow-sm border">
                             <div className="px-6 py-6">
                                 <h1 className="font-semibold text-[#C72030] mb-6">Order Timeline</h1>
 
@@ -330,7 +335,7 @@ const OrderDetails = () => {
                     {/* Right Column - Sidebar */}
                     <div className="lg:col-span-1 space-y-6">
                         {/* Customer Information */}
-                        <div className="bg-white rounded-lg shadow-sm border">
+                        <div className="bg-[#fbfbf8] rounded-lg shadow-sm border">
                             <div className="px-6 py-6">
                                 <h1 className="font-semibold text-[#C72030] mb-6">Customer Information</h1>
 
@@ -343,7 +348,7 @@ const OrderDetails = () => {
                                         </div>
                                         <div className="flex-1">
                                             <h3 className="font-semibold text-gray-900">{orderData?.customerName || "-"}</h3>
-                                            <div className="flex items-center gap-1 mt-1 border-1 p-1 border-gray-900">
+                                            <div className="flex items-center gap-1 mt-1 p-1" style={{ border: '2px solid #99999957', borderRadius: "2px", width: 'fit-content' }}>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                                     <path d="M19.3588 9.67942C19.3588 15.0251 15.0252 19.3588 9.67938 19.3588C4.3336 19.3588 0 15.0251 0 9.67942C0 4.33361 4.3336 0 9.67938 0C15.0252 0 19.3588 4.33361 19.3588 9.67942Z" fill="url(#paint0_linear_714_3143)" />
                                                     <path d="M17.2343 9.67865C17.2343 13.8515 13.8515 17.2344 9.67872 17.2344C5.50582 17.2344 2.12305 13.8515 2.12305 9.67865C2.12305 5.50581 5.50582 2.12305 9.67872 2.12305C13.8515 2.12305 17.2343 5.50581 17.2343 9.67865Z" fill="#A88300" />
@@ -361,7 +366,7 @@ const OrderDetails = () => {
                                                         </linearGradient>
                                                     </defs>
                                                 </svg>
-                                                <span className="text-sm text-gray-600">Gold Member</span>
+                                                <span className="text-sm text-gray-600 font-semibold">Gold Member</span>
                                             </div>
                                         </div>
                                     </div>
