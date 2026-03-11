@@ -15,6 +15,7 @@ import {
 import SelectBox from "../components/ui/select-box";
 import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 interface User {
   name: string;
@@ -417,6 +418,29 @@ const OrdersList = () => {
     { key: "created_at", label: "Created At", sortable: true },
   ];
 
+  const handleExport = async () => {
+    try {
+      const response = await axios.get(`https://${localStorage.getItem('baseUrl')}/organization_wallet/export_transactions.json`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        responseType: 'blob'
+      })
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "orders_transactions.csv");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to export users")
+    }
+  }
+
   const CustomMultiValue = (props: any) => (
     <div
       style={{
@@ -569,6 +593,7 @@ const OrdersList = () => {
         renderCell={renderCell}
         pagination={false}
         enableExport={true}
+        handleExport={handleExport}
         exportFileName="orders"
         storageKey="orders-table"
         enableGlobalSearch={true}

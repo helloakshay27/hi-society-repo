@@ -25,6 +25,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import axios from "axios";
+import { toast } from "sonner";
 
 interface WalletData {
   id: number;
@@ -326,8 +328,8 @@ const WalletTopup: React.FC = () => {
         return (
           <span
             className={`px-2 py-1 rounded text-xs font-medium ${item.transaction_type === "credit"
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
               }`}
           >
             {item.transaction_type?.toUpperCase() || "-"}
@@ -337,8 +339,8 @@ const WalletTopup: React.FC = () => {
         return (
           <span
             className={`font-semibold ${item.transaction_type === "credit"
-                ? "text-green-600"
-                : "text-red-600"
+              ? "text-green-600"
+              : "text-red-600"
               }`}
           >
             {item.transaction_type === "credit" ? "+" : "-"}₹
@@ -550,6 +552,28 @@ const WalletTopup: React.FC = () => {
     );
   };
 
+  const handleExport = async () => {
+    try {
+      const response = await axios.get(`https://${localStorage.getItem('baseUrl')}/organization_wallet/export_transactions.json?organization_id=${selectedOrgId}&range=${txTimeRange}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        responseType: 'blob'
+      })
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "orders_transactions.csv");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to export users")
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#f6f4ee] p-6">
@@ -720,6 +744,7 @@ const WalletTopup: React.FC = () => {
                 loadingMessage="Loading transactions..."
                 emptyMessage="No transactions found"
                 enableExport={true}
+                handleExport={handleExport}
                 enableGlobalSearch={true}
                 hideTableSearch={false}
                 hideTableExport={false}
