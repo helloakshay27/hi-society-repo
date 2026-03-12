@@ -72,6 +72,19 @@ interface InvoiceApprovalHistory {
     updated_by_name: string;
 }
 
+interface FitoutComment {
+    id: number;
+    body: string;
+    commentor_id: number;
+    commentor_name: string;
+    created_at: string;
+    updated_at: string;
+}
+
+interface FitoutDocument {
+    document_url: string;
+}
+
 interface FitoutCategoryDetail {
     id: number;
     category_id: number;
@@ -81,7 +94,8 @@ interface FitoutCategoryDetail {
     status_color: string;
     created_at: string;
     updated_at: string;
-    comments: any[];
+    comments: FitoutComment[];
+    documents: FitoutDocument[];
     snag_quest_maps: SnagQuestMap[];
     invoice_approval_histories?: InvoiceApprovalHistory[];
 }
@@ -268,6 +282,81 @@ const FitoutRequestCategoryApprovalRequestMobile: React.FC = () => {
                                     </div>
                                 </div>
                             </Card>
+
+                            {/* Documents Section */}
+                            {fitoutCategoryData.documents && fitoutCategoryData.documents.length > 0 && (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between px-1">
+                                        <h3 className="text-lg font-bold text-gray-900">Attachments</h3>
+                                        <Badge variant="outline" className="text-[10px] font-bold text-gray-500 border-gray-200">
+                                            {fitoutCategoryData.documents.length} FILES
+                                        </Badge>
+                                    </div>
+                                    <Card className="rounded-[24px] shadow-sm p-4 border-none bg-white">
+                                        <div className="flex flex-wrap gap-3">
+                                            {fitoutCategoryData.documents.map((doc, idx) => {
+                                                const isImage = doc.document_url.match(/\.(jpg|jpeg|png|gif|webp)/i);
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        className="relative group cursor-pointer"
+                                                        onClick={() => window.open(doc.document_url, "_blank")}
+                                                    >
+                                                        {isImage ? (
+                                                            <div className="w-20 h-20 rounded-2xl overflow-hidden border border-gray-100 shadow-sm transition-transform active:scale-95 bg-gray-50">
+                                                                <img
+                                                                    src={doc.document_url}
+                                                                    alt="Attachment"
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="w-20 h-20 rounded-2xl border border-gray-100 bg-gray-50 flex flex-col items-center justify-center gap-1 transition-transform active:scale-95">
+                                                                <span className="text-2xl">📄</span>
+                                                                <span className="text-[10px] font-bold text-gray-400 uppercase">
+                                                                    {doc.document_url.split('.').pop() || 'FILE'}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </Card>
+                                </div>
+                            )}
+
+                            {/* Comments/Activity Section */}
+                            {fitoutCategoryData.comments && fitoutCategoryData.comments.length > 0 && (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between px-1">
+                                        <h3 className="text-lg font-bold text-gray-900">Comments</h3>
+                                        <Badge variant="outline" className="text-[10px] font-bold text-gray-500 border-gray-200">
+                                            {fitoutCategoryData.comments.length} UPDATES
+                                        </Badge>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {fitoutCategoryData.comments.map((comment) => (
+                                            <Card key={comment.id} className="rounded-[20px] shadow-sm p-4 border-none bg-white overflow-hidden">
+                                                <div className="flex gap-4">
+                                                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#fdf8f3] flex items-center justify-center text-[#d4a574] font-bold text-sm border border-[#f5e6d3]">
+                                                        {comment.commentor_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                                    </div>
+                                                    <div className="flex-1 space-y-1">
+                                                        <div className="flex justify-between items-start">
+                                                            <p className="text-sm font-bold text-gray-900">{comment.commentor_name}</p>
+                                                            <p className="text-[10px] font-medium text-gray-400">{formatDate(comment.created_at)}</p>
+                                                        </div>
+                                                        <p className="text-[13px] text-gray-600 leading-relaxed font-medium">
+                                                            {comment.body}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Snag Questions & Answers */}
                             <div className="space-y-4">
