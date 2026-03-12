@@ -46,6 +46,10 @@ interface FitoutCards {
   pending: number;
   work_in_progress: number;
   closed: number;
+  furniture_work: number;
+  civil_fitout_work: number;
+  send_to_approval: number;
+  need_modification: number;
 }
 
 const FitoutRequests: React.FC = () => {
@@ -549,6 +553,10 @@ const FitoutRequests: React.FC = () => {
     pending: cards?.pending ?? 0,
     work_in_progress: cards?.work_in_progress ?? 0,
     closed: cards?.closed ?? 0,
+    furniture_work: cards?.furniture_work ?? 0,
+    civil_fitout_work: cards?.civil_fitout_work ?? 0,
+    send_to_approval: cards?.send_to_approval ?? 0,
+    need_modification: cards?.need_modification ?? 0,
   };
 
   const statCards = [
@@ -575,6 +583,30 @@ const FitoutRequests: React.FC = () => {
       value: fitoutStats.closed,
       icon: UserCheck,
       filterKey: "Closed" as string | null,
+    },
+     {
+      label: "Furniture Work",
+      value: fitoutStats.furniture_work,
+      icon: UserCheck,
+      filterKey: "Furniture Work" as string | null,
+    },
+     {
+      label: "Civil Fitout Work",
+      value: fitoutStats.civil_fitout_work,
+      icon: UserCheck,
+      filterKey: "Civil Fitout Work" as string | null,
+    },
+     {
+      label: "Send to Approval",
+      value: fitoutStats.send_to_approval,
+      icon: UserCheck,
+      filterKey: "Send to Approval" as string | null,
+    },
+     {
+      label: "Need Modification",
+      value: fitoutStats.need_modification,
+      icon: UserCheck,
+      filterKey: "Need Modification" as string | null,
     },
   ];
 
