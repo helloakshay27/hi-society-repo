@@ -249,17 +249,12 @@ export const LocationTab: React.FC = () => {
 
     try {
       let endpoint = '';
-      let body: object = {};
 
       if (item.level === 1) {
-        endpoint = `/crm/admin/create_society_location.json?id=${item.id}`;
-        body = { society_location: { active: false } };
-      } else if (item.level === 2) {
-        endpoint = `/crm/admin/create_pms_wing.json?id=${item.id}`;
-        body = { pms_wing: { active: false } };
+        endpoint = `/crm/admin/delete_society_location/${item.id}.json`;
       } else {
-        endpoint = `/crm/admin/create_pms_area.json?id=${item.id}`;
-        body = { pms_area: { active: false } };
+        // Level 2 (pms_wing) and Level 3 (pms_area) both use the same delete endpoint
+        endpoint = `/crm/admin/delete_pms_area/${item.id}.json`;
       }
 
       const response = await fetch(getFullUrl(endpoint), {
@@ -268,7 +263,6 @@ export const LocationTab: React.FC = () => {
           Authorization: getAuthHeader(),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
       });
 
       if (response.ok) {

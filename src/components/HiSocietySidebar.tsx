@@ -1118,6 +1118,12 @@ export const HiSocietySidebar: React.FC = () => {
               icon: DollarSign,
               path: "/settings/ticket-management/cost-approval",
             },
+            {
+              id: "vendor-setup",
+              label: "Vendor Setup",
+              icon: DollarSign,
+              path: "/settings/ticket-management/vendor-setup",
+            },
           ],
         },
       ],
