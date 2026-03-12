@@ -6,6 +6,7 @@ export default function MultiSelectBox({
   value,
   onChange,
   placeholder,
+  disabled = false
 }) {
   const customStyles = {
     control: (base, state) => ({
@@ -94,6 +95,7 @@ export default function MultiSelectBox({
       className="basic-multi-select"
       classNamePrefix="select"
       styles={customStyles}
+      isDisabled={disabled}
     />
   );
 }

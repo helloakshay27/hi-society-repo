@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,28 +17,145 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
+import axios from "axios";
 
 interface AddFlatDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  formData: any;
-  onChange: (field: string, value: any) => void;
-  onSubmit: () => void;
-  loading: boolean;
-  towerOptions: { id: number; name: string }[];
-  flatTypeOptions: { id: number; name: string }[];
+  fetchFlats: () => void
 }
 
 export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
   open,
   onOpenChange,
-  formData,
-  onChange,
-  onSubmit,
-  loading,
-  towerOptions,
-  flatTypeOptions,
+  fetchFlats
 }) => {
+  const baseUrl = localStorage.getItem("baseUrl")
+  const token = localStorage.getItem("token")
+
+  const [towerOptions, setTowerOptions] = useState([])
+  const [flatTypeOptions, setFlatTypeOptions] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [rmUsers, setRmUsers] = useState([])
+  const [formData, setFormData] = useState({
+    status: true,
+    possession: true,
+    sold: false,
+    tower: "",
+    flat: "",
+    carpetArea: "",
+    builtUpArea: "",
+    flatType: "",
+    occupied: "",
+    nameOnBill: "",
+    dateOfPossession: "",
+    rmUser: "",
+  });
+
+  const fetchTowers = async () => {
+    try {
+      const response = await axios.get(`https://${baseUrl}/crm/admin/society_blocks.json?society_id=${localStorage.getItem('selectedSocietyId')}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      setTowerOptions(response.data.society_blocks)
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to fetch towers")
+    }
+  }
+
+  const fetchFlatTypes = async () => {
+    try {
+      const response = await axios.get(`https://${baseUrl}/crm/flat_types.json`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      setFlatTypeOptions(response.data)
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to fetch flat types")
+    }
+  }
+
+  const fetchRmUsers = async () => {
+    try {
+      const response = await axios.get(`https://${baseUrl}/crm/admin/rm_users/society_rm_users.json`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      setRmUsers(response.data.rm_users)
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to fetch RM users")
+    }
+  }
+
+  useEffect(() => {
+    fetchTowers()
+    fetchFlatTypes()
+    fetchRmUsers()
+  }, [])
+
+  const onChange = (field: string, value: string | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async () => {
+    const payload = {
+      society_flat: {
+        society_block_id: formData.tower,
+        flat_no: formData.flat,
+        build_up_area: formData.carpetArea,
+        super_area: formData.builtUpArea,
+        society_flat_type_id: formData.flatType,
+        occupancy: formData.occupied,
+        bill_to_party: formData.nameOnBill,
+        date_of_possession: formData.dateOfPossession,
+        rm_user_id: formData.rmUser,
+        possession: formData.possession,
+        sold: formData.sold,
+        approve: formData.status,
+      },
+      society_id: localStorage.getItem('selectedSocietyId')
+    }
+    setLoading(true)
+    try {
+      await axios.post(`https://${baseUrl}/crm/admin/society_flats.json`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      toast.success("Flat added successfully!")
+      fetchFlats()
+      onOpenChange(false)
+      setFormData({
+        status: true,
+        possession: true,
+        sold: false,
+        tower: "",
+        flat: "",
+        carpetArea: "",
+        builtUpArea: "",
+        flatType: "",
+        occupied: "",
+        nameOnBill: "",
+        dateOfPossession: "",
+        rmUser: "",
+      })
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to add flat")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white">
@@ -113,7 +230,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 placeholder=" "
                 value={formData.flat}
                 onChange={(e) => onChange('flat', e.target.value)}
-                className="border border-gray-400 pt-2"
+                className="border border-gray-400"
               />
             </div>
           </div>
@@ -127,7 +244,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 placeholder=" "
                 value={formData.carpetArea}
                 onChange={(e) => onChange('carpetArea', e.target.value)}
-                className="border border-gray-400 pt-2"
+                className="border border-gray-400"
               />
             </div>
 
@@ -138,7 +255,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 placeholder=" "
                 value={formData.builtUpArea}
                 onChange={(e) => onChange('builtUpArea', e.target.value)}
-                className="border border-gray-400 pt-2"
+                className="border border-gray-400"
               />
             </div>
           </div>
@@ -156,7 +273,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   {flatTypeOptions.map((flatType) => (
-                    <SelectItem key={flatType.id} value={flatType.id.toString()}>{flatType.name}</SelectItem>
+                    <SelectItem key={flatType.id} value={flatType.id.toString()}>{flatType.society_flat_type}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -188,7 +305,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 placeholder=" "
                 value={formData.nameOnBill}
                 onChange={(e) => onChange('nameOnBill', e.target.value)}
-                className="border border-gray-400 pt-2"
+                className="border border-gray-400"
               />
             </div>
 
@@ -200,7 +317,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 placeholder=" "
                 value={formData.dateOfPossession}
                 onChange={(e) => onChange('dateOfPossession', e.target.value)}
-                className="border border-gray-400 pt-2"
+                className="border border-gray-400"
               />
             </div>
           </div>
@@ -216,9 +333,11 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user1">User 1</SelectItem>
-                <SelectItem value="user2">User 2</SelectItem>
-                <SelectItem value="user3">User 3</SelectItem>
+                {
+                  rmUsers.map(user => (
+                    <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
+                  ))
+                }
               </SelectContent>
             </Select>
           </div>
@@ -226,7 +345,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
           {/* Submit Button */}
           <div className="flex justify-center pt-4">
             <Button
-              onClick={onSubmit}
+              onClick={handleSubmit}
               disabled={loading}
               className="bg-[#0EA5E9] hover:bg-[#0284C7] text-white px-8"
             >
@@ -235,7 +354,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
           </div>
 
           {/* Attachment Documents */}
-          <div className="space-y-3 pt-4 border-t">
+          {/* <div className="space-y-3 pt-4 border-t">
             <h3 className="text-base font-semibold">Attachment Documents</h3>
             <div className="flex items-center gap-2">
               <input
@@ -258,7 +377,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
             >
               upload
             </Button>
-          </div>
+          </div> */}
         </div>
       </DialogContent>
     </Dialog>
