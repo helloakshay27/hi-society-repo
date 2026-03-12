@@ -698,10 +698,10 @@ export default function AddOfferPage() {
       // Map offer_applicable_projects to get project IDs
       const projectIds =
         offer.offer_applicable_projects &&
-        Array.isArray(offer.offer_applicable_projects)
+          Array.isArray(offer.offer_applicable_projects)
           ? offer.offer_applicable_projects.map((oap: any) =>
-              oap.project_id.toString()
-            )
+            oap.project_id.toString()
+          )
           : [];
 
       // Format dates to YYYY-MM-DD for HTML date inputs
@@ -1432,7 +1432,7 @@ export default function AddOfferPage() {
                         fontSize: "14px",
                       }}
                     >
-                     Offer Thumbnail Image
+                      Offer Thumbnail Image
                     </Typography>
                     <Typography
                       variant="body2"
@@ -1573,7 +1573,7 @@ export default function AddOfferPage() {
                     </TableHead>
                     <TableBody>
                       {!formData.offer_pdf ||
-                      formData.offer_pdf.length === 0 ? (
+                        formData.offer_pdf.length === 0 ? (
                         <TableRow>
                           <TableCell
                             colSpan={4}
@@ -1885,9 +1885,9 @@ export default function AddOfferPage() {
                         color: "#C72030",
                       },
                       "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                        {
-                          backgroundColor: "#C72030",
-                        },
+                      {
+                        backgroundColor: "#C72030",
+                      },
                     }}
                   />
                 </Box>
@@ -2065,9 +2065,9 @@ export default function AddOfferPage() {
               : "Submit"
             : "Proceed to save"}
         </DraftButton>
-        <DraftButton onClick={handleSaveDraft} disabled={isSubmitting}>
+        {/* <DraftButton onClick={handleSaveDraft} disabled={isSubmitting}>
           Save to draft
-        </DraftButton>
+        </DraftButton> */}
       </Box>
 
       {/* Progress Indicator */}
