@@ -7,16 +7,27 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { CommonImportModal } from "@/components/CommonImportModal";
 import { AddFlatDialog } from "./manage-flats-dialogs/AddFlatDialog";
+import { EditFlatDialog } from "./manage-flats-dialogs/EditFlatDialog";
 import { ConfigureTowerDialog } from "./manage-flats-dialogs/ConfigureTowerDialog";
 import { ConfigureFlatTypeDialog } from "./manage-flats-dialogs/ConfigureFlatTypeDialog";
 import { FiltersDialog } from "./manage-flats-dialogs/FiltersDialog";
 import { ActionsModal } from "./manage-flats-dialogs/ActionsModal";
 import { toast } from "sonner";
 import { getFullUrl } from "@/config/apiConfig";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
   { key: "actions", label: "Actions", sortable: false, draggable: false },
+  { key: "id", label: "Id", sortable: false, draggable: false },
   { key: "block_no", label: "Tower", sortable: true, draggable: true },
   { key: "flat_no", label: "Flat", sortable: true, draggable: true },
   { key: "flat_type", label: "Flat Type", sortable: true, draggable: true },
@@ -45,13 +56,20 @@ export const ManageFlatsPage = () => {
   const token = localStorage.getItem("token")
 
   const [flats, setFlats] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [showActionPanel, setShowActionPanel] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showConfigureDialog, setShowConfigureDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    total_count: 0,
+    total_pages: 0,
+  });
 
-  // Add Flat Dialog states
+  // Add/Edit Flat Dialog states
   const [showAddFlatDialog, setShowAddFlatDialog] = useState(false);
+  const [showEditFlatDialog, setShowEditFlatDialog] = useState(false);
+  const [editingFlatId, setEditingFlatId] = useState<string | null>(null);
 
   // Configure Tower Dialog states
   const [showConfigureTowerDialog, setShowConfigureTowerDialog] = useState(false);
@@ -68,46 +86,145 @@ export const ManageFlatsPage = () => {
     status: [],
     occupancy: "",
   });
-  const [addFlatFormData, setAddFlatFormData] = useState({
-    status: true,
-    possession: true,
-    sold: false,
-    tower: "",
-    flat: "",
-    carpetArea: "",
-    builtUpArea: "",
-    flatType: "",
-    occupied: "",
-    nameOnBill: "",
-    dateOfPossession: "",
-    rmUser: "",
-  });
+  const [towerOptions, setTowerOptions] = useState([]);
+  const [flatTypeOptions, setFlatTypeOptions] = useState([]);
+  const [flatOptions, setFlatOptions] = useState<{ label: string; value: string }[]>([]);
+  const [isDownloadingSample, setIsDownloadingSample] = useState(false);
 
-  const fetchFlats = async () => {
+  const fetchTowers = async () => {
     try {
-      const response = await axios.get(`https://${baseUrl}/crm/admin/society_flats.json?society_id=${localStorage.getItem('selectedSocietyId')}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const response = await axios.get(
+        `https://${baseUrl}/crm/admin/society_blocks.json?society_id=${localStorage.getItem(
+          "selectedSocietyId"
+        )}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      })
-      setFlats(response.data.society_flats)
+      );
+      setTowerOptions(response.data.society_blocks.map((t: any) => ({ id: t.id, name: t.name })));
     } catch (error) {
-      console.log(error)
-      toast.error("Failed to fetch flats")
+      console.log(error);
     }
-  }
+  };
+
+  const fetchFlatTypes = async () => {
+    try {
+      const response = await axios.get(`https://${baseUrl}/crm/flat_types.json`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setFlatTypeOptions(response.data.map((ft: any) => ({ id: ft.id, name: ft.society_flat_type })));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchFlatOptions = async () => {
+    try {
+      let url = `https://${baseUrl}/get_society_flats.json?society_id=${localStorage.getItem(
+        "selectedSocietyId"
+      )}`;
+
+      if (filters.tower.length > 0) {
+        filters.tower.forEach((tId: string) => {
+          url += `&society_block_id=${tId.value}`;
+        });
+      }
+
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setFlatOptions(response.data.society_flats.map((f: any) => ({ value: f.id, label: f.flat_no })))
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchFlats = async (page = 1, currentFilters = filters) => {
+    setLoading(true);
+    try {
+      let url = `https://${baseUrl}/crm/admin/society_flats.json?society_id=${localStorage.getItem(
+        "selectedSocietyId"
+      )}&page=${page}`;
+
+      // Append filters to URL using Ransack format
+      if (currentFilters.tower.length > 0) {
+        currentFilters.tower.forEach((tId: any) => {
+          url += `&q[society_block_id_in][]=${tId.value}`;
+        });
+      }
+      if (currentFilters.flatType.length > 0) {
+        currentFilters.flatType.forEach((ftId: any) => {
+          url += `&q[society_flat_type_id_in][]=${ftId.value}`;
+        });
+      }
+      if (currentFilters.status.length > 0) {
+        currentFilters.status.forEach((s: any) => {
+          // Map "active" to true, "inactive" to false if applicable
+          const val = s.value === "active" ? true : s.value === "inactive" ? false : s.value;
+          url += `&q[approve_in][]=${val}`;
+        });
+      }
+      if (currentFilters.occupancy) {
+        url += `&q[occupancy_eq]=${currentFilters.occupancy}`;
+      }
+      if (currentFilters.flat.length > 0) {
+        currentFilters.flat.forEach((f: any) => {
+          url += `&q[id_in][]=${f.value}`;
+        });
+      }
+      if (searchTerm) {
+        url += `&q[flat_no_cont]=${searchTerm}`;
+      }
+
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setFlats(response.data.society_flats);
+      if (response.data.pagination) {
+        setPagination({
+          current_page: response.data.pagination.current_page,
+          total_count: response.data.pagination.total_count,
+          total_pages: response.data.pagination.total_pages,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to fetch flats");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchFlats()
+    fetchFlats();
+    fetchTowers();
+    fetchFlatTypes();
   }, [])
+
+  useEffect(() => {
+    fetchFlatOptions();
+  }, [filters.tower]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchFlats(1);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
 
   const handleAddFlat = () => {
     setShowAddFlatDialog(true);
     setShowActionPanel(false);
-  };
-
-  const handleAddFlatInputChange = (field: string, value: string | boolean) => {
-    setAddFlatFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleAddUnit = () => {
@@ -135,29 +252,116 @@ export const ManageFlatsPage = () => {
   };
 
   const handleApplyFilters = () => {
-    toast.success("Filters applied successfully!");
+    fetchFlats(1, filters);
     setShowFiltersDialog(false);
   };
 
   const handleResetFilters = () => {
-    setFilters({
+    const defaultFilters = {
       tower: [],
       flat: [],
       flatType: [],
       status: [],
       occupancy: "",
-    });
+    };
+    setFilters(defaultFilters);
+    fetchFlats(1, defaultFilters);
     toast.info("Filters reset");
   };
 
   const handleEditFlat = (flatId: string) => {
-    console.log("Edit flat:", flatId);
-    navigate(`/setup/manage-flats/edit/${flatId}`);
+    setEditingFlatId(flatId);
+    setShowEditFlatDialog(true);
   };
 
   const handleToggleStatus = (flatId: string) => {
     toast.success("Status updated successfully!");
   };
+
+  const handleExport = async () => {
+    try {
+      const response = await axios.get(`https://${baseUrl}/crm/admin/society_flats.xlsx`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        responseType: 'blob'
+      })
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "flats.csv");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to export users")
+    }
+  }
+
+  const handleDownloadSample = async () => {
+    setIsDownloadingSample(true)
+    try {
+      const response = await axios.get(`https://${baseUrl}/assets/sample_flats.xlsx`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: 'blob',
+      });
+
+      // Create a blob URL and trigger download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'sample_flat.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Sample file downloaded successfully.');
+    } catch (error) {
+      console.log(error)
+      toast.error("Failed to download sample file.")
+    } finally {
+      setIsDownloadingSample(false)
+    }
+  }
+
+  const handleImportFlats = async () => {
+    try {
+      setIsImporting(true);
+      const formData = new FormData();
+      formData.append('product_import[file]', selectedImportFile);
+
+      const response = await axios.post(`https://${baseUrl}/crm/admin/upload_flats.json`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data?.[0]?.error) {
+        toast.error(response.data?.[0]?.error)
+        return
+      }
+
+      toast.success('Users imported successfully.');
+
+      // Refresh the users list
+      fetchFlats(1);
+      setShowImportModal(false);
+      setSelectedImportFile(null);
+    } catch (error) {
+      console.error('Error importing users:', error);
+      const errorMessage = error?.response?.data?.message || 'Failed to import users. Please try again.';
+      toast.error(errorMessage);
+    } finally {
+      setIsImporting(false)
+    }
+  }
 
   // Render cell content based on column key
   const renderCell = (flat: any, columnKey: string) => {
@@ -232,6 +436,135 @@ export const ManageFlatsPage = () => {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > pagination.total_pages || page === pagination.current_page || loading) {
+      return;
+    }
+    fetchFlats(page);
+  };
+
+  const renderPaginationItems = () => {
+    if (!pagination.total_pages || pagination.total_pages <= 0) {
+      return null;
+    }
+    const items = [];
+    const totalPages = pagination.total_pages;
+    const currentPage = pagination.current_page;
+    const showEllipsis = totalPages > 7;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink
+            onClick={() => handlePageChange(1)}
+            isActive={currentPage === 1}
+            aria-disabled={loading}
+            className={loading ? "pointer-events-none opacity-50" : ""}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+                aria-disabled={loading}
+                className={loading ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+                aria-disabled={loading}
+                className={loading ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink
+                  onClick={() => handlePageChange(i)}
+                  isActive={currentPage === i}
+                  aria-disabled={loading}
+                  className={loading ? "pointer-events-none opacity-50" : ""}
+                >
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+              aria-disabled={loading}
+              className={loading ? "pointer-events-none opacity-50" : ""}
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+              aria-disabled={loading}
+              className={loading ? "pointer-events-none opacity-50" : ""}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
+
   return (
     <div className="min-h-screen bg-[#fafafa] p-6">
       <div className="max-w-full mx-auto">
@@ -243,7 +576,7 @@ export const ManageFlatsPage = () => {
             onRowClick={(flat) => console.log("Row clicked:", flat)}
             renderCell={renderCell}
             enableExport={true}
-            handleExport={() => { }}
+            handleExport={handleExport}
             onFilterClick={handleFilters}
             enableSelection={true}
             searchTerm={searchTerm}
@@ -280,19 +613,55 @@ export const ManageFlatsPage = () => {
                 </Button>
               </div>
             }
+            loading={loading}
           />
         </div>
+
+        {pagination.total_pages > 1 && (
+          <div className="flex justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(Math.max(1, pagination.current_page - 1))}
+                    className={
+                      pagination.current_page === 1 || loading
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+                {renderPaginationItems()}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      handlePageChange(Math.min(pagination.total_pages, pagination.current_page + 1))
+                    }
+                    className={
+                      pagination.current_page === pagination.total_pages || loading
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
 
         {/* Add Flat Dialog */}
         <AddFlatDialog
           open={showAddFlatDialog}
           onOpenChange={setShowAddFlatDialog}
-          formData={addFlatFormData}
-          onChange={handleAddFlatInputChange}
-          onSubmit={() => { }}
-          loading={loading}
-          towerOptions={[]}
-          flatTypeOptions={[]}
+          fetchFlats={fetchFlats}
+        />
+
+        {/* Edit Flat Dialog */}
+        <EditFlatDialog
+          open={showEditFlatDialog}
+          onOpenChange={setShowEditFlatDialog}
+          fetchFlats={fetchFlats}
+          flatId={editingFlatId}
         />
 
         {/* Configure Tower Dialog */}
@@ -317,8 +686,9 @@ export const ManageFlatsPage = () => {
           onFilterChange={handleFilterChange}
           onApply={handleApplyFilters}
           onReset={handleResetFilters}
-          towerOptions={[]}
-          flatTypeOptions={[]}
+          towerOptions={towerOptions}
+          flatTypeOptions={flatTypeOptions}
+          flatOptions={flatOptions}
         />
 
         {/* Actions Modal */}
@@ -336,8 +706,9 @@ export const ManageFlatsPage = () => {
           setSelectedFile={setSelectedImportFile}
           title="Import Flats"
           entityType="Flats"
-          onImport={() => { }}
-          onSampleDownload={() => { }}
+          onImport={handleImportFlats}
+          onSampleDownload={handleDownloadSample}
+          isDownloading={isDownloadingSample}
           isUploading={isImporting}
         />
       </div>

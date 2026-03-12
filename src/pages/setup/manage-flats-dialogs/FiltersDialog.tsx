@@ -32,6 +32,7 @@ interface FiltersDialogProps {
   onReset: () => void;
   towerOptions: { id: number; name: string }[];
   flatTypeOptions: { id: number; name: string }[];
+  flatOptions: { label: string; value: string }[];
 }
 
 export const FiltersDialog: React.FC<FiltersDialogProps> = ({
@@ -43,23 +44,15 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
   onReset,
   towerOptions,
   flatTypeOptions,
+  flatOptions,
 }) => {
   // Map options to MultiSelectBox format { label, value }
   const towerSelectOptions = towerOptions.map(t => ({ label: t.name, value: t.id.toString() }));
   const flatTypeSelectOptions = flatTypeOptions.map(ft => ({ label: ft.name, value: ft.id.toString() }));
-  
-  // Dummy options for Flat and Status since they might be many or fixed
-  const flatOptions = [
-    { label: "101", value: "101" },
-    { label: "102", value: "102" },
-    { label: "103", value: "103" },
-    { label: "Office", value: "Office" },
-    { label: "Soc_office", value: "Soc_office" },
-  ];
 
   const statusOptions = [
-    { label: "Active", value: "active" },
-    { label: "Inactive", value: "inactive" },
+    { label: "Active", value: "true" },
+    { label: "Inactive", value: "false" },
   ];
 
   return (
@@ -100,6 +93,7 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                 value={filters.flat}
                 onChange={(value) => onFilterChange("flat", value)}
                 placeholder="Select Flat"
+                disabled={filters.tower.length === 0}
               />
             </div>
 
@@ -142,7 +136,6 @@ export const FiltersDialog: React.FC<FiltersDialogProps> = ({
                   <SelectValue placeholder="Select Occupancy" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
                   <SelectItem value="Yes">Yes</SelectItem>
                   <SelectItem value="No">No</SelectItem>
                 </SelectContent>
