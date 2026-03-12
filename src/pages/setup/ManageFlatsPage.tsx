@@ -9,6 +9,7 @@ import { CommonImportModal } from "@/components/CommonImportModal";
 import { AddFlatDialog } from "./manage-flats-dialogs/AddFlatDialog";
 import { EditFlatDialog } from "./manage-flats-dialogs/EditFlatDialog";
 import { ConfigureTowerDialog } from "./manage-flats-dialogs/ConfigureTowerDialog";
+import { ConfigureFloorDialog } from "./manage-flats-dialogs/ConfigureFloorDialog";
 import { ConfigureFlatTypeDialog } from "./manage-flats-dialogs/ConfigureFlatTypeDialog";
 import { FiltersDialog } from "./manage-flats-dialogs/FiltersDialog";
 import { ActionsModal } from "./manage-flats-dialogs/ActionsModal";
@@ -73,6 +74,7 @@ export const ManageFlatsPage = () => {
 
   // Configure Tower Dialog states
   const [showConfigureTowerDialog, setShowConfigureTowerDialog] = useState(false);
+  const [showConfigureFloorDialog, setShowConfigureFloorDialog] = useState(false);
   const [editingTower, setEditingTower] = useState<number | null>(null);
   const [showFiltersDialog, setShowFiltersDialog] = useState(false);
   const [showActionDropdown, setShowActionDropdown] = useState(false);
@@ -234,6 +236,11 @@ export const ManageFlatsPage = () => {
 
   const handleAddTower = () => {
     setShowConfigureTowerDialog(true);
+    setShowActionPanel(false);
+  };
+
+  const handleAddFloor = () => {
+    setShowConfigureFloorDialog(true);
     setShowActionPanel(false);
   };
 
@@ -611,6 +618,14 @@ export const ManageFlatsPage = () => {
                   <Plus className="w-4 h-4 mr-2" />
                   Tower
                 </Button>
+                <Button
+                  size="sm"
+                  onClick={handleAddFloor}
+                  className="bg-[#FEE2E2] hover:bg-[#FECACA] text-[#DC2626] border-none"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Floor
+                </Button>
               </div>
             }
             loading={loading}
@@ -670,6 +685,12 @@ export const ManageFlatsPage = () => {
           onOpenChange={setShowConfigureTowerDialog}
           editingTower={editingTower}
           setEditingTower={setEditingTower}
+        />
+
+        {/* Configure Floor Dialog */}
+        <ConfigureFloorDialog
+          open={showConfigureFloorDialog}
+          onOpenChange={setShowConfigureFloorDialog}
         />
 
         {/* Configure Flat Type Dialog */}
