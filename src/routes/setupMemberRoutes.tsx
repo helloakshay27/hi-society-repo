@@ -16,6 +16,8 @@ import { LoyaltyInventorySection } from "@/pages/LoyaltyInventorySection";
 import { LoyaltyInventoryDetails } from "@/pages/LoyaltyInventoryDetails";
 import { CustomerPricingRuleList } from "@/pages/CustomerPricingRuleList";
 import { TicketDashboard } from "@/TicketDashboardbackup";
+const VendorSetupPage = lazy(() => import("@/pages/VendorSetupPage"));
+const VendorSetupDetailsPage = lazy(() => import("@/pages/VendorSetupDetailsPage"));
 import CRMGroupsPage from "@/pages/CRMGroupsPage";
 // import { VisitorsDashboard } from "@/pages/VisitorsDashboard";
 import { HiSocGroupsPage } from "@/pages/HiSocGroupsPage";
@@ -1703,6 +1705,14 @@ export const setupMemberRoutes = (
     <Route
       path="/settings/customer-pricing-rule-list"
       Component={withSuspense(CustomerPricingRuleList)}
+    />
+    <Route
+      path="/settings/ticket-management/vendor-setup"
+      Component={withSuspense(VendorSetupPage)}
+    />
+    <Route
+      path="/settings/ticket-management/vendor-setup/view/:id"
+      Component={withSuspense(VendorSetupDetailsPage)}
     />
   </>
 );
