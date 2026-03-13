@@ -6,6 +6,7 @@ export default function MultiSelectBox({
   value,
   onChange,
   placeholder,
+  disabled = false
 }) {
   const customStyles = {
     control: (base, state) => ({
@@ -44,7 +45,7 @@ export default function MultiSelectBox({
       backgroundColor: state.isSelected
         ? "#D3D3D3"
         : state.isFocused
-          ? "var(--red)"
+          ? "#dc2626"
           : "transparent",
       color: state.isSelected ? "#333" : state.isFocused ? "white" : "black",
       cursor: "pointer",
@@ -58,7 +59,7 @@ export default function MultiSelectBox({
     }),
     multiValue: (base) => ({
       ...base,
-      backgroundColor: "var(--red)",
+      backgroundColor: "#dc2626",
       color: "white",
     }),
     multiValueLabel: (base) => ({
@@ -70,7 +71,7 @@ export default function MultiSelectBox({
       color: "white",
       cursor: "pointer",
       ":hover": {
-        backgroundColor: "var(--red)",
+        backgroundColor: "#b91c1c", // Darker red on hover
         color: "white",
       },
     }),
@@ -94,6 +95,7 @@ export default function MultiSelectBox({
       className="basic-multi-select"
       classNamePrefix="select"
       styles={customStyles}
+      isDisabled={disabled}
     />
   );
 }

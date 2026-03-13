@@ -43,6 +43,8 @@ interface Prize {
   } | null;
   product: Product | null;
   total_quantity: number | null;
+  validity: string | null;
+  terms_and_conditions: string | null;
   // other fields omitted if not used in UI
 }
 
@@ -51,12 +53,15 @@ interface ContestDetails {
   name: string;
   description: string | null;
   terms_and_conditions: string | null;
+  redemption_guide: string | null;
   content_type: string;
   active: boolean;
   start_at: string; // ISO string
   end_at: string; // ISO string
   user_caps: number | null;
   user_attemp_remaining: number | null;
+  access_type: string | null;
+  societies: Array<{ id: number; name: string }> | null;
   prizes: Prize[];
 }
 
@@ -344,6 +349,24 @@ export const ContestDetailsPage: React.FC = () => {
                   {contest.user_attemp_remaining ?? "—"}
                 </p>
               </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Access Type</p>
+                <p className="text-base text-[#1A1A1A] capitalize">
+                  {contest.access_type ? contest.access_type.replace('_', ' ') : "—"}
+                </p>
+              </div>
+              {contest.access_type === 'multiple_sites' && contest.societies && (
+                <div className="space-y-1 md:col-span-3">
+                  <p className="text-sm font-medium text-gray-500">Societies</p>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {contest.societies.map((s) => (
+                      <span key={s.id} className="px-2 py-1 bg-[#E5E0D3] text-[#1a1a1a8a] text-xs font-medium rounded">
+                        {s.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -477,6 +500,35 @@ export const ContestDetailsPage: React.FC = () => {
                             {prize.total_quantity !== null ? prize.total_quantity : "—"}
                           </p>
                         </div>
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-gray-500">
+                            Validity
+                          </p>
+                          <p className="text-sm text-[#1A1A1A]">
+                            {prize.validity ?? "—"}
+                          </p>
+                        </div>
+                        {prize.display_name && (
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-gray-500">
+                              Display Name
+                            </p>
+                            <p className="text-sm text-[#1A1A1A]">
+                              {prize.display_name}
+                            </p>
+                          </div>
+                        )}
+                        {prize.terms_and_conditions && (
+                          <div className="md:col-span-2 space-y-1">
+                            <p className="text-xs font-medium text-gray-500">
+                              Prize Terms & Conditions
+                            </p>
+                            <div
+                              className="text-sm text-[#1A1A1A] prose-sm max-w-none"
+                              dangerouslySetInnerHTML={{ __html: prize.terms_and_conditions }}
+                            />
+                          </div>
+                        )}
                       </div>
 
                       {/* Product Details for Merchandise */}
@@ -536,23 +588,9 @@ export const ContestDetailsPage: React.FC = () => {
                 Terms & Conditions
               </h3>
             </div>
-            {/* <Button
-              onClick={() => handleEdit("terms")}
-              variant="outline"
-              size="sm"
-              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/10"
-            >
-              <Edit className="w-4 h-4 mr-1" />
-              Edit
-            </Button> */}
           </div>
           <CardContent className="bg-white p-6 rounded-b-lg">
             <div className="prose max-w-none text-sm quill-content">
-              {/* {contest.terms_and_conditions ? (
-                <p>{contest.terms_and_conditions}</p>
-              ) : (
-                <p className="text-gray-500 italic">No terms and conditions provided.</p>
-              )} */}
               <div
                 dangerouslySetInnerHTML={{
                   __html:
@@ -563,6 +601,33 @@ export const ContestDetailsPage: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Redemption Guide */}
+        {contest.content_type.toLowerCase() === "scratch" && (
+          <Card className="w-full bg-transparent shadow-[0px_1px_8px_rgba(45,45,45,0.05)] border-none">
+            <div className="bg-[#F6F4EE] px-6 py-4 rounded-t-lg flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-[#C4B89D54] p-2 rounded-lg">
+                  <Gift className="w-5 h-5 text-[#C72030]" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#1A1A1A]">
+                  Redemption Guide
+                </h3>
+              </div>
+            </div>
+            <CardContent className="bg-white p-6 rounded-b-lg">
+              <div className="prose max-w-none text-sm quill-content">
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      contest.redemption_guide ||
+                      "<p className='text-gray-500'>No redemption guide provided</p>",
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

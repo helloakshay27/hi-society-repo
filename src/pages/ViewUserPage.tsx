@@ -114,7 +114,7 @@ export const ViewUserPage = () => {
                 Flat Number - {user?.flat_no} ({user?.phase || "-"})
               </Typography>
               <Typography variant="body2" sx={{ color: "#0097a7", mt: 0.5 }}>
-                {user?.status ? "Active" : "Inactive"}
+                {user?.approved ? "Approved" : user?.approved === false ? "Rejected" : "Pending"}
               </Typography>
             </Box>
           </Box>

@@ -376,6 +376,9 @@ export const CreateContestPage: React.FC = () => {
     formData.append('contest[name]', contestName.trim());
     formData.append('contest[description]', contestDescription.trim());
     formData.append('contest[content_type]', contestType.toLowerCase());
+    if (isStep1Only) {
+      formData.append('contest[status]', "draft");
+    }
 
     // Only send these if we are NOT in the initial step 1 creation (or if we have them)
     // For Step 1 creation, we just need name, description, type.
@@ -1522,13 +1525,13 @@ export const CreateContestPage: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex justify-center gap-4 mt-6">
-          <Button
+          {/* <Button
             onClick={handleSaveDraft}
             variant="outline"
             className="bg-[#F6F4EE] text-[#C72030] border-[#C72030] hover:bg-[#EDEAE3]"
           >
             Save to draft
-          </Button>
+          </Button> */}
           {currentStep < 4 ? (
             <Button
               onClick={handleNext}

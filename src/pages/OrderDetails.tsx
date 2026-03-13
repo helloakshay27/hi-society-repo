@@ -103,6 +103,7 @@ const OrderDetails = () => {
                     shippingMobile: data.shipping_address?.mobile || "-",
                     billingContact: data.billing_address?.contact_person || "-",
                     billingMobile: data.billing_address?.mobile || "-",
+                    billingAddressObj: data.billing_address,
                     createdAt: data.created_at || "-",
                     updatedAt: data.updated_at || "-",
                     notes: data.notes || "-",
@@ -394,13 +395,13 @@ const OrderDetails = () => {
                                     </div>
 
                                     {/* Address */}
-                                    <div className="flex items-start gap-3">
+                                    {/* <div className="flex items-start gap-3">
                                         <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                                         <div>
                                             <p className="text-sm text-gray-500">Address</p>
                                             <p className="text-sm text-gray-900">{orderData?.shippingAddress || "-"}</p>
                                         </div>
-                                    </div>
+                                    </div> */}
 
                                     {/* Total Loyalty Points */}
                                     <div className="pt-4 border-t">
@@ -465,6 +466,59 @@ const OrderDetails = () => {
                                             </div>
                                         </div>
                                     </div> */}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Billing Address Information */}
+                        <div className="bg-[#fbfbf8] rounded-lg shadow-sm border">
+                            <div className="px-6 py-6">
+                                <h1 className="font-semibold text-[#C72030] mb-6">Address</h1>
+
+                                <div className="space-y-4">
+                                    {/* Billing Address Details */}
+                                    <div className="flex items-start gap-3">
+                                        <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm text-gray-500 font-medium mb-1">Billing Address</p>
+                                            <div className="text-sm text-gray-900 leading-relaxed space-y-0.5">
+                                                {orderData?.billingAddressObj ? (
+                                                    <>
+                                                        <p>{orderData.billingAddressObj.address}</p>
+                                                        {orderData.billingAddressObj.address_line_two && <p>{orderData.billingAddressObj.address_line_two}</p>}
+                                                        <p>
+                                                            {orderData.billingAddressObj.city}, {orderData.billingAddressObj.state}
+                                                        </p>
+                                                        <p>
+                                                            {orderData.billingAddressObj.country} - {orderData.billingAddressObj.pin_code}
+                                                        </p>
+                                                    </>
+                                                ) : (
+                                                    <p>-</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Contact Person */}
+                                    <div className="flex items-start gap-3 pt-2">
+                                        <User className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm text-gray-500 font-medium mb-1">Contact Person</p>
+                                            <p className="text-sm text-gray-900">{orderData?.billingContact || "-"}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Mobile Number */}
+                                    <div className="flex items-start gap-3 pt-2">
+                                        <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                        </svg>
+                                        <div>
+                                            <p className="text-sm text-gray-500 font-medium mb-1">Mobile</p>
+                                            <p className="text-sm text-gray-900">{orderData?.billingMobile || "-"}</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
