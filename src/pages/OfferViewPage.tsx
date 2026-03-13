@@ -491,7 +491,7 @@ export default function OfferViewPage() {
       </div>
 
       <Typography variant="body2" sx={{ mb: 3, color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
-        Offer &gt; Detailsdsadasd
+        Offer &gt; Details
       </Typography>
       {/* replaced tabs with stepper UI */}
       <Box sx={{ mb: 3 }}>
