@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getFullUrl } from '@/config/apiConfig';
+import { getFullUrl, API_CONFIG, getAuthHeader } from '@/config/apiConfig';
 import axios from 'axios';
 import {
   Box,
   Typography,
-  Tabs,
-  Tab,
+  Stepper,
+  Step,
+  StepLabel,
+  StepConnector,
+  // Tabs and Tab removed in favour of stepper styling
 } from '@mui/material';
 import { Settings } from '@mui/icons-material';
+import { styled } from '@mui/material/styles';
 import { ArrowLeft } from 'lucide-react';
 
 const steps = [
@@ -18,6 +22,33 @@ const steps = [
   'Validity & Status',
   'Visibility',
 ];
+
+// styled components copied from AddOfferPage for consistent stepper appearance
+const CustomStepConnector = styled(StepConnector)(() => ({
+  top: 20,
+  '& .MuiStepConnector-line': {
+    borderTop: '2px dotted #E6E6E6',
+  },
+}));
+
+const StepPill = styled(Box)<{ $active?: boolean; $completed?: boolean }>(({ $active, $completed }) => ({
+  height: 40,
+  padding: '0 20px',
+  borderRadius: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: 14,
+  fontWeight: 500,
+  fontFamily: 'Work Sans, sans-serif',
+  whiteSpace: 'nowrap',
+  cursor: 'pointer',
+  backgroundColor: $active || $completed ? '#C72030' : '#FFFFFF',
+  color: $active ? '#FFFFFF' : $completed ? '#fff' : '#333',
+  border: $active || $completed
+    ? '2px solid #C72030'
+    : '2px solid #E6E6E6',
+}));
 
 function formatDate(dateString?: string) {
   if (!dateString) return '-';
@@ -41,12 +72,17 @@ export default function OfferViewPage() {
   const fetchOfferDetails = async (offerId: string) => {
     setLoading(true);
     try {
+      // pick up token from API_CONFIG; fallback to whatever might be in localStorage (legacy)
+      const token = API_CONFIG.TOKEN || localStorage.getItem('token') || '';
       const response = await axios.get(
         getFullUrl(`/crm/offers/${offerId}.json`),
         {
           params: {
-            token: 'bfa5004e7b0175622be8f7e69b37d01290b737f82e078414'
-          }
+            token,
+          },
+          headers: {
+            Authorization: getAuthHeader(),
+          },
         }
       );
       // Handle both response.data and response.data.offer structures
@@ -455,45 +491,43 @@ export default function OfferViewPage() {
       </div>
 
       <Typography variant="body2" sx={{ mb: 3, color: '#666', fontFamily: 'Work Sans, sans-serif' }}>
-        Offer &gt; Details
+        Offer &gt; Detailsdsadasd
       </Typography>
-      <Box sx={{ mb: 3, background: '#f6f7f7', p: 1 }}>
-        <Tabs
-          value={activeTab}
-          onChange={(e, val) => setActiveTab(val)}
-          variant="fullWidth"
-          scrollButtons={false}
-          TabIndicatorProps={{ style: { display: 'none' } }}
+      {/* replaced tabs with stepper UI */}
+      <Box sx={{ mb: 3 }}>
+        <Stepper
+          activeStep={activeTab}
+          connector={<CustomStepConnector />}
           sx={{
-            minHeight: 48,
-            '& .MuiTabs-flexContainer': {
-              justifyContent: 'space-around',
-            },
-            '& .MuiTab-root': {
-              textTransform: 'none',
-              fontWeight: 500,
-              fontSize: 14,
-              minHeight: 40,
-              px: 3,
-              color: '#000 !important',
-              background: '#f6f7f7',
-              marginRight: 0.5,
-              flex: 1,
-            },
-            '& .Mui-selected': {
-              background: '#edeae3',
-              color: '#000 !important',
-              fontWeight: 500,
-              margin: '4px',
+            '& .MuiStep-root': {
+              padding: 0,
             },
           }}
         >
-          <Tab label="Basic Info" />
-          <Tab label="Media & Display" />
-          <Tab label="Applicability" />
-          <Tab label="Validity & Status" />
-          <Tab label="Visibility" />
-        </Tabs>
+          {steps.map((label, index) => {
+            const active = index === activeTab;
+            // view page doesn't track completed state; always false
+            const completed = false;
+
+            return (
+              <Step key={label} onClick={() => setActiveTab(index)}>
+                <StepLabel StepIconComponent={() => null}>
+                  <Box
+                    style={{
+                      padding: '8px',
+                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                      backgroundColor: '#FFFFFF',
+                    }}
+                  >
+                    <StepPill $active={active} $completed={completed}>
+                      {index + 1}. {label}
+                    </StepPill>
+                  </Box>
+                </StepLabel>
+              </Step>
+            );
+          })}
+        </Stepper>
       </Box>
       {loading ? (
         <Typography sx={{ textAlign: 'center', mt: 6 }}>Loading...</Typography>

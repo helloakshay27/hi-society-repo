@@ -7,7 +7,8 @@ import axios from "axios";
 import { getFullUrl } from "@/config/apiConfig";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
 import ProjectBannerUpload from "@/components/reusable/ProjectBannerUpload";
-import Select from "react-select";
+import { saveDraftItem, loadDraftItem, clearAllDraftItems } from "@/utils/draftStorage";
+// removed react-select import in favor of MUI Select
 import {
   Box,
   Typography,
@@ -19,6 +20,7 @@ import {
   StepConnector,
   Button as MuiButton,
   Select as MuiSelect,
+  SelectChangeEvent,
   MenuItem,
   FormControl,
   InputLabel,
@@ -37,146 +39,7 @@ import { InfoOutlined, Close as CloseIcon } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
 import { boxShadow } from "html2canvas/dist/types/css/property-descriptors/box-shadow";
 
-const CustomMultiValue = (props) => (
-  <div
-    style={{
-      position: "relative",
-      backgroundColor: "#E5E0D3",
-      borderRadius: "2px",
-      margin: "3px",
-      marginTop: "10px",
-      padding: "4px 10px 6px 10px",
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      paddingRight: "28px",
-    }}
-  >
-    <span
-      style={{
-        color: "#1a1a1a8a",
-        fontSize: "13px",
-        fontWeight: "500",
-      }}
-    >
-      {props.data.label}
-    </span>
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        props.removeProps.onClick(e);
-      }}
-      onMouseDown={(e) => {
-        e.stopPropagation();
-        props.removeProps.onMouseDown(e);
-      }}
-      onTouchEnd={(e) => {
-        e.stopPropagation();
-        props.removeProps.onTouchEnd(e);
-      }}
-      style={{
-        position: "absolute",
-        right: "-10px",
-        top: "-5px",
-        transform: "translateY(-50%), translateX(-50%)",
-        background: "transparent",
-        border: "1px solid #ccc",
-        borderRadius: "50%",
-        cursor: "pointer",
-        padding: "0",
-        display: "flex",
-        alignItems: "start",
-        justifyContent: "center",
-        color: "#666",
-        fontSize: "12px",
-        lineHeight: "1",
-        width: "16px",
-        height: "16px",
-        transition: "background 0.2s, color 0.2s, border-color 0.2s",
-      }}
-      type="button"
-      onMouseOver={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = "#f6f4ee";
-        (e.currentTarget as HTMLButtonElement).style.color = "#C72030";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "#C72030";
-      }}
-      onMouseOut={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-        (e.currentTarget as HTMLButtonElement).style.color = "#666";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "#ccc";
-      }}
-    >
-      ×
-    </button>
-  </div>
-);
 
-const customStyles = {
-  control: (provided, state) => ({
-    ...provided,
-    minHeight: "44px",
-    borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
-    boxShadow: "none",
-    fontSize: "14px",
-    paddingTop: "6px",
-    backgroundColor: "transparent",
-    "&:hover": { borderColor: "#C72030" },
-  }),
-  valueContainer: (provided) => ({
-    ...provided,
-    padding: "4px 6px",
-    flexWrap: "wrap",
-    backgroundColor: "transparent",
-  }),
-  dropdownIndicator: (provided, state) => ({
-    ...provided,
-    padding: "4px 8px",
-    color: state.isFocused ? "#C72030" : "#666",
-    "&:hover": { color: "#C72030" },
-  }),
-  indicatorSeparator: () => ({ display: "none" }),
-  placeholder: (provided) => ({
-    ...provided,
-    color: "#999",
-    fontSize: "14px",
-  }),
-  menu: (provided) => ({
-    ...provided,
-    zIndex: 9999,
-    fontSize: "14px",
-    backgroundColor: "#fff",
-  }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "#C72030"
-      : state.isFocused
-        ? "#F6F4EE"
-        : "#fff",
-    color: state.isSelected ? "#fff" : "#1A1A1A",
-    fontSize: "14px",
-    padding: "8px 12px",
-    cursor: "pointer",
-    "&:hover": {
-      backgroundColor: "#F6F4EE",
-      color: "#1A1A1A",
-    },
-    "&:active": {
-      backgroundColor: "#C72030",
-      color: "#fff",
-    },
-  }),
-  multiValue: (provided) => ({
-    ...provided,
-    backgroundColor: "transparent",
-  }),
-  multiValueLabel: (provided) => ({
-    ...provided,
-    color: "#1a1a1a8a",
-    fontSize: "13px",
-    fontWeight: "500",
-  }),
-};
 
 // Styled Components
 const CustomStepConnector = styled(StepConnector)(() => ({
@@ -267,7 +130,7 @@ const SectionCard = styled(Paper)(({ theme }) => ({
   backgroundColor: "white",
   boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
   borderRadius: "8px",
-  overflow: "hidden",
+  overflow: "visible", // allow dropdowns/popovers to escape
   marginBottom: "24px",
   border: "1px solid #E5E5E5",
 }));
@@ -303,24 +166,31 @@ const RedIcon = styled(Settings)(({ theme }) => ({
 }));
 
 const fieldStyles = {
-  backgroundColor: "#fff",
-  "& .MuiOutlinedInput-root": {
-    fontSize: "14px",
-    "& fieldset": {
-      borderColor: "#ddd",
+  height: '40px',
+  backgroundColor: '#fff',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    height: '40px',
+    fontSize: '14px',
+    '& fieldset': {
+      borderColor: '#ddd',
     },
-    "&:hover fieldset": {
-      borderColor: "#C72030",
+    '&:hover fieldset': {
+      borderColor: '#C72030',
     },
-    "&.Mui-focused fieldset": {
-      borderColor: "#C72030",
+    '&.Mui-focused fieldset': {
+      borderColor: '#C72030',
     },
   },
-  "& .MuiInputLabel-root": {
-    fontSize: "14px",
+  '& .MuiInputLabel-root': {
+    fontSize: '14px',
     "&.Mui-focused": {
       color: "#C72030",
     },
+  },
+  // color the required asterisk red for all labels
+  '& .MuiInputLabel-asterisk, & .MuiFormLabel-asterisk': {
+    color: 'red',
   },
   "& .MuiInputBase-input": {
     fontSize: "14px",
@@ -397,9 +267,18 @@ export default function AddOfferPage() {
     offer_pdf: [],
   });
 
-  const [uploadedImages, setUploadedImages] = useState<
-    Array<{ id: string; name: string; file: File; preview: string }>
-  >([]);
+  // track thumbnail/pdf images temporarily during the flow
+  type UploadedImage = {
+    id: string;
+    file: File | null;
+    preview: string;
+    // optional fields when loaded from server
+    name?: string;
+    file_name?: string;
+    ratio?: string;
+  };
+
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [offerTemplates, setOfferTemplates] = useState<OfferTemplate[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -411,7 +290,7 @@ export default function AddOfferPage() {
   const [showTooltipBanner, setShowTooltipBanner] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // LocalStorage keys for draft persistence
+  // Draft keys (used in IndexedDB)
   const STORAGE_KEYS = {
     FORM_DATA: "addOffer_formData",
     UPLOADED_IMAGES: "addOffer_uploadedImages",
@@ -419,31 +298,9 @@ export default function AddOfferPage() {
     COMPLETED_STEPS: "addOffer_completedSteps",
   };
 
-  // Save to localStorage
-  const saveToLocalStorage = (key: string, data: any) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(data));
-    } catch (error) {
-      console.error("Error saving to localStorage:", error);
-    }
-  };
-
-  // Load from localStorage
-  const loadFromLocalStorage = (key: string) => {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : null;
-    } catch (error) {
-      console.error("Error loading from localStorage:", error);
-      return null;
-    }
-  };
-
-  // Clear all form data from localStorage
-  const clearAllFromLocalStorage = () => {
-    Object.values(STORAGE_KEYS).forEach((key) => {
-      localStorage.removeItem(key);
-    });
+  // clear all draft entries
+  const clearAllDraft = async () => {
+    await clearAllDraftItems(Object.values(STORAGE_KEYS));
   };
 
   // Image ratio configuration
@@ -565,24 +422,30 @@ export default function AddOfferPage() {
   // Check for saved draft on component mount (only if not in edit mode)
   useEffect(() => {
     if (!offerId) {
-      const savedActiveStep = loadFromLocalStorage(STORAGE_KEYS.ACTIVE_STEP);
-      const savedFormData = loadFromLocalStorage(STORAGE_KEYS.FORM_DATA);
-
-      // If there's a saved draft, show modal
-      if (savedActiveStep !== null || savedFormData !== null) {
-        setShowDraftModal(true);
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('skipDraftModal')) {
+        handleContinueWithDraft();
+        return;
       }
+
+      (async () => {
+        const savedActiveStep = await loadDraftItem(STORAGE_KEYS.ACTIVE_STEP);
+        const savedFormData = await loadDraftItem(STORAGE_KEYS.FORM_DATA);
+        if (savedActiveStep !== null || savedFormData !== null) {
+          setShowDraftModal(true);
+        }
+      })();
     }
   }, [offerId]);
 
   // Handler for continuing with draft
-  const handleContinueWithDraft = () => {
-    const savedActiveStep = loadFromLocalStorage(STORAGE_KEYS.ACTIVE_STEP);
-    const savedFormData = loadFromLocalStorage(STORAGE_KEYS.FORM_DATA);
-    const savedUploadedImages = loadFromLocalStorage(
+  const handleContinueWithDraft = async () => {
+    const savedActiveStep = await loadDraftItem(STORAGE_KEYS.ACTIVE_STEP);
+    const savedFormData = await loadDraftItem(STORAGE_KEYS.FORM_DATA);
+    const savedUploadedImages = await loadDraftItem(
       STORAGE_KEYS.UPLOADED_IMAGES
     );
-    const savedCompletedSteps = loadFromLocalStorage(
+    const savedCompletedSteps = await loadDraftItem(
       STORAGE_KEYS.COMPLETED_STEPS
     );
 
@@ -593,12 +456,49 @@ export default function AddOfferPage() {
 
     // Restore form data
     if (savedFormData) {
-      setFormData(savedFormData);
-    }
+      // ensure preview fields exist and file refs are null on all image/pdf arrays
+      const imageKeys = [
+        "image_1_by_1",
+        "image_16_by_9",
+        "image_3_by_2",
+        "image_9_by_16",
+        "offer_pdf",
+      ];
+      imageKeys.forEach((k) => {
+        if (savedFormData[k] && Array.isArray(savedFormData[k])) {
+          savedFormData[k] = savedFormData[k].map((img: any) => ({
+            ...img,
+            preview: img.preview || "",
+            file: null, // file refs don't survive JSON serialization
+          }));
+        } else {
+          // ensure the key exists as an empty array so rendering doesn't break
+          savedFormData[k] = savedFormData[k] || [];
+        }
+      });
 
-    // Restore uploaded images (without File objects for existing images)
-    if (savedUploadedImages && Array.isArray(savedUploadedImages)) {
-      setUploadedImages(savedUploadedImages);
+      setFormData(savedFormData);
+
+      // mirror banner + pdf images into uploadedImages for preview/side storage
+      const restoredImages: UploadedImage[] = [];
+      imageKeys.forEach((k) => {
+        const arr = savedFormData[k];
+        if (arr && Array.isArray(arr)) {
+          arr.forEach((img: any) => {
+            restoredImages.push({
+              id: img.id?.toString() || Date.now().toString(),
+              file: null,
+              preview: img.preview || "",
+              file_name: img.file_name || img.name || "",
+              name: img.name || img.file_name || "",
+              ratio: img.ratio || "",
+            });
+          });
+        }
+      });
+
+      // Set uploadedImages (replace, don't append to empty initial state)
+      setUploadedImages(restoredImages);
     }
 
     // Restore completed steps
@@ -614,8 +514,8 @@ export default function AddOfferPage() {
   };
 
   // Handler for starting fresh
-  const handleStartFresh = () => {
-    clearAllFromLocalStorage();
+  const handleStartFresh = async () => {
+    await clearAllDraft();
     setShowDraftModal(false);
     setHasSavedDraft(false);
 
@@ -766,18 +666,32 @@ export default function AddOfferPage() {
         offer.offer_pdf?.document_url &&
         offer.offer_pdf?.document_file_name
       ) {
+        const existingPdfEntry = {
+          id: offer.offer_pdf.id,
+          document_file_name: offer.offer_pdf.document_file_name,
+          document_url: offer.offer_pdf.document_url,
+          file_name: offer.offer_pdf.document_file_name,
+          file: null,
+          // show existing thumbnail by using URL from server
+          preview: offer.offer_pdf.document_url,
+        };
+
         setFormData((prev) => ({
           ...prev,
-          offer_pdf: [
-            {
-              id: offer.offer_pdf.id,
-              document_file_name: offer.offer_pdf.document_file_name,
-              document_url: offer.offer_pdf.document_url,
-              file_name: offer.offer_pdf.document_file_name,
-              file: null,
-            },
-          ],
+          offer_pdf: [existingPdfEntry],
         }));
+
+        // also mirror into uploadedImages so draft/save logic retains preview
+        setUploadedImages([
+          {
+            id: existingPdfEntry.id,
+            file: null,
+            preview: existingPdfEntry.preview,
+            file_name: existingPdfEntry.file_name,
+            name: existingPdfEntry.file_name,
+            ratio: "",
+          },
+        ]);
       }
     } catch (error) {
       console.error("Error fetching offer details:", error);
@@ -825,30 +739,34 @@ export default function AddOfferPage() {
           toast.error("Please select start date");
           return false;
         }
-        const today = new Date();
-        const startDate = new Date(formData.startDate);
-        const startDateNormalized = new Date(
-          startDate.getFullYear(),
-          startDate.getMonth(),
-          startDate.getDate()
-        );
-        const todayNormalized = new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          today.getDate()
-        );
-
-        if (startDateNormalized < todayNormalized) {
-          toast.error(
-            "Start date cannot be in the past. Please select today or a future date."
+        // only validate against past when not editing existing offer
+        if (!isEditMode) {
+          const today = new Date();
+          const startDate = new Date(formData.startDate);
+          const startDateNormalized = new Date(
+            startDate.getFullYear(),
+            startDate.getMonth(),
+            startDate.getDate()
           );
-          return false;
+          const todayNormalized = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate()
+          );
+
+          if (startDateNormalized < todayNormalized) {
+            toast.error(
+              "Start date cannot be in the past. Please select today or a future date."
+            );
+            return false;
+          }
         }
         if (!formData.endDate) {
           toast.error("Please select end date");
           return false;
         }
         const endDate = new Date(formData.endDate);
+        const startDate = new Date(formData.startDate);
         if (endDate < startDate) {
           toast.error("End date must be equal to or after start date");
           return false;
@@ -892,39 +810,82 @@ export default function AddOfferPage() {
         return;
       }
 
-      // Mark current step as completed
-      if (!completedSteps.includes(activeStep)) {
-        setCompletedSteps((prev) => {
-          const updated = [...prev, activeStep];
-          saveToLocalStorage(STORAGE_KEYS.COMPLETED_STEPS, updated);
-          return updated;
+      // if the user was editing a specific step, clear that flag so the
+      // summary reappears after we move onward
+      setEditingStep(null);
+
+      // Mark current step as completed and always persist to localStorage
+      const updatedCompletedSteps = completedSteps.includes(activeStep)
+        ? [...completedSteps]
+        : [...completedSteps, activeStep];
+      setCompletedSteps(updatedCompletedSteps);
+      await saveDraftItem(STORAGE_KEYS.COMPLETED_STEPS, updatedCompletedSteps);
+
+      // helper: convert File objects to base64 preview, drop file refs
+      const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = (err) => reject(err);
+          reader.readAsDataURL(file);
         });
+      };
+
+      const processValue = async (value: any): Promise<any> => {
+        if (value instanceof File || value instanceof Blob) {
+          return await fileToBase64(value as File);
+        }
+        if (Array.isArray(value)) {
+          return Promise.all(value.map(processValue));
+        }
+        if (value && typeof value === 'object') {
+          const obj: any = { ...value };
+          if (obj.file instanceof File || obj.file instanceof Blob) {
+            // only convert file to base64 if preview is missing or is a blob: URL
+            if (!obj.preview || typeof obj.preview !== 'string' || obj.preview.startsWith('blob:')) {
+              obj.preview = await fileToBase64(obj.file as File);
+            }
+            obj.file = null;
+          }
+          for (const k of Object.keys(obj)) {
+            if (k === 'file') continue; // already handled above
+            obj[k] = await processValue(obj[k]);
+          }
+          return obj;
+        }
+        return value;
+      };
+
+      // build safe form data asynchronously
+      const safeForm = await processValue(formData);
+      const formSaved = await saveDraftItem(STORAGE_KEYS.FORM_DATA, safeForm);
+      if (!formSaved) {
+        toast.error("Failed to save draft. Try again later.");
+        return;
       }
 
-      // Save form data to localStorage
-      saveToLocalStorage(STORAGE_KEYS.FORM_DATA, formData);
-
-      // Save uploaded images to localStorage (serialize preview URLs only)
-      const imagesToSave = uploadedImages.map((img) => ({
+      // Save uploadedImages similarly (preview will be base64 if file present)
+      const processedImages = await processValue(uploadedImages);
+      const imagesToSave = (processedImages as UploadedImage[]).map((img) => ({
         id: img.id,
-        name: img.name,
+        name: img.name || img.file_name || "",
         preview: img.preview,
-        file: null, // Don't save File objects to localStorage
+        file: null,
       }));
-      saveToLocalStorage(STORAGE_KEYS.UPLOADED_IMAGES, imagesToSave);
+      await saveDraftItem(STORAGE_KEYS.UPLOADED_IMAGES, imagesToSave);
 
       // If not on the last step, move to next step
       if (activeStep < steps.length - 1) {
         const nextStep = activeStep + 1;
         setActiveStep(nextStep);
-        saveToLocalStorage(STORAGE_KEYS.ACTIVE_STEP, nextStep);
+        await saveDraftItem(STORAGE_KEYS.ACTIVE_STEP, nextStep);
 
         toast.success("Draft saved successfully! Moving to next step.", {
           duration: 3000,
         });
       } else {
         // On last step, just save without moving
-        saveToLocalStorage(STORAGE_KEYS.ACTIVE_STEP, activeStep);
+        await saveDraftItem(STORAGE_KEYS.ACTIVE_STEP, activeStep);
 
         toast.success("Draft saved successfully!", {
           duration: 3000,
@@ -1051,8 +1012,8 @@ export default function AddOfferPage() {
           : "Offer created successfully!"
       );
 
-      // Clear draft from localStorage after successful submission
-      clearAllFromLocalStorage();
+      // Clear draft after successful submission
+      await clearAllDraft();
 
       // Navigate after a short delay to show success message
       setTimeout(() => {
@@ -1076,14 +1037,23 @@ export default function AddOfferPage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const preview = URL.createObjectURL(file);
-      const newImage = {
+      const previewUrl = URL.createObjectURL(file);
+      // keep preview so the table can show an image
+      const newFile = {
         id: Date.now().toString(),
+        file_name: file.name,
         name: file.name,
         file: file,
-        preview: preview,
+        preview: previewUrl,
       };
-      setUploadedImages((prev) => [...prev, newImage]);
+
+      setFormData((prev) => ({
+        ...prev,
+        offer_pdf: [...(prev.offer_pdf || []), newFile],
+      }));
+
+      // mirror into uploadedImages for draft logic as before
+      setUploadedImages((prev) => [...prev, newFile]);
     }
   };
 
@@ -1094,12 +1064,7 @@ export default function AddOfferPage() {
   // Get unique images for display (deduplicate by preview URL)
   const getUniqueImages = () => {
     const seenPreviews = new Set<string>();
-    const uniqueImages: Array<{
-      id: string;
-      name: string;
-      file: File;
-      preview: string;
-    }> = [];
+    const uniqueImages: UploadedImage[] = [];
 
     for (const img of uploadedImages) {
       if (!seenPreviews.has(img.preview)) {
@@ -1557,16 +1522,6 @@ export default function AddOfferPage() {
                             color: "#333",
                           }}
                         >
-                          Ratio
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            fontSize: "14px",
-                            fontWeight: 600,
-                            fontFamily: "Work Sans, sans-serif",
-                            color: "#333",
-                          }}
-                        >
                           Action
                         </TableCell>
                       </TableRow>
@@ -1576,7 +1531,7 @@ export default function AddOfferPage() {
                       formData.offer_pdf.length === 0 ? (
                         <TableRow>
                           <TableCell
-                            colSpan={4}
+                            colSpan={3}
                             align="center"
                             sx={{ py: 4, color: "#999", fontSize: "14px" }}
                           >
@@ -1597,15 +1552,6 @@ export default function AddOfferPage() {
                                 pdf.document_file_name ||
                                 "Document"}
                             </TableCell>
-                            {/* <TableCell>
-                                                            {pdf.document_url ? (
-                                                                <a href={pdf.document_url} target="_blank" rel="noopener noreferrer" style={{ color: '#C72030', textDecoration: 'underline' }}>
-                                                                    View
-                                                                </a>
-                                                            ) : (
-                                                                <Typography sx={{ fontSize: '13px', color: '#999' }}>-</Typography>
-                                                            )}
-                                                        </TableCell> */}
                             <TableCell>
                               {pdf.preview ? (
                                 <img
@@ -1616,37 +1562,13 @@ export default function AddOfferPage() {
                                     height: "50px",
                                     objectFit: "cover",
                                     borderRadius: "4px",
-                                    border: "1px solid #E5E5E5",
-                                  }}
-                                />
-                              ) : pdf.document_url ? (
-                                <img
-                                  src={pdf.document_url}
-                                  alt="Preview"
-                                  style={{
-                                    width: "80px",
-                                    height: "50px",
-                                    objectFit: "cover",
-                                    borderRadius: "4px",
-                                    border: "1px solid #E5E5E5",
                                   }}
                                 />
                               ) : (
-                                <Typography
-                                  sx={{ fontSize: "13px", color: "#999" }}
-                                >
+                                <Typography sx={{ fontSize: "13px", color: "#999" }}>
                                   -
                                 </Typography>
                               )}
-                            </TableCell>
-                            <TableCell
-                              sx={{
-                                fontSize: "14px",
-                                color: "#666",
-                                fontFamily: "Work Sans, sans-serif",
-                              }}
-                            >
-                              -
                             </TableCell>
                             <TableCell>
                               <MuiButton
@@ -1712,43 +1634,94 @@ export default function AddOfferPage() {
               </Box>
             </SectionHeader>
             <SectionBody>
-              <div className="space-y-4">
-                {/* Applicable Projects Multi-Select */}
-                <div className="relative">
-                  <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
-                    Applicable Project(s)
-                  </label>
-                  <Select
-                    isMulti
-                    value={projects
-                      .filter((p) =>
-                        formData.applicableProjects.includes(p.id.toString())
-                      )
-                      .map((p) => ({ value: p.id.toString(), label: p.name }))}
-                    onChange={(selected) => {
-                      const selectedIds = selected
-                        ? selected.map((s) => s.value)
-                        : [];
-                      handleInputChange("applicableProjects", selectedIds);
+              <Box sx={{ minWidth: 0, overflow: 'visible', position: 'relative' }}>
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  sx={{
+                    '& .MuiInputBase-root': fieldStyles,
+                    minWidth: 0,
+                    maxWidth: '100%',
+                  }}
+                >
+                  <InputLabel shrink>
+                    Applicable Project(s) <span style={{ color: 'red' }}>*</span>
+                  </InputLabel>
+                  {/* use MUI Select (MuiSelect) instead of react-select component */}
+                  <MuiSelect
+                    multiple
+                    label="Applicable Project(s)"
+                    notched
+                    displayEmpty
+                    value={formData.applicableProjects}
+                    onChange={(e: SelectChangeEvent<any>) => {
+                      const vals = e.target.value as string[];
+                      handleInputChange('applicableProjects', vals);
                     }}
-                    options={projects.map((p) => ({
-                      value: p.id.toString(),
-                      label: p.name,
-                    }))}
-                    styles={customStyles}
-                    components={{
-                      MultiValue: CustomMultiValue,
-                      MultiValueRemove: () => null,
+                    renderValue={(selected) => {
+                      const sel = selected as string[];
+                      if (!sel || sel.length === 0) {
+                        return <span style={{ color: '#aaa' }}>Select Projects</span>;
+                      }
+                      const names = projects
+                        .filter((p) => sel.includes(p.id.toString()))
+                        .map((p) => p.name)
+                        .join(', ');
+                      return (
+                        <span
+                          title={names}
+                          style={{
+                            display: 'inline-block',
+                            maxWidth: '100%',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {names}
+                        </span>
+                      );
                     }}
-                    closeMenuOnSelect={false}
-                    placeholder="Select Projects..."
-                    isDisabled={loadingProjects}
-                    isLoading={loadingProjects}
-                    menuPortalTarget={document.body}
-                    menuPosition="fixed"
-                  />
-                </div>
-              </div>
+                    disabled={(step < activeStep && editingStep !== step) || loadingProjects}
+                    sx={{
+                      minWidth: 0,
+                      maxWidth: '100%',
+                      width: '100%',
+                      '& .MuiSelect-select': {
+                        display: 'block',
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      },
+                    }}
+                    MenuProps={{
+                      PaperProps: {
+                        style: { minWidth: 200, maxWidth: 520, width: 'auto', zIndex: 99999 },
+                      },
+                      // ensure the menu is positioned above other elements
+                      anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+                      transformOrigin: { vertical: 'top', horizontal: 'left' },
+                      // @ts-ignore: MUI MenuProps type doesn't expose PopperProps but we use it for positioning
+                      PopperProps: {
+                        container: document.body,
+                        modifiers: [
+                          { name: 'preventOverflow', options: { boundary: 'viewport' } },
+                        ],
+                        style: { zIndex: 99999 },
+                      },
+                    } as any}
+                  >
+                    <MenuItem value="">Select Projects</MenuItem>
+                    {projects &&
+                      projects.map((option) => (
+                        <MenuItem key={option.id} value={option.id.toString()}>
+                          {option.name}
+                        </MenuItem>
+                      ))}
+                  </MuiSelect>
+                </FormControl>
+              </Box>
             </SectionBody>
           </SectionCard>
         );
@@ -1792,7 +1765,7 @@ export default function AddOfferPage() {
                   }
                   InputLabelProps={{ shrink: true }}
                   placeholder="DD/MM/YYYY"
-                  inputProps={{ min: getTodayDateString() }}
+                  inputProps={{ min: isEditMode ? undefined : getTodayDateString() }}
                   sx={{ ...fieldStyles, width: "50%" }}
                   fullWidth
                 />
@@ -1814,7 +1787,7 @@ export default function AddOfferPage() {
                   <InputLabel>Status</InputLabel>
                   <MuiSelect
                     value={formData.status}
-                    onChange={(e) =>
+                    onChange={(e: SelectChangeEvent<any>) =>
                       handleInputChange("status", e.target.value)
                     }
                     label="Status"
@@ -1930,6 +1903,8 @@ export default function AddOfferPage() {
         backgroundColor: "#f5f5f5",
         maxHeight: "90vh",
         overflowY: "auto",
+        overflow: "visible",
+        position: "relative",
       }}
     >
       <Toaster position="top-right" richColors closeButton />
@@ -2055,19 +2030,27 @@ export default function AddOfferPage() {
 
       {/* Action Buttons */}
       <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 4 }}>
-        <DraftButton
-          onClick={activeStep === steps.length - 1 ? handleSubmit : handleNext}
-          disabled={isSubmitting}
-        >
-          {activeStep === steps.length - 1
-            ? isSubmitting
-              ? "Submitting..."
-              : "Submit"
-            : "Proceed to save"}
-        </DraftButton>
-        <DraftButton onClick={handleSaveDraft} disabled={isSubmitting}>
-          Save to draft
-        </DraftButton>
+        {activeStep === steps.length - 1 ? (
+        // final visibility step: only submit & cancel
+        <>
+          <DraftButton onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </DraftButton>
+          <DraftButton onClick={handleCancel}>Cancel</DraftButton>
+        </>
+      ) : (
+        // intermediate steps
+        <>
+          <DraftButton onClick={handleNext} disabled={isSubmitting}>
+            Proceed to save
+          </DraftButton>
+          {!isEditMode && (
+            <DraftButton onClick={handleSaveDraft} disabled={isSubmitting}>
+              Save to draft
+            </DraftButton>
+          )}
+        </>
+      )}
       </Box>
 
       {/* Progress Indicator */}
@@ -2087,7 +2070,8 @@ export default function AddOfferPage() {
 
       {/* Completed Steps Summary */}
       {completedSteps.map((stepIndex) => {
-        if (stepIndex === activeStep || editingStep === stepIndex) return null;
+        // hide summary only when the user is actively editing that step
+        if (editingStep === stepIndex) return null;
 
         return (
           <SectionCard key={stepIndex}>
@@ -2237,7 +2221,7 @@ export default function AddOfferPage() {
                   )}
                 </Box>
               )}
-              {stepIndex === 1 && uploadedImages.length > 0 && (
+              {stepIndex === 1 && (
                 <Box>
                   <Typography
                     variant="body2"
@@ -2248,25 +2232,199 @@ export default function AddOfferPage() {
                       mb: 1,
                     }}
                   >
-                    Uploaded Images
+                    Offer Banner Image(s)
                   </Typography>
-                  <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                    {uploadedImages.map((image) => (
-                      <Box key={image.id} sx={{ position: "relative" }}>
-                        <img
-                          src={image.preview}
-                          alt={image.name}
-                          style={{
-                            width: "100px",
-                            height: "60px",
-                            objectFit: "cover",
-                            borderRadius: "4px",
-                            border: "1px solid #ddd",
-                          }}
-                        />
-                      </Box>
-                    ))}
-                  </Box>
+                  <TableContainer
+                    sx={{ border: "1px solid #ddd", borderRadius: "4px" }}
+                  >
+                    <Table>
+                      <TableHead sx={{ backgroundColor: "#e7e3d9" }}>
+                        <TableRow>
+                          <TableCell
+                            sx={{
+                              fontSize: "14px",
+                              fontWeight: 600,
+                              fontFamily: "Work Sans, sans-serif",
+                              color: "#333",
+                            }}
+                          >
+                            File Name
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              fontSize: "14px",
+                              fontWeight: 600,
+                              fontFamily: "Work Sans, sans-serif",
+                              color: "#333",
+                            }}
+                          >
+                            Preview
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              fontSize: "14px",
+                              fontWeight: 600,
+                              fontFamily: "Work Sans, sans-serif",
+                              color: "#333",
+                            }}
+                          >
+                            Ratio
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {(() => {
+                          const allImages: any[] = [];
+                          project_banner.forEach((ratio) => {
+                            const imgs = formData[ratio.key] || [];
+                            imgs.forEach((img) => {
+                              allImages.push({
+                                ...img,
+                                ratio: ratio.label,
+                              });
+                            });
+                          });
+
+                          if (allImages.length === 0) {
+                            return (
+                              <TableRow>
+                                <TableCell
+                                  colSpan={3}
+                                  align="center"
+                                  sx={{ py: 4, color: "#999", fontSize: "14px" }}
+                                >
+                                  No images uploaded yet
+                                </TableCell>
+                              </TableRow>
+                            );
+                          }
+
+                          return allImages.map((img, index) => (
+                            <TableRow key={index}>
+                              <TableCell
+                                sx={{
+                                  fontSize: "14px",
+                                  color: "#666",
+                                  fontFamily: "Work Sans, sans-serif",
+                                }}
+                              >
+                                {img.file_name || img.document_file_name || "Banner Image"}
+                              </TableCell>
+                              <TableCell>
+                                <img
+                                  src={
+                                    img.preview ||
+                                    img.document_url ||
+                                    (img.file ? URL.createObjectURL(img.file) : "")
+                                  }
+                                  alt={
+                                    img.file_name || img.document_file_name || "Banner"
+                                  }
+                                  style={{
+                                    width: "80px",
+                                    height: "50px",
+                                    objectFit: "cover",
+                                    borderRadius: "4px",
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  fontSize: "14px",
+                                  color: "#666",
+                                  fontFamily: "Work Sans, sans-serif",
+                                }}
+                              >
+                                {img.ratio || "-"}
+                              </TableCell>
+                            </TableRow>
+                          ));
+                        })()}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+
+                  {/* Thumbnail / PDF table */}
+                  {formData.offer_pdf && formData.offer_pdf.length > 0 && (
+                    <Box sx={{ mt: 4 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#999",
+                          fontSize: "12px",
+                          fontFamily: "Work Sans, sans-serif",
+                          mb: 1,
+                        }}
+                      >
+                        Offer Thumbnail Image(s)
+                      </Typography>
+                      <TableContainer
+                        sx={{ border: "1px solid #ddd", borderRadius: "4px" }}
+                      >
+                        <Table>
+                          <TableHead sx={{ backgroundColor: "#e7e3d9" }}>
+                            <TableRow>
+                              <TableCell
+                                sx={{
+                                  fontSize: "14px",
+                                  fontWeight: 600,
+                                  fontFamily: "Work Sans, sans-serif",
+                                  color: "#333",
+                                }}
+                              >
+                                File Name
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  fontSize: "14px",
+                                  fontWeight: 600,
+                                  fontFamily: "Work Sans, sans-serif",
+                                  color: "#333",
+                                }}
+                              >
+                                Preview
+                              </TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {formData.offer_pdf.map((pdf, idx) => (
+                              <TableRow key={idx}>
+                                <TableCell
+                                  sx={{
+                                    fontSize: "14px",
+                                    color: "#666",
+                                    fontFamily: "Work Sans, sans-serif",
+                                  }}
+                                >
+                                  {pdf.file_name || pdf.document_file_name}
+                                </TableCell>
+                                <TableCell>
+                                  {pdf.preview ? (
+                                    <img
+                                      src={pdf.preview}
+                                      alt="Preview"
+                                      style={{
+                                        width: "80px",
+                                        height: "50px",
+                                        objectFit: "cover",
+                                        borderRadius: "4px",
+                                      }}
+                                    />
+                                  ) : (
+                                    <Typography
+                                      sx={{ fontSize: "13px", color: "#999" }}
+                                    >
+                                      -
+                                    </Typography>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                  )}
                 </Box>
               )}
               {stepIndex === 2 && formData.applicableProjects.length > 0 && (
