@@ -7,7 +7,8 @@ import axios from 'axios';
 import { getFullUrl } from '@/config/apiConfig';
 import { HI_SOCIETY_CONFIG } from '@/config/apiConfig';
 import ProjectBannerUpload from '@/components/reusable/ProjectBannerUpload';
-import Select from 'react-select';
+// react-select was used previously for the project dropdown, but we now standardize on Material‑UI's Select component.
+
 import {
     Box,
     Typography,
@@ -19,6 +20,7 @@ import {
     StepConnector,
     Button as MuiButton,
     Select as MuiSelect,
+    SelectChangeEvent,
     MenuItem,
     FormControl,
     InputLabel,
@@ -37,146 +39,7 @@ import { InfoOutlined, Close as CloseIcon } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { boxShadow } from 'html2canvas/dist/types/css/property-descriptors/box-shadow';
 
-const CustomMultiValue = (props) => (
-  <div
-    style={{
-      position: "relative",
-      backgroundColor: "#E5E0D3",
-      borderRadius: "2px",
-      margin: "3px",
-      marginTop: "10px",
-      padding: "4px 10px 6px 10px",
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      paddingRight: "28px",
-    }}
-  >
-    <span
-      style={{
-        color: "#1a1a1a8a",
-        fontSize: "13px",
-        fontWeight: "500",
-      }}
-    >
-      {props.data.label}
-    </span>
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        props.removeProps.onClick(e);
-      }}
-      onMouseDown={(e) => {
-        e.stopPropagation();
-        props.removeProps.onMouseDown(e);
-      }}
-      onTouchEnd={(e) => {
-        e.stopPropagation();
-        props.removeProps.onTouchEnd(e);
-      }}
-      style={{
-        position: "absolute",
-        right: "-10px",
-        top: "-5px",
-        transform: "translateY(-50%), translateX(-50%)",
-        background: "transparent",
-        border: "1px solid #ccc",
-        borderRadius: "50%",
-        cursor: "pointer",
-        padding: "0",
-        display: "flex",
-        alignItems: "start",
-        justifyContent: "center",
-        color: "#666",
-        fontSize: "12px",
-        lineHeight: "1",
-        width: "16px",
-        height: "16px",
-        transition: "background 0.2s, color 0.2s, border-color 0.2s",
-      }}
-      type="button"
-      onMouseOver={e => {
-        (e.currentTarget as HTMLButtonElement).style.background = "#f6f4ee";
-        (e.currentTarget as HTMLButtonElement).style.color = "#C72030";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "#C72030";
-      }}
-      onMouseOut={e => {
-        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-        (e.currentTarget as HTMLButtonElement).style.color = "#666";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "#ccc";
-      }}
-    >
-      ×
-    </button>
-  </div>
-);
 
-const customStyles = {
-  control: (provided, state) => ({
-    ...provided,
-    minHeight: "44px",
-    borderColor: state.isFocused ? "#C72030" : "#dcdcdc",
-    boxShadow: "none",
-    fontSize: "14px",
-    paddingTop: "6px",
-    backgroundColor: "transparent",
-    "&:hover": { borderColor: "#C72030" },
-  }),
-  valueContainer: (provided) => ({
-    ...provided,
-    padding: "4px 6px",
-    flexWrap: "wrap",
-    backgroundColor: "transparent",
-  }),
-  dropdownIndicator: (provided, state) => ({
-    ...provided,
-    padding: "4px 8px",
-    color: state.isFocused ? "#C72030" : "#666",
-    "&:hover": { color: "#C72030" },
-  }),
-  indicatorSeparator: () => ({ display: "none" }),
-  placeholder: (provided) => ({
-    ...provided,
-    color: "#999",
-    fontSize: "14px",
-  }),
-  menu: (provided) => ({
-    ...provided,
-    zIndex: 9999,
-    fontSize: "14px",
-    backgroundColor: "#fff",
-  }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "#C72030"
-      : state.isFocused
-        ? "#F6F4EE"
-        : "#fff",
-    color: state.isSelected ? "#fff" : "#1A1A1A",
-    fontSize: "14px",
-    padding: "8px 12px",
-    cursor: "pointer",
-    "&:hover": {
-      backgroundColor: "#F6F4EE",
-      color: "#1A1A1A",
-    },
-    "&:active": {
-      backgroundColor: "#C72030",
-      color: "#fff",
-    },
-  }),
-  multiValue: (provided) => ({
-    ...provided,
-    backgroundColor: "transparent",
-  }),
-  multiValueLabel: (provided) => ({
-    ...provided,
-    color: "#1a1a1a8a",
-    fontSize: "13px",
-    fontWeight: "500",
-  }),
-};
 
 // Styled Components
 const CustomStepConnector = styled(StepConnector)(() => ({
@@ -1392,32 +1255,66 @@ export default function AddOfferPage() {
                         <SectionBody>
                             <div className="space-y-4">
                                 {/* Applicable Projects Multi-Select */}
-                                <div className="relative">
-                                    <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
-                                        Applicable Project(s)
-                                    </label>
-                                    <Select
-                                        isMulti
-                                        value={projects
-                                            .filter(p => formData.applicableProjects.includes(p.id.toString()))
-                                            .map(p => ({ value: p.id.toString(), label: p.name }))}
-                                        onChange={(selected) => {
-                                            const selectedIds = selected ? selected.map(s => s.value) : [];
-                                            handleInputChange('applicableProjects', selectedIds);
+                                <div style={{ minWidth: 0, overflow: 'visible', position: 'relative' }}>
+                                    <FormControl
+                                        fullWidth
+                                        variant="outlined"
+                                        sx={{
+                                            '& .MuiInputBase-root': fieldStyles,
+                                            minWidth: 0,
+                                            maxWidth: '100%',
                                         }}
-                                        options={projects.map(p => ({ value: p.id.toString(), label: p.name }))}
-                                        styles={customStyles}
-                                        components={{
-                                            MultiValue: CustomMultiValue,
-                                            MultiValueRemove: () => null,
-                                        }}
-                                        closeMenuOnSelect={false}
-                                        placeholder="Select Projects..."
-                                        isDisabled={loadingProjects}
-                                        isLoading={loadingProjects}
-                                        menuPortalTarget={document.body}
-                                        menuPosition="fixed"
-                                    />
+                                    >
+                                        <InputLabel shrink>
+                                            Applicable Project(s) <span style={{ color: 'red' }}>*</span>
+                                        </InputLabel>
+                                        <MuiSelect
+                                            multiple
+                                            label="Applicable Project(s)"
+                                            notched
+                                            displayEmpty
+                                            value={formData.applicableProjects}
+                                            onChange={(e: SelectChangeEvent<any>) => {
+                                                const vals = e.target.value as string[];
+                                                handleInputChange('applicableProjects', vals);
+                                            }}
+                                            disabled={loadingProjects}
+                                            sx={{
+                                                minWidth: 0,
+                                                maxWidth: '100%',
+                                                width: '100%',
+                                                '& .MuiSelect-select': {
+                                                    display: 'block',
+                                                    minWidth: 0,
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                },
+                                            }}
+                                            MenuProps={{
+                                                PaperProps: {
+                                                    style: { minWidth: 200, maxWidth: 520, width: 'auto', zIndex: 99999 },
+                                                },
+                                                anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+                                                transformOrigin: { vertical: 'top', horizontal: 'left' },
+                                                // @ts-ignore: PopperProps not defined on MenuProps
+                                                PopperProps: {
+                                                    container: document.body,
+                                                    modifiers: [
+                                                        { name: 'preventOverflow', options: { boundary: 'viewport' } },
+                                                    ],
+                                                    style: { zIndex: 99999 },
+                                                },
+                                            }}
+                                        >
+                                            <MenuItem value="">Select Projects</MenuItem>
+                                            {projects.map((option) => (
+                                                <MenuItem key={option.id} value={option.id.toString()}>
+                                                    {option.name}
+                                                </MenuItem>
+                                            ))}
+                                        </MuiSelect>
+                                    </FormControl>
                                 </div>
                             </div>
                         </SectionBody>

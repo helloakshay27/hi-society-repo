@@ -262,7 +262,7 @@ export default function OffersList() {
     { key: 'startDate', label: 'Start Date', sortable: true },
     { key: 'endDate', label: 'End Date', sortable: true },
     { key: 'status', label: 'Status', sortable: true },
-    { key: 'featured', label: 'Featured', sortable: true },
+    // { key: 'featured', label: 'Featured', sortable: true },
     { key: 'showOnHome', label: 'Show on Home', sortable: true },
     { key: 'createdAt', label: 'Created At', sortable: true },
     { key: 'lastDateUpdated', label: 'Last Updated', sortable: true }
@@ -325,7 +325,7 @@ export default function OffersList() {
                 : 'bg-[#d5dbdb] w-full'}
             `}>
               <p className="text-center mx-auto">
-                {item.status === 'Active' ? 'Active' : item.status === 'Inactive' ? 'Expired' : 'Expired'}
+                {item.status === 'Active' ? 'Active' : item.status === 'Inactive' ? 'Inactive' : 'Expired'}
               </p>
             </div>
           </div>
@@ -381,14 +381,16 @@ export default function OffersList() {
 
   const handleContinueDraft = () => {
     setShowDraftModal(false);
-    navigate('/loyalty/offer/add');
+    // include flag so AddOfferPage skips its own modal
+    navigate('/loyalty/offer/add?skipDraftModal=1');
     // The AddOfferPage will handle loading the draft
   };
 
   const handleStartFresh = () => {
     clearDraft();
     setShowDraftModal(false);
-    navigate('/loyalty/offer/add');
+    // also signal to skip the modal
+    navigate('/loyalty/offer/add?skipDraftModal=1');
     toast.info('Starting fresh! Previous draft has been cleared.', {
       duration: 3000,
     });
