@@ -37,6 +37,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
   const token = localStorage.getItem("token");
 
   const [towerOptions, setTowerOptions] = useState<any[]>([]);
+  const [floorOptions, setFloorOptions] = useState([])
   const [flatTypeOptions, setFlatTypeOptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
@@ -46,6 +47,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
     possession: true,
     sold: false,
     tower: "",
+    floor: "",
     flat: "",
     carpetArea: "",
     builtUpArea: "",
@@ -72,6 +74,19 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
     } catch (error) {
       console.log(error);
       toast.error("Failed to fetch towers");
+    }
+  };
+
+  const fetchFloors = async () => {
+    try {
+      const response = await axios.get(`https://${baseUrl}/society_floors.json?society_block_id=${formData.tower}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+      setFloorOptions(response.data || []);
+    } catch (error) {
+      console.error("Error fetching floors:", error);
     }
   };
 
@@ -117,6 +132,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
         possession: flat.possession || false,
         sold: flat.sold || false,
         tower: flat.society_block_id?.toString() || "",
+        floor: flat.society_floor_id?.toString() || "",
         flat: flat.flat_no || "",
         carpetArea: flat.build_up_area?.toString() || "",
         builtUpArea: flat.super_area?.toString() || "",
@@ -145,6 +161,12 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
     }
   }, [open, flatId]);
 
+  useEffect(() => {
+    if (formData.tower) {
+      fetchFloors()
+    }
+  }, [formData.tower])
+
   const onChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -156,6 +178,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
     const payload = {
       society_flat: {
         society_block_id: formData.tower,
+        society_floor_id: formData.floor,
         flat_no: formData.flat,
         build_up_area: formData.carpetArea,
         super_area: formData.builtUpArea,
@@ -264,6 +287,25 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
               </div>
 
               <div className="relative">
+                <Label htmlFor="floor" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+                  Floor <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.floor}
+                  onValueChange={(value) => onChange('floor', value)}
+                >
+                  <SelectTrigger id="floor" className="border border-gray-400 pt-2">
+                    <SelectValue placeholder="Select Floor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {floorOptions.map((floor) => (
+                      <SelectItem key={floor.id} value={floor.id.toString()}>{floor.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="relative">
                 <Label
                   htmlFor="flat"
                   className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10"
@@ -278,9 +320,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   className="border border-gray-400"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
               <div className="relative">
                 <Label
                   htmlFor="carpetArea"
@@ -312,9 +352,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   className="border border-gray-400"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
               <div className="relative">
                 <Label
                   htmlFor="flatType"
@@ -359,9 +397,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
               <div className="relative">
                 <Label
                   htmlFor="nameOnBill"
@@ -394,27 +430,27 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                   className="border border-gray-400"
                 />
               </div>
-            </div>
 
-            <div className="relative">
-              <Label
-                htmlFor="rmUser"
-                className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10"
-              >
-                Rm User
-              </Label>
-              <Select value={formData.rmUser} onValueChange={(value) => onChange("rmUser", value)}>
-                <SelectTrigger id="rmUser" className="border border-gray-400 pt-2">
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  {
-                    rmUsers.map(user => (
-                      <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
-                    ))
-                  }
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <Label
+                  htmlFor="rmUser"
+                  className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10"
+                >
+                  Rm User
+                </Label>
+                <Select value={formData.rmUser} onValueChange={(value) => onChange("rmUser", value)}>
+                  <SelectTrigger id="rmUser" className="border border-gray-400 pt-2">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {
+                      rmUsers.map(user => (
+                        <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="flex justify-center pt-4">

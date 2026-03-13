@@ -443,6 +443,10 @@ const AddFacilityBookingPage = () => {
       toast.error("Please select a sub-facility");
       return false;
     }
+    if (facilityDetails?.fac_type === "request" && !numOfPersons) {
+      toast.error("Please enter number of persons");
+      return false;
+    }
     if (selectedSlotIds.length === 0) {
       toast.error("Please select at least one slot");
       return false;
@@ -1062,7 +1066,10 @@ const AddFacilityBookingPage = () => {
                     <TextField
                       placeholder="Enter Number of Persons"
                       value={numOfPersons}
-                      onChange={(e) => setNumOfPersons(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+                        setNumOfPersons(value);
+                      }}
                       fullWidth
                       sx={fieldStyles}
                     />

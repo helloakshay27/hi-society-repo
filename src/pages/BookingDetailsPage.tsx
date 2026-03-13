@@ -233,7 +233,7 @@ const BookingDetailsPage = () => {
   };
 
   const handleRefundSubmit = async () => {
-    if (!refundFormData.refundable_amount || !refundFormData.refund_mode) {
+    if (!refundFormData.refundable_amount || !refundFormData.refund_mode || !refundFormData.transaction_number) {
       toast.error("Please fill in all mandatory fields");
       return;
     }
@@ -273,9 +273,25 @@ const BookingDetailsPage = () => {
     }
   };
 
+  // const handleRefundChange = (e: any) => {
+  //   const { name, value } = e.target;
+  //   setRefundFormData((prev) => ({ ...prev, [name]: value }));
+  // };
+
   const handleRefundChange = (e: any) => {
     const { name, value } = e.target;
-    setRefundFormData((prev) => ({ ...prev, [name]: value }));
+
+    let updatedValue = value;
+
+    // Allow only numbers for refundable_amount
+    if (name === "refundable_amount") {
+      updatedValue = value.replace(/\D/g, "");
+    }
+
+    setRefundFormData((prev) => ({
+      ...prev,
+      [name]: updatedValue,
+    }));
   };
 
   const handleEditStatusChange = (e: any) => {
@@ -1130,7 +1146,7 @@ const BookingDetailsPage = () => {
           <Box className="space-y-4 pt-2">
             <div>
               <Typography variant="body2" color="textSecondary" gutterBottom>
-                Refundable Amount
+                Refundable Amount <span className="text-red-500">*</span>
               </Typography>
               <TextField
                 fullWidth
@@ -1143,7 +1159,7 @@ const BookingDetailsPage = () => {
             </div>
             <div>
               <Typography variant="body2" color="textSecondary" gutterBottom>
-                Refund Mode
+                Refund Mode <span className="text-red-500">*</span>
               </Typography>
               <FormControl fullWidth size="small">
                 <MuiSelect
@@ -1163,7 +1179,7 @@ const BookingDetailsPage = () => {
             </div>
             <div>
               <Typography variant="body2" color="textSecondary" gutterBottom>
-                Cheque/Transaction Number
+                Cheque/Transaction Number <span className="text-red-500">*</span>
               </Typography>
               <TextField
                 fullWidth
@@ -1249,7 +1265,7 @@ const BookingDetailsPage = () => {
           <Box className="space-y-6 pt-2">
             <div>
               <Typography variant="body2" color="textSecondary" gutterBottom>
-                Select Status
+                Select Status <span className="text-red-500">*</span>
               </Typography>
               <FormControl fullWidth size="small">
                 <MuiSelect
