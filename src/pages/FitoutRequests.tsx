@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Eye, Settings, Mail, Users, UserCheck, Clock } from "lucide-react";
+import { Plus, Edit, Eye, Settings, Mail, Users, UserCheck, Clock, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EnhancedTable } from "../components/enhanced-table/EnhancedTable";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
@@ -44,7 +44,7 @@ interface FitoutRequestItem {
 interface FitoutCards {
   total: number;
   pending: number;
-  work_in_progress: number;
+  rejected: number;
   closed: number;
   furniture_work: number;
   civil_fitout_work: number;
@@ -551,7 +551,7 @@ const FitoutRequests: React.FC = () => {
   const fitoutStats = {
     total: cards?.total ?? 0,
     pending: cards?.pending ?? 0,
-    work_in_progress: cards?.work_in_progress ?? 0,
+    rejected: cards?.rejected ?? 0,
     closed: cards?.closed ?? 0,
     furniture_work: cards?.furniture_work ?? 0,
     civil_fitout_work: cards?.civil_fitout_work ?? 0,
@@ -573,10 +573,10 @@ const FitoutRequests: React.FC = () => {
       filterKey: "Pending" as string | null,
     },
     {
-      label: "Work In Progress",
-      value: fitoutStats.work_in_progress,
-      icon: Clock,
-      filterKey: "Work In Progress" as string | null,
+      label: "Rejected",
+      value: fitoutStats.rejected,
+      icon: XCircle,
+      filterKey: "Rejected" as string | null,
     },
     {
       label: "Closed",
