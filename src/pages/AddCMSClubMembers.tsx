@@ -823,8 +823,8 @@ const AddCMSClubMembers = () => {
                                                 label={<span>First Name <span className="text-[#C72030]">*</span></span>}
                                                 placeholder="Enter First Name"
                                                 value={member.firstName}
-                                                onChange={(e) =>{
-                                                   const value = e.target.value;
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
 
                                                     if (/^[A-Za-z\s]*$/.test(value)) {
                                                         updateMember(member.id, "firstName", value);
@@ -836,7 +836,7 @@ const AddCMSClubMembers = () => {
                                                 label={<span>Last Name <span className="text-[#C72030]">*</span></span>}
                                                 placeholder="Enter Last Name"
                                                 value={member.lastName}
-                                                onChange={(e) =>{
+                                                onChange={(e) => {
                                                     const value = e.target.value;
 
                                                     if (/^[A-Za-z\s]*$/.test(value)) {
@@ -859,9 +859,10 @@ const AddCMSClubMembers = () => {
                                                 label="Mobile"
                                                 placeholder="Enter Mobile"
                                                 value={member.mobile}
-                                                onChange={(e) =>
-                                                    updateMember(member.id, "mobile", e.target.value)
-                                                }
+                                                onChange={(e) => {
+                                                    const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+                                                    updateMember(member.id, "mobile", value);
+                                                }}
                                                 sx={fieldStyles}
                                             />
                                         </div>

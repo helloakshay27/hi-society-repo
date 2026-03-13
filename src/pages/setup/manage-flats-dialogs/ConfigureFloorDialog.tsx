@@ -35,6 +35,7 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
   const [towers, setTowers] = useState<any[]>([]);
   const [floors, setFloors] = useState<any[]>([]);
   const [selectedTower, setSelectedTower] = useState("");
+  const [selectedTowerForFloors, setSelectedTowerForFloors] = useState("");
   const [floorName, setFloorName] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetchingFloors, setFetchingFloors] = useState(false);
@@ -47,6 +48,7 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
         }
       });
       setTowers(response.data?.society_blocks || []);
+      setSelectedTowerForFloors(response.data?.society_blocks?.[0]?.id?.toString() || "");
     } catch (error) {
       console.error("Error fetching towers:", error);
     }
@@ -55,12 +57,12 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
   const fetchFloors = async () => {
     setFetchingFloors(true);
     try {
-      const response = await axios.get(`https://${baseUrl}/society_floors.json?society_id=${societyId}`, {
+      const response = await axios.get(`https://${baseUrl}/society_floors.json?society_block_id=${selectedTowerForFloors}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         }
       });
-      setFloors(response.data?.society_floors || []);
+      setFloors(response.data || []);
     } catch (error) {
       console.error("Error fetching floors:", error);
     } finally {
@@ -71,9 +73,12 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
   useEffect(() => {
     if (open) {
       fetchTowers();
-      fetchFloors();
     }
   }, [open]);
+
+  useEffect(() => {
+    fetchFloors();
+  }, [selectedTowerForFloors])
 
   const handleSubmit = async () => {
     if (!selectedTower || !floorName.trim()) {
@@ -97,6 +102,7 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
 
       toast.success("Floor added successfully!");
       setFloorName("");
+      setSelectedTower("")
       fetchFloors();
     } catch (error) {
       console.error("Error adding floor:", error);
@@ -162,7 +168,23 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Floor List</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Floor List</h3>
+              <div className="w-60">
+                <Select value={selectedTowerForFloors} onValueChange={setSelectedTowerForFloors}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Tower" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {towers.map((tower) => (
+                      <SelectItem key={tower.id} value={tower.id.toString()}>
+                        {tower.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
             <div className="border rounded-lg overflow-hidden">
               <table className="w-full">
