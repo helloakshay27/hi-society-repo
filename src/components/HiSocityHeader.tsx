@@ -89,7 +89,7 @@ export const HiSocityHeader = () => {
   // Treat vi-web prod and localhost as VI for dev account fetch
   const isViSite = hostname.includes("vi-web.gophygital.work");
   const isWebSite = hostname.includes("web.gophygital.work");
-  const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com") || hostname.includes("localhost") || org_id ==="9";
+  const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com") || hostname.includes("localhost") || org_id === "9";
 
   const isLocalhost =
     hostname.includes("localhost") ||
@@ -177,7 +177,7 @@ export const HiSocityHeader = () => {
             role_name: data?.role_name,
           });
         })
-        .catch(() => {});
+        .catch(() => { });
     } catch {
       /* no-op */
     }
@@ -434,35 +434,35 @@ export const HiSocityHeader = () => {
 
         <div className="flex items-center gap-3">
           {!isUIHiSocietySite && (
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
-              <Building2 className="w-4 h-4" />
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 text-[#1a1a1a] hover:text-[#C72030] transition-colors">
+                <Building2 className="w-4 h-4" />
 
-              {projectLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <span className="text-sm font-medium">
-                  {selectedCompany?.name || "Select Project"}
-                </span>
-              )}
-              <ChevronDown className="w-3 h-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
-              {companies.map((company) => (
-                <DropdownMenuItem
-                  key={company.id}
-                  onClick={() => handleCompanyChange(company.id)}
-                  className={
-                    selectedCompany?.id === company.id
-                      ? "bg-[#f6f4ee] text-[#C72030]"
-                      : ""
-                  }
-                >
-                  {company.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                {projectLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <span className="text-sm font-medium">
+                    {selectedCompany?.name || "Select Project"}
+                  </span>
+                )}
+                <ChevronDown className="w-3 h-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48 bg-white border border-[#D5DbDB] shadow-lg max-h-[60vh] overflow-y-auto">
+                {companies.map((company) => (
+                  <DropdownMenuItem
+                    key={company.id}
+                    onClick={() => handleCompanyChange(company.id)}
+                    className={
+                      selectedCompany?.id === company.id
+                        ? "bg-[#f6f4ee] text-[#C72030]"
+                        : ""
+                    }
+                  >
+                    {company.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
 
           {/* Site Dropdown (hidden for VI and localhost) */}
@@ -585,7 +585,7 @@ export const HiSocityHeader = () => {
                 <p className="text-sm font-semibold text-gray-900">
                   {isViSite && viAccount
                     ? `${viAccount.firstname || ""} ${viAccount.lastname || ""}`.trim() ||
-                      "User"
+                    "User"
                     : `${user.firstname} ${user.lastname}`}
                 </p>
                 <div className="flex items-center text-gray-600 text-xs mt-0.5">
