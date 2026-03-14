@@ -976,6 +976,18 @@ export const HiSocietySidebar: React.FC = () => {
               icon: CreditCard,
               path: "/settings/wallet-topup",
             },
+             {
+              id: "threshold-alerts",
+              label: "Threshold Alerts",
+              icon: CreditCard,
+              path: "/settings/threshold-alerts",
+            },
+             {
+              id: "generic-categories",
+              label: "Generic Categories",
+              icon: CreditCard,
+              path: "/settings/generic-categories",
+            },
           ],
         },
         {
@@ -1105,6 +1117,12 @@ export const HiSocietySidebar: React.FC = () => {
               label: "Cost Approval",
               icon: DollarSign,
               path: "/settings/ticket-management/cost-approval",
+            },
+            {
+              id: "vendor-setup",
+              label: "Vendor Setup",
+              icon: DollarSign,
+              path: "/settings/ticket-management/vendor-setup",
             },
           ],
         },

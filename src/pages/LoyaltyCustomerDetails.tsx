@@ -199,8 +199,8 @@ const LoyaltyCustomerDetails = () => {
                 </div>
                 <div
                     className={`text-[14px] font-semibold text-gray-900 flex-1 min-w-0 ${!isExpanded && hasLongValue
-                            ? "truncate"
-                            : "break-all whitespace-normal"
+                        ? "truncate"
+                        : "break-all whitespace-normal"
                         } ${hasLongValue ? "cursor-pointer hover:text-[#C72030] transition-colors" : ""}`}
                     onClick={() => hasLongValue && toggleFieldExpansion(fieldKey)}
                     title={hasLongValue && !isExpanded ? value : undefined}
@@ -216,9 +216,10 @@ const LoyaltyCustomerDetails = () => {
 
     // Wallet Transactions Table Columns
     const walletTransactionColumns = [
+        { key: "id", label: "Reference ID", sortable: true },
         { key: "transactionType", label: "Type", sortable: true },
         { key: "resourceType", label: "Resource Type", sortable: false },
-        { key: "amount", label: "Amount", sortable: true },
+        { key: "amount", label: "Points", sortable: true },
         { key: "createdAt", label: "Date", sortable: true },
         { key: "remarks", label: "Remarks", sortable: false },
     ];
@@ -255,12 +256,15 @@ const LoyaltyCustomerDetails = () => {
     // Renderers
     const renderWalletTransactionCell = (item: any, columnKey: string) => {
         switch (columnKey) {
+            case "id":
+                return <span>{item.id}</span>;
             case "transactionType": {
                 const type = item.transactionType?.toLowerCase();
                 let color = "";
                 if (type === "debit") color = "text-red-600 font-medium";
                 if (type === "credit") color = "text-green-600 font-medium";
-                return <span className={color}>{item.transactionType}</span>;
+                // return <span className={color}>{item.transactionType}</span>;
+                return <span className={color}>{item.transactionType?.charAt(0).toUpperCase() + item.transactionType?.slice(1).toLowerCase()}</span>;
             }
             case "resourceType":
                 return <span>{item.resource_type || "-"}</span>;
@@ -542,14 +546,14 @@ const LoyaltyCustomerDetails = () => {
                         <div className="bg-[#FBFBFA] border border-t-0 border-[#ECE9E2] px-5 py-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-8">
                                 {/* Currently Loyalty Points */}
-                                <div className="flex flex-col">
+                                {/* <div className="flex flex-col">
                                     <span className="text-gray-500 text-[14px]">
                                         Currently Loyalty Points
                                     </span>
                                     <span className="font-semibold text-[15px] text-gray-900">
                                         {customerData?.currentLoyaltyPoints ?? "-"}
                                     </span>
-                                </div>
+                                </div> */}
                                 {/* Enrolled Date */}
                                 <div className="flex flex-col">
                                     <span className="text-gray-500 text-[14px]">
@@ -560,14 +564,14 @@ const LoyaltyCustomerDetails = () => {
                                     </span>
                                 </div>
                                 {/* Tier Progress */}
-                                <div className="flex flex-col">
+                                {/* <div className="flex flex-col">
                                     <span className="text-gray-500 text-[14px]">
                                         Tier Progress
                                     </span>
                                     <span className="font-semibold text-[15px] text-gray-900">
                                         {customerData?.tierProgress ?? "-"}
                                     </span>
-                                </div>
+                                </div> */}
                                 {/* Tier Level */}
                                 <div className="flex flex-col">
                                     <span className="text-gray-500 text-[14px]">Tier Level</span>

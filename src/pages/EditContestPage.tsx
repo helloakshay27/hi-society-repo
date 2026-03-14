@@ -365,12 +365,18 @@ export const EditContestPage: React.FC = () => {
   };
 
   const buildISO = (date: string, time: string, isEnd = false): string => {
-    if (!date || !time) return "";
+    if (!date) return "";
+    let h = 0, min = 0;
+    if (time && /^\d{2}:\d{2}$/.test(time)) {
+      [h, min] = time.split(":").map(Number);
+    } else if (isEnd) {
+      // If no time provided for end, default to 23:59:59.999
+      h = 23; min = 59;
+    }
     const [y, m, d] = date.split("-");
-    const [h, min] = time.split(":");
-    const dt = new Date(Number(y), Number(m) - 1, Number(d), Number(h), Number(min));
-    if (isEnd) {
-      dt.setHours(23, 59, 59, 999);
+    const dt = new Date(Number(y), Number(m) - 1, Number(d), h, min);
+    if (isEnd && (!time || !/^\d{2}:\d{2}$/.test(time))) {
+      dt.setSeconds(59, 999);
     }
     return dt.toISOString();
   };
@@ -1115,7 +1121,10 @@ export const EditContestPage: React.FC = () => {
                   inputProps={{
                     placeholder: "HH:MM",
                     style: { textTransform: 'uppercase' },
-                    min: (startDate && endDate && startDate === endDate) ? startTime : undefined,
+                    min:
+                      startDate && endDate && startDate === endDate && /^\d{2}:\d{2}$/.test(startTime)
+                        ? startTime
+                        : undefined,
                   }}
                   sx={{
                     ...textFieldSx,

@@ -6,11 +6,11 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationPrevious,
   PaginationLink,
-  PaginationNext,
-  PaginationEllipsis,
+  PaginationNext
 } from "@/components/ui/pagination";
 import SelectBox from "../components/ui/select-box";
 import { API_CONFIG, getFullUrl, getAuthHeader } from "@/config/apiConfig";

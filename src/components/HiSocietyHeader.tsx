@@ -76,6 +76,7 @@ export const HiSocietyHeader = () => {
   const currentPath = window.location.pathname;
 
   const hostname = window.location.hostname;
+  const org_id = localStorage.getItem("org_id");
 
   // Check if it's Oman site
   const isOmanSite = hostname.includes("oig.gophygital.work");
@@ -84,7 +85,7 @@ export const HiSocietyHeader = () => {
 
   const isWebSite = hostname.includes("web.gophygital.work");
 
-  const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com");
+  const isUIHiSocietySite = hostname.includes("ui-hisociety.lockated.com") || org_id === "9";
 
   const isLocalhost =
     hostname.includes("localhost") ||
