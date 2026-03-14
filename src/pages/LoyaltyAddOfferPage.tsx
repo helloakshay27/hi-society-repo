@@ -215,6 +215,20 @@ interface Project {
   sfdc_id: string | null;
 }
 
+interface HiSocietySociety {
+  id: number;
+  id_society: string;
+  society: {
+    id: number;
+    building_name: string;
+  };
+  user_flat?: {
+    id: number;
+    flat: string;
+    block: string;
+  };
+}
+
 interface OfferFormData {
   offerTitle: string;
   offerDescription: string;
@@ -283,6 +297,8 @@ export default function AddOfferPage() {
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
+  const [userApprovedSocieties, setUserApprovedSocieties] = useState<HiSocietySociety[]>([]);
+  const [loadingUserApprovedSocieties, setLoadingUserApprovedSocieties] = useState(false);
   const [isEditMode, setIsEditMode] = useState(!!offerId);
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
@@ -409,6 +425,7 @@ export default function AddOfferPage() {
   useEffect(() => {
     fetchOfferTemplates();
     fetchProjects();
+    fetchUserApprovedSocieties();
   }, []);
 
   // Fetch offer details if editing
@@ -581,6 +598,34 @@ export default function AddOfferPage() {
       toast.error("Failed to load projects");
     } finally {
       setLoadingProjects(false);
+    }
+  };
+
+  const fetchUserApprovedSocieties = async () => {
+    setLoadingUserApprovedSocieties(true);
+    try {
+      // Try to get from localStorage first
+      const societiesData = localStorage.getItem("hiSocietyApprovedSocieties");
+      if (societiesData) {
+        const societies = JSON.parse(societiesData);
+        setUserApprovedSocieties(societies);
+      } else {
+        // Fallback to API if not in localStorage
+        const token = HI_SOCIETY_CONFIG.TOKEN;
+        const response = await fetch(`${HI_SOCIETY_CONFIG.BASE_URL}${HI_SOCIETY_CONFIG.ENDPOINTS.USER_APPROVED_SOCIETIES}?token=${token}`);
+        if (response.ok) {
+          const data = await response.json();
+          const societies = data.user_societies || [];
+          setUserApprovedSocieties(societies);
+        } else {
+          toast.error("Failed to load approved societies");
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user approved societies:", error);
+      toast.error("Failed to load approved societies");
+    } finally {
+      setLoadingUserApprovedSocieties(false);
     }
   };
 
@@ -918,9 +963,15 @@ export default function AddOfferPage() {
     try {
       const formDataPayload = new FormData();
 
-      // Add project IDs (multiple values)
-      formData.applicableProjects.forEach((projectId) => {
-        formDataPayload.append("project_ids[]", projectId);
+      // Add site IDs (multiple values) - changed from project_ids to site_ids
+      // Commenting out project IDs
+      // formData.applicableProjects.forEach((projectId) => {
+      //   formDataPayload.append("project_ids[]", projectId);
+      // });
+
+      // Add society site IDs
+      formData.applicableProjects.forEach((societyId) => {
+        formDataPayload.append("site_ids[]", societyId);
       });
 
       // Add offer details
@@ -1634,7 +1685,7 @@ export default function AddOfferPage() {
               </Box>
             </SectionHeader>
             <SectionBody>
-              <Box sx={{ minWidth: 0, overflow: 'visible', position: 'relative' }}>
+              {/* <Box sx={{ minWidth: 0, overflow: 'visible', position: 'relative' }}>
                 <FormControl
                   fullWidth
                   variant="outlined"
@@ -1647,7 +1698,6 @@ export default function AddOfferPage() {
                   <InputLabel shrink>
                     Applicable Project(s) <span style={{ color: 'red' }}>*</span>
                   </InputLabel>
-                  {/* use MUI Select (MuiSelect) instead of react-select component */}
                   <MuiSelect
                     multiple
                     label="Applicable Project(s)"
@@ -1699,10 +1749,8 @@ export default function AddOfferPage() {
                       PaperProps: {
                         style: { minWidth: 200, maxWidth: 520, width: 'auto', zIndex: 99999 },
                       },
-                      // ensure the menu is positioned above other elements
                       anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
                       transformOrigin: { vertical: 'top', horizontal: 'left' },
-                      // @ts-ignore: MUI MenuProps type doesn't expose PopperProps but we use it for positioning
                       PopperProps: {
                         container: document.body,
                         modifiers: [
@@ -1717,6 +1765,95 @@ export default function AddOfferPage() {
                       projects.map((option) => (
                         <MenuItem key={option.id} value={option.id.toString()}>
                           {option.name}
+                        </MenuItem>
+                      ))}
+                  </MuiSelect>
+                </FormControl>
+              </Box> */}
+
+              <Box sx={{ minWidth: 0, overflow: 'visible', position: 'relative' }}>
+                <FormControl
+                  fullWidth
+                  variant="outlined"
+                  sx={{
+                    '& .MuiInputBase-root': fieldStyles,
+                    minWidth: 0,
+                    maxWidth: '100%',
+                  }}
+                >
+                  <InputLabel shrink>
+                    Applicable Societies <span style={{ color: 'red' }}>*</span>
+                  </InputLabel>
+                  {/* use MUI Select (MuiSelect) instead of react-select component */}
+                  <MuiSelect
+                    multiple
+                    label="Applicable Societies"
+                    notched
+                    displayEmpty
+                    value={formData.applicableProjects}
+                    onChange={(e: SelectChangeEvent<any>) => {
+                      const vals = e.target.value as string[];
+                      handleInputChange('applicableProjects', vals);
+                    }}
+                    renderValue={(selected) => {
+                      const sel = selected as string[];
+                      if (!sel || sel.length === 0) {
+                        return <span style={{ color: '#aaa' }}>Select Societies</span>;
+                      }
+                      const names = userApprovedSocieties
+                        .filter((s) => sel.includes(s.id_society.toString()))
+                        .map((s) => s.society.building_name)
+                        .join(', ');
+                      return (
+                        <span
+                          title={names}
+                          style={{
+                            display: 'inline-block',
+                            maxWidth: '100%',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {names}
+                        </span>
+                      );
+                    }}
+                    disabled={(step < activeStep && editingStep !== step) || loadingUserApprovedSocieties}
+                    sx={{
+                      minWidth: 0,
+                      maxWidth: '100%',
+                      width: '100%',
+                      '& .MuiSelect-select': {
+                        display: 'block',
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      },
+                    }}
+                    MenuProps={{
+                      PaperProps: {
+                        style: { minWidth: 200, maxWidth: 520, width: 'auto', zIndex: 99999 },
+                      },
+                      // ensure the menu is positioned above other elements
+                      anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+                      transformOrigin: { vertical: 'top', horizontal: 'left' },
+                      // @ts-ignore: MUI MenuProps type doesn't expose PopperProps but we use it for positioning
+                      PopperProps: {
+                        container: document.body,
+                        modifiers: [
+                          { name: 'preventOverflow', options: { boundary: 'viewport' } },
+                        ],
+                        style: { zIndex: 99999 },
+                      },
+                    } as any}
+                  >
+                    <MenuItem value="">Select Societies</MenuItem>
+                    {userApprovedSocieties &&
+                      userApprovedSocieties.map((option) => (
+                        <MenuItem key={option.id} value={option.id_society.toString()}>
+                          {option.society.building_name}
                         </MenuItem>
                       ))}
                   </MuiSelect>
@@ -2031,26 +2168,26 @@ export default function AddOfferPage() {
       {/* Action Buttons */}
       <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 4 }}>
         {activeStep === steps.length - 1 ? (
-        // final visibility step: only submit & cancel
-        <>
-          <DraftButton onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : "Submit"}
-          </DraftButton>
-          <DraftButton onClick={handleCancel}>Cancel</DraftButton>
-        </>
-      ) : (
-        // intermediate steps
-        <>
-          <DraftButton onClick={handleNext} disabled={isSubmitting}>
-            Proceed to save
-          </DraftButton>
-          {!isEditMode && (
-            <DraftButton onClick={handleSaveDraft} disabled={isSubmitting}>
-              Save to draft
+          // final visibility step: only submit & cancel
+          <>
+            <DraftButton onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit"}
             </DraftButton>
-          )}
-        </>
-      )}
+            <DraftButton onClick={handleCancel}>Cancel</DraftButton>
+          </>
+        ) : (
+          // intermediate steps
+          <>
+            <DraftButton onClick={handleNext} disabled={isSubmitting}>
+              Proceed to save
+            </DraftButton>
+            {!isEditMode && (
+              <DraftButton onClick={handleSaveDraft} disabled={isSubmitting}>
+                Save to draft
+              </DraftButton>
+            )}
+          </>
+        )}
       </Box>
 
       {/* Progress Indicator */}
