@@ -46,8 +46,8 @@ interface FitoutCards {
   pending: number;
   rejected: number;
   closed: number;
-  furniture_work: number;
-  civil_fitout_work: number;
+  send_internal_approval: number;
+  documents_approved: number;
   send_to_approval: number;
   need_modification: number;
 }
@@ -553,8 +553,8 @@ const FitoutRequests: React.FC = () => {
     pending: cards?.pending ?? 0,
     rejected: cards?.rejected ?? 0,
     closed: cards?.closed ?? 0,
-    furniture_work: cards?.furniture_work ?? 0,
-    civil_fitout_work: cards?.civil_fitout_work ?? 0,
+    send_internal_approval: cards?.send_internal_approval ?? 0,
+    documents_approved: cards?.documents_approved ?? 0,
     send_to_approval: cards?.send_to_approval ?? 0,
     need_modification: cards?.need_modification ?? 0,
   };
@@ -585,16 +585,16 @@ const FitoutRequests: React.FC = () => {
       filterKey: "Closed" as string | null,
     },
      {
-      label: "Furniture Work",
-      value: fitoutStats.furniture_work,
+      label: "Send Internal Approval",
+      value: fitoutStats.send_internal_approval,
       icon: UserCheck,
-      filterKey: "Furniture Work" as string | null,
+      filterKey: "Send Internal Approval" as string | null,
     },
      {
-      label: "Civil Fitout Work",
-      value: fitoutStats.civil_fitout_work,
+      label: "Documents Approved",
+      value: fitoutStats.documents_approved,
       icon: UserCheck,
-      filterKey: "Civil Fitout Work" as string | null,
+      filterKey: "Documents Approved" as string | null,
     },
      {
       label: "Send to Approval",
