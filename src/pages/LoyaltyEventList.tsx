@@ -380,35 +380,45 @@ const LoyaltyEventsList = () => {
         return formatDateOnly(item.created_at);
       case "show_on_home":
         return (
-          <Switch
-            checked={item.show_on_home || false}
-            onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
-                transform: "translateX(25px)", // 👈 adjust movement properly
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
-              },
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={item.show_on_home || false}
+              onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
+              size="small"
+              sx={{
+                "& .MuiSwitch-switchBase.Mui-checked": {
+                  color: "#C72030",
+                },
+                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                  backgroundColor: "#C72030",
+                },
+              }}
+            />
+            <span className="text-sm font-medium">
+              {item.show_on_home ? "Yes" : "No"}
+            </span>
+          </div>
         );
       case "active":
         return (
-          <Switch
-            checked={item.active || false}
-            onChange={() => handleToggle(item.id, item.active)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
-                transform: "translateX(25px)", // 👈 adjust movement properly
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
-              },
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={item.active || false}
+              onChange={() => handleToggle(item.id, item.active)}
+              size="small"
+              sx={{
+                "& .MuiSwitch-switchBase.Mui-checked": {
+                  color: "#22c55e",
+                },
+                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                  backgroundColor: "#22c55e",
+                },
+              }}
+            />
+            <span className="text-sm font-medium">
+              {item.active ? "Active" : "Inactive"}
+            </span>
+          </div>
         );
       default:
         return (item[columnKey as keyof Event] as React.ReactNode) ?? "-";
@@ -565,7 +575,7 @@ const LoyaltyEventsList = () => {
             isSearching ? "Searching events..." : "Loading events..."
           }
         />
-        {!searchTerm && totalPages > 1 && (
+        {!searchTerm && (
           <div className="mt-6 flex justify-center">
             <Pagination>
               <PaginationContent>

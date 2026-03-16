@@ -371,6 +371,8 @@ const EventEdit = () => {
     }
   };
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
   const handleCoverImageCropComplete = (validImages) => {
     if (!validImages || validImages.length === 0) {
       toast.error("No valid images selected.");
@@ -380,6 +382,11 @@ const EventEdit = () => {
 
     validImages.forEach((img) => {
       if (!img.ratio) return;
+
+      if (img.file && img.file.size > MAX_FILE_SIZE) {
+        toast.error(`"${img.file.name}" exceeds 5MB. Please upload an image less than 5MB.`);
+        return;
+      }
 
       const formattedRatio = img.ratio.replace(":", "_by_");
       const key = `cover_image_${formattedRatio}`;
@@ -419,6 +426,10 @@ const EventEdit = () => {
     // Handle video files first
     if (videoFiles && videoFiles.length > 0) {
       videoFiles.forEach((video) => {
+        if (video.file && video.file.size > MAX_FILE_SIZE) {
+          toast.error(`"${video.file.name}" exceeds 5MB. Please upload a file less than 5MB.`);
+          return;
+        }
         const formattedRatio = video.ratio.replace(":", "_by_");
         const prefix =
           type === "cover"
@@ -457,6 +468,10 @@ const EventEdit = () => {
     }
 
     validImages.forEach((img) => {
+      if (img.file && img.file.size > MAX_FILE_SIZE) {
+        toast.error(`"${img.file.name}" exceeds 5MB. Please upload an image less than 5MB.`);
+        return;
+      }
       const formattedRatio = img.ratio.replace(":", "_by_");
       const prefix =
         type === "cover"
@@ -2608,23 +2623,29 @@ const EventEdit = () => {
                     Display this event on the home page
                   </p>
                 </div>
-                <Switch
-                  checked={formData.show_on_home}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      show_on_home: e.target.checked,
-                    }))
-                  }
-                  sx={{
-                    "& .MuiSwitch-switchBase.Mui-checked": {
-                      color: "#C72030",
-                    },
-                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                      backgroundColor: "#C72030",
-                    },
-                  }}
-                />
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={formData.show_on_home}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        show_on_home: e.target.checked,
+                      }))
+                    }
+                    size="small"
+                    sx={{
+                      "& .MuiSwitch-switchBase.Mui-checked": {
+                        color: "#C72030",
+                      },
+                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                        backgroundColor: "#C72030",
+                      },
+                    }}
+                  />
+                  <span className="text-sm font-medium">
+                    {formData.show_on_home ? "Yes" : "No"}
+                  </span>
+                </div>
               </div>
 
               {/* Show on Project Detail Page */}
@@ -3072,7 +3093,7 @@ const EventEdit = () => {
                       <Info className="w-5 h-5 fill-black text-white" />
                       {showCoverImageTooltip && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                          Max Upload Size 3 MB. Supports{" "}
+                          Max Upload Size 5 MB. Supports{" "}
                           {getDynamicRatiosText("EventCoverImage")} aspect
                           ratios
                         </span>
@@ -3832,25 +3853,30 @@ const EventEdit = () => {
                                 Display this event on the home page
                               </p>
                             </div>
-                            <Switch
-                              checked={formData.show_on_home || false}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  "show_on_home",
-                                  e.target.checked
-                                )
-                              }
-                              disabled
-                              sx={{
-                                "& .MuiSwitch-switchBase.Mui-checked": {
-                                  color: "#C72030",
-                                },
-                                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                  {
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={formData.show_on_home || false}
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    "show_on_home",
+                                    e.target.checked
+                                  )
+                                }
+                                disabled
+                                size="small"
+                                sx={{
+                                  "& .MuiSwitch-switchBase.Mui-checked": {
+                                    color: "#C72030",
+                                  },
+                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
                                     backgroundColor: "#C72030",
                                   },
-                              }}
-                            />
+                                }}
+                              />
+                              <span className="text-sm font-medium">
+                                {formData.show_on_home ? "Yes" : "No"}
+                              </span>
+                            </div>
                           </div>
                           {/* <div className="flex items-center justify-between">
                           <div>
@@ -4504,22 +4530,27 @@ const EventEdit = () => {
                           Display this event on the home page
                         </p>
                       </div>
-                      <Switch
-                        checked={formData.show_on_home || false}
-                        onChange={(e) =>
-                          handleInputChange("show_on_home", e.target.checked)
-                        }
-                        disabled
-                        sx={{
-                          "& .MuiSwitch-switchBase.Mui-checked": {
-                            color: "#C72030",
-                          },
-                          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                            {
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={formData.show_on_home || false}
+                          onChange={(e) =>
+                            handleInputChange("show_on_home", e.target.checked)
+                          }
+                          disabled
+                          size="small"
+                          sx={{
+                            "& .MuiSwitch-switchBase.Mui-checked": {
+                              color: "#C72030",
+                            },
+                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
                               backgroundColor: "#C72030",
                             },
-                        }}
-                      />
+                          }}
+                        />
+                        <span className="text-sm font-medium">
+                          {formData.show_on_home ? "Yes" : "No"}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Show on Project Detail Page */}
