@@ -475,6 +475,24 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
                 InputProps={{ sx: fieldStyles }}
                 multiline
                 rows={3}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: "auto !important",
+                    padding: "2px !important",
+                    display: "flex",
+                  },
+                  "& .MuiInputBase-input[aria-hidden='true']": {
+                    flex: 0,
+                    width: 0,
+                    height: 0,
+                    padding: "0 !important",
+                    margin: 0,
+                    display: "none",
+                  },
+                  "& .MuiInputBase-input": {
+                    resize: "none !important",
+                  },
+                }}
               />
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mt-6">
@@ -517,7 +535,7 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
                   <MenuItem value=""><em>Select Headquarter</em></MenuItem>
                   {headquarters.map((hq) => (
                     <MenuItem key={hq.id} value={hq.id}>
-                      {hq.name}
+                      {hq.company_name} ({hq?.country_name || ""})
                     </MenuItem>
                   ))}
                 </MuiSelect>
@@ -821,32 +839,32 @@ export const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
               />
             </div>
           </div>
-        
-        <div className="flex justify-end gap-3 pt-6 border-t">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleClose}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting || !canEdit}
-            className="bg-[#c72030] hover:bg-[#a01828]"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              "Add Society"
-            )}
-          </Button>
-        </div>
+
+          <div className="flex justify-end gap-3 pt-6 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting || !canEdit}
+              className="bg-[#c72030] hover:bg-[#a01828]"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Add Society"
+              )}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
