@@ -49,6 +49,8 @@ const AddFacilityBookingPage = () => {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [users, setUsers] = useState([]);
 
+  const [bookingRuleData, setBookingRuleData] = useState<any>(null);
+
   // Facility Info states
   const [selectedFacilitySetup, setSelectedFacilitySetup] = useState("");
   const [facilitySetups, setFacilitySetups] = useState([]);
@@ -109,8 +111,12 @@ const AddFacilityBookingPage = () => {
 
     let baseSubTotal = 0;
 
+    const adultMemberRate = (bookingRuleData && typeof bookingRuleData.rate === 'number')
+      ? bookingRuleData.rate
+      : (charge.adult_member_charge || 0);
+
     // Member charges
-    baseSubTotal += memberCounts.adultMember * (charge.adult_member_charge || 0);
+    baseSubTotal += memberCounts.adultMember * adultMemberRate;
     baseSubTotal += memberCounts.childMember * (charge.child_member_charge || 0);
 
     // Guest charges
@@ -221,17 +227,54 @@ const AddFacilityBookingPage = () => {
   };
 
   const isSlotEnabled = (slotId: string): boolean => {
+    // If booking rule says user cannot book, all slots are disabled
+    if (bookingRuleData && bookingRuleData.can_book === false) return false;
+
     if (selectedSlotIds.includes(slotId)) return true;
+
+    // Enforce max selectable slots from booking rule
+    const maxSelectableSlots = bookingRuleData && bookingRuleData.multiple_bookings
+      ? (bookingRuleData.multiple_booking_count || 1)
+      : (facilityDetails?.multiple_booking_count || 1); // fallback to facility setting if available
+
+    if (selectedSlotIds.length >= maxSelectableSlots) return false;
+
+    // Determine max concurrent slots: rule overrides facility setting
+    let maxConcurrentSlots = 1;
+    if (bookingRuleData && typeof bookingRuleData.concurrent_slots === 'number') {
+      maxConcurrentSlots = bookingRuleData.concurrent_slots;
+    } else if (facilityDetails?.consecutive_slot) {
+      maxConcurrentSlots = facilityDetails?.concurrent_slots || 99; // Assume high number if consecutive is allowed but count not specified
+    }
+
+    if (selectedSlotIds.length > 0) {
+      const allIds = [...selectedSlotIds, slotId].map(id => parseInt(id)).sort((a, b) => a - b);
+      let maxConsec = 1, curr = 1;
+      for (let i = 1; i < allIds.length; i++) {
+        if (allIds[i] === allIds[i - 1] + 1) {
+          curr++;
+          maxConsec = Math.max(maxConsec, curr);
+        } else {
+          curr = 1;
+        }
+      }
+      if (maxConsec > maxConcurrentSlots) return false;
+    }
 
     if (selectedSlotIds.length === 0) return true;
 
     if (facilityDetails?.fac_type !== "bookable") return true;
 
-    if (facilityDetails?.consecutive_slot) {
-      return true;
-    } else {
-      return selectedSlotIds.every(id => Math.abs(parseInt(id) - parseInt(slotId)) !== 1);
+    // If no booking rule for concurrent slots, respect the original consecutive_slot setting
+    if (!(bookingRuleData && typeof bookingRuleData.concurrent_slots === 'number')) {
+      if (facilityDetails?.consecutive_slot) {
+        return true;
+      } else {
+        return selectedSlotIds.every(id => Math.abs(parseInt(id) - parseInt(slotId)) !== 1);
+      }
     }
+
+    return true;
   };
 
   // Fetch Towers
@@ -327,6 +370,35 @@ const AddFacilityBookingPage = () => {
       fetchUsers();
     }
   }, [selectedFlatId]);
+
+  // Fetch Booking Rule for User
+  useEffect(() => {
+    const fetchBookingRule = async () => {
+      if (!selectedUserId || !selectedFacilitySetup) {
+        setBookingRuleData(null);
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `https://${baseUrl}/booking_rule_for_user?user_id=${selectedUserId}&id=${selectedFacilitySetup}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response.data) {
+          setBookingRuleData(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching booking rule:", error);
+        setBookingRuleData(null);
+      }
+    };
+
+    fetchBookingRule();
+  }, [selectedUserId, selectedFacilitySetup]);
 
   // Fetch Facility Details
   const fetchFacilityDetails = async () => {
@@ -894,7 +966,11 @@ const AddFacilityBookingPage = () => {
                                           </button>
                                         </div>
                                         <div className="text-[10px] font-medium text-gray-500">
-                                          Charge: ₹ {row.adultCharge || 0}
+                                          Charge: ₹ {
+                                            row.key === 'Member' && bookingRuleData && typeof bookingRuleData.rate === 'number'
+                                              ? bookingRuleData.rate
+                                              : (row.adultCharge || 0)
+                                          }
                                         </div>
                                       </div>
                                     </td>

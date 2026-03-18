@@ -178,13 +178,13 @@ export const AddMembershipPlanPage = () => {
       return false;
     }
     // Validate frequency for each selected amenity
-    for (const amenityId of formData.amenities) {
-      const details = formData.amenityDetails[amenityId];
-      if (!details || !details.frequency) {
-        toast.error("Please select Frequency for all selected amenities");
-        return false;
-      }
-    }
+    // for (const amenityId of formData.amenities) {
+    //   const details = formData.amenityDetails[amenityId];
+    //   if (!details || !details.frequency) {
+    //     toast.error("Please select Frequency for all selected amenities");
+    //     return false;
+    //   }
+    // }
     return true;
   };
 
@@ -388,7 +388,7 @@ export const AddMembershipPlanPage = () => {
               hideColumnsButton={true}
               columns={[
                 { key: "name", label: "Amenity Name", sortable: true },
-                { key: "frequency", label: <span>Frequency<span style={{ color: 'red' }}> *</span></span>, sortable: false },
+                { key: "frequency", label: <span>Frequency</span>, sortable: false },
                 { key: "slotLimit", label: "Booking Limit", sortable: false },
                 { key: "canBookAfterSlotLimit", label: "Can Book After Limit", sortable: false },
                 // { key: "price", label: "Price", sortable: false },

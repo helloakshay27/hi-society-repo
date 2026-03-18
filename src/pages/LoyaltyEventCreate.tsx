@@ -402,6 +402,8 @@ const EventCreate = () => {
     }),
   };
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
   const handleCroppedImages = (validImages, type = "cover") => {
     if (!validImages || validImages.length === 0) {
       toast.error(
@@ -413,6 +415,10 @@ const EventCreate = () => {
     }
 
     validImages.forEach((img) => {
+      if (img.file && img.file.size > MAX_FILE_SIZE) {
+        toast.error(`"${img.file.name}" exceeds 5MB. Please upload an image less than 5MB.`);
+        return;
+      }
       const formattedRatio = img.ratio.replace(":", "_by_");
       const prefix = type === "cover" ? "cover_image" : "event_images";
       const key = `${prefix}_${formattedRatio}`;
@@ -442,6 +448,10 @@ const EventCreate = () => {
     // Handle video files first
     if (videoFiles && videoFiles.length > 0) {
       videoFiles.forEach((video) => {
+        if (video.file && video.file.size > MAX_FILE_SIZE) {
+          toast.error(`"${video.file.name}" exceeds 5MB. Please upload a file less than 5MB.`);
+          return;
+        }
         const formattedRatio = video.ratio.replace(":", "_by_");
         const prefix = type === "cover" ? "cover_image" : "event_images";
         const key = `${prefix}_${formattedRatio}`;
@@ -475,6 +485,10 @@ const EventCreate = () => {
     }
 
     validImages.forEach((img) => {
+      if (img.file && img.file.size > MAX_FILE_SIZE) {
+        toast.error(`"${img.file.name}" exceeds 5MB. Please upload an image less than 5MB.`);
+        return;
+      }
       const formattedRatio = img.ratio.replace(":", "_by_");
       const prefix =
         type === "cover"
@@ -2434,23 +2448,29 @@ const EventCreate = () => {
                     Display this event on the home page
                   </p>
                 </div>
-                <Switch
-                  checked={formData.show_on_home}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      show_on_home: e.target.checked,
-                    }))
-                  }
-                  sx={{
-                    "& .MuiSwitch-switchBase.Mui-checked": {
-                      color: "#C72030",
-                    },
-                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                      backgroundColor: "#C72030",
-                    },
-                  }}
-                />
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={formData.show_on_home}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        show_on_home: e.target.checked,
+                      }))
+                    }
+                    size="small"
+                    sx={{
+                      "& .MuiSwitch-switchBase.Mui-checked": {
+                        color: "#C72030",
+                      },
+                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                        backgroundColor: "#C72030",
+                      },
+                    }}
+                  />
+                  <span className="text-sm font-medium">
+                    {formData.show_on_home ? "Yes" : "No"}
+                  </span>
+                </div>
                 {/* <svg xmlns="http://www.w3.org/2000/svg" width="40" height="20" viewBox="0 0 22 14" fill="none">
                     <path fillRule="evenodd" clipRule="evenodd" d="M16.3489 9.70739H6.13079C4.13825 9.70739 2.55444 8.12357 2.55444 6.13104C2.55444 4.1385 4.13825 2.55469 6.13079 2.55469H16.3489C18.3415 2.55469 19.9253 4.1385 19.9253 6.13104C19.9253 8.12357 18.3415 9.70739 16.3489 9.70739Z" fill="#DEDEDE"/>
                     <g filter="url(#filter0_dd_2611_3818)">
@@ -2931,7 +2951,7 @@ const EventCreate = () => {
                       <Info className="w-5 h-5 fill-black text-white" />
                       {showCoverImageTooltip && (
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap z-10">
-                          Max Upload Size 3 MB. Supports{" "}
+                          Max Upload Size 5 MB. Supports{" "}
                           {getDynamicRatiosText("EventCoverImage")} aspect
                           ratios
                         </span>
@@ -3727,25 +3747,30 @@ const EventCreate = () => {
                               Display this event on the home page
                             </p>
                           </div>
-                          <Switch
-                            checked={formData.show_on_home || false}
-                            onChange={(e) =>
-                              handleInputChange(
-                                "show_on_home",
-                                e.target.checked
-                              )
-                            }
-                            disabled
-                            sx={{
-                              "& .MuiSwitch-switchBase.Mui-checked": {
-                                color: "#C72030",
-                              },
-                              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                                {
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={formData.show_on_home || false}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "show_on_home",
+                                  e.target.checked
+                                )
+                              }
+                              disabled
+                              size="small"
+                              sx={{
+                                "& .MuiSwitch-switchBase.Mui-checked": {
+                                  color: "#C72030",
+                                },
+                                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
                                   backgroundColor: "#C72030",
                                 },
-                            }}
-                          />
+                              }}
+                            />
+                            <span className="text-sm font-medium">
+                              {formData.show_on_home ? "Yes" : "No"}
+                            </span>
+                          </div>
                         </div>
 
                         {/* Show on Project Detail Page */}
@@ -4611,22 +4636,27 @@ const EventCreate = () => {
                           Display this event on the home page
                         </p>
                       </div>
-                      <Switch
-                        checked={formData.show_on_home || false}
-                        onChange={(e) =>
-                          handleInputChange("show_on_home", e.target.checked)
-                        }
-                        disabled
-                        sx={{
-                          "& .MuiSwitch-switchBase.Mui-checked": {
-                            color: "#C72030",
-                          },
-                          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
-                            {
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={formData.show_on_home || false}
+                          onChange={(e) =>
+                            handleInputChange("show_on_home", e.target.checked)
+                          }
+                          disabled
+                          size="small"
+                          sx={{
+                            "& .MuiSwitch-switchBase.Mui-checked": {
+                              color: "#C72030",
+                            },
+                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
                               backgroundColor: "#C72030",
                             },
-                        }}
-                      />
+                          }}
+                        />
+                        <span className="text-sm font-medium">
+                          {formData.show_on_home ? "Yes" : "No"}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Show on Project Detail Page */}

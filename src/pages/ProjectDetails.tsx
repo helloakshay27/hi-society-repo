@@ -1324,48 +1324,61 @@ const ProjectDetails = () => {
                         <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
                         <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Type</TableHead>
                         <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Updated At</TableHead>
-                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Image</TableHead>
+                        <TableHead className="font-semibold text-gray-900 py-3 px-4">Preview / Download</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody className="bg-white">
-                      {(() => {
-                        const eventGroups = [
-                          formData.project_2d_image_1_by_1,
-                          formData.project_2d_image_9_by_16,
-                          formData.project_2d_image_3_by_2,
-                          formData.project_2d_image_16_by_9,
-                        ];
-
-                        const allEventImages = eventGroups
-                          .filter(
-                            (group) => Array.isArray(group) && group.length > 0
-                          )
-                          .flat()
-                          .filter((img) => img?.document_url);
-
-                        return allEventImages.length > 0 ? (
-                          allEventImages.map((file, index) => (
-                            <TableRow key={`floor-plan-${index}`} className="hover:bg-gray-50">
-                              <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name}</TableCell>
-                              <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type}</TableCell>
+                      {formData.project_layout && formData.project_layout.length > 0 ? (
+                        formData.project_layout.map((file, index) => {
+                          const isPdf = file.document_content_type === "application/pdf";
+                          const isImage = file.document_content_type?.startsWith("image/");
+                          return (
+                            <TableRow key={`layout-${index}`} className="hover:bg-gray-50">
+                              <TableCell className="text-gray-900 py-3 px-4">{file.document_file_name || "—"}</TableCell>
+                              <TableCell className="text-gray-900 py-3 px-4">{file.document_content_type || "—"}</TableCell>
                               <TableCell className="text-gray-900 py-3 px-4">{formatDateTime(file.document_updated_at)}</TableCell>
                               <TableCell className="py-3 px-4">
-                                <img
-                                  src={file.document_url}
-                                  alt={`Floor Plan ${index}`}
-                                  className="w-20 h-20 object-cover rounded"
-                                />
+                                {isPdf ? (
+                                  <a
+                                    href={file.document_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[#C72030] hover:underline font-medium text-sm"
+                                  >
+                                    <svg width="16" height="16" viewBox="0 0 22 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M20.8468 22.9744H1.1545C0.662189 22.9744 0.333984 22.6462 0.333984 22.1538V15.5897C0.333984 15.0974 0.662189 14.7692 1.1545 14.7692C1.6468 14.7692 1.97501 15.0974 1.97501 15.5897V21.3333H20.0263V15.5897C20.0263 15.0974 20.3545 14.7692 20.8468 14.7692C21.3391 14.7692 21.6673 15.0974 21.6673 15.5897V22.1538C21.6673 22.6462 21.3391 22.9744 20.8468 22.9744ZM11.0007 18.0513C10.9186 18.0513 10.7545 18.0513 10.6724 17.9692C10.5904 17.9692 10.5083 17.8872 10.4263 17.8051L3.86219 11.241C3.53398 10.9128 3.53398 10.4205 3.86219 10.0923C4.19039 9.7641 4.6827 9.7641 5.01091 10.0923L10.1801 15.2615V0.820513C10.1801 0.328205 10.5083 0 11.0007 0C11.493 0 11.8212 0.328205 11.8212 0.820513V15.2615L16.9904 10.0923C17.3186 9.7641 17.8109 9.7641 18.1391 10.0923C18.4673 10.4205 18.4673 10.9128 18.1391 11.241L11.575 17.8051C11.493 17.8872 11.4109 17.9692 11.3289 17.9692C11.2468 18.0513 11.0827 18.0513 11.0007 18.0513Z" fill="#c72030"/>
+                                    </svg>
+                                    Download
+                                  </a>
+                                ) : isImage ? (
+                                  <a href={file.document_url} target="_blank" rel="noopener noreferrer">
+                                    <img
+                                      src={file.document_url}
+                                      alt={`Layout ${index + 1}`}
+                                      className="w-20 h-20 object-cover rounded border border-gray-200"
+                                    />
+                                  </a>
+                                ) : (
+                                  <a
+                                    href={file.document_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[#C72030] hover:underline text-sm"
+                                  >
+                                    View
+                                  </a>
+                                )}
                               </TableCell>
                             </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={4} className="text-center py-8 text-gray-600">
-                              No Floor Plan Images
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })()}
+                          );
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8 text-gray-600">
+                            No Layouts & Floor Plans Available
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </div>

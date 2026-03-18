@@ -126,21 +126,19 @@ const LoyaltyEventsList = () => {
           scanTimeEntries: 0, // This may need to be added to the API response
         });
 
-        // Bind upcoming events count from API (support both spellings)
+        // Bind upcoming events count from API (numeric value)
         setUpcomingEventsCount(
-          response.data.upcomming_events &&
-            Array.isArray(response.data.upcomming_events)
-            ? response.data.upcomming_events.length
-            : response.data.upcoming_events &&
-                Array.isArray(response.data.upcoming_events)
-              ? response.data.upcoming_events.length
+          typeof response.data.upcoming_events_count === "number"
+            ? response.data.upcoming_events_count
+            : typeof response.data.upcomming_events_count === "number"
+              ? response.data.upcomming_events_count
               : 0
         );
 
-        // Bind past events count from API
+        // Bind past events count from API (numeric value)
         setPastEventsCount(
-          response.data.past_events && Array.isArray(response.data.past_events)
-            ? response.data.past_events.length
+          typeof response.data.past_events_count === "number"
+            ? response.data.past_events_count
             : 0
         );
       }
@@ -164,8 +162,13 @@ const LoyaltyEventsList = () => {
 
       setEvents(paginatedEvents);
       setCurrentPage(page);
-      setTotalPages(Math.ceil(filteredEvents.length / itemsPerPage));
-      setTotalCount(filteredEvents.length);
+      setTotalPages(
+        response.data.pagination?.total_pages ||
+          Math.ceil(filteredEvents.length / itemsPerPage)
+      );
+      setTotalCount(
+        response.data.pagination?.total_count || filteredEvents.length
+      );
 
       // Cache all events
       sessionStorage.setItem("cached_events", JSON.stringify(eventsData));
@@ -380,35 +383,45 @@ const LoyaltyEventsList = () => {
         return formatDateOnly(item.created_at);
       case "show_on_home":
         return (
-          <Switch
-            checked={item.show_on_home || false}
-            onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
-                transform: "translateX(25px)", // 👈 adjust movement properly
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
-              },
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={item.show_on_home || false}
+              onChange={() => handleToggleShowOnHome(item.id, item.show_on_home)}
+              size="small"
+              sx={{
+                "& .MuiSwitch-switchBase.Mui-checked": {
+                  color: "#C72030",
+                },
+                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                  backgroundColor: "#C72030",
+                },
+              }}
+            />
+            <span className="text-sm font-medium">
+              {item.show_on_home ? "Yes" : "No"}
+            </span>
+          </div>
         );
       case "active":
         return (
-          <Switch
-            checked={item.active || false}
-            onChange={() => handleToggle(item.id, item.active)}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#C72030",
-                transform: "translateX(25px)", // 👈 adjust movement properly
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#C72030",
-              },
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={item.active || false}
+              onChange={() => handleToggle(item.id, item.active)}
+              size="small"
+              sx={{
+                "& .MuiSwitch-switchBase.Mui-checked": {
+                  color: "#22c55e",
+                },
+                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                  backgroundColor: "#22c55e",
+                },
+              }}
+            />
+            <span className="text-sm font-medium">
+              {item.active ? "Active" : "Inactive"}
+            </span>
+          </div>
         );
       default:
         return (item[columnKey as keyof Event] as React.ReactNode) ?? "-";
@@ -448,7 +461,7 @@ const LoyaltyEventsList = () => {
 
           <div
             className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => console.log("Filter by upcoming")}
+            onClick={() => {}}
           >
             <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
               <Clock className="w-6 h-6 text-[#C72030]" />
@@ -465,7 +478,7 @@ const LoyaltyEventsList = () => {
 
           <div
             className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => console.log("Filter by past")}
+            onClick={() => {}}
           >
             <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
               <Clock className="w-6 h-6 text-[#C72030]" />
@@ -565,7 +578,7 @@ const LoyaltyEventsList = () => {
             isSearching ? "Searching events..." : "Loading events..."
           }
         />
-        {!searchTerm && totalPages > 1 && (
+        {!searchTerm && (
           <div className="mt-6 flex justify-center">
             <Pagination>
               <PaginationContent>
