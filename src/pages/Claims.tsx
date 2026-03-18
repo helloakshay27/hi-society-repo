@@ -121,7 +121,7 @@ const Claims = () => {
                 {
                     params: {
                         token: token,
-                        reward_type: "marchandise",
+                        reward_type: "merchandise",
                         access: "admin",
                     },
                 }
