@@ -387,7 +387,7 @@ const BookingDetailsPage = () => {
               {bookings?.facility_name}
             </h2>
             <div className="flex gap-3">
-              {bookings?.pg_state === "Pending" && (
+              {(bookings?.pg_state === "Pending" || bookings?.pg_state === "NA") && (
                 <Button
                   onClick={() => setIsCaptureDialogOpen(true)}
                   className="bg-[#16B364] hover:bg-[#129a55] text-white text-xs font-semibold px-4 py-2 h-auto"
