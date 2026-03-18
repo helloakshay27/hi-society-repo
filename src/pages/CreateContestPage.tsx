@@ -389,7 +389,7 @@ export const CreateContestPage: React.FC = () => {
         formData.append('contest[start_at]', buildISO(startDate, startTime));
       }
       if (endDate && endTime) {
-        formData.append('contest[end_at]', buildISO(endDate, endTime, true));
+        formData.append('contest[end_at]', buildISO(endDate, endTime));
       }
 
       if (usersCap) {
