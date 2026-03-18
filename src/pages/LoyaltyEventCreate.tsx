@@ -407,8 +407,7 @@ const EventCreate = () => {
   const handleCroppedImages = (validImages, type = "cover") => {
     if (!validImages || validImages.length === 0) {
       toast.error(
-        `No valid ${type} image${
-          ["cover", "event"].includes(type) ? "" : "s"
+        `No valid ${type} image${["cover", "event"].includes(type) ? "" : "s"
         } selected.`
       );
       return;
@@ -416,7 +415,7 @@ const EventCreate = () => {
 
     validImages.forEach((img) => {
       if (img.file && img.file.size > MAX_FILE_SIZE) {
-        toast.error(`"${img.file.name}" exceeds 5MB. Please upload an image less than 5MB.`);
+        toast.error(`Image should be less than 5 mb in size. "${img.file.name}" exceeds 5MB.`);
         return;
       }
       const formattedRatio = img.ratio.replace(":", "_by_");
@@ -449,7 +448,7 @@ const EventCreate = () => {
     if (videoFiles && videoFiles.length > 0) {
       videoFiles.forEach((video) => {
         if (video.file && video.file.size > MAX_FILE_SIZE) {
-          toast.error(`"${video.file.name}" exceeds 5MB. Please upload a file less than 5MB.`);
+          toast.error(`Image should be less than 5 mb in size. "${video.file.name}" exceeds 5MB.`);
           return;
         }
         const formattedRatio = video.ratio.replace(":", "_by_");
@@ -486,7 +485,7 @@ const EventCreate = () => {
 
     validImages.forEach((img) => {
       if (img.file && img.file.size > MAX_FILE_SIZE) {
-        toast.error(`"${img.file.name}" exceeds 5MB. Please upload an image less than 5MB.`);
+        toast.error(`Image should be less than 5 mb in size. "${img.file.name}" exceeds 5MB.`);
         return;
       }
       const formattedRatio = img.ratio.replace(":", "_by_");
@@ -687,8 +686,8 @@ const EventCreate = () => {
       }
 
       // Size validation
-      if (isImage && file.size > MAX_IMAGE_SIZE) {
-        toast.error("Image size must be less than 3MB");
+      if (isImage && file.size > 5 * 1024 * 1024) {
+        toast.error("Image should be less than 5 mb in size.");
         e.target.value = "";
         return;
       }
@@ -1361,7 +1360,7 @@ const EventCreate = () => {
 
     // Check file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size must be less than 5MB");
+      toast.error("Image should be less than 5 mb in size.");
       return;
     }
 
@@ -1376,7 +1375,7 @@ const EventCreate = () => {
     const newAttachments = files
       .filter((file) => {
         if (file.size > MAX_SIZE) {
-          toast.error(`"${file.name}" exceeds the 5MB limit and was skipped.`);
+          toast.error(`Image should be less than 5 mb in size. "${file.name}" exceeds the 5MB limit and was skipped.`);
           return false;
         }
         return true;
@@ -1413,7 +1412,7 @@ const EventCreate = () => {
 
     const MAX_SIZE = 5 * 1024 * 1024; // 5MB
     if (file.size > MAX_SIZE) {
-      toast.error("Event Thumbnail Image must be less than 5MB.");
+      toast.error("Image should be less than 5 mb in size.");
       e.target.value = "";
       return;
     }
@@ -1741,21 +1740,21 @@ const EventCreate = () => {
                       index === currentStep || completedSteps.includes(index)
                         ? "#C72030"
                         : index > currentStep &&
-                            !completedSteps.includes(index - 1)
+                          !completedSteps.includes(index - 1)
                           ? "rgba(245, 245, 245, 1)"
                           : "rgba(255, 255, 255, 1)",
                     color:
                       index === currentStep || completedSteps.includes(index)
                         ? "white"
                         : index > currentStep &&
-                            !completedSteps.includes(index - 1)
+                          !completedSteps.includes(index - 1)
                           ? "rgba(150, 150, 150, 1)"
                           : "rgba(196, 184, 157, 1)",
                     border:
                       index === currentStep || completedSteps.includes(index)
                         ? "2px solid #C72030"
                         : index > currentStep &&
-                            !completedSteps.includes(index - 1)
+                          !completedSteps.includes(index - 1)
                           ? "1px solid rgba(200, 200, 200, 1)"
                           : "1px solid rgba(196, 184, 157, 1)",
                     padding: "12px 20px",
@@ -1776,21 +1775,21 @@ const EventCreate = () => {
                     "&:hover": {
                       opacity:
                         index > currentStep &&
-                        !completedSteps.includes(index - 1)
+                          !completedSteps.includes(index - 1)
                           ? 1
                           : 0.9,
                     },
                     "&::before":
                       completedSteps.includes(index) && index !== currentStep
                         ? {
-                            content: '"✓"',
-                            position: "absolute",
-                            right: "8px",
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            fontSize: "12px",
-                            fontWeight: "bold",
-                          }
+                          content: '"✓"',
+                          position: "absolute",
+                          right: "8px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                        }
                         : {},
                   }}
                 >
@@ -3121,62 +3120,62 @@ const EventCreate = () => {
                       {eventImageRatios.map(({ key, label }) =>
                         (formData[key] || []).length > 0
                           ? formData[key].map((file, index) => {
-                              const isVideo =
-                                file.type === "video" ||
-                                (file.file &&
-                                  file.file.type.startsWith("video/"));
-                              return (
-                                <TableRow
-                                  key={`${key}-${file.id}`}
-                                  className="hover:bg-gray-50 transition-colors"
-                                >
-                                  <TableCell className="py-3 px-4 font-medium">
-                                    {file.name || "Unnamed File"}
-                                  </TableCell>
-                                  <TableCell className="py-3 px-4">
-                                    {isVideo ? (
-                                      <video
-                                        controls
-                                        style={{
-                                          maxWidth: 100,
-                                          maxHeight: 100,
-                                        }}
-                                        className="rounded border border-gray-200"
-                                      >
-                                        <source
-                                          src={file.preview}
-                                          type={file.file?.type || "video/mp4"}
-                                        />
-                                      </video>
-                                    ) : (
-                                      <img
-                                        style={{
-                                          maxWidth: 100,
-                                          maxHeight: 100,
-                                          objectFit: "cover",
-                                        }}
-                                        className="rounded border border-gray-200"
-                                        src={file.preview}
-                                        alt={file.name}
-                                      />
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="py-3 px-4">
-                                    {file.ratio || label}
-                                  </TableCell>
-                                  <TableCell className="py-3 px-4">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleImageRemoval(key, index)
-                                      }
+                            const isVideo =
+                              file.type === "video" ||
+                              (file.file &&
+                                file.file.type.startsWith("video/"));
+                            return (
+                              <TableRow
+                                key={`${key}-${file.id}`}
+                                className="hover:bg-gray-50 transition-colors"
+                              >
+                                <TableCell className="py-3 px-4 font-medium">
+                                  {file.name || "Unnamed File"}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {isVideo ? (
+                                    <video
+                                      controls
+                                      style={{
+                                        maxWidth: 100,
+                                        maxHeight: 100,
+                                      }}
+                                      className="rounded border border-gray-200"
                                     >
-                                      <Trash2 className="w-4 h-4 text-[#C72030]" />
-                                    </button>
-                                  </TableCell>
-                                </TableRow>
-                              );
-                            })
+                                      <source
+                                        src={file.preview}
+                                        type={file.file?.type || "video/mp4"}
+                                      />
+                                    </video>
+                                  ) : (
+                                    <img
+                                      style={{
+                                        maxWidth: 100,
+                                        maxHeight: 100,
+                                        objectFit: "cover",
+                                      }}
+                                      className="rounded border border-gray-200"
+                                      src={file.preview}
+                                      alt={file.name}
+                                    />
+                                  )}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  {file.ratio || label}
+                                </TableCell>
+                                <TableCell className="py-3 px-4">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleImageRemoval(key, index)
+                                    }
+                                  >
+                                    <Trash2 className="w-4 h-4 text-[#C72030]" />
+                                  </button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })
                           : null
                       )}
                     </TableBody>
@@ -5091,54 +5090,54 @@ const EventCreate = () => {
                             {eventImageRatios.map(({ key, label }) =>
                               (formData[key] || []).length > 0
                                 ? formData[key].map((file, index) => {
-                                    const isVideo =
-                                      file.type === "video" ||
-                                      (file.file &&
-                                        file.file.type.startsWith("video/"));
-                                    return (
-                                      <TableRow
-                                        key={`${key}-${file.id}`}
-                                        className="hover:bg-gray-50 transition-colors"
-                                      >
-                                        <TableCell className="py-3 px-4 font-medium">
-                                          {file.name || "Unnamed File"}
-                                        </TableCell>
-                                        <TableCell className="py-3 px-4">
-                                          {isVideo ? (
-                                            <video
-                                              controls
-                                              style={{
-                                                maxWidth: 100,
-                                                maxHeight: 100,
-                                              }}
-                                              className="rounded border border-gray-200"
-                                            >
-                                              <source
-                                                src={file.preview}
-                                                type={
-                                                  file.file?.type || "video/mp4"
-                                                }
-                                              />
-                                            </video>
-                                          ) : (
-                                            <img
-                                              style={{
-                                                maxWidth: 100,
-                                                maxHeight: 100,
-                                                objectFit: "cover",
-                                              }}
-                                              className="rounded border border-gray-200"
+                                  const isVideo =
+                                    file.type === "video" ||
+                                    (file.file &&
+                                      file.file.type.startsWith("video/"));
+                                  return (
+                                    <TableRow
+                                      key={`${key}-${file.id}`}
+                                      className="hover:bg-gray-50 transition-colors"
+                                    >
+                                      <TableCell className="py-3 px-4 font-medium">
+                                        {file.name || "Unnamed File"}
+                                      </TableCell>
+                                      <TableCell className="py-3 px-4">
+                                        {isVideo ? (
+                                          <video
+                                            controls
+                                            style={{
+                                              maxWidth: 100,
+                                              maxHeight: 100,
+                                            }}
+                                            className="rounded border border-gray-200"
+                                          >
+                                            <source
                                               src={file.preview}
-                                              alt={file.name}
+                                              type={
+                                                file.file?.type || "video/mp4"
+                                              }
                                             />
-                                          )}
-                                        </TableCell>
-                                        <TableCell className="py-3 px-4">
-                                          {file.ratio || label}
-                                        </TableCell>
-                                      </TableRow>
-                                    );
-                                  })
+                                          </video>
+                                        ) : (
+                                          <img
+                                            style={{
+                                              maxWidth: 100,
+                                              maxHeight: 100,
+                                              objectFit: "cover",
+                                            }}
+                                            className="rounded border border-gray-200"
+                                            src={file.preview}
+                                            alt={file.name}
+                                          />
+                                        )}
+                                      </TableCell>
+                                      <TableCell className="py-3 px-4">
+                                        {file.ratio || label}
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })
                                 : null
                             )}
                           </TableBody>

@@ -21,10 +21,11 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
-  PaginationPrevious,
   PaginationLink,
   PaginationNext,
+  PaginationPrevious,
 } from "@/components/ui/pagination";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { Switch } from "@mui/material";
@@ -37,6 +38,7 @@ interface Event {
   to_time: string;
   active: boolean;
   show_on_home: boolean;
+  created_by: string;
   created_at: string;
   updated_at: string;
 }
@@ -109,7 +111,12 @@ const LoyaltyEventsList = () => {
     setLoading(true);
     setIsSearching(!!search);
     try {
+      // Use axios params to pass the page parameter correctly
       const response = await axios.get(getFullUrl("/crm/admin/events.json"), {
+        params: {
+          page: page,
+          "q[event_name_cont]": search || undefined,
+        },
         headers: {
           Authorization: getAuthHeader(),
         },
@@ -123,10 +130,9 @@ const LoyaltyEventsList = () => {
           totalInvitedCPs: response.data.total_invited || 0,
           attendedCPs: response.data.attended_count || 0,
           notAttendedCPs: response.data.not_attended_count || 0,
-          scanTimeEntries: 0, // This may need to be added to the API response
+          scanTimeEntries: 0,
         });
 
-        // Bind upcoming events count from API (numeric value)
         setUpcomingEventsCount(
           typeof response.data.upcoming_events_count === "number"
             ? response.data.upcoming_events_count
@@ -135,7 +141,6 @@ const LoyaltyEventsList = () => {
               : 0
         );
 
-        // Bind past events count from API (numeric value)
         setPastEventsCount(
           typeof response.data.past_events_count === "number"
             ? response.data.past_events_count
@@ -143,34 +148,19 @@ const LoyaltyEventsList = () => {
         );
       }
 
-      // Client-side search filtering
-      let filteredEvents = eventsData;
-      if (search) {
-        const searchLower = search.toLowerCase();
-        filteredEvents = eventsData.filter(
-          (event: Event) =>
-            event.event_name?.toLowerCase().includes(searchLower) ||
-            event.event_at?.toLowerCase().includes(searchLower)
-        );
+      setEvents(eventsData);
+      setCurrentPage(page);
+
+      if (response.data.pagination) {
+        setTotalPages(response.data.pagination.total_pages || 1);
+        setTotalCount(response.data.pagination.total_count || 0);
+      } else {
+        // Fallback for unexpected response structure
+        setTotalPages(1);
+        setTotalCount(eventsData.length);
       }
 
-      // Client-side pagination
-      const itemsPerPage = 10;
-      const startIndex = (page - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
-
-      setEvents(paginatedEvents);
-      setCurrentPage(page);
-      setTotalPages(
-        response.data.pagination?.total_pages ||
-          Math.ceil(filteredEvents.length / itemsPerPage)
-      );
-      setTotalCount(
-        response.data.pagination?.total_count || filteredEvents.length
-      );
-
-      // Cache all events
+      // Cache all events if needed (though with server-side pagination, caching all is less common)
       sessionStorage.setItem("cached_events", JSON.stringify(eventsData));
     } catch (error) {
       toast.error("Failed to fetch events.");
@@ -182,10 +172,18 @@ const LoyaltyEventsList = () => {
   }, []);
 
   useEffect(() => {
-    fetchEvents(currentPage, searchTerm);
-  }, [currentPage, searchTerm, fetchEvents]);
+    const delayDebounceFn = setTimeout(() => {
+      fetchEvents(1, searchTerm);
+    }, 500);
 
-  // `upcomingEventsCount` is populated from API in `fetchEvents` (see response.data.upcomming_events)
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, fetchEvents]);
+
+  useEffect(() => {
+    if (currentPage !== 1) {
+      fetchEvents(currentPage, searchTerm);
+    }
+  }, [currentPage, fetchEvents]);
 
   const handleGlobalSearch = (term: string) => {
     setSearchTerm(term);
@@ -193,9 +191,135 @@ const LoyaltyEventsList = () => {
   };
 
   const handlePageChange = (page: number) => {
-    if (page > 0 && page <= totalPages) {
-      setCurrentPage(page);
+    if (
+      page < 1 ||
+      page > totalPages ||
+      page === currentPage ||
+      loading
+    ) {
+      return;
     }
+    setCurrentPage(page);
+  };
+
+  const renderPaginationItems = () => {
+    if (!totalPages || totalPages <= 0) {
+      return null;
+    }
+    const items = [];
+    const showEllipsis = totalPages > 7;
+
+    if (showEllipsis) {
+      items.push(
+        <PaginationItem key={1} className="cursor-pointer">
+          <PaginationLink
+            onClick={() => handlePageChange(1)}
+            isActive={currentPage === 1}
+            aria-disabled={loading}
+            className={loading ? "pointer-events-none opacity-50" : ""}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(
+          <PaginationItem key="ellipsis1">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = 2; i <= Math.min(3, totalPages - 1); i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+                aria-disabled={loading}
+                className={loading ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage > 3 && currentPage < totalPages - 2) {
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          items.push(
+            <PaginationItem key={i} className="cursor-pointer">
+              <PaginationLink
+                onClick={() => handlePageChange(i)}
+                isActive={currentPage === i}
+                aria-disabled={loading}
+                className={loading ? "pointer-events-none opacity-50" : ""}
+              >
+                {i}
+              </PaginationLink>
+            </PaginationItem>
+          );
+        }
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(
+          <PaginationItem key="ellipsis2">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      } else {
+        for (let i = Math.max(totalPages - 2, 2); i < totalPages; i++) {
+          if (!items.find((item) => item.key === i.toString())) {
+            items.push(
+              <PaginationItem key={i} className="cursor-pointer">
+                <PaginationLink
+                  onClick={() => handlePageChange(i)}
+                  isActive={currentPage === i}
+                  aria-disabled={loading}
+                  className={loading ? "pointer-events-none opacity-50" : ""}
+                >
+                  {i}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          }
+        }
+      }
+
+      if (totalPages > 1) {
+        items.push(
+          <PaginationItem key={totalPages} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(totalPages)}
+              isActive={currentPage === totalPages}
+              aria-disabled={loading}
+              className={loading ? "pointer-events-none opacity-50" : ""}
+            >
+              {totalPages}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i} className="cursor-pointer">
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+              aria-disabled={loading}
+              className={loading ? "pointer-events-none opacity-50" : ""}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
   };
 
   const handleAddEvent = () =>
@@ -461,7 +585,7 @@ const LoyaltyEventsList = () => {
 
           <div
             className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => {}}
+            onClick={() => { }}
           >
             <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
               <Clock className="w-6 h-6 text-[#C72030]" />
@@ -478,7 +602,7 @@ const LoyaltyEventsList = () => {
 
           <div
             className="bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => {}}
+            onClick={() => { }}
           >
             <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center">
               <Clock className="w-6 h-6 text-[#C72030]" />
@@ -531,11 +655,10 @@ const LoyaltyEventsList = () => {
             return (
               <div
                 key={i}
-                className={`bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 ${
-                  item.clickable
-                    ? "cursor-pointer hover:shadow-lg transition-shadow"
-                    : ""
-                }`}
+                className={`bg-[#F6F4EE] p-6 rounded-lg shadow-[0px_1px_8px_rgba(45,45,45,0.05)] flex items-center gap-4 ${item.clickable
+                  ? "cursor-pointer hover:shadow-lg transition-shadow"
+                  : ""
+                  }`}
               >
                 <div className="w-14 h-14 bg-[#C4B89D54] flex items-center justify-center rounded">
                   <IconComponent className="w-6 h-6 text-[#C72030]" />
@@ -565,7 +688,7 @@ const LoyaltyEventsList = () => {
           data={events}
           columns={columns}
           renderCell={renderCell}
-          pagination={true}
+          pagination={false}
           enableExport={true}
           exportFileName="events"
           storageKey="events-table"
@@ -578,49 +701,28 @@ const LoyaltyEventsList = () => {
             isSearching ? "Searching events..." : "Loading events..."
           }
         />
-        {!searchTerm && (
+        {totalPages > 1 && (
           <div className="mt-6 flex justify-center">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage - 1);
-                    }}
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                     className={
-                      currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                      currentPage === 1 || loading
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
                     }
                   />
                 </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(page);
-                        }}
-                        isActive={currentPage === page}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )
-                )}
+                {renderPaginationItems()}
                 <PaginationItem>
                   <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage + 1);
-                    }}
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                     className={
-                      currentPage === totalPages
+                      currentPage === totalPages || loading
                         ? "pointer-events-none opacity-50"
-                        : ""
+                        : "cursor-pointer"
                     }
                   />
                 </PaginationItem>
