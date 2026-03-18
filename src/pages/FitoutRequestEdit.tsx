@@ -52,7 +52,7 @@ const FitoutRequestEdit: React.FC = () => {
   const [requestCategories, setRequestCategories] = useState<FitoutRequestCategory[]>([]);
   const [fitoutFlatRates, setFitoutFlatRates] = useState<any[]>([]);
   const [deposit, setDeposit] = useState('0.00');
-  const fitoutTypes = ['Move In', 'Fitout'];
+  const fitoutTypes = ['Move In', 'Fitout', 'Refund Initiate'];
 
   const [formData, setFormData] = useState<FitoutRequestFormData>({
     tower: '',
@@ -799,6 +799,7 @@ const FitoutRequestEdit: React.FC = () => {
                   <MenuItem value="">Select Type</MenuItem>
                   <MenuItem value="Move In">Move In</MenuItem>
                   <MenuItem value="Fitout">Fitout</MenuItem>
+                  <MenuItem value="Refund Initiate">Refund Initiate</MenuItem>
                 </MuiSelect>
               </FormControl>
 
