@@ -798,6 +798,7 @@ const FitoutRequestEdit: React.FC = () => {
                 >
                   <MenuItem value="">Select Type</MenuItem>
                   <MenuItem value="Move In">Move In</MenuItem>
+                  <MenuItem value="Move Out">Move Out</MenuItem>
                   <MenuItem value="Fitout">Fitout</MenuItem>
                   <MenuItem value="Refund Initiate">Refund Initiate</MenuItem>
                 </MuiSelect>

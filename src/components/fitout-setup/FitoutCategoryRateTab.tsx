@@ -396,6 +396,7 @@ export const FitoutCategoryRateTab: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Move In">Move In</SelectItem>
+                  <SelectItem value="Move Out">Move Out</SelectItem>
                   <SelectItem value="Fitout">Fitout</SelectItem>
                   <SelectItem value="Refund Initiate">Refund Initiate</SelectItem>
                 </SelectContent>

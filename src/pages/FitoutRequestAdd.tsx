@@ -232,7 +232,7 @@ const FitoutRequestAdd: React.FC = () => {
       setCategories(categoriesArray);
       
       // Set static fitout types
-      setFitoutTypes(['Move In', 'Fitout', 'Refund Initiate']);
+      setFitoutTypes(['Move In', 'Move Out', 'Fitout', 'Refund Initiate']);
       
       // Set user_society.id in formData for user_society_id parameter
       const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
