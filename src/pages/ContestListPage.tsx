@@ -86,8 +86,8 @@ export const ContestListPage: React.FC = () => {
 
       const baseUrl = localStorage.getItem('baseUrl');
       const token = localStorage.getItem('token');
-    //   const baseUrl =  "https://uat-hi-society.lockated.com";
-    // const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI"
+      //   const baseUrl =  "https://uat-hi-society.lockated.com";
+      // const token = "O08MAh4ADTSweyKwK8zwR5CDVlzKYKLcu825jhnvEjI"
 
 
       if (!baseUrl || !token) {
@@ -100,7 +100,7 @@ export const ContestListPage: React.FC = () => {
       // Build URL with query parameters based on selected status and search query
       const queryParams = new URLSearchParams();
       queryParams.append('source', 'web');
-      
+
       // Add search query parameter if exists
       if (searchQuery.trim()) {
         queryParams.append(
@@ -108,7 +108,7 @@ export const ContestListPage: React.FC = () => {
           searchQuery.trim()
         );
       }
-      
+
       // Add status filter if selected
       if (selectedStatus) {
         const card = statusCards.find(c => c.status === selectedStatus);
@@ -151,15 +151,6 @@ export const ContestListPage: React.FC = () => {
       const formatted: ContestRecord[] = contestArray.map((item: any) => {
         const start = new Date(item.start_at);
         const end = new Date(item.end_at);
-
-        let status: "Active" | "Inactive" | "Expired" = "Inactive";
-
-        if (end < today) {
-          status = "Expired";
-        } else if (item.active) {
-          status = "Active";
-        }
-
         return {
           id: item.id,
           name: item.name,
@@ -173,7 +164,7 @@ export const ContestListPage: React.FC = () => {
                 ? "Scratch Card"
                 : "Card Flip",
           attempt: item.attemp_required ?? 1,
-          status,
+          status: item.status ?? "Inactive",
           isActive: item.active ?? false,
           contentStatus: item.status ?? "-",
         };
@@ -216,7 +207,7 @@ export const ContestListPage: React.FC = () => {
   useEffect(() => {
     // Update search query when debounced input changes
     const trimmedQuery = debouncedSearchQuery.trim();
-    
+
     if (searchQuery !== trimmedQuery) {
       setSearchQuery(trimmedQuery);
       setCurrentPage(1);
@@ -258,7 +249,7 @@ export const ContestListPage: React.FC = () => {
     try {
       setTogglingId(contestId);
       const baseUrl = localStorage.getItem("baseUrl");
-      const token = localStorage.getItem("token") ;
+      const token = localStorage.getItem("token");
 
       if (!baseUrl || !token) {
         throw new Error("Base URL or token not set in localStorage");
@@ -315,11 +306,11 @@ export const ContestListPage: React.FC = () => {
   };
 
   const getShortText = (text: string, wordLimit = 10) => {
-  if (!text) return "-";
-  const words = text.split(" ");
-  if (words.length <= wordLimit) return text;
-  return words.slice(0, wordLimit).join(" ") + "...";
-};
+    if (!text) return "-";
+    const words = text.split(" ");
+    if (words.length <= wordLimit) return text;
+    return words.slice(0, wordLimit).join(" ") + "...";
+  };
 
 
   /* ---------------- TABLE CONFIG ---------------- */
@@ -332,7 +323,7 @@ export const ContestListPage: React.FC = () => {
     { key: "endDate", label: "End Date", sortable: true },
     { key: "contestType", label: "Contest Type", sortable: true },
     { key: "attempt", label: "Attempt", sortable: true },
-    { key: "contentStatus", label: "Content Status", sortable: true },
+    { key: "contestStatus", label: "Contest Status", sortable: true },
     { key: "status", label: "Status", sortable: true },
   ];
 
@@ -406,81 +397,81 @@ export const ContestListPage: React.FC = () => {
       {/* TABLE */}
       <div className="rounded-lg shadow-sm">
         <EnhancedTable
-            data={filteredContests}
-            columns={columns}
-            renderRow={contest => ({
-              actions: (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate(`/contests/${contest.id}`)}
-                >
-                  <Eye className="w-4 h-4" />
-                </Button>
-              ),
-              name: contest.name,
-              description: (
-  <span
-    title={contest.description}
-    className="cursor-pointer"
-  >
-    {getShortText(contest.description, 10)}
-  </span>
-),
+          data={filteredContests}
+          columns={columns}
+          renderRow={contest => ({
+            actions: (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/contests/${contest.id}`)}
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+            ),
+            name: contest.name,
+            description: (
+              <span
+                title={contest.description}
+                className="cursor-pointer"
+              >
+                {getShortText(contest.description, 10)}
+              </span>
+            ),
 
-              startDate: contest.startDate,
-              endDate: contest.endDate,
-              contestType: contest.contestType,
-              attempt: String(contest.attempt).padStart(2, "0"),
-              contentStatus: (
-                <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
-                  {contest.contentStatus}
-                </span>
-              ),
-              status: (
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={contest.isActive}
-                    onChange={() => handleToggleActive(contest.id, contest.isActive)}
-                    disabled={togglingId === contest.id || contest.status === "Expired"}
-                    size="small"
-                    sx={{
-                      "& .MuiSwitch-switchBase.Mui-checked": {
-                        color: "#22c55e",
-                      },
-                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                        backgroundColor: "#22c55e",
-                      },
-                    }}
-                  />
-                  <span className="text-sm font-medium">
-                    {contest.isActive ? "Active" : "Inactive"}
-                  </span>
-                </div>
-              ),
-            })}
-            enableSearch={true}
-            enableGlobalSearch={true}
-            onGlobalSearch={handleSearch}
-            searchPlaceholder="Search contests..."
-            enableSelection={false}
-            enableExport={false}
-            loading={loading || searchLoading}
-            loadingMessage={searchLoading ? "Searching contests..." : "Loading contests..."}
-            leftActions={
+            startDate: contest.startDate,
+            endDate: contest.endDate,
+            contestType: contest.contestType,
+            attempt: String(contest.attempt).padStart(2, "0"),
+            contestStatus: (
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                {contest.status}
+              </span>
+            ),
+            status: (
               <div className="flex items-center gap-2">
-                <Button
-                  onClick={() => navigate("/contests/create")}
-                  className="bg-[#C72030] hover:bg-[#B01D2A] text-white px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Create Contest
-                </Button>
+                <Switch
+                  checked={contest.isActive}
+                  onChange={() => handleToggleActive(contest.id, contest.isActive)}
+                  disabled={togglingId === contest.id || contest.status === "Expired"}
+                  size="small"
+                  sx={{
+                    "& .MuiSwitch-switchBase.Mui-checked": {
+                      color: "#22c55e",
+                    },
+                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                      backgroundColor: "#22c55e",
+                    },
+                  }}
+                />
+                <span className="text-sm font-medium">
+                  {contest.isActive ? "Active" : "Inactive"}
+                </span>
               </div>
-            }
-            storageKey="contest-table"
-            emptyMessage="No contests found"
-          />
+            ),
+          })}
+          enableSearch={true}
+          enableGlobalSearch={true}
+          onGlobalSearch={handleSearch}
+          searchPlaceholder="Search contests..."
+          enableSelection={false}
+          enableExport={false}
+          loading={loading || searchLoading}
+          loadingMessage={searchLoading ? "Searching contests..." : "Loading contests..."}
+          leftActions={
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => navigate("/contests/create")}
+                className="bg-[#C72030] hover:bg-[#B01D2A] text-white px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Create Contest
+              </Button>
+            </div>
+          }
+          storageKey="contest-table"
+          emptyMessage="No contests found"
+        />
       </div>
 
       {/* PAGINATION (READY FOR BACKEND) */}

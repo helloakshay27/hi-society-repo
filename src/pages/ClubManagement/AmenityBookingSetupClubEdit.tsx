@@ -119,12 +119,14 @@ export const EditBookingSetupClubPage = () => {
                 id: "default-1",
                 isChecked: true,
                 times: "",
+                timePeriod: "Select",
                 unit: "Select",
             },
         ] as Array<{
             id: string;
             isChecked: boolean;
             times: string;
+            timePeriod: string;
             unit: string;
         }>,
         description: "",
@@ -759,6 +761,11 @@ export const EditBookingSetupClubPage = () => {
                 );
 
                 formDataToSend.append(
+                    `facility_setup[facility_booking_rules_attributes][${idx}][duration_unit]`,
+                    fb.timePeriod
+                );
+
+                formDataToSend.append(
                     `facility_setup[facility_booking_rules_attributes][${idx}][level]`,
                     fb.unit
                 )
@@ -935,6 +942,7 @@ export const EditBookingSetupClubPage = () => {
                 id: rule.facility_booking_rule.id?.toString() || Date.now().toString(),
                 isChecked: rule.facility_booking_rule.active,
                 times: rule.facility_booking_rule.enumerator || "",
+                timePeriod: rule.facility_booking_rule.duration_unit || "Select",
                 unit: rule.facility_booking_rule.level || "Select",
             }));
 
@@ -1153,6 +1161,7 @@ export const EditBookingSetupClubPage = () => {
             id: Date.now().toString(),
             isChecked: true,
             times: "",
+            timePeriod: "Select",
             unit: "Select",
         };
         setFormData({
@@ -3289,7 +3298,23 @@ export const EditBookingSetupClubPage = () => {
                                             size="small"
                                             style={{ width: "80px" }}
                                         />
-                                        <span>times per day by</span>
+                                        <span>times per</span>
+                                        <Select
+                                            value={booking.timePeriod}
+                                            onChange={(e) =>
+                                                updateFacilityBooking(booking.id, {
+                                                    timePeriod: e.target.value,
+                                                })
+                                            }
+                                            displayEmpty
+                                            size="small"
+                                            style={{ width: "140px" }}
+                                        >
+                                            <MenuItem value="Select">Select</MenuItem>
+                                            <MenuItem value="day">Day</MenuItem>
+                                            <MenuItem value="week">Week</MenuItem>
+                                        </Select>
+                                        <span>by</span>
                                         <Select
                                             value={booking.unit}
                                             onChange={(e) =>

@@ -130,12 +130,14 @@ export const AddBookingSetupClubPage = () => {
         id: "default-1",
         isChecked: true,
         times: "",
+        timePeriod: "Select",
         unit: "Select",
       },
     ] as Array<{
       id: string;
       isChecked: boolean;
       times: string;
+      timePeriod: string;
       unit: string;
     }>,
     description: "",
@@ -764,6 +766,11 @@ export const AddBookingSetupClubPage = () => {
         );
 
         formDataToSend.append(
+          `facility_setup[facility_booking_rules_attributes][${idx}][duration_unit]`,
+          fb.timePeriod
+        );
+
+        formDataToSend.append(
           `facility_setup[facility_booking_rules_attributes][${idx}][level]`,
           fb.unit
         );
@@ -937,6 +944,7 @@ export const AddBookingSetupClubPage = () => {
       id: Date.now().toString(),
       isChecked: true,
       times: "",
+      timePeriod: "Select",
       unit: "Select",
     };
     setFormData({
@@ -3191,7 +3199,23 @@ export const AddBookingSetupClubPage = () => {
                       size="small"
                       style={{ width: "80px" }}
                     />
-                    <span>times per day by</span>
+                    <span>times per</span>
+                    <Select
+                      value={booking.timePeriod}
+                      onChange={(e) =>
+                        updateFacilityBooking(booking.id, {
+                          timePeriod: e.target.value,
+                        })
+                      }
+                      displayEmpty
+                      size="small"
+                      style={{ width: "140px" }}
+                    >
+                      <MenuItem value="Select">Select</MenuItem>
+                      <MenuItem value="day">Day</MenuItem>
+                      <MenuItem value="week">Week</MenuItem>
+                    </Select>
+                    <span>by</span>
                     <Select
                       value={booking.unit}
                       onChange={(e) =>
@@ -3206,8 +3230,8 @@ export const AddBookingSetupClubPage = () => {
                       <MenuItem value="Select">Select</MenuItem>
                       <MenuItem value="flat">Flat</MenuItem>
                       <MenuItem value="user">User</MenuItem>
-                      <MenuItem value="owner">Owner</MenuItem>
-                      <MenuItem value="tenant">Tenant</MenuItem>
+                      {/* <MenuItem value="owner">Owner</MenuItem>
+                      <MenuItem value="tenant">Tenant</MenuItem> */}
                     </Select>
                     <Button
                       onClick={() => deleteFacilityBooking(booking.id)}
