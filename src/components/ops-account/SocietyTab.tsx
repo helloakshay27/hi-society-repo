@@ -152,8 +152,9 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
       "adhip.shetty@lockated.com",
       "helloakshay27@gmail.com",
       "dev@lockated.com",
-      "sumitra.patil@lockated.com", 
-"demo@lockated.com",
+      "sumitra.patil@lockated.com",
+      "demo@lockated.com",
+      "ajay.ghenand@lockated.com"
     ];
     const hasPermission = allowedEmails.includes(userEmail);
     console.log("🔐 Edit Permission Check:", { userEmail, hasPermission, allowedEmails });
@@ -175,17 +176,17 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
     try {
       const baseUrl = HI_SOCIETY_CONFIG.BASE_URL;
       const token = HI_SOCIETY_CONFIG.TOKEN;
-      
+
       console.log("🔧 API Config:", { baseUrl, tokenExists: !!token, tokenLength: token?.length });
-      
+
       if (!baseUrl) {
         throw new Error("Base URL is not configured");
       }
-      
+
       if (!token) {
         throw new Error("Authentication token is missing. Please login again.");
       }
-      
+
       let apiUrl = `${baseUrl}/admin/societies.json?token=${token}&page=${page}&per_page=${per_page}`;
 
       // Add search parameter if provided
@@ -219,13 +220,13 @@ export const SocietyTab: React.FC<SocietyTabProps> = ({
       const societiesList = Array.isArray(data) ? data : (data.societies || []);
       console.log("📋 Societies list length:", societiesList.length);
       console.log("📋 First society sample:", societiesList[0]);
-      
+
       if (societiesList.length === 0) {
         console.warn("⚠️ No societies found in response");
       }
-      
+
       setSocieties(societiesList);
-      
+
       // Handle pagination from response or calculate from array
       if (data.pagination) {
         console.log("📄 Using API pagination:", data.pagination);
