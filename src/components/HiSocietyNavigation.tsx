@@ -39,7 +39,7 @@ const navigationItems: NavigationItem[] = [
     id: "cms",
     label: "CMS",
     icon: <SettingsIcon className="w-4 h-4" />,
-    path: "/cms/facility-setup",
+    path: "/cms/facility-bookings",
   },
   {
     id: "campaigns",
