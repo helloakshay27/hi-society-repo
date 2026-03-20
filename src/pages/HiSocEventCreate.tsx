@@ -33,7 +33,7 @@ const HiSocEventCreate = () => {
     to_time: "",
     from_date: "",
     to_date: "",
-    rsvp_action: "",
+    rsvp_action: "0",
     rsvp_name: "",
     rsvp_number: "",
     description: "",
@@ -44,8 +44,8 @@ const HiSocEventCreate = () => {
     group_id: [],
     attachfile: [],
     cover_image: [],
-    is_important: "",
-    email_trigger_enabled: false,
+    is_important: "0",
+    email_trigger_enabled: "false",
     set_reminders_attributes: [],
     cover_image_1_by_1: [],
     cover_image_9_by_16: [],
@@ -503,10 +503,28 @@ const HiSocEventCreate = () => {
   // Handle input change for form fields
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    const updatedData = { ...formData, [name]: value };
+
+    // Validate end date/time is not before start date/time
+    if (["from_date", "from_time", "to_date", "to_time"].includes(name)) {
+      const startDate = updatedData.from_date;
+      const startTime = updatedData.from_time;
+      const endDate = updatedData.to_date;
+      const endTime = updatedData.to_time;
+
+      if (startDate && endDate) {
+        if (endDate < startDate) {
+          toast.error("End Date cannot be earlier than Start Date.");
+          return;
+        }
+        if (endDate === startDate && startTime && endTime && endTime <= startTime) {
+          toast.error("End Time must be later than Start Time for the same date.");
+          return;
+        }
+      }
+    }
+
+    setFormData(updatedData);
   };
 
   const handleInputChange = (field, value) => {
@@ -617,6 +635,15 @@ const HiSocEventCreate = () => {
       errors.push("Please select at least one group when sharing with groups.");
     }
 
+    // Validate date/time - end must not be before start
+    if (formData.from_date && formData.to_date) {
+      if (formData.to_date < formData.from_date) {
+        errors.push("End Date cannot be earlier than Start Date.");
+      } else if (formData.to_date === formData.from_date && formData.from_time && formData.to_time && formData.to_time <= formData.from_time) {
+        errors.push("End Time must be later than Start Time for the same date.");
+      }
+    }
+
     return errors;
   };
 
@@ -652,6 +679,15 @@ const HiSocEventCreate = () => {
     // Validate shared with group - require at least one group
     if (formData.shared === "group" && (!formData.group_id || formData.group_id.length === 0)) {
       errors.push("Please select at least one group when sharing with groups.");
+    }
+
+    // Validate date/time - end must not be before start
+    if (formData.from_date && formData.to_date) {
+      if (formData.to_date < formData.from_date) {
+        errors.push("End Date cannot be earlier than Start Date.");
+      } else if (formData.to_date === formData.from_date && formData.from_time && formData.to_time && formData.to_time <= formData.from_time) {
+        errors.push("End Time must be later than Start Time for the same date.");
+      }
     }
 
     if (errors.length > 0) {
@@ -722,12 +758,26 @@ const HiSocEventCreate = () => {
     formDataToSend.append("event[description]", formData.description || "");
     formDataToSend.append("event[event_at]", formData.event_at || "");
     
-    // Add from_time and to_time parameters
-    if (formData.from_time) {
-      formDataToSend.append("event[from_time]", formData.from_time);
+    // Combine date and time for from_time parameter
+    let fromTimeValue = "";
+    if (formData.from_date && formData.from_time) {
+      fromTimeValue = `${formData.from_date}T${formData.from_time}`;
+    } else if (formData.from_date) {
+      fromTimeValue = formData.from_date;
     }
-    if (formData.to_time) {
-      formDataToSend.append("event[to_time]", formData.to_time);
+    if (fromTimeValue) {
+      formDataToSend.append("event[from_time]", fromTimeValue);
+    }
+
+    // Combine end date and time for to_time parameter
+    let toTimeValue = "";
+    if (formData.to_date && formData.to_time) {
+      toTimeValue = `${formData.to_date}T${formData.to_time}`;
+    } else if (formData.to_date) {
+      toTimeValue = formData.to_date;
+    }
+    if (toTimeValue) {
+      formDataToSend.append("event[to_time]", toTimeValue);
     }
     formDataToSend.append("event[shared]", formData.shared === "all" ? "0" : "1");
     formDataToSend.append("event[is_important]", formData.is_important === "1" ? "1" : "0");
@@ -870,7 +920,9 @@ const HiSocEventCreate = () => {
         event_time: "",
         from_time: "",
         to_time: "",
-        rsvp_action: "",
+        from_date: "",
+        to_date: "",
+        rsvp_action: "0",
         rsvp_name: "",
         rsvp_number: "",
         description: "",
@@ -881,8 +933,8 @@ const HiSocEventCreate = () => {
         group_id: [],
         attachfile: [],
         cover_image: [],
-        is_important: false,
-        email_trigger_enabled: false,
+        is_important: "0",
+        email_trigger_enabled: "false",
         set_reminders_attributes: [],
         cover_image_1_by_1: [],
         cover_image_9_by_16: [],
@@ -1561,12 +1613,28 @@ const HiSocEventCreate = () => {
                 }}
               />
               <TextField
-                label="From Date"
-                type="datetime-local"
-                value={formData.from_time}
-                onChange={(e) => {
-                  handleChange({ target: { name: 'from_time', value: e.target.value } });
+                label="Start Date"
+                type="date"
+                value={formData.from_date}
+                onChange={handleChange}
+                name="from_date"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
                 }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
+
+              <TextField
+                label="Start Time"
+                type="time"
+                value={formData.from_time}
+                onChange={handleChange}
                 name="from_time"
                 fullWidth
                 variant="outlined"
@@ -1581,12 +1649,28 @@ const HiSocEventCreate = () => {
               />
 
               <TextField
-                label="To Date"
-                type="datetime-local"
-                value={formData.to_time}
-                onChange={(e) => {
-                  handleChange({ target: { name: 'to_time', value: e.target.value } });
+                label="End Date"
+                type="date"
+                value={formData.to_date}
+                onChange={handleChange}
+                name="to_date"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
                 }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
+
+              <TextField
+                label="End Time"
+                type="time"
+                value={formData.to_time}
+                onChange={handleChange}
                 name="to_time"
                 fullWidth
                 variant="outlined"
@@ -2505,10 +2589,10 @@ const HiSocEventCreate = () => {
           </>
         )}
 
-        {/* Completed Sections - Show completed steps below current step */}
-        {!isPreviewMode && completedSteps.length > 0 && currentStep > 0 && (
+        {/* Completed Sections - Show all previous steps below current step */}
+        {!isPreviewMode && currentStep > 0 && (
           <div className="mt-8 space-y-6">
-            {completedSteps.filter(step => step < currentStep).map((stepIndex) => (
+            {Array.from({ length: currentStep }, (_, i) => i).map((stepIndex) => (
               <div key={`completed-section-${stepIndex}`}>
                 {/* Step 1: Event Details - Completed */}
                 {stepIndex === 0 && (
@@ -2580,26 +2664,56 @@ const HiSocEventCreate = () => {
                               slotProps={{ inputLabel: { shrink: true } }}
                               InputProps={{ sx: fieldStyles }}
                             />
-                             <TextField
-                label="Event Date"
-                type="date"
-                value={formData.event_date}
-                onChange={handleChange}
-                name="event_date"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
+                            {/* Start Date */}
+                            <TextField
+                              label="Start Date"
+                              type="date"
+                              value={formData.from_date || ""}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
+
+                            {/* Start Time */}
+                            <TextField
+                              label="Start Time"
+                              type="time"
+                              value={formData.from_time || ""}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
+
+                            {/* End Date */}
+                            <TextField
+                              label="End Date"
+                              type="date"
+                              value={formData.to_date || ""}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
+
+                            {/* End Time */}
+                            <TextField
+                              label="End Time"
+                              type="time"
+                              value={formData.to_time || ""}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
 
                             {/* Event Description */}
-                            <div className="md:col-span-2">
+                            <div className="md:col-span-3">
                               <TextField
                                 label="Event Description"
                                 value={formData.description}
@@ -2609,60 +2723,10 @@ const HiSocEventCreate = () => {
                                 slotProps={{ inputLabel: { shrink: true } }}
                               />
                             </div>
-
-                             <TextField
-                label="Event Time"
-                type="time"
-                value={formData.event_time}
-                onChange={handleChange}
-                name="event_time"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: fieldStyles,
-                }}
-              />
-
-                            {/* Event From */}
-                          
                           </div>
 
-                          {/* 4-column grid for Event To, Mark Important, Send Email, RSVP Action */}
+                          {/* 4-column grid for Send Email, RSVP Action, Mark Important */}
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            {/* Event To */}
-                          
-
-                            {/* Mark Important */}
-                            {/* <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important</label>
-                              <div className="flex gap-4">
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    checked={formData.is_important === true}
-                                    disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">Yes</span>
-                                </label>
-                                <label className="flex items-center">
-                                  <input
-                                    type="radio"
-                                    checked={formData.is_important === false}
-                                    disabled
-                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
-                                    style={{ accentColor: '#C72030' }}
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">No</span>
-                                </label>
-                              </div>
-                            </div> */}
 
                             {/* Send Email */}
                             <div>
@@ -2709,6 +2773,33 @@ const HiSocEventCreate = () => {
                                   <input
                                     type="radio"
                                     checked={formData.rsvp_action === "0"}
+                                    disabled
+                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                    style={{ accentColor: '#C72030' }}
+                                  />
+                                  <span className="ml-2 text-sm text-gray-700">No</span>
+                                </label>
+                              </div>
+                            </div>
+
+                            {/* Mark as Important */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Mark as Important</label>
+                              <div className="flex gap-4">
+                                <label className="flex items-center">
+                                  <input
+                                    type="radio"
+                                    checked={formData.is_important === "1"}
+                                    disabled
+                                    className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                    style={{ accentColor: '#C72030' }}
+                                  />
+                                  <span className="ml-2 text-sm text-gray-700">Yes</span>
+                                </label>
+                                <label className="flex items-center">
+                                  <input
+                                    type="radio"
+                                    checked={formData.is_important === "0" || !formData.is_important}
                                     disabled
                                     className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
                                     style={{ accentColor: '#C72030' }}
@@ -2859,8 +2950,7 @@ const HiSocEventCreate = () => {
                           <p className="text-sm text-gray-500">Display this event on the home page</p>
                         </div>
                         <Switch
-                          checked={formData.showOnHomePage || false}
-                          onChange={(e) => handleInputChange('showOnHomePage', e.target.checked)}
+                          checked={formData.show_on_home || false}
                           disabled
                           sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
@@ -2970,9 +3060,6 @@ const HiSocEventCreate = () => {
                 {stepIndex === 1 && (
                   <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                     <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between" style={{ backgroundColor: '#F6F4EE' }}>
-                      {/* <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm mr-3 font-medium">
-                        ✓
-                      </span> */}
                       <h2 className="text-lg font-medium text-gray-900 flex items-center">
                         <Avatar
                           sx={{
@@ -2997,8 +3084,97 @@ const HiSocEventCreate = () => {
                         <Edit className="w-4 h-4 text-[#bf213e]" /> <span className="text-[#bf213e]">Edit</span> 
                       </button>
                     </div>
-                    <div className="p-6 opacity-75 pointer-events-none">
-                      <p className="text-sm text-gray-600">Event images have been uploaded.</p>
+                    <div className="p-6 space-y-6 opacity-75 pointer-events-none">
+                      {/* Cover Images */}
+                      <div>
+                        <h5 className="text-base font-semibold mb-4">Event Cover Image</h5>
+                        <div className="rounded-lg border border-gray-200 overflow-hidden">
+                          <Table className="border-separate">
+                            <TableHeader>
+                              <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
+                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</TableHead>
+                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</TableHead>
+                                <TableHead className="font-semibold text-gray-900 py-3 px-4" style={{ borderColor: "#fff" }}>Ratio</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {coverImageRatios.flatMap(({ key, label }) => {
+                                const files = Array.isArray(formData[key]) ? formData[key] : formData[key] ? [formData[key]] : [];
+                                if (files.length === 0) return [];
+                                return files.map((file, index) => (
+                                  <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50 transition-colors">
+                                    <TableCell className="py-3 px-4 font-medium">{file.name || file.document_file_name || `Image ${index + 1}`}</TableCell>
+                                    <TableCell className="py-3 px-4">
+                                      <img
+                                        style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                        className="rounded border border-gray-200"
+                                        src={file.preview || file.document_url}
+                                        alt={file.name}
+                                      />
+                                    </TableCell>
+                                    <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
+                                  </TableRow>
+                                ));
+                              })}
+                              {coverImageRatios.every(({ key }) => !(Array.isArray(formData[key]) && formData[key].length > 0)) && (
+                                <TableRow>
+                                  <TableCell colSpan={3} className="text-center py-4 text-gray-500">No cover images uploaded</TableCell>
+                                </TableRow>
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+
+                      {/* Event Attachment Images */}
+                      <div>
+                        <h5 className="text-base font-semibold mb-4">Event Attachment</h5>
+                        <div className="rounded-lg border border-gray-200 overflow-hidden">
+                          <Table className="border-separate">
+                            <TableHeader>
+                              <TableRow className="hover:bg-gray-50" style={{ backgroundColor: "#e6e2d8" }}>
+                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>File Name</TableHead>
+                                <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r" style={{ borderColor: "#fff" }}>Preview</TableHead>
+                                <TableHead className="font-semibold text-gray-900 py-3 px-4" style={{ borderColor: "#fff" }}>Ratio</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {eventImageRatios.flatMap(({ key, label }) => {
+                                const files = Array.isArray(formData[key]) ? formData[key] : [];
+                                if (files.length === 0) return [];
+                                return files.map((file, index) => {
+                                  const isVideo = file.type === "video" || (file.file && file.file.type?.startsWith("video/"));
+                                  return (
+                                    <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50 transition-colors">
+                                      <TableCell className="py-3 px-4 font-medium">{file.name || "Unnamed File"}</TableCell>
+                                      <TableCell className="py-3 px-4">
+                                        {isVideo ? (
+                                          <video controls style={{ maxWidth: 100, maxHeight: 100 }} className="rounded border border-gray-200">
+                                            <source src={file.preview} type={file.file?.type || "video/mp4"} />
+                                          </video>
+                                        ) : (
+                                          <img
+                                            style={{ maxWidth: 100, maxHeight: 100, objectFit: "cover" }}
+                                            className="rounded border border-gray-200"
+                                            src={file.preview || file.document_url}
+                                            alt={file.name}
+                                          />
+                                        )}
+                                      </TableCell>
+                                      <TableCell className="py-3 px-4">{file.ratio || label}</TableCell>
+                                    </TableRow>
+                                  );
+                                });
+                              })}
+                              {eventImageRatios.every(({ key }) => !(Array.isArray(formData[key]) && formData[key].length > 0)) && (
+                                <TableRow>
+                                  <TableCell colSpan={3} className="text-center py-4 text-gray-500">No event images uploaded</TableCell>
+                                </TableRow>
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -3260,10 +3436,22 @@ const HiSocEventCreate = () => {
                               InputProps={{ sx: fieldStyles }}
                             />
                              
-                            {/* From Date */}
+                            {/* Start Date */}
                             <TextField
-                              label="From Date"
-                              type="datetime-local"
+                              label="Start Date"
+                              type="date"
+                              value={formData.from_date || ""}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
+
+                            {/* Start Time */}
+                            <TextField
+                              label="Start Time"
+                              type="time"
                               value={formData.from_time || ""}
                               fullWidth
                               variant="outlined"
@@ -3272,10 +3460,22 @@ const HiSocEventCreate = () => {
                               InputProps={{ sx: fieldStyles }}
                             />
 
-                            {/* To Date */}
+                            {/* End Date */}
                             <TextField
-                              label="To Date"
-                              type="datetime-local"
+                              label="End Date"
+                              type="date"
+                              value={formData.to_date || ""}
+                              fullWidth
+                              variant="outlined"
+                              disabled
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              InputProps={{ sx: fieldStyles }}
+                            />
+
+                            {/* End Time */}
+                            <TextField
+                              label="End Time"
+                              type="time"
                               value={formData.to_time || ""}
                               fullWidth
                               variant="outlined"
@@ -3543,8 +3743,8 @@ const HiSocEventCreate = () => {
                         <p className="text-sm text-gray-500">Display this event on the home page</p>
                       </div>
                       <Switch
-                        checked={visibility.showOnHomePage}
-                        onChange={(e) => setVisibility(prev => ({ ...prev, showOnHomePage: e.target.checked }))}
+                        checked={formData.show_on_home || false}
+                        disabled
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: '#C72030',

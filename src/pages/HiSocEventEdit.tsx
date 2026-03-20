@@ -777,8 +777,10 @@ const HiSocEventEdit = () => {
           shared: shared,
           show_on_home: data.show_on_home === true || data.show_on_home === 1,
           is_important: data.is_important === true ? "1" : "0",
-          from_time: data.from_time ? data.from_time.substring(0, 16) : "",
-          to_time: data.to_time ? data.to_time.substring(0, 16) : "",
+          from_date: data.from_time ? data.from_time.substring(0, 10) : "",
+          from_time: data.from_time ? data.from_time.substring(11, 16) : "",
+          to_date: data.to_time ? data.to_time.substring(0, 10) : "",
+          to_time: data.to_time ? data.to_time.substring(11, 16) : "",
           attachfile: attachfileData,
           newImages: [],
           existingImages: existingImages,
@@ -932,10 +934,28 @@ const HiSocEventEdit = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    const updatedData = { ...formData, [name]: value };
+
+    // Validate end date/time is not before start date/time
+    if (["from_date", "from_time", "to_date", "to_time"].includes(name)) {
+      const startDate = updatedData.from_date;
+      const startTime = updatedData.from_time;
+      const endDate = updatedData.to_date;
+      const endTime = updatedData.to_time;
+
+      if (startDate && endDate) {
+        if (endDate < startDate) {
+          toast.error("End Date cannot be earlier than Start Date.");
+          return;
+        }
+        if (endDate === startDate && startTime && endTime && endTime <= startTime) {
+          toast.error("End Time must be later than Start Time for the same date.");
+          return;
+        }
+      }
+    }
+
+    setFormData(updatedData);
   };
 
   const handleInputChange = (field, value) => {
@@ -1112,6 +1132,16 @@ const HiSocEventEdit = () => {
     if (!formData.event_name) {
       errors.event_name = "Event Name is required.";
     }
+
+    // Validate date/time - end must not be before start
+    if (formData.from_date && formData.to_date) {
+      if (formData.to_date < formData.from_date) {
+        errors.date = "End Date cannot be earlier than Start Date.";
+      } else if (formData.to_date === formData.from_date && formData.from_time && formData.to_time && formData.to_time <= formData.from_time) {
+        errors.time = "End Time must be later than Start Time for the same date.";
+      }
+    }
+
     setFormErrors(errors); // Update state with errors
 
     if (Object.keys(errors).length > 0) {
@@ -1317,12 +1347,24 @@ const HiSocEventEdit = () => {
     removedIds.forEach((id) => data.append("event[removed_image_ids][]", id));
 
     // === DATE AND TIME HANDLING ===
-    if (formData.from_time) {
-      data.append("event[from_time]", formData.from_time);
+    let fromTimeValue = "";
+    if (formData.from_date && formData.from_time) {
+      fromTimeValue = `${formData.from_date}T${formData.from_time}`;
+    } else if (formData.from_date) {
+      fromTimeValue = formData.from_date;
     }
-    
-    if (formData.to_time) {
-      data.append("event[to_time]", formData.to_time);
+    if (fromTimeValue) {
+      data.append("event[from_time]", fromTimeValue);
+    }
+
+    let toTimeValue = "";
+    if (formData.to_date && formData.to_time) {
+      toTimeValue = `${formData.to_date}T${formData.to_time}`;
+    } else if (formData.to_date) {
+      toTimeValue = formData.to_date;
+    }
+    if (toTimeValue) {
+      data.append("event[to_time]", toTimeValue);
     }
 
     // === EVERYTHING ELSE (Primitive values only) ===
@@ -1343,6 +1385,8 @@ const HiSocEventEdit = () => {
           "event_images",
           "from_time", // Skip from_time as we handle it above
           "to_time", // Skip to_time as we handle it above
+          "from_date", // Skip from_date as we handle it above
+          "to_date", // Skip to_date as we handle it above
           "show_on_home", // Skip show_on_home as we handle it above
           "is_important", // Skip is_important as we handle it above
         ].includes(key)
@@ -1734,14 +1778,31 @@ const HiSocEventEdit = () => {
                 }}
               />
 
-              {/* From Date */}
+              {/* Start Date */}
               <TextField
-                label="From Date"
-                type="datetime-local"
-                value={formData.from_time || ""}
-                onChange={(e) => {
-                  handleChange({ target: { name: 'from_time', value: e.target.value } });
+                label="Start Date"
+                type="date"
+                value={formData.from_date}
+                onChange={handleChange}
+                name="from_date"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
                 }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
+
+              {/* Start Time */}
+              <TextField
+                label="Start Time"
+                type="time"
+                value={formData.from_time}
+                onChange={handleChange}
                 name="from_time"
                 fullWidth
                 variant="outlined"
@@ -1755,14 +1816,31 @@ const HiSocEventEdit = () => {
                 }}
               />
 
-              {/* To Date */}
+              {/* End Date */}
               <TextField
-                label="To Date"
-                type="datetime-local"
-                value={formData.to_time || ""}
-                onChange={(e) => {
-                  handleChange({ target: { name: 'to_time', value: e.target.value } });
+                label="End Date"
+                type="date"
+                value={formData.to_date}
+                onChange={handleChange}
+                name="to_date"
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
                 }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
+
+              {/* End Time */}
+              <TextField
+                label="End Time"
+                type="time"
+                value={formData.to_time}
+                onChange={handleChange}
                 name="to_time"
                 fullWidth
                 variant="outlined"
@@ -2874,10 +2952,10 @@ const HiSocEventEdit = () => {
           </>
         )}
 
-        {/* Completed Sections - Show completed steps below current step */}
-        {!isPreviewMode && completedSteps.length > 0 && currentStep > 0 && (
+        {/* Completed Sections - Show all previous steps below current step */}
+        {!isPreviewMode && currentStep > 0 && (
           <div className="mt-8 space-y-6">
-            {completedSteps.filter(step => step < currentStep).map((stepIndex) => (
+            {Array.from({ length: currentStep }, (_, i) => i).map((stepIndex) => (
               <div key={`completed-section-${stepIndex}`}>
                 {/* Step 0: Event Details - Completed */}
                 {stepIndex === 0 && (
@@ -2929,16 +3007,46 @@ const HiSocEventEdit = () => {
                             InputProps={{ sx: fieldStyles }}
                           />
                           <TextField
-                            label="Event Date"
+                            label="Start Date"
                             type="date"
-                            value={formData.from_time ? formData.from_time.split('T')[0] : ""}
+                            value={formData.from_date || ""}
                             fullWidth
                             variant="outlined"
                             disabled
                             slotProps={{ inputLabel: { shrink: true } }}
                             InputProps={{ sx: fieldStyles }}
                           />
-                          <div className="md:col-span-2">
+                          <TextField
+                            label="Start Time"
+                            type="time"
+                            value={formData.from_time || ""}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            InputProps={{ sx: fieldStyles }}
+                          />
+                          <TextField
+                            label="End Date"
+                            type="date"
+                            value={formData.to_date || ""}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            InputProps={{ sx: fieldStyles }}
+                          />
+                          <TextField
+                            label="End Time"
+                            type="time"
+                            value={formData.to_time || ""}
+                            fullWidth
+                            variant="outlined"
+                            disabled
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            InputProps={{ sx: fieldStyles }}
+                          />
+                          <div className="md:col-span-3">
                             <TextField
                               label="Event Description"
                               value={formData.description}
@@ -2948,16 +3056,6 @@ const HiSocEventEdit = () => {
                               slotProps={{ inputLabel: { shrink: true } }}
                             />
                           </div>
-                          <TextField
-                            label="Event Time"
-                            type="time"
-                            value={formData.from_time ? formData.from_time.split('T')[1]?.substring(0, 5) : ""}
-                            fullWidth
-                            variant="outlined"
-                            disabled
-                            slotProps={{ inputLabel: { shrink: true } }}
-                            InputProps={{ sx: fieldStyles }}
-                          />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                           <div>
@@ -2966,7 +3064,7 @@ const HiSocEventEdit = () => {
                               <label className="flex items-center">
                                 <input
                                   type="radio"
-                                  checked={formData.email_trigger_enabled === true}
+                                  checked={formData.email_trigger_enabled === "true" || formData.email_trigger_enabled === true}
                                   disabled
                                   className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
                                   style={{ accentColor: '#C72030' }}
@@ -2976,7 +3074,7 @@ const HiSocEventEdit = () => {
                               <label className="flex items-center">
                                 <input
                                   type="radio"
-                                  checked={formData.email_trigger_enabled === false}
+                                  checked={formData.email_trigger_enabled === "false" || formData.email_trigger_enabled === false}
                                   disabled
                                   className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
                                   style={{ accentColor: '#C72030' }}
@@ -3002,6 +3100,31 @@ const HiSocEventEdit = () => {
                                 <input
                                   type="radio"
                                   checked={formData.rsvp_action === "0"}
+                                  disabled
+                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                  style={{ accentColor: '#C72030' }}
+                                />
+                                <span className="ml-2 text-sm text-gray-700">No</span>
+                              </label>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Mark as Important</label>
+                            <div className="flex gap-4">
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  checked={formData.is_important === "1"}
+                                  disabled
+                                  className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
+                                  style={{ accentColor: '#C72030' }}
+                                />
+                                <span className="ml-2 text-sm text-gray-700">Yes</span>
+                              </label>
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  checked={formData.is_important === "0" || !formData.is_important}
                                   disabled
                                   className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
                                   style={{ accentColor: '#C72030' }}
@@ -3048,7 +3171,7 @@ const HiSocEventEdit = () => {
                             <p className="text-sm text-gray-500">Display this event on the home page</p>
                           </div>
                           <Switch
-                            checked={visibility.showOnHomePage}
+                            checked={formData.show_on_home || false}
                             disabled
                             sx={{
                               '& .MuiSwitch-switchBase.Mui-checked': {
@@ -3424,8 +3547,18 @@ const HiSocEventEdit = () => {
                         InputProps={{ sx: fieldStyles }}
                       />
                       <TextField
-                        label="From Date"
-                        type="datetime-local"
+                        label="Start Date"
+                        type="date"
+                        value={formData.from_date || ""}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
+                      <TextField
+                        label="Start Time"
+                        type="time"
                         value={formData.from_time || ""}
                         fullWidth
                         variant="outlined"
@@ -3434,8 +3567,18 @@ const HiSocEventEdit = () => {
                         InputProps={{ sx: fieldStyles }}
                       />
                       <TextField
-                        label="To Date"
-                        type="datetime-local"
+                        label="End Date"
+                        type="date"
+                        value={formData.to_date || ""}
+                        fullWidth
+                        variant="outlined"
+                        disabled
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
+                      <TextField
+                        label="End Time"
+                        type="time"
                         value={formData.to_time || ""}
                         fullWidth
                         variant="outlined"
@@ -3461,7 +3604,7 @@ const HiSocEventEdit = () => {
                           <label className="flex items-center">
                             <input
                               type="radio"
-                              checked={formData.email_trigger_enabled === true}
+                              checked={formData.email_trigger_enabled === "true" || formData.email_trigger_enabled === true}
                               disabled
                               className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
                               style={{ accentColor: '#C72030' }}
@@ -3471,7 +3614,7 @@ const HiSocEventEdit = () => {
                           <label className="flex items-center">
                             <input
                               type="radio"
-                              checked={formData.email_trigger_enabled === false}
+                              checked={formData.email_trigger_enabled === "false" || formData.email_trigger_enabled === false}
                               disabled
                               className="w-4 h-4 text-[#C72030] focus:ring-[#C72030]"
                               style={{ accentColor: '#C72030' }}
@@ -3572,8 +3715,8 @@ const HiSocEventEdit = () => {
                       <p className="text-sm text-gray-500">Display this event on the home page</p>
                     </div>
                     <Switch
-                      checked={formData.showOnHomePage || false}
-                      onChange={(e) => handleInputChange('showOnHomePage', e.target.checked)}
+                      checked={formData.show_on_home || false}
+                      disabled
                       sx={{
                         '& .MuiSwitch-switchBase.Mui-checked': {
                           color: '#C72030',
