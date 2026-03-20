@@ -347,7 +347,20 @@ const BannerEdit = () => {
     if (!formData.title.trim()) newErrors.title = "Title is mandatory";
     if (!formData.project_id) newErrors.project_id = "Project is mandatory";
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (Object.keys(newErrors).length > 0) return false;
+
+    // Check that at least one banner attachment exists
+    const hasAnyAttachment = project_banner.some(({ key }) => {
+      const files = Array.isArray(formData[key]) ? formData[key] : formData[key] ? [formData[key]] : [];
+      return files.length > 0;
+    });
+
+    if (!hasAnyAttachment) {
+      toast.error("Please add at least one banner attachment before submitting.");
+      return false;
+    }
+
+    return true;
   };
 
   const bannerUploadConfig = {
