@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Plus, Eye, Pencil } from "lucide-react";
+import { Switch } from "@mui/material";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
@@ -259,60 +260,33 @@ const NoticeboardList = () => {
         );
       case "expire_time":
         return formatDateTimeManual(item.expire_time);
-     case "active":
-  return noticeboardPermission.destroy === "true" ? (
-    <div className="flex items-center justify-center min-h-[32px]">
-      <Switch
-        checked={item.active ?? false}
-        onChange={() => handleToggleNoticeboard(item.id, item.active)}
-        size="small"
-        sx={{
-          '& .MuiSwitch-switchBase.Mui-checked': {
-            color: '#C72030',
-          },
-          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-            backgroundColor: '#C72030 !important',
-          },
-          '& .MuiSwitch-track': {
-            backgroundColor: '#cbd5e1 !important', // slate-300
-            opacity: 1,
-          },
-        }}
-      />
-    </div>
-  ) : (
-    <span className="text-sm text-gray-600 font-medium">
-      {item.active ? 'Active' : 'Inactive'}
-    </span>
-  );
-  return noticeboardPermission.destroy === "true" ? (
-    <Switch
-      checked={item.active ?? false}
-      onChange={() => handleToggleNoticeboard(item.id, item.active)}
-      size="small"           // optional – looks cleaner in tables
-      sx={{
-        // Target the thumb when checked
-        '& .MuiSwitch-switchBase.Mui-checked': {
-          color: '#C72030',
-        },
-        // Target the track (background) when checked
-        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-          backgroundColor: '#C72030 !important',
-        },
-        // Optional: make unchecked track a bit darker gray
-        '& .MuiSwitch-track': {
-          backgroundColor: '#94a3b8 !important', // slate-400 like
-          opacity: 1,
-        },
-        // Optional: slightly smaller in table
-        transform: 'scale(0.9)',
-      }}
-    />
-  ) : (
-    <span className="text-sm text-gray-500 font-medium">
-      {item.active ? "Active" : "Inactive"}
-    </span>
-  );
+      case "active":
+        return noticeboardPermission.destroy === "true" ? (
+          <div className="flex items-center justify-center min-h-[32px]">
+            <Switch
+              checked={item.active ?? false}
+              onChange={() => handleToggleNoticeboard(item.id, item.active)}
+              size="small"
+              sx={{
+                '& .MuiSwitch-switchBase.Mui-checked': {
+                  color: '#C72030',
+                },
+                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                  backgroundColor: '#C72030 !important',
+                },
+                '& .MuiSwitch-track': {
+                  backgroundColor: '#cbd5e1 !important',
+                  opacity: 1,
+                },
+              }}
+            />
+          </div>
+        ) : (
+          <span className="text-sm text-gray-600 font-medium">
+            {item.active ? 'Active' : 'Inactive'}
+          </span>
+        );
+      default:
         return item[columnKey] ?? "-";
     }
   };
