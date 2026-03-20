@@ -443,6 +443,24 @@ export const HiSocietySidebar: React.FC = () => {
       title: "CMS",
       items: [
         {
+          id: "facility-bookings",
+          label: "Facility Bookings",
+          icon: Calendar,
+          path: "/cms/facility-bookings",
+        },
+        {
+          id: "club-members",
+          label: "Club Members",
+          icon: Users,
+          path: "/cms/club-members",
+        },
+        {
+          id: "payments",
+          label: "Payments",
+          icon: CreditCard,
+          path: "/cms/payments",
+        },
+        {
           id: "setup",
           label: "Setup",
           icon: SettingsIcon,
@@ -467,24 +485,6 @@ export const HiSocietySidebar: React.FC = () => {
               path: "/cms/membership-plan-setup",
             },
           ],
-        },
-        {
-          id: "club-members",
-          label: "Club Members",
-          icon: Users,
-          path: "/cms/club-members",
-        },
-        {
-          id: "facility-bookings",
-          label: "Facility Bookings",
-          icon: Calendar,
-          path: "/cms/facility-bookings",
-        },
-        {
-          id: "payments",
-          label: "Payments",
-          icon: CreditCard,
-          path: "/cms/payments",
         },
       ],
     },
@@ -976,13 +976,13 @@ export const HiSocietySidebar: React.FC = () => {
               icon: CreditCard,
               path: "/settings/wallet-topup",
             },
-             {
+            {
               id: "threshold-alerts",
               label: "Threshold Alerts",
               icon: CreditCard,
               path: "/settings/threshold-alerts",
             },
-             {
+            {
               id: "generic-categories",
               label: "Generic Categories",
               icon: CreditCard,
