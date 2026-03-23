@@ -24,7 +24,9 @@ import {
   Trash,
   Trash2,
   Info,
+  Smile,
 } from "lucide-react";
+import { emojis } from "@/utils/emojies";
 import {
   TextField,
   FormControl,
@@ -192,6 +194,30 @@ const EventEdit = () => {
     showOnBookingPage: false,
     featuredEvent: false,
   });
+
+  // Emoji picker state
+  const [showDescriptionEmojiPicker, setShowDescriptionEmojiPicker] = useState(false);
+  const descriptionEmojiPickerRef = useRef(null);
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (descriptionEmojiPickerRef.current && !descriptionEmojiPickerRef.current.contains(event.target as Node)) {
+        setShowDescriptionEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Handle emoji clicks for description
+  const handleDescriptionEmojiClick = (emoji: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      description: prev.description + emoji,
+    }));
+  };
 
   // Fetch image configurations from API
   const fetchImageConfigurations = async () => {
@@ -699,295 +725,295 @@ const EventEdit = () => {
         // Prepare cover image previews for all ratios
         const coverImage1by1 = data.cover_image_1_by_1
           ? [
-              {
-                url: data.cover_image_1_by_1.document_url,
-                document_url: data.cover_image_1_by_1.document_url,
-                document_file_name: data.cover_image_1_by_1.document_file_name,
-                id: data.cover_image_1_by_1.id,
-                ratio: "1:1",
-                isExisting: true,
-                type: "image",
-              },
-            ]
+            {
+              url: data.cover_image_1_by_1.document_url,
+              document_url: data.cover_image_1_by_1.document_url,
+              document_file_name: data.cover_image_1_by_1.document_file_name,
+              id: data.cover_image_1_by_1.id,
+              ratio: "1:1",
+              isExisting: true,
+              type: "image",
+            },
+          ]
           : [];
 
         const coverImage9by16 = data.cover_image_9_by_16
           ? [
-              {
-                url: data.cover_image_9_by_16.document_url,
-                document_url: data.cover_image_9_by_16.document_url,
-                document_file_name: data.cover_image_9_by_16.document_file_name,
-                id: data.cover_image_9_by_16.id,
-                ratio: "9:16",
-                isExisting: true,
-                type: "image",
-              },
-            ]
+            {
+              url: data.cover_image_9_by_16.document_url,
+              document_url: data.cover_image_9_by_16.document_url,
+              document_file_name: data.cover_image_9_by_16.document_file_name,
+              id: data.cover_image_9_by_16.id,
+              ratio: "9:16",
+              isExisting: true,
+              type: "image",
+            },
+          ]
           : [];
 
         const coverImage3by2 = data.cover_image_3_by_2
           ? [
-              {
-                url: data.cover_image_3_by_2.document_url,
-                document_url: data.cover_image_3_by_2.document_url,
-                document_file_name: data.cover_image_3_by_2.document_file_name,
-                id: data.cover_image_3_by_2.id,
-                ratio: "3:2",
-                isExisting: true,
-                type: "image",
-              },
-            ]
+            {
+              url: data.cover_image_3_by_2.document_url,
+              document_url: data.cover_image_3_by_2.document_url,
+              document_file_name: data.cover_image_3_by_2.document_file_name,
+              id: data.cover_image_3_by_2.id,
+              ratio: "3:2",
+              isExisting: true,
+              type: "image",
+            },
+          ]
           : [];
 
         const coverImage16by9 = data.cover_image_16_by_9
           ? [
-              {
-                url: data.cover_image_16_by_9.document_url,
-                document_url: data.cover_image_16_by_9.document_url,
-                document_file_name: data.cover_image_16_by_9.document_file_name,
-                id: data.cover_image_16_by_9.id,
-                ratio: "16:9",
-                isExisting: true,
-                type: "image",
-              },
-            ]
+            {
+              url: data.cover_image_16_by_9.document_url,
+              document_url: data.cover_image_16_by_9.document_url,
+              document_file_name: data.cover_image_16_by_9.document_file_name,
+              id: data.cover_image_16_by_9.id,
+              ratio: "16:9",
+              isExisting: true,
+              type: "image",
+            },
+          ]
           : [];
 
         // Prepare event image previews for all ratios
         const eventImages1by1 = Array.isArray(data.event_images_1_by_1)
           ? data.event_images_1_by_1.map((img) => ({
-              url: img.document_url,
-              document_url: img.document_url,
-              document_file_name: img.document_file_name,
-              id: img.id,
-              ratio: "1:1",
-              isExisting: true,
-              type: img.document_content_type?.startsWith("video")
-                ? "video"
-                : "image",
-            }))
+            url: img.document_url,
+            document_url: img.document_url,
+            document_file_name: img.document_file_name,
+            id: img.id,
+            ratio: "1:1",
+            isExisting: true,
+            type: img.document_content_type?.startsWith("video")
+              ? "video"
+              : "image",
+          }))
           : data.event_images_1_by_1
             ? [
-                {
-                  url: data.event_images_1_by_1.document_url,
-                  document_url: data.event_images_1_by_1.document_url,
-                  document_file_name:
-                    data.event_images_1_by_1.document_file_name,
-                  id: data.event_images_1_by_1.id,
-                  ratio: "1:1",
-                  isExisting: true,
-                  type: "image",
-                },
-              ]
+              {
+                url: data.event_images_1_by_1.document_url,
+                document_url: data.event_images_1_by_1.document_url,
+                document_file_name:
+                  data.event_images_1_by_1.document_file_name,
+                id: data.event_images_1_by_1.id,
+                ratio: "1:1",
+                isExisting: true,
+                type: "image",
+              },
+            ]
             : [];
 
         const eventImages9by16 = Array.isArray(data.event_images_9_by_16)
           ? data.event_images_9_by_16.map((img) => ({
-              url: img.document_url,
-              document_url: img.document_url,
-              document_file_name: img.document_file_name,
-              id: img.id,
-              ratio: "9:16",
-              isExisting: true,
-              type: img.document_content_type?.startsWith("video")
-                ? "video"
-                : "image",
-            }))
+            url: img.document_url,
+            document_url: img.document_url,
+            document_file_name: img.document_file_name,
+            id: img.id,
+            ratio: "9:16",
+            isExisting: true,
+            type: img.document_content_type?.startsWith("video")
+              ? "video"
+              : "image",
+          }))
           : data.event_images_9_by_16
             ? [
-                {
-                  url: data.event_images_9_by_16.document_url,
-                  document_url: data.event_images_9_by_16.document_url,
-                  document_file_name:
-                    data.event_images_9_by_16.document_file_name,
-                  id: data.event_images_9_by_16.id,
-                  ratio: "9:16",
-                  isExisting: true,
-                  type: "image",
-                },
-              ]
+              {
+                url: data.event_images_9_by_16.document_url,
+                document_url: data.event_images_9_by_16.document_url,
+                document_file_name:
+                  data.event_images_9_by_16.document_file_name,
+                id: data.event_images_9_by_16.id,
+                ratio: "9:16",
+                isExisting: true,
+                type: "image",
+              },
+            ]
             : [];
 
         const eventImages3by2 = Array.isArray(data.event_images_3_by_2)
           ? data.event_images_3_by_2.map((img) => ({
-              url: img.document_url,
-              document_url: img.document_url,
-              document_file_name: img.document_file_name,
-              id: img.id,
-              ratio: "3:2",
-              isExisting: true,
-              type: img.document_content_type?.startsWith("video")
-                ? "video"
-                : "image",
-            }))
+            url: img.document_url,
+            document_url: img.document_url,
+            document_file_name: img.document_file_name,
+            id: img.id,
+            ratio: "3:2",
+            isExisting: true,
+            type: img.document_content_type?.startsWith("video")
+              ? "video"
+              : "image",
+          }))
           : data.event_images_3_by_2
             ? [
-                {
-                  url: data.event_images_3_by_2.document_url,
-                  document_url: data.event_images_3_by_2.document_url,
-                  document_file_name:
-                    data.event_images_3_by_2.document_file_name,
-                  id: data.event_images_3_by_2.id,
-                  ratio: "3:2",
-                  isExisting: true,
-                  type: "image",
-                },
-              ]
+              {
+                url: data.event_images_3_by_2.document_url,
+                document_url: data.event_images_3_by_2.document_url,
+                document_file_name:
+                  data.event_images_3_by_2.document_file_name,
+                id: data.event_images_3_by_2.id,
+                ratio: "3:2",
+                isExisting: true,
+                type: "image",
+              },
+            ]
             : [];
 
         const eventImages16by9 = Array.isArray(data.event_images_16_by_9)
           ? data.event_images_16_by_9.map((img) => ({
-              url: img.document_url,
-              document_url: img.document_url,
-              document_file_name: img.document_file_name,
-              id: img.id,
-              ratio: "16:9",
-              isExisting: true,
-              type: img.document_content_type?.startsWith("video")
-                ? "video"
-                : "image",
-            }))
+            url: img.document_url,
+            document_url: img.document_url,
+            document_file_name: img.document_file_name,
+            id: img.id,
+            ratio: "16:9",
+            isExisting: true,
+            type: img.document_content_type?.startsWith("video")
+              ? "video"
+              : "image",
+          }))
           : data.event_images_16_by_9
             ? [
-                {
-                  url: data.event_images_16_by_9.document_url,
-                  document_url: data.event_images_16_by_9.document_url,
-                  document_file_name:
-                    data.event_images_16_by_9.document_file_name,
-                  id: data.event_images_16_by_9.id,
-                  ratio: "16:9",
-                  isExisting: true,
-                  type: "image",
-                },
-              ]
+              {
+                url: data.event_images_16_by_9.document_url,
+                document_url: data.event_images_16_by_9.document_url,
+                document_file_name:
+                  data.event_images_16_by_9.document_file_name,
+                id: data.event_images_16_by_9.id,
+                ratio: "16:9",
+                isExisting: true,
+                type: "image",
+              },
+            ]
             : [];
 
         const thumbnailImages1by1 = Array.isArray(data.thumbnail_image_1_by_1)
           ? data.thumbnail_image_1_by_1.map((img) => ({
-              url: img.document_url,
-              document_url: img.document_url,
-              document_file_name: img.document_file_name,
-              id: img.id,
-              ratio: "1:1",
-              isExisting: true,
-              type: img.document_content_type?.startsWith("video")
-                ? "video"
-                : "image",
-            }))
+            url: img.document_url,
+            document_url: img.document_url,
+            document_file_name: img.document_file_name,
+            id: img.id,
+            ratio: "1:1",
+            isExisting: true,
+            type: img.document_content_type?.startsWith("video")
+              ? "video"
+              : "image",
+          }))
           : data.thumbnail_image_1_by_1
             ? [
-                {
-                  url: data.thumbnail_image_1_by_1.document_url,
-                  document_url: data.thumbnail_image_1_by_1.document_url,
-                  document_file_name:
-                    data.thumbnail_image_1_by_1.document_file_name,
-                  id: data.thumbnail_image_1_by_1.id,
-                  ratio: "1:1",
-                  isExisting: true,
-                  type: "image",
-                },
-              ]
+              {
+                url: data.thumbnail_image_1_by_1.document_url,
+                document_url: data.thumbnail_image_1_by_1.document_url,
+                document_file_name:
+                  data.thumbnail_image_1_by_1.document_file_name,
+                id: data.thumbnail_image_1_by_1.id,
+                ratio: "1:1",
+                isExisting: true,
+                type: "image",
+              },
+            ]
             : [];
 
         const thumbnailImages9by16 = Array.isArray(data.thumbnail_image_9_by_16)
           ? data.thumbnail_image_9_by_16.map((img) => ({
-              url: img.document_url,
-              document_url: img.document_url,
-              document_file_name: img.document_file_name,
-              id: img.id,
-              ratio: "9:16",
-              isExisting: true,
-              type: img.document_content_type?.startsWith("video")
-                ? "video"
-                : "image",
-            }))
+            url: img.document_url,
+            document_url: img.document_url,
+            document_file_name: img.document_file_name,
+            id: img.id,
+            ratio: "9:16",
+            isExisting: true,
+            type: img.document_content_type?.startsWith("video")
+              ? "video"
+              : "image",
+          }))
           : data.thumbnail_image_9_by_16
             ? [
-                {
-                  url: data.thumbnail_image_9_by_16.document_url,
-                  document_url: data.thumbnail_image_9_by_16.document_url,
-                  document_file_name:
-                    data.thumbnail_image_9_by_16.document_file_name,
-                  id: data.thumbnail_image_9_by_16.id,
-                  ratio: "9:16",
-                  isExisting: true,
-                  type: "image",
-                },
-              ]
+              {
+                url: data.thumbnail_image_9_by_16.document_url,
+                document_url: data.thumbnail_image_9_by_16.document_url,
+                document_file_name:
+                  data.thumbnail_image_9_by_16.document_file_name,
+                id: data.thumbnail_image_9_by_16.id,
+                ratio: "9:16",
+                isExisting: true,
+                type: "image",
+              },
+            ]
             : [];
 
         const thumbnailImages3by2 = Array.isArray(data.thumbnail_image_3_by_2)
           ? data.thumbnail_image_3_by_2.map((img) => ({
-              url: img.document_url,
-              document_url: img.document_url,
-              document_file_name: img.document_file_name,
-              id: img.id,
-              ratio: "3:2",
-              isExisting: true,
-              type: img.document_content_type?.startsWith("video")
-                ? "video"
-                : "image",
-            }))
+            url: img.document_url,
+            document_url: img.document_url,
+            document_file_name: img.document_file_name,
+            id: img.id,
+            ratio: "3:2",
+            isExisting: true,
+            type: img.document_content_type?.startsWith("video")
+              ? "video"
+              : "image",
+          }))
           : data.thumbnail_image_3_by_2
             ? [
-                {
-                  url: data.thumbnail_image_3_by_2.document_url,
-                  document_url: data.thumbnail_image_3_by_2.document_url,
-                  document_file_name:
-                    data.thumbnail_image_3_by_2.document_file_name,
-                  id: data.thumbnail_image_3_by_2.id,
-                  ratio: "3:2",
-                  isExisting: true,
-                  type: "image",
-                },
-              ]
+              {
+                url: data.thumbnail_image_3_by_2.document_url,
+                document_url: data.thumbnail_image_3_by_2.document_url,
+                document_file_name:
+                  data.thumbnail_image_3_by_2.document_file_name,
+                id: data.thumbnail_image_3_by_2.id,
+                ratio: "3:2",
+                isExisting: true,
+                type: "image",
+              },
+            ]
             : [];
 
         const thumbnailImages16by9 = Array.isArray(data.thumbnail_image_16_by_9)
           ? data.thumbnail_image_16_by_9.map((img) => ({
-              url: img.document_url,
-              document_url: img.document_url,
-              document_file_name: img.document_file_name,
-              id: img.id,
-              ratio: "16:9",
-              isExisting: true,
-              type: img.document_content_type?.startsWith("video")
-                ? "video"
-                : "image",
-            }))
+            url: img.document_url,
+            document_url: img.document_url,
+            document_file_name: img.document_file_name,
+            id: img.id,
+            ratio: "16:9",
+            isExisting: true,
+            type: img.document_content_type?.startsWith("video")
+              ? "video"
+              : "image",
+          }))
           : data.thumbnail_image_16_by_9
             ? [
-                {
-                  url: data.thumbnail_image_16_by_9.document_url,
-                  document_url: data.thumbnail_image_16_by_9.document_url,
-                  document_file_name:
-                    data.thumbnail_image_16_by_9.document_file_name,
-                  id: data.thumbnail_image_16_by_9.id,
-                  ratio: "16:9",
-                  isExisting: true,
-                  type: "image",
-                },
-              ]
+              {
+                url: data.thumbnail_image_16_by_9.document_url,
+                document_url: data.thumbnail_image_16_by_9.document_url,
+                document_file_name:
+                  data.thumbnail_image_16_by_9.document_file_name,
+                id: data.thumbnail_image_16_by_9.id,
+                ratio: "16:9",
+                isExisting: true,
+                type: "image",
+              },
+            ]
             : [];
 
         // Prepare home cover image (16:9 is used for home)
         const existingCoverImage =
           data.home_cover_image && data.home_cover_image.document_url
             ? {
-                url: data.home_cover_image.document_url,
-                id: data.home_cover_image.id,
-                isExisting: true,
-              }
+              url: data.home_cover_image.document_url,
+              id: data.home_cover_image.id,
+              isExisting: true,
+            }
             : null;
 
         // Prepare existing event image previews from home_event_images
         const existingImages = Array.isArray(data.home_event_images)
           ? data.home_event_images.map((img) => ({
-              url: img.document_url,
-              type: img.document_content_type,
-              id: img.id,
-              isExisting: true,
-            }))
+            url: img.document_url,
+            type: img.document_content_type,
+            id: img.id,
+            isExisting: true,
+          }))
           : [];
 
         const attachfileData = [];
@@ -1966,21 +1992,21 @@ const EventEdit = () => {
                       index === currentStep || completedSteps.includes(index)
                         ? "#C72030"
                         : index > currentStep &&
-                            !completedSteps.includes(index - 1)
+                          !completedSteps.includes(index - 1)
                           ? "rgba(245, 245, 245, 1)"
                           : "rgba(255, 255, 255, 1)",
                     color:
                       index === currentStep || completedSteps.includes(index)
                         ? "white"
                         : index > currentStep &&
-                            !completedSteps.includes(index - 1)
+                          !completedSteps.includes(index - 1)
                           ? "rgba(150, 150, 150, 1)"
                           : "rgba(196, 184, 157, 1)",
                     border:
                       index === currentStep || completedSteps.includes(index)
                         ? "2px solid #C72030"
                         : index > currentStep &&
-                            !completedSteps.includes(index - 1)
+                          !completedSteps.includes(index - 1)
                           ? "1px solid rgba(200, 200, 200, 1)"
                           : "1px solid rgba(196, 184, 157, 1)",
                     padding: "12px 20px",
@@ -2001,21 +2027,21 @@ const EventEdit = () => {
                     "&:hover": {
                       opacity:
                         index > currentStep &&
-                        !completedSteps.includes(index - 1)
+                          !completedSteps.includes(index - 1)
                           ? 1
                           : 0.9,
                     },
                     "&::before":
                       completedSteps.includes(index) && index !== currentStep
                         ? {
-                            content: '"✓"',
-                            position: "absolute",
-                            right: "8px",
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            fontSize: "12px",
-                            fontWeight: "bold",
-                          }
+                          content: '"✓"',
+                          position: "absolute",
+                          right: "8px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                        }
                         : {},
                   }}
                 >
@@ -2241,7 +2267,7 @@ const EventEdit = () => {
 
                 {/* Event Description */}
                 <div className="md:col-span-3 mt-1">
-                  <div className="relative w-full">
+                  <div className="relative w-full border border-gray-300 rounded-[5px] bg-white">
                     {/* Floating Label */}
                     <label
                       className="
@@ -2259,24 +2285,56 @@ const EventEdit = () => {
                       <span className="text-[#C72030]">*</span>
                     </label>
 
-                    {/* Textarea */}
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      placeholder="Enter Description"
-                      rows={6}
-                      className="
+                    <div className="relative p-4 pt-2">
+                      {/* Textarea with emoji picker */}
+                      <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        placeholder="Enter Description"
+                        rows={6}
+                        className="
         w-full
-      rounded-[5px]
-      border
-      border-gray-300
-      p-4
+      border-0
+      p-0
+      pr-8
       text-sm
       outline-none
       resize-none
+      bg-transparent
       "
-                    />
+                      />
+                      <div
+                        ref={descriptionEmojiPickerRef}
+                        className="absolute bottom-4 right-4"
+                      >
+                        <Smile
+                          className="text-gray-500 cursor-pointer hover:text-gray-700"
+                          size={18}
+                          onClick={() =>
+                            setShowDescriptionEmojiPicker(!showDescriptionEmojiPicker)
+                          }
+                        />
+                        {showDescriptionEmojiPicker && (
+                          <div className="absolute bottom-8 right-0 bg-white border rounded-lg shadow-lg p-3 w-64 h-48 overflow-y-auto z-50">
+                            <div className="grid grid-cols-8 gap-1">
+                              {emojis.map((emoji, index) => (
+                                <button
+                                  key={index}
+                                  type="button"
+                                  className="text-xl hover:bg-gray-100 rounded p-1 transition-colors"
+                                  onClick={() => {
+                                    handleDescriptionEmojiClick(emoji);
+                                  }}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3215,15 +3273,15 @@ const EventEdit = () => {
                           ({ key }) =>
                             !(formData[key] && formData[key].length > 0)
                         ) && (
-                          <TableRow>
-                            <TableCell
-                              colSpan={4}
-                              className="text-center text-gray-500"
-                            >
-                              No cover images uploaded
-                            </TableCell>
-                          </TableRow>
-                        )}
+                            <TableRow>
+                              <TableCell
+                                colSpan={4}
+                                className="text-center text-gray-500"
+                              >
+                                No cover images uploaded
+                              </TableCell>
+                            </TableRow>
+                          )}
                       </TableBody>
                     </Table>
                   </div>
@@ -3475,7 +3533,7 @@ const EventEdit = () => {
                 </div>
 
                 {/* Event Details Image */}
-                 <div className="mb-6">
+                <div className="mb-6">
                   <div className="flex justify-between items-center mb-4">
                     <h5 className="text-base font-semibold inline-flex items-center gap-1">
                       Event Thumbnail Image{" "}
@@ -3550,7 +3608,7 @@ const EventEdit = () => {
                       </Table>
                     </div>
                   </div>
-                </div> 
+                </div>
               </div>
             </div>
           </div>
@@ -4042,15 +4100,15 @@ const EventEdit = () => {
                                   ({ key }) =>
                                     !(formData[key] && formData[key].length > 0)
                                 ) && (
-                                  <TableRow>
-                                    <TableCell
-                                      colSpan={3}
-                                      className="text-center text-gray-500"
-                                    >
-                                      No cover images uploaded
-                                    </TableCell>
-                                  </TableRow>
-                                )}
+                                    <TableRow>
+                                      <TableCell
+                                        colSpan={3}
+                                        className="text-center text-gray-500"
+                                      >
+                                        No cover images uploaded
+                                      </TableCell>
+                                    </TableRow>
+                                  )}
                               </TableBody>
                             </Table>
                           </div>
@@ -4148,15 +4206,15 @@ const EventEdit = () => {
                                   ({ key }) =>
                                     !(formData[key] && formData[key].length > 0)
                                 ) && (
-                                  <TableRow>
-                                    <TableCell
-                                      colSpan={3}
-                                      className="text-center text-gray-500"
-                                    >
-                                      No event images uploaded
-                                    </TableCell>
-                                  </TableRow>
-                                )}
+                                    <TableRow>
+                                      <TableCell
+                                        colSpan={3}
+                                        className="text-center text-gray-500"
+                                      >
+                                        No event images uploaded
+                                      </TableCell>
+                                    </TableRow>
+                                  )}
                               </TableBody>
                             </Table>
                           </div>
@@ -4771,15 +4829,15 @@ const EventEdit = () => {
                               ({ key }) =>
                                 !(formData[key] && formData[key].length > 0)
                             ) && (
-                              <TableRow>
-                                <TableCell
-                                  colSpan={3}
-                                  className="text-center text-gray-500"
-                                >
-                                  No cover images uploaded
-                                </TableCell>
-                              </TableRow>
-                            )}
+                                <TableRow>
+                                  <TableCell
+                                    colSpan={3}
+                                    className="text-center text-gray-500"
+                                  >
+                                    No cover images uploaded
+                                  </TableCell>
+                                </TableRow>
+                              )}
                           </TableBody>
                         </Table>
                       </div>
@@ -4875,12 +4933,57 @@ const EventEdit = () => {
                               ({ key }) =>
                                 !(formData[key] && formData[key].length > 0)
                             ) && (
+                                <TableRow>
+                                  <TableCell
+                                    colSpan={3}
+                                    className="text-center text-gray-500"
+                                  >
+                                    No event images uploaded
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+
+                    {/* Event Details Image - inside Event Related Images card */}
+                    <div>
+                      <h5 className="text-base font-semibold mb-4">Event Thumbnail Image</h5>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow style={{ backgroundColor: '#E6E2D8' }}>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
+                              <TableHead className="font-semibold text-gray-900 py-3 px-4">Ratio</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {detailsImageRatios.map(({ key, label }) =>
+                              (formData[key] || []).length > 0
+                                ? formData[key].map((file, index) => (
+                                  <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
+                                    <TableCell>{file.name || file.document_file_name || 'Unnamed'}</TableCell>
+                                    <TableCell>
+                                      {(file.preview || file.document_url) && (
+                                        <img
+                                          style={{ maxWidth: 100, maxHeight: 100, objectFit: 'cover' }}
+                                          className="img-fluid rounded"
+                                          src={file.preview || file.document_url}
+                                          alt={file.name || label}
+                                        />
+                                      )}
+                                    </TableCell>
+                                    <TableCell>{file.ratio || label}</TableCell>
+                                  </TableRow>
+                                ))
+                                : null
+                            )}
+                            {detailsImageRatios.every(({ key }) => !formData[key] || formData[key].length === 0) && (
                               <TableRow>
-                                <TableCell
-                                  colSpan={3}
-                                  className="text-center text-gray-500"
-                                >
-                                  No event images uploaded
+                                <TableCell colSpan={3} className="text-center text-gray-500 py-4">
+                                  No details image uploaded.
                                 </TableCell>
                               </TableRow>
                             )}
@@ -4888,51 +4991,6 @@ const EventEdit = () => {
                         </Table>
                       </div>
                     </div>
-
-                    {/* Event Details Image - inside Event Related Images card */}
-                     <div>
-                  <h5 className="text-base font-semibold mb-4">Event Thumbnail Image</h5>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow style={{ backgroundColor: '#E6E2D8' }}>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">File Name</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4 border-r border-white">Preview</TableHead>
-                          <TableHead className="font-semibold text-gray-900 py-3 px-4">Ratio</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {detailsImageRatios.map(({ key, label }) =>
-                          (formData[key] || []).length > 0
-                            ? formData[key].map((file, index) => (
-                              <TableRow key={`${key}-${file.id || index}`} className="hover:bg-gray-50">
-                                <TableCell>{file.name || file.document_file_name || 'Unnamed'}</TableCell>
-                                <TableCell>
-                                  {(file.preview || file.document_url) && (
-                                    <img
-                                      style={{ maxWidth: 100, maxHeight: 100, objectFit: 'cover' }}
-                                      className="img-fluid rounded"
-                                      src={file.preview || file.document_url}
-                                      alt={file.name || label}
-                                    />
-                                  )}
-                                </TableCell>
-                                <TableCell>{file.ratio || label}</TableCell>
-                              </TableRow>
-                            ))
-                            : null
-                        )}
-                        {detailsImageRatios.every(({ key }) => !formData[key] || formData[key].length === 0) && (
-                          <TableRow>
-                            <TableCell colSpan={3} className="text-center text-gray-500 py-4">
-                              No details image uploaded.
-                            </TableCell>
-	                        </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div> 
                   </div>
                 </div>
                 {/* Step 3: Invite CPs Preview - Hidden for Loyalty */}

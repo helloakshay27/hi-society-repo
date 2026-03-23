@@ -19,7 +19,9 @@ import {
   Trash,
   Trash2,
   Info,
+  Smile,
 } from "lucide-react";
+import { emojis } from "@/utils/emojies";
 import MultiSelectBox from "../components/ui/multi-selector";
 import SelectBox from "@/components/ui/select-box";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
@@ -150,6 +152,10 @@ const EventCreate = () => {
     showOnBookingPage: false,
     featuredEvent: false,
   });
+
+  // Emoji picker state
+  const [showDescriptionEmojiPicker, setShowDescriptionEmojiPicker] = useState(false);
+  const descriptionEmojiPickerRef = useRef(null);
 
   const isLoyalty = location.pathname.includes("/loyalty");
   const effectiveTotalSteps = isLoyalty ? 2 : 3;
@@ -657,6 +663,14 @@ const EventCreate = () => {
     }));
   };
 
+  // Handle emoji clicks for description
+  const handleDescriptionEmojiClick = (emoji) => {
+    setFormData((prev) => ({
+      ...prev,
+      description: prev.description + emoji,
+    }));
+  };
+
   //for files into array
   const MAX_IMAGE_SIZE = 3 * 1024 * 1024; // 3MB
   const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB
@@ -709,6 +723,18 @@ const EventCreate = () => {
   useEffect(() => {
     console.log("Updated attachfile:", formData.attachfile);
   }, [formData.attachfile]);
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (descriptionEmojiPickerRef.current && !descriptionEmojiPickerRef.current.contains(event.target)) {
+        setShowDescriptionEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleRadioChange = (event) => {
     const { name, value } = event.target;
@@ -2064,8 +2090,8 @@ const EventCreate = () => {
                   }}
                 />
 
-                <div className="md:col-span-3  mt-1">
-                  <div className="relative w-full">
+                <div className="md:col-span-3 mt-1">
+                  <div className="relative w-full border border-gray-300 rounded-[5px] bg-white">
                     {/* Floating Label */}
                     <label
                       className="
@@ -2083,24 +2109,56 @@ const EventCreate = () => {
                       <span className="text-[#C72030]">*</span>
                     </label>
 
-                    {/* Textarea */}
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      placeholder="Enter Description"
-                      rows={6}
-                      className="
+                    <div className="relative p-4 pt-2">
+                      {/* Textarea with emoji picker */}
+                      <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        placeholder="Enter Description"
+                        rows={6}
+                        className="
          w-full
-      rounded-[5px]
-      border
-      border-gray-300
-      p-4
+      border-0
+      p-0
+      pr-8
       text-sm
       outline-none
       resize-none
+      bg-transparent
       "
-                    />
+                      />
+                      <div
+                        ref={descriptionEmojiPickerRef}
+                        className="absolute bottom-4 right-4"
+                      >
+                        <Smile
+                          className="text-gray-500 cursor-pointer hover:text-gray-700"
+                          size={18}
+                          onClick={() =>
+                            setShowDescriptionEmojiPicker(!showDescriptionEmojiPicker)
+                          }
+                        />
+                        {showDescriptionEmojiPicker && (
+                          <div className="absolute bottom-8 right-0 bg-white border rounded-lg shadow-lg p-3 w-64 h-48 overflow-y-auto z-50">
+                            <div className="grid grid-cols-8 gap-1">
+                              {emojis.map((emoji, index) => (
+                                <button
+                                  key={index}
+                                  type="button"
+                                  className="text-xl hover:bg-gray-100 rounded p-1 transition-colors"
+                                  onClick={() => {
+                                    handleDescriptionEmojiClick(emoji);
+                                  }}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
