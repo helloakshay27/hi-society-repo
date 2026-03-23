@@ -31,7 +31,7 @@ const HiSocNoticeCreate = () => {
     user_ids: [],
     is_important: "",
     email_trigger_enabled: "",
-    active: "",
+    active: true,
     publish: "",
     notice_type: "General",
     project_id: "",
@@ -269,7 +269,7 @@ const HiSocNoticeCreate = () => {
     // Basic fields
     data.append("noticeboard[notice_heading]", formData.notice_heading);
     data.append("noticeboard[notice_text]", formData.notice_text);
-    data.append("noticeboard[active]", formData.active ? "1" : "0");
+    data.append("noticeboard[active]", "1");
     data.append("noticeboard[IsDelete]", formData.IsDelete ? "1" : "0");
     data.append("noticeboard[notice_type]", formData.notice_type || "General");
     data.append("noticeboard[publish]", formData.publish);
@@ -443,7 +443,7 @@ const HiSocNoticeCreate = () => {
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Project Select */}
-              <FormControl
+              {/* <FormControl
                 fullWidth
                 variant="outlined"
                 sx={{ '& .MuiInputBase-root': fieldStyles }}
@@ -466,7 +466,8 @@ const HiSocNoticeCreate = () => {
                     </MenuItem>
                   ))}
                 </MuiSelect>
-              </FormControl>
+                
+              </FormControl> */}
 
               {/* Title */}
               <TextField
@@ -510,29 +511,6 @@ const HiSocNoticeCreate = () => {
                   <MenuItem value="Event">Event</MenuItem>
                 </MuiSelect>
               </FormControl>
-
-              {/* Description spanning 2 columns */}
-              <div className="md:col-span-2">
-                <TextField
-                  label={<span>Notice Description<span className="text-red-500">*</span></span>}
-                  placeholder="Enter Description"
-                  value={formData.notice_text}
-                  onChange={handleChange}
-                  name="notice_text"
-                  fullWidth
-                  variant="outlined"
-                  slotProps={{
-                    inputLabel: {
-                      shrink: true,
-                    },
-                  }}
-                  InputProps={{
-                    sx: fieldStyles,
-                  }}
-                />
-              </div>
-
-              {/* Broadcast From */}
               <TextField
                 label={<span>Expire Date<span className="text-red-500">*</span></span>}
                 type="date"
@@ -553,11 +531,28 @@ const HiSocNoticeCreate = () => {
                   min: new Date().toISOString().split("T")[0],
                 }}
               />
-            </div>
 
-            {/* 4-column grid for Broadcast To, Mark Important, Send Email, End Date & Time */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {/* Broadcast To */}
+              {/* Description spanning 2 columns */}
+              <div className="md:col-span-2">
+                <TextField
+                  label={<span>Notice Description<span className="text-red-500">*</span></span>}
+                  placeholder="Enter Description"
+                  value={formData.notice_text}
+                  onChange={handleChange}
+                  name="notice_text"
+                  fullWidth
+                  variant="outlined"
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
+                  InputProps={{
+                    sx: fieldStyles,
+                  }}
+                />
+                
+              </div>
                <TextField
                 label={<span>Expire Time<span className="text-red-500">*</span></span>}
                 type="time"
@@ -575,6 +570,15 @@ const HiSocNoticeCreate = () => {
                   sx: fieldStyles,
                 }}
               />
+
+              {/* Broadcast From */}
+              
+            </div>
+
+            {/* 4-column grid for Broadcast To, Mark Important, Send Email, End Date & Time */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* Broadcast To */}
+              
 
               {/* Mark Important */}
               <div>
@@ -655,7 +659,7 @@ const HiSocNoticeCreate = () => {
               </div>
 
               {/* Status */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
@@ -691,7 +695,7 @@ const HiSocNoticeCreate = () => {
                     <span className="ml-2 text-sm text-gray-700">Inactive</span>
                   </label>
                 </div>
-              </div>
+              </div> */}
             </div>
 
            

@@ -1943,9 +1943,6 @@ export default function AddOfferPage() {
                       },
                     }}
                     MenuProps={{
-                      PaperProps: {
-                        style: { minWidth: 200, maxWidth: 520, width: 'auto', zIndex: 99999 },
-                      },
                       // ensure the menu is positioned above other elements
                       anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
                       transformOrigin: { vertical: 'top', horizontal: 'left' },
@@ -2291,11 +2288,11 @@ export default function AddOfferPage() {
             <DraftButton onClick={handleNext} disabled={isSubmitting}>
               Proceed to save
             </DraftButton>
-            {!isEditMode && (
+            {/* {!isEditMode && (
               <DraftButton onClick={handleSaveDraft} disabled={isSubmitting}>
                 Save to draft
               </DraftButton>
-            )}
+            )} */}
           </>
         )}
       </Box>
