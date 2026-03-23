@@ -7,18 +7,10 @@ import { Button as MuiButton } from '@mui/material';
 import { toast, Toaster } from 'sonner';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { useNavigate } from 'react-router-dom';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
 import { Column } from 'jspdf-autotable';
 import axios from 'axios';
 import { getFullUrl, HI_SOCIETY_CONFIG } from '@/config/apiConfig';
+import OffersFilterDialog, { OffersFilterParams } from '@/components/OffersFilterDialog';
 
 interface ApiOffer {
   id: number;
@@ -76,6 +68,7 @@ export default function OffersList() {
   const [totalPages, setTotalPages] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showDraftModal, setShowDraftModal] = useState(false);
+  const [currentFilters, setCurrentFilters] = useState<OffersFilterParams>({});
 
   // LocalStorage keys (must match AddOfferPage)
   const STORAGE_KEYS = {
@@ -124,10 +117,10 @@ export default function OffersList() {
     };
   }, []);
 
-  // Mock data - Replace with actual API calls
+  // Fetch offers on component mount
   useEffect(() => {
     fetchOffers();
-  }, [currentPage]);
+  }, []);
 
   // Helper function to format date from API to DD/MM/YYYY
   const formatDate = (dateString: string): string => {
@@ -155,6 +148,7 @@ export default function OffersList() {
     return offerApplicableProjects.map((oap: any) => oap.project_name || `Project ${oap.project_id}`).join(', ');
   };
 
+  // Fetch all offers from API
   const fetchOffers = async () => {
     setLoading(true);
     try {
@@ -184,35 +178,129 @@ export default function OffersList() {
             showOnHome: apiOffer.show_on_home || false,
             createdAt: formatDate(apiOffer.created_at),
             lastDateUpdated: formatDate(apiOffer.updated_at),
-              imageUrl:
-      apiOffer.image_16_by_9?.document_url ||
-      apiOffer.image_3_by_2?.document_url ||
-      apiOffer.image_1_by_1?.document_url ||
-      apiOffer.image_9_by_16?.document_url ||
-      ''
+            imageUrl:
+              apiOffer.image_16_by_9?.document_url ||
+              apiOffer.image_3_by_2?.document_url ||
+              apiOffer.image_1_by_1?.document_url ||
+              apiOffer.image_9_by_16?.document_url ||
+              ''
           };
         });
 
         setOffers(mappedOffers);
-        
-        // Calculate stats
-        const activeCount = mappedOffers.filter(o => o.status === 'Active').length;
-        const expiredCount = mappedOffers.filter(o => o.status === 'Expired').length;
-        const totalCount = mappedOffers.length;
-        
-        setTotalOffers(totalCount);
-        setActiveOffers(activeCount);
-        setExpiredOffers(expiredCount);
-        setTotalCount(totalCount);
-        setTotalPages(Math.ceil(totalCount / 10)); // Assuming 10 items per page
+        calculateStats(mappedOffers);
       }
     } catch (error) {
       console.error('Error fetching offers:', error);
-      // You may want to show an error toast here
     } finally {
       setLoading(false);
     }
   };
+
+  const handleApplyFilters = (filters: OffersFilterParams) => {
+    setCurrentFilters(filters);
+    setCurrentPage(1); // Reset to first page when filters change
+    setIsFilterOpen(false);
+    toast.success('Filters applied successfully', {
+      duration: 2000,
+    });
+  };
+
+  // Calculate statistics based on offers
+  const calculateStats = (offersToCalc: Offer[]) => {
+    const activeCount = offersToCalc.filter(o => o.status === 'Active').length;
+    const expiredCount = offersToCalc.filter(o => o.status === 'Expired').length;
+    const totalCount = offersToCalc.length;
+
+    setTotalOffers(totalCount);
+    setActiveOffers(activeCount);
+    setExpiredOffers(expiredCount);
+    setTotalCount(totalCount);
+    setTotalPages(Math.ceil(totalCount / 10)); // Assuming 10 items per page
+  };
+
+  // Filter offers on frontend based on current filters
+  const applyFilters = (offersToFilter: Offer[], filters: OffersFilterParams): Offer[] => {
+    return offersToFilter.filter(offer => {
+      // Offer Type filter
+      if (filters.offerType && filters.offerType !== '') {
+        if (offer.offerType !== filters.offerType) {
+          return false;
+        }
+      }
+
+      // Status filter
+      if (filters.status && filters.status !== '') {
+        if (offer.status !== filters.status) {
+          return false;
+        }
+      }
+
+      // Start date range filter
+      if (filters.startDateFrom) {
+        const startDate = new Date(filters.startDateFrom);
+        const offerStartDate = new Date(offer.startDate.split('/').reverse().join('-'));
+        if (offerStartDate < startDate) {
+          return false;
+        }
+      }
+
+      if (filters.startDateTo) {
+        const endDate = new Date(filters.startDateTo);
+        const offerStartDate = new Date(offer.startDate.split('/').reverse().join('-'));
+        if (offerStartDate > endDate) {
+          return false;
+        }
+      }
+
+      // End date range filter
+      if (filters.endDateFrom) {
+        const startDate = new Date(filters.endDateFrom);
+        const offerEndDate = new Date(offer.endDate.split('/').reverse().join('-'));
+        if (offerEndDate < startDate) {
+          return false;
+        }
+      }
+
+      if (filters.endDateTo) {
+        const endDate = new Date(filters.endDateTo);
+        const offerEndDate = new Date(offer.endDate.split('/').reverse().join('-'));
+        if (offerEndDate > endDate) {
+          return false;
+        }
+      }
+
+      // Show on Home filter
+      if (filters.showOnHome && filters.showOnHome !== '') {
+        const shouldShowOnHome = filters.showOnHome === 'true';
+        if (offer.showOnHome !== shouldShowOnHome) {
+          return false;
+        }
+      }
+
+      // Created At date range filter
+      if (filters.createdAtFrom) {
+        const startDate = new Date(filters.createdAtFrom);
+        const offerCreatedDate = new Date(offer.createdAt.split('/').reverse().join('-'));
+        if (offerCreatedDate < startDate) {
+          return false;
+        }
+      }
+
+      if (filters.createdAtTo) {
+        const endDate = new Date(filters.createdAtTo);
+        const offerCreatedDate = new Date(offer.createdAt.split('/').reverse().join('-'));
+        if (offerCreatedDate > endDate) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  };
+
+  // Get filtered offers
+  const filteredOffers = applyFilters(offers, currentFilters);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -274,15 +362,15 @@ export default function OffersList() {
       case 'srNo':
         const itemIndex = index !== undefined ? index : offers.findIndex(o => o.id === item.id);
         return itemIndex !== -1 ? itemIndex + 1 : '-';
-      
+
       case 'offerId':
         return item.offerId;
-      
+
       case 'image':
         return item.imageUrl ? (
           <div className="w-16 h-16 rounded overflow-hidden border border-gray-200">
-            <img 
-              src={item.imageUrl} 
+            <img
+              src={item.imageUrl}
               alt={item.offerTitle}
               className="w-full h-full object-cover"
             />
@@ -292,37 +380,37 @@ export default function OffersList() {
             <span className="text-xs text-gray-400">No Image</span>
           </div>
         );
-      
+
       case 'offerTitle':
         return item.offerTitle;
 
       case 'offerType':
         return item.offerType;
-      
+
       case 'description':
         return item.description;
-      
+
       case 'applicableProjects':
         return item.applicableProjects;
-      
+
       case 'startDate':
         return item.startDate;
-      
+
       case 'endDate':
         return item.endDate;
-      
+
       case 'status':
         return (
           <div
             className="inline-flex px-auto text-center text-xs font-medium"
             style={{ width: 200, maxWidth: 200 }}
           >
-            <div className={ ` py-2.5
+            <div className={` py-2.5
               ${item.status === 'Active'
                 ? 'bg-[#d5dbdb] w-full'
                 : item.status === 'Inactive'
-                ? 'bg-[#e4626f] w-full'
-                : 'bg-[#d5dbdb] w-full'}
+                  ? 'bg-[#e4626f] w-full'
+                  : 'bg-[#d5dbdb] w-full'}
             `}>
               <p className="text-center mx-auto">
                 {item.status === 'Active' ? 'Active' : item.status === 'Inactive' ? 'Inactive' : 'Expired'}
@@ -330,19 +418,19 @@ export default function OffersList() {
             </div>
           </div>
         );
-      
+
       case 'featured':
         return item.featured ? 'Yes' : 'No';
-      
+
       case 'showOnHome':
         return item.showOnHome ? 'Yes' : 'No';
-      
+
       case 'createdAt':
         return item.createdAt;
-      
+
       case 'lastDateUpdated':
         return item.lastDateUpdated;
-      
+
       case 'actions':
         return (
           <div className="flex gap-1">
@@ -364,7 +452,7 @@ export default function OffersList() {
             </Button>
           </div>
         );
-      
+
       default:
         return String(item[columnKey as keyof Offer] ?? "-");
     }
@@ -399,11 +487,11 @@ export default function OffersList() {
   const renderCustomActions = () => {
     return (
       <div className="flex gap-2">
-        <Button 
+        <Button
           onClick={handleAddOffer}
           className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
         >
-          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> 
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
           Add
         </Button>
         {selectedOffers.length > 0 && (
@@ -423,7 +511,7 @@ export default function OffersList() {
   return (
     <div className="p-2 sm:p-4 lg:p-6 max-w-full overflow-x-hidden">
       <Toaster position="top-right" richColors closeButton />
-      
+
       {/* Draft Detection Modal */}
       <Dialog open={showDraftModal} onClose={() => setShowDraftModal(false)}>
         <DialogTitle sx={{ fontFamily: 'Work Sans, sans-serif', fontWeight: 600 }}>
@@ -471,6 +559,14 @@ export default function OffersList() {
           </MuiButton>
         </DialogActions>
       </Dialog>
+
+      {/* Offers Filter Dialog */}
+      <OffersFilterDialog
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onApply={handleApplyFilters}
+        initialFilters={currentFilters}
+      />
 
       <Tabs defaultValue="offers" className="w-full" onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
@@ -597,12 +693,12 @@ export default function OffersList() {
             )}
             {/* Pass columns and data from state to EnhancedTable */}
             <EnhancedTable
-              data={offers}
+              data={filteredOffers}
               columns={columns}
               renderCell={renderCell}
-              pagination={false}
-              enableExport={true}
-              exportFileName="offers"
+              pagination={true}
+              pageSize={10}
+              enableExport={false}
               handleExport={handleExport}
               storageKey="offers-table"
               enableSelection={true}
@@ -612,7 +708,7 @@ export default function OffersList() {
               getItemId={offer => offer.id.toString()}
               leftActions={
                 // <div className="flex gap-3">
-                  renderCustomActions()
+                renderCustomActions()
                 // </div>
               }
               onFilterClick={() => setIsFilterOpen(true)}
@@ -626,50 +722,17 @@ export default function OffersList() {
               loadingMessage="Loading offers..."
             />
 
-            {/* Pagination */}
-            {totalPages > 1 && (
+            {/* Pagination - Only show if needed for filtered results */}
+            {filteredOffers.length > 10 && (
               <div className="mt-6">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() => {
-                          if (currentPage > 1) handlePageChange(currentPage - 1);
-                        }}
-                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                      />
-                    </PaginationItem>
-                    {Array.from(
-                      { length: Math.min(totalPages, 10) },
-                      (_, i) => i + 1
-                    ).map((page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          onClick={() => handlePageChange(page)}
-                          isActive={currentPage === page}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    {totalPages > 10 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => {
-                          if (currentPage < totalPages) handlePageChange(currentPage + 1);
-                        }}
-                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
                 <div className="text-center mt-2 text-sm text-gray-600">
-                  Showing page {currentPage} of {totalPages} ({totalCount} total offers)
+                  Showing {filteredOffers.length} offers (Filtered)
                 </div>
+              </div>
+            )}
+            {filteredOffers.length === 0 && Object.keys(currentFilters).some(key => currentFilters[key as keyof OffersFilterParams]) && (
+              <div className="mt-6 text-center text-sm text-gray-600 py-4">
+                No offers found matching your filters.
               </div>
             )}
           </div>
