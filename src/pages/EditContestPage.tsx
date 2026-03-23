@@ -10,8 +10,10 @@ import {
   Trophy,
   Calendar,
   Clock,
+  Smile,
 } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
+import { emojis } from "@/utils/emojies";
 import {
   TextField,
   FormControl,
@@ -108,6 +110,32 @@ export const EditContestPage: React.FC = () => {
   // Products for Merchandise
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
+
+  // Emoji picker for description
+  const [showDescriptionEmojiPicker, setShowDescriptionEmojiPicker] = useState(false);
+  const descriptionEmojiPickerRef = useRef<HTMLDivElement>(null);
+
+  // Click outside listener for emoji picker
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (descriptionEmojiPickerRef.current && !descriptionEmojiPickerRef.current.contains(event.target as Node)) {
+        setShowDescriptionEmojiPicker(false);
+      }
+    };
+
+    if (showDescriptionEmojiPicker) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDescriptionEmojiPicker]);
+
+  // Handler for emoji selection in description
+  const handleDescriptionEmojiClick = (emoji: string) => {
+    setContestDescription(contestDescription + emoji);
+  };
 
   // Fetch contest data
   useEffect(() => {
@@ -760,34 +788,73 @@ export const EditContestPage: React.FC = () => {
               </div>
 
               <div className="mt-6">
-                <TextField
-                  fullWidth
-                  label="Contest Description"
-                  placeholder="Enter Description"
-                  value={contestDescription}
-                  onChange={(e) => setContestDescription(e.target.value)}
-                  variant="outlined"
-                  multiline
-                  rows={4}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      height: "auto !important",
-                      padding: "2px !important",
-                      display: "flex",
-                    },
-                    "& .MuiInputBase-input[aria-hidden='true']": {
-                      flex: 0,
-                      width: 0,
-                      height: 0,
-                      padding: "0 !important",
-                      margin: 0,
-                      display: "none",
-                    },
-                    "& .MuiInputBase-input": {
-                      resize: "none !important",
-                    },
-                  }}
-                />
+                <div className="relative w-full border border-gray-300 rounded-[5px] bg-white">
+                  {/* Floating Label */}
+                  <label
+                    className="
+         absolute
+      -top-2
+      left-3
+      bg-white
+      px-1
+      text-[12.5px]
+      text-black
+      pointer-events-none
+      "
+                  >
+                    Contest Description
+                  </label>
+
+                  <div className="relative p-4 pt-2">
+                    {/* Textarea with emoji picker */}
+                    <textarea
+                      value={contestDescription}
+                      onChange={(e) => setContestDescription(e.target.value)}
+                      placeholder="Enter Description"
+                      rows={4}
+                      className="
+        w-full
+      border-0
+      p-0
+      pr-8
+      text-sm
+      outline-none
+      resize-none
+      bg-transparent
+      "
+                    />
+                    <div
+                      ref={descriptionEmojiPickerRef}
+                      className="absolute bottom-4 right-4"
+                    >
+                      <Smile
+                        className="text-gray-500 cursor-pointer hover:text-gray-700"
+                        size={18}
+                        onClick={() =>
+                          setShowDescriptionEmojiPicker(!showDescriptionEmojiPicker)
+                        }
+                      />
+                      {showDescriptionEmojiPicker && (
+                        <div className="absolute bottom-8 right-0 bg-white border rounded-lg shadow-lg p-3 w-64 h-48 overflow-y-auto z-50">
+                          <div className="grid grid-cols-8 gap-1">
+                            {emojis.map((emoji, index) => (
+                              <button
+                                key={index}
+                                type="button"
+                                className="text-xl hover:bg-gray-100 rounded p-1 transition-colors"
+                                onClick={() => {
+                                  handleDescriptionEmojiClick(emoji);
+                                }}
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

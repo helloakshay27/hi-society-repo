@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Settings, Edit } from "@mui/icons-material";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Smile } from "lucide-react";
 import { toast, Toaster } from "sonner";
+import { emojis } from "@/utils/emojies";
 import axios from "axios";
 import { getFullUrl } from "@/config/apiConfig";
 import { HI_SOCIETY_CONFIG } from "@/config/apiConfig";
@@ -305,6 +306,8 @@ export default function AddOfferPage() {
   const [showBannerModal, setShowBannerModal] = useState(false);
   const [showTooltipBanner, setShowTooltipBanner] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDescriptionEmojiPicker, setShowDescriptionEmojiPicker] = useState(false);
+  const descriptionEmojiPickerRef = useRef(null);
 
   // Draft keys (used in IndexedDB)
   const STORAGE_KEYS = {
@@ -539,6 +542,26 @@ export default function AddOfferPage() {
     toast.info("Starting fresh! Previous draft has been cleared.", {
       duration: 3000,
     });
+  };
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (descriptionEmojiPickerRef.current && !descriptionEmojiPickerRef.current.contains(event.target as Node)) {
+        setShowDescriptionEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Handle emoji clicks for description
+  const handleDescriptionEmojiClick = (emoji: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      offerDescription: prev.offerDescription + emoji,
+    }));
   };
 
   const fetchOfferTemplates = async () => {
@@ -1164,17 +1187,104 @@ export default function AddOfferPage() {
                   sx={fieldStyles}
                   style={{ width: "50%" }}
                 />
-                <TextField
-                  label="Offer Description"
-                  required
-                  value={formData.offerDescription}
-                  onChange={(e) =>
-                    handleInputChange("offerDescription", e.target.value)
-                  }
-                  placeholder="Enter Description"
-                  sx={fieldStyles}
-                  fullWidth
-                />
+                <Box sx={{ position: "relative", flex: 1, border: "1px solid #ddd", borderRadius: "4px", backgroundColor: "#fff" }}>
+                  {/* Floating Label */}
+                  <label style={{
+                    position: "absolute",
+                    top: "-8px",
+                    left: "12px",
+                    backgroundColor: "white",
+                    padding: "0 4px",
+                    fontSize: "12.5px",
+                    color: "black",
+                    pointerEvents: "none",
+                  }}>
+                    Offer Description <span style={{ color: "#C72030" }}>*</span>
+                  </label>
+
+                  <div style={{ position: "relative", padding: "16px" }}>
+                    {/* Textarea with emoji picker */}
+                    <textarea
+                      value={formData.offerDescription}
+                      onChange={(e) =>
+                        handleInputChange("offerDescription", e.target.value)
+                      }
+                      placeholder="Enter Description"
+                      style={{
+                        width: "100%",
+                        border: "0",
+                        padding: "0",
+                        paddingRight: "32px",
+                        fontSize: "14px",
+                        outline: "none",
+                        resize: "none",
+                        backgroundColor: "transparent",
+                        fontFamily: "inherit",
+                        minHeight: "80px"
+                      }}
+                    />
+                    <div
+                      ref={descriptionEmojiPickerRef as any}
+                      style={{
+                        position: "absolute",
+                        bottom: "16px",
+                        right: "16px",
+                      }}
+                    >
+                      <Smile
+                        className="text-gray-500 cursor-pointer hover:text-gray-700"
+                        size={18}
+                        onClick={() =>
+                          setShowDescriptionEmojiPicker(!showDescriptionEmojiPicker)
+                        }
+                      />
+                      {showDescriptionEmojiPicker && (
+                        <div style={{
+                          position: "absolute",
+                          bottom: "32px",
+                          right: "0",
+                          backgroundColor: "white",
+                          border: "1px solid #ddd",
+                          borderRadius: "8px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                          padding: "12px",
+                          width: "256px",
+                          height: "192px",
+                          overflowY: "auto",
+                          zIndex: 50,
+                        }}>
+                          <div style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(8, 1fr)",
+                            gap: "4px",
+                          }}>
+                            {emojis.map((emoji, index) => (
+                              <button
+                                key={index}
+                                type="button"
+                                style={{
+                                  fontSize: "20px",
+                                  cursor: "pointer",
+                                  border: "none",
+                                  borderRadius: "4px",
+                                  padding: "4px",
+                                  backgroundColor: "transparent",
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
+                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                                onClick={() => {
+                                  handleDescriptionEmojiClick(emoji);
+                                }}
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Box>
               </Box>
               {/* <Box sx={{ mt: 3, display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
                                 <FormControl fullWidth sx={fieldStyles}>
