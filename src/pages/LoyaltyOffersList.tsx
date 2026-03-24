@@ -145,7 +145,7 @@ export default function OffersList() {
     if (!offerApplicableProjects || !Array.isArray(offerApplicableProjects) || offerApplicableProjects.length === 0) {
       return '-';
     }
-    return offerApplicableProjects.map((oap: any) => oap.project_name || `Project ${oap.project_id}`).join(', ');
+    return offerApplicableProjects.map((oap: any) => oap.name || `Site ${oap.resource_id}`).join(', ');
   };
 
   // Fetch all offers from API
@@ -170,7 +170,7 @@ export default function OffersList() {
             offerTitle: apiOffer.title,
             description: apiOffer.description || '-',
             offerType: apiOffer.offer_type || '-',
-            applicableProjects: getProjectNames(apiOffer.offer_applicable_projects),
+            applicableProjects: getProjectNames(apiOffer.offer_applicable_sites),
             startDate: formatDate(apiOffer.start_date),
             endDate: formatDate(apiOffer.expiry),
             status: status,
@@ -178,12 +178,7 @@ export default function OffersList() {
             showOnHome: apiOffer.show_on_home || false,
             createdAt: formatDate(apiOffer.created_at),
             lastDateUpdated: formatDate(apiOffer.updated_at),
-            imageUrl:
-              apiOffer.image_16_by_9?.document_url ||
-              apiOffer.image_3_by_2?.document_url ||
-              apiOffer.image_1_by_1?.document_url ||
-              apiOffer.image_9_by_16?.document_url ||
-              ''
+            imageUrl: apiOffer.offer_pdf?.document_url || ''
           };
         });
 
@@ -345,8 +340,8 @@ export default function OffersList() {
     { key: 'offerId', label: 'Offer ID', sortable: true },
     { key: 'image', label: 'Image', sortable: false },
     { key: 'offerTitle', label: 'Offer Title', sortable: true },
-    { key: 'offerType', label: 'Offer Type', sortable: true },
-    { key: 'applicableProjects', label: 'Applicable Project(s)', sortable: true },
+    // { key: 'offerType', label: 'Offer Type', sortable: true },
+    { key: 'applicableProjects', label: 'Applicable Site(s)', sortable: true },
     { key: 'startDate', label: 'Start Date', sortable: true },
     { key: 'endDate', label: 'End Date', sortable: true },
     { key: 'status', label: 'Status', sortable: true },
@@ -391,7 +386,9 @@ export default function OffersList() {
         return item.description;
 
       case 'applicableProjects':
-        return item.applicableProjects;
+        return item.applicableProjects?.length > 20
+          ? item.applicableProjects.slice(0, 20) + "..."
+          : item.applicableProjects;
 
       case 'startDate':
         return item.startDate;

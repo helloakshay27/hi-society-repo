@@ -97,26 +97,9 @@ const OffersFilterDialog: React.FC<OffersFilterDialogProps> = ({
             </DialogTitle>
             <DialogContent dividers>
                 <div className="space-y-4">
-                    {/* Offer Type */}
-                    <FormControl fullWidth size="small" margin="dense">
-                        <InputLabel id="offer-type-label">Offer Type</InputLabel>
-                        <Select
-                            labelId="offer-type-label"
-                            id="offer-type-select"
-                            value={filters.offerType || ''}
-                            label="Offer Type"
-                            onChange={(e) => handleFilterChange('offerType', e.target.value)}
-                        >
-                            <MenuItem value="">All Types</MenuItem>
-                            <MenuItem value="Discount">Discount</MenuItem>
-                            <MenuItem value="Offer">Offer</MenuItem>
-                            <MenuItem value="Deal">Deal</MenuItem>
-                            <MenuItem value="Promotion">Promotion</MenuItem>
-                        </Select>
-                    </FormControl>
 
                     {/* Start Date Range */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* <div className="grid grid-cols-2 gap-3">
                         <TextField
                             label="Start Date From"
                             type="date"
@@ -137,10 +120,10 @@ const OffersFilterDialog: React.FC<OffersFilterDialogProps> = ({
                             margin="dense"
                             InputLabelProps={{ shrink: true }}
                         />
-                    </div>
+                    </div> */}
 
                     {/* End Date Range */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* <div className="grid grid-cols-2 gap-3">
                         <TextField
                             label="End Date From"
                             type="date"
@@ -161,7 +144,7 @@ const OffersFilterDialog: React.FC<OffersFilterDialogProps> = ({
                             margin="dense"
                             InputLabelProps={{ shrink: true }}
                         />
-                    </div>
+                    </div> */}
 
                     {/* Status */}
                     <FormControl fullWidth size="small" margin="dense">
@@ -173,7 +156,7 @@ const OffersFilterDialog: React.FC<OffersFilterDialogProps> = ({
                             label="Status"
                             onChange={(e) => handleFilterChange('status', e.target.value)}
                         >
-                            <MenuItem value="">All Statuses</MenuItem>
+                            <MenuItem value="">Select</MenuItem>
                             <MenuItem value="Active">Active</MenuItem>
                             <MenuItem value="Inactive">Inactive</MenuItem>
                             <MenuItem value="Expired">Expired</MenuItem>
@@ -190,7 +173,7 @@ const OffersFilterDialog: React.FC<OffersFilterDialogProps> = ({
                             label="Show on Home"
                             onChange={(e) => handleFilterChange('showOnHome', e.target.value)}
                         >
-                            <MenuItem value="">All</MenuItem>
+                            <MenuItem value="">Select</MenuItem>
                             <MenuItem value="true">Yes</MenuItem>
                             <MenuItem value="false">No</MenuItem>
                         </Select>
@@ -208,7 +191,7 @@ const OffersFilterDialog: React.FC<OffersFilterDialogProps> = ({
                             margin="dense"
                             InputLabelProps={{ shrink: true }}
                         />
-                        <TextField
+                        {/* <TextField
                             label="Created To"
                             type="date"
                             value={filters.createdAtTo || ''}
@@ -217,7 +200,7 @@ const OffersFilterDialog: React.FC<OffersFilterDialogProps> = ({
                             size="small"
                             margin="dense"
                             InputLabelProps={{ shrink: true }}
-                        />
+                        /> */}
                     </div>
 
                     <p className="text-xs text-muted-foreground leading-snug">
