@@ -233,11 +233,11 @@ const AddFacilityBookingPage = () => {
     if (selectedSlotIds.includes(slotId)) return true;
 
     // Enforce max selectable slots from booking rule
-    const maxSelectableSlots = bookingRuleData && bookingRuleData.multiple_bookings
-      ? (bookingRuleData.multiple_booking_count || 1)
-      : (facilityDetails?.multiple_booking_count || 1); // fallback to facility setting if available
+    // const maxSelectableSlots = bookingRuleData && bookingRuleData.multiple_bookings
+    //   ? (bookingRuleData.multiple_booking_count || 1)
+    //   : (facilityDetails?.multiple_booking_count || 1); // fallback to facility setting if available
 
-    if (selectedSlotIds.length >= maxSelectableSlots) return false;
+    // if (selectedSlotIds.length >= maxSelectableSlots) return false;
 
     // Determine max concurrent slots: rule overrides facility setting
     let maxConcurrentSlots = 1;
