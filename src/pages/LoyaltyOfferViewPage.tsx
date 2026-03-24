@@ -157,9 +157,9 @@ export default function OfferViewPage() {
   };
 
   const getProjectNames = () => {
-    // Check for offer_applicable_projects array
-    if (offer?.offer_applicable_projects && Array.isArray(offer.offer_applicable_projects) && offer.offer_applicable_projects.length > 0) {
-      return offer.offer_applicable_projects.map((oap: any) => oap.project_name || `Project ${oap.project_id}`).join(', ');
+    // Check for offer_applicable_sites array
+    if (offer?.offer_applicable_sites && Array.isArray(offer.offer_applicable_sites) && offer.offer_applicable_sites.length > 0) {
+      return offer.offer_applicable_sites.map((oas: any) => oas.name || `Site ${oas.resource_id}`).join(', ');
     }
     // If offer_applicable_projects is empty array, show appropriate message
     if (offer?.offer_applicable_projects && Array.isArray(offer.offer_applicable_projects) && offer.offer_applicable_projects.length === 0) {
@@ -185,7 +185,7 @@ export default function OfferViewPage() {
                 </h3>
               </div>
             </div>
-            
+
             <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-8">
                 <div className="flex items-start">
@@ -196,7 +196,7 @@ export default function OfferViewPage() {
                     {offer.title || '-'}
                   </div>
                 </div>
-                
+
                 {/* <div className="flex items-start">
                   <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
                     Legal Policies
@@ -206,15 +206,15 @@ export default function OfferViewPage() {
                   </div>
                 </div> */}
 
-                <div className="flex items-start">
+                {/* <div className="flex items-start">
                   <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
                     Offer Type
                   </div>
                   <div className="text-[14px] font-semibold text-gray-900 flex-1">
                     {getOfferType()}
                   </div>
-                </div>
-                
+                </div> */}
+
                 <div className="flex items-start lg:col-span-2">
                   <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
                     Offer Description
@@ -240,14 +240,14 @@ export default function OfferViewPage() {
                 </h3>
               </div>
             </div>
-            
+
             <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
               {/* Offer Banner Image Section */}
               <div className="mb-6">
                 <div className="text-[14px] font-medium text-gray-700 mb-3">
                   Offer Banner Image
                 </div>
-                
+
                 {/* Table Header */}
                 <div className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 px-3 py-2 bg-[#F3EFE7] rounded-t-lg">
                   <div className="text-[14px] font-semibold text-gray-900">File Name</div>
@@ -260,8 +260,8 @@ export default function OfferViewPage() {
                 <div className="bg-[#F7F8F9] px-3 py-3 rounded-b-lg">
                   {getUniqueImages().length > 0 ? (
                     getUniqueImages().map((img, index) => (
-                      <div 
-                        key={img.data.document_url} 
+                      <div
+                        key={img.data.document_url}
                         className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 items-center py-2"
                         style={{
                           borderBottom: index !== getUniqueImages().length - 1 ? '1px solid #E5E5E5' : 'none'
@@ -274,10 +274,10 @@ export default function OfferViewPage() {
                           <img
                             src={img.data.document_url}
                             alt={img.data.document_file_name}
-                            style={{ 
-                              width: 80, 
-                              height: 80, 
-                              objectFit: 'cover', 
+                            style={{
+                              width: 80,
+                              height: 80,
+                              objectFit: 'cover',
                               borderRadius: 8,
                               border: '1px solid #E5E5E5'
                             }}
@@ -302,9 +302,9 @@ export default function OfferViewPage() {
               {/* File Upload Section (PDF) */}
               <div>
                 <div className="text-[14px] font-medium text-gray-700 mb-3">
-                  File Upload
+                  Offer Thumbnail Image
                 </div>
-                
+
                 {/* Table Header */}
                 <div className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 px-3 py-2 bg-[#F3EFE7] rounded-t-lg">
                   <div className="text-[14px] font-semibold text-gray-900">File Name</div>
@@ -321,9 +321,9 @@ export default function OfferViewPage() {
                         {offer.offer_pdf.document_file_name}
                       </div>
                       <div>
-                        <a 
-                          href={offer.offer_pdf.document_url} 
-                          target="_blank" 
+                        <a
+                          href={offer.offer_pdf.document_url}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-[14px] text-[#C72030] underline"
                         >
@@ -360,12 +360,12 @@ export default function OfferViewPage() {
                 </h3>
               </div>
             </div>
-            
+
             <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-8">
                 <div className="flex items-start lg:col-span-4">
                   <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
-                    Applicable Project(s)
+                    Applicable Site(s)
                   </div>
                   <div className="text-[14px] font-semibold text-gray-900 flex-1">
                     {getProjectNames()}
@@ -388,7 +388,7 @@ export default function OfferViewPage() {
                 </h3>
               </div>
             </div>
-            
+
             <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-8">
                 <div className="flex items-start">
@@ -399,7 +399,7 @@ export default function OfferViewPage() {
                     {formatDate(offer.start_date)}
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
                     End Date
@@ -408,7 +408,7 @@ export default function OfferViewPage() {
                     {formatDate(offer.expiry)}
                   </div>
                 </div>
-                
+
                 <div className="flex items-start lg:col-span-2">
                   <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
                     Status
@@ -434,7 +434,7 @@ export default function OfferViewPage() {
                 </h3>
               </div>
             </div>
-            
+
             <div className="bg-[#FBFBFA] border border-t-0 border-[#D9D9D9] px-5 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-8">
                 <div className="flex items-start">
@@ -445,7 +445,7 @@ export default function OfferViewPage() {
                     {getShowOnHome()}
                   </div>
                 </div>
-                
+
                 {/* <div className="flex items-start">
                   <div className="w-[140px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0">
                     Featured Offer

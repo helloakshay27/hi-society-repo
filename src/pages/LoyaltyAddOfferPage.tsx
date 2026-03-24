@@ -665,10 +665,10 @@ export default function AddOfferPage() {
 
       // Map offer_applicable_projects to get project IDs
       const projectIds =
-        offer.offer_applicable_projects &&
-          Array.isArray(offer.offer_applicable_projects)
-          ? offer.offer_applicable_projects.map((oap: any) =>
-            oap.project_id.toString()
+        offer.offer_applicable_sites &&
+          Array.isArray(offer.offer_applicable_sites)
+          ? offer.offer_applicable_sites.map((oap: any) =>
+            oap.resource_id.toString()
           )
           : [];
 
@@ -2412,7 +2412,7 @@ export default function AddOfferPage() {
                       {formData.offerDescription}
                     </Typography>
                   </Box>
-                  <Box>
+                  {/* <Box>
                     <Typography
                       variant="body2"
                       sx={{
@@ -2434,7 +2434,7 @@ export default function AddOfferPage() {
                     >
                       {formData.offerType}
                     </Typography>
-                  </Box>
+                  </Box> */}
                   {formData.legalPoliciesTemplate && (
                     <Box>
                       <Typography
