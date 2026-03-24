@@ -156,7 +156,8 @@ export default function OffersList() {
         getFullUrl('/crm/offers.json'),
         {
           params: {
-            token: HI_SOCIETY_CONFIG.TOKEN
+            token: HI_SOCIETY_CONFIG.TOKEN,
+            source: 'web'
           }
         }
       );
