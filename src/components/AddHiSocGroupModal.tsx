@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, TextField } from '@mui/material';
 import axios from 'axios';
 import { API_CONFIG, getAuthHeader } from '@/config/apiConfig';
+import { MemberFilterPanel, MemberFilterState } from './MemberFilterPanel';
 
 interface AddHiSocGroupModalProps {
   isOpen: boolean;
@@ -29,42 +30,81 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
   const [groupName, setGroupName] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
-  const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState<{ id: number; id_user: number; firstname: string; lastname: string; email: string; mobile: string; flat: string; block: string; building_name: string; roles: string[]; block_id: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<MemberFilterState>({ roles: [], towers: [] });
+
+  type MemberItem = {
+    id: number;
+    id_user: number;
+    user_type?: string;
+    society_block_id?: number;
+    user?: { firstname?: string; lastname?: string; email?: string; mobile?: string };
+    user_flat?: { flat?: string; block?: string };
+    society?: { building_name?: string };
+  };
+
+  const transformMember = (item: MemberItem) => ({
+    id: item.id,
+    id_user: item.id_user,
+    firstname: item.user?.firstname || '',
+    lastname: item.user?.lastname || '',
+    email: item.user?.email || '',
+    mobile: item.user?.mobile || '',
+    flat: item.user_flat?.flat || 'N/A',
+    block: item.user_flat?.block || 'N/A',
+    building_name: item.society?.building_name || '',
+    roles: item.user_type ? [item.user_type] : [],
+    block_id: item.society_block_id ? item.society_block_id.toString() : '',
+  });
+
+  // Fetch members — no params initially (returns all); params only sent when filters are active
+  const fetchUsers = async (activeFilters: MemberFilterState = { roles: [], towers: [] }) => {
+    const params = new URLSearchParams();
+
+    // Only append role params when user has selected roles
+    activeFilters.roles.forEach((r) => params.append("values[]", r));
+
+    // Only append tower params when user has selected towers
+    activeFilters.towers.forEach((tid) => params.append("block_ids[]", tid));
+
+    const queryString = params.toString();
+    const url = `${baseURL}/usergroups/get_members_list.json${queryString ? `?${queryString}` : ""}`;
+
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: getAuthHeader(),
+        },
+      });
+
+      // API may return an array directly or wrapped in a key
+      const raw: unknown = response.data;
+      const list: MemberItem[] = Array.isArray(raw)
+        ? (raw as MemberItem[])
+        : Array.isArray((raw as { members?: MemberItem[] })?.members)
+        ? ((raw as { members: MemberItem[] }).members as MemberItem[])
+        : [];
+
+      setMembers(list.map(transformMember));
+    } catch (error) {
+      console.error("Error fetching members:", error);
+      toast.error("Failed to fetch members");
+    }
+  };
+
+  // When filter changes: re-fetch with new params from server
+  const handleFilterChange = (newFilters: MemberFilterState) => {
+    setFilters(newFilters);
+    fetchUsers(newFilters);
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get(`${baseURL}/usergroups/get_members_list.json`, {
-          headers: {
-            Authorization: getAuthHeader(),
-          },
-        });
-        
-        // Transform the API response to match the component's expected format
-        const transformedMembers = response.data.map((item: any) => ({
-          id: item.id,
-          id_user: item.id_user,
-          firstname: item.user?.firstname || '',
-          lastname: item.user?.lastname || '',
-          email: item.user?.email || '',
-          mobile: item.user?.mobile || '',
-          flat: item.user_flat?.flat || 'N/A',
-          block: item.user_flat?.block || 'N/A',
-          building_name: item.society?.building_name || ''
-        }));
-        
-        setMembers(transformedMembers);
-      } catch (error) {
-        console.error("Error fetching members:", error);
-        toast.error("Failed to fetch members");
-      }
-    };
-
     if (isOpen) {
-      fetchUsers();
+      fetchUsers({ roles: [], towers: [] });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, baseURL]);
 
   useEffect(() => {
@@ -82,8 +122,8 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
           // Extract member IDs from groupmembers (note: API returns 'groupmembers', not 'group_members')
           if (response.data.groupmembers && Array.isArray(response.data.groupmembers)) {
             const memberIds = response.data.groupmembers
-              .filter((m: any) => m.active === 1 && m.user_society_id)
-              .map((m: any) => m.user_society_id.toString());
+              .filter((m: { active: number; user_society_id?: number }) => m.active === 1 && m.user_society_id)
+              .map((m: { user_society_id: number }) => m.user_society_id.toString());
             setSelectedMembers(memberIds);
           }
         } catch (error) {
@@ -123,13 +163,16 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
   };
 
   const filteredMembers = members.filter(member => {
+    if (!searchTerm.trim()) return true;
     const fullName = `${member.firstname} ${member.lastname}`.toLowerCase();
     const searchLower = searchTerm.toLowerCase();
-    return fullName.includes(searchLower) || 
-           member.email.toLowerCase().includes(searchLower) ||
-           member.mobile?.includes(searchTerm) ||
-           member.flat?.toLowerCase().includes(searchLower) ||
-           member.block?.toLowerCase().includes(searchLower);
+    return (
+      fullName.includes(searchLower) ||
+      member.email.toLowerCase().includes(searchLower) ||
+      member.mobile?.includes(searchTerm) ||
+      member.flat?.toLowerCase().includes(searchLower) ||
+      member.block?.toLowerCase().includes(searchLower)
+    );
   });
 
   const handleClose = () => {
@@ -137,6 +180,7 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
     setSelectedMembers([]);
     setSelectAll(false);
     setSearchTerm('');
+    setFilters({ roles: [], towers: [] });
     onClose();
   };
 
@@ -258,18 +302,27 @@ export const AddHiSocGroupModal = ({ isOpen, onClose, fetchGroups, isEditing, re
                 {selectAll ? 'Deselect All' : 'Select All Members'}
               </Button>
             </div>
-            <TextField
-              label="Search..."
-              name="searchTerm"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              placeholder="Search..."
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{ sx: fieldStyles }}
-              sx={{ mt: 1 }}
-            />
+            <div className="flex items-start gap-2 mt-1">
+              <div className="flex-1">
+                <TextField
+                  label="Search..."
+                  name="searchTerm"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  placeholder="Search..."
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
+              </div>
+              <div className="pt-1">
+                <MemberFilterPanel
+                  value={filters}
+                  onChange={handleFilterChange}
+                />
+              </div>
+            </div>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {filteredMembers.length > 0 ? (
                 filteredMembers.map((member) => (
