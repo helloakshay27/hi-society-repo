@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Edit, RefreshCw, Settings2, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getReferralSetups, ReferralSetup, deleteReferralSetup } from "@/services/referralService";
 import {
   Dialog,
   DialogContent,
@@ -18,20 +19,14 @@ import {
   Select as MuiSelect,
   FormControl,
   InputLabel,
+  CircularProgress,
 } from "@mui/material";
 import { X } from "lucide-react";
 
-interface ProjectData {
-  id: string;
-  image: string;
-  projectName: string;
-  projectReferenceId: string;
-  referralProgram: boolean;
-  bannerStatus: boolean;
-}
-
 const CampaignsReferralSetup: React.FC = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -40,165 +35,63 @@ const CampaignsReferralSetup: React.FC = () => {
     createdDate: "",
   });
 
-  // Check for newly created referral setup from localStorage
-  useEffect(() => {
-    const newReferralSetup = localStorage.getItem("newReferralSetup");
-    if (newReferralSetup) {
-      try {
-        const setupData = JSON.parse(newReferralSetup);
-        setProjectsData((prev) => [setupData, ...prev]);
-        localStorage.removeItem("newReferralSetup");
-      } catch (error) {
-        console.error("Failed to parse new referral setup:", error);
-      }
-    }
+  const [projectsData, setProjectsData] = useState<ReferralSetup[]>([]);
 
-    // Check for updated referral setup
-    const updatedReferralSetup = localStorage.getItem("updatedReferralSetup");
-    if (updatedReferralSetup) {
-      try {
-        const setupData = JSON.parse(updatedReferralSetup);
-        setProjectsData((prev) =>
-          prev.map((project) =>
-            project.id === setupData.id ? { ...project, ...setupData } : project
-          )
-        );
-        localStorage.removeItem("updatedReferralSetup");
-      } catch (error) {
-        console.error("Failed to parse updated referral setup:", error);
-      }
+  // Fetch referral setups from API
+  const fetchReferralSetups = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await getReferralSetups();
+      setProjectsData(response.referral_setups || []);
+    } catch (err) {
+      console.error("Failed to fetch referral setups:", err);
+      setError("Failed to load referral setups. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
-  const [projectsData, setProjectsData] = useState<ProjectData[]>([
-    {
-      id: "1",
-      image:
-        "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=150&h=100&fit=crop",
-      projectName: "Romanjee-Igatput-V-95xx",
-      projectReferenceId: "333",
-      referralProgram: false,
-      bannerStatus: false,
-    },
-    {
-      id: "2",
-      image:
-        "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=150&h=100&fit=crop",
-      projectName: "Godrej",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: false,
-    },
-    {
-      id: "3",
-      image:
-        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: true,
-    },
-    {
-      id: "4",
-      image:
-        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: false,
-    },
-    {
-      id: "5",
-      image:
-        "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: true,
-    },
-    {
-      id: "6",
-      image:
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: true,
-    },
-    {
-      id: "7",
-      image:
-        "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=150&h=100&fit=crop",
-      projectName: "Renwil-Highlands-Glodrej Ciry",
-      projectReferenceId: "Renwil-Highlands-Glodrej Ciry",
-      referralProgram: false,
-      bannerStatus: false,
-    },
-    {
-      id: "8",
-      image:
-        "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=150&h=100&fit=crop",
-      projectName: "RNS",
-      projectReferenceId: "RNS Studio",
-      referralProgram: true,
-      bannerStatus: true,
-    },
-    {
-      id: "9",
-      image:
-        "https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: false,
-      bannerStatus: false,
-    },
-    {
-      id: "10",
-      image:
-        "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: true,
-    },
-    {
-      id: "11",
-      image:
-        "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: false,
-    },
-    {
-      id: "12",
-      image:
-        "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=150&h=100&fit=crop",
-      projectName: "Godrej Living",
-      projectReferenceId: "3712",
-      referralProgram: true,
-      bannerStatus: false,
-    },
-  ]);
+  useEffect(() => {
+    fetchReferralSetups();
+  }, [fetchReferralSetups]);
 
-  const handleToggleReferralProgram = (id: string) => {
+  const handleToggleReferralProgram = async (id: number, currentValue: boolean) => {
+    // Note: The API doesn't have a direct endpoint to toggle status,
+    // so this would need to be implemented on the backend or use the update endpoint
+    // For now, we just update the local state
     setProjectsData((prev) =>
       prev.map((project) =>
         project.id === id
-          ? { ...project, referralProgram: !project.referralProgram }
+          ? { ...project, is_referral: !currentValue }
           : project
       )
     );
   };
 
-  const handleToggleBannerStatus = (id: string) => {
+  const handleToggleBannerStatus = async (id: number, currentValue: boolean) => {
+    // Note: The API doesn't have a direct endpoint to toggle banner status,
+    // so this would need to be implemented on the backend or use the update endpoint
+    // For now, we just update the local state
     setProjectsData((prev) =>
       prev.map((project) =>
         project.id === id
-          ? { ...project, bannerStatus: !project.bannerStatus }
+          ? { ...project, active: currentValue ? 0 : 1 }
           : project
       )
     );
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Are you sure you want to delete this referral setup?")) {
+      try {
+        await deleteReferralSetup(id);
+        setProjectsData((prev) => prev.filter((project) => project.id !== id));
+      } catch (err) {
+        console.error("Failed to delete referral setup:", err);
+        alert("Failed to delete referral setup. Please try again.");
+      }
+    }
   };
 
   const columns: ColumnConfig[] = [
@@ -210,28 +103,28 @@ const CampaignsReferralSetup: React.FC = () => {
       defaultVisible: true,
     },
     {
-      key: "image",
+      key: "banner",
       label: "Image",
       sortable: false,
       draggable: false,
       defaultVisible: true,
     },
     {
-      key: "projectName",
+      key: "project_name",
       label: "Project Name",
       sortable: true,
       draggable: true,
       defaultVisible: true,
     },
     {
-      key: "projectReferenceId",
+      key: "project_reference_id",
       label: "Project Reference Id",
       sortable: true,
       draggable: true,
       defaultVisible: true,
     },
     {
-      key: "referralProgram",
+      key: "active",
       label: "Referral Program",
       sortable: false,
       draggable: true,
@@ -246,11 +139,11 @@ const CampaignsReferralSetup: React.FC = () => {
     },
   ];
 
-  const renderCell = (item: ProjectData, columnKey: string) => {
+  const renderCell = (item: ReferralSetup, columnKey: string) => {
     switch (columnKey) {
       case "actions":
         return (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-2">
             <button
               className="p-1 hover:bg-gray-100 rounded"
               onClick={() =>
@@ -259,30 +152,48 @@ const CampaignsReferralSetup: React.FC = () => {
             >
               <Edit className="w-4 h-4 text-gray-600" />
             </button>
+            {/* <button
+              className="p-1 hover:bg-gray-100 rounded"
+              onClick={() => handleDelete(item.id)}
+            >
+              <X className="w-4 h-4 text-red-500" />
+            </button> */}
           </div>
         );
-      case "image":
+      case "banner":
         return (
           <div className="flex items-center justify-center">
-            <img
-              src={item.image}
-              alt={item.projectName}
-              className="w-20 h-14 object-cover rounded"
-            />
+            {item.banner_url || item.banner ? (
+              <img
+                src={item.banner_url || item.banner || ""}
+                alt={item.project_name}
+                className="w-20 h-14 object-cover rounded"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (item.banner && target.src !== item.banner && item.banner_url) {
+                    target.src = item.banner; // fallback
+                  }
+                }}
+              />
+            ) : (
+              <div className="w-20 h-14 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
+                No Image
+              </div>
+            )}
           </div>
         );
-      case "projectName":
-        return <span className="text-sm">{item.projectName}</span>;
-      case "projectReferenceId":
-        return <span className="text-sm">{item.projectReferenceId}</span>;
-      case "referralProgram":
+      case "project_name":
+        return <span className="text-sm">{item.project_name}</span>;
+      case "project_reference_id":
+        return <span className="text-sm">{item.project_reference_id || "-"}</span>;
+      case "active":
         return (
           <div className="flex items-center justify-center">
             <Switch
-              checked={item.referralProgram}
-              onCheckedChange={() => handleToggleReferralProgram(item.id)}
+              checked={!!item.is_referral}
+              onCheckedChange={() => handleToggleReferralProgram(item.id, !!item.is_referral)}
               className={
-                item.referralProgram
+                item.is_referral
                   ? "data-[state=checked]:bg-green-500"
                   : "data-[state=unchecked]:bg-red-500"
               }
@@ -293,10 +204,10 @@ const CampaignsReferralSetup: React.FC = () => {
         return (
           <div className="flex items-center justify-center">
             <Switch
-              checked={item.bannerStatus}
-              onCheckedChange={() => handleToggleBannerStatus(item.id)}
+              checked={item.active === 1}
+              onCheckedChange={() => handleToggleBannerStatus(item.id, item.active === 1)}
               className={
-                item.bannerStatus
+                item.active === 1
                   ? "data-[state=checked]:bg-green-500"
                   : "data-[state=unchecked]:bg-red-500"
               }
@@ -310,10 +221,8 @@ const CampaignsReferralSetup: React.FC = () => {
 
   const filteredData = projectsData.filter(
     (project) =>
-      project.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.projectReferenceId
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
+      project.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.project_reference_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleApplyFilters = () => {
