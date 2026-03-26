@@ -17,28 +17,23 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
-import axios from "axios";
-import { getBaseUrl, getToken } from "@/utils/auth";
+import {
+  getCampaignReferralById,
+  getLeadStages,
+  CampaignReferral,
+  LeadStage,
+} from "@/services/campaignReferralService";
 
 const CampaignsReferralDetail: React.FC = () => {
   const { id } = useParams();
   const [showEditModal, setShowEditModal] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [leadStages, setLeadStages] = useState<LeadStage[]>([]);
 
-  const [referralData, setReferralData] = useState({
-    id: "",
-    referCode: "",
-    referTo: "",
-    referedBy: "",
-    project: "",
-    mobile: "",
-    status: "",
-    clientEmail: "",
-    leadStage: "",
-    createdOn: "",
-    notes: [] as { text: string; timestamp: string }[],
-  });
+  const [referralData, setReferralData] = useState<CampaignReferral | null>(
+    null
+  );
 
   const [editForm, setEditForm] = useState({
     status: "",
@@ -46,74 +41,87 @@ const CampaignsReferralDetail: React.FC = () => {
     notes: "",
   });
 
-  // Fetch referral detail from API
+  // Fetch referral detail and lead stages
   useEffect(() => {
-    const fetchReferralDetail = async () => {
+    const fetchData = async () => {
+      if (!id) return;
+
+      setIsLoading(true);
+      setError(null);
       try {
-        setLoading(true);
-        setError(null);
-        const baseUrl = getBaseUrl();
-        const token = getToken();
+        const [data, stagesData] = await Promise.all([
+          getCampaignReferralById(parseInt(id, 10)),
+          getLeadStages(),
+        ]);
 
-        if (!baseUrl || !token) {
-          throw new Error("Authentication required. Please login again.");
-        }
-
-        const apiUrl = `${baseUrl}/crm/admin/referrals/${id}.json`;
-        console.log("🔍 Fetching referral detail from:", apiUrl);
-
-        const response = await axios.get(apiUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        setReferralData(data);
+        setLeadStages(Array.isArray(stagesData) ? stagesData : []);
+        setEditForm({
+          status: data.status || "",
+          leadStage: data.lead_stage_id ? String(data.lead_stage_id) : "",
+          notes: "",
         });
-
-        console.log("✅ Referral Detail API Response:", response.data);
-
-        // Map API response to component data (matching actual API structure)
-        if (response.data) {
-          const data = response.data;
-          setReferralData({
-            id: `#${data.id}`,
-            referCode: data.unique_id || "-",
-            referTo: data.ref_name || "-",
-            referedBy: data.ref_name || "-",
-            project: data.project_name || "-",
-            mobile: data.ref_phone || "-",
-            status: data.status || "-",
-            clientEmail: data.client_email || "",
-            leadStage: data.lead_stage || "-",
-            createdOn: data.created_at
-              ? new Date(data.created_at).toLocaleString("en-GB")
-              : "-",
-            notes: data.notes || [],
-          });
-
-          // Set edit form values
-          setEditForm({
-            status: data.status || "",
-            leadStage: data.lead_stage || "",
-            notes: "",
-          });
-        }
       } catch (err) {
-        const error = err as Error;
-        console.error("❌ Error fetching referral detail:", error);
-        setError(error.message || "Failed to fetch referral details");
+        console.error("Failed to fetch referral detail:", err);
+        setError("Failed to load referral detail. Please try again.");
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    if (id) {
-      fetchReferralDetail();
-    }
+    fetchData();
   }, [id]);
+
+  const formatDateTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      const hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      const ampm = hours >= 12 ? "PM" : "AM";
+      const displayHours = hours % 12 || 12;
+      return `${day}/${month}/${year} ${displayHours}:${minutes} ${ampm}`;
+    } catch {
+      return dateString;
+    }
+  };
+
+  const getLeadStageName = (stageId: number | null) => {
+    if (!stageId) return "-";
+    const stage = leadStages.find((s) => s.id === stageId);
+    return stage ? stage.lead_stage : "-";
+  };
 
   const handleSave = () => {
     // Handle save logic here - connect to API
     setShowEditModal(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-gray-50 min-h-screen p-6 flex items-center justify-center">
+        <div className="text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-gray-50 min-h-screen p-6 flex items-center justify-center">
+        <div className="text-red-600">{error}</div>
+      </div>
+    );
+  }
+
+  if (!referralData) {
+    return (
+      <div className="bg-gray-50 min-h-screen p-6 flex items-center justify-center">
+        <div className="text-gray-600">No referral data found.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen p-6">
@@ -123,146 +131,125 @@ const CampaignsReferralDetail: React.FC = () => {
           {/* Header */}
           <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
             <h1 className="text-lg font-normal text-gray-700">Detail</h1>
-            {!loading && !error && (
-              <Button
-                onClick={() => setShowEditModal(true)}
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                Edit
-              </Button>
-            )}
+            <Button
+              onClick={() => setShowEditModal(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              Edit
+            </Button>
           </div>
 
-          {/* Loading State */}
-          {loading && (
-            <div className="flex justify-center items-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1e3a8a]"></div>
-            </div>
-          )}
-
-          {/* Error State */}
-          {error && !loading && (
-            <div className="p-6">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-600 text-sm">{error}</p>
-                <Button
-                  onClick={() => window.location.reload()}
-                  className="mt-2 bg-red-600 hover:bg-red-700 text-white"
-                  size="sm"
-                >
-                  Retry
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* Content */}
-          {!loading && !error && (
-            <div className="p-6">
-              {/* Grid Layout for Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                {/* ID */}
-                <div>
-                  <label className="text-sm text-gray-600 block mb-1">ID</label>
-                  <p className="text-gray-800">{referralData.id}</p>
-                </div>
-
-                {/* Refered by */}
-                <div>
-                  <label className="text-sm text-gray-600 block mb-1">
-                    Refered by
-                  </label>
-                  <p className="text-gray-800">{referralData.referedBy}</p>
-                </div>
-
-                {/* Refer Code */}
-                <div>
-                  <label className="text-sm text-gray-600 block mb-1">
-                    Refer Code
-                  </label>
-                  <p className="text-gray-800">{referralData.referCode}</p>
-                </div>
-
-                {/* Project */}
-                <div>
-                  <label className="text-sm text-gray-600 block mb-1">
-                    Project
-                  </label>
-                  <p className="text-gray-800">{referralData.project}</p>
-                </div>
-
-                {/* Refer to */}
-                <div>
-                  <label className="text-sm text-gray-600 block mb-1">
-                    Refer to
-                  </label>
-                  <p className="text-gray-800">{referralData.referTo}</p>
-                </div>
-
-                {/* Mobile */}
-                <div>
-                  <label className="text-sm text-gray-600 block mb-1">
-                    Mobile
-                  </label>
-                  <p className="text-gray-800">{referralData.mobile}</p>
-                </div>
-
-                {/* Status */}
-                <div>
-                  <label className="text-sm text-gray-600 block mb-1">
-                    Status
-                  </label>
-                  <p className="text-gray-800">{referralData.status}</p>
-                </div>
-
-                {/* Client Email */}
-                <div>
-                  <label className="text-sm text-gray-600 block mb-1">
-                    Client Email
-                  </label>
-                  <p className="text-gray-800">
-                    {referralData.clientEmail || "-"}
-                  </p>
-                </div>
-
-                {/* Lead Stage */}
-                <div>
-                  <label className="text-sm text-gray-600 block mb-1">
-                    Lead Stage
-                  </label>
-                  <p className="text-gray-800">{referralData.leadStage}</p>
-                </div>
+          <div className="p-6">
+            {/* Grid Layout for Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+              {/* ID */}
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">ID</label>
+                <p className="text-gray-800">#{referralData.id}</p>
               </div>
 
-              {/* Created on - Full Width */}
-              <div className="mt-6 pb-6 border-b border-gray-200">
+              {/* Refer Name */}
+              <div>
                 <label className="text-sm text-gray-600 block mb-1">
-                  Created on
+                  Refer Name
                 </label>
-                <p className="text-gray-800">{referralData.createdOn}</p>
+                <p className="text-gray-800">
+                  {referralData.ref_name || "-"}
+                </p>
               </div>
 
-              {/* Notes Section */}
-              <div className="mt-6">
-                <h2 className="text-lg font-normal text-gray-700 mb-4">
-                  Notes
-                </h2>
-                <div className="space-y-3">
-                  {referralData.notes.map((note, index) => (
-                    <div
-                      key={index}
-                      className="bg-gray-50 rounded p-4 flex items-start justify-between"
-                    >
-                      <p className="text-gray-800">{note.text}</p>
-                      <span className="text-sm text-gray-500 ml-4 whitespace-nowrap">
-                        {note.timestamp}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+              {/* Referral Code */}
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">
+                  Referral Code
+                </label>
+                <p className="text-gray-800">
+                  {referralData.referral_code || "-"}
+                </p>
+              </div>
+
+              {/* Project */}
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">
+                  Project
+                </label>
+                <p className="text-gray-800">
+                  {referralData.project_name || "-"}
+                </p>
+              </div>
+
+              {/* Mobile */}
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">
+                  Mobile
+                </label>
+                <p className="text-gray-800">
+                  {referralData.ref_phone || "-"}
+                </p>
+              </div>
+
+              {/* Alternate Mobile */}
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">
+                  Alternate Mobile
+                </label>
+                <p className="text-gray-800">
+                  {referralData.alternate_mob || "-"}
+                </p>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">
+                  Status
+                </label>
+                <p className="text-gray-800">
+                  {referralData.status || "-"}
+                </p>
+              </div>
+
+              {/* Client Email */}
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">
+                  Client Email
+                </label>
+                <p className="text-gray-800">
+                  {referralData.client_email || "-"}
+                </p>
+              </div>
+
+              {/* Lead Stage */}
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">
+                  Lead Stage
+                </label>
+                <p className="text-gray-800">
+                  {getLeadStageName(referralData.lead_stage_id)}
+                </p>
+              </div>
+
+              {/* Earning */}
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">
+                  Earning
+                </label>
+                <p className="text-gray-800">
+                  {referralData.earning || "-"}
+                </p>
               </div>
             </div>
-          )}
+
+            {/* Created on - Full Width */}
+            <div className="mt-6 pb-6 border-b border-gray-200">
+              <label className="text-sm text-gray-600 block mb-1">
+                Created on
+              </label>
+              <p className="text-gray-800">
+                {formatDateTime(referralData.created_at)}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -303,7 +290,7 @@ const CampaignsReferralDetail: React.FC = () => {
               </Select>
             </div>
 
-            {/* Lead Stage */}
+            {/* Lead Stage - Dynamic from API */}
             <div className="space-y-2">
               <Label htmlFor="leadStage" className="text-sm text-gray-700">
                 Lead Stage
@@ -318,10 +305,11 @@ const CampaignsReferralDetail: React.FC = () => {
                   <SelectValue placeholder="Select lead stage" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Round Table">Round Table</SelectItem>
-                  <SelectItem value="Site Visit">Site Visit</SelectItem>
-                  <SelectItem value="Negotiation">Negotiation</SelectItem>
-                  <SelectItem value="Closed">Closed</SelectItem>
+                  {leadStages.map((stage) => (
+                    <SelectItem key={stage.id} value={String(stage.id)}>
+                      {stage.lead_stage}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

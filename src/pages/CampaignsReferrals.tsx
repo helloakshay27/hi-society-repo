@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Eye, RefreshCw, Settings2 } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  getCampaignReferrals,
+  CampaignReferral,
+} from "@/services/campaignReferralService";
 import {
   Dialog,
   DialogContent,
@@ -19,23 +23,11 @@ import {
   InputLabel,
 } from "@mui/material";
 import { X } from "lucide-react";
-import axios from "axios";
-import { getBaseUrl, getToken } from "@/utils/auth";
-
-interface ReferralData {
-  id: string;
-  displayId: string;
-  createdBy: string;
-  uniqueId: string;
-  project: string;
-  lead: string;
-  mobile: string;
-  status: string;
-  createdOn: string;
-}
 
 const CampaignsReferrals: React.FC = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -44,73 +36,37 @@ const CampaignsReferrals: React.FC = () => {
     createdOn: "",
   });
 
-  const [referralsData, setReferralsData] = useState<ReferralData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [referralsData, setReferralsData] = useState<CampaignReferral[]>([]);
 
   // Fetch referrals from API
-  useEffect(() => {
-    const fetchReferrals = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Get Hi-Society token from hiSocietyAccount
-        const hiSocietyAccount = localStorage.getItem("hiSocietyAccount");
-        const token = hiSocietyAccount
-          ? JSON.parse(hiSocietyAccount).spree_api_key
-          : null;
-
-        console.log("🔎 DEBUG Referrals - Hi-Society token:", token);
-
-        if (!token) {
-          console.error("❌ Referrals: Hi-Society token missing!");
-          throw new Error(
-            "Hi-Society authentication required. Please login again."
-          );
-        }
-
-        // Hardcode Hi-Society UAT base URL (same as other Campaign pages)
-        const hiSocietyBaseUrl = "https://uat-hi-society.lockated.com";
-        const apiUrl = `${hiSocietyBaseUrl}/crm/admin/referrals.json`;
-        console.log("🔍 Fetching referrals from:", apiUrl);
-
-        const response = await axios.get(apiUrl, {
-          params: { token },
-        });
-
-        console.log("✅ Referrals API Response:", response.data);
-
-        // Map API response to component data structure
-        if (response.data.referrals && Array.isArray(response.data.referrals)) {
-          const mappedData: ReferralData[] = response.data.referrals.map(
-            (referral: any) => ({
-              id: referral.id?.toString() || "",
-              displayId: referral.display_id || `#${referral.id}`,
-              createdBy: referral.created_by || "-",
-              uniqueId: referral.unique_id || "-",
-              project: referral.project_name || "-",
-              lead: referral.lead_name || "-",
-              mobile: referral.mobile || "-",
-              status: referral.status || "",
-              createdOn: referral.created_at
-                ? new Date(referral.created_at).toLocaleDateString("en-GB")
-                : "-",
-            })
-          );
-          setReferralsData(mappedData);
-        }
-      } catch (err) {
-        const error = err as Error;
-        console.error("❌ Error fetching referrals:", error);
-        setError(error.message || "Failed to fetch referrals");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReferrals();
+  const fetchReferrals = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getCampaignReferrals();
+      setReferralsData(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch referrals:", err);
+      setError("Failed to load referrals. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchReferrals();
+  }, [fetchReferrals]);
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return `${String(date.getDate()).padStart(2, "0")}/${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}/${date.getFullYear()}`;
+    } catch {
+      return dateString;
+    }
+  };
 
   const columns: ColumnConfig[] = [
     {
@@ -121,43 +77,36 @@ const CampaignsReferrals: React.FC = () => {
       defaultVisible: true,
     },
     {
-      key: "displayId",
+      key: "id",
       label: "ID",
       sortable: true,
       draggable: true,
       defaultVisible: true,
     },
     {
-      key: "createdBy",
-      label: "Created By",
+      key: "ref_name",
+      label: "Refer Name",
       sortable: true,
       draggable: true,
       defaultVisible: true,
     },
     {
-      key: "uniqueId",
-      label: "Unique Id",
-      sortable: true,
-      draggable: true,
-      defaultVisible: true,
-    },
-    {
-      key: "project",
+      key: "project_name",
       label: "Project",
       sortable: true,
       draggable: true,
       defaultVisible: true,
     },
     {
-      key: "lead",
-      label: "Lead",
+      key: "ref_phone",
+      label: "Mobile",
       sortable: true,
       draggable: true,
       defaultVisible: true,
     },
     {
-      key: "mobile",
-      label: "Mobile",
+      key: "client_email",
+      label: "Client Email",
       sortable: true,
       draggable: true,
       defaultVisible: true,
@@ -170,7 +119,7 @@ const CampaignsReferrals: React.FC = () => {
       defaultVisible: true,
     },
     {
-      key: "createdOn",
+      key: "created_at",
       label: "Created On",
       sortable: true,
       draggable: true,
@@ -178,53 +127,58 @@ const CampaignsReferrals: React.FC = () => {
     },
   ];
 
-  const renderCell = (item: ReferralData, columnKey: string) => {
+  const renderCell = (item: CampaignReferral, columnKey: string) => {
     switch (columnKey) {
       case "actions":
         return (
           <div className="flex items-center justify-center">
             <button
               className="p-1 hover:bg-gray-100 rounded"
-              onClick={() => navigate(`/campaigns/referrals/detail/${item.id}`)}
+              onClick={() =>
+                navigate(`/campaigns/referrals/detail/${item.id}`)
+              }
             >
               <Eye className="w-4 h-4 text-gray-600" />
             </button>
           </div>
         );
-      case "displayId":
-        return <span className="text-sm font-medium">{item.displayId}</span>;
-      case "createdBy":
-        return <span className="text-sm">{item.createdBy}</span>;
-      case "uniqueId":
-        return <span className="text-sm">{item.uniqueId}</span>;
-      case "project":
-        return <span className="text-sm">{item.project}</span>;
-      case "lead":
-        return <span className="text-sm">{item.lead}</span>;
-      case "mobile":
-        return <span className="text-sm">{item.mobile}</span>;
+      case "id":
+        return <span className="text-sm font-medium">#{item.id}</span>;
+      case "ref_name":
+        return <span className="text-sm">{item.ref_name || "-"}</span>;
+      case "project_name":
+        return <span className="text-sm">{item.project_name || "-"}</span>;
+      case "ref_phone":
+        return <span className="text-sm">{item.ref_phone || "-"}</span>;
+      case "client_email":
+        return <span className="text-sm">{item.client_email || "-"}</span>;
       case "status":
         return item.status ? (
           <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
             {item.status}
           </span>
-        ) : null;
-      case "createdOn":
-        return <span className="text-sm">{item.createdOn}</span>;
+        ) : (
+          <span className="text-sm text-gray-400">-</span>
+        );
+      case "created_at":
+        return (
+          <span className="text-sm">{formatDate(item.created_at)}</span>
+        );
       default:
         return null;
     }
   };
 
-  const filteredData = referralsData.filter(
-    (referral) =>
-      referral.displayId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      referral.createdBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      referral.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      referral.lead.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      referral.mobile.includes(searchTerm) ||
-      referral.uniqueId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = referralsData.filter((referral) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (referral.ref_name || "").toLowerCase().includes(term) ||
+      (referral.project_name || "").toLowerCase().includes(term) ||
+      (referral.ref_phone || "").includes(searchTerm) ||
+      (referral.client_email || "").toLowerCase().includes(term) ||
+      String(referral.id).includes(searchTerm)
+    );
+  });
 
   const handleApplyFilters = () => {
     // Apply filter logic here - connect to API or filter local data
@@ -237,57 +191,41 @@ const CampaignsReferrals: React.FC = () => {
   return (
     <div className="bg-gray-50 min-h-screen p-4">
       <div>
-        {/* Loading State */}
-        {loading && (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1e3a8a]"></div>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && !loading && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-            <p className="text-red-600 text-sm">{error}</p>
-            <Button
-              onClick={() => window.location.reload()}
-              className="mt-2 bg-red-600 hover:bg-red-700 text-white"
-              size="sm"
-            >
-              Retry
-            </Button>
+        {/* Error */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
+            {error}
           </div>
         )}
 
         {/* Table */}
-        {!loading && !error && (
-          <div>
-            <EnhancedTable
-              data={filteredData}
-              columns={columns}
-              renderCell={renderCell}
-              pagination={true}
-              pageSize={10}
-              hideTableSearch={false}
-              hideTableExport={false}
-              hideColumnsButton={false}
-              emptyMessage="No referrals available"
-              searchPlaceholder="Search"
-              enableExport={true}
-              storageKey="campaigns-referrals-list-v2"
-              onFilterClick={() => setShowFilters(!showFilters)}
-              leftActions={
-                <div className="flex items-center gap-2">
-                  <Button
-                    className="bg-[#F2EEE9] hover:bg-[#E5DDD6] text-[#BF213E] px-8"
-                    onClick={() => navigate("/campaigns/referrals/create")}
-                  >
-                    Add
-                  </Button>
-                </div>
-              }
-            />
-          </div>
-        )}
+        <div>
+          <EnhancedTable
+            data={filteredData}
+            columns={columns}
+            renderCell={renderCell}
+            pagination={true}
+            pageSize={10}
+            hideTableSearch={false}
+            hideTableExport={false}
+            hideColumnsButton={false}
+            emptyMessage="No referrals available"
+            searchPlaceholder="Search"
+            enableExport={true}
+            storageKey="campaigns-referrals-list-v2"
+            onFilterClick={() => setShowFilters(!showFilters)}
+            leftActions={
+              <div className="flex items-center gap-2">
+                <Button
+                  className="bg-[#F2EEE9] hover:bg-[#E5DDD6] text-[#BF213E] px-8"
+                  onClick={() => navigate("/campaigns/referrals/create")}
+                >
+                  Add
+                </Button>
+              </div>
+            }
+          />
+        </div>
       </div>
 
       {/* Filter Dialog */}
@@ -364,27 +302,6 @@ const CampaignsReferrals: React.FC = () => {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-4">
                   <FormControl fullWidth size="small">
-                    <InputLabel id="created-by-label" shrink>
-                      Created By
-                    </InputLabel>
-                    <MuiSelect
-                      labelId="created-by-label"
-                      value={filters.createdBy}
-                      label="Created By"
-                      onChange={(e) =>
-                        setFilters({ ...filters, createdBy: e.target.value })
-                      }
-                      displayEmpty
-                      notched
-                    >
-                      <MenuItem value="">Select Created By</MenuItem>
-                      <MenuItem value="samay">Samay Seth</MenuItem>
-                      <MenuItem value="deepak">Deepak Gupta</MenuItem>
-                      <MenuItem value="rahul">Rahul Kumar</MenuItem>
-                    </MuiSelect>
-                  </FormControl>
-
-                  <FormControl fullWidth size="small">
                     <InputLabel id="status-label" shrink>
                       Status
                     </InputLabel>
@@ -399,9 +316,9 @@ const CampaignsReferrals: React.FC = () => {
                       notched
                     >
                       <MenuItem value="">Select Status</MenuItem>
-                      <MenuItem value="hot">Hot</MenuItem>
-                      <MenuItem value="cold">Cold</MenuItem>
-                      <MenuItem value="warm">Warm</MenuItem>
+                      <MenuItem value="Hot">Hot</MenuItem>
+                      <MenuItem value="Cold">Cold</MenuItem>
+                      <MenuItem value="Warm">Warm</MenuItem>
                     </MuiSelect>
                   </FormControl>
 

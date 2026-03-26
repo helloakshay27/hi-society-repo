@@ -1121,6 +1121,7 @@ import { QuotesAdd } from "./pages/ClubManagement/QuotesAdd";
 import { DeliveryChallansDashboard } from "./pages/ClubManagement/DeliveryChallansDashboard";
 import { DeliveryChallansAdd } from "./pages/ClubManagement/DeliveryChallansAdd";
 import FitoutRequestCategoryApprovalRequestMobile from "./pages/FitoutRequestCategoryApprovalRequestMobile";
+import AddVisitorPage from "./pages/AddVisitorPage";
 
 const queryClient = new QueryClient();
 
@@ -4914,7 +4915,7 @@ function App() {
                       />
                       <Route
                         path="/security/visitor/add"
-                        element={<VisitorFormPage />}
+                        element={<AddVisitorPage />}
                       />
                       <Route
                         path="/security/visitor/employee/add"

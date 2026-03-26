@@ -1,21 +1,57 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from "@mui/material";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  createCampaignReferral,
+  getLeadStages,
+  getActivities,
+  getLeadStatuses,
+  getLeadSubSources,
+  getProjects,
+  getProjectLeadSources,
+  getProjectFlatTypes,
+  LeadStage,
+  Activity,
+  LeadStatus,
+  LeadSource,
+  LeadSubSource,
+  Project,
+  FlatType,
+} from "@/services/campaignReferralService";
+
+const fieldStyles = {
+  height: "45px",
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  "& .MuiOutlinedInput-root": {
+    height: "45px",
+    "& fieldset": { borderColor: "#ddd" },
+    "&:hover fieldset": { borderColor: "#C72030" },
+    "&.Mui-focused fieldset": { borderColor: "#C72030" },
+  },
+  "& .MuiInputLabel-root": {
+    "&.Mui-focused": { color: "#C72030" },
+  },
+};
 
 const CampaignsReferralCreate: React.FC = () => {
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Dropdown data from APIs
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [flatTypes, setFlatTypes] = useState<FlatType[]>([]);
+  const [leadStages, setLeadStages] = useState<LeadStage[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [leadStatuses, setLeadStatuses] = useState<LeadStatus[]>([]);
+  const [leadSources, setLeadSources] = useState<LeadSource[]>([]);
+  const [leadSubSources, setLeadSubSources] = useState<LeadSubSource[]>([]);
+
   const [formData, setFormData] = useState({
-    project: "",
-    flatType: "",
+    projectId: "",
+    flatTypeId: "",
     clientName: "",
     mobile: "",
     alternateMobile: "",
@@ -27,48 +63,126 @@ const CampaignsReferralCreate: React.FC = () => {
     leadSubSource: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Fetch static dropdown data on mount
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        const [projectsData, stagesData, activitiesData, statusesData] =
+          await Promise.all([
+            getProjects(),
+            getLeadStages(),
+            getActivities(),
+            getLeadStatuses(),
+          ]);
+        setProjects(Array.isArray(projectsData) ? projectsData : []);
+        setLeadStages(Array.isArray(stagesData) ? stagesData : []);
+        setActivities(Array.isArray(activitiesData) ? activitiesData : []);
+        setLeadStatuses(Array.isArray(statusesData) ? statusesData : []);
+      } catch (err) {
+        console.error("Failed to fetch dropdown data:", err);
+      }
+    };
+    fetchDropdownData();
+  }, []);
 
-    // Validate required fields
-    if (!formData.project || !formData.clientName || !formData.mobile) {
-      alert(
-        "Please fill in all required fields: Project, Client Name, and Mobile"
-      );
+  // Fetch project-specific lead sources & flat types when project changes
+  useEffect(() => {
+    if (!formData.projectId) {
+      setLeadSources([]);
+      setFlatTypes([]);
+      setFormData((prev) => ({ ...prev, leadSource: "", leadSubSource: "", flatTypeId: "" }));
       return;
     }
-
-    // Generate unique IDs
-    const timestamp = Date.now();
-    const displayId = `#${Math.floor(1000 + Math.random() * 9000)}`;
-    const uniqueId = Math.random().toString(36).substring(2, 10);
-
-    // Get current date in DD/MM/YYYY format
-    const currentDate = new Date();
-    const formattedDate = `${String(currentDate.getDate()).padStart(2, "0")}/${String(currentDate.getMonth() + 1).padStart(2, "0")}/${currentDate.getFullYear()}`;
-
-    // Create new referral object
-    const newReferral = {
-      id: timestamp.toString(),
-      displayId: displayId,
-      createdBy: formData.clientName, // Using client name as created by
-      uniqueId: uniqueId,
-      project: formData.project,
-      lead: formData.clientName,
-      mobile: formData.mobile,
-      status: formData.leadStatus === "active" ? "ACT" : "",
-      createdOn: formattedDate,
+    const pid = parseInt(formData.projectId, 10);
+    const fetchProjectData = async () => {
+      try {
+        const [sourcesData, flatsData] = await Promise.all([
+          getProjectLeadSources(pid),
+          getProjectFlatTypes(pid),
+        ]);
+        setLeadSources(Array.isArray(sourcesData) ? sourcesData : []);
+        setFlatTypes(Array.isArray(flatsData) ? flatsData : []);
+      } catch (err) {
+        console.error("Failed to fetch project data:", err);
+        setLeadSources([]);
+        setFlatTypes([]);
+      }
     };
+    fetchProjectData();
+  }, [formData.projectId]);
 
-    // Save to localStorage to pass to list page
-    localStorage.setItem("newReferral", JSON.stringify(newReferral));
-
-    // Navigate back to referrals list
-    navigate("/campaigns/referrals");
-  };
+  // Fetch sub-sources when lead source changes
+  useEffect(() => {
+    if (!formData.leadSource) {
+      setLeadSubSources([]);
+      return;
+    }
+    const fetchSubSources = async () => {
+      try {
+        const data = await getLeadSubSources(parseInt(formData.leadSource, 10));
+        setLeadSubSources(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to fetch sub-sources:", err);
+        setLeadSubSources([]);
+      }
+    };
+    fetchSubSources();
+  }, [formData.leadSource]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    if (field === "leadSource") {
+      setFormData((prev) => ({ ...prev, leadSource: value, leadSubSource: "" }));
+    }
+    if (field === "projectId") {
+      setFormData((prev) => ({
+        ...prev,
+        projectId: value,
+        flatTypeId: "",
+        leadSource: "",
+        leadSubSource: "",
+      }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.projectId || !formData.clientName || !formData.mobile) {
+      alert("Please fill in all required fields: Project, Client Name, and Mobile");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const selectedProject = projects.find((p) => String(p.id) === formData.projectId);
+      const payload = {
+        referral: {
+          ref_phone: formData.mobile,
+          ref_name: formData.clientName,
+          project_name: selectedProject?.name || selectedProject?.project_name || "",
+          project_id: formData.projectId ? parseInt(formData.projectId, 10) : null,
+          status: formData.leadStatus || undefined,
+          alternate_mob: formData.alternateMobile || null,
+          client_email: formData.clientEmail || null,
+          flat_type_id: formData.flatTypeId ? parseInt(formData.flatTypeId, 10) : null,
+          lead_stage_id: formData.leadStage ? parseInt(formData.leadStage, 10) : null,
+          activity_id: formData.activity ? parseInt(formData.activity, 10) : null,
+          lead_source_id: formData.leadSource ? parseInt(formData.leadSource, 10) : null,
+          lead_sub_source_id: formData.leadSubSource ? parseInt(formData.leadSubSource, 10) : null,
+        },
+      };
+
+      await createCampaignReferral(payload);
+      navigate("/campaigns/referrals");
+    } catch (err) {
+      console.error("Failed to create referral:", err);
+      setError("Failed to create referral. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -76,238 +190,249 @@ const CampaignsReferralCreate: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-[#F2EEE9] text-[#BF213E] px-4 py-3 mb-6 rounded-t">
-          <h1 className="text-lg font-medium">CREATE LED</h1>
+          <h1 className="text-lg font-medium">CREATE LEAD</h1>
         </div>
 
         {/* Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-6 rounded-b shadow-sm"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Project */}
-            <div className="space-y-2">
-              <Label htmlFor="project" className="text-gray-600">
-                Project <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={formData.project}
-                onValueChange={(value) => handleInputChange("project", value)}
-              >
-                <SelectTrigger id="project" className="bg-gray-50">
-                  <SelectValue placeholder="Select Project" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="project1">Project 1</SelectItem>
-                  <SelectItem value="project2">Project 2</SelectItem>
-                  <SelectItem value="project3">Project 3</SelectItem>
-                </SelectContent>
-              </Select>
+        <form onSubmit={handleSubmit} className="bg-white rounded-b shadow-sm overflow-hidden">
+          {error && (
+            <div className="mx-6 mt-6 p-3 bg-red-50 text-red-600 rounded-md text-sm">
+              {error}
             </div>
+          )}
 
-            {/* Flat Type */}
-            <div className="space-y-2">
-              <Label htmlFor="flatType" className="text-gray-600">
-                Flat Type
-              </Label>
-              <Select
-                value={formData.flatType}
-                onValueChange={(value) => handleInputChange("flatType", value)}
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Project - Dynamic dropdown */}
+            <FormControl fullWidth variant="outlined" required sx={fieldStyles}>
+              <InputLabel shrink>
+                Project <span style={{ color: "#C72030" }}>*</span>
+              </InputLabel>
+              <MuiSelect
+                value={formData.projectId}
+                onChange={(e) => handleInputChange("projectId", e.target.value)}
+                label="Project *"
+                notched
+                displayEmpty
               >
-                <SelectTrigger id="flatType" className="bg-gray-50">
-                  <SelectValue placeholder="Select Flat Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1bhk">1 BHK</SelectItem>
-                  <SelectItem value="2bhk">2 BHK</SelectItem>
-                  <SelectItem value="3bhk">3 BHK</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <MenuItem value="">Select Project</MenuItem>
+                {projects.map((p) => (
+                  <MenuItem key={p.id} value={String(p.id)}>
+                    {p.name || p.project_name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+
+            {/* Flat Type - Dynamic dropdown based on selected project */}
+            <FormControl
+              fullWidth
+              variant="outlined"
+              disabled={!formData.projectId}
+              sx={fieldStyles}
+            >
+              <InputLabel shrink>Flat Type</InputLabel>
+              <MuiSelect
+                value={formData.flatTypeId}
+                onChange={(e) => handleInputChange("flatTypeId", e.target.value)}
+                label="Flat Type"
+                notched
+                displayEmpty
+              >
+                <MenuItem value="">
+                  {formData.projectId ? "Select Flat Type" : "Select Project first"}
+                </MenuItem>
+                {flatTypes.map((ft) => (
+                  <MenuItem key={ft.id} value={String(ft.id)}>
+                    {ft.appartment_type
+                      ? `${ft.society_flat_type} (${ft.appartment_type})`
+                      : ft.society_flat_type}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
 
             {/* Client Name */}
-            <div className="space-y-2">
-              <Label htmlFor="clientName" className="text-gray-600">
-                Client Name <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="clientName"
-                type="text"
-                placeholder="Client Name"
-                className="bg-gray-50"
-                value={formData.clientName}
-                onChange={(e) =>
-                  handleInputChange("clientName", e.target.value)
-                }
-              />
-            </div>
+            <TextField
+              label={
+                <span>
+                  Client Name <span style={{ color: "#C72030" }}>*</span>
+                </span>
+              }
+              placeholder="Client Name"
+              value={formData.clientName}
+              onChange={(e) => handleInputChange("clientName", e.target.value)}
+              fullWidth
+              variant="outlined"
+              required
+              InputLabelProps={{ shrink: true }}
+              sx={fieldStyles}
+            />
 
             {/* Mobile */}
-            <div className="space-y-2">
-              <Label htmlFor="mobile" className="text-gray-600">
-                Mobile <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="mobile"
-                type="tel"
-                placeholder="Phone"
-                className="bg-gray-50"
-                value={formData.mobile}
-                onChange={(e) => handleInputChange("mobile", e.target.value)}
-              />
-            </div>
+            <TextField
+              label={
+                <span>
+                  Mobile <span style={{ color: "#C72030" }}>*</span>
+                </span>
+              }
+              placeholder="Phone"
+              value={formData.mobile}
+              onChange={(e) => handleInputChange("mobile", e.target.value)}
+              fullWidth
+              variant="outlined"
+              required
+              type="tel"
+              InputLabelProps={{ shrink: true }}
+              sx={fieldStyles}
+            />
 
             {/* Alternate Mobile */}
-            <div className="space-y-2">
-              <Label htmlFor="alternateMobile" className="text-gray-600">
-                Alternate Mobile
-              </Label>
-              <Input
-                id="alternateMobile"
-                type="tel"
-                placeholder="Alternate Phone"
-                className="bg-gray-50"
-                value={formData.alternateMobile}
-                onChange={(e) =>
-                  handleInputChange("alternateMobile", e.target.value)
-                }
-              />
-            </div>
+            <TextField
+              label="Alternate Mobile"
+              placeholder="Alternate Phone"
+              value={formData.alternateMobile}
+              onChange={(e) => handleInputChange("alternateMobile", e.target.value)}
+              fullWidth
+              variant="outlined"
+              type="tel"
+              InputLabelProps={{ shrink: true }}
+              sx={fieldStyles}
+            />
 
             {/* Client Email */}
-            <div className="space-y-2">
-              <Label htmlFor="clientEmail" className="text-gray-600">
-                Client Email
-              </Label>
-              <Input
-                id="clientEmail"
-                type="email"
-                placeholder="Email"
-                className="bg-gray-50"
-                value={formData.clientEmail}
-                onChange={(e) =>
-                  handleInputChange("clientEmail", e.target.value)
-                }
-              />
-            </div>
+            <TextField
+              label="Client Email"
+              placeholder="Email"
+              value={formData.clientEmail}
+              onChange={(e) => handleInputChange("clientEmail", e.target.value)}
+              fullWidth
+              variant="outlined"
+              type="email"
+              InputLabelProps={{ shrink: true }}
+              sx={fieldStyles}
+            />
 
             {/* Lead Stage */}
-            <div className="space-y-2">
-              <Label htmlFor="leadStage" className="text-gray-600">
-                Lead Stage
-              </Label>
-              <Select
+            <FormControl fullWidth variant="outlined" sx={fieldStyles}>
+              <InputLabel shrink>Lead Stage</InputLabel>
+              <MuiSelect
                 value={formData.leadStage}
-                onValueChange={(value) => handleInputChange("leadStage", value)}
+                onChange={(e) => handleInputChange("leadStage", e.target.value)}
+                label="Lead Stage"
+                notched
+                displayEmpty
               >
-                <SelectTrigger id="leadStage" className="bg-gray-50">
-                  <SelectValue placeholder="Select Lead Stage" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="contacted">Contacted</SelectItem>
-                  <SelectItem value="qualified">Qualified</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <MenuItem value="">Select Lead Stage</MenuItem>
+                {leadStages.map((stage) => (
+                  <MenuItem key={stage.id} value={String(stage.id)}>
+                    {stage.lead_stage}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
 
             {/* Activity */}
-            <div className="space-y-2">
-              <Label htmlFor="activity" className="text-gray-600">
-                Activity
-              </Label>
-              <Select
+            <FormControl fullWidth variant="outlined" sx={fieldStyles}>
+              <InputLabel shrink>Activity</InputLabel>
+              <MuiSelect
                 value={formData.activity}
-                onValueChange={(value) => handleInputChange("activity", value)}
+                onChange={(e) => handleInputChange("activity", e.target.value)}
+                label="Activity"
+                notched
+                displayEmpty
               >
-                <SelectTrigger id="activity" className="bg-gray-50">
-                  <SelectValue placeholder="Select Activity" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="call">Call</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="meeting">Meeting</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <MenuItem value="">Select Activity</MenuItem>
+                {activities.map((activity) => (
+                  <MenuItem key={activity.id} value={String(activity.id)}>
+                    {activity.activity_name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
 
             {/* Lead Status */}
-            <div className="space-y-2">
-              <Label htmlFor="leadStatus" className="text-gray-600">
-                Lead Status
-              </Label>
-              <Select
+            <FormControl fullWidth variant="outlined" sx={fieldStyles}>
+              <InputLabel shrink>Lead Status</InputLabel>
+              <MuiSelect
                 value={formData.leadStatus}
-                onValueChange={(value) =>
-                  handleInputChange("leadStatus", value)
-                }
+                onChange={(e) => handleInputChange("leadStatus", e.target.value)}
+                label="Lead Status"
+                notched
+                displayEmpty
               >
-                <SelectTrigger id="leadStatus" className="bg-gray-50">
-                  <SelectValue placeholder="select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="closed">Closed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <MenuItem value="">Select Status</MenuItem>
+                {leadStatuses.map((status) => (
+                  <MenuItem key={status.id} value={status.name}>
+                    {status.name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
 
-            {/* Lead Source */}
-            <div className="space-y-2">
-              <Label htmlFor="leadSource" className="text-gray-600">
-                Lead Source
-              </Label>
-              <Select
+            {/* Lead Source - depends on selected project */}
+            <FormControl
+              fullWidth
+              variant="outlined"
+              disabled={!formData.projectId}
+              sx={fieldStyles}
+            >
+              <InputLabel shrink>Lead Source</InputLabel>
+              <MuiSelect
                 value={formData.leadSource}
-                onValueChange={(value) =>
-                  handleInputChange("leadSource", value)
-                }
+                onChange={(e) => handleInputChange("leadSource", e.target.value)}
+                label="Lead Source"
+                notched
+                displayEmpty
               >
-                <SelectTrigger id="leadSource" className="bg-gray-50">
-                  <SelectValue placeholder="Select Lead Source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="website">Website</SelectItem>
-                  <SelectItem value="referral">Referral</SelectItem>
-                  <SelectItem value="walkin">Walk-in</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <MenuItem value="">
+                  {formData.projectId ? "Select Lead Source" : "Select Project first"}
+                </MenuItem>
+                {leadSources.map((source) => (
+                  <MenuItem key={source.id} value={String(source.id)}>
+                    {source.source_name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
 
-            {/* Lead Sub Source */}
-            <div className="space-y-2">
-              <Label htmlFor="leadSubSource" className="text-gray-600">
-                Lead Sub Source
-              </Label>
-              <Select
+            {/* Lead Sub Source - depends on selected lead source */}
+            <FormControl
+              fullWidth
+              variant="outlined"
+              disabled={!formData.leadSource}
+              sx={fieldStyles}
+            >
+              <InputLabel shrink>Lead Sub Source</InputLabel>
+              <MuiSelect
                 value={formData.leadSubSource}
-                onValueChange={(value) =>
-                  handleInputChange("leadSubSource", value)
-                }
+                onChange={(e) => handleInputChange("leadSubSource", e.target.value)}
+                label="Lead Sub Source"
+                notched
+                displayEmpty
               >
-                <SelectTrigger id="leadSubSource" className="bg-gray-50">
-                  <SelectValue placeholder="Select Lead Sub Source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="google">Google</SelectItem>
-                  <SelectItem value="facebook">Facebook</SelectItem>
-                  <SelectItem value="direct">Direct</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <MenuItem value="">
+                  {formData.leadSource ? "Select Lead Sub Source" : "Select Lead Source first"}
+                </MenuItem>
+                {leadSubSources.map((sub) => (
+                  <MenuItem key={sub.id} value={String(sub.id)}>
+                    {sub.subsource_name}
+                  </MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
           </div>
 
           {/* Divider */}
-          <div className="border-t border-dashed border-gray-300 my-6"></div>
+          <div className="border-t border-dashed border-gray-300 mx-6" />
 
           {/* Submit Button */}
-          <div className="flex justify-center">
+          <div className="flex justify-center py-6">
             <Button
               type="submit"
-              className="bg-[#10b981] hover:bg-[#059669] text-white px-8"
+              disabled={isSubmitting}
+              className="bg-[#C72030] hover:bg-[#B01C29] text-white px-10 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Submit
+              {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
           </div>
         </form>

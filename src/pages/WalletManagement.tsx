@@ -299,7 +299,7 @@ export const WalletManagement = () => {
           ? new Date(item.created_at).toLocaleString()
           : "";
       case "amount":
-        return item.amount !== undefined ? item.amount.toLocaleString() : "";
+        return item.amount !== undefined ? new Intl.NumberFormat("en-IN").format(Number(item.amount)) : "";
       case "id":
         return item.id;
       case "remarks":
@@ -473,7 +473,11 @@ export const WalletManagement = () => {
             /> */}
             <StatsCard
               title="Total Recharges"
-              value={cardsData?.credited_amount || "0.00"}
+              value={
+                new Intl.NumberFormat("en-IN").format(
+                  Number(cardsData?.credited_amount || 0)
+                )
+              }
               icon={
                 <svg
                   className="w-6 h-6 text-[#C72030]"
@@ -495,7 +499,11 @@ export const WalletManagement = () => {
             />
             <StatsCard
               title="Total Redeemed"
-              value={cardsData?.debited_amount || "0.00"}
+              value={
+                new Intl.NumberFormat("en-IN").format(
+                  Number(cardsData?.debited_amount || 0)
+                )
+              }
               icon={
                 <svg
                   className="w-6 h-6 text-[#C72030]"
@@ -517,7 +525,11 @@ export const WalletManagement = () => {
             />
             <StatsCard
               title="Available Balance"
-              value={cardsData?.available_amount || "0.00"}
+              value={
+                new Intl.NumberFormat("en-IN").format(
+                  Number(cardsData?.available_amount || 0)
+                )
+              }
               icon={
                 <svg
                   className="w-6 h-6 text-[#C72030]"
@@ -794,7 +806,7 @@ export const WalletManagement = () => {
         </TabsContent>
         <TabsContent value="alerts" className="space-y-6 mt-6">
           <div className="max-w-2xl">
-            
+
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-[#f1c7cb] rounded-lg flex items-center justify-center">
@@ -822,7 +834,7 @@ export const WalletManagement = () => {
             </div>
 
             <div className="space-y-4">
-           
+
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-[#1A1A1A] flex items-center gap-1">
                   Minimum Balance Threshold
@@ -842,7 +854,7 @@ export const WalletManagement = () => {
                 </div>
               </div>
 
-             
+
               <div className="space-y-2 bg-[#eae6dd] p-4">
                 <div className="flex items-start gap-3">
                   <Bell className="w-5 h-5 text-[#c72030] mt-0.5" />
@@ -855,7 +867,7 @@ export const WalletManagement = () => {
                 </div>
               </div>
 
-        
+
               <div className="flex justify-end mt-6">
                 <Button
                   className="bg-[#C72030] hover:bg-[#A01828] text-white px-8"

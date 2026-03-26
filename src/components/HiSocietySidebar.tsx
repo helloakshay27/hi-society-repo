@@ -1060,7 +1060,7 @@ export const HiSocietySidebar: React.FC = () => {
               id: "incidents-setup",
               label: "Incidents Setup",
               icon: AlertTriangle,
-              path: "/incidents/setup",
+              path: "/settings/safety/incident",
             },
             {
               id: "osr-setup",

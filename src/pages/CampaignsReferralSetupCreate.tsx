@@ -1,102 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { getBaseUrl, getToken } from "@/utils/auth";
-import { useToast } from "@/hooks/use-toast";
+import { Upload, X, FileImage } from "lucide-react";
+import { createReferralSetup } from "@/services/referralService";
 
 const CampaignsReferralSetupCreate: React.FC = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     bannerEnabled: false,
     referralBannerEnabled: false,
     projectName: "",
     projectReferenceId: "",
+    banner: null as File | null,
   });
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
 
     try {
-      setLoading(true);
-      const baseUrl = getBaseUrl();
-      const token = getToken();
-      const societyId = localStorage.getItem("selectedUserSociety");
-
-      if (!baseUrl || !token) {
-        toast({
-          title: "Authentication Error",
-          description: "Please login again to continue.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!societyId) {
-        toast({
-          title: "Society Required",
-          description: "Please select a society first.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Prepare POST data
-      const postData = {
-        project_name: formData.projectName,
-        project_reference_id: formData.projectReferenceId,
-        active: formData.bannerEnabled ? 1 : 0,
-        banner: formData.referralBannerEnabled ? "enabled" : "",
-        society_id: societyId,
+      const payload = {
+        society_banner: {
+          project_name: formData.projectName,
+          project_reference_id: parseInt(formData.projectReferenceId, 10) || 0,
+          active: formData.bannerEnabled ? "on" : "off",
+          is_referral: formData.referralBannerEnabled ? "on" : "off",
+          banner: formData.banner,
+        },
       };
 
-      const apiUrl = `${baseUrl}/crm/admin/referral_setups.json`;
-      console.log("📤 Creating referral setup:", apiUrl);
-      console.log("📦 POST Data:", postData);
-
-      const response = await axios.post(apiUrl, postData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log("✅ Create Response:", response.data);
-
-      if (
-        response.data.code === 200 ||
-        response.status === 200 ||
-        response.status === 201
-      ) {
-        toast({
-          title: "Success",
-          description: "Referral setup created successfully!",
-        });
-
-        // Navigate back to list page
-        navigate("/campaigns/referral-setup");
-      } else {
-        throw new Error(
-          response.data.message || "Failed to create referral setup"
-        );
-      }
+      await createReferralSetup(payload);
+      navigate("/campaigns/referral-setup");
     } catch (err) {
-      const error = err as Error;
-      console.error("❌ Error creating referral setup:", error);
-
-      toast({
-        title: "Error",
-        description:
-          error.message || "Failed to create referral setup. Please try again.",
-        variant: "destructive",
-      });
+      console.error("Failed to create referral setup:", err);
+      setError("Failed to create referral setup. Please try again.");
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -108,9 +54,27 @@ const CampaignsReferralSetupCreate: React.FC = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData((prev) => ({ ...prev, banner: file }));
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setFormData((prev) => ({ ...prev, banner: null }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleBrowseClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen p-6">
-      <div className="max-w-3xl mx-auto">
+      <div className="mx-auto">
         {/* Card */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           {/* Header */}
@@ -122,6 +86,12 @@ const CampaignsReferralSetupCreate: React.FC = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6">
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+
             {/* Toggle Switches Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Banner */}
@@ -216,6 +186,55 @@ const CampaignsReferralSetupCreate: React.FC = () => {
               </div>
             </div>
 
+            {/* Banner Upload */}
+            <div className="space-y-2 mb-6">
+              <Label htmlFor="banner" className="text-gray-600 text-sm">
+                Banner
+              </Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <div className="flex-1">
+                  {formData.banner ? (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md">
+                      <FileImage className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-700 flex-1 truncate">
+                        {formData.banner.name}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleRemoveFile}
+                        className="p-1 hover:bg-gray-200 rounded"
+                      >
+                        <X className="w-4 h-4 text-gray-500" />
+                      </button>
+                    </div>
+                  ) : (
+                    <Input
+                      type="text"
+                      placeholder="No file selected"
+                      readOnly
+                      className="bg-gray-50 cursor-default"
+                    />
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleBrowseClick}
+                  className="flex items-center gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  Browse
+                </Button>
+              </div>
+            </div>
+
             {/* Divider */}
             <div className="border-t border-dashed border-gray-300 my-6"></div>
 
@@ -223,10 +242,10 @@ const CampaignsReferralSetupCreate: React.FC = () => {
             <div className="flex justify-center">
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={isSubmitting}
                 className="bg-[#10b981] hover:bg-[#059669] text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? "Creating..." : "Submit"}
+                {isSubmitting ? "Submitting..." : "Submit"}
               </Button>
             </div>
           </form>

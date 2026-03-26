@@ -669,7 +669,10 @@ const WalletTopup: React.FC = () => {
                   <div>
                     <p className="text-sm text-gray-600">Total Credited</p>
                     <p className="text-2xl font-bold text-green-700">
-                      ₹{(walletData.credited_amount || 0).toFixed(2)}
+                      ₹{new Intl.NumberFormat("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }).format(Number(walletData.credited_amount || 0))}
                     </p>
                   </div>
                 </div>
@@ -684,7 +687,10 @@ const WalletTopup: React.FC = () => {
                   <div>
                     <p className="text-sm text-gray-600">Total Debited</p>
                     <p className="text-2xl font-bold text-red-700">
-                      ₹{(walletData.debited_amount || 0).toFixed(2)}
+                      ₹{new Intl.NumberFormat("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }).format(Number(walletData.debited_amount || 0))}
                     </p>
                   </div>
                 </div>
@@ -699,7 +705,10 @@ const WalletTopup: React.FC = () => {
                   <div>
                     <p className="text-sm text-gray-600">Available Balance</p>
                     <p className="text-2xl font-bold text-blue-700">
-                      ₹{(walletData.available_amount || 0).toFixed(2)}
+                      ₹{new Intl.NumberFormat("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }).format(Number(walletData.available_amount || 0))}
                     </p>
                   </div>
                 </div>

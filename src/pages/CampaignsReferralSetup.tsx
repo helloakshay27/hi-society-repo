@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Edit, RefreshCw, Settings2, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { getBaseUrl, getToken } from "@/utils/auth";
+import { getReferralSetups, ReferralSetup, deleteReferralSetup } from "@/services/referralService";
 import {
   Dialog,
   DialogContent,
@@ -20,47 +19,14 @@ import {
   Select as MuiSelect,
   FormControl,
   InputLabel,
+  CircularProgress,
 } from "@mui/material";
 import { X } from "lucide-react";
 
-interface ProjectData {
-  id: string;
-  image: string;
-  projectName: string;
-  projectReferenceId: string;
-  referralProgram: boolean;
-  bannerStatus: boolean;
-}
-
-interface ReferralSetupApiResponse {
-  code: number;
-  referral_setups: {
-    id: number;
-    project_name: string;
-    banner: string | null;
-    society_id: number;
-    project_reference_id: number | null;
-    title: string | null;
-    description: string | null;
-    active: number;
-    created_at: string;
-    updated_at: string;
-  }[];
-}
-
-interface ReferralSetupDetailApiResponse {
-  id: number;
-  project_name: string;
-  banner: string | null;
-  society_id: number;
-  project_reference_id: number | null;
-  active: number;
-  created_at: string;
-  updated_at: string;
-}
-
 const CampaignsReferralSetup: React.FC = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -68,170 +34,64 @@ const CampaignsReferralSetup: React.FC = () => {
     referralNumber: "",
     createdDate: "",
   });
-  const [projectsData, setProjectsData] = useState<ProjectData[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const [projectsData, setProjectsData] = useState<ReferralSetup[]>([]);
 
   // Fetch referral setups from API
-  useEffect(() => {
-    const fetchReferralSetups = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Get Hi-Society token from hiSocietyAccount
-        const hiSocietyAccount = localStorage.getItem("hiSocietyAccount");
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-          console.error("❌ Hi-Society token is missing!");
-          throw new Error(
-            "Hi-Society authentication token not found. Please login again."
-          );
-        }
-
-        // Hardcode Hi-Society UAT base URL (same as Other Projects API)
-        const hiSocietyBaseUrl = "https://uat-hi-society.lockated.com";
-        const apiUrl = `${hiSocietyBaseUrl}/crm/admin/referral_setups.json`;
-        console.log("🔍 Fetching from URL:", apiUrl);
-        console.log("🔑 Using token:", token?.substring(0, 20) + "...");
-
-        const response = await axios.get<ReferralSetupApiResponse>(apiUrl, {
-          params: { token },
-        });
-
-        console.log("✅ API Response:", response.data);
-
-        if (response.data.code === 200 && response.data.referral_setups) {
-          // Map API response to component data structure
-          const mappedData: ProjectData[] = response.data.referral_setups.map(
-            (setup) => ({
-              id: setup.id.toString(),
-              image:
-                setup.banner ||
-                "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=150&h=100&fit=crop",
-              projectName: setup.project_name || "-",
-              projectReferenceId: setup.project_reference_id?.toString() || "-",
-              referralProgram: setup.active === 1,
-              bannerStatus: !!setup.banner,
-            })
-          );
-          setProjectsData(mappedData);
-        }
-      } catch (err) {
-        const error = err as Error;
-        console.error("❌ Error fetching referral setups:", error);
-        if (axios.isAxiosError(err)) {
-          console.error("📍 Request URL:", err.config?.url);
-          console.error("📍 Status:", err.response?.status);
-          console.error("📍 Response:", err.response?.data);
-          setError(
-            `Request failed with status code ${err.response?.status}: ${err.response?.statusText || "Unknown error"}`
-          );
-        } else {
-          setError(error.message || "Failed to fetch referral setups");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReferralSetups();
-  }, []);
-
-  // Function to fetch a single referral setup by ID
-  const fetchReferralSetupDetail = async (id: number) => {
+  const fetchReferralSetups = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const baseUrl = getBaseUrl();
-      const token = getToken();
-
-      if (!baseUrl) {
-        throw new Error("Base URL not found. Please login again.");
-      }
-
-      if (!token) {
-        throw new Error("Authentication token not found. Please login again.");
-      }
-
-      const apiUrl = `${baseUrl}/crm/admin/referral_setups/${id}.json`;
-      console.log("🔍 Fetching referral setup detail from URL:", apiUrl);
-      console.log("🔑 Using token:", token?.substring(0, 20) + "...");
-
-      const response = await axios.get<ReferralSetupDetailApiResponse>(apiUrl, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      console.log("✅ Referral Setup Detail API Response:", response.data);
-
-      return response.data;
+      const response = await getReferralSetups();
+      setProjectsData(response.referral_setups || []);
     } catch (err) {
-      const error = err as Error;
-      console.error("❌ Error fetching referral setup detail:", error);
-      if (axios.isAxiosError(err)) {
-        console.error("📍 Request URL:", err.config?.url);
-        console.error("📍 Status:", err.response?.status);
-        console.error("📍 Response:", err.response?.data);
-        throw new Error(
-          `Request failed with status code ${err.response?.status}: ${err.response?.statusText || "Unknown error"}`
-        );
-      } else {
-        throw new Error(
-          error.message || "Failed to fetch referral setup detail"
-        );
-      }
-    }
-  };
-
-  // Check for newly created referral setup from localStorage
-  useEffect(() => {
-    const newReferralSetup = localStorage.getItem("newReferralSetup");
-    if (newReferralSetup) {
-      try {
-        const setupData = JSON.parse(newReferralSetup);
-        setProjectsData((prev) => [setupData, ...prev]);
-        localStorage.removeItem("newReferralSetup");
-      } catch (error) {
-        console.error("Failed to parse new referral setup:", error);
-      }
-    }
-
-    // Check for updated referral setup
-    const updatedReferralSetup = localStorage.getItem("updatedReferralSetup");
-    if (updatedReferralSetup) {
-      try {
-        const setupData = JSON.parse(updatedReferralSetup);
-        setProjectsData((prev) =>
-          prev.map((project) =>
-            project.id === setupData.id ? { ...project, ...setupData } : project
-          )
-        );
-        localStorage.removeItem("updatedReferralSetup");
-      } catch (error) {
-        console.error("Failed to parse updated referral setup:", error);
-      }
+      console.error("Failed to fetch referral setups:", err);
+      setError("Failed to load referral setups. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
-  const handleToggleReferralProgram = (id: string) => {
+  useEffect(() => {
+    fetchReferralSetups();
+  }, [fetchReferralSetups]);
+
+  const handleToggleReferralProgram = async (id: number, currentValue: boolean) => {
+    // Note: The API doesn't have a direct endpoint to toggle status,
+    // so this would need to be implemented on the backend or use the update endpoint
+    // For now, we just update the local state
     setProjectsData((prev) =>
       prev.map((project) =>
         project.id === id
-          ? { ...project, referralProgram: !project.referralProgram }
+          ? { ...project, is_referral: !currentValue }
           : project
       )
     );
   };
 
-  const handleToggleBannerStatus = (id: string) => {
+  const handleToggleBannerStatus = async (id: number, currentValue: boolean) => {
+    // Note: The API doesn't have a direct endpoint to toggle banner status,
+    // so this would need to be implemented on the backend or use the update endpoint
+    // For now, we just update the local state
     setProjectsData((prev) =>
       prev.map((project) =>
         project.id === id
-          ? { ...project, bannerStatus: !project.bannerStatus }
+          ? { ...project, active: currentValue ? 0 : 1 }
           : project
       )
     );
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Are you sure you want to delete this referral setup?")) {
+      try {
+        await deleteReferralSetup(id);
+        setProjectsData((prev) => prev.filter((project) => project.id !== id));
+      } catch (err) {
+        console.error("Failed to delete referral setup:", err);
+        alert("Failed to delete referral setup. Please try again.");
+      }
+    }
   };
 
   const columns: ColumnConfig[] = [
@@ -243,28 +103,28 @@ const CampaignsReferralSetup: React.FC = () => {
       defaultVisible: true,
     },
     {
-      key: "image",
+      key: "banner",
       label: "Image",
       sortable: false,
       draggable: false,
       defaultVisible: true,
     },
     {
-      key: "projectName",
+      key: "project_name",
       label: "Project Name",
       sortable: true,
       draggable: true,
       defaultVisible: true,
     },
     {
-      key: "projectReferenceId",
+      key: "project_reference_id",
       label: "Project Reference Id",
       sortable: true,
       draggable: true,
       defaultVisible: true,
     },
     {
-      key: "referralProgram",
+      key: "active",
       label: "Referral Program",
       sortable: false,
       draggable: true,
@@ -279,11 +139,11 @@ const CampaignsReferralSetup: React.FC = () => {
     },
   ];
 
-  const renderCell = (item: ProjectData, columnKey: string) => {
+  const renderCell = (item: ReferralSetup, columnKey: string) => {
     switch (columnKey) {
       case "actions":
         return (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-2">
             <button
               className="p-1 hover:bg-gray-100 rounded"
               onClick={() =>
@@ -292,30 +152,48 @@ const CampaignsReferralSetup: React.FC = () => {
             >
               <Edit className="w-4 h-4 text-gray-600" />
             </button>
+            {/* <button
+              className="p-1 hover:bg-gray-100 rounded"
+              onClick={() => handleDelete(item.id)}
+            >
+              <X className="w-4 h-4 text-red-500" />
+            </button> */}
           </div>
         );
-      case "image":
+      case "banner":
         return (
           <div className="flex items-center justify-center">
-            <img
-              src={item.image}
-              alt={item.projectName}
-              className="w-20 h-14 object-cover rounded"
-            />
+            {item.banner_url || item.banner ? (
+              <img
+                src={item.banner_url || item.banner || ""}
+                alt={item.project_name}
+                className="w-20 h-14 object-cover rounded"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (item.banner && target.src !== item.banner && item.banner_url) {
+                    target.src = item.banner; // fallback
+                  }
+                }}
+              />
+            ) : (
+              <div className="w-20 h-14 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
+                No Image
+              </div>
+            )}
           </div>
         );
-      case "projectName":
-        return <span className="text-sm">{item.projectName}</span>;
-      case "projectReferenceId":
-        return <span className="text-sm">{item.projectReferenceId}</span>;
-      case "referralProgram":
+      case "project_name":
+        return <span className="text-sm">{item.project_name}</span>;
+      case "project_reference_id":
+        return <span className="text-sm">{item.project_reference_id || "-"}</span>;
+      case "active":
         return (
           <div className="flex items-center justify-center">
             <Switch
-              checked={item.referralProgram}
-              onCheckedChange={() => handleToggleReferralProgram(item.id)}
+              checked={!!item.is_referral}
+              onCheckedChange={() => handleToggleReferralProgram(item.id, !!item.is_referral)}
               className={
-                item.referralProgram
+                item.is_referral
                   ? "data-[state=checked]:bg-green-500"
                   : "data-[state=unchecked]:bg-red-500"
               }
@@ -326,10 +204,10 @@ const CampaignsReferralSetup: React.FC = () => {
         return (
           <div className="flex items-center justify-center">
             <Switch
-              checked={item.bannerStatus}
-              onCheckedChange={() => handleToggleBannerStatus(item.id)}
+              checked={item.active === 1}
+              onCheckedChange={() => handleToggleBannerStatus(item.id, item.active === 1)}
               className={
-                item.bannerStatus
+                item.active === 1
                   ? "data-[state=checked]:bg-green-500"
                   : "data-[state=unchecked]:bg-red-500"
               }
@@ -337,16 +215,14 @@ const CampaignsReferralSetup: React.FC = () => {
           </div>
         );
       default:
-        return <span className="text-sm">{item[columnKey]}</span>;
+        return null;
     }
   };
 
   const filteredData = projectsData.filter(
     (project) =>
-      project.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.projectReferenceId
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
+      project.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.project_reference_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleApplyFilters = () => {
@@ -360,57 +236,34 @@ const CampaignsReferralSetup: React.FC = () => {
   return (
     <div className="bg-gray-50 min-h-screen p-4">
       <div>
-        {/* Loading State */}
-        {loading && (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1e3a8a]"></div>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && !loading && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-            <p className="text-red-600 text-sm">{error}</p>
-            <Button
-              onClick={() => window.location.reload()}
-              className="mt-2 bg-red-600 hover:bg-red-700 text-white"
-              size="sm"
-            >
-              Retry
-            </Button>
-          </div>
-        )}
-
         {/* Table */}
-        {!loading && !error && (
-          <div>
-            <EnhancedTable
-              data={filteredData}
-              columns={columns}
-              renderCell={renderCell}
-              pagination={true}
-              pageSize={10}
-              hideTableSearch={false}
-              hideTableExport={false}
-              hideColumnsButton={false}
-              emptyMessage="No projects available"
-              searchPlaceholder="Search"
-              enableExport={true}
-              storageKey="campaigns-referral-setup-table"
-              onFilterClick={() => setShowFilters(!showFilters)}
-              leftActions={
-                <div className="flex items-center gap-2">
-                  <Button
-                    className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-8"
-                    onClick={() => navigate("/campaigns/referral-setup/create")}
-                  >
-                    Add
-                  </Button>
-                </div>
-              }
-            />
-          </div>
-        )}
+        <div>
+          <EnhancedTable
+            data={filteredData}
+            columns={columns}
+            renderCell={renderCell}
+            pagination={true}
+            pageSize={10}
+            hideTableSearch={false}
+            hideTableExport={false}
+            hideColumnsButton={false}
+            emptyMessage="No projects available"
+            searchPlaceholder="Search"
+            enableExport={true}
+            storageKey="campaigns-referral-setup-table"
+            onFilterClick={() => setShowFilters(!showFilters)}
+            leftActions={
+              <div className="flex items-center gap-2">
+                <Button
+                  className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-8"
+                  onClick={() => navigate("/campaigns/referral-setup/create")}
+                >
+                  Add
+                </Button>
+              </div>
+            }
+          />
+        </div>
       </div>
 
       {/* Filter Dialog */}
