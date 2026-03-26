@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Button } from "@/components/ui/button";
-import { Eye, RefreshCw, Settings2 } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  getCampaignReferrals,
+  CampaignReferral,
+} from "@/services/campaignReferralService";
 import {
   Dialog,
   DialogContent,
@@ -20,20 +24,10 @@ import {
 } from "@mui/material";
 import { X } from "lucide-react";
 
-interface ReferralData {
-  id: string;
-  displayId: string;
-  createdBy: string;
-  uniqueId: string;
-  project: string;
-  lead: string;
-  mobile: string;
-  status: string;
-  createdOn: string;
-}
-
 const CampaignsReferrals: React.FC = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -42,109 +36,37 @@ const CampaignsReferrals: React.FC = () => {
     createdOn: "",
   });
 
-  // Check for newly created referral from localStorage
-  useEffect(() => {
-    const newReferral = localStorage.getItem("newReferral");
-    if (newReferral) {
-      try {
-        const referralData = JSON.parse(newReferral);
-        setReferralsData((prev) => [referralData, ...prev]);
-        localStorage.removeItem("newReferral");
-      } catch (error) {
-        console.error("Failed to parse new referral:", error);
-      }
+  const [referralsData, setReferralsData] = useState<CampaignReferral[]>([]);
+
+  // Fetch referrals from API
+  const fetchReferrals = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getCampaignReferrals();
+      setReferralsData(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch referrals:", err);
+      setError("Failed to load referrals. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   }, []);
-  const [referralsData, setReferralsData] = useState<ReferralData[]>([
-    {
-      id: "1",
-      displayId: "#1553",
-      createdBy: "Deepak Gupta",
-      uniqueId: "H3IT1baa",
-      project: "GODREJ CITY",
-      lead: "Deepak Gupta",
-      mobile: "7021401252",
-      status: "ACT",
-      createdOn: "29/03/2025",
-    },
-    {
-      id: "2",
-      displayId: "#1642",
-      createdBy: "Godrej Living",
-      uniqueId: "5cV4bbaa",
-      project: "GODREJ RKS",
-      lead: "Godrej Living",
-      mobile: "2217695214",
-      status: "",
-      createdOn: "05/03/2025",
-    },
-    {
-      id: "3",
-      displayId: "#1399",
-      createdBy: "Rahul Rasal",
-      uniqueId: "1rJ5heaf",
-      project: "GODREJ HILL RK IRRAT",
-      lead: "Rahul Rasal",
-      mobile: "9870801292",
-      status: "ACT",
-      createdOn: "11/05/2025",
-    },
-    {
-      id: "4",
-      displayId: "#1289",
-      createdBy: "Samay Seth",
-      uniqueId: "CJ2acZ70",
-      project: "GODREJ HILL RETIRAT",
-      lead: "Samay Seth",
-      mobile: "8770950325",
-      status: "",
-      createdOn: "14/08/2023",
-    },
-    {
-      id: "5",
-      displayId: "#1218",
-      createdBy: "Godrej Living",
-      uniqueId: "5cV4bbaa",
-      project: "GODREJ CITY",
-      lead: "Godrej Living",
-      mobile: "2217695214",
-      status: "",
-      createdOn: "03/02/2023",
-    },
-    {
-      id: "6",
-      displayId: "#1272",
-      createdBy: "Deepak Gupta",
-      uniqueId: "H3IT1baa",
-      project: "GODREJ RKS",
-      lead: "Deepak Gupta",
-      mobile: "7021401252",
-      status: "",
-      createdOn: "05/11/2022",
-    },
-    {
-      id: "7",
-      displayId: "#1272",
-      createdBy: "Deepak Gupta",
-      uniqueId: "H3IT1baa",
-      project: "GODREJ HILL RK IRRAT",
-      lead: "Deepak Gupta",
-      mobile: "7021401252",
-      status: "",
-      createdOn: "07/11/2022",
-    },
-    {
-      id: "8",
-      displayId: "#1270",
-      createdBy: "Godrej Living",
-      uniqueId: "5cV4bbaa",
-      project: "GODREJ HILL RETIRAT",
-      lead: "Godrej Living",
-      mobile: "2217695214",
-      status: "",
-      createdOn: "06/01/2022",
-    },
-  ]);
+
+  useEffect(() => {
+    fetchReferrals();
+  }, [fetchReferrals]);
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return `${String(date.getDate()).padStart(2, "0")}/${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}/${date.getFullYear()}`;
+    } catch {
+      return dateString;
+    }
+  };
 
   const columns: ColumnConfig[] = [
     {
@@ -155,43 +77,36 @@ const CampaignsReferrals: React.FC = () => {
       defaultVisible: true,
     },
     {
-      key: "displayId",
+      key: "id",
       label: "ID",
       sortable: true,
       draggable: true,
       defaultVisible: true,
     },
     {
-      key: "createdBy",
-      label: "Created By",
+      key: "ref_name",
+      label: "Refer Name",
       sortable: true,
       draggable: true,
       defaultVisible: true,
     },
     {
-      key: "uniqueId",
-      label: "Unique Id",
-      sortable: true,
-      draggable: true,
-      defaultVisible: true,
-    },
-    {
-      key: "project",
+      key: "project_name",
       label: "Project",
       sortable: true,
       draggable: true,
       defaultVisible: true,
     },
     {
-      key: "lead",
-      label: "Lead",
+      key: "ref_phone",
+      label: "Mobile",
       sortable: true,
       draggable: true,
       defaultVisible: true,
     },
     {
-      key: "mobile",
-      label: "Mobile",
+      key: "client_email",
+      label: "Client Email",
       sortable: true,
       draggable: true,
       defaultVisible: true,
@@ -204,7 +119,7 @@ const CampaignsReferrals: React.FC = () => {
       defaultVisible: true,
     },
     {
-      key: "createdOn",
+      key: "created_at",
       label: "Created On",
       sortable: true,
       draggable: true,
@@ -212,53 +127,58 @@ const CampaignsReferrals: React.FC = () => {
     },
   ];
 
-  const renderCell = (item: ReferralData, columnKey: string) => {
+  const renderCell = (item: CampaignReferral, columnKey: string) => {
     switch (columnKey) {
       case "actions":
         return (
           <div className="flex items-center justify-center">
             <button
               className="p-1 hover:bg-gray-100 rounded"
-              onClick={() => navigate(`/campaigns/referrals/detail/${item.id}`)}
+              onClick={() =>
+                navigate(`/campaigns/referrals/detail/${item.id}`)
+              }
             >
               <Eye className="w-4 h-4 text-gray-600" />
             </button>
           </div>
         );
-      case "displayId":
-        return <span className="text-sm font-medium">{item.displayId}</span>;
-      case "createdBy":
-        return <span className="text-sm">{item.createdBy}</span>;
-      case "uniqueId":
-        return <span className="text-sm">{item.uniqueId}</span>;
-      case "project":
-        return <span className="text-sm">{item.project}</span>;
-      case "lead":
-        return <span className="text-sm">{item.lead}</span>;
-      case "mobile":
-        return <span className="text-sm">{item.mobile}</span>;
+      case "id":
+        return <span className="text-sm font-medium">#{item.id}</span>;
+      case "ref_name":
+        return <span className="text-sm">{item.ref_name || "-"}</span>;
+      case "project_name":
+        return <span className="text-sm">{item.project_name || "-"}</span>;
+      case "ref_phone":
+        return <span className="text-sm">{item.ref_phone || "-"}</span>;
+      case "client_email":
+        return <span className="text-sm">{item.client_email || "-"}</span>;
       case "status":
         return item.status ? (
           <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
             {item.status}
           </span>
-        ) : null;
-      case "createdOn":
-        return <span className="text-sm">{item.createdOn}</span>;
+        ) : (
+          <span className="text-sm text-gray-400">-</span>
+        );
+      case "created_at":
+        return (
+          <span className="text-sm">{formatDate(item.created_at)}</span>
+        );
       default:
         return null;
     }
   };
 
-  const filteredData = referralsData.filter(
-    (referral) =>
-      referral.displayId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      referral.createdBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      referral.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      referral.lead.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      referral.mobile.includes(searchTerm) ||
-      referral.uniqueId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = referralsData.filter((referral) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (referral.ref_name || "").toLowerCase().includes(term) ||
+      (referral.project_name || "").toLowerCase().includes(term) ||
+      (referral.ref_phone || "").includes(searchTerm) ||
+      (referral.client_email || "").toLowerCase().includes(term) ||
+      String(referral.id).includes(searchTerm)
+    );
+  });
 
   const handleApplyFilters = () => {
     // Apply filter logic here - connect to API or filter local data
@@ -271,6 +191,13 @@ const CampaignsReferrals: React.FC = () => {
   return (
     <div className="bg-gray-50 min-h-screen p-4">
       <div>
+        {/* Error */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
+            {error}
+          </div>
+        )}
+
         {/* Table */}
         <div>
           <EnhancedTable
@@ -375,27 +302,6 @@ const CampaignsReferrals: React.FC = () => {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-4">
                   <FormControl fullWidth size="small">
-                    <InputLabel id="created-by-label" shrink>
-                      Created By
-                    </InputLabel>
-                    <MuiSelect
-                      labelId="created-by-label"
-                      value={filters.createdBy}
-                      label="Created By"
-                      onChange={(e) =>
-                        setFilters({ ...filters, createdBy: e.target.value })
-                      }
-                      displayEmpty
-                      notched
-                    >
-                      <MenuItem value="">Select Created By</MenuItem>
-                      <MenuItem value="samay">Samay Seth</MenuItem>
-                      <MenuItem value="deepak">Deepak Gupta</MenuItem>
-                      <MenuItem value="rahul">Rahul Kumar</MenuItem>
-                    </MuiSelect>
-                  </FormControl>
-
-                  <FormControl fullWidth size="small">
                     <InputLabel id="status-label" shrink>
                       Status
                     </InputLabel>
@@ -410,9 +316,9 @@ const CampaignsReferrals: React.FC = () => {
                       notched
                     >
                       <MenuItem value="">Select Status</MenuItem>
-                      <MenuItem value="hot">Hot</MenuItem>
-                      <MenuItem value="cold">Cold</MenuItem>
-                      <MenuItem value="warm">Warm</MenuItem>
+                      <MenuItem value="Hot">Hot</MenuItem>
+                      <MenuItem value="Cold">Cold</MenuItem>
+                      <MenuItem value="Warm">Warm</MenuItem>
                     </MuiSelect>
                   </FormControl>
 

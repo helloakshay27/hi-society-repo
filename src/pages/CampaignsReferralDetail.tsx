@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useParams } from "react-router-dom";
 import {
@@ -17,39 +17,111 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
+import {
+  getCampaignReferralById,
+  getLeadStages,
+  CampaignReferral,
+  LeadStage,
+} from "@/services/campaignReferralService";
 
 const CampaignsReferralDetail: React.FC = () => {
   const { id } = useParams();
   const [showEditModal, setShowEditModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [leadStages, setLeadStages] = useState<LeadStage[]>([]);
 
-  // Sample data - in real app, fetch based on ID
-  const [referralData, setReferralData] = useState({
-    id: "#1393",
-    referCode: "173f347f",
-    referTo: "Kshitij Rasal",
-    referedBy: "Kshitij Rasal",
-    project: "GODREJ HILL RETREAT",
-    mobile: "9819808570",
-    status: "Hot",
-    clientEmail: "",
-    leadStage: "Round Table",
-    createdOn: "11/09/2023 4: 34 PM",
-    notes: [
-      { text: "Great", timestamp: "11/09/2023/ 4: 36 PM" },
-      { text: "Test", timestamp: "24/03/2025/ 3: 14 PM" },
-    ],
-  });
+  const [referralData, setReferralData] = useState<CampaignReferral | null>(
+    null
+  );
 
   const [editForm, setEditForm] = useState({
-    status: referralData.status,
-    leadStage: referralData.leadStage,
+    status: "",
+    leadStage: "",
     notes: "",
   });
+
+  // Fetch referral detail and lead stages
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!id) return;
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [data, stagesData] = await Promise.all([
+          getCampaignReferralById(parseInt(id, 10)),
+          getLeadStages(),
+        ]);
+
+        setReferralData(data);
+        setLeadStages(Array.isArray(stagesData) ? stagesData : []);
+        setEditForm({
+          status: data.status || "",
+          leadStage: data.lead_stage_id ? String(data.lead_stage_id) : "",
+          notes: "",
+        });
+      } catch (err) {
+        console.error("Failed to fetch referral detail:", err);
+        setError("Failed to load referral detail. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  const formatDateTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      const hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      const ampm = hours >= 12 ? "PM" : "AM";
+      const displayHours = hours % 12 || 12;
+      return `${day}/${month}/${year} ${displayHours}:${minutes} ${ampm}`;
+    } catch {
+      return dateString;
+    }
+  };
+
+  const getLeadStageName = (stageId: number | null) => {
+    if (!stageId) return "-";
+    const stage = leadStages.find((s) => s.id === stageId);
+    return stage ? stage.lead_stage : "-";
+  };
 
   const handleSave = () => {
     // Handle save logic here - connect to API
     setShowEditModal(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-gray-50 min-h-screen p-6 flex items-center justify-center">
+        <div className="text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-gray-50 min-h-screen p-6 flex items-center justify-center">
+        <div className="text-red-600">{error}</div>
+      </div>
+    );
+  }
+
+  if (!referralData) {
+    return (
+      <div className="bg-gray-50 min-h-screen p-6 flex items-center justify-center">
+        <div className="text-gray-600">No referral data found.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen p-6">
@@ -74,23 +146,27 @@ const CampaignsReferralDetail: React.FC = () => {
               {/* ID */}
               <div>
                 <label className="text-sm text-gray-600 block mb-1">ID</label>
-                <p className="text-gray-800">{referralData.id}</p>
+                <p className="text-gray-800">#{referralData.id}</p>
               </div>
 
-              {/* Refered by */}
+              {/* Refer Name */}
               <div>
                 <label className="text-sm text-gray-600 block mb-1">
-                  Refered by
+                  Refer Name
                 </label>
-                <p className="text-gray-800">{referralData.referedBy}</p>
+                <p className="text-gray-800">
+                  {referralData.ref_name || "-"}
+                </p>
               </div>
 
-              {/* Refer Code */}
+              {/* Referral Code */}
               <div>
                 <label className="text-sm text-gray-600 block mb-1">
-                  Refer Code
+                  Referral Code
                 </label>
-                <p className="text-gray-800">{referralData.referCode}</p>
+                <p className="text-gray-800">
+                  {referralData.referral_code || "-"}
+                </p>
               </div>
 
               {/* Project */}
@@ -98,15 +174,9 @@ const CampaignsReferralDetail: React.FC = () => {
                 <label className="text-sm text-gray-600 block mb-1">
                   Project
                 </label>
-                <p className="text-gray-800">{referralData.project}</p>
-              </div>
-
-              {/* Refer to */}
-              <div>
-                <label className="text-sm text-gray-600 block mb-1">
-                  Refer to
-                </label>
-                <p className="text-gray-800">{referralData.referTo}</p>
+                <p className="text-gray-800">
+                  {referralData.project_name || "-"}
+                </p>
               </div>
 
               {/* Mobile */}
@@ -114,7 +184,19 @@ const CampaignsReferralDetail: React.FC = () => {
                 <label className="text-sm text-gray-600 block mb-1">
                   Mobile
                 </label>
-                <p className="text-gray-800">{referralData.mobile}</p>
+                <p className="text-gray-800">
+                  {referralData.ref_phone || "-"}
+                </p>
+              </div>
+
+              {/* Alternate Mobile */}
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">
+                  Alternate Mobile
+                </label>
+                <p className="text-gray-800">
+                  {referralData.alternate_mob || "-"}
+                </p>
               </div>
 
               {/* Status */}
@@ -122,7 +204,9 @@ const CampaignsReferralDetail: React.FC = () => {
                 <label className="text-sm text-gray-600 block mb-1">
                   Status
                 </label>
-                <p className="text-gray-800">{referralData.status}</p>
+                <p className="text-gray-800">
+                  {referralData.status || "-"}
+                </p>
               </div>
 
               {/* Client Email */}
@@ -131,7 +215,7 @@ const CampaignsReferralDetail: React.FC = () => {
                   Client Email
                 </label>
                 <p className="text-gray-800">
-                  {referralData.clientEmail || "-"}
+                  {referralData.client_email || "-"}
                 </p>
               </div>
 
@@ -140,7 +224,19 @@ const CampaignsReferralDetail: React.FC = () => {
                 <label className="text-sm text-gray-600 block mb-1">
                   Lead Stage
                 </label>
-                <p className="text-gray-800">{referralData.leadStage}</p>
+                <p className="text-gray-800">
+                  {getLeadStageName(referralData.lead_stage_id)}
+                </p>
+              </div>
+
+              {/* Earning */}
+              <div>
+                <label className="text-sm text-gray-600 block mb-1">
+                  Earning
+                </label>
+                <p className="text-gray-800">
+                  {referralData.earning || "-"}
+                </p>
               </div>
             </div>
 
@@ -149,25 +245,9 @@ const CampaignsReferralDetail: React.FC = () => {
               <label className="text-sm text-gray-600 block mb-1">
                 Created on
               </label>
-              <p className="text-gray-800">{referralData.createdOn}</p>
-            </div>
-
-            {/* Notes Section */}
-            <div className="mt-6">
-              <h2 className="text-lg font-normal text-gray-700 mb-4">Notes</h2>
-              <div className="space-y-3">
-                {referralData.notes.map((note, index) => (
-                  <div
-                    key={index}
-                    className="bg-gray-50 rounded p-4 flex items-start justify-between"
-                  >
-                    <p className="text-gray-800">{note.text}</p>
-                    <span className="text-sm text-gray-500 ml-4 whitespace-nowrap">
-                      {note.timestamp}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <p className="text-gray-800">
+                {formatDateTime(referralData.created_at)}
+              </p>
             </div>
           </div>
         </div>
@@ -210,7 +290,7 @@ const CampaignsReferralDetail: React.FC = () => {
               </Select>
             </div>
 
-            {/* Lead Stage */}
+            {/* Lead Stage - Dynamic from API */}
             <div className="space-y-2">
               <Label htmlFor="leadStage" className="text-sm text-gray-700">
                 Lead Stage
@@ -225,10 +305,11 @@ const CampaignsReferralDetail: React.FC = () => {
                   <SelectValue placeholder="Select lead stage" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Round Table">Round Table</SelectItem>
-                  <SelectItem value="Site Visit">Site Visit</SelectItem>
-                  <SelectItem value="Negotiation">Negotiation</SelectItem>
-                  <SelectItem value="Closed">Closed</SelectItem>
+                  {leadStages.map((stage) => (
+                    <SelectItem key={stage.id} value={String(stage.id)}>
+                      {stage.lead_stage}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
