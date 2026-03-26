@@ -224,7 +224,7 @@ export const API_CONFIG = {
     CREATE_VISITOR: "/pms/admin/visitors/new_visitor.json",
     UNEXPECTED_VISITORS: "/pms/admin/visitors/unexpected_visitors.json",
     EXPECTED_VISITORS: "/pms/admin/visitors/expected_visitors.json",
-    VISITOR_HISTORY: "/pms/admin/visitors/visitor_history.json",
+    VISITOR_HISTORY: "/crm/admin/visitors_history.json",
     ITEM_MOVEMENT_TYPES: "/item_movement_types.json",
     ITEM_TYPES: "/item_movement_types/movement_types.json",
     // Performance export endpoint

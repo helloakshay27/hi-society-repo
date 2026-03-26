@@ -153,6 +153,8 @@ export interface Headquarter {
   id: number;
   name: string;
   country_id?: number;
+  company_name?: string;
+  country_name?: string;
   active?: boolean;
 }
 

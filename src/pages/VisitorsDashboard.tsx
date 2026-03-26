@@ -414,7 +414,7 @@ export const VisitorsDashboard = () => {
       console.log('🔍 Using site ID for visitor history:', siteId);
       console.log('🔍 SearchTerm being passed to visitor history:', searchTerm);
       const data = await getVisitorHistory(siteId, page, 20, searchTerm);
-      setVisitorHistoryData(data.visitors);
+      setVisitorHistoryData(data.data);
       setHistoryPagination({
         currentPage: data.pagination?.current_page || 1,
         totalPages: data.pagination?.total_pages || 1,
@@ -1967,8 +1967,9 @@ export const VisitorsDashboard = () => {
         isOpen={isActionPanelOpen}
         onClose={() => setIsActionPanelOpen(false)}
         onAddVisitor={() => {
-          setIsNewVisitorDialogOpen(true);
-          setIsActionPanelOpen(false);
+          // setIsNewVisitorDialogOpen(true);
+          // setIsActionPanelOpen(false);
+          navigate('/security/visitor/add');
         }}
         onImportVisitors={() => {
           handleImportVisitors();
