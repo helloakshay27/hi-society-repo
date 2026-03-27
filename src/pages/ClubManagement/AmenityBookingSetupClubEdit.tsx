@@ -379,14 +379,26 @@ export const EditBookingSetupClubPage = () => {
                 formData.chargeSetup.member.selected ? "true" : "false"
             );
             if (formData.chargeSetup.member.selected) {
-                formDataToSend.append(
-                    "facility_setup[facility_charge_attributes][adult_member_charge]",
-                    formData.chargeSetup.member.adult || "0"
-                );
-                formDataToSend.append(
-                    "facility_setup[facility_charge_attributes][child_member_charge]",
-                    formData.chargeSetup.member.child || "0"
-                );
+                if (formData.chargeSetup.member.adult) {
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][adult_member]",
+                        "true"
+                    );
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][adult_member_charge]",
+                        formData.chargeSetup.member.adult || "0"
+                    );
+                }
+                if (formData.chargeSetup.member.child) {
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][child_member]",
+                        "true"
+                    );
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][child_member_charge]",
+                        formData.chargeSetup.member.child || "0"
+                    );
+                }
             }
 
             // Charge Setup - Guest charges and boolean
@@ -395,14 +407,26 @@ export const EditBookingSetupClubPage = () => {
                 formData.chargeSetup.guest.selected ? "true" : "false"
             );
             if (formData.chargeSetup.guest.selected) {
-                formDataToSend.append(
-                    "facility_setup[facility_charge_attributes][adult_guest_charge]",
-                    formData.chargeSetup.guest.adult || "0"
-                );
-                formDataToSend.append(
-                    "facility_setup[facility_charge_attributes][child_guest_charge]",
-                    formData.chargeSetup.guest.child || "0"
-                );
+                if (formData.chargeSetup.guest.adult) {
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][adult_guest]",
+                        "true"
+                    );
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][adult_guest_charge]",
+                        formData.chargeSetup.guest.adult || "0"
+                    );
+                }
+                if (formData.chargeSetup.guest.child) {
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][child_guest]",
+                        "true"
+                    );
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][child_guest_charge]",
+                        formData.chargeSetup.guest.child || "0"
+                    );
+                }
             }
 
             // Charge Setup - Non-member charges and boolean
@@ -411,14 +435,26 @@ export const EditBookingSetupClubPage = () => {
                 formData.chargeSetup.nonMember.selected ? "true" : "false"
             );
             if (formData.chargeSetup.nonMember.selected) {
-                formDataToSend.append(
-                    "facility_setup[facility_charge_attributes][adult_non_member_charge]",
-                    formData.chargeSetup.nonMember.adult || "0"
-                );
-                formDataToSend.append(
-                    "facility_setup[facility_charge_attributes][child_non_member_charge]",
-                    formData.chargeSetup.nonMember.child || "0"
-                );
+                if (formData.chargeSetup.nonMember.adult) {
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][adult_non_member]",
+                        "true"
+                    );
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][adult_non_member_charge]",
+                        formData.chargeSetup.nonMember.adult || "0"
+                    );
+                }
+                if (formData.chargeSetup.nonMember.child) {
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][child_non_member]",
+                        "true"
+                    );
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][child_non_member_charge]",
+                        formData.chargeSetup.nonMember.child || "0"
+                    );
+                }
             }
 
             // Charge Setup - Tenent charges and boolean
@@ -427,14 +463,26 @@ export const EditBookingSetupClubPage = () => {
                 formData.chargeSetup.tenant.selected ? "true" : "false"
             );
             if (formData.chargeSetup.tenant.selected) {
-                formDataToSend.append(
-                    "facility_setup[facility_charge_attributes][adult_tenant_charge]",
-                    formData.chargeSetup.tenant.adult || "0"
-                );
-                formDataToSend.append(
-                    "facility_setup[facility_charge_attributes][child_tenant_charge]",
-                    formData.chargeSetup.tenant.child || "0"
-                );
+                if (formData.chargeSetup.tenant.adult) {
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][adult_tenant]",
+                        "true"
+                    );
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][adult_tenant_charge]",
+                        formData.chargeSetup.tenant.adult || "0"
+                    );
+                }
+                if (formData.chargeSetup.tenant.child) {
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][child_tenant]",
+                        "true"
+                    );
+                    formDataToSend.append(
+                        "facility_setup[facility_charge_attributes][child_tenant_charge]",
+                        formData.chargeSetup.tenant.child || "0"
+                    );
+                }
             }
             // Charge Setup - Person limits and GST
             formDataToSend.append(

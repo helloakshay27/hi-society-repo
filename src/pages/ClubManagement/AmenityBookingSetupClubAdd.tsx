@@ -2836,131 +2836,156 @@ export const AddBookingSetupClubPage = () => {
                 </>
               ) : (
                 <>
-                  <div className="grid grid-cols-3 gap-2 mb-2 text-sm font-medium text-gray-600">
-                    <div>Start Time</div>
-                    <div>End Time</div>
-                    <div>Payable Amount</div>
-                  </div>
-
-                  {formData.customSlots.map((slot, index) => (
-                    <div key={index} className="grid grid-cols-3 gap-2 mb-2">
-                      <div className="flex gap-1">
-                        <FormControl size="small">
-                          <Select
-                            value={slot.startTime.hour}
-                            onChange={(e) => {
-                              const newCustomSlots = [...formData.customSlots];
-                              newCustomSlots[index].startTime.hour =
-                                e.target.value;
-                              setFormData({
-                                ...formData,
-                                customSlots: newCustomSlots,
-                              });
-                            }}
-                          >
-                            {Array.from({ length: 24 }, (_, i) => (
-                              <MenuItem
-                                key={i}
-                                value={i.toString().padStart(2, "0")}
-                              >
-                                {i.toString().padStart(2, "0")}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        <FormControl size="small">
-                          <Select
-                            value={slot.startTime.minute}
-                            onChange={(e) => {
-                              const newCustomSlots = [...formData.customSlots];
-                              newCustomSlots[index].startTime.minute =
-                                e.target.value;
-                              setFormData({
-                                ...formData,
-                                customSlots: newCustomSlots,
-                              });
-                            }}
-                          >
-                            {Array.from({ length: 60 }, (_, i) => (
-                              <MenuItem
-                                key={i}
-                                value={i.toString().padStart(2, "0")}
-                              >
-                                {i.toString().padStart(2, "0")}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
+                  <div className="grid">
+                    <div className="grid">
+                      <div className={`grid gap-3 mb-4 text-sm font-semibold text-gray-700 px-2 ${formData.customSlots.length > 1 ? 'grid-cols-12' : 'grid-cols-11'}`}>
+                        <div className="col-span-4">Start Time</div>
+                        <div className="col-span-4">End Time</div>
+                        <div className="col-span-3">Payable Amount</div>
+                        {formData.customSlots.length > 1 && (
+                          <div className="col-span-1">Action</div>
+                        )}
                       </div>
 
-                      <div className="flex gap-1">
-                        <FormControl size="small">
-                          <Select
-                            value={slot.endTime.hour}
-                            onChange={(e) => {
-                              const newCustomSlots = [...formData.customSlots];
-                              newCustomSlots[index].endTime.hour =
-                                e.target.value;
-                              setFormData({
-                                ...formData,
-                                customSlots: newCustomSlots,
-                              });
-                            }}
-                          >
-                            {Array.from({ length: 24 }, (_, i) => (
-                              <MenuItem
-                                key={i}
-                                value={i.toString().padStart(2, "0")}
+                      {formData.customSlots.map((slot, index) => (
+                        <div key={index} className={`grid gap-3 items-center ${formData.customSlots.length > 1 ? 'grid-cols-12' : 'grid-cols-11'}`}>
+                          <div className="col-span-4 flex gap-2">
+                            <FormControl size="small" fullWidth>
+                              <Select
+                                value={slot.startTime.hour}
+                                onChange={(e) => {
+                                  const newCustomSlots = [...formData.customSlots];
+                                  newCustomSlots[index].startTime.hour =
+                                    e.target.value;
+                                  setFormData({
+                                    ...formData,
+                                    customSlots: newCustomSlots,
+                                  });
+                                }}
                               >
-                                {i.toString().padStart(2, "0")}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        <FormControl size="small">
-                          <Select
-                            value={slot.endTime.minute}
-                            onChange={(e) => {
-                              const newCustomSlots = [...formData.customSlots];
-                              newCustomSlots[index].endTime.minute =
-                                e.target.value;
-                              setFormData({
-                                ...formData,
-                                customSlots: newCustomSlots,
-                              });
-                            }}
-                          >
-                            {Array.from({ length: 60 }, (_, i) => (
-                              <MenuItem
-                                key={i}
-                                value={i.toString().padStart(2, "0")}
+                                {Array.from({ length: 24 }, (_, i) => (
+                                  <MenuItem
+                                    key={i}
+                                    value={i.toString().padStart(2, "0")}
+                                  >
+                                    {i.toString().padStart(2, "0")}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                            <FormControl size="small" fullWidth>
+                              <Select
+                                value={slot.startTime.minute}
+                                onChange={(e) => {
+                                  const newCustomSlots = [...formData.customSlots];
+                                  newCustomSlots[index].startTime.minute =
+                                    e.target.value;
+                                  setFormData({
+                                    ...formData,
+                                    customSlots: newCustomSlots,
+                                  });
+                                }}
                               >
-                                {i.toString().padStart(2, "0")}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </div>
+                                {Array.from({ length: 60 }, (_, i) => (
+                                  <MenuItem
+                                    key={i}
+                                    value={i.toString().padStart(2, "0")}
+                                  >
+                                    {i.toString().padStart(2, "0")}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </div>
 
-                      <div className="flex gap-1">
-                        <TextField
-                          size="small"
-                          variant="outlined"
-                          className="w-32"
-                          placeholder="1"
-                          value={slot.amount}
-                          onChange={(e) => {
-                            const newCustomSlots = [...formData.customSlots];
-                            newCustomSlots[index].amount = e.target.value;
-                            setFormData({
-                              ...formData,
-                              customSlots: newCustomSlots,
-                            });
-                          }}
-                        />
-                      </div>
+                          <div className="col-span-4 flex gap-2">
+                            <FormControl size="small" fullWidth>
+                              <Select
+                                value={slot.endTime.hour}
+                                onChange={(e) => {
+                                  const newCustomSlots = [...formData.customSlots];
+                                  newCustomSlots[index].endTime.hour =
+                                    e.target.value;
+                                  setFormData({
+                                    ...formData,
+                                    customSlots: newCustomSlots,
+                                  });
+                                }}
+                              >
+                                {Array.from({ length: 24 }, (_, i) => (
+                                  <MenuItem
+                                    key={i}
+                                    value={i.toString().padStart(2, "0")}
+                                  >
+                                    {i.toString().padStart(2, "0")}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                            <FormControl size="small" fullWidth>
+                              <Select
+                                value={slot.endTime.minute}
+                                onChange={(e) => {
+                                  const newCustomSlots = [...formData.customSlots];
+                                  newCustomSlots[index].endTime.minute =
+                                    e.target.value;
+                                  setFormData({
+                                    ...formData,
+                                    customSlots: newCustomSlots,
+                                  });
+                                }}
+                              >
+                                {Array.from({ length: 60 }, (_, i) => (
+                                  <MenuItem
+                                    key={i}
+                                    value={i.toString().padStart(2, "0")}
+                                  >
+                                    {i.toString().padStart(2, "0")}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </div>
+
+                          <div className="col-span-3">
+                            <TextField
+                              size="small"
+                              variant="outlined"
+                              fullWidth
+                              placeholder="Amount"
+                              value={slot.amount}
+                              onChange={(e) => {
+                                const newCustomSlots = [...formData.customSlots];
+                                newCustomSlots[index].amount = e.target.value;
+                                setFormData({
+                                  ...formData,
+                                  customSlots: newCustomSlots,
+                                });
+                              }}
+                            />
+                          </div>
+
+                          {formData.customSlots.length > 1 && (
+                            <div className="col-span-1 flex justify-center">
+                              <button
+                                onClick={() => {
+                                  const newCustomSlots = formData.customSlots.filter((_, i) => i !== index);
+                                  setFormData({
+                                    ...formData,
+                                    customSlots: newCustomSlots,
+                                  });
+                                }}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                title="Remove slot"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </>
               )}
 
