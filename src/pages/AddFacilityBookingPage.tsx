@@ -5,7 +5,7 @@ import {
   Select as MuiSelect,
   TextField,
 } from "@mui/material";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -91,7 +91,7 @@ const AddFacilityBookingPage = () => {
     return facilityDetails?.max_people || 0;
   };
 
-  // Calculate costs
+  // Calculate costs with premium slot consideration
   const calculateCosts = () => {
     const charge =
       selectedSubFacility && subFacilityDetails
@@ -107,34 +107,104 @@ const AddFacilityBookingPage = () => {
         gst: 0,
         convenienceCharge: 0,
         grandTotal: 0,
+        slotPremiumDetails: [],
       };
 
+    // If booking rule rate is 0, make the entire booking free for this user
+    if (bookingRuleData && bookingRuleData.rate === 0) {
+      return {
+        subTotal: 0,
+        cgstAmount: 0,
+        sgstAmount: 0,
+        igstAmount: 0,
+        gst: 0,
+        convenienceCharge: 0,
+        grandTotal: 0,
+        slotPremiumDetails: selectedSlotIds.length > 0
+          ? selectedSlotIds.map((slotId) => {
+            const slot = availableSlots.find((s) => (s.id || s.Index)?.toString() === slotId);
+            return {
+              slotLabel: slot ? (slot.ampm || slot.time || `Slot ${slotId}`) : `Slot ${slotId}`,
+              slotPremiumPercent: 0,
+              premiumAmount: 0,
+              baseAmount: 0,
+              total: 0,
+            };
+          })
+          : [],
+        cgst_percent: 0,
+        sgst_percent: 0,
+        igst_percent: 0,
+        slotCount: selectedSlotIds.length || 1,
+      };
+    }
+
+    const adultMemberRate = charge.adult_member_charge || 0;
+    console.log(adultMemberRate)
+
     let baseSubTotal = 0;
+    let slotPremiumDetails: Array<{
+      slotLabel: string;
+      slotPremiumPercent: number;
+      premiumAmount: number;
+      baseAmount: number;
+      total: number;
+    }> = [];
 
-    const adultMemberRate = (bookingRuleData && typeof bookingRuleData.rate === 'number')
-      ? bookingRuleData.rate
-      : (charge.adult_member_charge || 0);
+    // Calculate premium details for each slot
+    if (selectedSlotIds.length > 0) {
+      selectedSlotIds.forEach((slotId) => {
+        const slot = availableSlots.find((s) => (s.id || s.Index)?.toString() === slotId);
+        let slotPremiumPercent = 0;
+        let premiumAmount = 0;
 
-    // Member charges
-    baseSubTotal += memberCounts.adultMember * adultMemberRate;
-    baseSubTotal += memberCounts.childMember * (charge.child_member_charge || 0);
+        // Calculate base amount for this slot
+        let slotBaseAmount = 0;
+        slotBaseAmount += memberCounts.adultMember * adultMemberRate;
+        slotBaseAmount += memberCounts.childMember * (charge.child_member_charge || 0);
+        slotBaseAmount += memberCounts.adultGuest * (charge.adult_guest_charge || 0);
+        slotBaseAmount += memberCounts.childGuest * (charge.child_guest_charge || 0);
+        slotBaseAmount += memberCounts.adultTenant * (charge.adult_tenant_charge || 0);
+        slotBaseAmount += memberCounts.childTenant * (charge.child_tenant_charge || 0);
+        slotBaseAmount += memberCounts.adultNonMember * (charge.adult_non_member_charge || 0);
+        slotBaseAmount += memberCounts.childNonMember * (charge.child_non_member_charge || 0);
 
-    // Guest charges
-    baseSubTotal += memberCounts.adultGuest * (charge.adult_guest_charge || 0);
-    baseSubTotal += memberCounts.childGuest * (charge.child_guest_charge || 0);
+        // Check if slot has premium percentage
+        if (slot && slot.is_premium && slot.premium_percentage) {
+          slotPremiumPercent = slot.premium_percentage;
+          premiumAmount = Math.round((slotBaseAmount * slotPremiumPercent) / 100);
+        }
 
-    // Tenant charges
-    baseSubTotal += memberCounts.adultTenant * (charge.adult_tenant_charge || 0);
-    baseSubTotal += memberCounts.childTenant * (charge.child_tenant_charge || 0);
+        slotPremiumDetails.push({
+          slotLabel: slot ? (slot.ampm || slot.time || `Slot ${slotId}`) : `Slot ${slotId}`,
+          slotPremiumPercent,
+          premiumAmount,
+          baseAmount: slotBaseAmount,
+          total: slotBaseAmount + premiumAmount,
+        });
 
-    // Non-member charges
-    baseSubTotal +=
-      memberCounts.adultNonMember * (charge.adult_non_member_charge || 0);
-    baseSubTotal +=
-      memberCounts.childNonMember * (charge.child_non_member_charge || 0);
+        // Add both base and premium to subtotal
+        baseSubTotal += slotBaseAmount + premiumAmount;
+      });
+    } else {
+      // No slots selected, use base charges
+      baseSubTotal += memberCounts.adultMember * adultMemberRate;
+      baseSubTotal += memberCounts.childMember * (charge.child_member_charge || 0);
+      baseSubTotal += memberCounts.adultGuest * (charge.adult_guest_charge || 0);
+      baseSubTotal += memberCounts.childGuest * (charge.child_guest_charge || 0);
+      baseSubTotal += memberCounts.adultTenant * (charge.adult_tenant_charge || 0);
+      baseSubTotal += memberCounts.childTenant * (charge.child_tenant_charge || 0);
+      baseSubTotal += memberCounts.adultNonMember * (charge.adult_non_member_charge || 0);
+      baseSubTotal += memberCounts.childNonMember * (charge.child_non_member_charge || 0);
+    }
 
-    // Multiply by number of selected slots
-    const subTotal = baseSubTotal * (selectedSlotIds.length || 1);
+    // The subTotal now correctly includes premium charges
+    // Verify by summing slot details
+    const calculatedSubTotal = slotPremiumDetails.length > 0
+      ? slotPremiumDetails.reduce((sum, slot) => sum + slot.total, 0)
+      : baseSubTotal;
+
+    const subTotal = calculatedSubTotal;
 
     const activeDetails =
       selectedSubFacility && subFacilityDetails
@@ -165,6 +235,7 @@ const AddFacilityBookingPage = () => {
       slotCount: selectedSlotIds.length || 1,
       convenienceCharge,
       grandTotal,
+      slotPremiumDetails,
     };
   };
 
@@ -564,6 +635,18 @@ const AddFacilityBookingPage = () => {
 
       const costs = calculateCosts();
 
+      // Build guest premium details array
+      const guestPremiumDetails = costs.slotPremiumDetails.map((detail) => ({
+        slotLabel: detail.slotLabel,
+        slotPremiumPercent: detail.slotPremiumPercent,
+        premiumAmount: detail.premiumAmount,
+        baseAmount: detail.baseAmount,
+        total: detail.total,
+      }));
+
+      // Calculate total premium amount from all slots
+      const totalPremiumAmount = costs.slotPremiumDetails.reduce((sum, detail) => sum + detail.premiumAmount, 0);
+
       const payload = {
         tower: selectedTowerId,
         flat: selectedFlatId,
@@ -580,9 +663,19 @@ const AddFacilityBookingPage = () => {
           book_by: "slot",
           booked_members_attributes,
           amount_full: costs.subTotal,
+          premium_amount: totalPremiumAmount,
+          guest_premium_details: guestPremiumDetails,
+          cgst_amount: costs.cgstAmount,
+          sgst_amount: costs.sgstAmount,
+          igst_amount: costs.igstAmount,
+          cgst: costs.cgst_percent,
+          sgst: costs.sgst_percent,
+          igst: costs.igst_percent,
           // gst: costs.cgstAmount + costs.sgstAmount + costs.igstAmount
         },
       };
+
+      console.log('Booking Payload with Premium Details:', JSON.stringify(payload, null, 2));
 
       await axios.post(
         `https://${baseUrl}/crm/admin/facility_bookings.json`,
@@ -786,6 +879,8 @@ const AddFacilityBookingPage = () => {
                           const slotIdStr = slot.id.toString();
                           const isEnabled = isSlotEnabled(slotIdStr);
                           const isSelected = selectedSlotIds.includes(slotIdStr);
+                          const isPremium = slot.is_premium && slot.premium_percentage;
+                          const premiumPercent = slot.premium_percentage || 0;
 
                           return (
                             <div
@@ -817,11 +912,19 @@ const AddFacilityBookingPage = () => {
                                 onChange={() => { }} // Handled by div click
                                 className="w-4 h-4 text-[#C72030] rounded border-gray-300 focus:ring-[#C72030] disabled:opacity-50"
                               />
-                              <span className={`text-sm font-medium ${isEnabled ? 'text-gray-800' : 'text-gray-400'
+                              <span className={`text-sm font-medium flex-1 ${isEnabled ? 'text-gray-800' : 'text-gray-400'
                                 }`}>
                                 {slot.ampm ||
                                   `${slot.start_time} to ${slot.end_time}`}
                               </span>
+                              {isPremium && (
+                                <div className="flex items-center gap-1">
+                                  <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                                  <span className="text-xs font-semibold text-amber-600">
+                                    +{premiumPercent}%
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -882,6 +985,8 @@ const AddFacilityBookingPage = () => {
                               selectedSubFacility && subFacilityDetails
                                 ? subFacilityDetails.facility_charge
                                 : facilityDetails?.facility_charge;
+
+                            console.log(activeCharge)
 
                             if (!activeCharge) return null;
 
@@ -966,11 +1071,7 @@ const AddFacilityBookingPage = () => {
                                           </button>
                                         </div>
                                         <div className="text-[10px] font-medium text-gray-500">
-                                          Charge: ₹ {
-                                            row.key === 'Member' && bookingRuleData && typeof bookingRuleData.rate === 'number'
-                                              ? bookingRuleData.rate
-                                              : (row.adultCharge || 0)
-                                          }
+                                          Charge: ₹ {row.adultCharge || 0}
                                         </div>
                                       </div>
                                     </td>
@@ -1033,6 +1134,37 @@ const AddFacilityBookingPage = () => {
                       const costs = calculateCosts();
                       return (
                         <>
+                          {/* Slot-wise Breakdown with Premium */}
+                          {costs.slotPremiumDetails && costs.slotPremiumDetails.length > 0 && (
+                            <div className="space-y-2 pb-4 border-b border-gray-200">
+                              <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                                Slot Breakdown:
+                              </h4>
+                              {costs.slotPremiumDetails.map((slot, idx) => (
+                                <div key={idx} className="space-y-1 text-xs">
+                                  <div className="flex justify-between items-center text-gray-600">
+                                    <span className="font-medium">{slot.slotLabel}</span>
+                                    {slot.slotPremiumPercent > 0 && (
+                                      <span className="text-amber-600 font-semibold">
+                                        Premium: +{slot.slotPremiumPercent}%
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex justify-between items-center text-gray-500 ml-2">
+                                    <span>Base: ₹{slot.baseAmount.toLocaleString("en-IN", { minimumFractionDigits: 0 })}</span>
+                                    {slot.slotPremiumPercent > 0 && (
+                                      <span>Premium: +₹{slot.premiumAmount.toLocaleString("en-IN", { minimumFractionDigits: 0 })}</span>
+                                    )}
+                                  </div>
+                                  <div className="flex justify-between items-center text-gray-700 font-semibold ml-2">
+                                    <span>Slot Total:</span>
+                                    <span>₹{slot.total.toLocaleString("en-IN", { minimumFractionDigits: 0 })}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
                           <div className="flex justify-between items-center text-gray-600">
                             <span className="text-sm font-medium">
                               Sub Total ({costs.slotCount} {costs.slotCount > 1 ? "Slots" : "Slot"})
