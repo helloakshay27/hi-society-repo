@@ -96,6 +96,30 @@ export interface CreateReferralPayload {
   };
 }
 
+export interface UpdateReferralPayload {
+  referral: {
+    status?: string;
+    lead_stage_id?: number | null;
+  };
+}
+
+export interface OsrLogPayload {
+  osr_log: {
+    about: string;
+    about_id: number;
+    comment: string;
+    osr_status_id?: number | null;
+    osr_staff_id?: number | null;
+    priority?: string;
+    rating?: number | null;
+    current_status?: string;
+    user_society_id?: number | null;
+  };
+  referral: {
+    lead_stage_id?: number | null;
+  };
+}
+
 // ─── API Functions ───────────────────────────────────────────────────────
 
 /**
@@ -148,6 +172,53 @@ export const createCampaignReferral = async (
 
   const response = await axios.post(
     `${baseUrl}/crm/admin/referrals.json`,
+    payload,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Update a campaign referral by ID
+ */
+export const updateCampaignReferral = async (
+  id: number,
+  payload: UpdateReferralPayload
+): Promise<CampaignReferral> => {
+  const baseUrl = getBaseUrl();
+  const token = getToken();
+
+  const response = await axios.put(
+    `${baseUrl}/crm/admin/referrals/${id}.json`,
+    payload,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
+
+/**
+ * Create OSR log (used for edit modal notes/status)
+ */
+export const createOsrLog = async (
+  payload: OsrLogPayload
+): Promise<unknown> => {
+  const baseUrl = getBaseUrl();
+  const token = getToken();
+
+  const response = await axios.post(
+    `${baseUrl}/crm/create_osr_log.json`,
     payload,
     {
       headers: {

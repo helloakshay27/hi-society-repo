@@ -187,7 +187,7 @@ const CampaignsReferralCreate: React.FC = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto">
         {/* Header */}
         <div className="bg-[#F2EEE9] text-[#BF213E] px-4 py-3 mb-6 rounded-t">
           <h1 className="text-lg font-medium">CREATE LEAD</h1>
