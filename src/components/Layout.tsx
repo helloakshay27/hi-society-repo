@@ -132,6 +132,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const renderSidebar = () => {
     // If Hi-Society mode is active, use the unified HiSocietySidebar
 
+    if (layoutMode === "hi-society" && isDevHiSocietySite) {
+      return <HiSocietySidebar />;
+    }
+
     if (layoutMode === "hi-society" && isUIHiSocietySite) {
       return <UIHiSocietySidebar />;
     }
