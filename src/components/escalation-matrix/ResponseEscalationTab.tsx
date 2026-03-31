@@ -485,8 +485,55 @@ export const ResponseEscalationTab: React.FC = () => {
     }
   }
 
+  const [activeFmProjectTab, setActiveFmProjectTab] = useState<'fm' | 'project'>('fm')
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-0">
+      {/* FM / Project sub-tabs */}
+      <div className="flex border-b border-gray-200 bg-white">
+        <button
+          onClick={() => setActiveFmProjectTab('fm')}
+          className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+            activeFmProjectTab === 'fm'
+              ? 'border-[#C72030] text-[#C72030]'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          FM
+        </button>
+        <button
+          onClick={() => setActiveFmProjectTab('project')}
+          className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+            activeFmProjectTab === 'project'
+              ? 'border-[#C72030] text-[#C72030]'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Project
+        </button>
+      </div>
+
+      {/* Issue Type & Category Type filter row */}
+      <div className="flex gap-3 p-4 bg-white border-b border-gray-200">
+        <Select>
+          <SelectTrigger className="w-44 h-9 text-sm border-gray-300">
+            <SelectValue placeholder="Select Issue Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select>
+          <SelectTrigger className="w-44 h-9 text-sm border-gray-300">
+            <SelectValue placeholder="Select Category Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="p-6 space-y-6">
       {/* Form Section */}
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
@@ -897,6 +944,7 @@ export const ResponseEscalationTab: React.FC = () => {
           </form>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   )
 }

@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/pagination';
 import { API_CONFIG, getFullUrl, getAuthenticatedFetchOptions, getAuthHeader, ENDPOINTS } from '@/config/apiConfig';
 import { toast } from 'sonner';
+import { ticketManagementAPI } from '@/services/ticketManagementAPI';
 
 // Get current site ID dynamically from localStorage
 const getCurrentSiteId = (): number => {
@@ -1124,50 +1125,12 @@ export const VisitorsDashboardEmployee = () => {
 
   const handleCheckOut = async (visitorId: number) => {
     try {
-      // Construct the API URL using the visitor ID
-      const url = getFullUrl(`/pms/admin/visitors/marked_out_visitors.json`);
-      const options = getAuthenticatedFetchOptions();
-
-      // Create request body for checkout with current timestamp
-      const requestBody = {
-        gatekeeper: {
-          guest_exit_time: new Date().toISOString().slice(0, 19) + "+05:30", // Format: 2025-08-22T19:07:37+05:30
-          exit_gate_id: "",
-          status: "checked_out",
-          gatekeeper_ids: visitorId
-        }
-      };
-
-      // Set the request method to PUT and add the request body
-      const requestOptions = {
-        ...options,
-        method: 'PUT',
-        headers: {
-          ...options.headers,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      };
-
-      const response = await fetch(url, requestOptions);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Error Response:', errorText);
-        throw new Error(`Failed to checkout visitor: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('✅ Visitor checked out successfully:', data);
-
-      // Show success toast
+      await ticketManagementAPI.checkOutVisitor(visitorId);
       toast.success('Visitor checked out successfully!');
 
-      // Refresh the visitors out data to reflect the checkout
       if (visitorSubTab === 'visitor-out') {
         fetchVisitorsOut(visitorsOutPagination.currentPage);
       }
-
     } catch (error) {
       console.error('❌ Error checking out visitor:', error);
       toast.error('Failed to checkout visitor. Please try again.');

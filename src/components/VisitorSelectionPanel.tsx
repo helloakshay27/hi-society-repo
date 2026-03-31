@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { X, User, Edit, Download, QrCode, Loader2, HandCoins, UserCheck, UserX, UserPlus, Shield, RotateCcw, Ban, Flag } from 'lucide-react';
 import { getFullUrl, getAuthHeader, ENDPOINTS, API_CONFIG } from '@/config/apiConfig';
 import { toast } from 'sonner';
+import { ticketManagementAPI } from '@/services/ticketManagementAPI';
 
 interface VisitorObject {
   id: number;
@@ -80,11 +81,14 @@ export const VisitorSelectionPanel: React.FC<VisitorSelectionPanelProps> = ({
   };
 
   const handleCheckOut = async () => {
-    console.log('VisitorSelectionPanel - Bulk check out clicked for visitors:', selectedVisitors);
     setIsCheckOutLoading(true);
     try {
-      await onCheckOut();
+      for (const visitorId of selectedVisitors) {
+        await ticketManagementAPI.checkOutVisitor(visitorId);
+      }
+      toast.success(`Successfully checked out ${selectedVisitors.length} visitor(s).`);
       fetchVisitorHistory();
+      await onCheckOut();
     } catch (error) {
       console.error('Failed to check out visitors:', error);
       toast.error("Failed to check out visitors. Please try again.");
@@ -119,117 +123,24 @@ export const VisitorSelectionPanel: React.FC<VisitorSelectionPanelProps> = ({
       return;
     }
 
-    console.log('VisitorSelectionPanel - OTP submitted:', otpValue, 'for visitors:', selectedVisitors);
     setIsOtpVerifying(true);
 
     try {
-      let successCount = 0;
-      let errorCount = 0;
+      await ticketManagementAPI.verifyHourOtp(otpValue.trim());
 
-      // Process each visitor individually for OTP verification
-      for (const visitorId of selectedVisitors) {
-        try {
-          console.log('🔐 Verifying OTP for visitor ID:', visitorId);
+      toast.success(`OTP verified successfully.`);
+      setIsOtpModalOpen(false);
+      setOtpValue('');
 
-          // Construct the API URL for OTP verification
-          const url = getFullUrl('/pms/visitors/verify_otp.json');
-          const urlWithParams = new URL(url);
-
-          // Add query parameters
-          urlWithParams.searchParams.append('otp', otpValue.trim());
-          urlWithParams.searchParams.append('gatekeeper_id', visitorId.toString());
-
-          // Add access token if available
-          if (API_CONFIG.TOKEN) {
-            urlWithParams.searchParams.append('access_token', API_CONFIG.TOKEN);
-          }
-
-          console.log('🚀 Calling OTP verification API:', urlWithParams.toString());
-
-          const response = await fetch(urlWithParams.toString(), {
-            method: 'GET',
-            headers: {
-              'Authorization': getAuthHeader(),
-              'Content-Type': 'application/json',
-            }
-          });
-
-          // Parse the response data first
-          const data = await response.json();
-
-          if (!response.ok) {
-            const errorText = JSON.stringify(data);
-
-            if (response.status === 401) {
-              throw new Error('Authentication failed. Please check your access token and try again.');
-            } else if (response.status === 404 && data.message === "OTP Verification failed") {
-              throw new Error('Invalid OTP');
-            } else if (response.status === 404) {
-              throw new Error('Visitor not found or OTP expired.');
-            } else if (response.status === 400) {
-              throw new Error('Invalid OTP code. Please check and try again.');
-            } else {
-              throw new Error(`OTP verification failed: ${response.status} ${response.statusText}`);
-            }
-          }
-
-          // Check for error messages in successful responses (200 OK but with error content)
-          if (data.code === 404 && data.message === "OTP Verification failed") {
-            console.error('OTP Verification failed in 200 response for visitor', visitorId, ':', data);
-            throw new Error('Invalid OTP');
-          }
-
-          // Check if OTP verification was actually successful
-          if (data.otp_verified === 0 || data.otp_verified === "0") {
-            console.error('OTP not verified for visitor', visitorId, ':', data);
-            throw new Error('Invalid OTP');
-          }
-
-          console.log('✅ OTP verified successfully for visitor', visitorId, ':', data);
-          successCount++;
-
-        } catch (visitorError) {
-          console.error('❌ Error verifying OTP for visitor', visitorId, ':', visitorError);
-          errorCount++;
-
-          // Show specific error message for invalid OTP
-          if (visitorError instanceof Error && visitorError.message === 'Invalid OTP') {
-            toast.error(`Invalid OTP for visitor ${visitorId}`);
-          }
-        }
+      if (onVerifyOtp) {
+        await onVerifyOtp();
       }
 
-      // Show success/error summary
-      if (successCount > 0) {
-        toast.success(`Successfully verified OTP for ${successCount} visitor(s).`);
-        setIsOtpModalOpen(false);
-        setOtpValue('');
-
-        // Call the parent component's onVerifyOtp if provided for additional handling
-        if (onVerifyOtp) {
-          await onVerifyOtp();
-        }
-
-        fetchVisitorHistory();
-      }
-
-      if (errorCount > 0 && successCount === 0) {
-        // If all failed, show specific error message
-        toast.error(`OTP verification failed for all ${errorCount} visitor(s). Please check the OTP and try again.`);
-      } else if (errorCount > 0) {
-        // If some failed, show partial failure message
-        toast.error(`Failed to verify OTP for ${errorCount} visitor(s).`);
-      }
-
-      // If all failed, keep modal open for retry
-      if (successCount === 0) {
-        setOtpValue(''); // Clear the OTP field for retry
-      }
-
+      fetchVisitorHistory();
     } catch (error) {
       console.error('❌ Failed to verify OTP:', error);
-      toast.error("Failed to verify OTP. Please check the code and try again.");
-      setOtpValue(''); // Clear the OTP field for retry
+      toast.error("Invalid OTP. Please check the code and try again.");
+      setOtpValue('');
     } finally {
       setIsOtpVerifying(false);
     }
