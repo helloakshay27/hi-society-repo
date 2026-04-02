@@ -676,6 +676,12 @@ export const ManageFlatsPage = () => {
           </div>
         )}
 
+        {pagination.total_count > 0 && (
+          <div className="text-center text-sm text-gray-500 mt-2">
+            Showing {Math.min((pagination.current_page - 1) * pagination.per_page + 1, pagination.total_count)}–{Math.min(pagination.current_page * pagination.per_page, pagination.total_count)} of {pagination.total_count} records
+          </div>
+        )}
+
         {/* Add Flat Dialog */}
         <AddFlatDialog
           open={showAddFlatDialog}
