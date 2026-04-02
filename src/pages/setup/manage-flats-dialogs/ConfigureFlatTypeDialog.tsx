@@ -7,16 +7,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SearchableSelect } from "@/components/SearchSelect";
 import { toast } from "sonner";
 import axios from "axios";
 
@@ -71,6 +65,10 @@ export const ConfigureFlatTypeDialog: React.FC<ConfigureFlatTypeDialogProps> = (
     }
     if (!newApartmentType) {
       toast.error("Please select an apartment type");
+      return;
+    }
+    if (!newConfiguration) {
+      toast.error("Please select a configuration");
       return;
     }
 
@@ -157,7 +155,7 @@ export const ConfigureFlatTypeDialog: React.FC<ConfigureFlatTypeDialogProps> = (
           {/* Add New Flat Type Form */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="flat-type">Flat/Unit Type</Label>
+              <Label htmlFor="flat-type">Flat/Unit Type <span className="text-red-500">*</span></Label>
               <Input
                 id="flat-type"
                 placeholder="Enter Flat Type"
@@ -166,36 +164,36 @@ export const ConfigureFlatTypeDialog: React.FC<ConfigureFlatTypeDialogProps> = (
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="configuration">Configuration</Label>
-              <Select value={newConfiguration} onValueChange={setNewConfiguration}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select any" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="RK">RK</SelectItem>
-                  <SelectItem value="BHK">BHK</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="configuration">Configuration <span className="text-red-500">*</span></Label>
+              <SearchableSelect
+                value={newConfiguration}
+                onChange={setNewConfiguration}
+                options={[
+                  { label: "RK", value: "RK" },
+                  { label: "BHK", value: "BHK" },
+                ]}
+                placeholder="Select any"
+              />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="apartment-type">Apartment Type</Label>
-            <Select value={newApartmentType} onValueChange={setNewApartmentType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Apartment">Apartment</SelectItem>
-                <SelectItem value="Penthouse">Penthouse</SelectItem>
-                <SelectItem value="Duplex">Duplex</SelectItem>
-                <SelectItem value="Villa">Villa</SelectItem>
-                <SelectItem value="Row House">Row House</SelectItem>
-                <SelectItem value="Compact">Compact</SelectItem>
-                <SelectItem value="Compact Duplex">Compact Duplex</SelectItem>
-                <SelectItem value="Studio">Studio</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="apartment-type">Apartment Type <span className="text-red-500">*</span></Label>
+            <SearchableSelect
+              value={newApartmentType}
+              onChange={setNewApartmentType}
+              options={[
+                { label: "Apartment", value: "Apartment" },
+                { label: "Penthouse", value: "Penthouse" },
+                { label: "Duplex", value: "Duplex" },
+                { label: "Villa", value: "Villa" },
+                { label: "Row House", value: "Row House" },
+                { label: "Compact", value: "Compact" },
+                { label: "Compact Duplex", value: "Compact Duplex" },
+                { label: "Studio", value: "Studio" },
+              ]}
+              placeholder="Select Type"
+            />
           </div>
 
           <div className="flex justify-start">
@@ -253,24 +251,21 @@ export const ConfigureFlatTypeDialog: React.FC<ConfigureFlatTypeDialogProps> = (
                       </td>
                       <td className="px-4 py-3 text-sm text-center">
                         {editingFlatType === flatType.id ? (
-                          <Select
+                          <SearchableSelect
                             value={editedFlatTypeData.appartment_type}
-                            onValueChange={(val) => setEditedFlatTypeData({ ...editedFlatTypeData, appartment_type: val })}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select Apartment" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Apartment">Apartment</SelectItem>
-                              <SelectItem value="Penthouse">Penthouse</SelectItem>
-                              <SelectItem value="Duplex">Duplex</SelectItem>
-                              <SelectItem value="Villa">Villa</SelectItem>
-                              <SelectItem value="Row House">Row House</SelectItem>
-                              <SelectItem value="Compact">Compact</SelectItem>
-                              <SelectItem value="Compact Duplex">Compact Duplex</SelectItem>
-                              <SelectItem value="Studio">Studio</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            onChange={(val) => setEditedFlatTypeData({ ...editedFlatTypeData, appartment_type: val })}
+                            options={[
+                              { label: "Apartment", value: "Apartment" },
+                              { label: "Penthouse", value: "Penthouse" },
+                              { label: "Duplex", value: "Duplex" },
+                              { label: "Villa", value: "Villa" },
+                              { label: "Row House", value: "Row House" },
+                              { label: "Compact", value: "Compact" },
+                              { label: "Compact Duplex", value: "Compact Duplex" },
+                              { label: "Studio", value: "Studio" },
+                            ]}
+                            placeholder="Select Apartment"
+                          />
                         ) : (
                           <span className="text-gray-500">
                             {flatType.appartment_type || "Select Apartment"}

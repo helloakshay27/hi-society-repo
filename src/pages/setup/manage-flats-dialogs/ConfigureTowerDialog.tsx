@@ -32,6 +32,7 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
   const [newTowerName, setNewTowerName] = useState("");
   const [newTowerAbbreviation, setNewTowerAbbreviation] = useState("");
   const [editedTowerData, setEditedTowerData] = useState({ name: "", abbreviation: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const fetchConfiguredTowers = async () => {
     try {
@@ -86,8 +87,9 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
   };
 
   const handleSubmitTower = async () => {
+    setIsSubmitting(true)
     try {
-      const reponse = await axios.post(`https://${baseUrl}/crm/admin/society_blocks.json`, {
+      await axios.post(`https://${baseUrl}/crm/admin/society_blocks.json`, {
         society_block: {
           name: newTowerName,
           description: newTowerAbbreviation,
@@ -107,6 +109,8 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
       fetchConfiguredTowers()
     } catch (error) {
       console.log(error)
+    } finally {
+      setIsSubmitting(false)
     }
   };
 
@@ -183,9 +187,10 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
           <div className="flex justify-start">
             <Button
               onClick={handleSubmitTower}
+              disabled={isSubmitting}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              Submit
+              {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
           </div>
 

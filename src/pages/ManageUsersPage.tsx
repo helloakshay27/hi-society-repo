@@ -30,7 +30,7 @@ import axios from "axios";
 
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
-  
+
   { key: "actions", label: "Actions", sortable: false, draggable: false },
   { key: "srNo", label: "SR.NO", sortable: false, draggable: false },
   { key: "tower", label: "Tower", sortable: true, draggable: true },
@@ -75,7 +75,7 @@ const formattedResponse = (data) => {
     phase: item.display_view || "-",
     livesHere: (item.lives_here === "1" || item.lives_here === "true") ? "Yes" : "No",
     membershipType: item?.membership_type || "-",
-    status: item.approve ? "Approved" : "Not Approved",
+    status: item.approve ? "Approved" : item.approve === false ? "Rejected" : "Pending",
     staff: item.staff || "-",
     vehicle: item.vehicle || "-",
     appDownloaded: item.app_downloaded ? "Yes" : "No",
@@ -193,7 +193,7 @@ const ManageUsersPage = () => {
       setLoading(true);
       const queryParams = new URLSearchParams();
       queryParams.append("page", page.toString());
-      
+
       Object.entries(filterParams).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           value.forEach(v => queryParams.append(key, v));
