@@ -28,6 +28,7 @@ import {
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
   { key: "actions", label: "Actions", sortable: false, draggable: false },
+  { key: "sr_no", label: "Sr. No.", sortable: false, draggable: false },
   { key: "id", label: "Id", sortable: false, draggable: false },
   { key: "block_no", label: "Tower", sortable: true, draggable: true },
   { key: "flat_no", label: "Flat", sortable: true, draggable: true },
@@ -65,6 +66,7 @@ export const ManageFlatsPage = () => {
     current_page: 1,
     total_count: 0,
     total_pages: 0,
+    per_page: 20,
   });
 
   // Add/Edit Flat Dialog states
@@ -196,6 +198,7 @@ export const ManageFlatsPage = () => {
           current_page: response.data.pagination.current_page,
           total_count: response.data.pagination.total_count,
           total_pages: response.data.pagination.total_pages,
+          per_page: response.data.pagination.per_page || 20,
         });
       }
     } catch (error) {
@@ -371,8 +374,17 @@ export const ManageFlatsPage = () => {
   }
 
   // Render cell content based on column key
-  const renderCell = (flat: any, columnKey: string) => {
+  const renderCell = (flat: any, columnKey: string, index: number) => {
     switch (columnKey) {
+      case "sr_no":
+        const page = pagination.current_page || 1;
+        const perPage = pagination.per_page || 20;
+        const srNo = (page - 1) * perPage + index + 1;
+        return (
+          <div className="text-center">
+            <span className="text-sm text-gray-900">{srNo}</span>
+          </div>
+        );
       case "actions":
         return (
           <div className="flex items-center justify-center gap-2">
@@ -661,6 +673,12 @@ export const ManageFlatsPage = () => {
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
+          </div>
+        )}
+
+        {pagination.total_count > 0 && (
+          <div className="text-center text-sm text-gray-500 mt-2">
+            Showing {Math.min((pagination.current_page - 1) * pagination.per_page + 1, pagination.total_count)}–{Math.min(pagination.current_page * pagination.per_page, pagination.total_count)} of {pagination.total_count} records
           </div>
         )}
 

@@ -30,7 +30,9 @@ import axios from "axios";
 
 // Column configuration matching the image
 const columns: ColumnConfig[] = [
+
   { key: "actions", label: "Actions", sortable: false, draggable: false },
+  { key: "srNo", label: "SR.NO", sortable: false, draggable: false },
   { key: "tower", label: "Tower", sortable: true, draggable: true },
   { key: "flat", label: "Flat", sortable: true, draggable: true },
   { key: "occupancy", label: "Occupancy", sortable: true, draggable: true },
@@ -59,8 +61,9 @@ const columns: ColumnConfig[] = [
 ];
 
 const formattedResponse = (data) => {
-  return data.map((item) => ({
+  return data.map((item, index) => ({
     id: item.id,
+    srNo: index,
     flat: item.flat_no || "-",
     tower: item.block_no || "-",
     occupancy: item.occupancy == "Yes" ? "Occupied" : "Vacant",
@@ -72,7 +75,7 @@ const formattedResponse = (data) => {
     phase: item.display_view || "-",
     livesHere: (item.lives_here === "1" || item.lives_here === "true") ? "Yes" : "No",
     membershipType: item?.membership_type || "-",
-    status: item.approve ? "Approved" : "Not Approved",
+    status: item.approve ? "Approved" : item.approve === false ? "Rejected" : "Pending",
     staff: item.staff || "-",
     vehicle: item.vehicle || "-",
     appDownloaded: item.app_downloaded ? "Yes" : "No",
@@ -190,7 +193,7 @@ const ManageUsersPage = () => {
       setLoading(true);
       const queryParams = new URLSearchParams();
       queryParams.append("page", page.toString());
-      
+
       Object.entries(filterParams).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           value.forEach(v => queryParams.append(key, v));
@@ -595,6 +598,12 @@ const ManageUsersPage = () => {
   // Render cell content based on column key
   const renderCell = (user: any, columnKey: string) => {
     switch (columnKey) {
+      case "srNo":
+        return (
+          <span className="text-sm text-gray-600 font-medium">
+            {(pagination.current_page - 1) * pagination.per_page + (users.indexOf(user) + 1)}
+          </span>
+        );
       case "actions":
         return (
           <div className="flex items-center justify-center gap-2">
@@ -633,69 +642,69 @@ const ManageUsersPage = () => {
     <div className="min-h-screen bg-[#fafafa] p-6">
       <div className="max-w-full mx-auto">
         {/* Stats Cards - First Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-3">
           <StatsCard
             title="Total Users"
             value={dashboardData.total_users.toString()}
-            icon={<Users className="w-6 h-6 text-[#C72030]" />}
+            icon={<Users className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Pending Users"
             value={dashboardData.pending_users.toString()}
-            icon={<Clock className="w-6 h-6 text-[#C72030]" />}
+            icon={<Clock className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Approved Users"
             value={dashboardData.approved_users.toString()}
-            icon={<UserCheck className="w-6 h-6 text-[#C72030]" />}
+            icon={<UserCheck className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Rejected Users"
             value={dashboardData.rejected_users.toString()}
-            icon={<UserX className="w-6 h-6 text-[#C72030]" />}
+            icon={<UserX className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Total No. Of Downloads"
             value={dashboardData.app_downloads.toString()}
-            icon={<MonitorSmartphone className="w-6 h-6 text-[#C72030]" />}
+            icon={<MonitorSmartphone className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
           />
         </div>
 
         {/* Stats Cards - Second Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
           <StatsCard
             title="Total No. Of Flat Downloads"
             value={dashboardData.total_flat_downloads.toString()}
-            icon={<Download className="w-6 h-6 text-[#C72030]" />}
+            icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Total No. Of Owners Downloads"
             value={dashboardData.total_owner_downloads.toString()}
-            icon={<Download className="w-6 h-6 text-[#C72030]" />}
+            icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Total No. Of Tenants Downloads"
             value={dashboardData.total_tenant_downloads.toString()}
-            icon={<Download className="w-6 h-6 text-[#C72030]" />}
+            icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Post Sale Downloads"
             value={dashboardData.post_sale_downloads.toString()}
-            icon={<Download className="w-6 h-6 text-[#C72030]" />}
+            icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
           />
           <StatsCard
             title="Post Possession Downloads"
             value={dashboardData.post_possession_downloads.toString()}
-            icon={<Download className="w-6 h-6 text-[#C72030]" />}
+            icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
           />
         </div>
@@ -986,6 +995,13 @@ const ManageUsersPage = () => {
             </PaginationContent>
           </Pagination>
         </div>
+
+        {/* Record Count */}
+        {pagination.total_count > 0 && (
+          <div className="text-center text-sm text-gray-500 mt-2">
+            Showing {Math.min((pagination.current_page - 1) * pagination.per_page + 1, pagination.total_count)}–{Math.min(pagination.current_page * pagination.per_page, pagination.total_count)} of {pagination.total_count} records
+          </div>
+        )}
       </div>
     </div>
   );

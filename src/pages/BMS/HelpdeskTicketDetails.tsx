@@ -6955,7 +6955,7 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
                   </div>
                 </Card>
 
-                <div className="w-full bg-white rounded-lg shadow-sm border">
+                {/* <div className="w-full bg-white rounded-lg shadow-sm border">
                   <div className="flex items-center justify-between gap-3 bg-[#F6F4EE] py-3 px-4 border border-[#D9D9D9]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#E5E0D3]">
@@ -7021,7 +7021,7 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
                         className="space-y-6"
                       >
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          {/* Building */}
+                        
                           <FormControl
                             fullWidth
                             variant="outlined"
@@ -7047,7 +7047,7 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
                             </MuiSelect>
                           </FormControl>
 
-                          {/* Wing */}
+                   
                           <FormControl
                             fullWidth
                             variant="outlined"
@@ -7074,7 +7074,7 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
                             </MuiSelect>
                           </FormControl>
 
-                          {/* Area */}
+                      
                           <FormControl
                             fullWidth
                             variant="outlined"
@@ -7101,7 +7101,7 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
                             </MuiSelect>
                           </FormControl>
 
-                          {/* Floor */}
+                       
                           <FormControl
                             fullWidth
                             variant="outlined"
@@ -7128,7 +7128,7 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
                             </MuiSelect>
                           </FormControl>
 
-                          {/* Room */}
+                    
                           <FormControl
                             fullWidth
                             variant="outlined"
@@ -7156,7 +7156,7 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
                           </FormControl>
                         </div>
 
-                        {/* Action Buttons */}
+                   
                         <div className="flex items-center gap-3 justify-end mt-6">
                           <Button
                             type="button"
@@ -7178,7 +7178,7 @@ console.log("status logic:", isTicketOnHold, isTicketClosed)
                       </form>
                     )}
                   </div>
-                </div>
+                </div> */}
 
                 {ticketData.documents && (
                   <Card className="w-full bg-white rounded-lg shadow-sm border">

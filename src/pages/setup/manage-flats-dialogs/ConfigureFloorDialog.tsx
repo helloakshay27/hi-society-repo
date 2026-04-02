@@ -1,19 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { X, Check, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SearchableSelect } from "@/components/SearchSelect";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
@@ -132,22 +127,20 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
         <div className="flex-1 overflow-y-auto py-6 space-y-6 px-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Tower</Label>
-              <Select value={selectedTower} onValueChange={setSelectedTower}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Tower" />
-                </SelectTrigger>
-                <SelectContent>
-                  {towers.map((tower) => (
-                    <SelectItem key={tower.id} value={tower.id.toString()}>
-                      {tower.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Tower <span className="text-red-500">*</span></Label>
+              <SearchableSelect
+                value={selectedTower}
+                onChange={setSelectedTower}
+                options={towers.map((tower) => ({
+                  value: tower.id.toString(),
+                  label: tower.name,
+                }))}
+                placeholder="Select Tower"
+                className=""
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="floor-name">Floor Name</Label>
+              <Label htmlFor="floor-name">Floor Name <span className="text-red-500">*</span></Label>
               <Input
                 id="floor-name"
                 placeholder="Enter Floor Name"
@@ -171,18 +164,15 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Floor List</h3>
               <div className="w-60">
-                <Select value={selectedTowerForFloors} onValueChange={setSelectedTowerForFloors}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Tower" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {towers.map((tower) => (
-                      <SelectItem key={tower.id} value={tower.id.toString()}>
-                        {tower.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  value={selectedTowerForFloors}
+                  onChange={setSelectedTowerForFloors}
+                  options={towers.map((tower) => ({
+                    value: tower.id.toString(),
+                    label: tower.name,
+                  }))}
+                  placeholder="Select Tower"
+                />
               </div>
             </div>
 

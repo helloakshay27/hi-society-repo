@@ -17,9 +17,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
+import { toast } from "sonner";
 import {
   getCampaignReferralById,
   getLeadStages,
+  createOsrLog,
   CampaignReferral,
   LeadStage,
 } from "@/services/campaignReferralService";
@@ -35,6 +37,7 @@ const CampaignsReferralDetail: React.FC = () => {
     null
   );
 
+  const [isSaving, setIsSaving] = useState(false);
   const [editForm, setEditForm] = useState({
     status: "",
     leadStage: "",
@@ -94,9 +97,40 @@ const CampaignsReferralDetail: React.FC = () => {
     return stage ? stage.lead_stage : "-";
   };
 
-  const handleSave = () => {
-    // Handle save logic here - connect to API
-    setShowEditModal(false);
+  const handleSave = async () => {
+    if (!referralData) return;
+
+    setIsSaving(true);
+    try {
+      const referralId = referralData.id; // use the actual referral ID being edited
+
+      // POST /crm/create_osr_log.json — updates status & lead_stage via OSR log
+      await createOsrLog({
+        osr_log: {
+          about: "Referral",
+          about_id: referralId,         // current referral ID
+          comment: editForm.notes || "",
+          current_status: editForm.status || undefined,
+        },
+        referral: {
+          lead_stage_id: editForm.leadStage
+            ? parseInt(editForm.leadStage, 10)
+            : null,
+        },
+      });
+
+      // Refresh referral data to reflect changes
+      const updated = await getCampaignReferralById(referralId);
+      setReferralData(updated);
+
+      toast.success("Referral updated successfully");
+      setShowEditModal(false);
+    } catch (err) {
+      console.error("Failed to update referral:", err);
+      toast.error("Failed to update referral. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (isLoading) {
@@ -125,7 +159,7 @@ const CampaignsReferralDetail: React.FC = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto">
         {/* Card */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           {/* Header */}
@@ -334,9 +368,10 @@ const CampaignsReferralDetail: React.FC = () => {
             <div className="flex justify-center pt-2">
               <Button
                 onClick={handleSave}
-                className="bg-[#10b981] hover:bg-[#059669] text-white px-8"
+                disabled={isSaving}
+                className="bg-[#C72030] hover:bg-[#B01C29] text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Save
+                {isSaving ? "Saving..." : "Save"}
               </Button>
             </div>
           </div>
