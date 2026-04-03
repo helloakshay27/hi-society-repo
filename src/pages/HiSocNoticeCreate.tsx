@@ -244,10 +244,6 @@ const HiSocNoticeCreate = () => {
       errors.push("Description is required.");
       return errors;
     }
-    if (formData.notice_text.length > 255) {
-      errors.push("Description cannot exceed 255 characters.");
-      return errors;
-    }
     return errors;
   };
 
@@ -296,13 +292,13 @@ const HiSocNoticeCreate = () => {
       // Individuals
       data.append("noticeboard[shared]", "1");
       formData.user_ids.forEach((userId) => {
-        data.append("noticeboard[cpusers][]", userId.toString());
+        data.append("noticeboard[swusers][]", userId.toString());
       });
     } else if (formData.shared === "2" && formData.group_id.length > 0) {
       // Groups
       data.append("noticeboard[shared]", "1");
       formData.group_id.forEach((groupId) => {
-        data.append("noticeboard[cp_group_id][]", groupId.toString());
+        data.append("noticeboard[group_id][]", groupId.toString());
       });
     }
 
@@ -323,7 +319,7 @@ const HiSocNoticeCreate = () => {
       if (Array.isArray(images) && images.length > 0) {
         images.forEach((img) => {
           if (img?.file instanceof File) {
-            data.append("noticeboard[files_attached][]", img.file);
+            data.append("noticeboard[documents][]", img.file);
           }
         });
       }
