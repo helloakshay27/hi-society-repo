@@ -122,6 +122,22 @@ const HiSocNoticeDetails = () => {
     <div className="p-6 bg-gray-50 h-screen overflow-y-auto scrollbar-thin pb-28">
       <Toaster position="top-right" richColors closeButton />
       
+      {/* Breadcrumb + Back Button */}
+      <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors mr-2"
+          aria-label="Go back"
+        >
+          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <span>Notice</span>
+        <span>{">"}  </span>
+        <span className="text-gray-900 font-medium">Notice Details</span>
+      </div>
+      
       <style>
         {`
           .tbl-container {
@@ -205,16 +221,6 @@ const HiSocNoticeDetails = () => {
                 </div>
               </div>
 
-              {/* Project Name */}
-              <div className="flex items-start gap-6">
-                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
-                  Project Name
-                </div>
-                <div className="text-[14px] font-semibold text-gray-900 flex-1">
-                  {broadcastData.project_name || "-"}
-                </div>
-              </div>
-
               {/* Status */}
               <div className="flex items-start gap-6">
                 <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
@@ -255,6 +261,91 @@ const HiSocNoticeDetails = () => {
                 </div>
               </div>
 
+              {/* Share With */}
+              <div className="flex items-start col-span-1 md:col-span-2 gap-6">
+                <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
+                  Share With
+                </div>
+                <div className="text-[14px] font-semibold text-gray-900 flex-1">
+                  {(() => {
+                    const shared = broadcastData.shared;
+                    // Determine selected option
+                    const hasUsers =
+                      (broadcastData.noticeboard_users && broadcastData.noticeboard_users.length > 0) ||
+                      (broadcastData.swusers && broadcastData.swusers.length > 0) ||
+                      (broadcastData.user_societies && broadcastData.user_societies.length > 0);
+                    const hasGroups =
+                      (broadcastData.noticeboard_groups && broadcastData.noticeboard_groups.length > 0) ||
+                      (broadcastData.cp_groups && broadcastData.cp_groups.length > 0) ||
+                      (broadcastData.usergroups && broadcastData.usergroups.length > 0);
+
+                    if (shared === 0 || shared === "0" || (!hasUsers && !hasGroups)) {
+                      return (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          All
+                        </span>
+                      );
+                    }
+
+                    if (hasGroups) {
+                      const groups =
+                        broadcastData.noticeboard_groups ||
+                        broadcastData.cp_groups ||
+                        broadcastData.usergroups ||
+                        [];
+                      return (
+                        <div className="space-y-1">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mb-2">
+                            Groups
+                          </span>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {groups.map((g: any, i: number) => (
+                              <span key={i} className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                                {g.name || g.group_name || g}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    if (hasUsers) {
+                      const users =
+                        broadcastData.noticeboard_users ||
+                        broadcastData.swusers ||
+                        broadcastData.user_societies ||
+                        [];
+                      return (
+                        <div className="space-y-1">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mb-2">
+                            Individuals
+                          </span>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {users.map((u: any, i: number) => {
+                              const name =
+                                u.full_name ||
+                                (u.user
+                                  ? `${u.user.firstname || ""} ${u.user.lastname || ""}`.trim()
+                                  : null) ||
+                                u.name ||
+                                u.firstname ||
+                                u;
+                              return (
+                                <span key={i} className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                                  {name}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return "-";
+                  })()}
+                </div>
+              </div>
+
               {/* Notice Text - Full Width */}
               <div className="flex items-start col-span-1 md:col-span-2 gap-6">
                 <div className="w-[180px] text-[14px] leading-tight text-gray-500 tracking-wide flex-shrink-0 whitespace-nowrap">
@@ -286,7 +377,7 @@ const HiSocNoticeDetails = () => {
             <div className="space-y-6">
               {/* Broadcast Cover Image */}
               <div className="mt-4">
-                <h5 className="text-[15px] font-semibold text-gray-900 mb-3">Broadcast Cover Image</h5>
+                <h5 className="text-[15px] font-semibold text-gray-900 mb-3">Notice Cover Image</h5>
                 <div className="tbl-container">
                   <table>
                     <thead>
@@ -335,7 +426,7 @@ const HiSocNoticeDetails = () => {
 
               {/* File Upload */}
               <div className="mt-4">
-                <h5 className="text-[15px] font-semibold text-gray-900 mb-3">File Upload</h5>
+                <h5 className="text-[15px] font-semibold text-gray-900 mb-3">Notice Attachment</h5>
                 <div className="tbl-container">
                   <table>
                     <thead>
