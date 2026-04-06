@@ -263,18 +263,30 @@ const HiSocEventDetails = () => {
                   </div>
 
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event Date</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">Event Start Date</p>
                     <p className="text-base font-medium text-gray-900">
                       {eventData?.from_time ? formatDate(eventData.from_time) : "N/A"}
                     </p>
                   </div>
 
                   <div className="flex items-start gap-2">
-                    <p className="text-sm text-gray-500 min-w-[140px]">Event Time</p>
+                    <p className="text-sm text-gray-500 min-w-[140px]">Event Start Time</p>
                     <p className="text-base font-medium text-gray-900">
-                      {eventData?.from_time 
-                        ? `${formatTime(eventData.from_time)}${eventData?.to_time ? ` - ${formatTime(eventData.to_time)}` : ''}`
-                        : "N/A"}
+                      {eventData?.from_time ? formatTime(eventData.from_time) : "N/A"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Event End Date</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.to_time ? formatDate(eventData.to_time) : "N/A"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <p className="text-sm text-gray-500 min-w-[140px]">Event End Time</p>
+                    <p className="text-base font-medium text-gray-900">
+                      {eventData?.to_time ? formatTime(eventData.to_time) : "N/A"}
                     </p>
                   </div>
 
