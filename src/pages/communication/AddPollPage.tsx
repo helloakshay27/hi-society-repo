@@ -189,7 +189,6 @@ const AddPollPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     const startMinutes = toMinutes(formData.startTime);
     const endMinutes = toMinutes(formData.endTime);
 
@@ -229,6 +228,8 @@ const AddPollPage = () => {
       );
       return;
     }
+
+    setLoading(true);
     // Format dates and times for API
     const formatDateTime = (date, time) => {
       const [hours, minutes] = time.split(/[: ]/);
