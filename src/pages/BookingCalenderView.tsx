@@ -36,13 +36,13 @@ const BookingCalenderView = () => {
 
     const getFacilities = async () => {
         try {
-            const response = await axios.get(`https://${baseUrl}/crm/admin/facility_setups.json?q[fac_type_eq]=${bookingType}`, {
+            const response = await axios.get(`https://${baseUrl}/crm/admin/facility_setups.json?q[fac_type_eq]=${bookingType}&calendar_view=true`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
             })
 
-            setFacilities(response.data.data)
+            setFacilities(response.data.facility_setups)
         } catch (error) {
             console.log(error)
         }

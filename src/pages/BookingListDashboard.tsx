@@ -223,14 +223,14 @@ const BookingListDashboard = () => {
     const fetchFacilities = async () => {
       try {
         const response = await axios.get(
-          `https://${baseUrl}/crm/admin/facility_setups.json`,
+          `https://${baseUrl}/crm/admin/facility_setups.json?calendar_view=true`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setFacilities(response.data.data);
+        setFacilities(response.data.facility_setups);
       } catch (error) {
         console.error("Error fetching facilities:", error);
         toast.error("Failed to fetch facilities");
