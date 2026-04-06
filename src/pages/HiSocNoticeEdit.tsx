@@ -719,7 +719,7 @@ const HiSocNoticeEdit = () => {
                 >
                   <MenuItem value="">Select Type</MenuItem>
                   <MenuItem value="Maintenance">Maintenance</MenuItem>
-                  <MenuItem value="General ">General </MenuItem>
+                  <MenuItem value="General">General </MenuItem>
                   <MenuItem value="Emergency">Emergency</MenuItem>
                   <MenuItem value="Announcement">Announcement</MenuItem>
                   <MenuItem value="Event">Event</MenuItem>
