@@ -1617,12 +1617,11 @@ const HiSocEventCreate = () => {
 
               {/* Event Name */}
               <TextField
-                label="Event Name"
+                label={<span>Event Name <span style={{ color: '#C72030' }}>*</span></span>}
                 placeholder="Enter Event Name"
                 value={formData.event_name}
                 onChange={handleChange}
                 name="event_name"
-                required
                 fullWidth
                 variant="outlined"
                 slotProps={{
@@ -1642,7 +1641,6 @@ const HiSocEventCreate = () => {
                 value={formData.event_at}
                 onChange={handleChange}
                 name="event_at"
-                required
                 fullWidth
                 variant="outlined"
                 slotProps={{
@@ -1660,7 +1658,6 @@ const HiSocEventCreate = () => {
                 value={formData.from_date}
                 onChange={handleChange}
                 name="from_date"
-                required
                 fullWidth
                 variant="outlined"
                 helperText="Format: DD/MM/YYYY"
@@ -1683,7 +1680,6 @@ const HiSocEventCreate = () => {
                 value={formData.from_time}
                 onChange={handleChange}
                 name="from_time"
-                required
                 fullWidth
                 variant="outlined"
                 slotProps={{
@@ -1702,7 +1698,6 @@ const HiSocEventCreate = () => {
                 value={formData.to_date}
                 onChange={handleChange}
                 name="to_date"
-                required
                 fullWidth
                 variant="outlined"
                 helperText="Format: DD/MM/YYYY"
@@ -1725,7 +1720,6 @@ const HiSocEventCreate = () => {
                 value={formData.to_time}
                 onChange={handleChange}
                 name="to_time"
-                required
                 fullWidth
                 variant="outlined"
                 slotProps={{
@@ -1748,7 +1742,6 @@ const HiSocEventCreate = () => {
                   value={formData.description}
                   onChange={handleChange}
                   name="description"
-                  required
                   fullWidth
                   variant="outlined"
                   slotProps={{

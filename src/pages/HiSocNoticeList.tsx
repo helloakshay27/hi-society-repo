@@ -227,11 +227,16 @@ const HiSocNoticeList = () => {
                 <Eye className="w-4 h-4" />
               </Button>
             )}
-            {/* {noticeboardPermission.update === "true" && (
-              <Button variant="ghost" size="sm" onClick={() => handleEditNoticeboard(item.id)} title="Edit">
+            {noticeboardPermission.update === "true" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEditNoticeboard(item.id)}
+                title="Edit"
+              >
                 <Pencil className="w-4 h-4" />
               </Button>
-            )} */}
+            )}
           </div>
         );
       case "id":
