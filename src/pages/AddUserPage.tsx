@@ -134,7 +134,11 @@ const getEditApiUrl = (id: string) => {
   return `https://${baseUrl}/crm/admin/user_societies/${id}.json?token=${token}`;
 };
 
-const mapFormDataToApiPayload = (formData: any) => {
+const mapFormDataToApiPayload = (formData: any, flatOptions: { id: number; flat_no: string }[]) => {
+  // Find the flat name from flatOptions using the flat ID
+  const selectedFlat = flatOptions.find(f => f.id.toString() === formData.flat.toString());
+  const flatName = selectedFlat ? selectedFlat.flat_no : formData.flat;
+  
   const payload: any = {
     email: formData.email,
     mobile: formData.mobile,
@@ -149,7 +153,7 @@ const mapFormDataToApiPayload = (formData: any) => {
     company_name: formData.companyName || "",
     pan_number: formData.panNumber,
     gst_number: formData.gstNumber,
-    flat_no: formData.flat,
+    flat_no: flatName,
     society_block_id: formData.tower,
     resident_type: formData.residentType,
     lives_here: formData.livesHere === "Yes",
@@ -414,7 +418,7 @@ export const AddUserPage = () => {
 
     setLoading(true);
     setError(null);
-    const payload = mapFormDataToApiPayload(formData);
+    const payload = mapFormDataToApiPayload(formData, flatOptions);
     const url = isEdit && userId ? getEditApiUrl(userId) : getCreateApiUrl();
     const method = isEdit ? "patch" : "post";
 
