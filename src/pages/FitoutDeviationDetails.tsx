@@ -335,6 +335,7 @@ const FitoutDeviationDetails: React.FC = () => {
 
   const columns = [
     { key: 'actions', label: 'Actions', sortable: false },
+    { key: 'sr_no', label: 'Sr. No.', sortable: false },
     { key: 'id', label: 'ID', sortable: true },
     { key: 'resource_id', label: 'Resource ID', sortable: true },
     { key: 'description', label: 'Description', sortable: true },
@@ -347,8 +348,10 @@ const FitoutDeviationDetails: React.FC = () => {
     { key: 'send_violation', label: 'Send Violation', sortable: false },
   ];
 
-  const renderCell = (item: TableDeviation, columnKey: string) => {
+  const renderCell = (item: TableDeviation, columnKey: string, index: number) => {
     switch (columnKey) {
+      case 'sr_no':
+        return <span>{index + 1}</span>;
       case 'actions':
         return (
           <div className="flex gap-1">

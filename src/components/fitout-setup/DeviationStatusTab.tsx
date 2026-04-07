@@ -189,9 +189,8 @@ export const DeviationStatusTab: React.FC = () => {
     try {
       setIsSubmitting(true);
       await axios.put(
-        `${API_CONFIG.BASE_URL}/fitout_categories/modify_complaint_status.json`,
+        `${API_CONFIG.BASE_URL}/fitout_categories/modify_complaint_status/${editingId}.json`,
         {
-          id: editingId,
           name: statusName,
           color_code: selectedColor,
           position: parseInt(statusPosition),
@@ -276,6 +275,13 @@ export const DeviationStatusTab: React.FC = () => {
         defaultVisible: true,
       },
       {
+        key: 'sr_no',
+        label: 'Sr. No.',
+        sortable: false,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
         key: 'position',
         label: 'Position',
         sortable: true,
@@ -315,8 +321,10 @@ export const DeviationStatusTab: React.FC = () => {
   );
 
   const renderCell = useCallback(
-    (item: DeviationStatus, columnKey: string) => {
+    (item: DeviationStatus, columnKey: string, index: number) => {
       switch (columnKey) {
+        case 'sr_no':
+          return <span>{index + 1}</span>;
         case 'actions':
           return (
             <div className="flex gap-2">
