@@ -43,6 +43,7 @@ import {
   ChevronLeft,
   Settings,
   DollarSign,
+  Phone,
 } from "lucide-react";
 
 interface MenuItem {
@@ -275,6 +276,12 @@ export const HiSocietySidebar: React.FC = () => {
               path: "/bms/business-directory/list",
             },
           ],
+        },
+        {
+          id: "call-directory",
+          label: "Call Directory",
+          icon: Phone,
+          path: "/bms/call-directory",
         },
         { id: "mis", label: "MIS", icon: BarChart3, path: "/bms/mis" },
         {

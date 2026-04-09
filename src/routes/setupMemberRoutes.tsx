@@ -262,6 +262,7 @@ const BMSBusinessDirectorySetup = lazy(
 const BMSBusinessDirectoryList = lazy(
   () => import("@/pages/BMSBusinessDirectoryList")
 );
+const CallDirectory = lazy(() => import("@/pages/CallDirectory"));
 const BMSMIS = lazy(() => import("@/pages/BMSMIS"));
 const BMSHelpdeskReport = lazy(() => import("@/pages/BMSHelpdeskReport"));
 const BMSInvoiceReport = lazy(() => import("@/pages/BMSInvoiceReport"));
@@ -1262,6 +1263,10 @@ export const setupMemberRoutes = (
     <Route
       path="/business-directory/view/:id"
       Component={withSuspense(BusinessDirectoryDetailsPage)}
+    />
+    <Route
+      path="/bms/call-directory"
+      Component={withSuspense(CallDirectory)}
     />
     <Route path="/bms/mis" Component={withSuspense(BMSMIS)} />
     <Route
