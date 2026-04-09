@@ -145,8 +145,8 @@ export const BookingSetupClubDashboard = () => {
       const response = await apiClient.get("/crm/admin/facility_setups.json", {
         params
       });
-      if (response.data && response.data.data) {
-        const formattedData = response.data.data.map(
+      if (response.data && response.data.facility_setups) {
+        const formattedData = response.data.facility_setups.map(
           (item: any) => ({
             id: item.id.toString(),
             name: item.fac_name || "",
