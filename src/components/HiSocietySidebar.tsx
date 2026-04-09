@@ -674,7 +674,7 @@ export const HiSocietySidebar: React.FC = () => {
               id: "visitor-history-sub",
               label: "Visitor History",
               icon: History,
-              path: "/smartsecure/visitor-history",
+              path: "/smartsecure/visitor-history-list",
             },
           ],
         },
