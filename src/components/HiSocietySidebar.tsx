@@ -283,12 +283,12 @@ export const HiSocietySidebar: React.FC = () => {
           icon: BarChart3,
           path: "/bms/helpdesk-report",
         },
-        {
-          id: "invoice-report",
-          label: "Invoice Report",
-          icon: BarChart3,
-          path: "/bms/invoice-report",
-        },
+        // {
+        //   id: "invoice-report",
+        //   label: "Invoice Report",
+        //   icon: BarChart3,
+        //   path: "/bms/invoice-report",
+        // },
       ],
     },
     home: {
@@ -647,6 +647,31 @@ export const HiSocietySidebar: React.FC = () => {
           path: "/smartsecure/visitor-history",
         },
         {
+          id: "visitors",
+          label: "Visitors",
+          icon: Users,
+          subItems: [
+            {
+              id: "visitor-in",
+              label: "Visitor In",
+              icon: LogIn,
+              path: "/smartsecure/visitor-in",
+            },
+            {
+              id: "visitor-out",
+              label: "Visitor Out",
+              icon: LogOut,
+              path: "/smartsecure/visitor-out",
+            },
+            {
+              id: "visitor-history-sub",
+              label: "Visitor History",
+              icon: History,
+              path: "/smartsecure/visitor-history",
+            },
+          ],
+        },
+        {
           id: "staffs",
           label: "Staffs",
           icon: Users,
@@ -879,12 +904,12 @@ export const HiSocietySidebar: React.FC = () => {
               icon: Building2,
               path: "/settings/manage-flats",
             },
-            {
-              id: "helpdesk-setup",
-              label: "Helpdesk Setup",
-              icon: Headset,
-              path: "/settings/helpdesk-setup",
-            },
+            // {
+            //   id: "helpdesk-setup",
+            //   label: "Helpdesk Setup",
+            //   icon: Headset,
+            //   path: "/settings/helpdesk-setup",
+            // },
           ],
         },
         {
