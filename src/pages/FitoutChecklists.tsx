@@ -206,6 +206,13 @@ const FitoutChecklists: React.FC = () => {
         defaultVisible: true,
       },
       {
+        key: "sr_no",
+        label: "Sr. No.",
+        sortable: false,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
         key: "name",
         label: "Checklist Name",
         sortable: true,
@@ -259,8 +266,10 @@ const FitoutChecklists: React.FC = () => {
   );
 
   const renderCell = useCallback(
-    (item: FitoutChecklistItem, columnKey: string) => {
+    (item: FitoutChecklistItem, columnKey: string, index: number) => {
       switch (columnKey) {
+        case "sr_no":
+          return <span>{index + 1}</span>;
         case "actions":
           return (
             <div className="flex justify-center items-center gap-2">

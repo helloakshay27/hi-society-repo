@@ -202,7 +202,7 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
                     floors.map((floor) => (
                       <tr key={floor.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm text-gray-900">{floor.id}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{floor.society_block_name || floor.society_block_id}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{floor.tower_name || floor.society_block_id}</td>
                         <td className="px-4 py-3 text-sm text-gray-900">{floor.name}</td>
                       </tr>
                     ))

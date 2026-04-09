@@ -196,6 +196,13 @@ export const CategoryTab: React.FC = () => {
         defaultVisible: true,
       },
       {
+        key: 'sr_no',
+        label: 'Sr. No.',
+        sortable: false,
+        draggable: false,
+        defaultVisible: true,
+      },
+      {
         key: 'id',
         label: 'ID',
         sortable: true,
@@ -234,8 +241,10 @@ export const CategoryTab: React.FC = () => {
     []
   );
 
-  const renderCell = useCallback((item: Category, columnKey: string) => {
+  const renderCell = useCallback((item: Category, columnKey: string, index: number) => {
     switch (columnKey) {
+      case 'sr_no':
+        return <span>{index + 1}</span>;
       case 'actions':
         return (
           <div className="flex gap-2">

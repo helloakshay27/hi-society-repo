@@ -104,9 +104,14 @@ export const StatusTab: React.FC = () => {
       setIsDialogOpen(false);
       resetForm();
       fetchStatuses();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding status:', error);
-      toast.error('Failed to add status');
+      const msg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.response?.data?.errors?.[0] ||
+        'Failed to add status';
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -158,9 +163,14 @@ export const StatusTab: React.FC = () => {
       setIsDialogOpen(false);
       resetForm();
       fetchStatuses();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating status:', error);
-      toast.error('Failed to update status');
+      const msg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.response?.data?.errors?.[0] ||
+        'Failed to update status';
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -207,6 +217,13 @@ export const StatusTab: React.FC = () => {
         defaultVisible: true,
       },
       {
+        key: 'sr_no',
+        label: 'Sr. No.',
+        sortable: false,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
         key: 'position',
         label: 'Position',
         sortable: true,
@@ -245,8 +262,10 @@ export const StatusTab: React.FC = () => {
     []
   );
 
-  const renderCell = useCallback((item: Status, columnKey: string) => {
+  const renderCell = useCallback((item: Status, columnKey: string, index: number) => {
     switch (columnKey) {
+      case 'sr_no':
+        return <span>{index + 1}</span>;
       case 'actions':
         return (
           <div className="flex gap-2">

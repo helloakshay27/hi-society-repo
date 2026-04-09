@@ -281,6 +281,13 @@ const FitoutRequests: React.FC = () => {
         draggable: false,
         defaultVisible: true,
       },
+      {
+        key: "sr_no",
+        label: "Sr. No.",
+        sortable: false,
+        draggable: true,
+        defaultVisible: true,
+      },
 
       {
         key: "id",
@@ -392,8 +399,10 @@ const FitoutRequests: React.FC = () => {
   );
 
   const renderCell = useCallback(
-    (item: FitoutRequestItem, columnKey: string) => {
+    (item: FitoutRequestItem, columnKey: string, index: number) => {
       switch (columnKey) {
+        case "sr_no":
+          return <span>{index + 1}</span>;
         case "actions":
           return (
             <div className="flex justify-center items-center gap-2 mb-2">
