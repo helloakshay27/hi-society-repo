@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronDown, Folder, FolderOpen, File, FileText, Upload, RefreshCw, Loader2, Download, Search, FileVideo, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
@@ -38,6 +40,8 @@ const inferFileType = (name: string): string => {
   if (["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"].includes(ext)) return "image";
   if (["xls", "xlsx", "csv"].includes(ext)) return "spreadsheet";
   if (["doc", "docx"].includes(ext)) return "doc";
+  // Specific check for warranty cards if they are special, otherwise pdf check above handles it
+  if (name.toLowerCase().includes("warranty_card")) return "pdf"; 
   return "file";
 };
 
@@ -98,6 +102,7 @@ const getFileIcon = (fileType?: string) => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const BMSDocumentsCommonFiles: React.FC = () => {
+  const navigate = useNavigate();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(["All"]));
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -110,19 +115,10 @@ const BMSDocumentsCommonFiles: React.FC = () => {
   } = useQuery<DocumentNode[]>({
     queryKey: ["common-files"],
     queryFn: async () => {
-      const url = getFullUrl("/crm/admin/attachment_common.json");
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: getAuthHeader(),
-          "Content-Type": "application/json",
-        },
+      const { data } = await axios.get(getFullUrl("/crm/admin/attachment_common.json"), {
+        headers: { Authorization: getAuthHeader() },
       });
-      if (!response.ok) {
-        throw new Error(`Failed to load documents: ${response.status} ${response.statusText}`);
-      }
-      const raw: ApiNode[] = await response.json();
-      return buildTree(raw);
+      return buildTree(data);
     },
     retry: 2,
     staleTime: 30000,
@@ -162,7 +158,9 @@ const BMSDocumentsCommonFiles: React.FC = () => {
     });
   };
 
-  const handleUpload = () => toast.info("Upload functionality coming soon");
+  const handleUpload = () => {
+    navigate("/bms/documents/upload");
+  };
 
   const handleDownload = (fileName: string) =>
     toast.success(`Downloading ${fileName}…`);
@@ -217,11 +215,16 @@ const BMSDocumentsCommonFiles: React.FC = () => {
     }
 
     // File node
+    const handleFileClick = () => {
+      navigate(`/bms/documents/view/${node.id}`);
+    };
+
     return (
       <div
         key={node.id}
-        className="flex items-center gap-2 py-2 px-3 hover:bg-gray-50 rounded group"
+        className="flex items-center gap-2 py-2 px-3 hover:bg-gray-50 rounded group cursor-pointer"
         style={{ paddingLeft: `${level * 24 + 36}px` }}
+        onClick={handleFileClick}
       >
         <div className="flex-shrink-0">{getFileIcon(node.fileType)}</div>
         <span className="text-sm text-gray-600 flex-1 truncate" title={node.name}>
@@ -231,7 +234,10 @@ const BMSDocumentsCommonFiles: React.FC = () => {
           size="sm"
           variant="ghost"
           className="opacity-0 group-hover:opacity-100 h-7 px-2 flex-shrink-0"
-          onClick={() => handleDownload(node.name)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDownload(node.name);
+          }}
         >
           <Download className="w-4 h-4" />
         </Button>

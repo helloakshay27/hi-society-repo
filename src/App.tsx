@@ -951,6 +951,10 @@ import AddSosDirectory from "./pages/AddSosDirectory";
 import SosDirectoryDetailsPage from "./pages/SosDirectoryDetailsPage";
 import SOSCategorySetupPage from "./pages/SOSCategorySetupPage";
 
+import BMSDocumentsCommonFiles from "./pages/BMSDocumentsCommonFiles";
+import BMSDocumentViewer from "./pages/BMSDocumentViewer";
+import CallDirectory from "./pages/CallDirectory";
+
 import ParkingBookingListEmployee from "./pages/ParkingBookingListEmployee";
 import ParkingBookingAddEmployee from "./pages/ParkingBookingAddEmployee";
 import ProfileDetailsPage from "./pages/ProfileDetailsPage";
@@ -6113,6 +6117,22 @@ function App() {
                       <Route
                         path="/pulse/sos-category-setup"
                         element={<SOSCategorySetupPage />}
+                      />
+
+                      {/* BMS Documents Routes */}
+                      <Route
+                        path="/bms/documents/common-files"
+                        element={<BMSDocumentsCommonFiles />}
+                      />
+                      <Route
+                        path="/bms/documents/view/:id"
+                        element={<BMSDocumentViewer />}
+                      />
+
+                      {/* Call Directory Routes */}
+                      <Route
+                        path="/pulse/call-directory"
+                        element={<CallDirectory />}
                       />
 
                       {/* Space Management Routes */}

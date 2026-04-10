@@ -257,6 +257,12 @@ const BMSDocumentsFlatRelated = lazy(
 const BMSDocumentsCommonFiles = lazy(
   () => import("@/pages/BMSDocumentsCommonFiles")
 );
+const BMSDocumentViewer = lazy(
+  () => import("@/pages/BMSDocumentViewer")
+);
+const BMSDocumentsUpload = lazy(
+  () => import("@/pages/BMSDocumentsUpload")
+);
 const BMSBusinessDirectorySetup = lazy(
   () => import("@/pages/BMSBusinessDirectorySetup")
 );
@@ -1257,6 +1263,18 @@ export const setupMemberRoutes = (
     <Route
       path="/bms/documents/common-files"
       Component={withSuspense(BMSDocumentsCommonFiles)}
+    />
+    <Route
+      path="/bms/documents/view/:id"
+      Component={withSuspense(BMSDocumentViewer)}
+    />
+    <Route
+      path="/bms/documents/upload"
+      Component={withSuspense(BMSDocumentsUpload)}
+    />
+    <Route
+      path="/bms/documents/upload-flat"
+      Component={withSuspense(BMSDocumentsUpload)}
     />
     <Route
       path="/bms/business-directory/setup"
