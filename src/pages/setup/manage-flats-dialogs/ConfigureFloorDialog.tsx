@@ -34,6 +34,9 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
   const [floorName, setFloorName] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetchingFloors, setFetchingFloors] = useState(false);
+  const [editingFloor, setEditingFloor] = useState<number | null>(null);
+  const [editedFloorData, setEditedFloorData] = useState({ name: "" });
+  const [isSaving, setIsSaving] = useState(false);
 
   const fetchTowers = async () => {
     try {
@@ -104,6 +107,38 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
       toast.error("Failed to add floor");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveFloorEdit = async (floor: any) => {
+    if (!editedFloorData.name.trim()) {
+      toast.error("Floor name cannot be empty");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await axios.put(`https://${baseUrl}/society_floors/${floor.id}.json`, {
+        society_floor: {
+          society_block_id: floor.society_block_id,
+          name: editedFloorData.name,
+        },
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+
+      toast.success("Floor updated successfully!");
+      setEditingFloor(null);
+      setEditedFloorData({ name: "" });
+      fetchFloors();
+    } catch (error) {
+      console.error("Error updating floor:", error);
+      toast.error("Failed to update floor");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -183,18 +218,19 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Id</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Tower</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Floor</th>
+                    <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Edit</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {fetchingFloors ? (
                     <tr>
-                      <td colSpan={3} className="px-4 py-8 text-center text-sm text-gray-500">
+                      <td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-500">
                         Loading floors...
                       </td>
                     </tr>
                   ) : floors.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="px-4 py-8 text-center text-sm text-gray-500">
+                      <td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-500">
                         No floors configured yet.
                       </td>
                     </tr>
@@ -203,7 +239,44 @@ export const ConfigureFloorDialog: React.FC<ConfigureFloorDialogProps> = ({
                       <tr key={floor.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm text-gray-900">{floor.id}</td>
                         <td className="px-4 py-3 text-sm text-gray-900">{floor.tower_name || floor.society_block_id}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{floor.name}</td>
+                        <td className="px-4 py-3 text-sm">
+                          {editingFloor === floor.id ? (
+                            <Input
+                              value={editedFloorData.name}
+                              onChange={(e) =>
+                                setEditedFloorData({ ...editedFloorData, name: e.target.value })
+                              }
+                              className="w-full"
+                            />
+                          ) : (
+                            <span className="text-gray-900">{floor.name}</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {editingFloor === floor.id ? (
+                            <button
+                              onClick={() => handleSaveFloorEdit(floor)}
+                              disabled={isSaving}
+                              className="text-green-600 hover:text-green-800 inline-flex items-center justify-center"
+                              title="Save"
+                            >
+                              <Check className="h-5 w-5" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setEditingFloor(floor.id);
+                                setEditedFloorData({
+                                  name: floor.name,
+                                });
+                              }}
+                              className="text-gray-600 hover:text-gray-800 inline-flex items-center justify-center"
+                              title="Edit"
+                            >
+                              <Edit2 className="h-5 w-5" />
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     ))
                   )}

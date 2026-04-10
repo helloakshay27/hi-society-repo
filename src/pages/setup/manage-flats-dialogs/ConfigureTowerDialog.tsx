@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ConfigureTowerDialogProps {
   open: boolean;
@@ -87,6 +88,11 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
   };
 
   const handleSubmitTower = async () => {
+    if (!newTowerName.trim() || !newTowerAbbreviation.trim()) {
+      toast.error("Please fill in both Tower Name and Abbreviation");
+      return;
+    }
+
     setIsSubmitting(true)
     try {
       await axios.post(`https://${baseUrl}/crm/admin/society_blocks.json`, {
@@ -165,7 +171,7 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
           {/* Add New Tower Form */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="tower-name">Tower Name</Label>
+              <Label htmlFor="tower-name">Tower Name <span className="text-red-500">*</span></Label>
               <Input
                 id="tower-name"
                 placeholder="Enter Tower Name"
@@ -174,7 +180,7 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="tower-abbreviation">Abbreviation</Label>
+              <Label htmlFor="tower-abbreviation">Abbreviation <span className="text-red-500">*</span></Label>
               <Input
                 id="tower-abbreviation"
                 placeholder="Enter Abbreviation"
@@ -257,11 +263,17 @@ export const ConfigureTowerDialog: React.FC<ConfigureTowerDialogProps> = ({
                         )}
                       </td>
                       <td className="px-4 py-3 text-left">
-                        <input
+                        {/* <input
                           type="checkbox"
                           className="w-4 h-4 accent-[#C72030] cursor-pointer"
                           checked={!!tower.status}
                           onChange={() => handleToggleTowerStatus(tower)}
+                          title={tower.status ? "Active" : "Inactive"}
+                        /> */}
+                        <Checkbox
+                          checked={!!tower.status}
+                          onCheckedChange={() => handleToggleTowerStatus(tower)}
+                          className="data-[state=checked]:bg-[#C72030] data-[state=checked]:border-[#C72030]"
                           title={tower.status ? "Active" : "Inactive"}
                         />
                       </td>
