@@ -269,6 +269,7 @@ const HiSocNoticeCreate = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     toast.dismiss();
 
@@ -445,7 +446,7 @@ const HiSocNoticeCreate = () => {
         {/* <h1 className="text-2xl font-bold text-gray-900">CREATE BROADCAST</h1> */}
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Section: Communication Information */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>

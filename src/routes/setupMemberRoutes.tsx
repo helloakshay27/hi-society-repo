@@ -32,6 +32,7 @@ import HiSocEventDetails from "@/pages/HiSocEventDetails";
 import HiSocNoticeList from "@/pages/HiSocNoticeList";
 import HiSocNoticeCreate from "@/pages/HiSocNoticeCreate";
 import HiSocNoticeDetails from "@/pages/HiSocNoticeDetails";
+import HiSocNoticeEdit from "@/pages/HiSocNoticeEdit";
 import ContestListPage from "@/pages/ContestListPage";
 import CreateContestPage from "@/pages/CreateContestPage";
 import EditContestPage from "@/pages/EditContestPage";
@@ -262,6 +263,7 @@ const BMSBusinessDirectorySetup = lazy(
 const BMSBusinessDirectoryList = lazy(
   () => import("@/pages/BMSBusinessDirectoryList")
 );
+const CallDirectory = lazy(() => import("@/pages/CallDirectory"));
 const BMSMIS = lazy(() => import("@/pages/BMSMIS"));
 const BMSHelpdeskReport = lazy(() => import("@/pages/BMSHelpdeskReport"));
 const BMSInvoiceReport = lazy(() => import("@/pages/BMSInvoiceReport"));
@@ -379,6 +381,7 @@ const AccountingInvoiceReport = lazy(
 const AccountingDownloadReport = lazy(
   () => import("@/pages/AccountingDownloadReport")
 );
+const PaymentTermsPage = lazy(() => import("@/pages/PaymentTermsPage"));
 
 // Fitout Pages
 const FitoutRequests = lazy(() => import("@/pages/FitoutRequests"));
@@ -1239,6 +1242,10 @@ export const setupMemberRoutes = (
       element={<HiSocNoticeDetails />}
     />
     <Route
+      path="/bms/hisoc-notice-edit/:id"
+      element={<HiSocNoticeEdit />}
+    />
+    <Route
       path="/bms/quarantine-tracker"
       Component={withSuspense(BMSQuarantineTracker)}
     />
@@ -1262,6 +1269,10 @@ export const setupMemberRoutes = (
     <Route
       path="/business-directory/view/:id"
       Component={withSuspense(BusinessDirectoryDetailsPage)}
+    />
+    <Route
+      path="/bms/call-directory"
+      Component={withSuspense(CallDirectory)}
     />
     <Route path="/bms/mis" Component={withSuspense(BMSMIS)} />
     <Route
@@ -1469,6 +1480,10 @@ export const setupMemberRoutes = (
       path="/accounting/download-report"
       Component={withSuspense(AccountingDownloadReport)}
     />
+    <Route
+      path="/accounting/payment-terms"
+      Component={withSuspense(PaymentTermsPage)}
+    />
 
     {/* Fitout Routes */}
     <Route path="/settings/approval-matrix" Component={withSuspense(ApprovalMatrixSetupPage)} />
@@ -1536,6 +1551,10 @@ export const setupMemberRoutes = (
     <Route
       path="/smartsecure/visitor-history"
       Component={withSuspense(VisitorsDashboard)}
+    />
+    <Route
+      path="/smartsecure/visitor-history-list"
+      Component={withSuspense(SmartSecureVisitorHistory)}
     />
     <Route
       path="/smartsecure/staff-all"
