@@ -128,7 +128,7 @@ const CallDirectory: React.FC = () => {
       );
 
       if (response.data && response.data.public_directories) {
-        const mappedData = response.data.public_directories.map((d: any) => ({
+        const mappedData = response.data.public_directories.map((d: { id: string | number; nature: string; mobile: string; icon_url?: string }) => ({
           id: d.id.toString(),
           name: d.nature || "",
           phone: d.mobile || "",
@@ -147,7 +147,7 @@ const CallDirectory: React.FC = () => {
     fetchQuickCalls();
   }, [fetchQuickCalls]);
 
-  const [apiIcons, setApiIcons] = React.useState<any[]>([]);
+  const [apiIcons, setApiIcons] = React.useState<Array<{ id: number; icon_url: string; icon_name: string }>>([]);
 
   const fetchIcons = React.useCallback(async () => {
     try {
@@ -194,7 +194,7 @@ const CallDirectory: React.FC = () => {
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [viewingItem, setViewingItem] = React.useState<QuickCall | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
-  const [viewingDetails, setViewingDetails] = React.useState<any>(null);
+  const [viewingDetails, setViewingDetails] = React.useState<{ email?: string; firstname?: string; lastname?: string; active?: number } | null>(null);
 
   const handleViewClick = async (item: QuickCall) => {
     setViewingItem(item);
@@ -233,7 +233,7 @@ const CallDirectory: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const payload: any = {
+      const payload: { public_directory: { nature: string; mobile: string; active: number; quick_call_icon_id?: number | null } } = {
         public_directory: {
           nature: name,
           mobile: phone,
@@ -272,18 +272,24 @@ const CallDirectory: React.FC = () => {
       fetchQuickCalls();
       closeAdd();
       toast.success(editingId ? "Directory updated successfully!" : "Directory added successfully!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving directory entry", error);
-      const errorMessage = error?.response?.data?.message || error?.message || "Failed to save directory entry";
+      let errorMessage = "Failed to save directory entry";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "object" && error !== null && "response" in error) {
+        const axiosError = error as { response?: { data?: { message?: string } } };
+        errorMessage = axiosError.response?.data?.message || "Failed to save directory entry";
+      }
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   }, [
     closeAdd,
-    form.icon,
     form.name,
     form.phone,
+    form.quick_call_icon_id,
     editingId,
     baseUrl,
     token,
@@ -302,7 +308,7 @@ const CallDirectory: React.FC = () => {
     []
   );
 
-  const renderCell = (item: QuickCall, columnKey: string) => {
+  const renderCell = (item: QuickCall, columnKey: string): React.ReactNode => {
     if (columnKey === "icon") {
       if (item.icon_url) {
         return (
@@ -341,7 +347,7 @@ const CallDirectory: React.FC = () => {
         </span>
       );
     }
-    return (item as any)[columnKey];
+    return null;
   };
 
   const handleEditClick = (item: QuickCall) => {
