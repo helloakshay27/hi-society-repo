@@ -190,7 +190,7 @@ const HiSocNoticeList = () => {
     { key: "society_name", label: "Society", sortable: true },
     { key: "is_important", label: "Important", sortable: false },
     { key: "expire_time", label: "Expire Time", sortable: false },
-    { key: "active", label: "Status", sortable: false },
+    // { key: "active", label: "Status", sortable: false },
   ];
 
   /* eslint-disable @typescript-eslint/no-explicit-any */

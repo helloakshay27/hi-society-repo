@@ -280,7 +280,7 @@ const SmartSecureVisitorOut: React.FC = () => {
         return (
           <Button
             size="sm"
-            className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1"
+            className="hover:bg-green-600 text-white text-xs px-3 py-1"
             onClick={() => toast.success(`${visitor.guest_name} checked in successfully`)}
           >
             Check In
@@ -366,13 +366,13 @@ const SmartSecureVisitorOut: React.FC = () => {
         hideColumnsButton={false}
         leftActions={
           <div className="flex gap-2">
-            <Button
+            {/* <Button
               className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
               onClick={() => toast.info("Add visitor dialog coming soon")}
             >
               <Plus className="w-4 h-4 mr-2" />
               Add
-            </Button>
+            </Button> */}
           </div>
         }
       />

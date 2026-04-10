@@ -370,7 +370,7 @@ const CallDirectory: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto">
+      <div className="mx-auto">
         <EnhancedTable
           data={quickCalls}
           columns={columns}
