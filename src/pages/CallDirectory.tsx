@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, TextField } from "@mui/material";
@@ -138,6 +139,7 @@ const CallDirectory: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching quick calls", error);
+      toast.error("Failed to load directories. Please try again.");
     }
   }, [baseUrl, token]);
 
@@ -160,6 +162,7 @@ const CallDirectory: React.FC = () => {
       }
     } catch (e) {
       console.error(e);
+      toast.error("Failed to load icons. Please try again.");
     }
   }, [baseUrl, token]);
 
@@ -209,6 +212,7 @@ const CallDirectory: React.FC = () => {
       setViewingDetails(response.data);
     } catch (error) {
       console.error("Error fetching directory details", error);
+      toast.error("Failed to load directory details. Please try again.");
     } finally {
       setIsLoadingDetails(false);
     }
@@ -225,18 +229,22 @@ const CallDirectory: React.FC = () => {
   const onSubmit = React.useCallback(async () => {
     const name = form.name.trim();
     const phone = form.phone.trim();
-    if (!name || !phone) return;
+    if (!name || !phone || !form.quick_call_icon_id) return;
 
     setIsSubmitting(true);
     try {
-      const payload = {
+      const payload: any = {
         public_directory: {
           nature: name,
           mobile: phone,
           active: 1,
-          quick_call_icon_id: form.quick_call_icon_id,
         },
       };
+
+      // Only include quick_call_icon_id if it's set
+      if (form.quick_call_icon_id) {
+        payload.public_directory.quick_call_icon_id = form.quick_call_icon_id;
+      }
 
       if (editingId) {
         await axios.patch(
@@ -263,8 +271,11 @@ const CallDirectory: React.FC = () => {
       // Re-fetch list to get updated data from the server
       fetchQuickCalls();
       closeAdd();
-    } catch (error) {
+      toast.success(editingId ? "Directory updated successfully!" : "Directory added successfully!");
+    } catch (error: any) {
       console.error("Error saving directory entry", error);
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to save directory entry";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -355,7 +366,15 @@ const CallDirectory: React.FC = () => {
 
   const leftActions = (
     <Button
-      onClick={() => setIsAddOpen(true)}
+      onClick={() => {
+        resetForm();
+        setEditingId(null);
+        // Pre-select first icon if available
+        if (apiIcons.length > 0) {
+          setForm((p) => ({ ...p, quick_call_icon_id: apiIcons[0].id }));
+        }
+        setIsAddOpen(true);
+      }}
       className="hidden sm:inline-flex"
     >
       + Add
@@ -391,7 +410,15 @@ const CallDirectory: React.FC = () => {
       {/* Floating add button (mobile style like reference) */}
       <button
         type="button"
-        onClick={() => setIsAddOpen(true)}
+        onClick={() => {
+          resetForm();
+          setEditingId(null);
+          // Pre-select first icon if available
+          if (apiIcons.length > 0) {
+            setForm((p) => ({ ...p, quick_call_icon_id: apiIcons[0].id }));
+          }
+          setIsAddOpen(true);
+        }}
         className="sm:hidden fixed bottom-6 right-6 h-14 w-14 rounded-full bg-[#BF213E] text-white shadow-[0px_10px_30px_rgba(191,33,62,0.35)] grid place-items-center"
         aria-label="Add quick call"
       >
@@ -485,7 +512,8 @@ const CallDirectory: React.FC = () => {
             <Button
               onClick={onSubmit}
               className="!bg-[#F2EEE9] !text-[#BF213E] hover:!bg-[#e8e1d9] px-10"
-              disabled={!form.name.trim() || !form.phone.trim() || isSubmitting}
+              disabled={!form.name.trim() || !form.phone.trim() || !form.quick_call_icon_id || isSubmitting}
+              title={!form.quick_call_icon_id ? "Please select an icon" : ""}
             >
               {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
