@@ -36,10 +36,11 @@ import { ticketManagementAPI, UserAccountResponse } from '@/services/ticketManag
 import { API_CONFIG } from '@/config/apiConfig';
 
 const resolutionEscalationSchema = z.object({
-  categoryIds: z.array(z.number()).min(1, 'At least one category is required'),
+  categoryIds: z.array(z.number()).optional().default([]),
   escalationLevels: z.object({
     e1: z.object({
       users: z.array(z.number()),
+      copyTo: z.array(z.number()),
       priorities: z.object({
         p1: z.object({
           days: z.number().min(0),
@@ -70,6 +71,7 @@ const resolutionEscalationSchema = z.object({
     }),
     e2: z.object({
       users: z.array(z.number()),
+      copyTo: z.array(z.number()),
       priorities: z.object({
         p1: z.object({ days: z.number().min(0), hours: z.number().min(0).max(23), minutes: z.number().min(0).max(59) }),
         p2: z.object({ days: z.number().min(0), hours: z.number().min(0).max(23), minutes: z.number().min(0).max(59) }),
@@ -80,6 +82,7 @@ const resolutionEscalationSchema = z.object({
     }),
     e3: z.object({
       users: z.array(z.number()),
+      copyTo: z.array(z.number()),
       priorities: z.object({
         p1: z.object({ days: z.number().min(0), hours: z.number().min(0).max(23), minutes: z.number().min(0).max(59) }),
         p2: z.object({ days: z.number().min(0), hours: z.number().min(0).max(23), minutes: z.number().min(0).max(59) }),
@@ -90,6 +93,7 @@ const resolutionEscalationSchema = z.object({
     }),
     e4: z.object({
       users: z.array(z.number()),
+      copyTo: z.array(z.number()),
       priorities: z.object({
         p1: z.object({ days: z.number().min(0), hours: z.number().min(0).max(23), minutes: z.number().min(0).max(59) }),
         p2: z.object({ days: z.number().min(0), hours: z.number().min(0).max(23), minutes: z.number().min(0).max(59) }),
@@ -100,6 +104,7 @@ const resolutionEscalationSchema = z.object({
     }),
     e5: z.object({
       users: z.array(z.number()),
+      copyTo: z.array(z.number()),
       priorities: z.object({
         p1: z.object({ days: z.number().min(0), hours: z.number().min(0).max(23), minutes: z.number().min(0).max(59) }),
         p2: z.object({ days: z.number().min(0), hours: z.number().min(0).max(23), minutes: z.number().min(0).max(59) }),
@@ -142,8 +147,6 @@ export const ResolutionEscalationTab: React.FC = () => {
   const [userAccount, setUserAccount] = useState<UserAccountResponse | null>(null);
   const [escalationUsers, setEscalationUsers] = useState<{id: number; full_name: string}[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('');
-  const [filteredRules, setFilteredRules] = useState(resolutionEscalations);
   const [editingRule, setEditingRule] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -189,6 +192,32 @@ export const ResolutionEscalationTab: React.FC = () => {
   const [escalationIssueTypeFilter, setEscalationIssueTypeFilter] = useState('');
   const [escalationCategoryTypeFilter, setEscalationCategoryTypeFilter] = useState('');
 
+  // Escalation Rule form - Issue Type & Category Type selection
+  const [escalationFormIssueTypeId, setEscalationFormIssueTypeId] = useState('');
+  const [escalationFormCategoryTypeId, setEscalationFormCategoryTypeId] = useState('');
+
+  // Edit Escalation Rule dialog - Issue Type & Category Type selection
+  const [editEscalationIssueTypeId, setEditEscalationIssueTypeId] = useState('');
+  const [editEscalationCategoryTypeId, setEditEscalationCategoryTypeId] = useState('');
+
+  // Escalation Rule list data (from /crm/admin/assign_escalation.json)
+  const [escalationRulesList, setEscalationRulesList] = useState<any[]>([]);
+  const [escalationRulesLoading, setEscalationRulesLoading] = useState(false);
+  const [escalationRulesPagination, setEscalationRulesPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalEntries: 0,
+    perPage: 10,
+  });
+  const ESCALATION_RULES_PER_PAGE = 10;
+
+  // Escalation rule filter states
+  const [escalationFilterIssueTypeId, setEscalationFilterIssueTypeId] = useState('');
+  const [escalationFilterCategoryId, setEscalationFilterCategoryId] = useState('');
+  const [isEscalationFilterDialogOpen, setIsEscalationFilterDialogOpen] = useState(false);
+  const [pendingEscalationFilterIssueTypeId, setPendingEscalationFilterIssueTypeId] = useState('');
+  const [pendingEscalationFilterCategoryId, setPendingEscalationFilterCategoryId] = useState('');
+
   const {
     handleSubmit,
     formState: { errors },
@@ -201,35 +230,35 @@ export const ResolutionEscalationTab: React.FC = () => {
     defaultValues: {
       categoryIds: [],
       escalationLevels: {
-        e1: { users: [], priorities: { 
+        e1: { users: [], copyTo: [], priorities: { 
           p1: { days: 0, hours: 0, minutes: 0 }, 
           p2: { days: 0, hours: 0, minutes: 0 }, 
           p3: { days: 0, hours: 0, minutes: 0 }, 
           p4: { days: 0, hours: 0, minutes: 0 }, 
           p5: { days: 0, hours: 0, minutes: 0 } 
         }},
-        e2: { users: [], priorities: { 
+        e2: { users: [], copyTo: [], priorities: { 
           p1: { days: 0, hours: 0, minutes: 0 }, 
           p2: { days: 0, hours: 0, minutes: 0 }, 
           p3: { days: 0, hours: 0, minutes: 0 }, 
           p4: { days: 0, hours: 0, minutes: 0 }, 
           p5: { days: 0, hours: 0, minutes: 0 } 
         }},
-        e3: { users: [], priorities: { 
+        e3: { users: [], copyTo: [], priorities: { 
           p1: { days: 0, hours: 0, minutes: 0 }, 
           p2: { days: 0, hours: 0, minutes: 0 }, 
           p3: { days: 0, hours: 0, minutes: 0 }, 
           p4: { days: 0, hours: 0, minutes: 0 }, 
           p5: { days: 0, hours: 0, minutes: 0 } 
         }},
-        e4: { users: [], priorities: { 
+        e4: { users: [], copyTo: [], priorities: { 
           p1: { days: 0, hours: 0, minutes: 0 }, 
           p2: { days: 0, hours: 0, minutes: 0 }, 
           p3: { days: 0, hours: 0, minutes: 0 }, 
           p4: { days: 0, hours: 0, minutes: 0 }, 
           p5: { days: 0, hours: 0, minutes: 0 } 
         }},
-        e5: { users: [], priorities: { 
+        e5: { users: [], copyTo: [], priorities: { 
           p1: { days: 0, hours: 0, minutes: 0 }, 
           p2: { days: 0, hours: 0, minutes: 0 }, 
           p3: { days: 0, hours: 0, minutes: 0 }, 
@@ -331,6 +360,40 @@ export const ResolutionEscalationTab: React.FC = () => {
     }
   };
 
+  // Load escalation rules from /crm/admin/assign_escalation.json
+  const loadEscalationRules = async (
+    page = 1,
+    issueTypeId = escalationFilterIssueTypeId,
+    categoryId = escalationFilterCategoryId,
+  ) => {
+    setEscalationRulesLoading(true);
+    try {
+      const params: Record<string, string | number> = {
+        page,
+        per_page: ESCALATION_RULES_PER_PAGE,
+        'q[esc_type_eq]': 'resolution',
+        'q[issue_related_to_eq]': activeFmProjectTab === 'fm' ? 'FM' : 'Project',
+      };
+      if (issueTypeId) params['q[issue_type_id_eq]'] = issueTypeId;
+      if (categoryId) params['q[category_id_eq]'] = categoryId;
+      const data = await ticketManagementAPI.getAssignEscalations(params);
+      setEscalationRulesList(data.complaint_workers || []);
+      if (data.pagination) {
+        setEscalationRulesPagination({
+          currentPage: data.pagination.current_page,
+          totalPages: data.pagination.total_pages,
+          totalEntries: data.pagination.total_entries,
+          perPage: data.pagination.per_page,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading escalation rules:', error);
+      toast.error('Failed to load escalation rules!');
+    } finally {
+      setEscalationRulesLoading(false);
+    }
+  };
+
   // Handle Create Assign Rule
   const handleCreateAssignRule = async () => {
     if (!assignRuleForm.issueType || !assignRuleForm.categoryType || !assignRuleForm.engineer) {
@@ -420,16 +483,26 @@ export const ResolutionEscalationTab: React.FC = () => {
     loadEscalationUsers();
     loadAssignRules(1, '', '', '');
     loadAssignRuleDropdowns();
+    loadEscalationRules(1, '', '');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
+
+  // Reload escalation rules when FM/Project tab changes
+  useEffect(() => {
+    loadEscalationRules(1, escalationFilterIssueTypeId, escalationFilterCategoryId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFmProjectTab]);
 
   // Handle success/error states
   useEffect(() => {
     if (success) {
       toast.success('Resolution escalation saved successfully!');
       reset();
+      setEscalationFormIssueTypeId('');
+      setEscalationFormCategoryTypeId('');
       dispatch(clearState());
       dispatch(fetchResolutionEscalations());
+      loadEscalationRules(1, '', '');
     }
     // if (error) {
     //   // Ensure error is a string for toast display
@@ -439,88 +512,55 @@ export const ResolutionEscalationTab: React.FC = () => {
     // }
   }, [success, error, reset, dispatch]);
 
-  // Filter rules based on selected category
-  useEffect(() => {
-    if (!selectedCategoryFilter || selectedCategoryFilter === 'all') {
-      setFilteredRules(resolutionEscalations);
-    } else {
-      const categoryId = parseInt(selectedCategoryFilter);
-      setFilteredRules(resolutionEscalations.filter(rule => rule.category_id === categoryId));
-    }
-  }, [selectedCategoryFilter, resolutionEscalations]);
-
   const onSubmit = async (data: ResolutionEscalationFormData) => {
     try {
-      // Ensure user account is loaded to get site_id
-      if (!userAccount?.site_id) {
-        toast.error('Unable to determine site ID from user account. Please refresh and try again!');
+      // Validate required fields
+      if (!escalationFormIssueTypeId) {
+        toast.error('Please select an Issue Type!');
+        return;
+      }
+      if (!escalationFormCategoryTypeId) {
+        toast.error('Please select a Category Type!');
         return;
       }
 
-      // Get site_id from user account API response
-      const siteId = userAccount.site_id;
-      
+      // Build escalation matrix dynamically
+      const escalationMatrixPayload: Record<string, any> = {};
+      const levels = ['e1', 'e2', 'e3', 'e4', 'e5'] as const;
+      levels.forEach(level => {
+        const levelData = data.escalationLevels[level];
+        escalationMatrixPayload[level] = {
+          name: level.toUpperCase(),
+          escalate_to_users: levelData.users.map(String),
+          copy_to: levelData.copyTo.map(String),
+          p1: String(convertToMinutes(levelData.priorities.p1.days, levelData.priorities.p1.hours, levelData.priorities.p1.minutes)),
+          p2: String(convertToMinutes(levelData.priorities.p2.days, levelData.priorities.p2.hours, levelData.priorities.p2.minutes)),
+          p3: String(convertToMinutes(levelData.priorities.p3.days, levelData.priorities.p3.hours, levelData.priorities.p3.minutes)),
+          p4: String(convertToMinutes(levelData.priorities.p4.days, levelData.priorities.p4.hours, levelData.priorities.p4.minutes)),
+          p5: String(convertToMinutes(levelData.priorities.p5.days, levelData.priorities.p5.hours, levelData.priorities.p5.minutes)),
+        };
+      });
+
       const payload = {
         complaint_worker: {
-          society_id: siteId,
           esc_type: 'resolution',
-          of_phase: 'pms',
-          of_atype: 'Pms::Site',
+          issue_related_to: activeFmProjectTab === 'fm' ? 'FM' : 'Project',
+          of_phase: 'post_possession',
+          issue_type_id: escalationFormIssueTypeId,
+          category_id: escalationFormCategoryTypeId,
         },
-        category_ids: data.categoryIds,
-        escalation_matrix: {
-          e1: {
-            name: 'E1',
-            escalate_to_users: data.escalationLevels.e1.users,
-            p1: convertToMinutes(data.escalationLevels.e1.priorities.p1.days, data.escalationLevels.e1.priorities.p1.hours, data.escalationLevels.e1.priorities.p1.minutes),
-            p2: convertToMinutes(data.escalationLevels.e1.priorities.p2.days, data.escalationLevels.e1.priorities.p2.hours, data.escalationLevels.e1.priorities.p2.minutes),
-            p3: convertToMinutes(data.escalationLevels.e1.priorities.p3.days, data.escalationLevels.e1.priorities.p3.hours, data.escalationLevels.e1.priorities.p3.minutes),
-            p4: convertToMinutes(data.escalationLevels.e1.priorities.p4.days, data.escalationLevels.e1.priorities.p4.hours, data.escalationLevels.e1.priorities.p4.minutes),
-            p5: convertToMinutes(data.escalationLevels.e1.priorities.p5.days, data.escalationLevels.e1.priorities.p5.hours, data.escalationLevels.e1.priorities.p5.minutes),
-          },
-          e2: {
-            name: 'E2',
-            escalate_to_users: data.escalationLevels.e2.users,
-            p1: convertToMinutes(data.escalationLevels.e2.priorities.p1.days, data.escalationLevels.e2.priorities.p1.hours, data.escalationLevels.e2.priorities.p1.minutes),
-            p2: convertToMinutes(data.escalationLevels.e2.priorities.p2.days, data.escalationLevels.e2.priorities.p2.hours, data.escalationLevels.e2.priorities.p2.minutes),
-            p3: convertToMinutes(data.escalationLevels.e2.priorities.p3.days, data.escalationLevels.e2.priorities.p3.hours, data.escalationLevels.e2.priorities.p3.minutes),
-            p4: convertToMinutes(data.escalationLevels.e2.priorities.p4.days, data.escalationLevels.e2.priorities.p4.hours, data.escalationLevels.e2.priorities.p4.minutes),
-            p5: convertToMinutes(data.escalationLevels.e2.priorities.p5.days, data.escalationLevels.e2.priorities.p5.hours, data.escalationLevels.e2.priorities.p5.minutes),
-          },
-          e3: {
-            name: 'E3',
-            escalate_to_users: data.escalationLevels.e3.users,
-            p1: convertToMinutes(data.escalationLevels.e3.priorities.p1.days, data.escalationLevels.e3.priorities.p1.hours, data.escalationLevels.e3.priorities.p1.minutes),
-            p2: convertToMinutes(data.escalationLevels.e3.priorities.p2.days, data.escalationLevels.e3.priorities.p2.hours, data.escalationLevels.e3.priorities.p2.minutes),
-            p3: convertToMinutes(data.escalationLevels.e3.priorities.p3.days, data.escalationLevels.e3.priorities.p3.hours, data.escalationLevels.e3.priorities.p3.minutes),
-            p4: convertToMinutes(data.escalationLevels.e3.priorities.p4.days, data.escalationLevels.e3.priorities.p4.hours, data.escalationLevels.e3.priorities.p4.minutes),
-            p5: convertToMinutes(data.escalationLevels.e3.priorities.p5.days, data.escalationLevels.e3.priorities.p5.hours, data.escalationLevels.e3.priorities.p5.minutes),
-          },
-          e4: {
-            name: 'E4',
-            escalate_to_users: data.escalationLevels.e4.users,
-            p1: convertToMinutes(data.escalationLevels.e4.priorities.p1.days, data.escalationLevels.e4.priorities.p1.hours, data.escalationLevels.e4.priorities.p1.minutes),
-            p2: convertToMinutes(data.escalationLevels.e4.priorities.p2.days, data.escalationLevels.e4.priorities.p2.hours, data.escalationLevels.e4.priorities.p2.minutes),
-            p3: convertToMinutes(data.escalationLevels.e4.priorities.p3.days, data.escalationLevels.e4.priorities.p3.hours, data.escalationLevels.e4.priorities.p3.minutes),
-            p4: convertToMinutes(data.escalationLevels.e4.priorities.p4.days, data.escalationLevels.e4.priorities.p4.hours, data.escalationLevels.e4.priorities.p4.minutes),
-            p5: convertToMinutes(data.escalationLevels.e4.priorities.p5.days, data.escalationLevels.e4.priorities.p5.hours, data.escalationLevels.e4.priorities.p5.minutes),
-          },
-          e5: {
-            name: 'E5',
-            escalate_to_users: data.escalationLevels.e5.users,
-            p1: convertToMinutes(data.escalationLevels.e5.priorities.p1.days, data.escalationLevels.e5.priorities.p1.hours, data.escalationLevels.e5.priorities.p1.minutes),
-            p2: convertToMinutes(data.escalationLevels.e5.priorities.p2.days, data.escalationLevels.e5.priorities.p2.hours, data.escalationLevels.e5.priorities.p2.minutes),
-            p3: convertToMinutes(data.escalationLevels.e5.priorities.p3.days, data.escalationLevels.e5.priorities.p3.hours, data.escalationLevels.e5.priorities.p3.minutes),
-            p4: convertToMinutes(data.escalationLevels.e5.priorities.p4.days, data.escalationLevels.e5.priorities.p4.hours, data.escalationLevels.e5.priorities.p4.minutes),
-            p5: convertToMinutes(data.escalationLevels.e5.priorities.p5.days, data.escalationLevels.e5.priorities.p5.hours, data.escalationLevels.e5.priorities.p5.minutes),
-          },
-        }
+        escalation_matrix: escalationMatrixPayload,
       };
 
       console.log('Resolution escalation payload:', JSON.stringify(payload, null, 2));
-      console.log('Using site ID from user account:', siteId);
       
-      await dispatch(createResolutionEscalation(payload)).unwrap();
+      await ticketManagementAPI.createResolutionEscalationRule(payload);
+      toast.success('Resolution escalation created successfully!');
+      reset();
+      setEscalationFormIssueTypeId('');
+      setEscalationFormCategoryTypeId('');
+      loadAssignRules(1, '', '', '');
+      loadEscalationRules(1, '', '');
     } catch (error: unknown) {
       // Handle 422 error specifically for category already taken
       console.log('Full error object:', error);
@@ -634,65 +674,138 @@ export const ResolutionEscalationTab: React.FC = () => {
       }
       return [];
     };
+
+    // Support both old format (escalations with name/escalate_to_users) and new API format (escalation_matrix with level)
+    const escalations = rule.escalations || [];
+    const escalationMatrix = rule.escalation_matrix || [];
+    
+    const findLevel = (levelName: string) => {
+      // Try old format first
+      const oldFormat = escalations.find((e: any) => e.name === levelName);
+      if (oldFormat) return oldFormat;
+      // Try new API format
+      const newFormat = escalationMatrix.find((e: any) => e.level === levelName);
+      return newFormat || null;
+    };
+
+    // Helper to resolve a comma-separated name string (e.g. "Arijit Sinha, Ramesh Verma") to user IDs
+    const resolveNamesToIds = (nameStr: string): number[] => {
+      if (!nameStr || typeof nameStr !== 'string') return [];
+      const names = nameStr.split(',').map(n => n.trim()).filter(Boolean);
+      const ids: number[] = [];
+      names.forEach(name => {
+        const match = serviceEngineerOptions.find(
+          eng => eng.full_name.toLowerCase() === name.toLowerCase()
+        );
+        if (match) ids.push(match.id);
+      });
+      return ids;
+    };
+
+    const getLevelUsers = (levelName: string): number[] => {
+      const level = findLevel(levelName);
+      if (!level) return [];
+      // Old format has escalate_to_users (array of user IDs)
+      if (level.escalate_to_users) return safeParseUsers(level.escalate_to_users);
+      // New API format: escalation_to is a comma-separated string of names
+      if (level.escalation_to && typeof level.escalation_to === 'string') {
+        return resolveNamesToIds(level.escalation_to);
+      }
+      return [];
+    };
+
+    const getLevelCopyTo = (levelName: string): number[] => {
+      const level = findLevel(levelName);
+      if (!level) return [];
+      // Old format: copy_to is an array of user IDs
+      if (Array.isArray(level.copy_to)) return safeParseUsers(level.copy_to);
+      // Old format: copy_to is a JSON string of IDs
+      if (level.copy_to && typeof level.copy_to === 'string') {
+        // Try parsing as JSON array of IDs first
+        try {
+          const parsed = JSON.parse(level.copy_to);
+          if (Array.isArray(parsed) && parsed.length > 0 && !isNaN(Number(parsed[0]))) {
+            return safeParseUsers(parsed);
+          }
+        } catch {
+          // Not JSON — treat as comma-separated names (new API format)
+        }
+        return resolveNamesToIds(level.copy_to);
+      }
+      return [];
+    };
+
+    const getLevelPriority = (levelName: string, priority: string): number => {
+      const level = findLevel(levelName);
+      if (!level) return 0;
+      return level[priority] || 0;
+    };
     
     // Pre-populate form with existing data
     const formData: ResolutionEscalationFormData = {
       categoryIds: [rule.category_id],
       escalationLevels: {
         e1: {
-          users: safeParseUsers(rule.escalations.find((e: any) => e.name === 'E1')?.escalate_to_users),
+          users: getLevelUsers('E1'),
+          copyTo: getLevelCopyTo('E1'),
           priorities: {
-            p1: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E1')?.p1 || 0),
-            p2: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E1')?.p2 || 0),
-            p3: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E1')?.p3 || 0),
-            p4: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E1')?.p4 || 0),
-            p5: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E1')?.p5 || 0),
+            p1: convertFromMinutes(getLevelPriority('E1', 'p1')),
+            p2: convertFromMinutes(getLevelPriority('E1', 'p2')),
+            p3: convertFromMinutes(getLevelPriority('E1', 'p3')),
+            p4: convertFromMinutes(getLevelPriority('E1', 'p4')),
+            p5: convertFromMinutes(getLevelPriority('E1', 'p5')),
           }
         },
         e2: {
-          users: safeParseUsers(rule.escalations.find((e: any) => e.name === 'E2')?.escalate_to_users),
+          users: getLevelUsers('E2'),
+          copyTo: getLevelCopyTo('E2'),
           priorities: {
-            p1: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E2')?.p1 || 0),
-            p2: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E2')?.p2 || 0),
-            p3: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E2')?.p3 || 0),
-            p4: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E2')?.p4 || 0),
-            p5: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E2')?.p5 || 0),
+            p1: convertFromMinutes(getLevelPriority('E2', 'p1')),
+            p2: convertFromMinutes(getLevelPriority('E2', 'p2')),
+            p3: convertFromMinutes(getLevelPriority('E2', 'p3')),
+            p4: convertFromMinutes(getLevelPriority('E2', 'p4')),
+            p5: convertFromMinutes(getLevelPriority('E2', 'p5')),
           }
         },
         e3: {
-          users: safeParseUsers(rule.escalations.find((e: any) => e.name === 'E3')?.escalate_to_users),
+          users: getLevelUsers('E3'),
+          copyTo: getLevelCopyTo('E3'),
           priorities: {
-            p1: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E3')?.p1 || 0),
-            p2: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E3')?.p2 || 0),
-            p3: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E3')?.p3 || 0),
-            p4: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E3')?.p4 || 0),
-            p5: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E3')?.p5 || 0),
+            p1: convertFromMinutes(getLevelPriority('E3', 'p1')),
+            p2: convertFromMinutes(getLevelPriority('E3', 'p2')),
+            p3: convertFromMinutes(getLevelPriority('E3', 'p3')),
+            p4: convertFromMinutes(getLevelPriority('E3', 'p4')),
+            p5: convertFromMinutes(getLevelPriority('E3', 'p5')),
           }
         },
         e4: {
-          users: safeParseUsers(rule.escalations.find((e: any) => e.name === 'E4')?.escalate_to_users),
+          users: getLevelUsers('E4'),
+          copyTo: getLevelCopyTo('E4'),
           priorities: {
-            p1: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E4')?.p1 || 0),
-            p2: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E4')?.p2 || 0),
-            p3: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E4')?.p3 || 0),
-            p4: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E4')?.p4 || 0),
-            p5: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E4')?.p5 || 0),
+            p1: convertFromMinutes(getLevelPriority('E4', 'p1')),
+            p2: convertFromMinutes(getLevelPriority('E4', 'p2')),
+            p3: convertFromMinutes(getLevelPriority('E4', 'p3')),
+            p4: convertFromMinutes(getLevelPriority('E4', 'p4')),
+            p5: convertFromMinutes(getLevelPriority('E4', 'p5')),
           }
         },
         e5: {
-          users: safeParseUsers(rule.escalations.find((e: any) => e.name === 'E5')?.escalate_to_users),
+          users: getLevelUsers('E5'),
+          copyTo: getLevelCopyTo('E5'),
           priorities: {
-            p1: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E5')?.p1 || 0),
-            p2: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E5')?.p2 || 0),
-            p3: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E5')?.p3 || 0),
-            p4: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E5')?.p4 || 0),
-            p5: convertFromMinutes(rule.escalations.find((e: any) => e.name === 'E5')?.p5 || 0),
+            p1: convertFromMinutes(getLevelPriority('E5', 'p1')),
+            p2: convertFromMinutes(getLevelPriority('E5', 'p2')),
+            p3: convertFromMinutes(getLevelPriority('E5', 'p3')),
+            p4: convertFromMinutes(getLevelPriority('E5', 'p4')),
+            p5: convertFromMinutes(getLevelPriority('E5', 'p5')),
           }
         },
       }
     };
 
     reset(formData);
+    setEditEscalationIssueTypeId(String(rule.issue_type_id || ''));
+    setEditEscalationCategoryTypeId(String(rule.category_id || ''));
     setIsEditDialogOpen(true);
   };
 
@@ -700,64 +813,40 @@ export const ResolutionEscalationTab: React.FC = () => {
     if (!editingRule) return;
 
     try {
+      const levels = ['e1', 'e2', 'e3', 'e4', 'e5'] as const;
+      const escalationMatrixUpdate: Record<string, any> = {};
+      levels.forEach(level => {
+        const levelData = data.escalationLevels[level];
+        escalationMatrixUpdate[level] = {
+          name: level.toUpperCase(),
+          escalate_to_users: levelData.users.map(String),
+          copy_to: levelData.copyTo.map(String),
+          p1: String(convertToMinutes(levelData.priorities.p1.days, levelData.priorities.p1.hours, levelData.priorities.p1.minutes)),
+          p2: String(convertToMinutes(levelData.priorities.p2.days, levelData.priorities.p2.hours, levelData.priorities.p2.minutes)),
+          p3: String(convertToMinutes(levelData.priorities.p3.days, levelData.priorities.p3.hours, levelData.priorities.p3.minutes)),
+          p4: String(convertToMinutes(levelData.priorities.p4.days, levelData.priorities.p4.hours, levelData.priorities.p4.minutes)),
+          p5: String(convertToMinutes(levelData.priorities.p5.days, levelData.priorities.p5.hours, levelData.priorities.p5.minutes)),
+        };
+      });
+
       const payload = {
         id: editingRule.id,
         complaint_worker: {
-          category_id: data.categoryIds[0],
+          esc_type: 'resolution',
+          issue_related_to: activeFmProjectTab === 'fm' ? 'FM' : 'Project',
+          of_phase: 'post_possession',
+          issue_type_id: editEscalationIssueTypeId,
+          category_id: editEscalationCategoryTypeId,
         },
-        escalation_matrix: {
-          e1: {
-            name: 'E1',
-            escalate_to_users: data.escalationLevels.e1.users,
-            p1: convertToMinutes(data.escalationLevels.e1.priorities.p1.days, data.escalationLevels.e1.priorities.p1.hours, data.escalationLevels.e1.priorities.p1.minutes),
-            p2: convertToMinutes(data.escalationLevels.e1.priorities.p2.days, data.escalationLevels.e1.priorities.p2.hours, data.escalationLevels.e1.priorities.p2.minutes),
-            p3: convertToMinutes(data.escalationLevels.e1.priorities.p3.days, data.escalationLevels.e1.priorities.p3.hours, data.escalationLevels.e1.priorities.p3.minutes),
-            p4: convertToMinutes(data.escalationLevels.e1.priorities.p4.days, data.escalationLevels.e1.priorities.p4.hours, data.escalationLevels.e1.priorities.p4.minutes),
-            p5: convertToMinutes(data.escalationLevels.e1.priorities.p5.days, data.escalationLevels.e1.priorities.p5.hours, data.escalationLevels.e1.priorities.p5.minutes),
-          },
-          e2: {
-            name: 'E2',
-            escalate_to_users: data.escalationLevels.e2.users,
-            p1: convertToMinutes(data.escalationLevels.e2.priorities.p1.days, data.escalationLevels.e2.priorities.p1.hours, data.escalationLevels.e2.priorities.p1.minutes),
-            p2: convertToMinutes(data.escalationLevels.e2.priorities.p2.days, data.escalationLevels.e2.priorities.p2.hours, data.escalationLevels.e2.priorities.p2.minutes),
-            p3: convertToMinutes(data.escalationLevels.e2.priorities.p3.days, data.escalationLevels.e2.priorities.p3.hours, data.escalationLevels.e2.priorities.p3.minutes),
-            p4: convertToMinutes(data.escalationLevels.e2.priorities.p4.days, data.escalationLevels.e2.priorities.p4.hours, data.escalationLevels.e2.priorities.p4.minutes),
-            p5: convertToMinutes(data.escalationLevels.e2.priorities.p5.days, data.escalationLevels.e2.priorities.p5.hours, data.escalationLevels.e2.priorities.p5.minutes),
-          },
-          e3: {
-            name: 'E3',
-            escalate_to_users: data.escalationLevels.e3.users,
-            p1: convertToMinutes(data.escalationLevels.e3.priorities.p1.days, data.escalationLevels.e3.priorities.p1.hours, data.escalationLevels.e3.priorities.p1.minutes),
-            p2: convertToMinutes(data.escalationLevels.e3.priorities.p2.days, data.escalationLevels.e3.priorities.p2.hours, data.escalationLevels.e3.priorities.p2.minutes),
-            p3: convertToMinutes(data.escalationLevels.e3.priorities.p3.days, data.escalationLevels.e3.priorities.p3.hours, data.escalationLevels.e3.priorities.p3.minutes),
-            p4: convertToMinutes(data.escalationLevels.e3.priorities.p4.days, data.escalationLevels.e3.priorities.p4.hours, data.escalationLevels.e3.priorities.p4.minutes),
-            p5: convertToMinutes(data.escalationLevels.e3.priorities.p5.days, data.escalationLevels.e3.priorities.p5.hours, data.escalationLevels.e3.priorities.p5.minutes),
-          },
-          e4: {
-            name: 'E4',
-            escalate_to_users: data.escalationLevels.e4.users,
-            p1: convertToMinutes(data.escalationLevels.e4.priorities.p1.days, data.escalationLevels.e4.priorities.p1.hours, data.escalationLevels.e4.priorities.p1.minutes),
-            p2: convertToMinutes(data.escalationLevels.e4.priorities.p2.days, data.escalationLevels.e4.priorities.p2.hours, data.escalationLevels.e4.priorities.p2.minutes),
-            p3: convertToMinutes(data.escalationLevels.e4.priorities.p3.days, data.escalationLevels.e4.priorities.p3.hours, data.escalationLevels.e4.priorities.p3.minutes),
-            p4: convertToMinutes(data.escalationLevels.e4.priorities.p4.days, data.escalationLevels.e4.priorities.p4.hours, data.escalationLevels.e4.priorities.p4.minutes),
-            p5: convertToMinutes(data.escalationLevels.e4.priorities.p5.days, data.escalationLevels.e4.priorities.p5.hours, data.escalationLevels.e4.priorities.p5.minutes),
-          },
-          e5: {
-            name: 'E5',
-            escalate_to_users: data.escalationLevels.e5.users,
-            p1: convertToMinutes(data.escalationLevels.e5.priorities.p1.days, data.escalationLevels.e5.priorities.p1.hours, data.escalationLevels.e5.priorities.p1.minutes),
-            p2: convertToMinutes(data.escalationLevels.e5.priorities.p2.days, data.escalationLevels.e5.priorities.p2.hours, data.escalationLevels.e5.priorities.p2.minutes),
-            p3: convertToMinutes(data.escalationLevels.e5.priorities.p3.days, data.escalationLevels.e5.priorities.p3.hours, data.escalationLevels.e5.priorities.p3.minutes),
-            p4: convertToMinutes(data.escalationLevels.e5.priorities.p4.days, data.escalationLevels.e5.priorities.p4.hours, data.escalationLevels.e5.priorities.p4.minutes),
-            p5: convertToMinutes(data.escalationLevels.e5.priorities.p5.days, data.escalationLevels.e5.priorities.p5.hours, data.escalationLevels.e5.priorities.p5.minutes),
-          },
-        }
+        escalation_matrix: escalationMatrixUpdate,
       };
 
-      await dispatch(updateResolutionEscalation(payload));
+      await ticketManagementAPI.createResolutionEscalationRule(payload as any);
+      toast.success('Resolution escalation updated successfully!');
       setIsEditDialogOpen(false);
       setEditingRule(null);
       dispatch(fetchResolutionEscalations());
+      loadEscalationRules(escalationRulesPagination.currentPage, escalationFilterIssueTypeId, escalationFilterCategoryId);
     } catch (err) {
       console.error('Error updating resolution escalation:', err);
       toast.error('Failed to update resolution escalation. Please try again!');
@@ -766,25 +855,19 @@ export const ResolutionEscalationTab: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      await dispatch(deleteResolutionEscalation(id));
+      await ticketManagementAPI.deleteComplaintWorker(id.toString());
       toast.success('Resolution escalation deleted successfully!');
+      loadEscalationRules(escalationRulesPagination.currentPage, escalationFilterIssueTypeId, escalationFilterCategoryId);
     } catch (err) {
       console.error('Error deleting resolution escalation:', err);
       toast.error('Failed to delete resolution escalation. Please try again!');
     }
   };
 
-  const handleFilter = () => {
-    // Filter is applied automatically through useEffect
-  };
-
-  const handleResetFilter = () => {
-    setSelectedCategoryFilter('');
-  };
-
   // Options for react-select
   const categoryOptions = categories?.helpdesk_categories?.map(cat => ({ value: cat.id, label: cat.name })) || [];
-  const userOptions = escalationUsers?.map(user => ({ value: user.id, label: user.full_name })) || [];
+  // Use serviceEngineerOptions (from /dropdown/service_engineers) for escalation dropdowns
+  const userOptions = serviceEngineerOptions?.map(eng => ({ value: eng.id, label: eng.full_name })) || [];
 
   const escalationLevels = ['e1', 'e2', 'e3', 'e4', 'e5'] as const;
   const priorities = ['p1', 'p2', 'p3', 'p4', 'p5'] as const;
@@ -1143,7 +1226,7 @@ export const ResolutionEscalationTab: React.FC = () => {
           </div>
 
           {/* Issue Type + Category Type filter row */}
-          <div className="flex gap-3 p-4 bg-white border-b border-gray-200">
+          {/* <div className="flex gap-3 p-4 bg-white border-b border-gray-200">
             <Select value={escalationIssueTypeFilter} onValueChange={setEscalationIssueTypeFilter}>
               <SelectTrigger className="w-48 h-9 text-sm border-gray-300">
                 <SelectValue placeholder="Select Issue Type" />
@@ -1165,7 +1248,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           <div className="p-6 space-y-6">
             {/* Create Form */}
@@ -1175,24 +1258,67 @@ export const ResolutionEscalationTab: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                  {/* Category Selection */}
-                  <div>
-                    <Label className="text-sm font-medium">Select Categories</Label>
-                    <ReactSelect
-                      isMulti
-                      options={categoryOptions}
-                      value={categoryOptions.filter(option => watch('categoryIds')?.includes(option.value))}
-                      onChange={(selected) => {
-                        const selectedIds = selected ? selected.map(s => s.value) : [];
-                        setValue('categoryIds', selectedIds, { shouldValidate: true });
-                      }}
-                      className="mt-1"
-                      placeholder="Select categories..."
-                      isLoading={categoriesLoading}
-                    />
-                    {errors.categoryIds && (
-                      <p className="text-sm text-red-500 mt-1">{errors.categoryIds.message}</p>
-                    )}
+                  {/* Issue Type + Category Type + Category Selection row */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Issue Type Dropdown */}
+                    <div>
+                      <Label className="text-sm font-medium">Issue Type</Label>
+                      <Select
+                        value={escalationFormIssueTypeId}
+                        onValueChange={setEscalationFormIssueTypeId}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select Issue Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {issueTypeOptions.map((it) => (
+                            <SelectItem key={it.id} value={it.id.toString()}>
+                              {it.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Category Type Dropdown */}
+                    <div>
+                      <Label className="text-sm font-medium">Category Type</Label>
+                      <Select
+                        value={escalationFormCategoryTypeId}
+                        onValueChange={setEscalationFormCategoryTypeId}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select Category Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categoryDropdownOptions.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id.toString()}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Select Categories (multi-select) */}
+                    {/* <div>
+                      <Label className="text-sm font-medium">Select Categories</Label>
+                      <ReactSelect
+                        isMulti
+                        options={categoryOptions}
+                        value={categoryOptions.filter(option => watch('categoryIds')?.includes(option.value))}
+                        onChange={(selected) => {
+                          const selectedIds = selected ? selected.map(s => s.value) : [];
+                          setValue('categoryIds', selectedIds, { shouldValidate: true });
+                        }}
+                        className="mt-1"
+                        placeholder="Select categories..."
+                        isLoading={categoriesLoading}
+                      />
+                      {errors.categoryIds && (
+                        <p className="text-sm text-red-500 mt-1">{errors.categoryIds.message}</p>
+                      )}
+                    </div> */}
                   </div>
 
                   {/* Escalation Matrix Table */}
@@ -1202,6 +1328,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                         <TableRow className="bg-gray-50">
                           <TableHead className="font-semibold text-center border-r">Levels</TableHead>
                           <TableHead className="font-semibold text-center border-r">Escalation To</TableHead>
+                          <TableHead className="font-semibold text-center border-r">Copy To</TableHead>
                           <TableHead className="font-semibold text-center border-r" colSpan={3}>P1</TableHead>
                           <TableHead className="font-semibold text-center border-r" colSpan={3}>P2</TableHead>
                           <TableHead className="font-semibold text-center border-r" colSpan={3}>P3</TableHead>
@@ -1209,6 +1336,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                           <TableHead className="font-semibold text-center" colSpan={3}>P5</TableHead>
                         </TableRow>
                         <TableRow className="bg-gray-50">
+                          <TableHead className="border-r"></TableHead>
                           <TableHead className="border-r"></TableHead>
                           <TableHead className="border-r"></TableHead>
                           {priorities.map((priority) => (
@@ -1230,51 +1358,43 @@ export const ResolutionEscalationTab: React.FC = () => {
                                 options={userOptions}
                                 value={userOptions.filter(option => watch(`escalationLevels.${level}.users`)?.includes(option.value))}
                                 onChange={(selected) => {
-                                  const selectedUserIds = selected ? selected.map(s => s.value) : [];
-                                  setValue(`escalationLevels.${level}.users`, selectedUserIds, { shouldValidate: true });
+                                  const selectedIds = selected ? selected.map(s => s.value) : [];
+                                  setValue(`escalationLevels.${level}.users`, selectedIds, { shouldValidate: true });
                                 }}
-                                placeholder="Select up to 15 Options..."
-                                isLoading={loadingUsers}
-                                className="min-w-[250px]"
+                                placeholder="Escalate to..."
+                                isLoading={serviceEngineerOptions.length === 0}
+                                className="min-w-[200px]"
                                 menuPlacement="auto"
                                 maxMenuHeight={150}
                                 styles={{
-                                  control: (base) => ({
-                                    ...base,
-                                    minHeight: '32px',
-                                    fontSize: '14px',
-                                    border: 'none',
-                                    boxShadow: 'none'
-                                  }),
-                                  multiValue: (base) => ({
-                                    ...base,
-                                    fontSize: '12px'
-                                  }),
-                                  menu: (base) => ({
-                                    ...base,
-                                    zIndex: 50,
-                                    position: 'relative'
-                                  }),
-                                  menuList: (base) => ({
-                                    ...base,
-                                    maxHeight: '150px',
-                                    overflowY: 'auto'
-                                  }),
-                                  option: (base, state) => ({
-                                    ...base,
-                                    fontSize: '14px',
-                                    padding: '8px 12px',
-                                    backgroundColor: state.isSelected
-                                      ? '#3b82f6'
-                                      : state.isFocused
-                                        ? '#e5e7eb'
-                                        : 'white',
-                                    color: state.isSelected ? 'white' : '#374151',
-                                    cursor: 'pointer',
-                                    '&:hover': {
-                                      backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
-                                    }
-                                  })
+                                  control: (base) => ({ ...base, minHeight: '32px', fontSize: '13px', border: 'none', boxShadow: 'none' }),
+                                  multiValue: (base) => ({ ...base, fontSize: '11px' }),
+                                  menu: (base) => ({ ...base, zIndex: 50, position: 'relative' }),
+                                  menuList: (base) => ({ ...base, maxHeight: '150px', overflowY: 'auto' }),
+                                  option: (base, state) => ({ ...base, fontSize: '13px', padding: '6px 10px', backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#e5e7eb' : 'white', color: state.isSelected ? 'white' : '#374151', cursor: 'pointer' })
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell className="p-2 border-r">
+                              <ReactSelect
+                                isMulti
+                                options={userOptions}
+                                value={userOptions.filter(option => watch(`escalationLevels.${level}.copyTo`)?.includes(option.value))}
+                                onChange={(selected) => {
+                                  const selectedIds = selected ? selected.map(s => s.value) : [];
+                                  setValue(`escalationLevels.${level}.copyTo`, selectedIds, { shouldValidate: true });
+                                }}
+                                placeholder="Copy to..."
+                                isLoading={serviceEngineerOptions.length === 0}
+                                className="min-w-[200px]"
+                                menuPlacement="auto"
+                                maxMenuHeight={150}
+                                styles={{
+                                  control: (base) => ({ ...base, minHeight: '32px', fontSize: '13px', border: 'none', boxShadow: 'none' }),
+                                  multiValue: (base) => ({ ...base, fontSize: '11px' }),
+                                  menu: (base) => ({ ...base, zIndex: 50, position: 'relative' }),
+                                  menuList: (base) => ({ ...base, maxHeight: '150px', overflowY: 'auto' }),
+                                  option: (base, state) => ({ ...base, fontSize: '13px', padding: '6px 10px', backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#e5e7eb' : 'white', color: state.isSelected ? 'white' : '#374151', cursor: 'pointer' })
                                 }}
                               />
                             </TableCell>
@@ -1326,60 +1446,47 @@ export const ResolutionEscalationTab: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Filter Section */}
+            {/* Escalation Rules Display */}
             <Card>
-              <CardHeader>
-                <CardTitle>Filter</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-end space-x-4">
-                  <div className="flex-1">
-                    <Label className="text-sm font-medium">Category Type</Label>
-                    <Select value={selectedCategoryFilter} onValueChange={setSelectedCategoryFilter}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select Category Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categories?.helpdesk_categories?.map((category) => (
-                          <SelectItem key={category.id} value={category.id.toString()}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button onClick={handleFilter} variant="default" className="bg-purple-600 hover:bg-purple-700 text-white">
-                      Apply
-                    </Button>
-                    <Button onClick={handleResetFilter} variant="outline">
-                      Reset
-                    </Button>
-                  </div>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Escalation Rules</CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-1 h-9 px-4 text-sm border-gray-300"
+                    onClick={() => {
+                      setPendingEscalationFilterIssueTypeId(escalationFilterIssueTypeId);
+                      setPendingEscalationFilterCategoryId(escalationFilterCategoryId);
+                      setIsEscalationFilterDialogOpen(true);
+                    }}
+                  >
+                    <Filter className="h-4 w-4" />
+                    Filter
+                    {(escalationFilterIssueTypeId || escalationFilterCategoryId) && (
+                      <span className="ml-1 bg-[#C72030] text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">!</span>
+                    )}
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Rules Display */}
-            <Card>
+              </CardHeader>
               <CardContent className="p-0">
-                {fetchLoading ? (
-                  <div className="text-center py-8">Loading rules...</div>
-                ) : filteredRules.length === 0 ? (
+                {escalationRulesLoading ? (
+                  <div className="text-center py-8 text-gray-500">Loading...</div>
+                ) : escalationRulesList.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">No resolution escalation rules found</div>
                 ) : (
                   <div className="space-y-0">
-                    {filteredRules.map((rule, index) => {
-                      const categoryName = categories?.helpdesk_categories?.find(cat => cat.id === rule.category_id)?.name || 'Unknown';
-
+                    {escalationRulesList.map((rule, index) => {
+                      const categoryName = rule.category_type || rule.category?.name || 'Unknown';
+                      const issueTypeName = typeof rule.issue_type === 'string' ? rule.issue_type : rule.issue_type?.name || '-';
                       return (
                         <div key={rule.id} className="border-b last:border-b-0">
                           <div className="flex items-center justify-between p-4 bg-gray-50">
                             <div className="flex items-center space-x-4">
                               <span className="font-semibold text-purple-600">Rule {index + 1}</span>
                               <div className="flex items-center space-x-4 text-sm">
+                                <span><strong>Issue Type:</strong> {issueTypeName}</span>
                                 <span><strong>Category Type:</strong> {categoryName}</span>
+                                {/* <span><strong>Service Engineer:</strong> {rule.service_engineer_name || '-'}</span> */}
                               </div>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -1422,6 +1529,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                                 <TableRow className="bg-gray-100">
                                   <TableHead className="font-semibold text-center w-20 border-r">Levels</TableHead>
                                   <TableHead className="font-semibold text-center border-r">Escalation To</TableHead>
+                                  <TableHead className="font-semibold text-center border-r">Copy To</TableHead>
                                   <TableHead className="font-semibold text-center w-32 border-r">P1</TableHead>
                                   <TableHead className="font-semibold text-center w-32 border-r">P2</TableHead>
                                   <TableHead className="font-semibold text-center w-32 border-r">P3</TableHead>
@@ -1430,59 +1538,75 @@ export const ResolutionEscalationTab: React.FC = () => {
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {rule.escalations.map((escalation) => {
-                                  let escalateToUsers: (string | number)[] = [];
-                                  if (escalation.escalate_to_users) {
-                                    try {
-                                      if (typeof escalation.escalate_to_users === 'string') {
-                                        escalateToUsers = JSON.parse(escalation.escalate_to_users);
-                                      } else if (Array.isArray(escalation.escalate_to_users)) {
-                                        escalateToUsers = escalation.escalate_to_users;
+                                {['E1', 'E2', 'E3', 'E4', 'E5'].map((levelName) => {
+                                  const matrixData = (rule.escalation_matrix || rule.escalations || []);
+                                  // Find matching level from API data (new format uses 'level', old uses 'name')
+                                  const escalation = matrixData.find((e: any) => 
+                                    (e.level || e.name || '').toUpperCase() === levelName
+                                  );
+
+                                  let escalationToDisplay = '-';
+                                  let copyToDisplay = '-';
+
+                                  if (escalation) {
+                                    if (escalation.escalation_to !== undefined) {
+                                      // New API format: escalation_to is already a string name
+                                      escalationToDisplay = escalation.escalation_to || '-';
+                                      copyToDisplay = escalation.copy_to || '-';
+                                    } else if (escalation.escalate_to_users) {
+                                      // Old API format: resolve user IDs to names
+                                      let escalateToUsers: (string | number)[] = [];
+                                      try {
+                                        if (typeof escalation.escalate_to_users === 'string') {
+                                          escalateToUsers = JSON.parse(escalation.escalate_to_users);
+                                        } else if (Array.isArray(escalation.escalate_to_users)) {
+                                          escalateToUsers = escalation.escalate_to_users;
+                                        }
+                                      } catch (error) {
+                                        console.error('Error parsing escalate_to_users:', error);
+                                        escalateToUsers = [];
                                       }
-                                    } catch (error) {
-                                      console.error('Error parsing escalate_to_users:', error);
-                                      escalateToUsers = [];
+                                      escalationToDisplay = Array.isArray(escalateToUsers) && escalateToUsers.length > 0
+                                        ? escalateToUsers.map((userId: string | number) => {
+                                            const userIdNum = typeof userId === 'string' ? parseInt(userId) : userId;
+                                            const user = escalationUsers?.find(u => u.id === userIdNum);
+                                            return user ? user.full_name : `User ${userId}`;
+                                          }).join(', ')
+                                        : '-';
                                     }
                                   }
 
-                                  const userNames = Array.isArray(escalateToUsers)
-                                    ? escalateToUsers.map((userId: string | number) => {
-                                        const userIdNum = typeof userId === 'string' ? parseInt(userId) : userId;
-                                        const user = escalationUsers?.find(u => u.id === userIdNum);
-                                        return user ? user.full_name : `User ${userId}`;
-                                      }).join(', ')
-                                    : '';
-
                                   return (
-                                    <TableRow key={escalation.id} className="border-b">
-                                      <TableCell className="font-medium text-center border-r">{escalation.name}</TableCell>
-                                      <TableCell className="text-center border-r">{userNames || '-'}</TableCell>
+                                    <TableRow key={levelName} className="border-b">
+                                      <TableCell className="font-medium text-center border-r">{levelName}</TableCell>
+                                      <TableCell className="text-center border-r">{escalationToDisplay}</TableCell>
+                                      <TableCell className="text-center border-r">{copyToDisplay}</TableCell>
                                       <TableCell className="text-center text-sm border-r">
-                                        {escalation.p1 ? (() => {
+                                        {escalation?.p1 ? (() => {
                                           const { days, hours, minutes } = convertFromMinutes(escalation.p1);
                                           return `${days}d ${hours}h ${minutes}m`;
                                         })() : '-'}
                                       </TableCell>
                                       <TableCell className="text-center text-sm border-r">
-                                        {escalation.p2 ? (() => {
+                                        {escalation?.p2 ? (() => {
                                           const { days, hours, minutes } = convertFromMinutes(escalation.p2);
                                           return `${days}d ${hours}h ${minutes}m`;
                                         })() : '-'}
                                       </TableCell>
                                       <TableCell className="text-center text-sm border-r">
-                                        {escalation.p3 ? (() => {
+                                        {escalation?.p3 ? (() => {
                                           const { days, hours, minutes } = convertFromMinutes(escalation.p3);
                                           return `${days}d ${hours}h ${minutes}m`;
                                         })() : '-'}
                                       </TableCell>
                                       <TableCell className="text-center text-sm border-r">
-                                        {escalation.p4 ? (() => {
+                                        {escalation?.p4 ? (() => {
                                           const { days, hours, minutes } = convertFromMinutes(escalation.p4);
                                           return `${days}d ${hours}h ${minutes}m`;
                                         })() : '-'}
                                       </TableCell>
                                       <TableCell className="text-center text-sm">
-                                        {escalation.p5 ? (() => {
+                                        {escalation?.p5 ? (() => {
                                           const { days, hours, minutes } = convertFromMinutes(escalation.p5);
                                           return `${days}d ${hours}h ${minutes}m`;
                                         })() : '-'}
@@ -1499,10 +1623,164 @@ export const ResolutionEscalationTab: React.FC = () => {
                   </div>
                 )}
               </CardContent>
+
+              {/* Pagination */}
+              {!escalationRulesLoading && escalationRulesPagination.totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t">
+                  <p className="text-sm text-gray-500">
+                    Showing {Math.min((escalationRulesPagination.currentPage - 1) * escalationRulesPagination.perPage + 1, escalationRulesPagination.totalEntries)}–{Math.min(escalationRulesPagination.currentPage * escalationRulesPagination.perPage, escalationRulesPagination.totalEntries)} of {escalationRulesPagination.totalEntries} rules
+                  </p>
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          className={escalationRulesPagination.currentPage === 1 ? 'pointer-events-none opacity-50 cursor-default' : 'cursor-pointer'}
+                          onClick={() => {
+                            if (escalationRulesPagination.currentPage > 1)
+                              loadEscalationRules(escalationRulesPagination.currentPage - 1, escalationFilterIssueTypeId, escalationFilterCategoryId);
+                          }}
+                        />
+                      </PaginationItem>
+                      {(() => {
+                        const items: React.ReactNode[] = [];
+                        const { currentPage, totalPages } = escalationRulesPagination;
+                        const showEllipsis = totalPages > 7;
+                        if (showEllipsis) {
+                          items.push(
+                            <PaginationItem key={1}>
+                              <PaginationLink isActive={currentPage === 1} onClick={() => loadEscalationRules(1, escalationFilterIssueTypeId, escalationFilterCategoryId)} className="cursor-pointer">{1}</PaginationLink>
+                            </PaginationItem>
+                          );
+                          if (currentPage <= 3) {
+                            for (let i = 2; i <= 4 && i < totalPages; i++) {
+                              items.push(
+                                <PaginationItem key={i}>
+                                  <PaginationLink isActive={currentPage === i} onClick={() => loadEscalationRules(i, escalationFilterIssueTypeId, escalationFilterCategoryId)} className="cursor-pointer">{i}</PaginationLink>
+                                </PaginationItem>
+                              );
+                            }
+                            if (totalPages > 5) items.push(<PaginationItem key="end-ellipsis"><PaginationEllipsis /></PaginationItem>);
+                          } else if (currentPage >= totalPages - 2) {
+                            items.push(<PaginationItem key="start-ellipsis"><PaginationEllipsis /></PaginationItem>);
+                            for (let i = totalPages - 3; i < totalPages; i++) {
+                              items.push(
+                                <PaginationItem key={i}>
+                                  <PaginationLink isActive={currentPage === i} onClick={() => loadEscalationRules(i, escalationFilterIssueTypeId, escalationFilterCategoryId)} className="cursor-pointer">{i}</PaginationLink>
+                                </PaginationItem>
+                              );
+                            }
+                          } else {
+                            items.push(<PaginationItem key="start-ellipsis"><PaginationEllipsis /></PaginationItem>);
+                            for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                              items.push(
+                                <PaginationItem key={i}>
+                                  <PaginationLink isActive={currentPage === i} onClick={() => loadEscalationRules(i, escalationFilterIssueTypeId, escalationFilterCategoryId)} className="cursor-pointer">{i}</PaginationLink>
+                                </PaginationItem>
+                              );
+                            }
+                            items.push(<PaginationItem key="end-ellipsis"><PaginationEllipsis /></PaginationItem>);
+                          }
+                          if (totalPages > 1) items.push(
+                            <PaginationItem key={totalPages}>
+                              <PaginationLink isActive={currentPage === totalPages} onClick={() => loadEscalationRules(totalPages, escalationFilterIssueTypeId, escalationFilterCategoryId)} className="cursor-pointer">{totalPages}</PaginationLink>
+                            </PaginationItem>
+                          );
+                        } else {
+                          for (let i = 1; i <= totalPages; i++) {
+                            items.push(
+                              <PaginationItem key={i}>
+                                <PaginationLink isActive={currentPage === i} onClick={() => loadEscalationRules(i, escalationFilterIssueTypeId, escalationFilterCategoryId)} className="cursor-pointer">{i}</PaginationLink>
+                              </PaginationItem>
+                            );
+                          }
+                        }
+                        return items;
+                      })()}
+                      <PaginationItem>
+                        <PaginationNext
+                          className={escalationRulesPagination.currentPage === escalationRulesPagination.totalPages ? 'pointer-events-none opacity-50 cursor-default' : 'cursor-pointer'}
+                          onClick={() => {
+                            if (escalationRulesPagination.currentPage < escalationRulesPagination.totalPages)
+                              loadEscalationRules(escalationRulesPagination.currentPage + 1, escalationFilterIssueTypeId, escalationFilterCategoryId);
+                          }}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
             </Card>
           </div>
         </div>
       )}
+
+      {/* ──────────────── ESCALATION RULE FILTER DIALOG ──────────────── */}
+      <Dialog open={isEscalationFilterDialogOpen} onOpenChange={setIsEscalationFilterDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filter Escalation Rules</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div>
+              <Label className="text-sm font-medium">Issue Type</Label>
+              <Select value={pendingEscalationFilterIssueTypeId} onValueChange={setPendingEscalationFilterIssueTypeId}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select Issue Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Issue Types</SelectItem>
+                  {issueTypeOptions.map(it => (
+                    <SelectItem key={it.id} value={it.id.toString()}>{it.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Category Type</Label>
+              <Select value={pendingEscalationFilterCategoryId} onValueChange={setPendingEscalationFilterCategoryId}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select Category Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categoryDropdownOptions.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4 border-t mt-2">
+            <Button
+              variant="outline"
+              className="border-[#C72030] text-[#C72030] hover:bg-[#C72030]/5"
+              onClick={() => {
+                setPendingEscalationFilterIssueTypeId('');
+                setPendingEscalationFilterCategoryId('');
+                setEscalationFilterIssueTypeId('');
+                setEscalationFilterCategoryId('');
+                setIsEscalationFilterDialogOpen(false);
+                loadEscalationRules(1, '', '');
+              }}
+            >
+              Reset
+            </Button>
+            <Button
+              className="bg-[#C72030] hover:bg-[#B01E2F] text-white px-8"
+              onClick={() => {
+                const it = pendingEscalationFilterIssueTypeId === 'all' ? '' : pendingEscalationFilterIssueTypeId;
+                const cat = pendingEscalationFilterCategoryId === 'all' ? '' : pendingEscalationFilterCategoryId;
+                setEscalationFilterIssueTypeId(it);
+                setEscalationFilterCategoryId(cat);
+                setIsEscalationFilterDialogOpen(false);
+                loadEscalationRules(1, it, cat);
+              }}
+            >
+              Apply
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ──────────────── ADD ASSIGN RULE MODAL ──────────────── */}
       <Dialog open={isAddAssignRuleOpen} onOpenChange={setIsAddAssignRuleOpen}>
@@ -1632,19 +1910,40 @@ export const ResolutionEscalationTab: React.FC = () => {
             <DialogTitle>Edit</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(handleUpdate)} className="space-y-6">
-            {/* Category Selection */}
-            <div>
-              <Label className="text-sm font-medium">Category Type</Label>
-              <ReactSelect
-                options={categoryOptions}
-                value={categoryOptions.filter(option => watch('categoryIds')?.includes(option.value))}
-                onChange={(selected) => {
-                  setValue('categoryIds', selected ? [selected.value] : []);
-                }}
-                className="mt-1"
-                placeholder="Select category..."
-                isLoading={categoriesLoading}
-              />
+            {/* Issue Type & Category Type Selection */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Issue Type</Label>
+                <Select
+                  value={editEscalationIssueTypeId}
+                  onValueChange={(v) => setEditEscalationIssueTypeId(v)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select Issue Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {issueTypeOptions.map(issue => (
+                      <SelectItem key={issue.id} value={issue.id.toString()}>{issue.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Category Type</Label>
+                <Select
+                  value={editEscalationCategoryTypeId}
+                  onValueChange={(v) => setEditEscalationCategoryTypeId(v)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select Category Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categoryDropdownOptions.map(cat => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Escalation Matrix Table */}
@@ -1654,6 +1953,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                   <TableRow className="bg-gray-50">
                     <TableHead className="font-semibold text-center border-r">Levels</TableHead>
                     <TableHead className="font-semibold text-center border-r">Escalation To</TableHead>
+                    <TableHead className="font-semibold text-center border-r">Copy To</TableHead>
                     <TableHead className="font-semibold text-center border-r" colSpan={3}>P1</TableHead>
                     <TableHead className="font-semibold text-center border-r" colSpan={3}>P2</TableHead>
                     <TableHead className="font-semibold text-center border-r" colSpan={3}>P3</TableHead>
@@ -1661,6 +1961,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                     <TableHead className="font-semibold text-center" colSpan={3}>P5</TableHead>
                   </TableRow>
                   <TableRow className="bg-gray-50">
+                    <TableHead className="border-r"></TableHead>
                     <TableHead className="border-r"></TableHead>
                     <TableHead className="border-r"></TableHead>
                     {priorities.map((priority) => (
@@ -1685,51 +1986,46 @@ export const ResolutionEscalationTab: React.FC = () => {
                             return currentUsers.includes(option.value);
                           })}
                           onChange={(selected) => {
-                            const selectedUserIds = selected ? selected.map(s => s.value) : [];
-                            setValue(`escalationLevels.${level}.users`, selectedUserIds, { shouldValidate: true });
+                            const selectedIds = selected ? selected.map(s => s.value) : [];
+                            setValue(`escalationLevels.${level}.users`, selectedIds, { shouldValidate: true });
                           }}
-                          placeholder="Select up to 15 Options..."
-                          isLoading={loadingUsers}
-                          className="min-w-[250px]"
+                          placeholder="Escalate to..."
+                          isLoading={serviceEngineerOptions.length === 0}
+                          className="min-w-[200px]"
                           menuPlacement="auto"
                           maxMenuHeight={150}
                           styles={{
-                            control: (base) => ({
-                              ...base,
-                              minHeight: '32px',
-                              fontSize: '14px',
-                              border: 'none',
-                              boxShadow: 'none'
-                            }),
-                            multiValue: (base) => ({
-                              ...base,
-                              fontSize: '12px'
-                            }),
-                            menu: (base) => ({
-                              ...base,
-                              zIndex: 50,
-                              position: 'relative'
-                            }),
-                            menuList: (base) => ({
-                              ...base,
-                              maxHeight: '150px',
-                              overflowY: 'auto'
-                            }),
-                            option: (base, state) => ({
-                              ...base,
-                              fontSize: '14px',
-                              padding: '8px 12px',
-                              backgroundColor: state.isSelected
-                                ? '#3b82f6'
-                                : state.isFocused
-                                  ? '#e5e7eb'
-                                  : 'white',
-                              color: state.isSelected ? 'white' : '#374151',
-                              cursor: 'pointer',
-                              '&:hover': {
-                                backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
-                              }
-                            })
+                            control: (base) => ({ ...base, minHeight: '32px', fontSize: '13px', border: 'none', boxShadow: 'none' }),
+                            multiValue: (base) => ({ ...base, fontSize: '11px' }),
+                            menu: (base) => ({ ...base, zIndex: 50, position: 'relative' }),
+                            menuList: (base) => ({ ...base, maxHeight: '150px', overflowY: 'auto' }),
+                            option: (base, state) => ({ ...base, fontSize: '13px', padding: '6px 10px', backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#e5e7eb' : 'white', color: state.isSelected ? 'white' : '#374151', cursor: 'pointer' })
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell className="p-2 border-r">
+                        <ReactSelect
+                          isMulti
+                          options={userOptions}
+                          value={userOptions.filter(option => {
+                            const currentCopyTo = watch(`escalationLevels.${level}.copyTo`) || [];
+                            return currentCopyTo.includes(option.value);
+                          })}
+                          onChange={(selected) => {
+                            const selectedIds = selected ? selected.map(s => s.value) : [];
+                            setValue(`escalationLevels.${level}.copyTo`, selectedIds, { shouldValidate: true });
+                          }}
+                          placeholder="Copy to..."
+                          isLoading={serviceEngineerOptions.length === 0}
+                          className="min-w-[200px]"
+                          menuPlacement="auto"
+                          maxMenuHeight={150}
+                          styles={{
+                            control: (base) => ({ ...base, minHeight: '32px', fontSize: '13px', border: 'none', boxShadow: 'none' }),
+                            multiValue: (base) => ({ ...base, fontSize: '11px' }),
+                            menu: (base) => ({ ...base, zIndex: 50, position: 'relative' }),
+                            menuList: (base) => ({ ...base, maxHeight: '150px', overflowY: 'auto' }),
+                            option: (base, state) => ({ ...base, fontSize: '13px', padding: '6px 10px', backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#e5e7eb' : 'white', color: state.isSelected ? 'white' : '#374151', cursor: 'pointer' })
                           }}
                         />
                       </TableCell>

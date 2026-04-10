@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Filter } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -28,523 +28,164 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── API Types ────────────────────────────────────────────────────────────────
 
-interface VisitorHistoryRecord {
-  id: number;
-  visitor_image: string | null;
-  guest_name: string;
-  guest_number: string;
-  building: string;
-  tower: string;
-  flat: string;
-  visited_to: string;
-  vehicle_number: string;
-  visitor_type: "Support Staff" | "Guest" | "Delivery" | "Contractor";
-  visit_purpose: string;
-  other_purpose: string;
-  service_provider: string;
-  master_status: "Checked In" | "Checked Out" | "Expected" | "Rejected";
-  host_status: "Approved" | "Pending" | "Rejected";
-  mode_of_approval: string;
-  created_date: string;
-  created_time: string;
-  in_date: string;
-  in_time: string;
-  in_gate: string;
-  marked_in_by: string;
-  out_date: string;
-  out_time: string;
-  out_gate: string;
-  marked_out_by: string;
-  checkin_date: string;
-  checkin_time: string;
-  checkout_date: string;
-  checkout_time: string;
+interface FilterOption {
+  label: string;
+  value: number | string;
 }
 
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
+interface ApiVisitor {
+  id: number;
+  guest_name: string;
+  guest_number: string;
+  guest_type: string;
+  visit_purpose: string | null;
+  guest_entry_time: string | null;
+  guest_exit_time: string | null;
+  approve: number;
+  approve_status: { status: string } | null;
+  notes: string;
+  guest_vehicle_number: string;
+  created_by: string | null;
+  created_at: string;
+  checkin_time: string | null;
+  checkout_time: string | null;
+  approval_mode: string | null;
+  building: { id: number; name: string } | null;
+  tower: { id: number; name: string } | null;
+  flat: { id: number; number: string } | null;
+  person_to_meet: {
+    id: string;
+    name: string;
+    flat_member_str: string;
+    mobile: string;
+  } | null;
+  entry_gate?: { id: number; name: string } | null;
+  exit_gate?: { id: number; name: string } | null;
+  marked_in_by: string | null;
+  marked_out_by: string | null;
+}
 
-const ALL_DATA: VisitorHistoryRecord[] = [
-  {
-    id: 1,
-    visitor_image: null,
-    guest_name: "Trst6",
-    guest_number: "9876543210",
-    building: "Block A",
-    tower: "Tower 1",
-    flat: "A/101",
-    visited_to: "Manoj Prajapati",
-    vehicle_number: "MH12AB1234",
-    visitor_type: "Support Staff",
-    visit_purpose: "Delivery Person",
-    other_purpose: "--",
-    service_provider: "Swiggy",
-    master_status: "Checked Out",
-    host_status: "Approved",
-    mode_of_approval: "OTP",
-    created_date: "09 Apr 2026",
-    created_time: "10:00 AM",
-    in_date: "09 Apr 2026",
-    in_time: "10:15 AM",
-    in_gate: "Gate 1",
-    marked_in_by: "Guard Ramesh",
-    out_date: "09 Apr 2026",
-    out_time: "11:00 AM",
-    out_gate: "Gate 1",
-    marked_out_by: "Guard Ramesh",
-    checkin_date: "09 Apr 2026",
-    checkin_time: "10:15 AM",
-    checkout_date: "09 Apr 2026",
-    checkout_time: "11:00 AM",
-  },
-  {
-    id: 2,
-    visitor_image: null,
-    guest_name: "Anil Kumar",
-    guest_number: "9876543211",
-    building: "Block A",
-    tower: "Tower 1",
-    flat: "A/102",
-    visited_to: "Manoj Prajapati",
-    vehicle_number: "--",
-    visitor_type: "Support Staff",
-    visit_purpose: "Vegetable Parcel",
-    other_purpose: "--",
-    service_provider: "Zomato",
-    master_status: "Checked In",
-    host_status: "Approved",
-    mode_of_approval: "OTP",
-    created_date: "09 Apr 2026",
-    created_time: "08:00 AM",
-    in_date: "09 Apr 2026",
-    in_time: "08:10 AM",
-    in_gate: "Gate 2",
-    marked_in_by: "Guard Suresh",
-    out_date: "--",
-    out_time: "--",
-    out_gate: "--",
-    marked_out_by: "--",
-    checkin_date: "09 Apr 2026",
-    checkin_time: "08:10 AM",
-    checkout_date: "--",
-    checkout_time: "--",
-  },
-  {
-    id: 3,
-    visitor_image: null,
-    guest_name: "Deepak Gupta",
-    guest_number: "9876543212",
-    building: "Block B",
-    tower: "Tower 2",
-    flat: "B/201",
-    visited_to: "Deepak Gupta",
-    vehicle_number: "MH14CD5678",
-    visitor_type: "Guest",
-    visit_purpose: "Guest",
-    other_purpose: "--",
-    service_provider: "--",
-    master_status: "Checked Out",
-    host_status: "Approved",
-    mode_of_approval: "Host App",
-    created_date: "09 Apr 2026",
-    created_time: "11:30 AM",
-    in_date: "09 Apr 2026",
-    in_time: "11:45 AM",
-    in_gate: "Gate 1",
-    marked_in_by: "Guard Mohan",
-    out_date: "09 Apr 2026",
-    out_time: "01:00 PM",
-    out_gate: "Gate 1",
-    marked_out_by: "Guard Mohan",
-    checkin_date: "09 Apr 2026",
-    checkin_time: "11:45 AM",
-    checkout_date: "09 Apr 2026",
-    checkout_time: "01:00 PM",
-  },
-  {
-    id: 4,
-    visitor_image: null,
-    guest_name: "Priya Patel",
-    guest_number: "9876543213",
-    building: "Block A",
-    tower: "Tower 1",
-    flat: "A/301",
-    visited_to: "Raj Patel",
-    vehicle_number: "--",
-    visitor_type: "Guest",
-    visit_purpose: "Personal Visit",
-    other_purpose: "--",
-    service_provider: "--",
-    master_status: "Checked Out",
-    host_status: "Approved",
-    mode_of_approval: "OTP",
-    created_date: "09 Apr 2026",
-    created_time: "01:00 PM",
-    in_date: "09 Apr 2026",
-    in_time: "01:15 PM",
-    in_gate: "Gate 2",
-    marked_in_by: "Guard Ramesh",
-    out_date: "09 Apr 2026",
-    out_time: "03:00 PM",
-    out_gate: "Gate 2",
-    marked_out_by: "Guard Ramesh",
-    checkin_date: "09 Apr 2026",
-    checkin_time: "01:15 PM",
-    checkout_date: "09 Apr 2026",
-    checkout_time: "03:00 PM",
-  },
-  {
-    id: 5,
-    visitor_image: null,
-    guest_name: "Rahul Verma",
-    guest_number: "9876543214",
-    building: "Block C",
-    tower: "Tower 3",
-    flat: "C/401",
-    visited_to: "Sanjay Verma",
-    vehicle_number: "MH01EF9012",
-    visitor_type: "Contractor",
-    visit_purpose: "Maintenance",
-    other_purpose: "Plumbing Work",
-    service_provider: "FixIt Co.",
-    master_status: "Checked Out",
-    host_status: "Approved",
-    mode_of_approval: "Admin",
-    created_date: "08 Apr 2026",
-    created_time: "09:00 AM",
-    in_date: "08 Apr 2026",
-    in_time: "09:30 AM",
-    in_gate: "Gate 1",
-    marked_in_by: "Guard Suresh",
-    out_date: "08 Apr 2026",
-    out_time: "12:00 PM",
-    out_gate: "Gate 1",
-    marked_out_by: "Guard Suresh",
-    checkin_date: "08 Apr 2026",
-    checkin_time: "09:30 AM",
-    checkout_date: "08 Apr 2026",
-    checkout_time: "12:00 PM",
-  },
-  {
-    id: 6,
-    visitor_image: null,
-    guest_name: "Sunita Sharma",
-    guest_number: "9876543215",
-    building: "Block B",
-    tower: "Tower 2",
-    flat: "B/105",
-    visited_to: "Anita Sharma",
-    vehicle_number: "--",
-    visitor_type: "Guest",
-    visit_purpose: "Guest",
-    other_purpose: "--",
-    service_provider: "--",
-    master_status: "Expected",
-    host_status: "Pending",
-    mode_of_approval: "OTP",
-    created_date: "09 Apr 2026",
-    created_time: "02:00 PM",
-    in_date: "--",
-    in_time: "--",
-    in_gate: "--",
-    marked_in_by: "--",
-    out_date: "--",
-    out_time: "--",
-    out_gate: "--",
-    marked_out_by: "--",
-    checkin_date: "--",
-    checkin_time: "--",
-    checkout_date: "--",
-    checkout_time: "--",
-  },
-  {
-    id: 7,
-    visitor_image: null,
-    guest_name: "Mohan Das",
-    guest_number: "9876543216",
-    building: "Block A",
-    tower: "Tower 1",
-    flat: "A/204",
-    visited_to: "Ravi Das",
-    vehicle_number: "MH02GH3456",
-    visitor_type: "Delivery",
-    visit_purpose: "Courier",
-    other_purpose: "--",
-    service_provider: "Blue Dart",
-    master_status: "Checked Out",
-    host_status: "Approved",
-    mode_of_approval: "OTP",
-    created_date: "08 Apr 2026",
-    created_time: "03:00 PM",
-    in_date: "08 Apr 2026",
-    in_time: "03:15 PM",
-    in_gate: "Gate 1",
-    marked_in_by: "Guard Mohan",
-    out_date: "08 Apr 2026",
-    out_time: "03:45 PM",
-    out_gate: "Gate 1",
-    marked_out_by: "Guard Mohan",
-    checkin_date: "08 Apr 2026",
-    checkin_time: "03:15 PM",
-    checkout_date: "08 Apr 2026",
-    checkout_time: "03:45 PM",
-  },
-  {
-    id: 8,
-    visitor_image: null,
-    guest_name: "Kavita Nair",
-    guest_number: "9876543217",
-    building: "Block C",
-    tower: "Tower 3",
-    flat: "C/105",
-    visited_to: "Meena Nair",
-    vehicle_number: "--",
-    visitor_type: "Guest",
-    visit_purpose: "Personal Visit",
-    other_purpose: "--",
-    service_provider: "--",
-    master_status: "Checked Out",
-    host_status: "Rejected",
-    mode_of_approval: "Admin",
-    created_date: "07 Apr 2026",
-    created_time: "06:30 AM",
-    in_date: "07 Apr 2026",
-    in_time: "06:45 AM",
-    in_gate: "Gate 2",
-    marked_in_by: "Guard Ramesh",
-    out_date: "07 Apr 2026",
-    out_time: "08:00 AM",
-    out_gate: "Gate 2",
-    marked_out_by: "Guard Ramesh",
-    checkin_date: "07 Apr 2026",
-    checkin_time: "06:45 AM",
-    checkout_date: "07 Apr 2026",
-    checkout_time: "08:00 AM",
-  },
-  {
-    id: 9,
-    visitor_image: null,
-    guest_name: "Arjun Singh",
-    guest_number: "9876543218",
-    building: "Block B",
-    tower: "Tower 2",
-    flat: "B/302",
-    visited_to: "Harjit Singh",
-    vehicle_number: "MH04IJ7890",
-    visitor_type: "Contractor",
-    visit_purpose: "Maintenance",
-    other_purpose: "AC Repair",
-    service_provider: "CoolAir Pvt.",
-    master_status: "Checked Out",
-    host_status: "Approved",
-    mode_of_approval: "OTP",
-    created_date: "07 Apr 2026",
-    created_time: "09:45 AM",
-    in_date: "07 Apr 2026",
-    in_time: "10:00 AM",
-    in_gate: "Gate 1",
-    marked_in_by: "Guard Suresh",
-    out_date: "07 Apr 2026",
-    out_time: "01:00 PM",
-    out_gate: "Gate 1",
-    marked_out_by: "Guard Suresh",
-    checkin_date: "07 Apr 2026",
-    checkin_time: "10:00 AM",
-    checkout_date: "07 Apr 2026",
-    checkout_time: "01:00 PM",
-  },
-  {
-    id: 10,
-    visitor_image: null,
-    guest_name: "Meena Kumari",
-    guest_number: "9876543219",
-    building: "Block A",
-    tower: "Tower 1",
-    flat: "A/205",
-    visited_to: "Ramesh Gupta",
-    vehicle_number: "--",
-    visitor_type: "Guest",
-    visit_purpose: "Guest",
-    other_purpose: "--",
-    service_provider: "--",
-    master_status: "Checked Out",
-    host_status: "Approved",
-    mode_of_approval: "Host App",
-    created_date: "07 Apr 2026",
-    created_time: "10:30 AM",
-    in_date: "07 Apr 2026",
-    in_time: "10:45 AM",
-    in_gate: "Gate 2",
-    marked_in_by: "Guard Mohan",
-    out_date: "07 Apr 2026",
-    out_time: "12:30 PM",
-    out_gate: "Gate 2",
-    marked_out_by: "Guard Mohan",
-    checkin_date: "07 Apr 2026",
-    checkin_time: "10:45 AM",
-    checkout_date: "07 Apr 2026",
-    checkout_time: "12:30 PM",
-  },
-  {
-    id: 11,
-    visitor_image: null,
-    guest_name: "Vikram Rao",
-    guest_number: "9876543220",
-    building: "Block C",
-    tower: "Tower 3",
-    flat: "C/501",
-    visited_to: "Suresh Rao",
-    vehicle_number: "MH06KL1234",
-    visitor_type: "Support Staff",
-    visit_purpose: "Maintenance",
-    other_purpose: "Electrician",
-    service_provider: "PowerFix",
-    master_status: "Checked Out",
-    host_status: "Approved",
-    mode_of_approval: "OTP",
-    created_date: "06 Apr 2026",
-    created_time: "11:00 AM",
-    in_date: "06 Apr 2026",
-    in_time: "11:15 AM",
-    in_gate: "Gate 1",
-    marked_in_by: "Guard Ramesh",
-    out_date: "06 Apr 2026",
-    out_time: "02:00 PM",
-    out_gate: "Gate 1",
-    marked_out_by: "Guard Ramesh",
-    checkin_date: "06 Apr 2026",
-    checkin_time: "11:15 AM",
-    checkout_date: "06 Apr 2026",
-    checkout_time: "02:00 PM",
-  },
-  {
-    id: 12,
-    visitor_image: null,
-    guest_name: "Geeta Mishra",
-    guest_number: "9876543221",
-    building: "Block B",
-    tower: "Tower 2",
-    flat: "B/401",
-    visited_to: "Ashok Mishra",
-    vehicle_number: "--",
-    visitor_type: "Guest",
-    visit_purpose: "Personal Visit",
-    other_purpose: "--",
-    service_provider: "--",
-    master_status: "Checked Out",
-    host_status: "Approved",
-    mode_of_approval: "Host App",
-    created_date: "06 Apr 2026",
-    created_time: "04:00 PM",
-    in_date: "06 Apr 2026",
-    in_time: "04:15 PM",
-    in_gate: "Gate 2",
-    marked_in_by: "Guard Suresh",
-    out_date: "06 Apr 2026",
-    out_time: "06:00 PM",
-    out_gate: "Gate 2",
-    marked_out_by: "Guard Suresh",
-    checkin_date: "06 Apr 2026",
-    checkin_time: "04:15 PM",
-    checkout_date: "06 Apr 2026",
-    checkout_time: "06:00 PM",
-  },
-];
+interface ApiResponse {
+  filters: {
+    available_options: {
+      buildings: FilterOption[];
+      towers: FilterOption[];
+      flats: FilterOption[];
+      visitor_types: FilterOption[];
+      approval_statuses: FilterOption[];
+    };
+  };
+  data: ApiVisitor[];
+  pagination: {
+    page: number;
+    per_page: number;
+    total_count: number;
+    total_pages: number;
+  };
+}
 
-const BUILDINGS = ["All", "Block A", "Block B", "Block C"];
-const TOWERS: Record<string, string[]> = {
-  All: ["All", "Tower 1", "Tower 2", "Tower 3"],
-  "Block A": ["All", "Tower 1"],
-  "Block B": ["All", "Tower 2"],
-  "Block C": ["All", "Tower 3"],
-};
-const FLATS: Record<string, string[]> = {
-  "Tower 1": ["All", "A/101", "A/102", "A/204", "A/205", "A/301"],
-  "Tower 2": ["All", "B/105", "B/201", "B/302", "B/401"],
-  "Tower 3": ["All", "C/105", "C/401", "C/501"],
-  All: ["All"],
-};
-
-const PER_PAGE = 5;
-
-// ─── Column Config ────────────────────────────────────────────────────────────
-
-const historyColumns: ColumnConfig[] = [
-  { key: "actions", label: "Actions", sortable: false, hideable: false, draggable: false },
-  { key: "id", label: "Id", sortable: true, hideable: true, draggable: true },
-  { key: "guest_name", label: "Name", sortable: true, hideable: true, draggable: true },
-  { key: "guest_number", label: "Mobile Number", sortable: true, hideable: true, draggable: true },
-  { key: "building", label: "Building", sortable: true, hideable: true, draggable: true },
-  { key: "tower", label: "Tower", sortable: true, hideable: true, draggable: true },
-  { key: "flat", label: "Flat", sortable: true, hideable: true, draggable: true },
-  { key: "visited_to", label: "Visited To", sortable: true, hideable: true, draggable: true },
-  { key: "vehicle_number", label: "Vehicle Number", sortable: true, hideable: true, draggable: true },
-  { key: "visitor_type", label: "Visitor Type", sortable: true, hideable: true, draggable: true },
-  { key: "visit_purpose", label: "Purpose", sortable: true, hideable: true, draggable: true },
-  { key: "other_purpose", label: "Other Purpose", sortable: true, hideable: true, draggable: true },
-  { key: "service_provider", label: "Service Provider", sortable: true, hideable: true, draggable: true },
-  { key: "master_status", label: "Master Status", sortable: true, hideable: true, draggable: true },
-  { key: "host_status", label: "Host Status", sortable: true, hideable: true, draggable: true },
-  { key: "mode_of_approval", label: "Mode of Approval", sortable: true, hideable: true, draggable: true },
-  { key: "created_date", label: "Created Date", sortable: true, hideable: true, draggable: true },
-  { key: "created_time", label: "Created Time", sortable: true, hideable: true, draggable: true },
-  { key: "in_date", label: "In Date", sortable: true, hideable: true, draggable: true },
-  { key: "in_time", label: "In Time", sortable: true, hideable: true, draggable: true },
-  { key: "in_gate", label: "In Gate", sortable: true, hideable: true, draggable: true },
-  { key: "marked_in_by", label: "Marked In By", sortable: true, hideable: true, draggable: true },
-  { key: "out_date", label: "Out Date", sortable: true, hideable: true, draggable: true },
-  { key: "out_time", label: "Out Time", sortable: true, hideable: true, draggable: true },
-  { key: "out_gate", label: "Out Gate", sortable: true, hideable: true, draggable: true },
-  { key: "marked_out_by", label: "Marked Out By", sortable: true, hideable: true, draggable: true },
-  { key: "checkin_date", label: "Checkin Date", sortable: true, hideable: true, draggable: true },
-  { key: "checkin_time", label: "Checkin Time", sortable: true, hideable: true, draggable: true },
-  { key: "checkout_date", label: "Checkout Date", sortable: true, hideable: true, draggable: true },
-  { key: "checkout_time", label: "Checkout Time", sortable: true, hideable: true, draggable: true },
-];
-
-// ─── Filter Dialog ────────────────────────────────────────────────────────────
+// ─── Filter State ─────────────────────────────────────────────────────────────
 
 interface FilterState {
   building: string;
   tower: string;
   flat: string;
+  visitor_type: string;
+  approval_status: string;
   from_date: string;
   to_date: string;
 }
 
+const defaultFilters: FilterState = {
+  building: "",
+  tower: "",
+  flat: "",
+  visitor_type: "",
+  approval_status: "",
+  from_date: "",
+  to_date: "",
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const formatDateTime = (iso: string | null | undefined): string => {
+  if (!iso) return "--";
+  const d = new Date(iso);
+  return d.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+const buildQueryString = (page: number, filters: FilterState): string => {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("per_page", "20");
+  if (filters.building) params.set("building_id", filters.building);
+  if (filters.tower) params.set("tower_id", filters.tower);
+  if (filters.flat) params.set("flat_id", filters.flat);
+  if (filters.visitor_type) params.set("visitor_type", filters.visitor_type);
+  if (filters.approval_status) params.set("approval_status", filters.approval_status);
+  if (filters.from_date) params.set("created_date_range[from]", filters.from_date);
+  if (filters.to_date) params.set("created_date_range[to]", filters.to_date);
+  return params.toString();
+};
+
+// ─── Column Config ────────────────────────────────────────────────────────────
+
+const historyColumns: ColumnConfig[] = [
+  // { key: "actions",           label: "Actions",         sortable: false, hideable: false, draggable: false },
+  { key: "sr_no",             label: "Sr. No.",         sortable: false, hideable: true,  draggable: true  },
+  { key: "visitor_image",     label: "Photo",           sortable: false, hideable: true,  draggable: true  },
+  { key: "id",                label: "Id",              sortable: true,  hideable: true,  draggable: true  },
+  { key: "guest_name",        label: "Name",            sortable: true,  hideable: true,  draggable: true  },
+  { key: "guest_number",      label: "Mobile Number",   sortable: true,  hideable: true,  draggable: true  },
+  { key: "building",          label: "Building",        sortable: true,  hideable: true,  draggable: true  },
+  { key: "tower",             label: "Tower",           sortable: true,  hideable: true,  draggable: true  },
+  { key: "flat",              label: "Flat",            sortable: true,  hideable: true,  draggable: true  },
+  { key: "visited_to",        label: "Visited To",      sortable: true,  hideable: true,  draggable: true  },
+  { key: "vehicle_number",    label: "Vehicle Number",  sortable: true,  hideable: true,  draggable: true  },
+  { key: "visitor_type",      label: "Visitor Type",    sortable: true,  hideable: true,  draggable: true  },
+  { key: "visit_purpose",     label: "Purpose",         sortable: true,  hideable: true,  draggable: true  },
+  { key: "approve_status",    label: "Host Status",     sortable: true,  hideable: true,  draggable: true  },
+  { key: "approval_mode",     label: "Mode of Approval",sortable: true,  hideable: true,  draggable: true  },
+  { key: "created_at",        label: "Created Date",    sortable: true,  hideable: true,  draggable: true  },
+  { key: "guest_entry_time",  label: "Entry Time",      sortable: true,  hideable: true,  draggable: true  },
+  { key: "guest_exit_time",   label: "Exit Time",       sortable: true,  hideable: true,  draggable: true  },
+  { key: "entry_gate",        label: "In Gate",         sortable: true,  hideable: true,  draggable: true  },
+  { key: "exit_gate",         label: "Out Gate",        sortable: true,  hideable: true,  draggable: true  },
+  { key: "marked_in_by",      label: "Marked In By",    sortable: true,  hideable: true,  draggable: true  },
+  { key: "marked_out_by",     label: "Marked Out By",   sortable: true,  hideable: true,  draggable: true  },
+  { key: "created_by",        label: "Created By",      sortable: true,  hideable: true,  draggable: true  },
+];
+
+// ─── Filter Dialog ────────────────────────────────────────────────────────────
+
 interface FilterDialogProps {
   open: boolean;
   filters: FilterState;
+  options: ApiResponse["filters"]["available_options"] | null;
   onClose: () => void;
   onApply: (f: FilterState) => void;
   onReset: () => void;
 }
 
-const defaultFilters: FilterState = {
-  building: "All",
-  tower: "All",
-  flat: "All",
-  from_date: "",
-  to_date: "",
-};
-
 const FilterDialog: React.FC<FilterDialogProps> = ({
-  open, filters, onClose, onApply, onReset,
+  open, filters, options, onClose, onApply, onReset,
 }) => {
   const [local, setLocal] = useState<FilterState>(filters);
 
-  const towerOptions = TOWERS[local.building] ?? TOWERS["All"];
-  const flatOptions = FLATS[local.tower] ?? FLATS["All"];
-
   const set = (key: keyof FilterState, val: string) =>
-    setLocal((prev) => {
-      const next = { ...prev, [key]: val };
-      if (key === "building") { next.tower = "All"; next.flat = "All"; }
-      if (key === "tower") { next.flat = "All"; }
-      return next;
-    });
+    setLocal((prev) => ({ ...prev, [key]: val }));
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -557,10 +198,13 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
           {/* Building */}
           <div className="grid gap-1.5">
             <label className="text-sm font-medium text-gray-700">Building</label>
-            <Select value={local.building} onValueChange={(v) => set("building", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select value={local.building || "__all__"} onValueChange={(v) => set("building", v === "__all__" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="All Buildings" /></SelectTrigger>
               <SelectContent>
-                {BUILDINGS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                <SelectItem value="__all__">All</SelectItem>
+                {options?.buildings.map((b) => (
+                  <SelectItem key={b.value} value={String(b.value)}>{b.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -568,10 +212,13 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
           {/* Tower */}
           <div className="grid gap-1.5">
             <label className="text-sm font-medium text-gray-700">Tower</label>
-            <Select value={local.tower} onValueChange={(v) => set("tower", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select value={local.tower || "__all__"} onValueChange={(v) => set("tower", v === "__all__" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="All Towers" /></SelectTrigger>
               <SelectContent>
-                {towerOptions.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                <SelectItem value="__all__">All</SelectItem>
+                {options?.towers.map((t) => (
+                  <SelectItem key={t.value} value={String(t.value)}>{t.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -579,10 +226,41 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
           {/* Flat */}
           <div className="grid gap-1.5">
             <label className="text-sm font-medium text-gray-700">Flat</label>
-            <Select value={local.flat} onValueChange={(v) => set("flat", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select value={local.flat || "__all__"} onValueChange={(v) => set("flat", v === "__all__" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="All Flats" /></SelectTrigger>
               <SelectContent>
-                {flatOptions.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                <SelectItem value="__all__">All</SelectItem>
+                {options?.flats.map((f) => (
+                  <SelectItem key={f.value} value={String(f.value)}>{f.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Visitor Type */}
+          <div className="grid gap-1.5">
+            <label className="text-sm font-medium text-gray-700">Visitor Type</label>
+            <Select value={local.visitor_type || "__all__"} onValueChange={(v) => set("visitor_type", v === "__all__" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="All Types" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All</SelectItem>
+                {options?.visitor_types.map((vt) => (
+                  <SelectItem key={vt.value} value={String(vt.value)}>{vt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Approval Status */}
+          <div className="grid gap-1.5">
+            <label className="text-sm font-medium text-gray-700">Approval Status</label>
+            <Select value={local.approval_status || "__all__"} onValueChange={(v) => set("approval_status", v === "__all__" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="All Statuses" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All</SelectItem>
+                {options?.approval_statuses.map((s) => (
+                  <SelectItem key={s.value} value={String(s.value)}>{s.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -594,7 +272,6 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
               <input
                 type="date"
                 title="From Date"
-                placeholder="From Date"
                 value={local.from_date}
                 onChange={(e) => set("from_date", e.target.value)}
                 className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
@@ -605,7 +282,6 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
               <input
                 type="date"
                 title="To Date"
-                placeholder="To Date"
                 value={local.to_date}
                 onChange={(e) => set("to_date", e.target.value)}
                 className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
@@ -631,24 +307,32 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
 
 const SmartSecureVisitorHistory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState>(defaultFilters);
 
-  // Apply filters
-  const filteredData = ALL_DATA.filter((r) => {
-    if (activeFilters.building !== "All" && r.building !== activeFilters.building) return false;
-    if (activeFilters.tower !== "All" && r.tower !== activeFilters.tower) return false;
-    if (activeFilters.flat !== "All" && r.flat !== activeFilters.flat) return false;
-    return true;
+  const { data: apiData, isLoading, isError, error, refetch } = useQuery<ApiResponse>({
+    queryKey: ["visitor-history-list", currentPage, activeFilters],
+    queryFn: async () => {
+      const qs = buildQueryString(currentPage, activeFilters);
+      const res = await fetch(
+        getFullUrl(`/crm/admin/visitors_history.json?${qs}`),
+        { headers: { Authorization: getAuthHeader() } }
+      );
+      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+      return res.json();
+    },
+    staleTime: 30000,
   });
 
-  const totalPages = Math.ceil(filteredData.length / PER_PAGE);
-  const pagedData = filteredData.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+  const rows = useMemo(() => apiData?.data ?? [], [apiData]);
+  const pagination = apiData?.pagination;
+  const totalPages = pagination?.total_pages ?? 1;
+  const totalCount = pagination?.total_count ?? 0;
+  const perPage = pagination?.per_page ?? 20;
+  const filterOptions = apiData?.filters?.available_options ?? null;
 
   const handleApplyFilter = (f: FilterState) => {
     setActiveFilters(f);
-    setFilters(f);
     setCurrentPage(1);
     setFilterOpen(false);
     toast.success("Filters applied");
@@ -656,13 +340,12 @@ const SmartSecureVisitorHistory: React.FC = () => {
 
   const handleResetFilter = () => {
     setActiveFilters(defaultFilters);
-    setFilters(defaultFilters);
     setCurrentPage(1);
   };
 
   // ── Cell Renderer ──────────────────────────────────────────────────────────
 
-  const renderCell = useCallback((row: VisitorHistoryRecord, columnKey: string) => {
+  const renderCell = useCallback((row: ApiVisitor, columnKey: string) => {
     switch (columnKey) {
       case "actions":
         return (
@@ -688,56 +371,121 @@ const SmartSecureVisitorHistory: React.FC = () => {
             </button>
           </div>
         );
-      case "guest_name":
+
+      case "sr_no": {
+        const idx = rows.indexOf(row);
         return (
-          <div className="flex flex-col gap-0.5">
-            <span className="font-medium text-gray-900">{row.guest_name || "--"}</span>
+          <span className="text-sm text-gray-500 font-medium">
+            {(currentPage - 1) * perPage + idx + 1}
+          </span>
+        );
+      }
+
+      case "visitor_image":
+        return (
+          <div className="flex justify-center">
+            <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+              <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              </svg>
+            </div>
           </div>
         );
+
+      case "id":
+        return <span className="text-sm text-gray-700">{row.id}</span>;
+
+      case "guest_name":
+        return <span className="font-medium text-gray-900">{row.guest_name || "--"}</span>;
+
+      case "guest_number":
+        return <span className="text-sm text-gray-700">{row.guest_number || "--"}</span>;
+
+      case "building":
+        return <span className="text-sm text-gray-700">{row.building?.name || "--"}</span>;
+
+      case "tower":
+        return <span className="text-sm text-gray-700">{row.tower?.name || "--"}</span>;
+
+      case "flat":
+        return <span className="text-sm text-gray-700">{row.flat?.number || "--"}</span>;
+
+      case "visited_to":
+        return (
+          <span className="text-sm text-gray-700">
+            {row.person_to_meet?.flat_member_str || row.person_to_meet?.name || "--"}
+          </span>
+        );
+
+      case "vehicle_number":
+        return <span className="text-sm text-gray-700">{row.guest_vehicle_number || "--"}</span>;
+
       case "visitor_type":
         return (
           <span className={`px-2 py-1 text-xs rounded font-medium ${
-            row.visitor_type === "Support Staff" ? "bg-purple-100 text-purple-700" :
-            row.visitor_type === "Guest" ? "bg-blue-100 text-blue-700" :
-            row.visitor_type === "Delivery" ? "bg-yellow-100 text-yellow-700" :
-            "bg-orange-100 text-orange-700"
+            row.guest_type === "Support Staff" ? "bg-purple-100 text-purple-700" :
+            row.guest_type === "Guest"         ? "bg-blue-100 text-blue-700" :
+            row.guest_type === "Delivery"      ? "bg-yellow-100 text-yellow-700" :
+                                                 "bg-orange-100 text-orange-700"
           }`}>
-            {row.visitor_type}
+            {row.guest_type || "--"}
           </span>
         );
-      case "master_status":
-        return (
-          <Badge className={
-            row.master_status === "Checked In" ? "bg-green-100 text-green-800 hover:bg-green-100" :
-            row.master_status === "Checked Out" ? "bg-gray-100 text-gray-800 hover:bg-gray-100" :
-            row.master_status === "Expected" ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100" :
-            "bg-red-100 text-red-800 hover:bg-red-100"
-          }>
-            {row.master_status}
-          </Badge>
-        );
-      case "host_status":
-        return (
-          <Badge className={
-            row.host_status === "Approved" ? "bg-green-100 text-green-800 hover:bg-green-100" :
-            row.host_status === "Pending" ? "bg-orange-100 text-orange-800 hover:bg-orange-100" :
-            "bg-red-100 text-red-800 hover:bg-red-100"
-          }>
-            {row.host_status}
-          </Badge>
-        );
+
       case "visit_purpose":
         return (
           <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">
             {row.visit_purpose || "--"}
           </span>
         );
+
+      case "approve_status": {
+        const status = row.approve_status?.status ?? "--";
+        return (
+          <Badge className={
+            status === "Approved" ? "bg-green-100 text-green-800 hover:bg-green-100" :
+            status === "Pending"  ? "bg-orange-100 text-orange-800 hover:bg-orange-100" :
+            status === "Rejected" ? "bg-red-100 text-red-800 hover:bg-red-100" :
+                                    "bg-gray-100 text-gray-800 hover:bg-gray-100"
+          }>
+            {status}
+          </Badge>
+        );
+      }
+
+      case "approval_mode":
+        return <span className="text-sm text-gray-700">{row.approval_mode || "--"}</span>;
+
+      case "created_at":
+        return <span className="text-sm text-gray-600">{formatDateTime(row.created_at)}</span>;
+
+      case "guest_entry_time":
+        return <span className="text-sm text-gray-600">{formatDateTime(row.guest_entry_time)}</span>;
+
+      case "guest_exit_time":
+        return <span className="text-sm text-gray-600">{formatDateTime(row.guest_exit_time)}</span>;
+
+      case "entry_gate":
+        return <span className="text-sm text-gray-700">{row.entry_gate?.name || "--"}</span>;
+
+      case "exit_gate":
+        return <span className="text-sm text-gray-700">{row.exit_gate?.name || "--"}</span>;
+
+      case "marked_in_by":
+        return <span className="text-sm text-gray-700">{row.marked_in_by || "--"}</span>;
+
+      case "marked_out_by":
+        return <span className="text-sm text-gray-700">{row.marked_out_by || "--"}</span>;
+
+      case "created_by":
+        return <span className="text-sm text-gray-700">{row.created_by || "--"}</span>;
+
       default: {
         const val = (row as unknown as Record<string, unknown>)[columnKey];
         return val ? String(val) : "--";
       }
     }
-  }, []);
+  }, [currentPage, perPage, rows]);
 
   // ── Pagination ─────────────────────────────────────────────────────────────
 
@@ -759,19 +507,33 @@ const SmartSecureVisitorHistory: React.FC = () => {
     return items;
   };
 
-  // ── Active filter count ────────────────────────────────────────────────────
-  const activeFilterCount = [
-    activeFilters.building !== "All",
-    activeFilters.tower !== "All",
-    activeFilters.flat !== "All",
-    activeFilters.from_date !== "",
-    activeFilters.to_date !== "",
-  ].filter(Boolean).length;
+  // ── Loading / Error ────────────────────────────────────────────────────────
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex justify-center items-center py-24">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-400 mr-2" />
+        <span className="text-sm text-gray-500">Loading visitor history...</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-6 text-center py-24">
+        <p className="text-red-600 font-medium">Error loading visitor history</p>
+        <p className="text-sm text-gray-500 mt-1">{(error as Error)?.message}</p>
+        <Button onClick={() => refetch()} variant="outline" size="sm" className="mt-4">
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
       <EnhancedTable
-        data={pagedData}
+        data={rows}
         columns={historyColumns}
         renderCell={renderCell}
         enableSearch={true}
@@ -781,32 +543,15 @@ const SmartSecureVisitorHistory: React.FC = () => {
         searchPlaceholder="Search visitors..."
         hideTableExport={false}
         hideColumnsButton={false}
-        leftActions={
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="h-9 px-4 text-sm font-medium border-gray-300 relative"
-              onClick={() => setFilterOpen(true)}
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Filter
-              {activeFilterCount > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-[#C72030] text-white rounded-full">
-                  {activeFilterCount}
-                </span>
-              )}
-            </Button>
-          </div>
-        }
+        onFilterClick={() => setFilterOpen(true)}
       />
 
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4 px-1">
           <span className="text-sm text-gray-500">
-            Showing {(currentPage - 1) * PER_PAGE + 1}–
-            {Math.min(currentPage * PER_PAGE, filteredData.length)} of{" "}
-            {filteredData.length} records
+            Showing {(currentPage - 1) * perPage + 1}–
+            {Math.min(currentPage * perPage, totalCount)} of {totalCount} records
           </span>
           <Pagination>
             <PaginationContent>
@@ -831,7 +576,8 @@ const SmartSecureVisitorHistory: React.FC = () => {
       {/* Filter Dialog */}
       <FilterDialog
         open={filterOpen}
-        filters={filters}
+        filters={activeFilters}
+        options={filterOptions}
         onClose={() => setFilterOpen(false)}
         onApply={handleApplyFilter}
         onReset={handleResetFilter}

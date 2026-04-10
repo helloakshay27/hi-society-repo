@@ -423,6 +423,7 @@ const SmartSecureVisitorOut = lazy(
 const SmartSecureVisitorHistory = lazy(
   () => import("@/pages/SmartSecureVisitorHistory")
 );
+const AddVisitorPage = lazy(() => import("@/pages/AddVisitorPage"));
 const SmartSecureStaffsAll = lazy(() => import("@/pages/SmartSecureStaffsAll"));
 const SmartSecureStaffsIn = lazy(() => import("@/pages/SmartSecureStaffsIn"));
 const SmartSecureStaffsOut = lazy(() => import("@/pages/SmartSecureStaffsOut"));
@@ -1573,6 +1574,10 @@ export const setupMemberRoutes = (
     <Route
       path="/smartsecure/visitor-history-list"
       Component={withSuspense(SmartSecureVisitorHistory)}
+    />
+    <Route
+      path="/smartsecure/visitor-in/add"
+      Component={withSuspense(AddVisitorPage)}
     />
     <Route
       path="/smartsecure/staff-all"

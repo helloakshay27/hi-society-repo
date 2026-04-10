@@ -1,150 +1,176 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
-import { Plus, KeyRound } from "lucide-react";
+import { Plus, KeyRound, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 
-// ─── Dummy Data ────────────────────────────────────────────────────────────────
+// ─── API Types ─────────────────────────────────────────────────────────────────
 
-interface VisitorRecord {
+interface VisitorHost {
   id: number;
-  visitor_image: string | null;
-  guest_name: string;
-  visitor_type: "Support Staff" | "Guest";
-  status: "Approved" | "Pending" | "Rejected";
-  primary_host: string;
-  visit_purpose: string;
-  guest_number?: string;
+  name: string;
+  mobile: string;
+  status: string;
+  flat_name: string;
+  block_name: string;
+  building_name: string | null;
 }
 
-const dummyExpectedVisitors: VisitorRecord[] = [
-  {
-    id: 1,
-    visitor_image: null,
-    guest_name: "Trst6",
-    visitor_type: "Support Staff",
-    status: "Approved",
-    primary_host: "FM/Office- Manoj Prajapati",
-    visit_purpose: "Delivery Person",
-    guest_number: "9876543210",
-  },
-  {
-    id: 2,
-    visitor_image: null,
-    guest_name: "Deepak Kumar",
-    visitor_type: "Guest",
-    status: "Approved",
-    primary_host: "FM/Office- Deepak Gupta",
-    visit_purpose: "Guest",
-    guest_number: "9876543211",
-  },
-  {
-    id: 3,
-    visitor_image: null,
-    guest_name: "Rahul Sharma",
-    visitor_type: "Support Staff",
-    status: "Pending",
-    primary_host: "FM/Office- Anita Singh",
-    visit_purpose: "Maintenance",
-    guest_number: "9876543212",
-  },
-  {
-    id: 4,
-    visitor_image: null,
-    guest_name: "Priya Patel",
-    visitor_type: "Guest",
-    status: "Approved",
-    primary_host: "Tower A - Flat 301",
-    visit_purpose: "Personal Visit",
-    guest_number: "9876543213",
-  },
-  {
-    id: 5,
-    visitor_image: null,
-    guest_name: "Amit Verma",
-    visitor_type: "Support Staff",
-    status: "Approved",
-    primary_host: "FM/Office- Ravi Kumar",
-    visit_purpose: "Plumber",
-    guest_number: "9876543214",
-  },
-];
+interface UserFlat {
+  id: number;
+  id_user: number;
+  society_id: number;
+  flat: string;
+  block: string;
+  building_number: string | null;
+  society_flat_id: number;
+}
 
-const dummyUnexpectedVisitors: VisitorRecord[] = [
-  {
-    id: 101,
-    visitor_image: null,
-    guest_name: "Suresh Yadav",
-    visitor_type: "Guest",
-    status: "Pending",
-    primary_host: "Tower B - Flat 202",
-    visit_purpose: "Unknown",
-    guest_number: "9812345670",
-  },
-  {
-    id: 102,
-    visitor_image: null,
-    guest_name: "Meena Kumari",
-    visitor_type: "Guest",
-    status: "Pending",
-    primary_host: "Tower C - Flat 105",
-    visit_purpose: "Courier",
-    guest_number: "9812345671",
-  },
-  {
-    id: 103,
-    visitor_image: null,
-    guest_name: "Rohit Joshi",
-    visitor_type: "Support Staff",
-    status: "Approved",
-    primary_host: "FM/Office- Sanjay Mishra",
-    visit_purpose: "Electrician",
-    guest_number: "9812345672",
-  },
-  {
-    id: 104,
-    visitor_image: null,
-    guest_name: "Kavita Nair",
-    visitor_type: "Guest",
-    status: "Rejected",
-    primary_host: "Tower A - Flat 401",
-    visit_purpose: "Personal Visit",
-    guest_number: "9812345673",
-  },
-];
+interface SocietyGate {
+  id: number;
+  gate_name: string;
+}
+
+interface ApiGatekeeper {
+  id: number;
+  guest_number: string;
+  guest_vehicle_number: string;
+  visit_purpose: string | null;
+  guest_name: string;
+  guest_entry_time: string | null;
+  guest_exit_time: string | null;
+  expected_at: string | null;
+  approve: number;
+  created_at: string;
+  approval_mode: string | null;
+  checkin_time: string | null;
+  checkout_time: string | null;
+  check_in: boolean;
+  check_out: boolean;
+  guest_type: string;
+  vstatus: string;
+  visitor_type: string;
+  image: string;
+  otp_string: string;
+  delivery_service_provider: string | null;
+  delivery_service_provider_icon: string | null;
+  society_gate: SocietyGate | null;
+  visitor_hosts: VisitorHost[];
+  user_flat: UserFlat | null;
+}
+
+interface ApiResponse {
+  code: number;
+  gtype: string;
+  count: number;
+  current_page: number;
+  pages: number | null;
+  gatekeepers: ApiGatekeeper[];
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+const formatDateTime = (iso: string | null | undefined): string => {
+  if (!iso) return "--";
+  const d = new Date(iso);
+  return d.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+const getHostDisplay = (v: ApiGatekeeper): string => {
+  if (v.visitor_hosts && v.visitor_hosts.length > 0) {
+    const h = v.visitor_hosts[0];
+    const block = h.block_name ? `${h.block_name}/` : "";
+    return `${block}${h.flat_name} - ${h.name}`;
+  }
+  if (v.user_flat) {
+    return `${v.user_flat.block}/${v.user_flat.flat}`;
+  }
+  return "--";
+};
 
 // ─── Column Config ─────────────────────────────────────────────────────────────
 
 const visitorInColumns: ColumnConfig[] = [
-  { key: "visitor_image", label: "Photo", sortable: false, hideable: true, draggable: true },
-  { key: "guest_name", label: "Visitor Name", sortable: true, hideable: true, draggable: true },
-  { key: "visitor_type", label: "Type", sortable: true, hideable: true, draggable: true },
-  { key: "status", label: "Status", sortable: true, hideable: true, draggable: true },
-  { key: "primary_host", label: "Host", sortable: true, hideable: true, draggable: true },
-  { key: "visit_purpose", label: "Purpose", sortable: true, hideable: true, draggable: true },
-  { key: "check_in_action", label: "Check In", sortable: false, hideable: false, draggable: false },
-  { key: "out_action", label: "OUT", sortable: false, hideable: false, draggable: false },
+  { key: "sr_no",           label: "Sr. No.",       sortable: false, hideable: true,  draggable: true  },
+  { key: "visitor_image",   label: "Photo",          sortable: false, hideable: true,  draggable: true  },
+  { key: "guest_name",      label: "Visitor Name",   sortable: true,  hideable: true,  draggable: true  },
+  { key: "guest_number",    label: "Mobile",         sortable: true,  hideable: true,  draggable: true  },
+  { key: "guest_type",      label: "Guest Type",     sortable: true,  hideable: true,  draggable: true  },
+  { key: "visitor_type",    label: "Visit Type",     sortable: true,  hideable: true,  draggable: true  },
+  { key: "vstatus",         label: "Status",         sortable: true,  hideable: true,  draggable: true  },
+  { key: "primary_host",    label: "Host",           sortable: false, hideable: true,  draggable: true  },
+  { key: "visit_purpose",   label: "Purpose",        sortable: true,  hideable: true,  draggable: true  },
+  { key: "society_gate",    label: "Gate",           sortable: false, hideable: true,  draggable: true  },
+  { key: "guest_entry_time",label: "Entry Time",     sortable: true,  hideable: true,  draggable: true  },
+  // { key: "check_in_action", label: "Check In",       sortable: false, hideable: false, draggable: false },
+  // { key: "out_action",      label: "OUT",            sortable: false, hideable: false, draggable: false },
 ];
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 const SmartSecureVisitorIn: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"expected" | "unexpected">("expected");
+  const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 20;
+
+  const { data: apiData, isLoading, isError, refetch } = useQuery<ApiResponse>({
+    queryKey: ["visitor-in-list", currentPage],
+    queryFn: async () => {
+      const res = await fetch(
+        getFullUrl(`/crm/admin/visitor_in.json?page=${currentPage}&per_page=${perPage}`),
+        { headers: { Authorization: getAuthHeader() } }
+      );
+      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+      return res.json();
+    },
+    staleTime: 30000,
+  });
+
+  const rows = useMemo(() => apiData?.gatekeepers ?? [], [apiData]);
+  const totalCount = apiData?.count ?? 0;
+  const totalPages = Math.ceil(totalCount / perPage) || 1;
 
   // ── Cell Renderer ──────────────────────────────────────────────────────────
 
-  const renderCell = useCallback((visitor: VisitorRecord, columnKey: string) => {
+  const renderCell = useCallback((visitor: ApiGatekeeper, columnKey: string) => {
     switch (columnKey) {
+      case "sr_no": {
+        const idx = rows.indexOf(visitor);
+        return (
+          <span className="text-sm text-gray-500 font-medium">
+            {(currentPage - 1) * perPage + idx + 1}
+          </span>
+        );
+      }
+
       case "visitor_image":
         return (
           <div className="flex justify-center">
             <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-              {visitor.visitor_image ? (
+              {visitor.image ? (
                 <img
-                  src={visitor.visitor_image}
+                  src={visitor.image}
                   alt={visitor.guest_name}
                   className="w-full h-full object-cover"
                 />
@@ -161,57 +187,89 @@ const SmartSecureVisitorIn: React.FC = () => {
 
       case "guest_name":
         return (
-          <div className="flex flex-col gap-1">
-            <span className="font-medium text-gray-900">{visitor.guest_name || "--"}</span>
-            {visitor.guest_number && (
-              <span className="text-xs text-gray-500">{visitor.guest_number}</span>
-            )}
-          </div>
+          <span className="font-medium text-gray-900">{visitor.guest_name || "--"}</span>
         );
 
-      case "visitor_type":
+      case "guest_number":
+        return (
+          <span className="text-sm text-gray-700">{visitor.guest_number || "--"}</span>
+        );
+
+      case "guest_type":
         return (
           <span
             className={`px-2 py-1 text-xs rounded font-medium ${
-              visitor.visitor_type === "Support Staff"
+              visitor.guest_type === "Support Staff"
                 ? "bg-purple-100 text-purple-700"
                 : "bg-blue-100 text-blue-700"
             }`}
           >
-            {visitor.visitor_type}
+            {visitor.guest_type || "--"}
           </span>
         );
 
-      case "status":
+      case "visitor_type": {
+        const vt = visitor.visitor_type;
+        const isExpected = vt?.toLowerCase() === "expected";
+        return (
+          <span
+            className={`px-2 py-1 text-xs rounded font-medium ${
+              isExpected
+                ? "bg-teal-100 text-teal-700"
+                : "bg-orange-100 text-orange-700"
+            }`}
+          >
+            {vt || "--"}
+          </span>
+        );
+      }
+
+      case "vstatus": {
+        const s = visitor.vstatus;
         return (
           <Badge
             className={
-              visitor.status === "Approved"
+              s === "Approved"
                 ? "bg-green-100 text-green-800 hover:bg-green-100"
-                : visitor.status === "Pending"
+                : s === "Pending"
                 ? "bg-orange-100 text-orange-800 hover:bg-orange-100"
                 : "bg-red-100 text-red-800 hover:bg-red-100"
             }
           >
-            {visitor.status}
+            {s || "--"}
           </Badge>
         );
+      }
 
       case "primary_host":
-        return <span className="text-sm text-gray-700">{visitor.primary_host || "--"}</span>;
+        return (
+          <span className="text-sm text-gray-700">{getHostDisplay(visitor)}</span>
+        );
 
       case "visit_purpose":
         return (
           <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">
-            {visitor.visit_purpose || "--"}
+            {visitor.visit_purpose?.trim() || "--"}
           </span>
+        );
+
+      case "society_gate":
+        return (
+          <span className="text-sm text-gray-700">
+            {visitor.society_gate?.gate_name || "--"}
+          </span>
+        );
+
+      case "guest_entry_time":
+        return (
+          <span className="text-sm text-gray-700">{formatDateTime(visitor.guest_entry_time)}</span>
         );
 
       case "check_in_action":
         return (
           <Button
             size="sm"
-            className=" hover:bg-green-600 text-white text-xs px-3 py-1"
+            className="hover:bg-green-600 text-white text-xs px-3 py-1"
             onClick={() => {
               toast.success(`${visitor.guest_name} checked in successfully`);
             }}
@@ -239,15 +297,15 @@ const SmartSecureVisitorIn: React.FC = () => {
         return val ? String(val) : "--";
       }
     }
-  }, []);
+  }, [currentPage, perPage, rows]);
 
-  // ── Shared Left Actions ────────────────────────────────────────────────────
+  // ── Left Actions ───────────────────────────────────────────────────────────
 
   const leftActions = (
     <div className="flex gap-2">
       <Button
         className="bg-[#C72030] text-white hover:bg-[#C72030]/90 h-9 px-4 text-sm font-medium"
-        onClick={() => toast.info("Add visitor dialog coming soon")}
+        onClick={() => navigate("/smartsecure/visitor-in/add")}
       >
         <Plus className="w-4 h-4 mr-2" />
         Add
@@ -263,66 +321,98 @@ const SmartSecureVisitorIn: React.FC = () => {
     </div>
   );
 
+  // ── Loading / Error ────────────────────────────────────────────────────────
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
+        <span className="ml-2 text-gray-600">Loading visitors...</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <p className="text-red-600">Failed to load visitor data.</p>
+        <Button onClick={() => refetch()} variant="outline">
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="p-6">
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => setActiveTab(v as "expected" | "unexpected")}
-        className="w-full"
-      >
-        <div className="mb-4">
-          <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-200">
-            <TabsTrigger
-              value="expected"
-              className="flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
-            >
-              Expected Visitors
-            </TabsTrigger>
-            <TabsTrigger
-              value="unexpected"
-              className="flex items-center gap-2 data-[state=active]:bg-[#EDEAE3] data-[state=active]:text-[#C72030] data-[state=inactive]:bg-white data-[state=inactive]:text-black border-none font-semibold"
-            >
-              Unexpected Visitors
-            </TabsTrigger>
-          </TabsList>
+      <EnhancedTable
+        data={rows}
+        columns={visitorInColumns}
+        renderCell={renderCell}
+        enableSearch={true}
+        enableSelection={false}
+        storageKey="visitor-in-table"
+        emptyMessage="No visitors found"
+        searchPlaceholder="Search visitors..."
+        hideTableExport={false}
+        hideColumnsButton={false}
+        leftActions={leftActions}
+      />
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            Showing page {currentPage} of {totalPages} ({totalCount} total visitors)
+          </p>
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let page: number;
+                if (totalPages <= 5) {
+                  page = i + 1;
+                } else if (currentPage <= 3) {
+                  page = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  page = totalPages - 4 + i;
+                } else {
+                  page = currentPage - 2 + i;
+                }
+                return (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      isActive={page === currentPage}
+                      onClick={() => setCurrentPage(page)}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+              {totalPages > 5 && currentPage < totalPages - 2 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
-
-        {/* Expected Visitors Tab */}
-        <TabsContent value="expected">
-          <EnhancedTable
-            data={dummyExpectedVisitors}
-            columns={visitorInColumns}
-            renderCell={renderCell}
-            enableSearch={true}
-            enableSelection={false}
-            storageKey="expected-visitor-in-table"
-            emptyMessage="No expected visitors available"
-            searchPlaceholder="Search visitors..."
-            hideTableExport={false}
-            hideColumnsButton={false}
-            leftActions={leftActions}
-          />
-        </TabsContent>
-
-        {/* Unexpected Visitors Tab */}
-        <TabsContent value="unexpected">
-          <EnhancedTable
-            data={dummyUnexpectedVisitors}
-            columns={visitorInColumns}
-            renderCell={renderCell}
-            enableSearch={true}
-            enableSelection={false}
-            storageKey="unexpected-visitor-in-table"
-            emptyMessage="No unexpected visitors available"
-            searchPlaceholder="Search visitors..."
-            hideTableExport={false}
-            hideColumnsButton={false}
-            leftActions={leftActions}
-          />
-        </TabsContent>
-      </Tabs>
+      )}
     </div>
   );
 };

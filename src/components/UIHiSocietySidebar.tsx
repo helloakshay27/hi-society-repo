@@ -920,6 +920,49 @@ export const UIHiSocietySidebar: React.FC = () => {
               icon: Calendar,
               path: "/accounting/payment-terms",
             },
+            {
+              id: "vendors",
+              label: "Vendors",
+              icon: Users,
+              path: "/accounting/vendors",
+            },
+            {
+              id: "smartsecure-setup",
+              label: "SmartSecure Setup",
+              icon: SettingsIcon,
+              subItems: [
+                {
+                  id: "visitor-purpose",
+                  label: "Visitor Purpose",
+                  icon: SettingsIcon,
+                  path: "/smartsecure/visitor-purpose",
+                },
+                {
+                  id: "vehicle-type",
+                  label: "Vehicle Type",
+                  icon: Car,
+                  path: "/smartsecure/vehicle-type",
+                },
+                {
+                  id: "material-type",
+                  label: "Material Type",
+                  icon: Truck,
+                  path: "/smartsecure/material-type",
+                },
+              ],
+            },
+            {
+              id: "incidents-setup",
+              label: "Incidents Setup",
+              icon: AlertTriangle,
+              path: "/incidents/setup",
+            },
+            {
+              id: "osr-setup",
+              label: "OSR Setup",
+              icon: Calendar,
+              path: "/osr/setup",
+            },
 
           ],
         },

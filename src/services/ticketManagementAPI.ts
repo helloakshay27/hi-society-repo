@@ -1733,13 +1733,7 @@ export const ticketManagementAPI = {
 
   // ─── Assign Rule (Complaint Worker) APIs ───────────────────────────────────
 
-  async getAssignEscalations(params?: {
-    page?: number;
-    per_page?: number;
-    'q[assign_to_cont]'?: string;
-    'q[issue_type_id_eq]'?: string;
-    'q[category_id_eq]'?: string;
-  }) {
+  async getAssignEscalations(params?: Record<string, string | number>) {
     const response = await apiClient.get('/crm/admin/assign_escalation.json', { params });
     return response.data;
   },
@@ -1767,6 +1761,29 @@ export const ticketManagementAPI = {
       category_id: string;
       assign_to: string[];
     };
+  }) {
+    const response = await apiClient.post('/crm/admin/create_complaint_worker', payload);
+    return response.data;
+  },
+
+  async createResolutionEscalationRule(payload: {
+    complaint_worker: {
+      esc_type: string;
+      issue_related_to: string;
+      of_phase: string;
+      issue_type_id: string;
+      category_id: string;
+    };
+    escalation_matrix: Record<string, {
+      name: string;
+      escalate_to_users?: string[];
+      copy_to?: string[];
+      p1: string;
+      p2: string;
+      p3: string;
+      p4: string;
+      p5: string;
+    }>;
   }) {
     const response = await apiClient.post('/crm/admin/create_complaint_worker', payload);
     return response.data;
