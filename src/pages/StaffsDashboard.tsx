@@ -20,7 +20,7 @@ import {
 import { StaffsFilterModal } from '@/components/StaffsFilterModal';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
-import { fetchSocietyStaffs, searchSocietyStaffs, SocietyStaff, PaginationInfo } from '@/services/societyStaffsAPI';
+import { fetchSocietyStaffs, searchSocietyStaffs, NewSocietyStaff, PaginationInfo } from '@/services/societyStaffsAPI';
 import { staffService } from '@/services/staffService';
 import { toast } from 'sonner';
 
@@ -155,7 +155,7 @@ export const StaffsDashboard = () => {
   const [activeSearchQuery, setActiveSearchQuery] = useState<string>('');
   
   // API state management
-  const [apiStaffsData, setApiStaffsData] = useState<SocietyStaff[]>([]);
+  const [apiStaffsData, setApiStaffsData] = useState<NewSocietyStaff[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -164,6 +164,21 @@ export const StaffsDashboard = () => {
     total_pages: 1
   });
   const [currentPage, setCurrentPage] = useState(1);
+  const [resourceId, setResourceId] = useState<string>(''); // Resource ID for print all QR codes
+  const [printingAll, setPrintingAll] = useState(false);
+
+  // Get resource ID from localStorage or auth context
+  useEffect(() => {
+    try {
+      // Try to get resource_id from localStorage
+      const storedResourceId = localStorage.getItem('resource_id') || localStorage.getItem('society_id') || localStorage.getItem('company_id');
+      if (storedResourceId) {
+        setResourceId(storedResourceId);
+      }
+    } catch (error) {
+      console.error('Error getting resource ID:', error);
+    }
+  }, []);
 
   // Fetch staff data from API
   useEffect(() => {
@@ -172,30 +187,24 @@ export const StaffsDashboard = () => {
         setLoading(true);
         setError(null);
         
-        console.log('🔄 Fetching society staffs data:');
-        console.log('  - Current page (local state):', currentPage);
-        console.log('  - Active search query:', activeSearchQuery);
-        
         let response;
         if (activeSearchQuery.trim()) {
-          // Use search API when there's an active search query
-          console.log('🔍 Using search API');
           response = await searchSocietyStaffs(activeSearchQuery, currentPage);
         } else {
-          // Use regular fetch API when no search
-          console.log('📋 Using regular fetch API');
           response = await fetchSocietyStaffs(currentPage);
         }
         
-        console.log('📊 API Response:', {
-          totalCount: response.pagination.total_count,
-          totalPages: response.pagination.total_pages,
-          currentPageFromAPI: response.pagination.current_page,
-          staffsCount: response.society_staffs.length
-        });
+        // Handle both old and new API response formats
+        const staffsList = response.data || response.society_staffs || [];
         
-        setApiStaffsData(response.society_staffs);
-        setPagination(response.pagination);
+        setApiStaffsData(staffsList as NewSocietyStaff[]);
+        
+        // Normalize pagination data
+        setPagination({
+          current_page: response.pagination.current_page || response.pagination.page || currentPage,
+          total_count: response.pagination.total_count,
+          total_pages: response.pagination.total_pages
+        });
       } catch (err) {
         console.error('❌ Error loading staffs data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load staffs data');
@@ -213,7 +222,6 @@ export const StaffsDashboard = () => {
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       const newPage = currentPage - 1;
-      console.log('⬅️ Moving to previous page:', newPage);
       setCurrentPage(newPage);
     }
   };
@@ -221,13 +229,11 @@ export const StaffsDashboard = () => {
   const handleNextPage = () => {
     if (currentPage < pagination.total_pages) {
       const newPage = currentPage + 1;
-      console.log('➡️ Moving to next page:', newPage);
       setCurrentPage(newPage);
     }
   };
 
   const handlePageClick = (page: number) => {
-    console.log('🔢 Clicking page:', page, '(current:', currentPage, ')');
     setCurrentPage(page);
   };
 
@@ -331,7 +337,6 @@ export const StaffsDashboard = () => {
     }
 
     try {
-      console.log('Printing QR codes for selected staff:', selectedStaffs);
       
       // Convert string IDs to numbers for the API
       const staffIds = selectedStaffs.map(id => parseInt(id, 10));
@@ -346,24 +351,33 @@ export const StaffsDashboard = () => {
     }
   };
 
+  const handlePrintAllQR = async () => {
+    if (!resourceId) {
+      toast.error('Resource ID not available. Please ensure you are logged in with a valid society.');
+      return;
+    }
+
+    setPrintingAll(true);
+    try {
+      await staffService.printAllQRCodes(resourceId);
+    } catch (error) {
+      console.error('Failed to print all QR codes:', error);
+      // Error is already handled in the service with toast
+    } finally {
+      setPrintingAll(false);
+    }
+  };
+
   const handleSearch = () => {
-    console.log('🔍 Search triggered for:', searchTerm);
-    
-    // Only proceed if there's a search term or we're clearing
     if (searchTerm.trim() || activeSearchQuery) {
       setIsSearching(true);
-      setCurrentPage(1); // Reset to first page when searching
+      setCurrentPage(1);
       setActiveSearchQuery(searchTerm.trim());
-      setSelectedStaffs([]); // Clear selections when searching
-      
-      console.log('🔄 Search state updated:');
-      console.log('  - New search query:', searchTerm.trim());
-      console.log('  - Page reset to: 1');
+      setSelectedStaffs([]);
     }
   };
 
   const handleClearSearch = () => {
-    console.log('🔄 Clearing search');
     setSearchTerm('');
     setActiveSearchQuery('');
     setCurrentPage(1);
@@ -380,7 +394,6 @@ export const StaffsDashboard = () => {
   };
 
   const handleDeleteStaff = (staffId: string) => {
-    console.log('Deleting staff:', staffId);
     // Add delete functionality here
   };
 
@@ -400,25 +413,26 @@ export const StaffsDashboard = () => {
   const transformedApiData = () => {
     return apiStaffsData.map(staff => ({
       id: staff.id.toString(),
-      name: staff.full_name,
-      unit: staff.unit_name || '--',
-      department: staff.department_name,
-      email: staff.email,
-      mobile: staff.mobile,
-      workType: staff.work_type_name,
-      vendorName: staff.vendor_name || '--',
-      status: staff.status_text,
-      validTill: staff.valid_from || '--',
-      checkIn: null as string | null, // This would come from staff_workings if needed
-      checkOut: null as string | null, // This would come from staff_workings if needed
-      isIn: false, // This would be calculated from staff_workings if needed
-      staffId: staff.soc_staff_id,
-      numberVerified: staff.number_verified,
-      imageUrl: staff.staff_image_url,
-      qrCodeUrl: staff.qr_code_url,
-      expiry: staff.expiry,
-      createdAt: staff.created_at,
-      updatedAt: staff.updated_at
+      name: staff.name || '--',
+      unit: '--', // New API doesn't have unit info
+      department: '--', // New API doesn't have department info
+      email: staff.email || '--',
+      mobile: staff.mobile || '--',
+      workType: staff.work_type || '--',
+      vendorName: staff.company_name || '--',
+      status: staff.status?.label || 'Unknown',
+      validTill: staff.created_at_formatted || '--',
+      checkIn: null as string | null,
+      checkOut: null as string | null,
+      isIn: false,
+      staffId: staff.staff_id || '--',
+      numberVerified: false,
+      imageUrl: staff.image_url || '/images/male.jpg',
+      qrCodeUrl: staff.qr_code_url || '',
+      staffType: staff.staff_type || '--',
+      companyName: staff.company_name || '--',
+      createdAt: staff.created_at_formatted || staff.created_at || '--',
+      rawStatus: staff.status?.value || 0
     }));
   };
 
@@ -701,6 +715,15 @@ export const StaffsDashboard = () => {
                     {/* ({selectedStaffs.length}) */}
                   </Button>
                 )}
+                <Button 
+                  onClick={handlePrintAllQR}
+                  disabled={printingAll || !resourceId}
+                  style={{ backgroundColor: '#8B4B8C' }}
+                  className="hover:bg-[#8B4B8C]/90 text-white px-4 py-2 disabled:opacity-50"
+                >
+                  <QrCode className="w-4 h-4 mr-2" />
+                  {printingAll ? 'Downloading...' : 'Print All QR'}
+                </Button>
               </div>
             }
             onFilterClick={() => setIsFilterModalOpen(true)}

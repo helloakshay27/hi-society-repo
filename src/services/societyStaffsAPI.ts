@@ -1,5 +1,36 @@
 import { API_CONFIG } from '@/config/apiConfig';
+import { getAuthHeader } from '@/config/apiConfig';
 
+// New API response structure
+export interface NewSocietyStaff {
+  id: number;
+  name: string;
+  email: string | null;
+  mobile: string;
+  staff_id: string;
+  work_type: string;
+  company_name: string;
+  created_at: string;
+  created_at_formatted: string;
+  staff_type: string;
+  image_url: string;
+  qr_code_url: string;
+  qr_code_page_url: string;
+  documents: unknown[];
+  staff_documents: unknown[];
+  gallery_documents: unknown[];
+  status: {
+    value: number;
+    label: string;
+  };
+  associated_flats: unknown[];
+  actions: {
+    view_url: string;
+    edit_url: string;
+  };
+}
+
+// Old API response structure for backward compatibility
 export interface SocietyStaff {
   id: number;
   first_name: string;
@@ -27,14 +58,18 @@ export interface SocietyStaff {
 }
 
 export interface PaginationInfo {
-  current_page: number;
+  current_page?: number;
+  page?: number;
   total_count: number;
   total_pages: number;
+  per_page?: number;
 }
 
 export interface SocietyStaffsResponse {
-  society_staffs: SocietyStaff[];
+  data?: NewSocietyStaff[];
+  society_staffs?: SocietyStaff[];
   pagination: PaginationInfo;
+  message?: string;
 }
 
 export const fetchSocietyStaffs = async (page: number = 1, searchQuery?: string): Promise<SocietyStaffsResponse> => {
@@ -51,16 +86,13 @@ export const fetchSocietyStaffs = async (page: number = 1, searchQuery?: string)
     }
     
     const queryString = params.toString();
-    const url = `${API_CONFIG.BASE_URL}/pms/admin/society_staffs.json${queryString ? `?${queryString}` : ''}`;
-    
-    console.log('Fetching society staffs from URL:', url);
-    console.log('Search query:', searchQuery);
+    const url = `${API_CONFIG.BASE_URL}/crm/admin/society_staffs.json${queryString ? `?${queryString}` : ''}`;
     
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_CONFIG.TOKEN}`,
+        'Authorization': getAuthHeader(),
         'Accept': 'application/json',
       },
     });
@@ -70,11 +102,15 @@ export const fetchSocietyStaffs = async (page: number = 1, searchQuery?: string)
     }
 
     const data: SocietyStaffsResponse = await response.json();
-    console.log('Society Staffs API Response:', data);
+    
+    // Normalize pagination object
+    if (data.pagination) {
+      data.pagination.current_page = data.pagination.page || data.pagination.current_page || 1;
+    }
     
     return data;
   } catch (error) {
-    console.error('Error fetching society staffs:', error);
+    console.error('❌ Error fetching society staffs:', error);
     throw error;
   }
 };

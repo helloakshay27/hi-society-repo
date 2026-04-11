@@ -2,11 +2,19 @@ import React, { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { Plus, KeyRound, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 import {
   Pagination,
@@ -109,6 +117,23 @@ const getHostDisplay = (v: ApiGatekeeper): string => {
   return "--";
 };
 
+// ─── API Actions ──────────────────────────────────────────────────────────────
+
+const checkVisitorAction = async (
+  id: number,
+  checkType: "in" | "out"
+): Promise<void> => {
+  const res = await fetch(getFullUrl(`/crm/admin/visitors/${id}.json`), {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: getAuthHeader(),
+    },
+    body: JSON.stringify({ gatekeeper: { check_type: checkType } }),
+  });
+  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+};
+
 // ─── Column Config ─────────────────────────────────────────────────────────────
 
 const visitorInColumns: ColumnConfig[] = [
@@ -131,8 +156,41 @@ const visitorInColumns: ColumnConfig[] = [
 
 const SmartSecureVisitorIn: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
+  const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
   const perPage = 20;
+
+  // ── Verify OTP State ───────────────────────────────────────────────────────
+  const [otpDialogOpen, setOtpDialogOpen] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
+
+  const handleVerifyOtp = async () => {
+    if (!otpValue.trim()) {
+      toast.error("Please enter the OTP");
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      const res = await fetch(getFullUrl("/crm/admin/verify_hour_otp.json"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: getAuthHeader(),
+        },
+        body: JSON.stringify({ otp: otpValue.trim() }),
+      });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      toast.success("OTP verified successfully");
+      setOtpDialogOpen(false);
+      setOtpValue("");
+    } catch {
+      toast.error("Invalid OTP. Please try again.");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
 
   const { data: apiData, isLoading, isError, refetch } = useQuery<ApiResponse>({
     queryKey: ["visitor-in-list", currentPage],
@@ -265,41 +323,71 @@ const SmartSecureVisitorIn: React.FC = () => {
           <span className="text-sm text-gray-700">{formatDateTime(visitor.guest_entry_time)}</span>
         );
 
-      case "check_in_action":
+      case "check_in_action": {
+        const inKey = `in-${visitor.id}`;
         return (
           <Button
             size="sm"
             className="hover:bg-green-600 text-white text-xs px-3 py-1"
-            onClick={() => {
-              toast.success(`${visitor.guest_name} checked in successfully`);
+            disabled={!!loadingIds[inKey]}
+            onClick={async () => {
+              setLoadingIds((prev) => ({ ...prev, [inKey]: true }));
+              try {
+                await checkVisitorAction(visitor.id, "in");
+                toast.success(`${visitor.guest_name} checked in successfully`);
+                queryClient.invalidateQueries({ queryKey: ["visitor-in-list"] });
+              } catch {
+                toast.error(`Failed to check in ${visitor.guest_name}`);
+              } finally {
+                setLoadingIds((prev) => ({ ...prev, [inKey]: false }));
+              }
             }}
           >
-            Check In
+            {loadingIds[inKey] ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              "Check In"
+            )}
           </Button>
         );
+      }
 
-      case "out_action":
+      case "out_action": {
+        const outKey = `out-${visitor.id}`;
         return (
           <Button
             size="sm"
             variant="outline"
             className="border-red-500 text-red-500 hover:bg-red-50 text-xs px-3 py-1"
-            onClick={() => {
-              toast.info(`${visitor.guest_name} marked as OUT`);
+            disabled={!!loadingIds[outKey]}
+            onClick={async () => {
+              setLoadingIds((prev) => ({ ...prev, [outKey]: true }));
+              try {
+                await checkVisitorAction(visitor.id, "out");
+                toast.success(`${visitor.guest_name} marked as OUT`);
+                queryClient.invalidateQueries({ queryKey: ["visitor-in-list"] });
+              } catch {
+                toast.error(`Failed to mark ${visitor.guest_name} as OUT`);
+              } finally {
+                setLoadingIds((prev) => ({ ...prev, [outKey]: false }));
+              }
             }}
           >
-            OUT
+            {loadingIds[outKey] ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              "OUT"
+            )}
           </Button>
         );
+      }
 
       default: {
         const val = (visitor as unknown as Record<string, unknown>)[columnKey];
         return val ? String(val) : "--";
       }
     }
-  }, [currentPage, perPage, rows]);
-
-  // ── Left Actions ───────────────────────────────────────────────────────────
+    }, [currentPage, perPage, rows, loadingIds, queryClient]);
 
   const leftActions = (
     <div className="flex gap-2">
@@ -313,7 +401,10 @@ const SmartSecureVisitorIn: React.FC = () => {
       <Button
         variant="outline"
         className="h-9 px-4 text-sm font-medium border-gray-300"
-        onClick={() => toast.info("Verify OTP dialog coming soon")}
+        onClick={() => {
+          setOtpValue("");
+          setOtpDialogOpen(true);
+        }}
       >
         <KeyRound className="w-4 h-4 mr-2" />
         Verify OTP
@@ -413,6 +504,57 @@ const SmartSecureVisitorIn: React.FC = () => {
           </Pagination>
         </div>
       )}
+
+      {/* Verify OTP Dialog */}
+      <Dialog open={otpDialogOpen} onOpenChange={(open) => { if (!otpLoading) { setOtpDialogOpen(open); if (!open) setOtpValue(""); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-[#C72030]" />
+              Verify OTP
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="py-4">
+            <p className="text-sm text-gray-500 mb-3">Enter the OTP to verify visitor access.</p>
+            <Input
+              type="text"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="Enter OTP"
+              value={otpValue}
+              onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ""))}
+              onKeyDown={(e) => { if (e.key === "Enter") handleVerifyOtp(); }}
+              className="text-center text-lg tracking-widest font-semibold"
+              autoFocus
+            />
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => { setOtpDialogOpen(false); setOtpValue(""); }}
+              disabled={otpLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-[#C72030] text-white hover:bg-[#C72030]/90"
+              onClick={handleVerifyOtp}
+              disabled={otpLoading || !otpValue.trim()}
+            >
+              {otpLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                "Verify"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

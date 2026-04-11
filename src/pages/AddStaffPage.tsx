@@ -46,6 +46,7 @@ export const AddStaffPage = () => {
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [isPhotoSaved, setIsPhotoSaved] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -140,8 +141,9 @@ export const AddStaffPage = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = newStream;
         videoRef.current.onloadedmetadata = () => {
+          setIsVideoReady(true);
           if (videoRef.current) {
-            videoRef.current.play();
+            videoRef.current.play().catch(console.error);
           }
         };
       }
@@ -153,10 +155,13 @@ export const AddStaffPage = () => {
 
   const handleCameraChange = (deviceId: string) => {
     setSelectedCamera(deviceId);
+    setIsVideoReady(false);
     startCamera(deviceId);
   };
 
   const handleCameraClick = () => {
+    setIsVideoReady(false);
+    setCapturedPhoto(null);
     setShowCameraModal(true);
     initializeCamera();
   };
@@ -165,6 +170,7 @@ export const AddStaffPage = () => {
     setCapturedPhoto(null);
     setIsPhotoSaved(false);
     setShowCameraModal(true);
+    setIsVideoReady(false);
     initializeCamera();
   };
 
@@ -186,6 +192,7 @@ export const AddStaffPage = () => {
         stream.getTracks().forEach((track) => track.stop());
         setStream(null);
         setShowCameraModal(false);
+        setIsVideoReady(false);
         
         toast.success('Photo captured successfully!');
       } else {
@@ -216,6 +223,7 @@ export const AddStaffPage = () => {
         stream.getTracks().forEach((track) => track.stop());
         setStream(null);
         setShowCameraModal(false);
+        setIsVideoReady(false);
         
         toast.success('Photo captured successfully!');
       } else {
@@ -312,7 +320,8 @@ export const AddStaffPage = () => {
       
       await staffService.createSocietyStaff(staffDataWithCalculated, schedule, {
         profilePicture: attachments.profilePicture,
-        documents: documents
+        documents: documents,
+        capturedPhoto: capturedPhoto || undefined
       });
       toast.success('Society staff created successfully!');
       navigate('/security/staff'); // Navigate back to staff dashboard
@@ -351,6 +360,7 @@ export const AddStaffPage = () => {
                   setStream(null);
                 }
                 setShowCameraModal(false);
+                setIsVideoReady(false);
               }}
               className="h-6 w-6 p-0 hover:bg-gray-100"
             >
@@ -380,6 +390,11 @@ export const AddStaffPage = () => {
               muted
               className="w-full h-48 object-cover"
             />
+            <div className="absolute top-2 right-2">
+              <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs font-medium">
+                📹 Preview
+              </span>
+            </div>
             <canvas ref={canvasRef} className="hidden" />
           </div>
 
@@ -406,15 +421,17 @@ export const AddStaffPage = () => {
           <div className="space-y-2">
             <Button
               onClick={handleAllowThisTime}
-              className="w-full bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+              className="w-full bg-pink-200 hover:bg-pink-300 text-gray-800 rounded-full"
+              disabled={!stream || !isVideoReady}
             >
-              Allow this time
+              {!isVideoReady ? 'Loading Camera...' : 'Allow this time'}
             </Button>
             <Button
               onClick={handleCaptureAndClose}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full"
+              disabled={!stream || !isVideoReady}
             >
-              Capture & Close
+              {!isVideoReady ? 'Loading Camera...' : 'Capture & Close'}
             </Button>
             <Button
               onClick={() => {
@@ -423,9 +440,10 @@ export const AddStaffPage = () => {
                   setStream(null);
                 }
                 setShowCameraModal(false);
+                setIsVideoReady(false);
               }}
               variant="outline"
-              className="w-full"
+              className="w-full rounded-full"
             >
               Cancel
             </Button>

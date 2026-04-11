@@ -7,9 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { staffService, SocietyStaffDetails, Unit, Department, WorkType } from '@/services/staffService';
+import { staffService, SocietyStaffDetails, Unit, Department, WorkType, StaffFormData } from '@/services/staffService';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
-import { API_CONFIG } from '@/config/apiConfig';
 
 // Field styles for Material-UI components
 const fieldStyles = {
@@ -44,6 +43,18 @@ interface ScheduleDay {
   endMinute: string;
 }
 
+interface ScheduleDataEntry {
+  checked: boolean;
+  startTime: string;
+  startMinute: string;
+  endTime: string;
+  endMinute: string;
+}
+
+interface ScheduleData {
+  [key: string]: ScheduleDataEntry;
+}
+
 export const EditStaffPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -74,11 +85,7 @@ export const EditStaffPage = () => {
       try {
         setLoading(true);
         setError(null);
-        console.log('Fetching staff details for ID:', id);
         const staffDetails = await staffService.getStaffDetails(id);
-        console.log('Fetched staff details:', staffDetails);
-        console.log('Staff status_text:', staffDetails.status_text);
-        console.log('Staff status (raw):', staffDetails.status);
         setStaff(staffDetails);
       } catch (err) {
         console.error('Error loading staff details:', err);
@@ -139,15 +146,12 @@ export const EditStaffPage = () => {
       
       // Find the matching department by ID
       const matchingDepartment = departments.find(dept => dept.id === staff.department_id);
-      console.log('Staff department_id:', staff.department_id, 'Found department:', matchingDepartment);
       
       // Find the matching work type by ID
       const matchingWorkType = workTypes.find(wt => wt.id === staff.type_id);
-      console.log('Staff type_id:', staff.type_id, 'Found work type:', matchingWorkType);
       
       // Find the matching unit by ID
       const matchingUnit = units.find(unit => unit.id === staff.pms_unit_id);
-      console.log('Staff pms_unit_id:', staff.pms_unit_id, 'Found unit:', matchingUnit);
       
       // Map status from API response to dropdown value
       let statusValue = '';
@@ -183,8 +187,6 @@ export const EditStaffPage = () => {
         validTill: staff.expiry || '',
         status: statusValue
       });
-
-      console.log('Status mapping - API status_text:', staff.status_text, 'Mapped to:', statusValue);
     }
   }, [staff, workTypes, departments, units]); // Add all dependencies
 
@@ -202,9 +204,6 @@ export const EditStaffPage = () => {
     profilePicture: null as File | null,
     manuals: null as File | null
   });
-
-  // Track removed files for API
-  const [removedFiles, setRemovedFiles] = useState<number[]>([]);
 
   // Loading state
   if (loading) {
@@ -271,81 +270,40 @@ export const EditStaffPage = () => {
 
     setSaving(true);
     try {
-      // Create FormData object
-      const formDataToSend = new FormData();
-      
-      // Add text fields - following the exact API specification format
-      formDataToSend.append('society_staff[first_name]', formData.firstName);
-      formDataToSend.append('society_staff[last_name]', formData.lastName);
-      formDataToSend.append('society_staff[email]', formData.email);
-      formDataToSend.append('society_staff[mobile]', formData.mobile);
-      
-      // Add staff ID if provided
-      if (formData.staffId) {
-        formDataToSend.append('society_staff[soc_staff_id]', formData.staffId);
-      }
-      
-      // Add additional fields
-      if (formData.unit) {
-        // Find the unit ID by name
-        const selectedUnit = units.find(unit => unit.unit_name === formData.unit);
-        if (selectedUnit) {
-          formDataToSend.append('society_staff[pms_unit_id]', selectedUnit.id.toString());
-        }
-      }
-      if (formData.department) {
-        // Find the department ID by name
-        const selectedDepartment = departments.find(dept => dept.department_name === formData.department);
-        if (selectedDepartment) {
-          formDataToSend.append('society_staff[department_id]', selectedDepartment.id.toString());
-        }
-      }
-      if (formData.workType) {
-        // Work type is already stored as ID
-        formDataToSend.append('society_staff[type_id]', formData.workType);
-      }
-      if (formData.vendorName) {
-        formDataToSend.append('society_staff[vendor_name]', formData.vendorName);
-      }
-      if (formData.validFrom) {
-        formDataToSend.append('society_staff[valid_from]', formData.validFrom);
-      }
-      if (formData.validTill) {
-        formDataToSend.append('society_staff[expiry]', formData.validTill);
-      }
-      if (formData.status) {
-        // Map dropdown value back to API format
-        formDataToSend.append('society_staff[status]', formData.status);
-        console.log('Status submission - Form value:', formData.status);
-      }
-      
-      if (formData.password) {
-        formDataToSend.append('society_staff[password]', formData.password);
-      }
+      // Convert schedule format to match staffService expectations
+      const scheduleData: ScheduleData = {};
+      schedule.forEach((day, index) => {
+        const dayKey = day.day.toLowerCase();
+        scheduleData[dayKey] = {
+          checked: day.enabled,
+          startTime: day.startHour,
+          startMinute: day.startMinute,
+          endTime: day.endHour,
+          endMinute: day.endMinute
+        };
+      });
 
-      // Add removed files if any
-      if (removedFiles.length > 0) {
-        formDataToSend.append('removed_files', removedFiles.join(','));
-      }
+      const formDataToSubmit: StaffFormData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        mobile: formData.mobile,
+        unit: formData.unit,
+        department: formData.department,
+        workType: formData.workType,
+        staffId: formData.staffId,
+        vendorName: formData.vendorName,
+        validFrom: formData.validFrom,
+        validTill: formData.validTill,
+        status: formData.status
+      };
 
-      // Add file uploads if any
-      if (attachments.profilePicture) {
-        formDataToSend.append('staffimage', attachments.profilePicture);
-      }
-      
-      if (attachments.manuals) {
-        formDataToSend.append('attachments[]', attachments.manuals);
-      }
-
-      console.log('📤 Final form data being sent to API:');
-      for (const [key, value] of formDataToSend.entries()) {
-        console.log(`${key}:`, value);
-      }
-      
-      console.log('🔗 API Endpoint will be:', `${API_CONFIG.BASE_URL}/pms/admin/society_staffs/${id}.json`);
-      console.log('🔑 Using PUT method for staff update');
-
-      await staffService.updateStaff(id, formDataToSend);
+      await staffService.updateStaff(id, formDataToSubmit, scheduleData, {
+        profilePicture: attachments.profilePicture || undefined,
+        documents: [],
+        capturedPhoto: undefined
+      });
       
       // Navigate back to staff list after successful update
       navigate('/security/staff');
@@ -712,6 +670,7 @@ export const EditStaffPage = () => {
                         <div className="flex items-center gap-3">
                           <input
                             type="checkbox"
+                            aria-label={`Enable ${scheduleDay.day}`}
                             checked={scheduleDay.enabled}
                             onChange={(e) => handleScheduleChange(index, 'enabled', e.target.checked)}
                             className="rounded border-gray-300 text-red-600 focus:ring-red-600"

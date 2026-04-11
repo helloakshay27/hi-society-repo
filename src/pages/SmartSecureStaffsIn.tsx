@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Phone, Mail } from "lucide-react";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { Loader2 } from "lucide-react";
 import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
 import { toast } from "sonner";
 
@@ -49,14 +49,7 @@ const dummyStaffData: StaffData[] = [
     vendor_name: "SecureGuard Services",
     status_text: "Active",
     number_verified: true,
-    staff_workings: [
-      {
-        id: 1,
-        check_in: "2026-02-11T08:30:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
+    staff_workings: [{ id: 1, check_in: "2026-02-11T08:30:00", check_out: null, status: "in" }],
   },
   {
     id: 2,
@@ -73,14 +66,7 @@ const dummyStaffData: StaffData[] = [
     vendor_name: "CleanPro Ltd",
     status_text: "Active",
     number_verified: true,
-    staff_workings: [
-      {
-        id: 2,
-        check_in: "2026-02-11T09:00:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
+    staff_workings: [{ id: 2, check_in: "2026-02-11T09:00:00", check_out: null, status: "in" }],
   },
   {
     id: 3,
@@ -97,14 +83,7 @@ const dummyStaffData: StaffData[] = [
     vendor_name: null,
     status_text: "Active",
     number_verified: false,
-    staff_workings: [
-      {
-        id: 3,
-        check_in: "2026-02-11T07:45:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
+    staff_workings: [{ id: 3, check_in: "2026-02-11T07:45:00", check_out: null, status: "in" }],
   },
   {
     id: 4,
@@ -121,14 +100,7 @@ const dummyStaffData: StaffData[] = [
     vendor_name: "FixIt Services",
     status_text: "Approved",
     number_verified: true,
-    staff_workings: [
-      {
-        id: 4,
-        check_in: "2026-02-11T08:15:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
+    staff_workings: [{ id: 4, check_in: "2026-02-11T08:15:00", check_out: null, status: "in" }],
   },
   {
     id: 5,
@@ -145,14 +117,7 @@ const dummyStaffData: StaffData[] = [
     vendor_name: null,
     status_text: "Active",
     number_verified: true,
-    staff_workings: [
-      {
-        id: 5,
-        check_in: "2026-02-11T06:00:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
+    staff_workings: [{ id: 5, check_in: "2026-02-11T06:00:00", check_out: null, status: "in" }],
   },
   {
     id: 6,
@@ -169,38 +134,69 @@ const dummyStaffData: StaffData[] = [
     vendor_name: "GreenScape Services",
     status_text: "Active",
     number_verified: false,
-    staff_workings: [
-      {
-        id: 6,
-        check_in: "2026-02-11T07:00:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
+    staff_workings: [{ id: 6, check_in: "2026-02-11T07:00:00", check_out: null, status: "in" }],
   },
 ];
 
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+const getInitials = (name: string): string => {
+  const parts = name.split(" ");
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return name.substring(0, 2).toUpperCase();
+};
+
+const getStatusBadge = (status: string): string => {
+  const s = status.toLowerCase();
+  if (s.includes("active") || s.includes("approved")) return "bg-green-100 text-green-800 hover:bg-green-100";
+  if (s.includes("pending")) return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
+  return "bg-gray-100 text-gray-800 hover:bg-gray-100";
+};
+
+const formatCheckIn = (iso: string): string => {
+  if (!iso) return "--";
+  return new Date(iso).toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+// ─── Column Config ─────────────────────────────────────────────────────────────
+
+const staffInColumns: ColumnConfig[] = [
+  { key: "sr_no",         label: "Sr. No.",      sortable: false, hideable: true,  draggable: true  },
+  { key: "photo",         label: "Photo",        sortable: false, hideable: true,  draggable: true  },
+  { key: "full_name",     label: "Staff Name",   sortable: true,  hideable: true,  draggable: true  },
+  { key: "mobile",        label: "Mobile",       sortable: true,  hideable: true,  draggable: true  },
+  { key: "department",    label: "Department",   sortable: true,  hideable: true,  draggable: true  },
+  { key: "work_type",     label: "Work Type",    sortable: true,  hideable: true,  draggable: true  },
+  { key: "unit",          label: "Unit",         sortable: true,  hideable: true,  draggable: true  },
+  { key: "vendor",        label: "Vendor",       sortable: true,  hideable: true,  draggable: true  },
+  { key: "status",        label: "Status",       sortable: true,  hideable: true,  draggable: true  },
+  { key: "checked_in_at", label: "Check In Time",sortable: true,  hideable: true,  draggable: true  },
+  { key: "in_status",     label: "IN/OUT",       sortable: false, hideable: false, draggable: false },
+];
+
+// ─── Component ─────────────────────────────────────────────────────────────────
+
 const SmartSecureStaffsIn: React.FC = () => {
   const [staffsIn, setStaffsIn] = useState<StaffData[]>(dummyStaffData);
-  const [filteredStaffs, setFilteredStaffs] = useState<StaffData[]>(dummyStaffData);
-  const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [expandedStaffId, setExpandedStaffId] = useState<number | null>(null);
 
   // Fetch staff in data
   const fetchStaffsIn = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        getFullUrl("/crm/admin/society_staffs.json"),
-        {
-          headers: {
-            Authorization: getAuthHeader(),
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
+      const response = await fetch(getFullUrl("/crm/admin/society_staffs.json"), {
+        headers: {
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         // Filter only staff who are currently checked in
@@ -211,13 +207,11 @@ const SmartSecureStaffsIn: React.FC = () => {
             staff.staff_workings[0].check_out === null
         );
         setStaffsIn(staffsInData);
-        setFilteredStaffs(staffsInData);
       }
     } catch (error) {
       console.error("Error fetching staffs in:", error);
       // Using dummy data on error
       setStaffsIn(dummyStaffData);
-      setFilteredStaffs(dummyStaffData);
     } finally {
       setIsLoading(false);
     }
@@ -228,184 +222,147 @@ const SmartSecureStaffsIn: React.FC = () => {
     // fetchStaffsIn();
   }, []);
 
-  // Search handler
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setFilteredStaffs(staffsIn);
-    } else {
-      const filtered = staffsIn.filter(
-        (staff) =>
-          staff.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          staff.mobile.includes(searchTerm) ||
-          staff.department_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          staff.work_type_name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredStaffs(filtered);
-    }
-  }, [searchTerm, staffsIn]);
+  // ── Cell Renderer ──────────────────────────────────────────────────────────
 
-  const getInitials = (name: string) => {
-    const parts = name.split(" ");
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
+  const renderCell = useCallback((staff: StaffData, columnKey: string) => {
+    switch (columnKey) {
+      case "sr_no": {
+        const idx = staffsIn.indexOf(staff);
+        return (
+          <span className="text-sm text-gray-500 font-medium">{idx + 1}</span>
+        );
+      }
 
-  const getStatusBadge = (status: string) => {
-    const statusLower = status.toLowerCase();
-    if (statusLower.includes("active") || statusLower.includes("approved")) {
-      return "bg-green-100 text-green-800";
-    } else if (statusLower.includes("pending")) {
-      return "bg-yellow-100 text-yellow-800";
-    } else {
-      return "bg-gray-100 text-gray-800";
+      case "photo":
+        return (
+          <div className="flex justify-center">
+            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
+              {staff.staff_image_url ? (
+                <img
+                  src={staff.staff_image_url}
+                  alt={staff.full_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                  <span className="text-white font-semibold text-sm">
+                    {getInitials(staff.full_name)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      case "full_name":
+        return (
+          <span className="font-medium text-gray-900">{staff.full_name || "--"}</span>
+        );
+
+      case "mobile":
+        return (
+          <span className="text-sm text-gray-700">{staff.mobile || "--"}</span>
+        );
+
+      case "department":
+        return (
+          <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded font-medium">
+            {staff.department_name || "--"}
+          </span>
+        );
+
+      case "work_type":
+        return (
+          <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded font-medium">
+            {staff.work_type_name || "--"}
+          </span>
+        );
+
+      case "unit":
+        return (
+          <span className="text-sm text-gray-700">{staff.unit_name || "--"}</span>
+        );
+
+      case "vendor":
+        return (
+          <span className="text-sm text-gray-700">{staff.vendor_name || "--"}</span>
+        );
+
+      case "status":
+        return (
+          <Badge className={getStatusBadge(staff.status_text)}>
+            {staff.status_text || "--"}
+          </Badge>
+        );
+
+      case "checked_in_at": {
+        const checkIn = staff.staff_workings?.[0]?.check_in ?? null;
+        return (
+          <span className="text-sm text-gray-600">{checkIn ? formatCheckIn(checkIn) : "--"}</span>
+        );
+      }
+
+      case "in_status": {
+        const isIn =
+          staff.staff_workings &&
+          staff.staff_workings.length > 0 &&
+          staff.staff_workings[0].check_out === null;
+        return (
+          <span
+            className={`inline-block border-2 px-4 py-1 text-sm font-semibold rounded ${
+              isIn
+                ? "border-green-400 text-green-600"
+                : "border-red-400 text-red-600"
+            }`}
+          >
+            {isIn ? "IN" : "OUT"}
+          </span>
+        );
+      }
+
+      default: {
+        const val = (staff as unknown as Record<string, unknown>)[columnKey];
+        return val ? String(val) : "--";
+      }
     }
-  };
+  }, [staffsIn]);
+
+  // ── Loading / Error ────────────────────────────────────────────────────────
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex justify-center items-center py-24">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-400 mr-2" />
+        <span className="text-sm text-gray-500">Loading staffs...</span>
+      </div>
+    );
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-semibold text-gray-900">Staffs In</h1>
+    <div className="p-6">
+      <EnhancedTable
+        data={staffsIn}
+        columns={staffInColumns}
+        renderCell={renderCell}
+        enableSearch={true}
+        enableSelection={false}
+        storageKey="staffs-in-table"
+        emptyMessage="No staff are currently checked in"
+        searchPlaceholder="Search by name, mobile, department..."
+        hideTableExport={false}
+        hideColumnsButton={false}
+        leftActions={
           <Button
             onClick={fetchStaffsIn}
             variant="outline"
-            className="border-gray-300"
+            className="h-9 px-4 text-sm font-medium border-gray-300"
           >
             Refresh
           </Button>
-        </div>
-
-        {/* Search Bar */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search using staff's name or mobile number"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-10"
-          />
-        </div>
-      </div>
-
-      {/* Staff Cards */}
-      <div className="p-6">
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="text-gray-500">Loading staffs...</div>
-          </div>
-        ) : filteredStaffs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="text-gray-400 text-lg mb-2">No Staff In</div>
-            <div className="text-gray-500 text-sm">
-              {searchTerm
-                ? "No staff found matching your search"
-                : "No staff are currently checked in"}
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {filteredStaffs.map((staff) => (
-              <div key={staff.id} className="bg-white border border-gray-200 rounded-none shadow-sm">
-                {/* Main Staff Info Section */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                  <div className="flex items-center gap-4">
-                    {/* Profile Photo */}
-                    {staff.staff_image_url ? (
-                      <img
-                        src={staff.staff_image_url}
-                        alt={staff.full_name}
-                        className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
-                      />
-                    ) : (
-                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center border-2 border-gray-200">
-                        <span className="text-white font-semibold text-2xl">
-                          {getInitials(staff.full_name)}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Name, ID, Badge */}
-                    <div>
-                      <h2 className="text-2xl font-normal text-gray-900 mb-1">
-                        {staff.full_name}
-                      </h2>
-                      <p className="text-gray-600 text-base mb-2">
-                        {staff.mobile}
-                      </p>
-                      <Badge className="bg-teal-100 text-teal-700 hover:bg-teal-100 rounded-full px-3 py-1 text-sm font-normal">
-                        Personal
-                      </Badge>
-                    </div>
-                  </div>
-
-                  {/* IN Button */}
-                  <div className="border-2 border-green-400 text-green-500 px-8 py-2 text-xl font-semibold rounded">
-                    IN
-                  </div>
-                </div>
-
-                {/* Associated Flats Section */}
-                <div
-                  className={`${
-                    expandedStaffId === staff.id
-                      ? "bg-sky-400"
-                      : "bg-gray-100 hover:bg-gray-200"
-                  } transition-colors cursor-pointer`}
-                  onClick={() =>
-                    setExpandedStaffId(
-                      expandedStaffId === staff.id ? null : staff.id
-                    )
-                  }
-                >
-                  <div className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-lg font-medium ${
-                          expandedStaffId === staff.id
-                            ? "text-white"
-                            : "text-gray-700"
-                        }`}
-                      >
-                        Associated Flats
-                      </span>
-                      <span
-                        className={`${
-                          expandedStaffId === staff.id
-                            ? "bg-white text-sky-500"
-                            : "bg-orange-400 text-white"
-                        } rounded-full w-7 h-7 flex items-center justify-center text-sm font-semibold`}
-                      >
-                        1
-                      </span>
-                    </div>
-                    <button
-                      className={`text-2xl font-bold ${
-                        expandedStaffId === staff.id
-                          ? "text-white"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      {expandedStaffId === staff.id ? "−" : "+"}
-                    </button>
-                  </div>
-
-                  {/* Expanded Content */}
-                  {expandedStaffId === staff.id && (
-                    <div className="bg-white px-4 py-3 border-t border-gray-200">
-                      <p className="text-gray-700">
-                        {staff.unit_name || "A - 101"}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        }
+      />
     </div>
   );
 };

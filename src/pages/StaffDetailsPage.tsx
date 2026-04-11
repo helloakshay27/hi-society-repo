@@ -112,7 +112,6 @@ export const StaffDetailsPage = () => {
   };
 
   const handlePrint = () => {
-    console.log('Print QR code for staff:', staff.id);
     window.print();
   };
 

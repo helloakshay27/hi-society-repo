@@ -29,14 +29,6 @@ const getApiConfig = () => {
   // Use saved base URL or fallback to UAT Hi-Society
   const finalBaseUrl = savedBaseUrl || "https://uat-hi-society.lockated.com";
 
-  console.log("API Config Debug:", {
-    savedToken: savedToken ? "Present" : "Missing",
-    savedBaseUrl: savedBaseUrl || "Missing",
-    finalBaseUrl,
-    tokenLength: savedToken?.length || 0,
-    baseUrlValue: finalBaseUrl,
-  });
-
   return {
     BASE_URL: finalBaseUrl,
     TOKEN: savedToken,
@@ -65,8 +57,8 @@ export const API_CONFIG = {
     SITES: "/pms/sites.json",
     UNITS: "/pms/units.json",
     SOCIETY_STAFF_TYPES: "/pms/society_staff_types.json",
-    SOCIETY_STAFF_DETAILS: "/pms/admin/society_staffs", // Base path, will append /{id}.json
-    UPDATE_SOCIETY_STAFF: "/pms/admin/society_staffs", // Base path, will append /{id}.json
+    SOCIETY_STAFF_DETAILS: "/crm/admin/society_staffs", // Base path, will append /{id}.json
+    UPDATE_SOCIETY_STAFF: "/crm/admin/society_staffs", // Base path, will append /{id}.json
     SEND_STAFF_OTP: "/pms/admin/society_staffs/send_otp.json",
     VERIFY_STAFF_NUMBER: "/pms/admin/society_staffs/verify_number.json",
     PRINT_QR_CODES: "/pms/admin/society_staffs/print_qr_codes.json",
@@ -266,7 +258,7 @@ export const API_CONFIG = {
     EDIT_MOVE_IN_OUT_PURPOSE: "/pms/society_mimo_purposes",
     CREATE_WORK_TYPE: "/pms/society_staff_types.json",
     EDIT_WORK_TYPE: "/pms/society_staff_types", // Base path, will append /{id}.json
-    CREATE_SOCIETY_STAFF: "/pms/admin/society_staffs.json",
+    CREATE_SOCIETY_STAFF: "/crm/admin/society_staffs.json",
     CREATE_VISITOR_COMMENT: "/visitor_comments.json",
     EDIT_VISITOR_COMMENT: "/visitor_comments",
     PARKING_CONFIGURATIONS_SEARCH: "/pms/admin/parking_configurations.json",
@@ -288,7 +280,7 @@ export const API_CONFIG = {
     // Visitor history export endpoint
     VISITOR_HISTORY_EXPORT: "/pms/admin/visitors/visitors_history.xlsx",
     ASSET_TYPES: "/pms/custom_forms/get_asset_type",
-    COMMUNICATION_TEMPLATES: "/crm/admin/communication_templates.json",
+    COMMUNICATION_TEMPLATES: "crm/admin/communication_templates.json",
     // Vehicle details endpoint
     VEHICLE_DETAILS: "/vehicle_details/vehicle_detail_list.json",
     // LTM list endpoint

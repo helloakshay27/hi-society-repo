@@ -37,6 +37,7 @@ export interface ScheduleData {
 export interface StaffAttachments {
   profilePicture?: File;
   documents?: File[];
+  capturedPhoto?: string;
 }
 
 export interface Unit {
@@ -149,7 +150,68 @@ export interface SocietyStaffDetails {
 }
 
 export interface SocietyStaffDetailsResponse {
-  society_staff: SocietyStaffDetails;
+  society_staff?: SocietyStaffDetails;
+}
+
+// New API response format for single staff (old format)
+export interface NewStaffDetailsResponse {
+  society_staff: {
+    document: string;
+    first_name: string;
+    last_name: string;
+    email: string | null;
+    mobile: string;
+    password: string;
+    staff_type: string;
+    type_id: number | string;
+    soc_staff_id: string;
+    associate_function_id: string;
+    valid_from: string;
+    expiry: string;
+    status: string | number;
+    notes: string;
+    helpdesk_operations_attributes: Array<{
+      dayofweek: string;
+      of_phase: string;
+      is_open: string | number;
+      start_hour: string;
+      start_min: string;
+      end_hour: string;
+      end_min: string;
+    }>;
+  };
+}
+
+// New CRM API response format for single staff
+export interface StaffDetailsApiResponse {
+  data: {
+    id: number;
+    name: string;
+    email: string | null;
+    mobile: string;
+    staff_id: string;
+    work_type: string;
+    company_name: string;
+    created_at: string;
+    created_at_formatted: string;
+    staff_type: string;
+    image_url: string;
+    qr_code_url: string;
+    qr_code_page_url: string;
+    documents: unknown[];
+    staff_documents: unknown[];
+    gallery_documents: unknown[];
+    status: {
+      value: number;
+      label: string;
+    };
+    associated_flats: unknown[];
+    actions: {
+      view_url: string;
+      edit_url: string;
+    };
+  };
+  message: string;
 }
 
 export const staffService = {
@@ -236,75 +298,74 @@ export const staffService = {
     attachments: StaffAttachments = {}
   ) => {
     try {
-      console.log('Creating society staff with user_id:', staffData.userId);
-      const formData = new FormData();
+      console.log('Creating society staff with data:', staffData);
+      
+      // Convert date format from YYYY-MM-DD to DD/MM/YYYY
+      const convertDateFormat = (dateStr: string): string => {
+        if (!dateStr) return '';
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}/${year}`;
+      };
 
-      // Basic staff information
-      formData.append('society_staff[first_name]', staffData.firstName);
-      formData.append('society_staff[last_name]', staffData.lastName);
-      formData.append('society_staff[mobile]', staffData.mobile);
-      formData.append('society_staff[email]', staffData.email);
-      formData.append('society_staff[password]', staffData.password);
-      
-      // User ID - current user creating the staff
-      if (staffData.userId) {
-        formData.append('society_staff[user_id]', staffData.userId.toString());
-        console.log('Added user_id to FormData:', staffData.userId);
-      } else {
-        console.warn('No user_id provided in staffData');
-      }
-      
-      // Resource and type information
-      formData.append('society_staff[resource_id]', staffData.resourceId || '12');
-      formData.append('society_staff[resource_type]', staffData.resourceType || staffData.workType || 'Guard');
-      formData.append('society_staff[status]', staffData.status || 'active');
-      formData.append('society_staff[department_id]', staffData.departmentId || '3');
-      formData.append('society_staff[type_id]', staffData.typeId || '5');
-      
-      // Validity information
-      formData.append('society_staff[valid_from]', staffData.validFrom);
-      formData.append('society_staff[expiry_type]', staffData.expiryType || 'days');
-      formData.append('society_staff[expiry_value]', staffData.expiryValue || '90');
-
-      // Schedule operations for each day
-      let operationIndex = 0;
+      // Convert schedule data to helpdesk_operations_attributes format
+      const helpdeskOperations: any[] = [];
       Object.entries(schedule).forEach(([day, dayData]) => {
         if (dayData.checked) {
-          formData.append(`society_staff[helpdesk_operations_attributes][${operationIndex}][op_of]`, 'Society');
-          formData.append(`society_staff[helpdesk_operations_attributes][${operationIndex}][op_of_id]`, '1');
-          formData.append(`society_staff[helpdesk_operations_attributes][${operationIndex}][dayofweek]`, 
-            day.charAt(0).toUpperCase() + day.slice(1));
-          formData.append(`society_staff[helpdesk_operations_attributes][${operationIndex}][start_hour]`, 
-            dayData.startTime.padStart(2, '0'));
-          formData.append(`society_staff[helpdesk_operations_attributes][${operationIndex}][start_min]`, 
-            dayData.startMinute.padStart(2, '0'));
-          formData.append(`society_staff[helpdesk_operations_attributes][${operationIndex}][end_hour]`, 
-            dayData.endTime.padStart(2, '0'));
-          formData.append(`society_staff[helpdesk_operations_attributes][${operationIndex}][end_min]`, 
-            dayData.endMinute.padStart(2, '0'));
-          formData.append(`society_staff[helpdesk_operations_attributes][${operationIndex}][is_open]`, 'true');
-          operationIndex++;
+          helpdeskOperations.push({
+            dayofweek: day.toLowerCase(),
+            of_phase: 'post_possession',
+            is_open: '1',
+            start_hour: dayData.startTime.padStart(2, '0'),
+            start_min: dayData.startMinute.padStart(2, '0'),
+            end_hour: dayData.endTime.padStart(2, '0'),
+            end_min: dayData.endMinute.padStart(2, '0'),
+          });
         }
       });
 
-      // File attachments
-      if (attachments.profilePicture) {
-        formData.append('staffimage', attachments.profilePicture);
-      }
-      
-      if (attachments.documents && attachments.documents.length > 0) {
-        attachments.documents.forEach((doc) => {
-          formData.append('attachments[]', doc);
+      // Convert image to base64
+      let documentBase64 = '';
+      if (attachments.capturedPhoto) {
+        documentBase64 = attachments.capturedPhoto;
+      } else if (attachments.profilePicture) {
+        // If profilePicture is provided as File, convert to base64
+        documentBase64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(attachments.profilePicture);
         });
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CREATE_SOCIETY_STAFF}`, {
+      // Build the payload matching the API structure
+      const payload = {
+        society_staff: {
+          document: documentBase64,
+          first_name: staffData.firstName,
+          last_name: staffData.lastName,
+          email: staffData.email,
+          mobile: staffData.mobile,
+          password: staffData.password,
+          staff_type: staffData.workType || 'Personal',
+          type_id: staffData.typeId || staffData.workType,
+          soc_staff_id: staffData.staffId,
+          associate_function_id: '1',
+          valid_from: convertDateFormat(staffData.validFrom),
+          expiry: convertDateFormat(staffData.validTill),
+          status: staffData.status || '1',
+          notes: staffData.vendorName || '',
+          helpdesk_operations_attributes: helpdeskOperations,
+        }
+      };
+
+      console.log('Sending payload:', JSON.stringify(payload));
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}/crm/admin/society_staffs.json`, {
         method: 'POST',
         headers: {
           'Authorization': getAuthHeader(),
-          // Don't set Content-Type for FormData, browser will set it automatically
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -326,7 +387,7 @@ export const staffService = {
   // Fetch staff details by ID
   getStaffDetails: async (staffId: string): Promise<SocietyStaffDetails> => {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOCIETY_STAFF_DETAILS}/${staffId}.json`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/crm/admin/society_staffs/${staffId}.json`, {
         method: 'GET',
         headers: {
           'Authorization': getAuthHeader(),
@@ -338,8 +399,56 @@ export const staffService = {
         throw new Error('Failed to fetch staff details');
       }
 
-      const data: SocietyStaffDetailsResponse = await response.json();
-      return data.society_staff;
+      const apiResponse: StaffDetailsApiResponse = await response.json();
+      const staff = apiResponse.data;
+
+      // Split name into first and last name
+      const nameParts = staff.name.split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ');
+
+      // Convert new CRM API format to SocietyStaffDetails for compatibility
+      const convertedStaff: SocietyStaffDetails = {
+        id: staff.id,
+        first_name: firstName,
+        last_name: lastName,
+        full_name: staff.name,
+        mobile: staff.mobile,
+        email: staff.email || '',
+        soc_staff_id: staff.staff_id,
+        vendor_name: staff.company_name,
+        active: null,
+        staff_type: staff.staff_type,
+        status: staff.status.value.toString(),
+        resource_id: 0,
+        resource_type: '',
+        department_id: 0,
+        type_id: 0,
+        pms_unit_id: null,
+        created_by: 0,
+        expiry_type: 'days',
+        expiry_value: 90,
+        number_verified: false,
+        otp: null,
+        notes: '',
+        valid_from: '',
+        expiry: null,
+        created_at: staff.created_at,
+        updated_at: staff.created_at,
+        user_id: 0,
+        unit_name: null,
+        department_name: '',
+        work_type_name: staff.work_type,
+        status_text: staff.status.label,
+        staff_image_url: staff.image_url,
+        qr_code_present: !!staff.qr_code_url,
+        qr_code_url: staff.qr_code_url,
+        helpdesk_operations: [],
+        staff_workings: [],
+        documents: []
+      };
+
+      return convertedStaff;
     } catch (error) {
       console.error('Error fetching staff details:', error);
       toast.error('Failed to load staff details');
@@ -347,37 +456,28 @@ export const staffService = {
     }
   },
 
-  // Print QR codes for selected staff
+  // Print QR codes for selected staff (1 or more)
   printQRCodes: async (staffIds: number[]): Promise<void> => {
     try {
-      console.log('Sending print QR request with body:', { ids: staffIds });
-      
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRINT_QR_CODES}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/crm/admin/society_staffs/print_qr_code`, {
         method: 'POST',
         headers: {
           'Authorization': getAuthHeader(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ids: staffIds
+          society_staff_ids: staffIds.map(id => id.toString())
         }),
       });
 
-      console.log('Print QR response status:', response.status);
-      console.log('Print QR response headers:', Object.fromEntries(response.headers.entries()));
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Print QR error response:', errorText);
         throw new Error(`Failed to print QR codes (${response.status}): ${errorText}`);
       }
 
       // Check if the response is a file (PDF, ZIP, etc.)
       const contentType = response.headers.get('content-type');
       const contentDisposition = response.headers.get('content-disposition');
-      
-      console.log('Response content-type:', contentType);
-      console.log('Response content-disposition:', contentDisposition);
 
       if (contentType && (
         contentType.includes('application/pdf') || 
@@ -411,7 +511,6 @@ export const staffService = {
       } else {
         // Handle JSON response
         const result = await response.json();
-        console.log('Print QR JSON response:', result);
         toast.success(`QR codes printed successfully for ${staffIds.length} staff member(s)`);
       }
     } catch (error) {
@@ -421,30 +520,170 @@ export const staffService = {
     }
   },
 
-  // Update staff by ID
-  updateStaff: async (staffId: string, formData: FormData): Promise<SocietyStaffDetails | Record<string, unknown>> => {
+  // Print all QR codes for a resource (society)
+  printAllQRCodes: async (resourceId: string): Promise<void> => {
     try {
-      console.log('Updating staff with ID:', staffId);
-      console.log('Update form data entries:');
-      for (const [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
+      const response = await fetch(`${API_CONFIG.BASE_URL}/crm/admin/society_staffs/print_qr_codes`, {
+        method: 'POST',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          all_society_staffs: 'true',
+          resource_id: resourceId
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to print all QR codes (${response.status}): ${errorText}`);
       }
 
-      // Use the correct API endpoint format for updating society staff
+      // Check if the response is a file (PDF, ZIP, etc.)
+      const contentType = response.headers.get('content-type');
+      const contentDisposition = response.headers.get('content-disposition');
+
+      if (contentType && (
+        contentType.includes('application/pdf') || 
+        contentType.includes('application/zip') || 
+        contentType.includes('application/octet-stream') ||
+        contentDisposition?.includes('attachment')
+      )) {
+        // Handle file download
+        const blob = await response.blob();
+        
+        // Extract filename from content-disposition header or use default
+        let filename = 'all-qr-codes.pdf';
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1].replace(/['"]/g, '');
+          }
+        }
+        
+        // Create download link and trigger download
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        toast.success('All QR codes downloaded successfully');
+      } else {
+        // Handle JSON response
+        const result = await response.json();
+        toast.success('All QR codes printed successfully');
+      }
+    } catch (error) {
+      console.error('Error printing all QR codes:', error);
+      toast.error('Failed to print all QR codes');
+      throw error;
+    }
+  },
+
+  // Update staff by ID
+  updateStaff: async (
+    staffId: string, 
+    formData: FormData | StaffFormData,
+    schedule?: ScheduleData,
+    attachments?: StaffAttachments
+  ): Promise<SocietyStaffDetails | Record<string, unknown>> => {
+    try {
+      // Convert date format from YYYY-MM-DD to DD/MM/YYYY
+      const convertDateFormat = (dateStr: string): string => {
+        if (!dateStr) return '';
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}/${year}`;
+      };
+
+      // If formData is FormData instance, convert it
+      let staffFormData: StaffFormData;
+      if (formData instanceof FormData) {
+        // Extract data from FormData - this is called from EditStaffPage
+        staffFormData = {
+          firstName: '',
+          lastName: '',
+          email: '',
+          password: '',
+          mobile: '',
+          unit: '',
+          department: '',
+          workType: '',
+          staffId: '',
+          vendorName: '',
+          validFrom: '',
+          validTill: '',
+          status: ''
+        };
+      } else {
+        staffFormData = formData;
+      }
+
+      // Convert schedule data to helpdesk_operations_attributes format
+      const helpdeskOperations: any[] = [];
+      if (schedule) {
+        Object.entries(schedule).forEach(([day, dayData]) => {
+          if (dayData.checked) {
+            helpdeskOperations.push({
+              dayofweek: day.toLowerCase(),
+              of_phase: 'post_possession',
+              is_open: '1',
+              start_hour: dayData.startTime.padStart(2, '0'),
+              start_min: dayData.startMinute.padStart(2, '0'),
+              end_hour: dayData.endTime.padStart(2, '0'),
+              end_min: dayData.endMinute.padStart(2, '0'),
+            });
+          }
+        });
+      }
+
+      // Convert image to base64 if provided
+      let documentBase64 = '';
+      if (attachments?.capturedPhoto) {
+        documentBase64 = attachments.capturedPhoto;
+      } else if (attachments?.profilePicture) {
+        documentBase64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(attachments.profilePicture);
+        });
+      }
+
+      // Build the payload matching the API structure
+      const payload = {
+        society_staff: {
+          document: documentBase64,
+          first_name: staffFormData.firstName,
+          last_name: staffFormData.lastName,
+          email: staffFormData.email,
+          mobile: staffFormData.mobile,
+          password: staffFormData.password,
+          staff_type: staffFormData.workType || 'Personal',
+          type_id: staffFormData.typeId || staffFormData.workType,
+          soc_staff_id: staffFormData.staffId,
+          associate_function_id: '1',
+          valid_from: convertDateFormat(staffFormData.validFrom),
+          expiry: convertDateFormat(staffFormData.validTill),
+          status: staffFormData.status || '1',
+          notes: staffFormData.vendorName || '',
+          helpdesk_operations_attributes: helpdeskOperations,
+        }
+      };
+
       const apiUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPDATE_SOCIETY_STAFF}/${staffId}.json`;
-      console.log('Making PUT request to:', apiUrl);
 
       const response = await fetch(apiUrl, {
         method: 'PUT',
         headers: {
           'Authorization': getAuthHeader(),
-          // Don't set Content-Type for FormData, let browser handle it
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify(payload),
       });
-
-      console.log('Update staff response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         let errorMessage = 'Failed to update society staff';
@@ -452,14 +691,12 @@ export const staffService = {
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
         } catch (e) {
-          // If response is not JSON, use status text
           errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         }
         throw new Error(errorMessage);
       }
 
       const result = await response.json();
-      console.log('Update staff success response:', result);
       toast.success('Society staff updated successfully!');
       return result;
     } catch (error: unknown) {
