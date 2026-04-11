@@ -288,7 +288,7 @@ export const API_CONFIG = {
     // Visitor history export endpoint
     VISITOR_HISTORY_EXPORT: "/pms/admin/visitors/visitors_history.xlsx",
     ASSET_TYPES: "/pms/custom_forms/get_asset_type",
-    COMMUNICATION_TEMPLATES: "/communication_templates.json",
+    COMMUNICATION_TEMPLATES: "/crm/admin/communication_templates.json",
     // Vehicle details endpoint
     VEHICLE_DETAILS: "/vehicle_details/vehicle_detail_list.json",
     // LTM list endpoint
