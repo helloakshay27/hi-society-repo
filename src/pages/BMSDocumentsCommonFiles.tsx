@@ -1,19 +1,30 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronDown, Folder, FolderOpen, File, FileText, Upload, RefreshCw, Loader2, Download, Search, FileVideo, Image as ImageIcon, FileSpreadsheet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
 
-interface ApiNode {
+interface ApiFolder {
   id: string | number;
-  parent: string | number;
-  text: string;
-  icon?: string;
-  a_attr?: { href: string };
+  name: string;
+}
+
+interface ApiDocument {
+  id: string | number;
+  name: string;
+  content: { url: string };
+}
+
+interface CommonFolderResponse {
+  folder?: ApiFolder;
+  subfolders: ApiFolder[];
+  documents: ApiDocument[];
 }
 
 // ─── Internal Tree Types ──────────────────────────────────────────────────────
@@ -22,8 +33,8 @@ interface DocumentNode {
   id: string;
   name: string;
   type: "folder" | "file";
-  children?: DocumentNode[];
   fileType?: string;
+  url?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -38,48 +49,8 @@ const inferFileType = (name: string): string => {
   if (["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"].includes(ext)) return "image";
   if (["xls", "xlsx", "csv"].includes(ext)) return "spreadsheet";
   if (["doc", "docx"].includes(ext)) return "doc";
+  if (name.toLowerCase().includes("warranty_card")) return "pdf"; 
   return "file";
-};
-
-const isFile = (node: ApiNode): boolean =>
-  String(node.id).startsWith("documents_");
-
-/** Transform flat jstree array into a nested tree */
-const buildTree = (nodes: ApiNode[]): DocumentNode[] => {
-  const map = new Map<string, DocumentNode>();
-
-  // First pass: create all nodes
-  for (const n of nodes) {
-    const id = String(n.id);
-    const file = isFile(n);
-    map.set(id, {
-      id,
-      name: n.text,
-      type: file ? "file" : "folder",
-      fileType: file ? inferFileType(n.text) : undefined,
-      children: file ? undefined : [],
-    });
-  }
-
-  const roots: DocumentNode[] = [];
-
-  // Second pass: wire up parent-child
-  for (const n of nodes) {
-    const id = String(n.id);
-    const parentId = String(n.parent);
-    const node = map.get(id)!;
-
-    if (parentId === "#") {
-      roots.push(node);
-    } else {
-      const parent = map.get(parentId);
-      if (parent && parent.children) {
-        parent.children.push(node);
-      }
-    }
-  }
-
-  return roots;
 };
 
 // ─── File icon helper ─────────────────────────────────────────────────────────
@@ -98,130 +69,106 @@ const getFileIcon = (fileType?: string) => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const BMSDocumentsCommonFiles: React.FC = () => {
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(["All"]));
+  const navigate = useNavigate();
+  const [currentFolderId, setCurrentFolderId] = useState<string | number | undefined>(undefined);
+  const [breadcrumbs, setBreadcrumbs] = useState<{ id: string | number | undefined; name: string }[]>([
+    { id: undefined, name: "Common Files" }
+  ]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
-    data: treeData,
+    data: folderData,
     isLoading,
     isError,
     error,
     refetch,
-  } = useQuery<DocumentNode[]>({
-    queryKey: ["common-files"],
+  } = useQuery<CommonFolderResponse>({
+    queryKey: ["common-folder", currentFolderId],
     queryFn: async () => {
-      const url = getFullUrl("/crm/admin/attachment_common.json");
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: getAuthHeader(),
-          "Content-Type": "application/json",
-        },
+      const url = getFullUrl("/crm/admin/common_folder_show.json");
+      const { data } = await axios.get(url, {
+        params: { folder_id: currentFolderId },
+        headers: { Authorization: getAuthHeader() },
       });
-      if (!response.ok) {
-        throw new Error(`Failed to load documents: ${response.status} ${response.statusText}`);
-      }
-      const raw: ApiNode[] = await response.json();
-      return buildTree(raw);
+      return data;
     },
-    retry: 2,
+    retry: 1,
     staleTime: 30000,
-    gcTime: 60000,
   });
 
-  const documents: DocumentNode[] = treeData ?? [];
-
-  // ── Search filter ──────────────────────────────────────────────────────────
-
-  const matchesSearch = (node: DocumentNode, query: string): boolean => {
-    const q = query.toLowerCase();
-    if (node.name.toLowerCase().includes(q)) return true;
-    if (node.children) return node.children.some((c) => matchesSearch(c, q));
-    return false;
-  };
-
-  const filterTree = (nodes: DocumentNode[], query: string): DocumentNode[] => {
-    if (!query.trim()) return nodes;
-    return nodes
-      .filter((n) => matchesSearch(n, query))
-      .map((n) => ({
-        ...n,
-        children: n.children ? filterTree(n.children, query) : undefined,
-      }));
-  };
-
-  const visibleDocuments = filterTree(documents, searchQuery);
-
-  // ── Folder toggle ──────────────────────────────────────────────────────────
-
-  const toggleFolder = (id: string) => {
-    setExpandedFolders((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) { next.delete(id); } else { next.add(id); }
-      return next;
+  // Transform folderData into UI nodes
+  const nodes: DocumentNode[] = [];
+  if (folderData) {
+    folderData.subfolders.forEach((sf) => {
+      nodes.push({
+        id: String(sf.id),
+        name: sf.name,
+        type: "folder"
+      });
     });
+    folderData.documents.forEach((doc) => {
+      nodes.push({
+        id: String(doc.id),
+        name: doc.name,
+        type: "file",
+        fileType: inferFileType(doc.name),
+        url: doc.content.url
+      });
+    });
+  }
+
+  const visibleDocuments = nodes.filter(n => 
+    n.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleFolderClick = (id: string, name: string) => {
+    setCurrentFolderId(id);
+    setBreadcrumbs(prev => [...prev, { id, name }]);
   };
 
-  const handleUpload = () => toast.info("Upload functionality coming soon");
+  const handleBreadcrumbClick = (id: string | number | undefined, index: number) => {
+    setCurrentFolderId(id);
+    setBreadcrumbs(prev => prev.slice(0, index + 1));
+  };
 
-  const handleDownload = (fileName: string) =>
-    toast.success(`Downloading ${fileName}…`);
+  const handleUpload = () => {
+    navigate("/bms/documents/upload");
+  };
+
+  const handleDownload = (fileName: string, url?: string) => {
+    if (url) {
+      window.open(url, '_blank');
+      toast.success(`Opening ${fileName}…`);
+    } else {
+      toast.error("File URL not found.");
+    }
+  };
 
   const handleRefresh = () => {
     refetch();
-    toast.success("Documents refreshed");
+    toast.success("Folder refreshed");
   };
 
-  // ── Tree renderer ──────────────────────────────────────────────────────────
-
-  const renderNode = (node: DocumentNode, level: number = 0): React.ReactNode => {
-    const isExpanded = expandedFolders.has(node.id);
-    const hasChildren = (node.children?.length ?? 0) > 0;
-
+  const renderNode = (node: DocumentNode): React.ReactNode => {
     if (node.type === "folder") {
       return (
-        <div key={node.id}>
-          <div
-            className="flex items-center gap-2 py-2 px-3 hover:bg-gray-50 cursor-pointer rounded select-none"
-            style={{ paddingLeft: `${level * 24 + 12}px` }}
-            onClick={() => toggleFolder(node.id)}
-          >
-            {hasChildren ? (
-              isExpanded ? (
-                <ChevronDown className="w-4 h-4 text-gray-500 flex-shrink-0" />
-              ) : (
-                <ChevronRight className="w-4 h-4 text-gray-500 flex-shrink-0" />
-              )
-            ) : (
-              <div className="w-4 flex-shrink-0" />
-            )}
-            {isExpanded ? (
-              <FolderOpen className="w-5 h-5 text-blue-500 flex-shrink-0" />
-            ) : (
-              <Folder className="w-5 h-5 text-blue-500 flex-shrink-0" />
-            )}
-            <span className="text-sm font-medium text-gray-700 truncate">{node.name}</span>
-            {hasChildren && (
-              <span className="ml-auto text-xs text-gray-400 flex-shrink-0">
-                {node.children!.length}
-              </span>
-            )}
-          </div>
-          {isExpanded && hasChildren && (
-            <div>
-              {node.children!.map((child) => renderNode(child, level + 1))}
-            </div>
-          )}
+        <div 
+          key={node.id}
+          className="flex items-center gap-2 py-2.5 px-3 hover:bg-gray-50 cursor-pointer rounded border-b border-gray-50 last:border-0"
+          onClick={() => handleFolderClick(node.id, node.name)}
+        >
+          <Folder className="w-5 h-5 text-blue-500 flex-shrink-0" />
+          <span className="text-sm font-medium text-gray-700 truncate">{node.name}</span>
+          <ChevronRight className="ml-auto w-4 h-4 text-gray-400" />
         </div>
       );
     }
 
-    // File node
     return (
       <div
         key={node.id}
-        className="flex items-center gap-2 py-2 px-3 hover:bg-gray-50 rounded group"
-        style={{ paddingLeft: `${level * 24 + 36}px` }}
+        className="flex items-center gap-2 py-2.5 px-3 hover:bg-gray-50 rounded group cursor-pointer border-b border-gray-50 last:border-0"
+        onClick={() => node.url && window.open(node.url, '_blank')}
       >
         <div className="flex-shrink-0">{getFileIcon(node.fileType)}</div>
         <span className="text-sm text-gray-600 flex-1 truncate" title={node.name}>
@@ -231,15 +178,16 @@ const BMSDocumentsCommonFiles: React.FC = () => {
           size="sm"
           variant="ghost"
           className="opacity-0 group-hover:opacity-100 h-7 px-2 flex-shrink-0"
-          onClick={() => handleDownload(node.name)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDownload(node.name, node.url);
+          }}
         >
           <Download className="w-4 h-4" />
         </Button>
       </div>
     );
   };
-
-  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="p-2 sm:p-4 lg:p-6">
@@ -266,14 +214,33 @@ const BMSDocumentsCommonFiles: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        {/* Breadcrumbs */}
+        <div className="px-4 py-2 border-b border-gray-100 bg-gray-50/50 flex items-center gap-1 overflow-x-auto no-scrollbar">
+          {breadcrumbs.map((bc, idx) => (
+            <React.Fragment key={idx}>
+              <button
+                onClick={() => handleBreadcrumbClick(bc.id, idx)}
+                className={`text-xs font-medium whitespace-nowrap hover:text-blue-600 transition-colors ${
+                  idx === breadcrumbs.length - 1 ? "text-gray-900 cursor-default" : "text-gray-500"
+                }`}
+              >
+                {bc.name}
+              </button>
+              {idx < breadcrumbs.length - 1 && (
+                <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+
         {/* Search */}
         <div className="p-4 border-b border-gray-200">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search documents..."
+              placeholder="Search in this folder..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -281,16 +248,16 @@ const BMSDocumentsCommonFiles: React.FC = () => {
           </div>
         </div>
 
-        {/* Tree */}
-        <div className="p-4 max-h-[600px] overflow-y-auto">
+        {/* Contents */}
+        <div className="p-2 min-h-[400px]">
           {isLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-              <span className="ml-2 text-sm text-gray-500">Loading documents…</span>
+            <div className="flex flex-col justify-center items-center py-24">
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400 mb-2" />
+              <span className="text-sm text-gray-500">Retrieving content…</span>
             </div>
           ) : isError ? (
-            <div className="text-center py-12">
-              <p className="text-red-600 font-medium">Error loading documents</p>
+            <div className="text-center py-24">
+              <p className="text-red-600 font-medium">Error loading folder contents</p>
               <p className="text-sm text-gray-500 mt-1">
                 {error instanceof Error ? error.message : "Please try again"}
               </p>
@@ -300,14 +267,16 @@ const BMSDocumentsCommonFiles: React.FC = () => {
               </Button>
             </div>
           ) : visibleDocuments.length === 0 ? (
-            <div className="text-center py-12">
-              <Folder className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">
-                {searchQuery ? "No documents match your search" : "No documents found"}
+            <div className="text-center py-24">
+              <Folder className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+              <p className="text-gray-400 text-sm">
+                {searchQuery ? "No items match your search" : "This folder is empty"}
               </p>
             </div>
           ) : (
-            <div>{visibleDocuments.map((node) => renderNode(node))}</div>
+            <div className="flex flex-col">
+              {visibleDocuments.map((node) => renderNode(node))}
+            </div>
           )}
         </div>
       </div>

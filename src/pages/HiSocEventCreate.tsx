@@ -853,9 +853,9 @@ const HiSocEventCreate = () => {
 
     // Add cp_group_id if shared with groups
     if (formData.shared === "group" && Array.isArray(formData.group_id) && formData.group_id.length > 0) {
-      formDataToSend.append("event[cp_group_id]", formData.group_id[0]);
+      formDataToSend.append("event[group_id]", formData.group_id[0]);
     } else if (formData.shared === "group" && formData.group_id) {
-      formDataToSend.append("event[cp_group_id]", formData.group_id);
+      formDataToSend.append("event[group_id]", formData.group_id);
     }
 
     // Add cover images (single file for each ratio)

@@ -257,6 +257,12 @@ const BMSDocumentsFlatRelated = lazy(
 const BMSDocumentsCommonFiles = lazy(
   () => import("@/pages/BMSDocumentsCommonFiles")
 );
+const BMSDocumentViewer = lazy(
+  () => import("@/pages/BMSDocumentViewer")
+);
+const BMSDocumentsUpload = lazy(
+  () => import("@/pages/BMSDocumentsUpload")
+);
 const BMSBusinessDirectorySetup = lazy(
   () => import("@/pages/BMSBusinessDirectorySetup")
 );
@@ -417,6 +423,7 @@ const SmartSecureVisitorOut = lazy(
 const SmartSecureVisitorHistory = lazy(
   () => import("@/pages/SmartSecureVisitorHistory")
 );
+const AddVisitorPage = lazy(() => import("@/pages/AddVisitorPage"));
 const SmartSecureStaffsAll = lazy(() => import("@/pages/SmartSecureStaffsAll"));
 const SmartSecureStaffsIn = lazy(() => import("@/pages/SmartSecureStaffsIn"));
 const SmartSecureStaffsOut = lazy(() => import("@/pages/SmartSecureStaffsOut"));
@@ -1259,6 +1266,18 @@ export const setupMemberRoutes = (
       Component={withSuspense(BMSDocumentsCommonFiles)}
     />
     <Route
+      path="/bms/documents/view/:id"
+      Component={withSuspense(BMSDocumentViewer)}
+    />
+    <Route
+      path="/bms/documents/upload"
+      Component={withSuspense(BMSDocumentsUpload)}
+    />
+    <Route
+      path="/bms/documents/upload-flat"
+      Component={withSuspense(BMSDocumentsUpload)}
+    />
+    <Route
       path="/bms/business-directory/setup"
       Component={withSuspense(BMSBusinessDirectorySetup)}
     />
@@ -1555,6 +1574,10 @@ export const setupMemberRoutes = (
     <Route
       path="/smartsecure/visitor-history-list"
       Component={withSuspense(SmartSecureVisitorHistory)}
+    />
+    <Route
+      path="/smartsecure/visitor-in/add"
+      Component={withSuspense(AddVisitorPage)}
     />
     <Route
       path="/smartsecure/staff-all"

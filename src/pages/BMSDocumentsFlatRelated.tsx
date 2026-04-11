@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   ChevronRight,
@@ -19,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
@@ -133,6 +135,7 @@ const FileIcon = ({ fileType }: { fileType?: string }) => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const BMSDocumentsFlatRelated: React.FC = () => {
+  const navigate = useNavigate();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -145,11 +148,10 @@ const BMSDocumentsFlatRelated: React.FC = () => {
   } = useQuery<ApiNode[]>({
     queryKey: ["flat-related-documents"],
     queryFn: async () => {
-      const res = await fetch(getFullUrl("/crm/admin/attachments.json"), {
+      const { data } = await axios.get(getFullUrl("/crm/admin/attachments.json"), {
         headers: { Authorization: getAuthHeader() },
       });
-      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
-      return res.json();
+      return data;
     },
     retry: 2,
     staleTime: 30000,
@@ -172,7 +174,9 @@ const BMSDocumentsFlatRelated: React.FC = () => {
   };
 
   const handleUpload = () => {
-    toast.info("Upload functionality coming soon");
+    navigate("/bms/documents/upload-flat", { 
+      state: { returnPath: "/bms/documents/flat-related" } 
+    });
   };
 
   const handleDownload = (fileName: string) => {
