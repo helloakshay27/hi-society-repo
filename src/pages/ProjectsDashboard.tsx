@@ -39,6 +39,7 @@ import axios from "axios";
 import { useDebounce } from "@/hooks/useDebounce";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
 import { CommonImportModal } from "@/components/CommonImportModal";
+import { getBaseUrl } from "@/utils/auth";
 
 const columns: ColumnConfig[] = [
   {
@@ -198,10 +199,12 @@ const transformedProjects = (projects: any) => {
       milestoneCompletionPercent: project.avg_milestone_completion_percent || 0,
       tasks: project.total_task_management_count,
       tasksCompleted: project.completed_task_management_count,
-      taskCompletionPercent: project.avg_task_management_completion_percent || 0,
+      taskCompletionPercent:
+        project.avg_task_management_completion_percent || 0,
       subtasks: project.total_sub_task_management_count || 0,
       subtasksCompleted: project.completed_sub_task_management_count || 0,
-      subtaskCompletionPercent: project.avg_sub_task_management_completion_percent || 0,
+      subtaskCompletionPercent:
+        project.avg_sub_task_management_completion_percent || 0,
       issues: project.total_issues_count,
       resolvedIssues: project.completed_issues_count,
       start_date: project.start_date,
@@ -280,15 +283,17 @@ export const ProjectsDashboard = () => {
 
   // Determine token source: prefer sessionStorage (mobile) over localStorage (web)
   const token =
-    sessionStorage.getItem("mobile_token") ||
-    localStorage.getItem("token");
+    sessionStorage.getItem("mobile_token") || localStorage.getItem("token");
 
   // For baseUrl: use localStorage for web, or will be resolved by baseClient for mobile
-  let baseUrl = localStorage.getItem("baseUrl") ?? "lockated-api.gophygital.work";
+  let baseUrl =
+    localStorage.getItem("baseUrl") ?? "lockated-api.gophygital.work";
 
   // If mobile flow and no baseUrl, will be resolved by baseClient interceptor
   if (!baseUrl && urlToken) {
-    console.log("📱 Mobile flow detected - baseUrl will be resolved by baseClient interceptor");
+    console.log(
+      "📱 Mobile flow detected - baseUrl will be resolved by baseClient interceptor"
+    );
     // After baseClient resolves it, it will be stored in localStorage automatically
   }
 
@@ -321,10 +326,12 @@ export const ProjectsDashboard = () => {
   const [showActionPanel, setShowActionPanel] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
+    null
+  );
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false)
+  const [isUploading, setIsUploading] = useState(false);
 
   // Refs for click outside detection
   const viewDropdownRef = useRef<HTMLDivElement>(null);
@@ -394,12 +401,12 @@ export const ProjectsDashboard = () => {
         // Add sorting parameters
         if (orderBy && orderDirection) {
           const backendFieldName = COLUMN_TO_BACKEND_MAP[orderBy] || orderBy;
-          filters += (filters ? "&" : "") + `order_by=${backendFieldName}&order_direction=${orderDirection}`;
+          filters +=
+            (filters ? "&" : "") +
+            `order_by=${backendFieldName}&order_direction=${orderDirection}`;
         }
 
-        filters +=
-          (filters ? "&" : "") +
-          `page=${page}`;
+        filters += (filters ? "&" : "") + `page=${page}`;
 
         // Fetch data
         if (!isLoadMore && page === 1) {
@@ -407,11 +414,15 @@ export const ProjectsDashboard = () => {
             filterProjects({ token, baseUrl, filters })
           ).unwrap();
 
-          const projectsData = response?.data?.project_managements || response?.project_managements || [];
+          const projectsData =
+            response?.data?.project_managements ||
+            response?.project_managements ||
+            [];
           const transformedData = transformedProjects(projectsData);
           setProjects(transformedData);
 
-          const paginationData = response?.data?.pagination || response?.pagination;
+          const paginationData =
+            response?.data?.pagination || response?.pagination;
           setHasMore(page < (paginationData?.total_pages || 1));
           setCurrentPage(page);
         } else {
@@ -420,7 +431,10 @@ export const ProjectsDashboard = () => {
             filterProjects({ token, baseUrl, filters })
           ).unwrap();
 
-          const projectsData = response?.data?.project_managements || response?.project_managements || [];
+          const projectsData =
+            response?.data?.project_managements ||
+            response?.project_managements ||
+            [];
           const transformedData = transformedProjects(projectsData);
 
           if (isLoadMore) {
@@ -429,7 +443,8 @@ export const ProjectsDashboard = () => {
             setProjects(transformedData);
           }
 
-          const paginationData = response?.data?.pagination || response?.pagination;
+          const paginationData =
+            response?.data?.pagination || response?.pagination;
           setHasMore(page < (paginationData?.total_pages || 1));
           setCurrentPage(page);
         }
@@ -440,7 +455,16 @@ export const ProjectsDashboard = () => {
         setScrollLoading(false);
       }
     },
-    [hasMore, appliedFilters, selectedFilterOption, dispatch, token, baseUrl, sortColumn, sortDirection]
+    [
+      hasMore,
+      appliedFilters,
+      selectedFilterOption,
+      dispatch,
+      token,
+      baseUrl,
+      sortColumn,
+      sortDirection,
+    ]
   );
 
   useEffect(() => {
@@ -489,7 +513,14 @@ export const ProjectsDashboard = () => {
       window.removeEventListener("scroll", handleScroll);
       clearTimeout(scrollTimeout);
     };
-  }, [currentPage, scrollLoading, loading, hasMore, debouncedSearchTerm, fetchData]);
+  }, [
+    currentPage,
+    scrollLoading,
+    loading,
+    hasMore,
+    debouncedSearchTerm,
+    fetchData,
+  ]);
 
   // Click outside handler for dropdowns
   useEffect(() => {
@@ -518,21 +549,21 @@ export const ProjectsDashboard = () => {
       // Use direct axios call for web flow
       const response = baseUrl
         ? await axios.get(
-          `https://${baseUrl}/pms/users/get_escalate_to_users.json?type=Task`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
+            `https://${baseUrl}/pms/users/get_escalate_to_users.json?type=Task`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
         : await baseClient.get(
-          `/pms/users/get_escalate_to_users.json?type=Task`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+            `/pms/users/get_escalate_to_users.json?type=Task`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
       setOwners(response.data.users);
     } catch (error) {
       console.log(error);
@@ -612,38 +643,32 @@ export const ProjectsDashboard = () => {
     try {
       // Use baseClient for mobile flow (when baseUrl not available)
       const response = baseUrl
-        ? await axios.get(
-          `https://${baseUrl}/assets/project_import.xlsx`,
-          {
-            responseType: 'blob',
+        ? await axios.get(`https://${baseUrl}/assets/project_import.xlsx`, {
+            responseType: "blob",
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
-        )
-        : await baseClient.get(
-          `/assets/project_import.xlsx`,
-          {
-            responseType: 'blob',
+          })
+        : await baseClient.get(`/assets/project_import.xlsx`, {
+            responseType: "blob",
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
-        );
+          });
 
       // Create a download link and trigger it
       const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.setAttribute('download', 'sample_project_management.xlsx'); // specify filename
+      link.setAttribute("download", "sample_project_management.xlsx"); // specify filename
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url); // cleanup
-      toast.success('Sample format downloaded successfully');
+      toast.success("Sample format downloaded successfully");
     } catch (error) {
-      console.error('Error downloading sample file:', error);
-      toast.error('Failed to download sample file. Please try again.');
+      console.error("Error downloading sample file:", error);
+      toast.error("Failed to download sample file. Please try again.");
     }
   };
 
@@ -655,22 +680,28 @@ export const ProjectsDashboard = () => {
 
       // Use baseClient for mobile flow (when baseUrl not available)
       const response = baseUrl
-        ? await axios.post(`https://${baseUrl}/project_managements/import.json`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          }
-        })
+        ? await axios.post(
+            `https://${baseUrl}/project_managements/import.json`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
         : await baseClient.post(`/project_managements/import.json`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          }
-        });
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
 
       if (response.data.failed && response.data.failed.length > 0) {
-        response.data.failed.forEach((item: { row: number; errors: string[] }) => {
-          const errorMessages = item.errors.join(', ');
-          toast.error(`Row ${item.row}: ${errorMessages}`);
-        });
+        response.data.failed.forEach(
+          (item: { row: number; errors: string[] }) => {
+            const errorMessages = item.errors.join(", ");
+            toast.error(`Row ${item.row}: ${errorMessages}`);
+          }
+        );
       } else {
         toast.success("Projects imported successfully");
         setIsImportModalOpen(false);
@@ -678,11 +709,11 @@ export const ProjectsDashboard = () => {
         fetchData(1, "", false, debouncedSearchTerm);
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     } finally {
       setIsUploading(false);
     }
-  }
+  };
 
   const renderActions = (item: any) => (
     <div className="flex items-center justify-center gap-2">
@@ -691,7 +722,11 @@ export const ProjectsDashboard = () => {
           size="sm"
           variant="ghost"
           className="p-1"
-          onClick={() => window.location.pathname.startsWith("/vas/projects") ? navigate(`/vas/projects/details/${item.id}`) : navigate(`/mobile-projects/${item.id}`)}
+          onClick={() =>
+            window.location.pathname.startsWith("/vas/projects")
+              ? navigate(`/vas/projects/details/${item.id}`)
+              : navigate(`/mobile-projects/${item.id}`)
+          }
         >
           <Eye className="w-4 h-4" />
         </Button>
@@ -701,7 +736,13 @@ export const ProjectsDashboard = () => {
           size="sm"
           variant="ghost"
           className="p-1"
-          onClick={() => window.location.pathname.startsWith("/vas/projects") ? navigate(`/vas/projects/${item.id}/milestones`) : navigate(`/mobile-projects/${item.id}/milestones?token=${token}&org_id=${urlOrgId}&user_id=${urlUserId}`)}
+          onClick={() =>
+            window.location.pathname.startsWith("/vas/projects")
+              ? navigate(`/vas/projects/${item.id}/milestones`)
+              : navigate(
+                  `/mobile-projects/${item.id}/milestones?token=${token}&org_id=${urlOrgId}&user_id=${urlUserId}`
+                )
+          }
         >
           <LogOut className="w-4 h-4" />
         </Button>
@@ -734,7 +775,12 @@ export const ProjectsDashboard = () => {
 
     // Cycle through: asc -> desc -> null -> asc
     if (sortColumn === columnKey) {
-      newDirection = sortDirection === "asc" ? "desc" : sortDirection === "desc" ? null : "asc";
+      newDirection =
+        sortDirection === "asc"
+          ? "desc"
+          : sortDirection === "desc"
+            ? null
+            : "asc";
     } else {
       newDirection = "asc";
     }
@@ -745,7 +791,14 @@ export const ProjectsDashboard = () => {
     // Reset to page 1 and fetch with new sort
     setCurrentPage(1);
     setHasMore(true);
-    fetchData(1, "", false, debouncedSearchTerm, newDirection ? columnKey : null, newDirection);
+    fetchData(
+      1,
+      "",
+      false,
+      debouncedSearchTerm,
+      newDirection ? columnKey : null,
+      newDirection
+    );
   };
 
   const renderCell = (item: any, columnKey: string) => {
@@ -919,77 +972,85 @@ export const ProjectsDashboard = () => {
           </TooltipProvider>
         );
       case "completion_percent":
-        return <div className="flex items-center gap-2 cursor-pointer">
-          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-            {item.status === "completed" ? 1 : 0}
-          </span>
-          <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
-            <div
-              className={`absolute top-0 left-0 h-6 bg-[#7fffdd] rounded-full transition-all duration-300`}
-              style={{ width: `${item.completion_percent}%` }}
-            ></div>
-            <span className="relative z-10 text-xs font-semibold text-gray-800">
-              {Math.round(item.completion_percent)}%
+        return (
+          <div className="flex items-center gap-2 cursor-pointer">
+            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+              {item.status === "completed" ? 1 : 0}
+            </span>
+            <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
+              <div
+                className={`absolute top-0 left-0 h-6 bg-[#7fffdd] rounded-full transition-all duration-300`}
+                style={{ width: `${item.completion_percent}%` }}
+              ></div>
+              <span className="relative z-10 text-xs font-semibold text-gray-800">
+                {Math.round(item.completion_percent)}%
+              </span>
+            </div>
+            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+              1
             </span>
           </div>
-          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-            1
-          </span>
-        </div>
+        );
       case "milestoneCompletionPercent":
-        return <div className="flex items-center gap-2 cursor-pointer">
-          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-            {item.milestonesCompleted}
-          </span>
-          <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
-            <div
-              className={`absolute top-0 left-0 h-6 bg-[#84edba] rounded-full transition-all duration-300`}
-              style={{ width: `${item.milestoneCompletionPercent}%` }}
-            ></div>
-            <span className="relative z-10 text-xs font-semibold text-gray-800">
-              {Math.round(item.milestoneCompletionPercent)}%
+        return (
+          <div className="flex items-center gap-2 cursor-pointer">
+            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+              {item.milestonesCompleted}
+            </span>
+            <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
+              <div
+                className={`absolute top-0 left-0 h-6 bg-[#84edba] rounded-full transition-all duration-300`}
+                style={{ width: `${item.milestoneCompletionPercent}%` }}
+              ></div>
+              <span className="relative z-10 text-xs font-semibold text-gray-800">
+                {Math.round(item.milestoneCompletionPercent)}%
+              </span>
+            </div>
+            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+              {item.milestones}
             </span>
           </div>
-          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-            {item.milestones}
-          </span>
-        </div>
+        );
       case "taskCompletionPercent":
-        return <div className="flex items-center gap-2 cursor-pointer">
-          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-            {item.tasksCompleted}
-          </span>
-          <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
-            <div
-              className={`absolute top-0 left-0 h-6 bg-[#e9e575] rounded-full transition-all duration-300`}
-              style={{ width: `${item.taskCompletionPercent}%` }}
-            ></div>
-            <span className="relative z-10 text-xs font-semibold text-gray-800">
-              {Math.round(item.taskCompletionPercent)}%
+        return (
+          <div className="flex items-center gap-2 cursor-pointer">
+            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+              {item.tasksCompleted}
+            </span>
+            <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
+              <div
+                className={`absolute top-0 left-0 h-6 bg-[#e9e575] rounded-full transition-all duration-300`}
+                style={{ width: `${item.taskCompletionPercent}%` }}
+              ></div>
+              <span className="relative z-10 text-xs font-semibold text-gray-800">
+                {Math.round(item.taskCompletionPercent)}%
+              </span>
+            </div>
+            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+              {item.tasks}
             </span>
           </div>
-          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-            {item.tasks}
-          </span>
-        </div>
+        );
       case "subtaskCompletionPercent":
-        return <div className="flex items-center gap-2 cursor-pointer">
-          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-            {item.subtasksCompleted}
-          </span>
-          <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
-            <div
-              className={`absolute top-0 left-0 h-6 bg-[#b4e7ff] rounded-full transition-all duration-300`}
-              style={{ width: `${item.subtaskCompletionPercent}%` }}
-            ></div>
-            <span className="relative z-10 text-xs font-semibold text-gray-800">
-              {Math.round(item.subtaskCompletionPercent)}%
+        return (
+          <div className="flex items-center gap-2 cursor-pointer">
+            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+              {item.subtasksCompleted}
+            </span>
+            <div className="relative w-[8rem] bg-gray-200 rounded-full h-4 overflow-hidden flex items-center !justify-center">
+              <div
+                className={`absolute top-0 left-0 h-6 bg-[#b4e7ff] rounded-full transition-all duration-300`}
+                style={{ width: `${item.subtaskCompletionPercent}%` }}
+              ></div>
+              <span className="relative z-10 text-xs font-semibold text-gray-800">
+                {Math.round(item.subtaskCompletionPercent)}%
+              </span>
+            </div>
+            <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
+              {item.subtasks}
             </span>
           </div>
-          <span className="text-xs font-medium text-gray-700 min-w-[1.5rem] text-center">
-            {item.subtasks}
-          </span>
-        </div>
+        );
       default:
         return item[columnKey] || "-";
     }
@@ -1008,7 +1069,6 @@ export const ProjectsDashboard = () => {
       )}
     </>
   );
-
 
   const renderEditableCell = (columnKey, value, onChange) => {
     if (columnKey === "status") {

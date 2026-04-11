@@ -190,7 +190,8 @@ export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
     const isHiSocietySite =
       hostname.includes("localhost") ||
       hostname.includes("ui-hisociety.lockated.com") ||
-      hostname.includes("web.hisociety.lockated.com");
+      hostname.includes("web.hisociety.lockated.com") ||
+      hostname.includes("dev-hisociety.lockated.com/");
 
     // Set initial mode based on hostname and save it
     const initialMode = isHiSocietySite ? 'hi-society' : 'fm-matrix';

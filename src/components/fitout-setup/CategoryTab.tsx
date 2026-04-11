@@ -78,36 +78,16 @@ export const CategoryTab: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      
-      // Get selected user_society ID from localStorage
-      const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
-      
-      if (!selectedUserSocietyId) {
+
+      // Read the society ID directly — set by HiSocietyHeader as 'selectedSocietyId'
+      const societyIdRaw = localStorage.getItem('selectedSocietyId') || '';
+
+      if (!societyIdRaw) {
         toast.error('Please select a society from the header dropdown.');
         return;
       }
-      
-      // Get societies data from localStorage (already fetched by header)
-      const societiesData = localStorage.getItem('hiSocietyApprovedSocieties');
-      
-      if (!societiesData) {
-        toast.error('Society data not found. Please refresh the page.');
-        return;
-      }
-      
-      const userSocieties = JSON.parse(societiesData);
-      
-      // Find the selected user_society record
-      const selectedSociety = userSocieties.find((us: any) => us.id.toString() === selectedUserSocietyId);
-      
-      if (!selectedSociety || !selectedSociety.id_society) {
-        toast.error('Society information not found. Please select a valid society.');
-        return;
-      }
-      
-      const societyId = parseInt(selectedSociety.id_society);
-      
-      console.log('Creating category with society_id:', societyId, 'for user_society:', selectedUserSocietyId);
+
+      const societyId = parseInt(societyIdRaw);
 
       const response = await apiClient.post('/crm/admin/fitout_categories.json', {
         fitout_category: {
@@ -216,6 +196,13 @@ export const CategoryTab: React.FC = () => {
         defaultVisible: true,
       },
       {
+        key: 'sr_no',
+        label: 'Sr. No.',
+        sortable: false,
+        draggable: false,
+        defaultVisible: true,
+      },
+      {
         key: 'id',
         label: 'ID',
         sortable: true,
@@ -254,8 +241,10 @@ export const CategoryTab: React.FC = () => {
     []
   );
 
-  const renderCell = useCallback((item: Category, columnKey: string) => {
+  const renderCell = useCallback((item: Category, columnKey: string, index: number) => {
     switch (columnKey) {
+      case 'sr_no':
+        return <span>{index + 1}</span>;
       case 'actions':
         return (
           <div className="flex gap-2">
@@ -371,7 +360,9 @@ export const CategoryTab: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Move In">Move In</SelectItem>
+                  <SelectItem value="Move Out">Move Out</SelectItem>
                   <SelectItem value="Fitout">Fitout</SelectItem>
+                  <SelectItem value="Refund Initiate">Refund Initiate</SelectItem>
                 </SelectContent>
               </Select>
             </div>

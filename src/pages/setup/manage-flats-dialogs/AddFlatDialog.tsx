@@ -7,16 +7,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { SearchableSelect } from "@/components/SearchSelect";
 import { toast } from "sonner";
 import axios from "axios";
 
@@ -127,6 +121,27 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (!formData.tower) {
+      toast.error("Please select a tower");
+      return;
+    }
+    if (!formData.floor) {
+      toast.error("Please select a floor");
+      return;
+    }
+    if (!formData.flat.trim()) {
+      toast.error("Please enter a flat number");
+      return;
+    }
+    if (!formData.flatType) {
+      toast.error("Please select a flat type");
+      return;
+    }
+    if (!formData.occupied) {
+      toast.error("Please select occupancy status");
+      return;
+    }
+
     const payload = {
       society_flat: {
         society_block_id: formData.tower,
@@ -229,38 +244,32 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
               <Label htmlFor="tower" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                 Tower <span className="text-red-500">*</span>
               </Label>
-              <Select
+              <SearchableSelect
                 value={formData.tower}
-                onValueChange={(value) => onChange('tower', value)}
-              >
-                <SelectTrigger id="tower" className="border border-gray-400 pt-2">
-                  <SelectValue placeholder="Select Tower" />
-                </SelectTrigger>
-                <SelectContent>
-                  {towerOptions.map((tower) => (
-                    <SelectItem key={tower.id} value={tower.id.toString()}>{tower.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => onChange('tower', value)}
+                options={towerOptions.map((tower) => ({
+                  value: tower.id.toString(),
+                  label: tower.name,
+                }))}
+                placeholder="Select Tower"
+                className="pt-2"
+              />
             </div>
 
             <div className="relative">
               <Label htmlFor="floor" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
                 Floor <span className="text-red-500">*</span>
               </Label>
-              <Select
+              <SearchableSelect
                 value={formData.floor}
-                onValueChange={(value) => onChange('floor', value)}
-              >
-                <SelectTrigger id="floor" className="border border-gray-400 pt-2">
-                  <SelectValue placeholder="Select Floor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {floorOptions.map((floor) => (
-                    <SelectItem key={floor.id} value={floor.id.toString()}>{floor.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => onChange('floor', value)}
+                options={floorOptions.map((floor) => ({
+                  value: floor.id.toString(),
+                  label: floor.name,
+                }))}
+                placeholder="Select Floor"
+                className="pt-2"
+              />
             </div>
 
             <div className="relative">
@@ -299,36 +308,35 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
             </div>
 
             <div className="relative">
-              <Label htmlFor="flatType" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Flat Type</Label>
-              <Select
+              <Label htmlFor="flatType" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+                Flat Type <span className="text-red-500">*</span>
+              </Label>
+              <SearchableSelect
                 value={formData.flatType}
-                onValueChange={(value) => onChange('flatType', value)}
-              >
-                <SelectTrigger id="flatType" className="border border-gray-400 pt-2">
-                  <SelectValue placeholder="Select Flat Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {flatTypeOptions.map((flatType) => (
-                    <SelectItem key={flatType.id} value={flatType.id.toString()}>{flatType.society_flat_type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => onChange('flatType', value)}
+                options={flatTypeOptions.map((flatType) => ({
+                  value: flatType.id.toString(),
+                  label: flatType.society_flat_type,
+                }))}
+                placeholder="Select Flat Type"
+                className="pt-2"
+              />
             </div>
 
             <div className="relative">
-              <Label htmlFor="occupied" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Occupied</Label>
-              <Select
+              <Label htmlFor="occupied" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">
+                Occupied <span className="text-red-500">*</span>
+              </Label>
+              <SearchableSelect
                 value={formData.occupied}
-                onValueChange={(value) => onChange('occupied', value)}
-              >
-                <SelectTrigger id="occupied" className="border border-gray-400 pt-2">
-                  <SelectValue placeholder="Please Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Yes">Yes</SelectItem>
-                  <SelectItem value="No">No</SelectItem>
-                </SelectContent>
-              </Select>
+                onChange={(value) => onChange('occupied', value)}
+                options={[
+                  { label: "Yes", value: "Yes" },
+                  { label: "No", value: "No" },
+                ]}
+                placeholder="Please Select"
+                className="pt-2"
+              />
             </div>
 
             <div className="relative">
@@ -351,27 +359,23 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 value={formData.dateOfPossession}
                 onChange={(e) => onChange('dateOfPossession', e.target.value)}
                 className="border border-gray-400"
+                max={new Date().toISOString().split("T")[0]}
               />
             </div>
 
             {/* Rm User */}
             <div className="relative">
               <Label htmlFor="rmUser" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Rm User</Label>
-              <Select
+              <SearchableSelect
                 value={formData.rmUser}
-                onValueChange={(value) => onChange('rmUser', value)}
-              >
-                <SelectTrigger id="rmUser" className="border border-gray-400 pt-2">
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  {
-                    rmUsers.map(user => (
-                      <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
-                    ))
-                  }
-                </SelectContent>
-              </Select>
+                onChange={(value) => onChange('rmUser', value)}
+                options={rmUsers.map((user) => ({
+                  value: user.id.toString(),
+                  label: user.name,
+                }))}
+                placeholder="Select"
+                className="pt-2"
+              />
             </div>
           </div>
 

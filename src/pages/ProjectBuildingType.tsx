@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { ArrowLeft, Building2 } from "lucide-react";
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { Button } from "@/components/ui/button";
@@ -48,9 +48,9 @@ const ProjectBuildingType = () => {
     const fetchPropertyTypes = async () => {
       try {
         const response = await axios.get(`${baseURL}/property_types.json`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
+           headers: {
+                   Authorization: getAuthHeader(),
+                 },
         });
         const fetchedPropertyTypes = response.data || [];
 
@@ -94,10 +94,9 @@ const ProjectBuildingType = () => {
           },
         },
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+           headers: {
+                           Authorization: getAuthHeader(),
+                         },
         }
       );
       toast.success("Building type added successfully");

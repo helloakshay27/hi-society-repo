@@ -9,6 +9,8 @@ const BMSQuarantineTracker = lazy(() => import("@/pages/BMSQuarantineTracker"));
 const BMSOffers = lazy(() => import("@/pages/BMSOffers"));
 const BMSDocumentsFlatRelated = lazy(() => import("@/pages/BMSDocumentsFlatRelated"));
 const BMSDocumentsCommonFiles = lazy(() => import("@/pages/BMSDocumentsCommonFiles"));
+const BMSDocumentViewer = lazy(() => import("@/pages/BMSDocumentViewer"));
+const BMSDocumentsUpload = lazy(() => import("@/pages/BMSDocumentsUpload"));
 const BMSBusinessDirectorySetup = lazy(() => import("@/pages/BMSBusinessDirectorySetup"));
 const BMSBusinessDirectoryList = lazy(() => import("@/pages/BMSBusinessDirectoryList"));
 const BMSMIS = lazy(() => import("@/pages/BMSMIS"));
@@ -55,6 +57,9 @@ export const bmsRoutes = (
     {/* Documents Routes */}
     <Route path="/bms/documents/flat-related" element={withSuspense(BMSDocumentsFlatRelated)} />
     <Route path="/bms/documents/common-files" element={withSuspense(BMSDocumentsCommonFiles)} />
+    <Route path="/bms/documents/view/:id" element={withSuspense(BMSDocumentViewer)} />
+    <Route path="/bms/documents/upload" element={withSuspense(BMSDocumentsUpload)} />
+    <Route path="/bms/documents/upload-flat" element={withSuspense(BMSDocumentsUpload)} />
 
     {/* Business Directory Routes */}
     <Route path="/bms/business-directory/setup" element={withSuspense(BMSBusinessDirectorySetup)} />

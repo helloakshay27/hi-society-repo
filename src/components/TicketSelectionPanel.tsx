@@ -47,7 +47,7 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
 
   const handleExport = async () => {
     console.log('TicketSelectionPanel - Export clicked for tickets:', selectedTickets);
-    
+
     if (selectedTickets.length === 0) {
       toast({
         title: "No Selection",
@@ -58,17 +58,17 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
     }
 
     setIsExportLoading(true);
-    
+
     try {
       // Create the ticket IDs query parameters in the correct format: q[id_in][]=1&q[id_in][]=2
       const ticketParams = selectedTickets.map(id => `q[id_in][]=${id}`).join('&');
       console.log('📥 Exporting tickets with IDs:', selectedTickets);
       console.log('📥 Generated ticket parameters:', ticketParams);
-      
+
       // Build the export URL with selected ticket IDs using the correct format
       const exportEndpoint = `${ENDPOINTS.TICKETS_EXPORT_EXCEL}?${ticketParams}`;
       const exportUrl = getFullUrl(exportEndpoint);
-      
+
       console.log('📥 Export endpoint:', exportEndpoint);
       console.log('📥 Full export URL:', exportUrl);
 
@@ -83,44 +83,44 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Export API error response:', errorText);
-        
+
         if (response.status === 401) {
           console.error('401 Authentication failed during export - invalid or expired token');
           throw new Error('Authentication failed. Please login again.');
         }
-        
+
         throw new Error(`Export failed: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       // Get the file blob
       const blob = await response.blob();
-      
+
       // Create download link
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      
+
       // Generate filename with timestamp
       const timestamp = new Date().toISOString().slice(0, 10);
       link.download = `selected_tickets_${selectedTickets.length}_${timestamp}.xlsx`;
-      
+
       // Trigger download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up the blob URL
       window.URL.revokeObjectURL(downloadUrl);
-      
+
       console.log('Export completed successfully');
       toast({
         title: "Export Successful",
         description: `Successfully exported ${selectedTickets.length} ticket(s).`
       });
-      
+
     } catch (error) {
       console.error('❌ Export failed:', error);
-      
+
       // Handle authentication errors specifically
       if (error instanceof Error && error.message.includes('Authentication failed')) {
         toast({
@@ -130,7 +130,7 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
         });
         return;
       }
-      
+
       toast({
         title: "Export Failed",
         description: `Failed to export tickets: ${error.message || 'Unknown error'}`,
@@ -161,7 +161,7 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
           {selectedTickets.length}
         </div>
       </div>
-      
+
       {/* Main content */}
       <div className="flex items-center justify-between gap-4 px-6 flex-1">
         <div className="flex items-center gap-4">
@@ -175,7 +175,7 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
             </span>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {/* <Button
             onClick={handleGoldenTicket}
@@ -191,8 +191,8 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
             )}
             <span className="text-xs text-gray-600">Assign To</span>
           </Button> */}
-          
-          <Button
+
+          {/* <Button
             onClick={handleFlag}
             disabled={isFlagLoading}
             variant="ghost"
@@ -205,8 +205,8 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
               <Edit className="w-6 h-6 text-black" />
             )}
             <span className="text-xs text-gray-600">Update</span>
-          </Button>
-          
+          </Button> */}
+
           <Button
             onClick={() => setIsCostApprovalOpen(true)}
             variant="ghost"
@@ -216,7 +216,7 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
             <HandCoins className="w-6 h-6 text-black" />
             <span className="text-xs text-gray-600">Cost Approval</span>
           </Button>
-          
+
           <Button
             onClick={handleExport}
             disabled={isExportLoading}
@@ -233,7 +233,7 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
           </Button>
         </div>
       </div>
-      
+
       {/* Cross button - 44px wide */}
       <div className="w-[44px] flex items-center justify-center border-l border-gray-200">
         <button
@@ -243,7 +243,7 @@ export const TicketSelectionPanel: React.FC<TicketSelectionPanelProps> = ({
           <X className="w-4 h-4 text-black" />
         </button>
       </div>
-      
+
       {/* Cost Approval Modal */}
       <CostApprovalModal
         isOpen={isCostApprovalOpen}

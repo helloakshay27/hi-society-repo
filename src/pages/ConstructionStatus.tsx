@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { ArrowLeft, Building2 } from "lucide-react";
 import { TextField } from "@mui/material";
@@ -51,8 +51,8 @@ const ConstructionStatus = () => {
     try {
       await axios.post(`${baseURL}/construction_statuses.json`, formDataToSend, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
+                 Authorization: getAuthHeader(),
+               },
       });
 
       toast.success("Construction status added successfully!");

@@ -226,6 +226,13 @@ export const FitoutCategoryRateTab: React.FC = () => {
         defaultVisible: true,
       },
       {
+        key: 'sr_no',
+        label: 'Sr. No.',
+        sortable: false,
+        draggable: true,
+        defaultVisible: true,
+      },
+      {
         key: 'id',
         label: 'ID',
         sortable: true,
@@ -278,8 +285,10 @@ export const FitoutCategoryRateTab: React.FC = () => {
     []
   );
 
-  const renderCell = useCallback((item: FitoutFlatRate, columnKey: string) => {
+  const renderCell = useCallback((item: FitoutFlatRate, columnKey: string, index: number) => {
     switch (columnKey) {
+      case 'sr_no':
+        return <span>{index + 1}</span>;
       case 'actions':
         return (
           <div className="flex gap-2">
@@ -396,7 +405,9 @@ export const FitoutCategoryRateTab: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Move In">Move In</SelectItem>
+                  <SelectItem value="Move Out">Move Out</SelectItem>
                   <SelectItem value="Fitout">Fitout</SelectItem>
+                  <SelectItem value="Refund Initiate">Refund Initiate</SelectItem>
                 </SelectContent>
               </Select>
             </div>

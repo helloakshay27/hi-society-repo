@@ -109,7 +109,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Detect Hi-Society site - used for fallback when no API role exists
   const isUIHiSocietySite =
     hostname.includes("ui-hisociety.lockated.com") ||
-    !hostname.includes("localhost") || org_id === "9";
+    hostname.includes("localhost") ||org_id === "9";
 
   const isDevHiSocietySite = hostname.includes("dev-hisociety.lockated.com");
 
@@ -131,6 +131,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Render sidebar component based on configuration
   const renderSidebar = () => {
     // If Hi-Society mode is active, use the unified HiSocietySidebar
+
+    if (layoutMode === "hi-society" && isDevHiSocietySite) {
+      return <HiSocietySidebar />;
+    }
 
     if (layoutMode === "hi-society" && isUIHiSocietySite) {
       return <UIHiSocietySidebar />;
@@ -359,19 +363,19 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               ? "ml-16"
               : "ml-64"
             : // FM Matrix mode - always show sidebar margin for admin users
-            isActionSidebarVisible
+              isActionSidebarVisible
               ? "ml-64 pt-28" // ActionSidebar is visible (fixed width 64)
               : isSidebarCollapsed
                 ? "ml-16"
                 : "ml-64"
-          } ${
+        } ${
           // Top padding based on mode
           layoutMode === "hi-society"
             ? "pt-28" // Header (16) + Navigation (12) = 28
             : isActionSidebarVisible
               ? ""
               : "pt-28"
-          } transition-all duration-300`}
+        } transition-all duration-300`}
       >
         <Outlet />
       </main>

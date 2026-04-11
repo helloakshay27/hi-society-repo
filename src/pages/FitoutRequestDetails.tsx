@@ -352,6 +352,7 @@ const FitoutRequestDetails: React.FC = () => {
   const [selectedCategoryForUpload, setSelectedCategoryForUpload] = useState<FitoutRequestCategory | null>(null);
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [uploadLoading, setUploadLoading] = useState(false);
+  const [resendingMailId, setResendingMailId] = useState<number | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -550,6 +551,28 @@ const FitoutRequestDetails: React.FC = () => {
         ...Object.keys(editedAnnexureSignaturesByMapId).map((k) => Number(k)),
       ]);
 
+      const MAX_ANS_DESCR_LENGTH = 255;
+
+      const validateAnsDescr = (value: unknown, mapIdNum: number) => {
+        const text = (value ?? '').toString();
+        if (text.length > MAX_ANS_DESCR_LENGTH) {
+          toast.error(
+            `Answer text must be ${MAX_ANS_DESCR_LENGTH} characters or less. (Answer ID: ${mapIdNum})`,
+            {
+              position: 'top-right',
+              duration: 4000,
+              style: {
+                background: '#fff',
+                color: 'black',
+                border: 'none',
+              },
+            }
+          );
+          return false;
+        }
+        return true;
+      };
+
       if (editedMapIds.size === 0) {
         toast.error('No changes to save', {
           position: 'top-right',
@@ -599,13 +622,25 @@ const FitoutRequestDetails: React.FC = () => {
               `${qKeyBase}[snag_quest_option_id]`,
               edited.quest_option_id ? String(edited.quest_option_id) : ''
             );
-            formData.append(`${qKeyBase}[ans_descr]`, (edited.ans_descr ?? '').toString());
+            const ans = (edited.ans_descr ?? '').toString();
+            if (!validateAnsDescr(ans, mapIdNum)) {
+              throw new Error('VALIDATION_ANS_DESCR_TOO_LONG');
+            }
+            formData.append(`${qKeyBase}[ans_descr]`, ans);
           } else if (existingAnswer?.quest_option_id) {
             formData.append(`${qKeyBase}[snag_quest_option_id]`, String(existingAnswer.quest_option_id));
-            formData.append(`${qKeyBase}[ans_descr]`, (existingAnswer.ans_descr ?? '').toString());
+            const ans = (existingAnswer.ans_descr ?? '').toString();
+            if (!validateAnsDescr(ans, mapIdNum)) {
+              throw new Error('VALIDATION_ANS_DESCR_TOO_LONG');
+            }
+            formData.append(`${qKeyBase}[ans_descr]`, ans);
           } else {
             formData.append(`${qKeyBase}[snag_quest_option_id]`, '');
-            formData.append(`${qKeyBase}[ans_descr]`, (edited?.ans_descr ?? '').toString());
+            const ans = (edited?.ans_descr ?? '').toString();
+            if (!validateAnsDescr(ans, mapIdNum)) {
+              throw new Error('VALIDATION_ANS_DESCR_TOO_LONG');
+            }
+            formData.append(`${qKeyBase}[ans_descr]`, ans);
           }
         } else if (question.qtype === 'file') {
           formData.append(`${qKeyBase}[snag_quest_option_id]`, '');
@@ -620,7 +655,11 @@ const FitoutRequestDetails: React.FC = () => {
             formData.append(`${qKeyBase}[docs][]`, signatureFile);
           }
         } else {
-          formData.append(`${qKeyBase}[ans_descr]`, (edited?.ans_descr ?? '').toString());
+          const ans = (edited?.ans_descr ?? '').toString();
+          if (!validateAnsDescr(ans, mapIdNum)) {
+            throw new Error('VALIDATION_ANS_DESCR_TOO_LONG');
+          }
+          formData.append(`${qKeyBase}[ans_descr]`, ans);
         }
       });
 
@@ -649,6 +688,9 @@ const FitoutRequestDetails: React.FC = () => {
         fetchFitoutRequestDetails(parseInt(id));
       }
     } catch (error: any) {
+      if (error?.message === 'VALIDATION_ANS_DESCR_TOO_LONG') {
+        return;
+      }
       console.error('Error updating responses:', error);
       toast.error(`Failed to update responses: ${error.message || 'Unknown error'}`, {
         position: 'top-right',
@@ -898,6 +940,29 @@ const FitoutRequestDetails: React.FC = () => {
       });
     } finally {
       setDeviationLoading(false);
+    }
+  };
+
+  const handleResendApprovalMail = async (annexureCategoryId: number, invoiceApprovalHistoryId: number) => {
+    setResendingMailId(invoiceApprovalHistoryId);
+    try {
+      await apiClient.post(
+        `/fitout_request_categories/${annexureCategoryId}/resend_approval_mail.json?invoice_approval_history_id=${invoiceApprovalHistoryId}`
+      );
+      toast.success('Approval email resent successfully', {
+        position: 'top-right',
+        duration: 3000,
+        style: { background: '#fff', color: 'black', border: 'none' },
+      });
+    } catch (error: any) {
+      console.error('Error resending approval mail:', error);
+      toast.error(`Failed to resend email: ${error.message || 'Unknown error'}`, {
+        position: 'top-right',
+        duration: 3000,
+        style: { background: '#fff', color: 'black', border: 'none' },
+      });
+    } finally {
+      setResendingMailId(null);
     }
   };
 
@@ -2526,32 +2591,58 @@ const FitoutRequestDetails: React.FC = () => {
                                               </p>
                                             </div>
                                           </div>
-                                          <Badge
-                                            variant="outline"
-                                            className="text-xs"
-                                            style={{
-                                              backgroundColor:
-                                                history.approve === true
-                                                  ? '#22c55e15'
-                                                  : history.approve === false
-                                                  ? '#ef444415'
-                                                  : '#f59e0b15',
-                                              color:
-                                                history.approve === true
-                                                  ? '#22c55e'
-                                                  : history.approve === false
-                                                  ? '#ef4444'
-                                                  : '#f59e0b',
-                                              borderColor:
-                                                history.approve === true
-                                                  ? '#22c55e'
-                                                  : history.approve === false
-                                                  ? '#ef4444'
-                                                  : '#f59e0b',
-                                            }}
-                                          >
-                                            {history.status_text}
-                                          </Badge>
+                                          <div className="flex items-center gap-2">
+                                            <Badge
+                                              variant="outline"
+                                              className="text-xs"
+                                              style={{
+                                                backgroundColor:
+                                                  history.approve === true
+                                                    ? '#22c55e15'
+                                                    : history.approve === false
+                                                    ? '#ef444415'
+                                                    : '#f59e0b15',
+                                                color:
+                                                  history.approve === true
+                                                    ? '#22c55e'
+                                                    : history.approve === false
+                                                    ? '#ef4444'
+                                                    : '#f59e0b',
+                                                borderColor:
+                                                  history.approve === true
+                                                    ? '#22c55e'
+                                                    : history.approve === false
+                                                    ? '#ef4444'
+                                                    : '#f59e0b',
+                                              }}
+                                            >
+                                              {history.status_text}
+                                            </Badge>
+                                            {history.status_text === 'Pending' && (
+                                              <button
+                                                onClick={() => handleResendApprovalMail(categoryResponse.id, history.id)}
+                                                disabled={resendingMailId === history.id}
+                                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-[#C72030] hover:bg-[#a51a28] rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                              >
+                                                {resendingMailId === history.id ? (
+                                                  <>
+                                                    <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                    </svg>
+                                                    Sending...
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                    </svg>
+                                                    Resend Email
+                                                  </>
+                                                )}
+                                              </button>
+                                            )}
+                                          </div>
                                         </div>
                                         
                                         {history.rejection_reason && (
@@ -2981,32 +3072,58 @@ const FitoutRequestDetails: React.FC = () => {
                                                           </p>
                                                         </div>
                                                       </div>
-                                                      <Badge
-                                                        variant="outline"
-                                                        className="text-[10px] px-1.5 py-0.5"
-                                                        style={{
-                                                          backgroundColor:
-                                                            history.approve === true
-                                                              ? '#22c55e15'
-                                                              : history.approve === false
-                                                              ? '#ef444415'
-                                                              : '#f59e0b15',
-                                                          color:
-                                                            history.approve === true
-                                                              ? '#22c55e'
-                                                              : history.approve === false
-                                                              ? '#ef4444'
-                                                              : '#f59e0b',
-                                                          borderColor:
-                                                            history.approve === true
-                                                              ? '#22c55e'
-                                                              : history.approve === false
-                                                              ? '#ef4444'
-                                                              : '#f59e0b',
-                                                        }}
-                                                      >
-                                                        {history.status_text}
-                                                      </Badge>
+                                                      <div className="flex items-center gap-1.5">
+                                                        <Badge
+                                                          variant="outline"
+                                                          className="text-[10px] px-1.5 py-0.5"
+                                                          style={{
+                                                            backgroundColor:
+                                                              history.approve === true
+                                                                ? '#22c55e15'
+                                                                : history.approve === false
+                                                                ? '#ef444415'
+                                                                : '#f59e0b15',
+                                                            color:
+                                                              history.approve === true
+                                                                ? '#22c55e'
+                                                                : history.approve === false
+                                                                ? '#ef4444'
+                                                                : '#f59e0b',
+                                                            borderColor:
+                                                              history.approve === true
+                                                                ? '#22c55e'
+                                                                : history.approve === false
+                                                                ? '#ef4444'
+                                                                : '#f59e0b',
+                                                          }}
+                                                        >
+                                                          {history.status_text}
+                                                        </Badge>
+                                                        {history.status_text === 'Pending' && (
+                                                          <button
+                                                            onClick={() => handleResendApprovalMail(categoryResponse.id, history.id)}
+                                                            disabled={resendingMailId === history.id}
+                                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-white bg-[#C72030] hover:bg-[#a51a28] rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                          >
+                                                            {resendingMailId === history.id ? (
+                                                              <>
+                                                                <svg className="w-2.5 h-2.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                                </svg>
+                                                                Sending...
+                                                              </>
+                                                            ) : (
+                                                              <>
+                                                                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                                </svg>
+                                                                Resend Email
+                                                              </>
+                                                            )}
+                                                          </button>
+                                                        )}
+                                                      </div>
                                                     </div>
                                                     
                                                     {history.rejection_reason && (

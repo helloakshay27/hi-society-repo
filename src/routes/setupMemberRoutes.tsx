@@ -32,6 +32,7 @@ import HiSocEventDetails from "@/pages/HiSocEventDetails";
 import HiSocNoticeList from "@/pages/HiSocNoticeList";
 import HiSocNoticeCreate from "@/pages/HiSocNoticeCreate";
 import HiSocNoticeDetails from "@/pages/HiSocNoticeDetails";
+import HiSocNoticeEdit from "@/pages/HiSocNoticeEdit";
 import ContestListPage from "@/pages/ContestListPage";
 import CreateContestPage from "@/pages/CreateContestPage";
 import EditContestPage from "@/pages/EditContestPage";
@@ -256,12 +257,19 @@ const BMSDocumentsFlatRelated = lazy(
 const BMSDocumentsCommonFiles = lazy(
   () => import("@/pages/BMSDocumentsCommonFiles")
 );
+const BMSDocumentViewer = lazy(
+  () => import("@/pages/BMSDocumentViewer")
+);
+const BMSDocumentsUpload = lazy(
+  () => import("@/pages/BMSDocumentsUpload")
+);
 const BMSBusinessDirectorySetup = lazy(
   () => import("@/pages/BMSBusinessDirectorySetup")
 );
 const BMSBusinessDirectoryList = lazy(
   () => import("@/pages/BMSBusinessDirectoryList")
 );
+const CallDirectory = lazy(() => import("@/pages/CallDirectory"));
 const BMSMIS = lazy(() => import("@/pages/BMSMIS"));
 const BMSHelpdeskReport = lazy(() => import("@/pages/BMSHelpdeskReport"));
 const BMSInvoiceReport = lazy(() => import("@/pages/BMSInvoiceReport"));
@@ -379,6 +387,7 @@ const AccountingInvoiceReport = lazy(
 const AccountingDownloadReport = lazy(
   () => import("@/pages/AccountingDownloadReport")
 );
+const PaymentTermsPage = lazy(() => import("@/pages/PaymentTermsPage"));
 
 // Fitout Pages
 const FitoutRequests = lazy(() => import("@/pages/FitoutRequests"));
@@ -414,6 +423,7 @@ const SmartSecureVisitorOut = lazy(
 const SmartSecureVisitorHistory = lazy(
   () => import("@/pages/SmartSecureVisitorHistory")
 );
+const AddVisitorPage = lazy(() => import("@/pages/AddVisitorPage"));
 const SmartSecureStaffsAll = lazy(() => import("@/pages/SmartSecureStaffsAll"));
 const SmartSecureStaffsIn = lazy(() => import("@/pages/SmartSecureStaffsIn"));
 const SmartSecureStaffsOut = lazy(() => import("@/pages/SmartSecureStaffsOut"));
@@ -1239,6 +1249,10 @@ export const setupMemberRoutes = (
       element={<HiSocNoticeDetails />}
     />
     <Route
+      path="/bms/hisoc-notice-edit/:id"
+      element={<HiSocNoticeEdit />}
+    />
+    <Route
       path="/bms/quarantine-tracker"
       Component={withSuspense(BMSQuarantineTracker)}
     />
@@ -1252,6 +1266,18 @@ export const setupMemberRoutes = (
       Component={withSuspense(BMSDocumentsCommonFiles)}
     />
     <Route
+      path="/bms/documents/view/:id"
+      Component={withSuspense(BMSDocumentViewer)}
+    />
+    <Route
+      path="/bms/documents/upload"
+      Component={withSuspense(BMSDocumentsUpload)}
+    />
+    <Route
+      path="/bms/documents/upload-flat"
+      Component={withSuspense(BMSDocumentsUpload)}
+    />
+    <Route
       path="/bms/business-directory/setup"
       Component={withSuspense(BMSBusinessDirectorySetup)}
     />
@@ -1262,6 +1288,10 @@ export const setupMemberRoutes = (
     <Route
       path="/business-directory/view/:id"
       Component={withSuspense(BusinessDirectoryDetailsPage)}
+    />
+    <Route
+      path="/bms/call-directory"
+      Component={withSuspense(CallDirectory)}
     />
     <Route path="/bms/mis" Component={withSuspense(BMSMIS)} />
     <Route
@@ -1469,6 +1499,10 @@ export const setupMemberRoutes = (
       path="/accounting/download-report"
       Component={withSuspense(AccountingDownloadReport)}
     />
+    <Route
+      path="/accounting/payment-terms"
+      Component={withSuspense(PaymentTermsPage)}
+    />
 
     {/* Fitout Routes */}
     <Route path="/settings/approval-matrix" Component={withSuspense(ApprovalMatrixSetupPage)} />
@@ -1536,6 +1570,14 @@ export const setupMemberRoutes = (
     <Route
       path="/smartsecure/visitor-history"
       Component={withSuspense(VisitorsDashboard)}
+    />
+    <Route
+      path="/smartsecure/visitor-history-list"
+      Component={withSuspense(SmartSecureVisitorHistory)}
+    />
+    <Route
+      path="/smartsecure/visitor-in/add"
+      Component={withSuspense(AddVisitorPage)}
     />
     <Route
       path="/smartsecure/staff-all"

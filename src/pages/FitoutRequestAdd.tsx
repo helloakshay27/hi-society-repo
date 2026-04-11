@@ -232,7 +232,7 @@ const FitoutRequestAdd: React.FC = () => {
       setCategories(categoriesArray);
       
       // Set static fitout types
-      setFitoutTypes(['Move In', 'Fitout']);
+      setFitoutTypes(['Move In', 'Move Out', 'Fitout', 'Refund Initiate']);
       
       // Set user_society.id in formData for user_society_id parameter
       const selectedUserSocietyId = localStorage.getItem('selectedUserSociety') || '';
@@ -365,7 +365,7 @@ const FitoutRequestAdd: React.FC = () => {
     e.preventDefault();
     
     if (!formData.site_id || !formData.unit_id || !formData.user_id || !formData.fitout_type || !formData.requested_date) {
-      toast.error('Please fill in all required fields (Tower/Site, Flat, User, Fitout Type, and Requested Date)', {
+      toast.error('Please fill in all required fields (Tower/Site, Flat, User, Fitout Type, Description and Requested Date)', {
         position: 'top-right',
         duration: 3000,
         style: {
@@ -383,6 +383,7 @@ const FitoutRequestAdd: React.FC = () => {
       const formDataToSend = new FormData();
       
       // Add main fitout request fields
+      formDataToSend.append('fitout_request[active]', 'true');
       formDataToSend.append('fitout_request[site_id]', formData.site_id);
       formDataToSend.append('fitout_request[unit_id]', formData.unit_id);
       
@@ -573,7 +574,7 @@ const FitoutRequestAdd: React.FC = () => {
                 }}
               />
                 <TextField
-              label="Description"
+              label={<>Description<span className='text-red-600'> *</span> </>}
               name="description"
               value={formData.description}
               onChange={handleInputChange}

@@ -244,8 +244,24 @@ const HiSocNoticeCreate = () => {
       errors.push("Description is required.");
       return errors;
     }
-    if (formData.notice_text.length > 255) {
-      errors.push("Description cannot exceed 255 characters.");
+    if (formData.is_important === "") {
+      errors.push("Mark Important is required.");
+      return errors;
+    }
+    if (formData.email_trigger_enabled === "") {
+      errors.push("Send Email is required.");
+      return errors;
+    }
+    if (!formData.shared) {
+      errors.push("Share With is required.");
+      return errors;
+    }
+    if (formData.shared === "1" && formData.user_ids.length === 0) {
+      errors.push("Please select at least one user.");
+      return errors;
+    }
+    if (formData.shared === "2" && formData.group_id.length === 0) {
+      errors.push("Please select at least one group.");
       return errors;
     }
     return errors;
@@ -253,6 +269,7 @@ const HiSocNoticeCreate = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     toast.dismiss();
 
@@ -296,13 +313,13 @@ const HiSocNoticeCreate = () => {
       // Individuals
       data.append("noticeboard[shared]", "1");
       formData.user_ids.forEach((userId) => {
-        data.append("noticeboard[cpusers][]", userId.toString());
+        data.append("noticeboard[swusers][]", userId.toString());
       });
     } else if (formData.shared === "2" && formData.group_id.length > 0) {
       // Groups
       data.append("noticeboard[shared]", "1");
       formData.group_id.forEach((groupId) => {
-        data.append("noticeboard[cp_group_id][]", groupId.toString());
+        data.append("noticeboard[group_id][]", groupId.toString());
       });
     }
 
@@ -323,7 +340,7 @@ const HiSocNoticeCreate = () => {
       if (Array.isArray(images) && images.length > 0) {
         images.forEach((img) => {
           if (img?.file instanceof File) {
-            data.append("noticeboard[files_attached][]", img.file);
+            data.append("noticeboard[documents][]", img.file);
           }
         });
       }
@@ -422,14 +439,14 @@ const HiSocNoticeCreate = () => {
           >
             <ArrowLeft className="w-4 h-4 text-gray-600" />
           </button>
-          <span>Hi Soc Notice List</span>
+          <span>Notice</span>
           <span>{">"}</span>
-          <span className="text-gray-900 font-medium">Create Hi Soc Notice</span>
+          <span className="text-gray-900 font-medium">Notice Create</span>
         </div>
         {/* <h1 className="text-2xl font-bold text-gray-900">CREATE BROADCAST</h1> */}
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Section: Communication Information */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="px-6 py-3 border-b border-gray-200" style={{ backgroundColor: "#F6F4EE" }}>
@@ -505,7 +522,7 @@ const HiSocNoticeCreate = () => {
                 >
                   <MenuItem value="">Select Type</MenuItem>
                   <MenuItem value="Maintenance">Maintenance</MenuItem>
-                  <MenuItem value="General ">General </MenuItem>
+                  <MenuItem value="General">General </MenuItem>
                   <MenuItem value="Emergency">Emergency</MenuItem>
                   <MenuItem value="Announcement">Announcement</MenuItem>
                   <MenuItem value="Event">Event</MenuItem>
@@ -582,7 +599,7 @@ const HiSocNoticeCreate = () => {
 
               {/* Mark Important */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mark Important <span className="text-red-500">*</span></label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
                     <input
@@ -621,7 +638,7 @@ const HiSocNoticeCreate = () => {
 
               {/* Send Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Send Email <span className="text-red-500">*</span></label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
                     <input
@@ -703,7 +720,7 @@ const HiSocNoticeCreate = () => {
             {/* Share With */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Share With</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Share With <span className="text-red-500">*</span></label>
                 <div className="flex gap-6 mb-4">
                   <label className="flex items-center">
                     <input
@@ -883,7 +900,7 @@ const HiSocNoticeCreate = () => {
             <div className="mb-6">
               <div className="flex justify-between items-center mb-4">
                 <h5 className="text-base font-semibold">
-                  Broadcast Cover Image{" "}
+                  Notice Cover Image{" "}
                   {/* <span
                     className="relative inline-block cursor-pointer"
                     onMouseEnter={() => setShowTooltip(true)}
@@ -992,7 +1009,7 @@ const HiSocNoticeCreate = () => {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h5 className="text-base font-semibold">
-                  Broadcast Attachment{" "}
+                  Notice Attachment{" "}
                   {/* <span
                     className="relative inline-block cursor-pointer"
                     onMouseEnter={() => setShowAttachmentTooltip(true)}
@@ -1129,9 +1146,17 @@ const HiSocNoticeCreate = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px]"
+            className="bg-[#C4B89D59] text-[#C72030] hover:bg-[#C4B89D59]/90 h-9 px-4 text-sm font-medium rounded-md min-w-[120px] flex items-center justify-center gap-2"
           >
-            {loading ? 'Submit' : 'Submit'}
+            {loading ? (
+              <>
+                <svg className="animate-spin h-4 w-4 text-[#C72030]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Submitting...
+              </>
+            ) : 'Submit'}
           </button>
           <button
             type="button"

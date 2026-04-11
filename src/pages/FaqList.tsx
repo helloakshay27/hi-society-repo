@@ -48,9 +48,8 @@ const FaqList = () => {
 
       const response = await axios.get(getFullUrl('/faqs.json'), {
         headers: {
-          "Content-Type": "application/json",
-          Authorization: getAuthHeader(),
-        },
+                           Authorization: getAuthHeader(),
+                         },
         params,
       });
 

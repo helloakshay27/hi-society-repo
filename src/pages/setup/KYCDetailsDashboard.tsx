@@ -102,8 +102,8 @@ export const KYCDetailsDashboard = () => {
       return;
     }
 
-    // Validate mobile format (basic validation)
-    const mobileRegex = /^[0-9]{10,15}$/;
+    // Validate mobile format (exactly 10 digits)
+    const mobileRegex = /^[0-9]{10}$/;
     if (!mobileRegex.test(formData.userMobile.replace(/[\s\-\(\)]/g, ""))) {
       toast.error("Please enter a valid mobile number");
       return;
@@ -261,9 +261,11 @@ export const KYCDetailsDashboard = () => {
                 type="tel"
                 placeholder=" "
                 value={formData.userMobile}
-                onChange={(e) =>
-                  setFormData({ ...formData, userMobile: e.target.value })
-                }
+                maxLength={10}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setFormData({ ...formData, userMobile: val });
+                }}
                 className="border border-gray-400 pt-2"
               />
             </div>

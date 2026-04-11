@@ -45,6 +45,8 @@ const FaqCreate = () => {
     faq_sub_category_id: "",
     question: "",
     answer: "",
+      faqs: [],   // ✅ ADD THIS
+
   });
 
   const [categories, setCategories] = useState([]);
@@ -148,7 +150,7 @@ const FaqCreate = () => {
         setSites(formattedSites);
       } catch (err) {
         console.error("Failed to fetch sites:", err);
-        toast.error("Failed to load sites");
+        // toast.error("Failed to load sites");
       } finally {
         setSitesLoading(false);
       }
@@ -172,15 +174,15 @@ const FaqCreate = () => {
   };
 
   const handleAddFaq = () => {
-    if (!question.trim()) {
-      toast.error("Question is required");
-      return;
-    }
+    if (!formData.question.trim()) {
+  toast.error("Question is required");
+  return;
+}
 
-    if (!answer.trim()) {
-      toast.error("Answer is required");
-      return;
-    }
+if (!formData.answer.trim()) {
+  toast.error("Answer is required");
+  return;
+}
 
      if (
     (getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" ||
@@ -240,7 +242,7 @@ const FaqCreate = () => {
     //   return;
     // }
     if (
-  (getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" || getFullUrl('') === "https://rustomjee-live.lockated.com") &&
+  // (getFullUrl('') === "https://dev-panchshil-super-app.lockated.com" || getFullUrl('') === "https://rustomjee-live.lockated.com") &&
   !formData.faq_category_id
 ) {
   toast.error("FAQ Category is required");
@@ -252,10 +254,10 @@ const FaqCreate = () => {
     //   return;
     // }
 
-    if (formData.faqs.length === 0) {
-      toast.error("At least one FAQ is required");
-      return;
-    }
+    // if (formData.faqs.length === 0) {
+    //   toast.error("At least one FAQ is required");
+    //   return;
+    // }
 
     setLoading(true);
 
@@ -269,7 +271,9 @@ const FaqCreate = () => {
       };
 
       await axios.post(getFullUrl('/faqs.json'), payload, {
-        headers: { Authorization: getAuthHeader() },
+         headers: {
+                           Authorization: getAuthHeader(),
+                         },
       });
 
       toast.success("FAQ created successfully!");

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { TextField } from "@mui/material";
 import { toast } from "sonner";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { ArrowLeft, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -52,8 +52,8 @@ const ProjectConfigEdit = () => {
           `${baseURL}/configuration_setups/${id}.json`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
+                             Authorization: getAuthHeader(),
+                           },
           }
         );
 
@@ -110,9 +110,8 @@ const ProjectConfigEdit = () => {
         formDataToSend,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "multipart/form-data",
-          },
+                           Authorization: getAuthHeader(),
+                         },
         }
       );
 

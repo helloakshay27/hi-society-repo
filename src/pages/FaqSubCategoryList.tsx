@@ -10,6 +10,7 @@ import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
 
 interface FaqSubCategory {
   id: number;
+  srNo?: number;
   name: string;
   faq_category_id: number;
   active: boolean;
@@ -103,7 +104,10 @@ const FaqSubCategoryList = () => {
       // Client-side pagination
       const startIndex = (page - 1) * itemsPerPage;
       const endIndex = startIndex + itemsPerPage;
-      const paginatedSubCategories = filteredSubCategories.slice(startIndex, endIndex);
+      const paginatedSubCategories = filteredSubCategories.slice(startIndex, endIndex).map((item, index) => ({
+        ...item,
+        srNo: startIndex + index + 1,
+      }));
       
       setSubCategories(paginatedSubCategories);
       setCurrentPage(page);
@@ -168,7 +172,7 @@ const FaqSubCategoryList = () => {
 
   const columns = [
     { key: 'actions', label: 'Action', sortable: false },
-    { key: 'id', label: 'Sr No', sortable: true },
+    { key: 'srNo', label: 'Sr No', sortable: false },
     { key: 'name', label: 'Name', sortable: true },
     { key: 'faq_category_id', label: 'FAQ Category ID', sortable: true },
     { key: 'active', label: 'Status', sortable: true },
@@ -176,6 +180,8 @@ const FaqSubCategoryList = () => {
 
   const renderCell = (item: FaqSubCategory, columnKey: string) => {
     switch (columnKey) {
+      case 'srNo':
+        return <span className="text-sm text-gray-600 font-medium">{item.srNo}</span>;
       case 'actions':
         return (
           <div className="flex gap-1">

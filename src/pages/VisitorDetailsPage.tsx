@@ -29,6 +29,7 @@ import {
 import { AttachmentPreviewModal } from "@/components/AttachmentPreviewModal";
 import { QRCodeModal } from "@/components/QRCodeModal";
 import VisitorPassWeb from "@/components/VisitorPassWeb";
+import { ticketManagementAPI } from "@/services/ticketManagementAPI";
 
 // Types
 interface DocumentItem {
@@ -314,41 +315,8 @@ export const VisitorDetailsPage = () => {
     if (!visitorData || !id) return;
 
     try {
-      const url = getFullUrl(`/crm/visitors/${id}.json`);
-      const options = getAuthenticatedFetchOptions();
-
-      const requestBody = {
-        gatekeeper: {
-          guest_entry_time: getLocalISOString(),
-          entry_gate_id: "",
-          status: "checked_in",
-        },
-      };
-
-      const requestOptions = {
-        ...options,
-        method: "PUT",
-        headers: {
-          ...options.headers,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      };
-
-      const response = await fetch(url, requestOptions);
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to check-in visitor: ${response.status} ${response.statusText}`
-        );
-      }
-
-      const data = await response.json();
-
-      // Show success toast
+      await ticketManagementAPI.checkInVisitor(Number(id));
       toast.success("Visitor checked in successfully!");
-
-      // Refresh visitor data
       window.location.reload();
     } catch (err) {
       console.error("❌ Error checking in visitor:", err);

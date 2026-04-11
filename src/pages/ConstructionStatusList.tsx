@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Plus, Edit } from "lucide-react";
@@ -47,9 +47,9 @@ const ConstructionStatusList = () => {
     setLoading(true);
     try {
       const response = await axios.get(`${baseURL}/construction_statuses.json`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
+         headers: {
+                  Authorization: getAuthHeader(),
+                },
       });
       
       let allStatuses = response.data || [];
@@ -109,10 +109,9 @@ const ConstructionStatusList = () => {
       await axios.put(`${baseURL}/construction_statuses/${id}.json`, {
         construction_status: { active: updatedStatus },
       }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          "Content-Type": "application/json",
-        },
+ headers: {
+                  Authorization: getAuthHeader(),
+                },
       });
       toast.success("Status updated successfully!");
       fetchStatuses(); // Refetch to maintain consistency

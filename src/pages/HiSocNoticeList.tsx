@@ -190,7 +190,7 @@ const HiSocNoticeList = () => {
     { key: "society_name", label: "Society", sortable: true },
     { key: "is_important", label: "Important", sortable: false },
     { key: "expire_time", label: "Expire Time", sortable: false },
-    { key: "active", label: "Status", sortable: false },
+    // { key: "active", label: "Status", sortable: false },
   ];
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -227,11 +227,16 @@ const HiSocNoticeList = () => {
                 <Eye className="w-4 h-4" />
               </Button>
             )}
-            {/* {noticeboardPermission.update === "true" && (
-              <Button variant="ghost" size="sm" onClick={() => handleEditNoticeboard(item.id)} title="Edit">
+            {noticeboardPermission.update === "true" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEditNoticeboard(item.id)}
+                title="Edit"
+              >
                 <Pencil className="w-4 h-4" />
               </Button>
-            )} */}
+            )}
           </div>
         );
       case "id":

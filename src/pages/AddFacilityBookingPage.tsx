@@ -403,14 +403,14 @@ const AddFacilityBookingPage = () => {
   const fetchFacilitySetups = async () => {
     try {
       const response = await axios.get(
-        `https://${baseUrl}/crm/admin/facility_setups.json`,
+        `https://${baseUrl}/crm/admin/facility_setups.json?calendar_view=true`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      setFacilitySetups(response.data.data);
+      setFacilitySetups(response.data.facility_setups);
     } catch (error) {
       console.log(error);
     }

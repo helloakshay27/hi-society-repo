@@ -19,6 +19,8 @@ import {
   InputLabel,
 } from "@mui/material";
 import { X } from "lucide-react";
+import axios from "axios";
+import { getBaseUrl, getToken } from "@/utils/auth";
 
 interface OtherProjectData {
   id: string;
@@ -31,6 +33,132 @@ interface OtherProjectData {
   active: boolean;
 }
 
+interface BuilderProjectApiResponse {
+  success: boolean;
+  builder_projects: {
+    id: number;
+    name: string;
+    project_reference_id?: string;
+    address?: string;
+    geo_location?: string;
+    reception_mobile_1?: string;
+    reception_mobile_2?: string;
+    active?: boolean;
+    [key: string]: any;
+  }[];
+  count: number;
+}
+
+interface BuilderProjectDetailApiResponse {
+  success: boolean;
+  data: {
+    id: number;
+    builder_id: number;
+    name: string;
+    address: string;
+    about: string;
+    video_link: string;
+    active: number;
+    society_id: number;
+    geo_link: string;
+    reception_number: string;
+    reception_second_number: string;
+    project_reference_id: string;
+    project_status: string | null;
+    description: string | null;
+    project_area: string | null;
+    external_project_id: string | null;
+    created_at: string;
+    updated_at: string;
+    builder: {
+      id: number;
+      name: string;
+    };
+    society: {
+      id: number;
+      building_name: string;
+      address1: string;
+      city: string;
+      state: string;
+      postcode: number;
+      name: string;
+    };
+    flat_types: Array<{
+      id: number;
+      name: string;
+      description: string | null;
+    }>;
+    society_blocks: Array<{
+      id: number;
+      name: string;
+      active: number;
+    }>;
+    project_lead_sources: Array<{
+      id: number;
+      name: string;
+    }>;
+    images: {
+      project_image: Array<{
+        id: number;
+        active: number;
+        url: string;
+      }>;
+      project_logo: Array<{
+        id: number;
+        active: number;
+        url: string;
+      }>;
+      gallery: Array<{
+        id: number;
+        active: number;
+        url?: string;
+      }>;
+    };
+    configurations: any[];
+    highlights: any[];
+    plans: any[];
+    amenities: Array<{
+      id: number;
+      name: string;
+      description: string | null;
+    }>;
+  };
+}
+
+interface SocietyBlockApiResponse {
+  id: number;
+  name: string;
+  description: string;
+  status: number;
+  active: number;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+  society_id: number;
+  project_id: number;
+  min_floor: number | null;
+  max_floor: number | null;
+}
+
+interface CreateSocietyBlockPayload {
+  name: string;
+  description?: string;
+  society_id: number;
+  project_id: number;
+  status?: number;
+  active?: number;
+  min_floor?: number;
+  max_floor?: number;
+}
+
+interface ProjectDropdownApiResponse {
+  builder_projects: Array<{
+    id: number;
+    name: string;
+    [key: string]: any;
+  }>;
+}
+
 const CampaignsOtherProject: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,6 +168,223 @@ const CampaignsOtherProject: React.FC = () => {
     status: "",
     createdDate: "",
   });
+
+  const [projectsData, setProjectsData] = useState<OtherProjectData[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch builder projects from API
+  useEffect(() => {
+    const fetchBuilderProjects = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Get Hi-Society token from hiSocietyAccount
+        const hiSocietyAccount = localStorage.getItem("hiSocietyAccount");
+        const token = hiSocietyAccount
+          ? JSON.parse(hiSocietyAccount).spree_api_key
+          : null;
+
+        console.log("🔎 DEBUG Builder Projects - Hi-Society token:", token);
+
+        if (!token) {
+          console.error("❌ Hi-Society token is missing!");
+          throw new Error(
+            "Hi-Society authentication token not found. Please login again."
+          );
+        }
+
+        // Use the Hi-Society UAT API URL directly since this API is on Hi-Society server
+        const hiSocietyBaseUrl = "https://uat-hi-society.lockated.com";
+        const apiUrl = `${hiSocietyBaseUrl}/crm/builder_projects.json`;
+        console.log("🔍 Fetching builder projects from URL:", apiUrl);
+        console.log("🔑 Using token:", token?.substring(0, 20) + "...");
+
+        const response = await axios.get<BuilderProjectApiResponse>(apiUrl, {
+          params: { token },
+        });
+
+        console.log("✅ Builder Projects API Response:", response.data);
+
+        if (response.data.success && response.data.builder_projects) {
+          // Map API response to component data structure
+          const mappedData: OtherProjectData[] =
+            response.data.builder_projects.map((project) => ({
+              id: project.id.toString(),
+              project: project.name || "-",
+              projectReferenceId: project.project_reference_id || "-",
+              address: project.address || "-",
+              geoLocation: project.geo_location || "-",
+              receptionMobile1: project.reception_mobile_1 || "-",
+              receptionMobile2: project.reception_mobile_2 || "-",
+              active: project.active ?? false,
+            }));
+          setProjectsData(mappedData);
+        }
+      } catch (err) {
+        const error = err as Error;
+        console.error("❌ Error fetching builder projects:", error);
+        if (axios.isAxiosError(err)) {
+          console.error("📍 Full Request URL:", err.config?.url);
+          console.error("📍 Request Params:", err.config?.params);
+          console.error("📍 Status:", err.response?.status);
+          console.error("📍 Response:", err.response?.data);
+          setError(
+            `Request failed with status code ${err.response?.status}: ${err.response?.statusText || "Unknown error"}. URL: ${err.config?.url}`
+          );
+        } else {
+          setError(error.message || "Failed to fetch builder projects");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBuilderProjects();
+  }, []);
+
+  // Function to fetch a single builder project by ID
+  const fetchBuilderProjectDetail = async (id: number) => {
+    try {
+      const token = getToken();
+
+      if (!token) {
+        throw new Error("Authentication token not found. Please login again.");
+      }
+
+      // Use the Hi-Society UAT API URL directly
+      const hiSocietyBaseUrl = "https://uat-hi-society.lockated.com";
+      const apiUrl = `${hiSocietyBaseUrl}/crm/builder_projects/${id}.json`;
+      console.log("🔍 Fetching builder project detail from URL:", apiUrl);
+      console.log("🔑 Using token:", token?.substring(0, 20) + "...");
+
+      const response = await axios.get<BuilderProjectDetailApiResponse>(
+        apiUrl,
+        {
+          params: { token },
+        }
+      );
+
+      console.log("✅ Builder Project Detail API Response:", response.data);
+
+      return response.data;
+    } catch (err) {
+      const error = err as Error;
+      console.error("❌ Error fetching builder project detail:", error);
+      if (axios.isAxiosError(err)) {
+        console.error("📍 Full Request URL:", err.config?.url);
+        console.error("📍 Request Params:", err.config?.params);
+        console.error("📍 Status:", err.response?.status);
+        console.error("📍 Response:", err.response?.data);
+        throw new Error(
+          `Request failed with status code ${err.response?.status}: ${err.response?.statusText || "Unknown error"}`
+        );
+      } else {
+        throw new Error(
+          error.message || "Failed to fetch builder project detail"
+        );
+      }
+    }
+  };
+
+  // Function to create a new society block/tower (POST API)
+  // Example usage:
+  // const newBlock = await createSocietyBlock({
+  //   name: "Tower A",
+  //   description: "Residential tower with 12 floors",
+  //   society_id: 3492,
+  //   project_id: 30,
+  //   status: 0,
+  //   active: 1,
+  //   min_floor: 1,
+  //   max_floor: 12
+  // });
+  const createSocietyBlock = async (payload: CreateSocietyBlockPayload) => {
+    try {
+      const token = getToken();
+
+      if (!token) {
+        throw new Error("Authentication token not found. Please login again.");
+      }
+
+      // Use the Hi-Society UAT API URL directly
+      const hiSocietyBaseUrl = "https://uat-hi-society.lockated.com";
+      const apiUrl = `${hiSocietyBaseUrl}/crm/admin/society_blocks.json`;
+      console.log("🔍 Creating society block at URL:", apiUrl);
+      console.log("🔑 Using token:", token?.substring(0, 20) + "...");
+      console.log("📦 Payload:", payload);
+
+      const response = await axios.post<SocietyBlockApiResponse>(
+        apiUrl,
+        payload,
+        {
+          params: { token },
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("✅ Society Block Created Successfully:", response.data);
+
+      return response.data;
+    } catch (err) {
+      const error = err as Error;
+      console.error("❌ Error creating society block:", error);
+      if (axios.isAxiosError(err)) {
+        console.error("📍 Full Request URL:", err.config?.url);
+        console.error("📍 Request Payload:", err.config?.data);
+        console.error("📍 Request Params:", err.config?.params);
+        console.error("📍 Status:", err.response?.status);
+        console.error("📍 Response:", err.response?.data);
+        throw new Error(
+          `Request failed with status code ${err.response?.status}: ${err.response?.statusText || "Unknown error"}`
+        );
+      } else {
+        throw new Error(error.message || "Failed to create society block");
+      }
+    }
+  };
+
+  // Function to fetch project dropdown list (GET API)
+  const fetchDropdownProjects = async () => {
+    try {
+      const token = getToken();
+
+      if (!token) {
+        throw new Error("Authentication token not found. Please login again.");
+      }
+
+      // Use the Hi-Society UAT API URL directly
+      const hiSocietyBaseUrl = "https://uat-hi-society.lockated.com";
+      const apiUrl = `${hiSocietyBaseUrl}/crm/builder_projects/dropdown_projects.json`;
+      console.log("🔍 Fetching dropdown projects from URL:", apiUrl);
+      console.log("🔑 Using token:", token?.substring(0, 20) + "...");
+
+      const response = await axios.get<ProjectDropdownApiResponse>(apiUrl, {
+        params: { token },
+      });
+
+      console.log("✅ Dropdown Projects API Response:", response.data);
+
+      return response.data;
+    } catch (err) {
+      const error = err as Error;
+      console.error("❌ Error fetching dropdown projects:", error);
+      if (axios.isAxiosError(err)) {
+        console.error("📍 Full Request URL:", err.config?.url);
+        console.error("📍 Request Params:", err.config?.params);
+        console.error("📍 Status:", err.response?.status);
+        console.error("📍 Response:", err.response?.data);
+        throw new Error(
+          `Request failed with status code ${err.response?.status}: ${err.response?.statusText || "Unknown error"}`
+        );
+      } else {
+        throw new Error(error.message || "Failed to fetch dropdown projects");
+      }
+    }
+  };
 
   // Check for newly created project from localStorage
   useEffect(() => {
@@ -54,10 +399,6 @@ const CampaignsOtherProject: React.FC = () => {
       }
     }
   }, []);
-
-  const [projectsData, setProjectsData] = useState<OtherProjectData[]>([
-    // Sample data - currently empty to show "No Matching Records Found"
-  ]);
 
   const columns: ColumnConfig[] = [
     {
@@ -123,7 +464,21 @@ const CampaignsOtherProject: React.FC = () => {
       case "actions":
         return (
           <div className="flex items-center justify-center">
-            <button className="p-1 hover:bg-gray-100 rounded">
+            <button
+              className="p-1 hover:bg-gray-100 rounded"
+              onClick={async () => {
+                try {
+                  const projectDetail = await fetchBuilderProjectDetail(
+                    parseInt(item.id)
+                  );
+                  console.log("📋 Project Detail:", projectDetail);
+                  // You can navigate to a detail page or show a modal here
+                  // For now, the data is logged to console and visible in Network tab
+                } catch (error) {
+                  console.error("Failed to fetch project detail:", error);
+                }
+              }}
+            >
               <Eye className="w-4 h-4 text-blue-600" />
             </button>
           </div>
@@ -170,35 +525,60 @@ const CampaignsOtherProject: React.FC = () => {
   return (
     <div className="bg-gray-50 min-h-screen p-4">
       <div>
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#14b8a6]"></div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-red-600 text-sm">{error}</p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="mt-2 bg-red-600 hover:bg-red-700 text-white"
+              size="sm"
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+
         {/* Table */}
-        <div>
-          <EnhancedTable
-            data={filteredData}
-            columns={columns}
-            renderCell={renderCell}
-            pagination={true}
-            pageSize={10}
-            hideTableSearch={false}
-            hideTableExport={false}
-            hideColumnsButton={false}
-            emptyMessage="No Matching Records Found"
-            searchPlaceholder="Search"
-            enableExport={true}
-            storageKey="campaigns-other-project-v1"
-            onFilterClick={() => setShowFilters(!showFilters)}
-            leftActions={
-              <div className="flex items-center gap-2">
-                <Button
-                  className="bg-[#14b8a6] hover:bg-[#0d9488] text-white px-6"
-                  onClick={() => navigate("/campaigns/other-project/configure")}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Configure Project
-                </Button>
-              </div>
-            }
-          />
-        </div>
+        {!loading && !error && (
+          <div>
+            <EnhancedTable
+              data={filteredData}
+              columns={columns}
+              renderCell={renderCell}
+              pagination={true}
+              pageSize={10}
+              hideTableSearch={false}
+              hideTableExport={false}
+              hideColumnsButton={false}
+              emptyMessage="No Matching Records Found"
+              searchPlaceholder="Search"
+              enableExport={true}
+              storageKey="campaigns-other-project-v1"
+              onFilterClick={() => setShowFilters(!showFilters)}
+              leftActions={
+                <div className="flex items-center gap-2">
+                  <Button
+                    className="bg-[#14b8a6] hover:bg-[#0d9488] text-white px-6"
+                    onClick={() =>
+                      navigate("/campaigns/other-project/configure")
+                    }
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Configure Project
+                  </Button>
+                </div>
+              }
+            />
+          </div>
+        )}
       </div>
 
       {/* Filter Dialog */}

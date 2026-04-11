@@ -134,7 +134,11 @@ const getEditApiUrl = (id: string) => {
   return `https://${baseUrl}/crm/admin/user_societies/${id}.json?token=${token}`;
 };
 
-const mapFormDataToApiPayload = (formData: any) => {
+const mapFormDataToApiPayload = (formData: any, flatOptions: { id: number; flat_no: string }[]) => {
+  // Find the flat name from flatOptions using the flat ID
+  const selectedFlat = flatOptions.find(f => f.id.toString() === formData.flat.toString());
+  const flatName = selectedFlat ? selectedFlat.flat_no : formData.flat;
+  
   const payload: any = {
     email: formData.email,
     mobile: formData.mobile,
@@ -149,7 +153,7 @@ const mapFormDataToApiPayload = (formData: any) => {
     company_name: formData.companyName || "",
     pan_number: formData.panNumber,
     gst_number: formData.gstNumber,
-    flat_no: formData.flat,
+    flat_no: flatName,
     society_block_id: formData.tower,
     resident_type: formData.residentType,
     lives_here: formData.livesHere === "Yes",
@@ -212,6 +216,8 @@ const defaultFormData = {
   agreementExpireDate: "",
   agreementDocuments: [] as File[],
 };
+
+const todayStr = new Date().toISOString().split('T')[0];
 
 export const AddUserPage = () => {
   const navigate = useNavigate();
@@ -285,7 +291,8 @@ export const AddUserPage = () => {
 
     if (isEdit && userId) {
       setLoading(true);
-      axios.get(getEditApiUrl(userId))
+      const editToken = localStorage.getItem('token') || '';
+      axios.get(getEditApiUrl(userId), { headers: { Authorization: `Bearer ${editToken}` } })
         .then(response => {
           const data = response.data;
           // Map API response to formData shape - using correct API key names
@@ -324,8 +331,8 @@ export const AddUserPage = () => {
             noOfChildren: user.children?.toString() || "",
             differentlyAbled: user.differently_abled ? "Yes" : "No",
             companyName: user.company_name || "",
-            agreementStartDate: user.user_flat?.agreement_start_date.split("T")[0] || "",
-            agreementExpireDate: user.user_flat?.agreement_expire_date.split("T")[0] || "",
+            agreementStartDate: user.user_flat?.agreement_start_date?.split("T")[0] || "",
+            agreementExpireDate: user.user_flat?.agreement_expire_date?.split("T")[0] || "",
             agreementDocuments: [], // Set appropriately if editing
           };
           setFormData(formDataState);
@@ -411,7 +418,7 @@ export const AddUserPage = () => {
 
     setLoading(true);
     setError(null);
-    const payload = mapFormDataToApiPayload(formData);
+    const payload = mapFormDataToApiPayload(formData, flatOptions);
     const url = isEdit && userId ? getEditApiUrl(userId) : getCreateApiUrl();
     const method = isEdit ? "patch" : "post";
 
@@ -619,7 +626,11 @@ export const AddUserPage = () => {
                     size="small"
                     label="Mobile Number"
                     value={formData.mobile}
-                    onChange={(e) => handleInputChange("mobile", e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                      handleInputChange("mobile", val);
+                    }}
+                    inputProps={{ maxLength: 10, inputMode: "numeric" }}
                     sx={fieldStyles}
                   />
                 </Box>
@@ -1026,6 +1037,7 @@ export const AddUserPage = () => {
                 value={formData.birthDate}
                 onChange={(e) => handleInputChange("birthDate", e.target.value)}
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ max: todayStr }}
                 sx={fieldStyles}
               />
 
@@ -1038,6 +1050,7 @@ export const AddUserPage = () => {
                 value={formData.anniversary}
                 onChange={(e) => handleInputChange("anniversary", e.target.value)}
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ max: todayStr }}
                 sx={fieldStyles}
               />
 
@@ -1050,6 +1063,7 @@ export const AddUserPage = () => {
                 value={formData.spouseBirthDate}
                 onChange={(e) => handleInputChange("spouseBirthDate", e.target.value)}
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ max: todayStr }}
                 sx={fieldStyles}
               />
 

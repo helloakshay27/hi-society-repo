@@ -1730,4 +1730,101 @@ export const ticketManagementAPI = {
       return null;
     }
   },
+
+  // ─── Assign Rule (Complaint Worker) APIs ───────────────────────────────────
+
+  async getAssignEscalations(params?: Record<string, string | number>) {
+    const response = await apiClient.get('/crm/admin/assign_escalation.json', { params });
+    return response.data;
+  },
+
+  async getIssueTypesDropdown() {
+    const response = await apiClient.get('/dropdown/issue_types');
+    return response.data;
+  },
+
+  async getCategoriesDropdown() {
+    const response = await apiClient.get('/dropdown/categories');
+    return response.data;
+  },
+
+  async getServiceEngineers() {
+    const response = await apiClient.get('/dropdown/service_engineers');
+    return response.data;
+  },
+
+  async createComplaintWorker(payload: {
+    complaint_worker: {
+      esc_type: string;
+      of_phase: string;
+      issue_type_id: string;
+      category_id: string;
+      assign_to: string[];
+    };
+  }) {
+    const response = await apiClient.post('/crm/admin/create_complaint_worker', payload);
+    return response.data;
+  },
+
+  async createResolutionEscalationRule(payload: {
+    complaint_worker: {
+      esc_type: string;
+      issue_related_to: string;
+      of_phase: string;
+      issue_type_id: string;
+      category_id: string;
+    };
+    escalation_matrix: Record<string, {
+      name: string;
+      escalate_to_users?: string[];
+      copy_to?: string[];
+      p1: string;
+      p2: string;
+      p3: string;
+      p4: string;
+      p5: string;
+    }>;
+  }) {
+    const response = await apiClient.post('/crm/admin/create_complaint_worker', payload);
+    return response.data;
+  },
+
+  async updateComplaintWorker(payload: {
+    id: string;
+    complaint_worker: {
+      issue_type_id: string;
+      category_id: string;
+      assign_to: string[];
+    };
+  }) {
+    const response = await apiClient.post('/crm/admin/update_complaint_worker', payload);
+    return response.data;
+  },
+
+  async deleteComplaintWorker(id: string) {
+    const response = await apiClient.post('/crm/admin/delete_complaint_worker', {
+      id,
+      complaint_worker: { assign: '0' },
+    });
+    return response.data;
+  },
+
+  async verifyHourOtp(otp: string) {
+    const response = await apiClient.post('/crm/admin/verify_hour_otp.json', { otp });
+    return response.data;
+  },
+
+  async checkInVisitor(visitorId: number) {
+    const response = await apiClient.patch(`/crm/admin/visitors/${visitorId}.json`, {
+      gatekeeper: { check_type: 'in' },
+    });
+    return response.data;
+  },
+
+  async checkOutVisitor(visitorId: number) {
+    const response = await apiClient.patch(`/crm/admin/visitors/${visitorId}.json`, {
+      gatekeeper: { check_type: 'out' },
+    });
+    return response.data;
+  },
 };

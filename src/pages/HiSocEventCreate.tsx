@@ -608,16 +608,38 @@ const HiSocEventCreate = () => {
 
   const validateForm = (formData) => {
     const errors = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     if (!formData.event_name) {
       errors.push("Event Name is required.");
     }
-    // if (!formData.event_date) {
-    //   errors.push("Event Date is required.");
-    // }
-    // if (!formData.event_time) {
-    //   errors.push("Event Time is required.");
-    // }
+    if (!formData.event_at || !formData.event_at.trim()) {
+      errors.push("Event At is required.");
+    }
+    if (!formData.description || !formData.description.trim()) {
+      errors.push("Event Description is required.");
+    }
+    if (!formData.from_date) {
+      errors.push("Event Start Date is required.");
+    }
+    if (!formData.from_time) {
+      errors.push("Event Start Time is required.");
+    }
+    if (!formData.to_date) {
+      errors.push("Event End Date is required.");
+    }
+    if (!formData.to_time) {
+      errors.push("Event End Time is required.");
+    }
+    // Start date must not be in the past
+    if (formData.from_date) {
+      const startDate = new Date(formData.from_date);
+      startDate.setHours(0, 0, 0, 0);
+      if (startDate < today) {
+        errors.push("Event Start Date cannot be in the past.");
+      }
+    }
     if (!formData.rsvp_action) {
       errors.push("RSVP Action is required.");
     }
@@ -651,19 +673,38 @@ const HiSocEventCreate = () => {
   const validateStep0 = () => {
     toast.dismiss();
     const errors = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     if (!formData.event_name || !formData.event_name.trim()) {
       errors.push("Event Name is required.");
     }
-    // if (!formData.event_type) {
-    //   errors.push("Event Type is required.");
-    // }
-    // if (!formData.event_date) {
-    //   errors.push("Event Date is required.");
-    // }
-    // if (!formData.event_time) {
-    //   errors.push("Event Time is required.");
-    // }
+    if (!formData.event_at || !formData.event_at.trim()) {
+      errors.push("Event At is required.");
+    }
+    if (!formData.description || !formData.description.trim()) {
+      errors.push("Event Description is required.");
+    }
+    if (!formData.from_date) {
+      errors.push("Event Start Date is required.");
+    }
+    if (!formData.from_time) {
+      errors.push("Event Start Time is required.");
+    }
+    if (!formData.to_date) {
+      errors.push("Event End Date is required.");
+    }
+    if (!formData.to_time) {
+      errors.push("Event End Time is required.");
+    }
+    // Start date must not be in the past
+    if (formData.from_date) {
+      const startDate = new Date(formData.from_date);
+      startDate.setHours(0, 0, 0, 0);
+      if (startDate < today) {
+        errors.push("Event Start Date cannot be in the past.");
+      }
+    }
     if (!formData.rsvp_action) {
       errors.push("RSVP Action is required.");
     }
@@ -812,9 +853,9 @@ const HiSocEventCreate = () => {
 
     // Add cp_group_id if shared with groups
     if (formData.shared === "group" && Array.isArray(formData.group_id) && formData.group_id.length > 0) {
-      formDataToSend.append("event[cp_group_id]", formData.group_id[0]);
+      formDataToSend.append("event[group_id]", formData.group_id[0]);
     } else if (formData.shared === "group" && formData.group_id) {
-      formDataToSend.append("event[cp_group_id]", formData.group_id);
+      formDataToSend.append("event[group_id]", formData.group_id);
     }
 
     // Add cover images (single file for each ratio)
@@ -1576,12 +1617,11 @@ const HiSocEventCreate = () => {
 
               {/* Event Name */}
               <TextField
-                label="Event Name"
+                label={<span>Event Name <span style={{ color: '#C72030' }}>*</span></span>}
                 placeholder="Enter Event Name"
                 value={formData.event_name}
                 onChange={handleChange}
                 name="event_name"
-                required
                 fullWidth
                 variant="outlined"
                 slotProps={{
@@ -1596,7 +1636,7 @@ const HiSocEventCreate = () => {
 
               {/* Event At */}
               <TextField
-                label="Event At"
+                label={<span>Event At <span style={{ color: '#C72030' }}>*</span></span>}
                 placeholder="Enter Event At"
                 value={formData.event_at}
                 onChange={handleChange}
@@ -1613,16 +1653,20 @@ const HiSocEventCreate = () => {
                 }}
               />
               <TextField
-                label="Start Date"
+                label={<span>Start Date <span style={{ color: '#C72030' }}>*</span></span>}
                 type="date"
                 value={formData.from_date}
                 onChange={handleChange}
                 name="from_date"
                 fullWidth
                 variant="outlined"
+                helperText="Format: DD/MM/YYYY"
                 slotProps={{
                   inputLabel: {
                     shrink: true,
+                  },
+                  htmlInput: {
+                    min: new Date().toISOString().split('T')[0],
                   },
                 }}
                 InputProps={{
@@ -1631,7 +1675,7 @@ const HiSocEventCreate = () => {
               />
 
               <TextField
-                label="Start Time"
+                label={<span>Start Time <span style={{ color: '#C72030' }}>*</span></span>}
                 type="time"
                 value={formData.from_time}
                 onChange={handleChange}
@@ -1649,16 +1693,20 @@ const HiSocEventCreate = () => {
               />
 
               <TextField
-                label="End Date"
+                label={<span>End Date <span style={{ color: '#C72030' }}>*</span></span>}
                 type="date"
                 value={formData.to_date}
                 onChange={handleChange}
                 name="to_date"
                 fullWidth
                 variant="outlined"
+                helperText="Format: DD/MM/YYYY"
                 slotProps={{
                   inputLabel: {
                     shrink: true,
+                  },
+                  htmlInput: {
+                    min: formData.from_date || new Date().toISOString().split('T')[0],
                   },
                 }}
                 InputProps={{
@@ -1667,7 +1715,7 @@ const HiSocEventCreate = () => {
               />
 
               <TextField
-                label="End Time"
+                label={<span>End Time <span style={{ color: '#C72030' }}>*</span></span>}
                 type="time"
                 value={formData.to_time}
                 onChange={handleChange}
@@ -1678,6 +1726,9 @@ const HiSocEventCreate = () => {
                   inputLabel: {
                     shrink: true,
                   },
+                  htmlInput: {
+                    min: formData.to_date && formData.from_date && formData.to_date === formData.from_date ? formData.from_time || undefined : undefined,
+                  },
                 }}
                 InputProps={{
                   sx: fieldStyles,
@@ -1686,7 +1737,7 @@ const HiSocEventCreate = () => {
 
               <div className="md:col-span-3">            
                <TextField
-                  label="Event Description"
+                  label={<span>Event Description <span style={{ color: '#C72030' }}>*</span></span>}
                   placeholder="Enter Description"
                   value={formData.description}
                   onChange={handleChange}
@@ -1710,7 +1761,7 @@ const HiSocEventCreate = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {/* Send Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Send Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Send Email <span style={{ color: '#C72030' }}>*</span></label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
                     <input
@@ -1751,7 +1802,7 @@ const HiSocEventCreate = () => {
 
               {/* RSVP Action */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">RSVP Action <span style={{ color: '#C72030' }}>*</span></label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
                     <input
@@ -1782,7 +1833,7 @@ const HiSocEventCreate = () => {
 
               {/* Mark as Important */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mark as Important</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mark as Important <span style={{ color: '#C72030' }}>*</span></label>
                 <div className="flex gap-4">
                   <label className="flex items-center">
                     <input
@@ -1956,7 +2007,7 @@ const HiSocEventCreate = () => {
               {/* Show on Home Page */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900">Show on Home Page</h3>
+                  <h3 className="text-sm font-medium text-gray-900">Show on Home Page <span style={{ color: '#C72030' }}>*</span></h3>
                   <p className="text-sm text-gray-500">Display this event on the home page</p>
                 </div>
                 <Switch

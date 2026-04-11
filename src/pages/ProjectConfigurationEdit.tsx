@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { API_CONFIG } from "@/config/apiConfig";
+import { API_CONFIG, getAuthHeader } from "@/config/apiConfig";
 import { toast } from "sonner";
 import { ChevronRight, ArrowLeft } from "lucide-react";
 
@@ -26,8 +26,8 @@ const ProjectConfigurationEdit = () => {
       try {
         const response = await axios.get(`${baseURL}/configuration_setups/${id}.json`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
+                           Authorization: getAuthHeader(),
+                         },
         });
         
         const config = response.data;
@@ -96,9 +96,8 @@ const ProjectConfigurationEdit = () => {
     try {
       await axios.put(`${baseURL}/configuration_setups/${id}.json`, formDataToSend, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          "Content-Type": "multipart/form-data",
-        },
+                         Authorization: getAuthHeader(),
+                       },
       });
 
       toast.success("Project configuration updated successfully!");
