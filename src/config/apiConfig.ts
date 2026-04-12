@@ -259,6 +259,7 @@ export const API_CONFIG = {
     CREATE_WORK_TYPE: "/pms/society_staff_types.json",
     EDIT_WORK_TYPE: "/pms/society_staff_types", // Base path, will append /{id}.json
     CREATE_SOCIETY_STAFF: "/crm/admin/society_staffs.json",
+    STAFF_SAMPLE_FORMAT: "/crm/admin/society_staffs/sample_format.xlsx",
     CREATE_VISITOR_COMMENT: "/visitor_comments.json",
     EDIT_VISITOR_COMMENT: "/visitor_comments",
     PARKING_CONFIGURATIONS_SEARCH: "/pms/admin/parking_configurations.json",
@@ -333,7 +334,7 @@ export const getFullUrl = (endpoint: string): string => {
   const hostname = window.location.hostname;
   // Force UAT baseUrl for localhost
   if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
-    resolvedBaseUrl = "https://uat-hi-society.lockated.com";
+    resolvedBaseUrl = "https://hi-society.lockated.com";
   }
   // Ensure endpoint starts with '/'
   const normalizedEndpoint = endpoint.startsWith("/")

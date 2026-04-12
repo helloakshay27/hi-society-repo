@@ -7,14 +7,15 @@ export interface StaffFormData {
   email: string;
   password: string;
   mobile: string;
-  unit: string;
-  department: string;
+  staffType: string;
   workType: string;
+  associateFunctionId: string;
   staffId: string;
   vendorName: string;
   validFrom: string;
   validTill: string;
   status: string;
+  notes: string;
   resourceId?: string;
   resourceType?: string;
   departmentId?: string;
@@ -82,6 +83,23 @@ export interface WorkType {
 export interface WorkTypesResponse {
   success: boolean;
   data: WorkType[];
+}
+
+// Staff Filters API types
+export interface StaffFilterOption {
+  label: string;
+  value: string | number;
+}
+
+export interface StaffFiltersResponse {
+  work_types: StaffFilterOption[];
+  staff_types: StaffFilterOption[];
+  functions: StaffFilterOption[];
+  statuses: StaffFilterOption[];
+  towers: StaffFilterOption[];
+  flats: StaffFilterOption[];
+  current_filters: Record<string, unknown>;
+  message: string;
 }
 
 export interface HelpdeskOperation {
@@ -292,6 +310,30 @@ export const staffService = {
     }
   },
 
+  // Fetch staff filters for dropdowns (staff_types, work_types, functions, statuses)
+  getStaffFilters: async (): Promise<StaffFiltersResponse | null> => {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/crm/admin/staff_filters.json`, {
+        method: 'GET',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch staff filters');
+      }
+
+      const data: StaffFiltersResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching staff filters:', error);
+      toast.error('Failed to load staff filter options');
+      return null;
+    }
+  },
+
   createSocietyStaff: async (
     staffData: StaffFormData, 
     schedule: ScheduleData, 
@@ -345,14 +387,14 @@ export const staffService = {
           email: staffData.email,
           mobile: staffData.mobile,
           password: staffData.password,
-          staff_type: staffData.workType || 'Personal',
-          type_id: staffData.typeId || staffData.workType,
+          staff_type: staffData.staffType || 'Personal',
+          type_id: staffData.workType,
           soc_staff_id: staffData.staffId,
-          associate_function_id: '1',
+          associate_function_id: staffData.associateFunctionId || '1',
           valid_from: convertDateFormat(staffData.validFrom),
           expiry: convertDateFormat(staffData.validTill),
           status: staffData.status || '1',
-          notes: staffData.vendorName || '',
+          notes: staffData.notes || '',
           helpdesk_operations_attributes: helpdeskOperations,
         }
       };
@@ -459,7 +501,7 @@ export const staffService = {
   // Print QR codes for selected staff (1 or more)
   printQRCodes: async (staffIds: number[]): Promise<void> => {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/crm/admin/society_staffs/print_qr_code`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/crm/admin/society_staffs/print_qr_codes`, {
         method: 'POST',
         headers: {
           'Authorization': getAuthHeader(),
@@ -610,14 +652,15 @@ export const staffService = {
           email: '',
           password: '',
           mobile: '',
-          unit: '',
-          department: '',
+          staffType: '',
           workType: '',
+          associateFunctionId: '',
           staffId: '',
           vendorName: '',
           validFrom: '',
           validTill: '',
-          status: ''
+          status: '',
+          notes: ''
         };
       } else {
         staffFormData = formData;
@@ -662,14 +705,14 @@ export const staffService = {
           email: staffFormData.email,
           mobile: staffFormData.mobile,
           password: staffFormData.password,
-          staff_type: staffFormData.workType || 'Personal',
-          type_id: staffFormData.typeId || staffFormData.workType,
+          staff_type: staffFormData.staffType || 'Personal',
+          type_id: staffFormData.workType,
           soc_staff_id: staffFormData.staffId,
-          associate_function_id: '1',
+          associate_function_id: staffFormData.associateFunctionId || '1',
           valid_from: convertDateFormat(staffFormData.validFrom),
           expiry: convertDateFormat(staffFormData.validTill),
           status: staffFormData.status || '1',
-          notes: staffFormData.vendorName || '',
+          notes: staffFormData.notes || '',
           helpdesk_operations_attributes: helpdeskOperations,
         }
       };

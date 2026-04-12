@@ -12,7 +12,7 @@ interface BulkUploadDialogProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   uploadType?: "upload" | "update";
-  context?: "assets" | "custom_forms" | "measurements"; // New prop to determine context
+  context?: "assets" | "custom_forms" | "measurements" | "staff"; // New prop to determine context
   onImport?: (file: File) => void;
 }
 
@@ -123,6 +123,9 @@ export const BulkUploadDialog: React.FC<BulkUploadDialogProps> = ({
       } else if (context === "measurements") {
         endpoint = ENDPOINTS.ASSET_MEASUREMENT_SAMPLE;
         filename = 'measurement_sample_format.xlsx';
+      } else if (context === "staff") {
+        endpoint = ENDPOINTS.STAFF_SAMPLE_FORMAT;
+        filename = 'staff_sample_format.xlsx';
       } else {
         endpoint = '/assets/asset.xlsx';
         filename = 'asset_sample_format.xlsx';
