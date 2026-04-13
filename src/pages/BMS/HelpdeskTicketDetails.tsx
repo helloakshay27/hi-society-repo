@@ -9102,40 +9102,96 @@ export const TicketDetailsPage = () => {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                       {/* Preventive Action - View Only */}
-                      <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
-                        <div className="relative">
-                          <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-[#6B6B6B] font-medium">Preventive Action</label>
-                          <div className="mt-4 space-y-2 text-[14px] text-[#1A1A1A] break-words overflow-wrap-anywhere">
+                      <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                        <div className="relative w-full pt-4">
+                          <label
+                            style={{
+                              position: "absolute",
+                              top: "-10px",
+                              left: "12px",
+                              background: "#fff",
+                              padding: "0 6px",
+                              fontWeight: 500,
+                              fontSize: "14px",
+                              color: "#1A1A1A",
+                              zIndex: 1,
+                            }}
+                          >
+                            Preventive Action
+                          </label>
+                          <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[16px] min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
                             {ticketData?.preventive_action ? ticketData.preventive_action : 'Not provided'}
                           </div>
                         </div>
                       </div>
 
                       {/* Short-term Impact - View Only */}
-                      <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
-                        <div className="relative">
-                          <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-[#6B6B6B] font-medium">Short-term Impact</label>
-                          <div className="mt-4 space-y-2 text-[14px] text-[#1A1A1A] break-words overflow-wrap-anywhere">
+                      <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                        <div className="relative w-full pt-4">
+                          <label
+                            style={{
+                              position: "absolute",
+                              top: "-10px",
+                              left: "12px",
+                              background: "#fff",
+                              padding: "0 6px",
+                              fontWeight: 500,
+                              fontSize: "14px",
+                              color: "#1A1A1A",
+                              zIndex: 1,
+                            }}
+                          >
+                            Short-term Impact
+                          </label>
+                          <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[16px] min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
                             {ticketData?.short_term_impact ? ticketData.short_term_impact : 'Not provided'}
                           </div>
                         </div>
                       </div>
 
                       {/* Corrective Action - View Only */}
-                      <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
-                        <div className="relative">
-                          <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-[#6B6B6B] font-medium">Corrective Action</label>
-                          <div className="mt-4 space-y-2 text-[14px] text-[#1A1A1A] break-words overflow-wrap-anywhere">
+                      <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                        <div className="relative w-full pt-4">
+                          <label
+                            style={{
+                              position: "absolute",
+                              top: "-10px",
+                              left: "12px",
+                              background: "#fff",
+                              padding: "0 6px",
+                              fontWeight: 500,
+                              fontSize: "14px",
+                              color: "#1A1A1A",
+                              zIndex: 1,
+                            }}
+                          >
+                            Corrective Action
+                          </label>
+                          <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[16px] min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
                             {ticketData?.corrective_action ? ticketData.corrective_action : 'Not provided'}
                           </div>
                         </div>
                       </div>
 
                       {/* Long-term Impact - View Only */}
-                      <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
-                        <div className="relative">
-                          <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-[#6B6B6B] font-medium">Long-term Impact</label>
-                          <div className="mt-4 space-y-2 text-[14px] text-[#1A1A1A] break-words overflow-wrap-anywhere">
+                      <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                        <div className="relative w-full pt-4">
+                          <label
+                            style={{
+                              position: "absolute",
+                              top: "-10px",
+                              left: "12px",
+                              background: "#fff",
+                              padding: "0 6px",
+                              fontWeight: 500,
+                              fontSize: "14px",
+                              color: "#1A1A1A",
+                              zIndex: 1,
+                            }}
+                          >
+                            Long-term Impact
+                          </label>
+                          <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[16px] min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
                             {ticketData?.long_term_impact ? ticketData.long_term_impact : 'Not provided'}
                           </div>
                         </div>
