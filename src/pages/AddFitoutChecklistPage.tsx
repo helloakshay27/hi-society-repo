@@ -463,7 +463,7 @@ export const AddFitoutChecklistPage = () => {
               </Select>
             </FormControl>
 
-            <FormControl
+            {/* <FormControl
               fullWidth
               sx={fieldStyles}
               disabled={!category || loadingSubCategories}
@@ -480,7 +480,7 @@ export const AddFitoutChecklistPage = () => {
                   </MenuItem>
                 ))}
               </Select>
-            </FormControl>
+            </FormControl> */}
 
             <FormControl fullWidth sx={fieldStyles}>
               <InputLabel>Checklist Type <span className='text-red-600'>*</span></InputLabel>

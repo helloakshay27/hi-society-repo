@@ -1144,12 +1144,12 @@ export const HiSocietySidebar: React.FC = () => {
               icon: AlertTriangle,
               path: "/settings/ticket-management/escalation-matrix",
             },
-            {
-              id: "cost-approval",
-              label: "Cost Approval",
-              icon: DollarSign,
-              path: "/settings/ticket-management/cost-approval",
-            },
+            // {
+            //   id: "cost-approval",
+            //   label: "Cost Approval",
+            //   icon: DollarSign,
+            //   path: "/settings/ticket-management/cost-approval",
+            // },
             {
               id: "vendor-setup",
               label: "Vendor Setup",

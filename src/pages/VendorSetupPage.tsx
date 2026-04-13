@@ -52,6 +52,7 @@ interface VendorForm {
   mobile1: string;
   mobile2: string;
   address: string;
+  active: boolean;
 }
 
 const emptyForm: VendorForm = {
@@ -64,6 +65,7 @@ const emptyForm: VendorForm = {
   mobile1: '',
   mobile2: '',
   address: '',
+  active: true,
 };
 
 const VendorSetupPage: React.FC = () => {
@@ -127,6 +129,7 @@ const VendorSetupPage: React.FC = () => {
       mobile1: vendor.mobile1 || '',
       mobile2: vendor.mobile2 || '',
       address: vendor.address || '',
+      active: vendor.active ?? true,
     });
     setDialogOpen(true);
   };
@@ -151,7 +154,7 @@ const VendorSetupPage: React.FC = () => {
       const isEdit = !!editingVendor;
 
       if (isEdit) {
-        // Edit: PUT to helpdesk_vendors endpoint
+        // Edit: PATCH /pms/suppliers/:id
         const editBody = {
           pms_supplier: {
             first_name: form.first_name,
@@ -163,13 +166,13 @@ const VendorSetupPage: React.FC = () => {
             mobile1: form.mobile1,
             mobile2: form.mobile2,
             address: form.address,
-            active: true,
+            active: form.active,
           },
         };
         const response = await fetch(
-          getFullUrl(`/crm/admin/helpdesk_vendors/${editingVendor!.id}.json`),
+          getFullUrl(`/pms/suppliers/${editingVendor!.id}.json`),
           {
-            method: 'PUT',
+            method: 'PATCH',
             headers: {
               Authorization: getAuthHeader(),
               'Content-Type': 'application/json',
@@ -198,7 +201,7 @@ const VendorSetupPage: React.FC = () => {
             mobile1: form.mobile1,
             mobile2: form.mobile2,
             address: form.address,
-            active: true,
+            active: form.active,
           },
         };
         const response = await fetch(
@@ -262,6 +265,8 @@ const VendorSetupPage: React.FC = () => {
     { key: 'company_name', label: 'Company Name', sortable: true },
     { key: 'gstin_number', label: 'GSTIN Number', sortable: false },
     { key: 'pan_number', label: 'PAN Number', sortable: false },
+    { key: 'address', label: 'Address', sortable: false },
+    { key: 'status', label: 'Status', sortable: false },
   ];
 
   const renderCell = (item: Vendor, columnKey: string) => {
@@ -283,6 +288,20 @@ const VendorSetupPage: React.FC = () => {
         return item.gstin_number || '--';
       case 'pan_number':
         return item.pan_number || '--';
+      case 'address':
+        return item.address || '--';
+      case 'status':
+        return (
+          <span
+            className={`px-2 py-1 text-xs rounded font-medium ${
+              item.active
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
+            }`}
+          >
+            {item.active ? 'Active' : 'Inactive'}
+          </span>
+        );
       default:
         return '--';
     }
