@@ -1,13 +1,30 @@
 import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
 import { StaffHistoryFilterDialog, StaffHistoryFilters } from "@/components/StaffHistoryFilterDialog";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, X } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-// ─── API Types (matching /crm/admin/staff_history.json) ────────────────────────
+// ─── API Types ─────────────────────────────────────────────────────────────────
 
 interface AssociatedFlat {
   block_no: string;
@@ -60,6 +77,7 @@ interface StaffHistoryResponse {
 
 const columns = [
   { key: "sr_no", label: "Sr. No.", sortable: false },
+  { key: "image", label: "Image", sortable: false },
   { key: "name", label: "Name", sortable: true },
   { key: "mobile", label: "Mobile Number", sortable: true },
   { key: "staff_type", label: "Staff Type", sortable: true },
@@ -85,24 +103,42 @@ const columns = [
 
 const SmartSecureStaffsHistory: React.FC = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportDateFrom, setExportDateFrom] = useState('');
+  const [exportDateTo, setExportDateTo] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<StaffHistoryFilters>({});
   const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
   const [isExporting, setIsExporting] = useState(false);
   const perPage = 20;
 
-  // Build query params from filters
+  // Build Ransack query params from filters
   const buildQueryParams = useCallback(() => {
     const params = new URLSearchParams();
     params.set("page", String(currentPage));
     params.set("per_page", String(perPage));
 
-    if (filters.work_type_ids) params.set("work_type_ids", filters.work_type_ids);
-    if (filters.staff_types) params.set("staff_types", filters.staff_types);
-    if (filters.tower_id) params.set("tower_id", filters.tower_id);
-    if (filters.flat_ids) params.set("flat_ids", filters.flat_ids);
-    if (filters.company_name) params.set("company_name", filters.company_name);
-    if (filters.date_range) params.set("date_range", filters.date_range);
+    if (filters.work_type_id) {
+      params.append("q[type_id_in][]", filters.work_type_id);
+    }
+    if (filters.staff_type) {
+      params.append("q[staff_type_in][]", filters.staff_type);
+    }
+    if (filters.tower_id) {
+      params.set("q[staff_workings_society_flat_society_block_id_eq]", filters.tower_id);
+    }
+    if (filters.flat_id) {
+      params.append("q[staff_workings_society_flat_id_in][]", filters.flat_id);
+    }
+    if (filters.company_name) {
+      params.set("q[notes_cont]", filters.company_name);
+    }
+    if (filters.date_from) {
+      params.set("q[created_at_gteq]", filters.date_from);
+    }
+    if (filters.date_to) {
+      params.set("q[created_at_lteq]", filters.date_to);
+    }
 
     return params.toString();
   }, [currentPage, filters]);
@@ -127,17 +163,37 @@ const SmartSecureStaffsHistory: React.FC = () => {
 
   // ── Export ──────────────────────────────────────────────────────────────────
 
-  const handleExport = async () => {
-    if (isExporting) return;
-    setIsExporting(true);
+  // Opens the date range modal instead of exporting directly
+  const handleExport = () => {
+    setExportDateFrom('');
+    setExportDateTo('');
+    setIsExportModalOpen(true);
+  };
 
-    const loadingToastId = sonnerToast.loading("Preparing staff history export...", {
-      duration: Infinity,
-    });
+  const handleExportConfirm = async () => {
+    if (!exportDateFrom || !exportDateTo) {
+      sonnerToast.error('Please select both Date From and Date To');
+      return;
+    }
+
+    // Format YYYY-MM-DD → DD/MM/YYYY for the API
+    const formatDate = (iso: string) => {
+      const [y, m, d] = iso.split('-');
+      return `${d}/${m}/${y}`;
+    };
+
+    const dateRange = `${formatDate(exportDateFrom)} - ${formatDate(exportDateTo)}`;
+
+    setIsExportModalOpen(false);
+    setIsExporting(true);
+    const loadingToastId = sonnerToast.loading("Preparing staff history export...", { duration: Infinity });
 
     try {
+      const params = new URLSearchParams();
+      params.set("q[date_range]", dateRange);
+
       const res = await fetch(
-        getFullUrl(`/crm/admin/staff_history.json?${buildQueryParams()}&export=true`),
+        getFullUrl(`/crm/admin/staffs_data.xlsx?${params.toString()}`),
         { headers: { Authorization: getAuthHeader() } }
       );
       if (!res.ok) throw new Error("Export failed");
@@ -146,15 +202,14 @@ const SmartSecureStaffsHistory: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "staff-history.csv";
+      a.download = "staffs_data.xlsx";
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
 
       sonnerToast.success("Staff history exported successfully!", { id: loadingToastId });
-    } catch (error) {
-      console.error("Export failed:", error);
+    } catch {
       sonnerToast.error("Failed to export staff history", { id: loadingToastId });
     } finally {
       setIsExporting(false);
@@ -170,11 +225,7 @@ const SmartSecureStaffsHistory: React.FC = () => {
   };
 
   const handleSelectAll = (isSelected: boolean) => {
-    if (isSelected) {
-      setSelectedStaff(rows.map((r) => r.id.toString()));
-    } else {
-      setSelectedStaff([]);
-    }
+    setSelectedStaff(isSelected ? rows.map((r) => r.id.toString()) : []);
   };
 
   // ── Filter ─────────────────────────────────────────────────────────────────
@@ -197,23 +248,27 @@ const SmartSecureStaffsHistory: React.FC = () => {
               {(currentPage - 1) * perPage + index + 1}
             </span>
           );
-
+        case "image":
+          return (
+            <img
+              src={staff.image_url || "/images/male.jpg"}
+              alt={staff.name}
+              className="w-9 h-9 rounded-full object-cover"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/images/male.jpg"; }}
+            />
+          );
         case "name":
           return <span className="font-medium">{staff.name}</span>;
-
         case "mobile":
           return <span className="text-sm">{staff.mobile}</span>;
-
         case "staff_type":
           return (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700">
               {staff.staff_type}
             </span>
           );
-
         case "work_type":
           return <span className="text-sm">{staff.work_type}</span>;
-
         case "associated_flats":
           return (
             <span className="text-sm">
@@ -222,49 +277,34 @@ const SmartSecureStaffsHistory: React.FC = () => {
                 : "-"}
             </span>
           );
-
         case "company_name":
           return <span className="text-sm">{staff.company_name || "-"}</span>;
-
         case "in_date":
           return <span className="text-sm">{in_details.date || "-"}</span>;
-
         case "in_time":
           return <span className="text-sm">{in_details.time || "-"}</span>;
-
         case "in_gate":
           return <span className="text-sm">{in_details.gate || "-"}</span>;
-
         case "marked_in_by":
           return <span className="text-sm">{in_details.marked_by || "-"}</span>;
-
         case "out_date":
           return <span className="text-sm">{out_details.date || "-"}</span>;
-
         case "out_time":
           return <span className="text-sm">{out_details.time || "-"}</span>;
-
         case "out_gate":
           return <span className="text-sm">{out_details.gate || "-"}</span>;
-
         case "marked_out_by":
           return <span className="text-sm">{out_details.marked_by || "-"}</span>;
-
         case "checkin_date":
           return <span className="text-sm">{checkin_details.date || "-"}</span>;
-
         case "checkin_time":
           return <span className="text-sm">{checkin_details.time || "-"}</span>;
-
         case "checkout_date":
           return <span className="text-sm">{checkout_details.date || "-"}</span>;
-
         case "checkout_time":
           return <span className="text-sm">{checkout_details.time || "-"}</span>;
-
         case "created_on":
           return <span className="text-sm">{record.created_on || "-"}</span>;
-
         default:
           return "-";
       }
@@ -272,78 +312,75 @@ const SmartSecureStaffsHistory: React.FC = () => {
     [currentPage]
   );
 
-  // ── Pagination ─────────────────────────────────────────────────────────────
+  // ── Pagination ────────────────────────────────────────────────────────────
 
-  const renderPagination = () => (
-    <div className="flex items-center justify-center mt-6 px-4 py-3 bg-white border-t border-gray-200">
-      <div className="flex items-center space-x-1">
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1 || isLoading}
-          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+  const renderPaginationItems = () => {
+    const items = [];
 
-        <div className="flex items-center space-x-1">
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            const pageNumber =
-              currentPage <= 3
-                ? i + 1
-                : currentPage >= totalPages - 2
-                  ? totalPages - 4 + i
-                  : currentPage - 2 + i;
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              onClick={() => setCurrentPage(i)}
+              isActive={currentPage === i}
+              className="cursor-pointer"
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      // First page
+      items.push(
+        <PaginationItem key={1}>
+          <PaginationLink onClick={() => setCurrentPage(1)} isActive={currentPage === 1} className="cursor-pointer">
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
 
-            if (pageNumber < 1 || pageNumber > totalPages) return null;
+      if (currentPage > 4) {
+        items.push(<PaginationItem key="start-ellipsis"><PaginationEllipsis /></PaginationItem>);
+      }
 
-            return (
-              <button
-                key={pageNumber}
-                onClick={() => setCurrentPage(pageNumber)}
-                disabled={isLoading}
-                className={`w-8 h-8 flex items-center justify-center text-sm rounded transition-colors ${
-                  currentPage === pageNumber
-                    ? "bg-red-600 text-white"
-                    : "text-gray-700 hover:bg-gray-100"
-                } disabled:opacity-50`}
-              >
-                {pageNumber}
-              </button>
-            );
-          })}
-        </div>
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink onClick={() => setCurrentPage(i)} isActive={currentPage === i} className="cursor-pointer">
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
 
-        <button
-          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages || isLoading}
-          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
+      if (currentPage < totalPages - 3) {
+        items.push(<PaginationItem key="end-ellipsis"><PaginationEllipsis /></PaginationItem>);
+      }
 
-      <div className="ml-4 text-sm text-gray-600">
-        Page {currentPage} of {totalPages}
-      </div>
-    </div>
-  );
+      items.push(
+        <PaginationItem key={totalPages}>
+          <PaginationLink onClick={() => setCurrentPage(totalPages)} isActive={currentPage === totalPages} className="cursor-pointer">
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+
+    return items;
+  };
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">Staff History</h1>
-      </div>
-
+    <div className="p-6 bg-gray-50 min-h-screen space-y-4">
       {/* Total Count */}
       {pagination && (
         <div className="text-sm font-semibold text-gray-700">
-          Total staffs : {pagination.total_count}
+          Total staffs: {pagination.total_count}
         </div>
       )}
 
@@ -351,7 +388,7 @@ const SmartSecureStaffsHistory: React.FC = () => {
         data={rows}
         columns={columns}
         renderCell={renderCell}
-        selectable={true}
+        // selectable={true}
         pagination={false}
         enableExport={true}
         exportFileName="staff-history"
@@ -363,16 +400,14 @@ const SmartSecureStaffsHistory: React.FC = () => {
         onSelectAll={handleSelectAll}
         getItemId={(record) => record.id.toString()}
         leftActions={
-          <div className="flex gap-3">
-            <Button
-              onClick={() => refetch()}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </Button>
-          </div>
+          <Button
+            onClick={() => refetch()}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </Button>
         }
         onFilterClick={() => setIsFilterOpen(true)}
         rightActions={null}
@@ -385,7 +420,28 @@ const SmartSecureStaffsHistory: React.FC = () => {
         loadingMessage="Loading staff history..."
       />
 
-      {renderPagination()}
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       {/* Filter Modal */}
       <StaffHistoryFilterDialog
@@ -393,6 +449,53 @@ const SmartSecureStaffsHistory: React.FC = () => {
         onClose={() => setIsFilterOpen(false)}
         onApplyFilters={handleFilterApply}
       />
+
+      {/* Export Date Range Modal */}
+      <Dialog open={isExportModalOpen} onOpenChange={(open) => { if (!open) setIsExportModalOpen(false); }}>
+        <DialogContent className="sm:max-w-sm bg-white [&>button]:hidden">
+          <DialogHeader className="flex flex-row items-center justify-between border-b pb-3">
+            <DialogTitle className="text-base font-semibold">Select Date Range to Export</DialogTitle>
+            <Button variant="ghost" size="sm" onClick={() => setIsExportModalOpen(false)} className="h-6 w-6 p-0">
+              <X className="w-4 h-4" />
+            </Button>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium text-gray-700">Date From</Label>
+              <Input
+                type="date"
+                value={exportDateFrom}
+                onChange={(e) => setExportDateFrom(e.target.value)}
+                className="h-10 border-gray-300"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium text-gray-700">Date To</Label>
+              <Input
+                type="date"
+                value={exportDateTo}
+                min={exportDateFrom}
+                onChange={(e) => setExportDateTo(e.target.value)}
+                className="h-10 border-gray-300"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2 border-t">
+            <Button variant="outline" onClick={() => setIsExportModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleExportConfirm}
+              disabled={!exportDateFrom || !exportDateTo || isExporting}
+              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+            >
+              {isExporting ? 'Exporting...' : 'Export'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

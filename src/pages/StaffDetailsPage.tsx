@@ -8,6 +8,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Edit, Printer, ArrowLeft, Loader2, ChevronDown, ChevronUp, User, MapPin, Calendar, FileText, Image, QrCode } from 'lucide-react';
 import { staffService, SocietyStaffDetails } from '@/services/staffService';
 import { toast } from 'sonner';
+import { apiClient } from '@/utils/apiClient';
+import { ENDPOINTS } from '@/config/apiConfig';
 
 export const StaffDetailsPage = () => {
   const { id } = useParams();
@@ -21,6 +23,7 @@ export const StaffDetailsPage = () => {
   const [otp, setOtp] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [sendingOTP, setSendingOTP] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   // State for expandable sections
   const [expandedSections, setExpandedSections] = useState({
@@ -111,8 +114,19 @@ export const StaffDetailsPage = () => {
     navigate(`/smartsecure/staff/edit/${staff.id}`);
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    if (!staff) return;
+    setIsPrinting(true);
+    try {
+      await apiClient.post(ENDPOINTS.STAFF_PRINT_QR_CODES, {
+        society_staff_ids: [staff.id.toString()],
+      });
+      toast.success('QR Code print request sent successfully!');
+    } catch {
+      toast.error('Failed to send QR Code print request');
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   const handleVerifyNumber = async () => {
@@ -504,10 +518,19 @@ export const StaffDetailsPage = () => {
             <Button
               onClick={handlePrint}
               className="bg-[#8B4B8C] hover:bg-[#7A4077] text-white px-6 py-2 flex items-center gap-2 mx-auto"
-              disabled={!staff.qr_code_present}
+              disabled={!staff.qr_code_present || isPrinting}
             >
-              <Printer className="w-4 h-4" />
-              Print QR Code
+              {isPrinting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Printing...
+                </>
+              ) : (
+                <>
+                  <Printer className="w-4 h-4" />
+                  Print QR Code
+                </>
+              )}
             </Button>
           </div>
         </div>

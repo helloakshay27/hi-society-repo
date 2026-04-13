@@ -23,9 +23,11 @@ import { StaffActionsPanel } from '@/components/StaffActionsPanel';
 import { BulkUploadDialog } from '@/components/BulkUploadDialog';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { ColumnConfig } from '@/hooks/useEnhancedTable';
-import { fetchSocietyStaffs, searchSocietyStaffs, NewSocietyStaff, PaginationInfo } from '@/services/societyStaffsAPI';
+import { fetchSocietyStaffs, searchSocietyStaffs, NewSocietyStaff, PaginationInfo, StaffFilters } from '@/services/societyStaffsAPI';
 import { staffService } from '@/services/staffService';
 import { toast } from 'sonner';
+import { apiClient } from '@/utils/apiClient';
+import { API_CONFIG } from '@/config/apiConfig';
 
 // Column configuration for the enhanced table
 const columns: ColumnConfig[] = [
@@ -81,6 +83,8 @@ export const StaffsDashboard = () => {
   const [printingAll, setPrintingAll] = useState(false);
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [uploadType, setUploadType] = useState<'import' | 'update'>('import');
+  const [isExporting, setIsExporting] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<StaffFilters>({});
 
   // Get resource ID from user data in localStorage or account API
   useEffect(() => {
@@ -149,9 +153,9 @@ export const StaffsDashboard = () => {
         
         let response;
         if (activeSearchQuery.trim()) {
-          response = await searchSocietyStaffs(activeSearchQuery, currentPage);
+          response = await searchSocietyStaffs(activeSearchQuery, currentPage, activeFilters);
         } else {
-          response = await fetchSocietyStaffs(currentPage);
+          response = await fetchSocietyStaffs(currentPage, undefined, activeFilters);
         }
         
         // Handle both old and new API response formats
@@ -176,7 +180,7 @@ export const StaffsDashboard = () => {
     };
 
     loadStaffsData();
-  }, [currentPage, activeSearchQuery]);
+  }, [currentPage, activeSearchQuery, activeFilters]);
 
   // Pagination handlers
   const handlePreviousPage = () => {
@@ -340,6 +344,30 @@ export const StaffsDashboard = () => {
   const handleImportStaffs = () => {
     setUploadType('import');
     setIsBulkUploadOpen(true);
+  };
+
+  const handleExport = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    const loadingToast = toast.loading('Preparing staff export...');
+    try {
+      const response = await apiClient.get(API_CONFIG.ENDPOINTS.STAFF_EXPORT, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(response.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'society_staff.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Staff exported successfully', { id: loadingToast });
+    } catch {
+      toast.error('Failed to export staff. Please try again.', { id: loadingToast });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleClearSelection = () => {
@@ -686,6 +714,7 @@ export const StaffsDashboard = () => {
             searchPlaceholder="Search..."
             hideTableExport={false}
             hideColumnsButton={false}
+            handleExport={handleExport}
             leftActions={
               <Button
                 onClick={() => setShowActionMenu(!showActionMenu)}
@@ -819,9 +848,14 @@ export const StaffsDashboard = () => {
       )} */}
 
       {/* Filter Modal */}
-      <StaffsFilterModal 
+      <StaffsFilterModal
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilters={(filters) => {
+          setActiveFilters(filters);
+          setCurrentPage(1);
+          setSelectedStaffs([]);
+        }}
       />
       {/* Bulk Upload Dialog */}
       <BulkUploadDialog

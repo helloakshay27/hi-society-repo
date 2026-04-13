@@ -216,6 +216,23 @@ const handleImport = async () => {
     }
 
     // ==================================
+    // 🔹 STAFF BULK UPLOAD
+    // ==================================
+    if (context === "staff") {
+      const formData = new FormData();
+      formData.append("society_staff_file", selectedFile);
+
+      await apiClient.post(ENDPOINTS.STAFF_BULK_UPLOAD, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success("Staff imported successfully");
+      setSelectedFile(null);
+      onOpenChange(false);
+      return;
+    }
+
+    // ==================================
     // 🔹 CUSTOM FORMS / MEASUREMENTS
     // (UNCHANGED – DIRECT UPLOAD)
     // ==================================

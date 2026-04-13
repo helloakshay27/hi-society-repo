@@ -57,6 +57,17 @@ export interface SocietyStaff {
   expiry: string | null;
 }
 
+export interface StaffFilters {
+  search?: string;
+  work_type_id?: number;
+  staff_type?: string;
+  function_id?: number;
+  tower_id?: number;
+  flat_id?: number;
+  status?: string | number;
+  company_name?: string;
+}
+
 export interface PaginationInfo {
   current_page?: number;
   page?: number;
@@ -72,19 +83,41 @@ export interface SocietyStaffsResponse {
   message?: string;
 }
 
-export const fetchSocietyStaffs = async (page: number = 1, searchQuery?: string): Promise<SocietyStaffsResponse> => {
+export const fetchSocietyStaffs = async (page: number = 1, searchQuery?: string, filters?: StaffFilters): Promise<SocietyStaffsResponse> => {
   try {
-    // Build query parameters
     const params = new URLSearchParams();
-    
+
     if (page > 1) {
       params.append('page', page.toString());
     }
-    
-    if (searchQuery && searchQuery.trim()) {
-      params.append('q[full_name_or_first_name_or_last_name_or_mobile_or_soc_staff_id_cont]', searchQuery.trim());
+
+    const search = filters?.search || searchQuery;
+    if (search?.trim()) {
+      params.append('q[full_name_or_first_name_or_last_name_or_mobile_or_soc_staff_id_cont]', search.trim());
     }
-    
+
+    if (filters?.work_type_id) {
+      params.append('q[type_id_in][]', String(filters.work_type_id));
+    }
+    if (filters?.staff_type) {
+      params.append('q[staff_type_in][]', filters.staff_type);
+    }
+    if (filters?.function_id) {
+      params.append('q[associate_function_id_in][]', String(filters.function_id));
+    }
+    if (filters?.tower_id) {
+      params.append('q[staff_workings_society_flat_society_block_id_eq]', String(filters.tower_id));
+    }
+    if (filters?.flat_id) {
+      params.append('q[staff_workings_society_flat_id_in][]', String(filters.flat_id));
+    }
+    if (filters?.status !== undefined && filters.status !== '') {
+      params.append('q[active_eq]', String(filters.status));
+    }
+    if (filters?.company_name) {
+      params.append('q[vendor_name_cont]', filters.company_name);
+    }
+
     const queryString = params.toString();
     const url = `${API_CONFIG.BASE_URL}/crm/admin/society_staffs.json${queryString ? `?${queryString}` : ''}`;
     
@@ -116,6 +149,6 @@ export const fetchSocietyStaffs = async (page: number = 1, searchQuery?: string)
 };
 
 // Enhanced search function for society staffs
-export const searchSocietyStaffs = async (searchQuery: string, page: number = 1): Promise<SocietyStaffsResponse> => {
-  return fetchSocietyStaffs(page, searchQuery);
+export const searchSocietyStaffs = async (searchQuery: string, page: number = 1, filters?: StaffFilters): Promise<SocietyStaffsResponse> => {
+  return fetchSocietyStaffs(page, searchQuery, filters);
 };

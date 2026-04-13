@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import {
   Dialog,
@@ -15,7 +16,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { X } from 'lucide-react';
 import { toast } from 'sonner';
+
+export interface StaffHistoryFilters {
+  work_type_id?: string;
+  staff_type?: string;
+  tower_id?: string;
+  flat_id?: string;
+  company_name?: string;
+  date_from?: string;
+  date_to?: string;
+}
 
 interface StaffHistoryFilterDialogProps {
   isOpen: boolean;
@@ -23,34 +35,12 @@ interface StaffHistoryFilterDialogProps {
   onApplyFilters: (filters: StaffHistoryFilters) => void;
 }
 
-export interface StaffHistoryFilters {
-  work_type_ids?: string;
-  staff_types?: string;
-  tower_id?: string;
-  flat_ids?: string;
-  company_name?: string;
-  date_range?: string;
-}
-
 interface FilterOption {
   label: string;
   value: string | number;
 }
 
-interface StaffFiltersResponse {
-  work_types: FilterOption[];
-  staff_types: FilterOption[];
-  towers: FilterOption[];
-  flats: FilterOption[];
-  current_filters: {
-    work_type_ids: string | null;
-    staff_types: string | null;
-    tower_id: string | null;
-    flat_ids: string | null;
-    company_name: string | null;
-    date_range: string | null;
-  };
-}
+const commonFieldStyles = "h-10 rounded-md border border-[hsl(var(--analytics-border))] bg-white";
 
 export const StaffHistoryFilterDialog = ({ isOpen, onClose, onApplyFilters }: StaffHistoryFilterDialogProps) => {
   const [workType, setWorkType] = useState('');
@@ -58,7 +48,8 @@ export const StaffHistoryFilterDialog = ({ isOpen, onClose, onApplyFilters }: St
   const [tower, setTower] = useState('');
   const [flat, setFlat] = useState('');
   const [companyName, setCompanyName] = useState('');
-  const [dateRange, setDateRange] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const [workTypes, setWorkTypes] = useState<FilterOption[]>([]);
   const [staffTypes, setStaffTypes] = useState<FilterOption[]>([]);
@@ -66,14 +57,12 @@ export const StaffHistoryFilterDialog = ({ isOpen, onClose, onApplyFilters }: St
   const [flats, setFlats] = useState<FilterOption[]>([]);
   const [isLoadingFlats, setIsLoadingFlats] = useState(false);
 
-  // Load filter options on mount
   useEffect(() => {
     if (isOpen) {
       fetchFilterOptions();
     }
   }, [isOpen]);
 
-  // Fetch flats when tower changes
   useEffect(() => {
     if (tower) {
       fetchFlatsForTower(tower);
@@ -89,12 +78,12 @@ export const StaffHistoryFilterDialog = ({ isOpen, onClose, onApplyFilters }: St
         headers: { Authorization: getAuthHeader() },
       });
       if (!res.ok) return;
-      const data: StaffFiltersResponse = await res.json();
+      const data = await res.json();
       setWorkTypes(data.work_types || []);
       setStaffTypes(data.staff_types || []);
       setTowers(data.towers || []);
-    } catch (error) {
-      console.error('Error loading filter options:', error);
+    } catch {
+      toast.error('Failed to load filter options');
     }
   };
 
@@ -107,26 +96,29 @@ export const StaffHistoryFilterDialog = ({ isOpen, onClose, onApplyFilters }: St
         { headers: { Authorization: getAuthHeader() } }
       );
       if (!res.ok) return;
-      const data: StaffFiltersResponse = await res.json();
+      const data = await res.json();
       setFlats(data.flats || []);
-    } catch (error) {
-      console.error('Error loading flats:', error);
+    } catch {
+      console.error('Error loading flats');
     } finally {
       setIsLoadingFlats(false);
     }
   };
 
   const handleApply = () => {
+    if ((dateFrom && !dateTo) || (!dateFrom && dateTo)) {
+      toast.error('Please select both Date From and Date To');
+      return;
+    }
     const filters: StaffHistoryFilters = {};
-    if (workType) filters.work_type_ids = workType;
-    if (staffType) filters.staff_types = staffType;
+    if (workType) filters.work_type_id = workType;
+    if (staffType) filters.staff_type = staffType;
     if (tower) filters.tower_id = tower;
-    if (flat) filters.flat_ids = flat;
+    if (flat) filters.flat_id = flat;
     if (companyName.trim()) filters.company_name = companyName.trim();
-    if (dateRange.trim()) filters.date_range = dateRange.trim();
-
+    if (dateFrom) filters.date_from = dateFrom;
+    if (dateTo) filters.date_to = dateTo;
     onApplyFilters(filters);
-    toast.success('Filters applied');
     onClose();
   };
 
@@ -136,114 +128,143 @@ export const StaffHistoryFilterDialog = ({ isOpen, onClose, onApplyFilters }: St
     setTower('');
     setFlat('');
     setCompanyName('');
-    setDateRange('');
+    setDateFrom('');
+    setDateTo('');
     onApplyFilters({});
-    toast.success('Filters cleared');
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-4xl bg-white">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-bold text-gray-800">Filter</DialogTitle>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white [&>button]:hidden">
+        <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
+          <DialogTitle className="text-xl font-bold text-[hsl(var(--analytics-text))]">FILTER BY</DialogTitle>
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
+            <X className="w-4 h-4" />
+          </Button>
         </DialogHeader>
 
-        {/* Row 1: Work Type, Staff Type, Tower, Flat */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
-        <Select value={workType} onValueChange={setWorkType}>
-          <SelectTrigger className="h-9 bg-white border-gray-300">
-            <SelectValue placeholder="Select Work Type" />
-          </SelectTrigger>
-          <SelectContent className="bg-white max-h-[250px] overflow-y-auto">
-            {workTypes.map((opt) => (
-              <SelectItem key={`wt-${opt.value}`} value={String(opt.value)}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
 
-        <Select value={staffType} onValueChange={setStaffType}>
-          <SelectTrigger className="h-9 bg-white border-gray-300">
-            <SelectValue placeholder="Select Staff Type" />
-          </SelectTrigger>
-          <SelectContent className="bg-white">
-            {staffTypes.map((opt) => (
-              <SelectItem key={`st-${opt.value}`} value={String(opt.value)}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            {/* Work Type */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Select Work Type</Label>
+              <Select value={workType} onValueChange={setWorkType}>
+                <SelectTrigger className={commonFieldStyles}>
+                  <SelectValue placeholder="Select Work Type" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
+                  {workTypes.map((opt) => (
+                    <SelectItem key={`wt-${opt.value}`} value={String(opt.value)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <Select value={tower} onValueChange={setTower}>
-          <SelectTrigger className="h-9 bg-white border-gray-300">
-            <SelectValue placeholder="Select Tower" />
-          </SelectTrigger>
-          <SelectContent className="bg-white max-h-[250px] overflow-y-auto">
-            {towers.map((opt) => (
-              <SelectItem key={`tw-${opt.value}`} value={String(opt.value)}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            {/* Staff Type */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Select Staff Type</Label>
+              <Select value={staffType} onValueChange={setStaffType}>
+                <SelectTrigger className={commonFieldStyles}>
+                  <SelectValue placeholder="Select Staff Type" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
+                  {staffTypes.map((opt) => (
+                    <SelectItem key={`st-${opt.value}`} value={String(opt.value)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <Select value={flat} onValueChange={setFlat} disabled={!tower || isLoadingFlats}>
-          <SelectTrigger className="h-9 bg-white border-gray-300">
-            <SelectValue
-              placeholder={
-                isLoadingFlats
-                  ? "Loading..."
-                  : tower
-                    ? "Select Flat"
-                    : "Select Flat"
-              }
-            />
-          </SelectTrigger>
-          <SelectContent className="bg-white max-h-[250px] overflow-y-auto">
-            {flats.map((opt) => (
-              <SelectItem key={`fl-${opt.value}`} value={String(opt.value)}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+            {/* Select Tower */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Select Tower</Label>
+              <Select value={tower} onValueChange={(val) => { setTower(val); setFlat(''); }}>
+                <SelectTrigger className={commonFieldStyles}>
+                  <SelectValue placeholder="Select Tower" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
+                  {towers.map((opt) => (
+                    <SelectItem key={`tw-${opt.value}`} value={String(opt.value)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-      {/* Row 2: Company Name, Date Range, Apply, Reset */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto] gap-3 items-center">
-        <Input
-          placeholder="Search by Company name"
-          value={companyName}
-          onChange={(e) => setCompanyName(e.target.value)}
-          className="h-9 bg-white border-gray-300"
-        />
+            {/* Select Flat */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Select Flat</Label>
+              <Select value={flat} onValueChange={setFlat} disabled={!tower || isLoadingFlats}>
+                <SelectTrigger className={commonFieldStyles}>
+                  <SelectValue placeholder={!tower ? 'Select tower first' : isLoadingFlats ? 'Loading...' : flats.length === 0 ? 'No flats available' : 'Select Flat'} />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-[hsl(var(--analytics-border))] max-h-60">
+                  {flats.map((opt) => (
+                    <SelectItem key={`fl-${opt.value}`} value={String(opt.value)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <Input
-          type="text"
-          placeholder="Select Date Range"
-          value={dateRange}
-          onFocus={(e) => (e.target.type = "date")}
-          onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
-          onChange={(e) => setDateRange(e.target.value)}
-          className="h-9 bg-white border-gray-300"
-        />
+            {/* Company Name */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Search by Company Name</Label>
+              <Input
+                placeholder="Enter company name"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className={commonFieldStyles}
+              />
+            </div>
 
-        <Button
-          onClick={handleApply}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 h-9 text-sm"
-        >
-          Apply
-        </Button>
+            {/* Date From */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Date From</Label>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className={commonFieldStyles}
+              />
+            </div>
 
-        <Button
-          onClick={handleReset}
-          className="bg-green-500 hover:bg-green-600 text-white px-5 h-9 text-sm"
-        >
-          Reset
-        </Button>
-      </div>
+            {/* Date To */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-[hsl(var(--analytics-text))]">Date To</Label>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className={commonFieldStyles}
+              />
+            </div>
+
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            className="text-[hsl(var(--analytics-text))] border-[hsl(var(--analytics-border))]"
+          >
+            Reset
+          </Button>
+          <Button
+            onClick={handleApply}
+            className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+          >
+            Apply Filters
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

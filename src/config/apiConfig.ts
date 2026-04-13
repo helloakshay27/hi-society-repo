@@ -260,6 +260,11 @@ export const API_CONFIG = {
     EDIT_WORK_TYPE: "/pms/society_staff_types", // Base path, will append /{id}.json
     CREATE_SOCIETY_STAFF: "/crm/admin/society_staffs.json",
     STAFF_SAMPLE_FORMAT: "/crm/admin/society_staffs/sample_format.xlsx",
+    STAFF_EXPORT: "/export_society_staff.xlsx",
+    STAFF_FILTERS: "/crm/admin/staff_filters.json",
+    STAFF_BULK_UPLOAD: "/crm/admin/society_staffs/upload",
+    STAFF_HISTORY_EXPORT: "/crm/admin/staffs_data.xlsx",
+    STAFF_PRINT_QR_CODES: "/crm/admin/society_staffs/print_qr_codes",
     CREATE_VISITOR_COMMENT: "/visitor_comments.json",
     EDIT_VISITOR_COMMENT: "/visitor_comments",
     PARKING_CONFIGURATIONS_SEARCH: "/pms/admin/parking_configurations.json",
