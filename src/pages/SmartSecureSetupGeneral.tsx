@@ -4,7 +4,6 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Briefcase, Truck, User, X } from "lucide-react";
 import { toast } from "sonner";
-import { Switch } from "@mui/material";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +20,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  fetchVisitorSetupData,
+  fetchApprovedSocieties,
+  fetchStaffFilters,
+  createVisitPurpose,
+  editVisitPurpose,
+  createMimoPurpose,
+  editMimoPurpose,
+  createStaffType,
+  editStaffType,
+  type VisitPurposeItem,
+  type MimoPurposeItem,
+  type StaffTypeItem,
+  type SocietyOption,
+  type WorkTypeOption,
+} from "@/services/smartSecureSetupAPI";
 
 interface SetupItem {
   id: number;
@@ -29,44 +44,51 @@ interface SetupItem {
   workType?: string;
 }
 
+const mapVisitPurpose = (item: VisitPurposeItem): SetupItem => ({
+  id: item.id,
+  purpose: item.purpose,
+  status: item.active === 1,
+});
+
+const mapMimoPurpose = (item: MimoPurposeItem): SetupItem => ({
+  id: item.id,
+  purpose: item.purpose,
+  status: item.active === 1,
+});
+
+const mapStaffType = (item: StaffTypeItem): SetupItem => ({
+  id: item.id,
+  purpose: item.staff_type,
+  status: item.active === 1,
+  workType: item.related_to || "-",
+});
+
 const SmartSecureSetupGeneral: React.FC = () => {
   const [activeTab, setActiveTab] = useState("visit-purpose");
-  const [visitPurposeData, setVisitPurposeData] = useState<SetupItem[]>([
-    { id: 1, purpose: "Other", status: true },
-    { id: 2, purpose: "Site Visit", status: true },
-    { id: 3, purpose: "Meeting", status: true },
-    { id: 4, purpose: "Personal", status: true },
-    { id: 5, purpose: "Guest", status: true },
-  ]);
+  const [visitPurposeData, setVisitPurposeData] = useState<SetupItem[]>([]);
   const [moveInOutData, setMoveInOutData] = useState<SetupItem[]>([]);
-  const [staffTypeData, setStaffTypeData] = useState<SetupItem[]>([
-    { id: 1, purpose: "FM Team", status: true, workType: "Society" },
-    { id: 2, purpose: "Housekeeping", status: true, workType: "Society" },
-    { id: 3, purpose: "Chef", status: true, workType: "Personal" },
-    { id: 4, purpose: "Fitout", status: true, workType: "Personal" },
-    {
-      id: 5,
-      purpose: "Construction Workers",
-      status: true,
-      workType: "Society",
-    },
-    {
-      id: 6,
-      purpose: "Construction Workers",
-      status: true,
-      workType: "Personal",
-    },
-    { id: 7, purpose: "Labour", status: true, workType: "Society" },
-  ]);
+  const [staffTypeData, setStaffTypeData] = useState<SetupItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<SetupItem | null>(null);
+
+  // Society dropdown
+  const [societies, setSocieties] = useState<SocietyOption[]>([]);
+  const [societyId, setSocietyId] = useState<string>("");
+
+  // Work type options from staff_filters API
+  const [workTypeOptions, setWorkTypeOptions] = useState<WorkTypeOption[]>([]);
+
+  // Form state
   const [formData, setFormData] = useState({
     society: "",
     purpose: "",
     status: false,
-    workType: "Society",
+    workType: "",
   });
   const [editFormData, setEditFormData] = useState({
     purpose: "",
@@ -87,27 +109,95 @@ const SmartSecureSetupGeneral: React.FC = () => {
     { key: "action", label: "Action", sortable: false },
   ];
 
-  const handleToggleStatus = (
+  // Fetch societies for dropdown
+  const loadSocieties = useCallback(async () => {
+    try {
+      const data = await fetchApprovedSocieties();
+      // Deduplicate by id_society
+      const unique = data.filter(
+        (s, i, arr) => arr.findIndex((x) => x.id_society === s.id_society) === i
+      );
+      setSocieties(unique);
+
+      // Pre-select current society from localStorage
+      const storedSocietyId = localStorage.getItem("selectedSocietyId") || "";
+      if (storedSocietyId) {
+        setSocietyId(storedSocietyId);
+        setFormData((prev) => ({ ...prev, society: storedSocietyId }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch societies:", error);
+    }
+  }, []);
+
+  // Fetch work type options from staff_filters API
+  const loadWorkTypes = useCallback(async () => {
+    try {
+      const data = await fetchStaffFilters();
+      setWorkTypeOptions(data);
+    } catch (error) {
+      console.error("Failed to fetch work types:", error);
+    }
+  }, []);
+
+  // Fetch visitor setup data (list API)
+  const loadSetupData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await fetchVisitorSetupData();
+      setSocietyId(data.society_id || societyId);
+      setVisitPurposeData(data.visit_purposes.map(mapVisitPurpose));
+      setMoveInOutData(data.mimo_purposes.map(mapMimoPurpose));
+      setStaffTypeData(data.staff_types.map(mapStaffType));
+    } catch (error) {
+      console.error("Failed to fetch setup data:", error);
+      toast.error("Failed to load setup data");
+    } finally {
+      setLoading(false);
+    }
+  }, [societyId]);
+
+  useEffect(() => {
+    loadSocieties();
+    loadWorkTypes();
+    loadSetupData();
+  }, [loadSocieties, loadWorkTypes, loadSetupData]);
+
+  // Toggle status via edit API
+  const handleToggleStatus = async (
     id: number,
     currentStatus: boolean,
     dataType: "visit" | "move" | "staff"
   ) => {
-    const updateData = (prev: SetupItem[]) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: !currentStatus } : item
-      );
+    const newActive = !currentStatus;
+    try {
+      if (dataType === "visit") {
+        const item = visitPurposeData.find((v) => v.id === id);
+        if (item) await editVisitPurpose(id, societyId, item.purpose, newActive);
+      } else if (dataType === "move") {
+        const item = moveInOutData.find((v) => v.id === id);
+        if (item) await editMimoPurpose(id, societyId, item.purpose, newActive);
+      } else {
+        const item = staffTypeData.find((v) => v.id === id);
+        if (item)
+          await editStaffType(id, societyId, item.purpose, item.workType || "Society", newActive);
+      }
 
-    if (dataType === "visit") {
-      setVisitPurposeData(updateData);
-    } else if (dataType === "move") {
-      setMoveInOutData(updateData);
-    } else {
-      setStaffTypeData(updateData);
-    }
+      // Update local state
+      const updateData = (prev: SetupItem[]) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, status: newActive } : item
+        );
 
-    setTimeout(() => {
+      if (dataType === "visit") setVisitPurposeData(updateData);
+      else if (dataType === "move") setMoveInOutData(updateData);
+      else setStaffTypeData(updateData);
+
       toast.success("Status updated successfully!");
-    }, 0);
+    } catch (error) {
+      console.error("Failed to toggle status:", error);
+      toast.error("Failed to update status");
+    }
   };
 
   const handleEdit = (item: SetupItem) => {
@@ -120,75 +210,90 @@ const SmartSecureSetupGeneral: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleAddPurpose = () => {
+  // Add purpose via API
+  const handleAddPurpose = async () => {
     if (!formData.purpose.trim()) {
-      setTimeout(() => {
-        toast.error("Please enter a purpose");
-      }, 0);
+      toast.error("Please enter a purpose");
       return;
     }
 
-    const newItem: SetupItem = {
-      id: Date.now(),
-      purpose: formData.purpose,
-      status: formData.status,
-      workType: activeTab === "staff-type" ? formData.workType : undefined,
-    };
-
-    if (activeTab === "visit-purpose") {
-      setVisitPurposeData((prev) => [...prev, newItem]);
-    } else if (activeTab === "move-in-out") {
-      setMoveInOutData((prev) => [...prev, newItem]);
-    } else {
-      setStaffTypeData((prev) => [...prev, newItem]);
+    const selectedSociety = formData.society || societyId;
+    if (!selectedSociety) {
+      toast.error("Please select a society");
+      return;
     }
 
-    setFormData({
-      society: "",
-      purpose: "",
-      status: false,
-      workType: "Society",
-    });
-    setIsAddModalOpen(false);
-    setTimeout(() => {
-      toast.success("Purpose added successfully!");
-    }, 0);
+    setSubmitting(true);
+    try {
+      if (activeTab === "visit-purpose") {
+        await createVisitPurpose(selectedSociety, formData.purpose, formData.status);
+      } else if (activeTab === "move-in-out") {
+        await createMimoPurpose(selectedSociety, formData.purpose, formData.status);
+      } else {
+        await createStaffType(
+          selectedSociety,
+          formData.purpose,
+          formData.workType,
+          formData.status
+        );
+      }
+
+      setFormData({ society: selectedSociety, purpose: "", status: false, workType: "" });
+      setIsAddModalOpen(false);
+      toast.success(
+        `${activeTab === "staff-type" ? "Staff type" : "Purpose"} added successfully!`
+      );
+      // Refresh data
+      loadSetupData();
+    } catch (error) {
+      console.error("Failed to add:", error);
+      toast.error(
+        `Failed to add ${activeTab === "staff-type" ? "staff type" : "purpose"}`
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleUpdatePurpose = () => {
+  // Update purpose via API
+  const handleUpdatePurpose = async () => {
     if (!editFormData.purpose.trim()) {
-      setTimeout(() => {
-        toast.error("Please enter a purpose");
-      }, 0);
+      toast.error("Please enter a purpose");
       return;
     }
-
     if (!editingItem) return;
 
-    const updatedItem: SetupItem = {
-      id: editingItem.id,
-      purpose: editFormData.purpose,
-      status: editFormData.status,
-      workType: activeTab === "staff-type" ? editFormData.workType : undefined,
-    };
+    setSubmitting(true);
+    try {
+      if (activeTab === "visit-purpose") {
+        await editVisitPurpose(editingItem.id, societyId, editFormData.purpose, editFormData.status);
+      } else if (activeTab === "move-in-out") {
+        await editMimoPurpose(editingItem.id, societyId, editFormData.purpose, editFormData.status);
+      } else {
+        await editStaffType(
+          editingItem.id,
+          societyId,
+          editFormData.purpose,
+          editFormData.workType,
+          editFormData.status
+        );
+      }
 
-    const updateData = (prev: SetupItem[]) =>
-      prev.map((item) => (item.id === editingItem.id ? updatedItem : item));
-
-    if (activeTab === "visit-purpose") {
-      setVisitPurposeData(updateData);
-    } else if (activeTab === "move-in-out") {
-      setMoveInOutData(updateData);
-    } else {
-      setStaffTypeData(updateData);
+      setEditingItem(null);
+      setEditFormData({ purpose: "", status: true, workType: "" });
+      setIsEditModalOpen(false);
+      toast.success(
+        `${activeTab === "staff-type" ? "Staff type" : "Purpose"} updated successfully!`
+      );
+      loadSetupData();
+    } catch (error) {
+      console.error("Failed to update:", error);
+      toast.error(
+        `Failed to update ${activeTab === "staff-type" ? "staff type" : "purpose"}`
+      );
+    } finally {
+      setSubmitting(false);
     }
-
-    setEditingItem(null);
-    setEditFormData({ purpose: "", status: true, workType: "" });
-    setIsEditModalOpen(false);
-    setTimeout(() => {
-      toast.success("Purpose updated successfully!");
-    }, 0);
   };
 
   const renderCell = (
@@ -212,11 +317,12 @@ const SmartSecureSetupGeneral: React.FC = () => {
         return (
           <div className="flex items-center gap-2">
             <span
-              className={`px-3 py-1 rounded-full text-xs font-semibold ${
+              className={`px-3 py-1 rounded-full text-xs font-semibold cursor-pointer ${
                 item.status
                   ? "bg-[#00A651] text-white"
                   : "bg-red-500 text-white"
               }`}
+              onClick={() => handleToggleStatus(item.id, item.status, dataType)}
             >
               {item.status ? "Active" : "Inactive"}
             </span>
@@ -242,29 +348,16 @@ const SmartSecureSetupGeneral: React.FC = () => {
     }
   };
 
-  const getCurrentData = () => {
+  const getAddLabel = () => {
     switch (activeTab) {
       case "visit-purpose":
-        return visitPurposeData;
+        return "Enter purpose";
       case "move-in-out":
-        return moveInOutData;
+        return "Enter purpose";
       case "staff-type":
-        return staffTypeData;
+        return "Enter staff type";
       default:
-        return [];
-    }
-  };
-
-  const getDataType = (): "visit" | "move" | "staff" => {
-    switch (activeTab) {
-      case "visit-purpose":
-        return "visit";
-      case "move-in-out":
-        return "move";
-      case "staff-type":
-        return "staff";
-      default:
-        return "visit";
+        return "Enter purpose";
     }
   };
 
@@ -314,7 +407,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
             rightActions={
               <Button
                 onClick={() => setIsAddModalOpen(true)}
-                className="bg-  [#C72030] hover:bg-[#C72030] text-white"
+                className="bg-[#C72030] hover:bg-[#C72030] text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Purpose
@@ -374,11 +467,12 @@ const SmartSecureSetupGeneral: React.FC = () => {
         </TabsContent>
       </Tabs>
 
+      {/* Add Modal */}
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white p-0">
           <DialogHeader className="p-4 border-b bg-white relative">
             <DialogTitle className="text-center font-bold text-lg">
-              Add Purpose
+              Add {getTabLabel()}
             </DialogTitle>
             <button
               onClick={() => setIsAddModalOpen(false)}
@@ -403,16 +497,18 @@ const SmartSecureSetupGeneral: React.FC = () => {
                   <SelectValue placeholder="Select society" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="society1">Society 1</SelectItem>
-                  <SelectItem value="society2">Society 2</SelectItem>
-                  <SelectItem value="society3">Society 3</SelectItem>
+                  {societies.map((s) => (
+                    <SelectItem key={s.id_society} value={s.id_society}>
+                      {s.society?.building_name || `Society ${s.id_society}`}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
-                Enter purpose
+                {getAddLabel()}
               </label>
               <Input
                 type="text"
@@ -421,7 +517,7 @@ const SmartSecureSetupGeneral: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, purpose: e.target.value })
                 }
-                placeholder="enter purpose"
+                placeholder={getAddLabel().toLowerCase()}
                 className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
               />
             </div>
@@ -461,8 +557,11 @@ const SmartSecureSetupGeneral: React.FC = () => {
                     <SelectValue placeholder="Select Work Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Society">Society</SelectItem>
-                    <SelectItem value="Personal">Personal</SelectItem>
+                    {workTypeOptions.map((wt) => (
+                      <SelectItem key={wt.value} value={wt.value}>
+                        {wt.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -472,20 +571,21 @@ const SmartSecureSetupGeneral: React.FC = () => {
           <DialogFooter className="p-4 border-t flex justify-start bg-white">
             <Button
               onClick={handleAddPurpose}
+              disabled={submitting}
               className="bg-[#00A651] hover:bg-[#008f45] text-white min-w-[100px]"
             >
-              Submit
+              {submitting ? "Submitting..." : "Submit"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Purpose Modal */}
+      {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white p-0">
           <DialogHeader className="p-4 border-b bg-white relative">
             <DialogTitle className="text-center font-bold text-lg">
-              Edit Purpose
+              Edit {getTabLabel()}
             </DialogTitle>
             <button
               onClick={() => setIsEditModalOpen(false)}
@@ -497,6 +597,9 @@ const SmartSecureSetupGeneral: React.FC = () => {
 
           <div className="p-6 bg-white space-y-4">
             <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                {activeTab === "staff-type" ? "Staff Type" : "Purpose"}
+              </label>
               <Input
                 type="text"
                 name="purpose"
@@ -504,7 +607,11 @@ const SmartSecureSetupGeneral: React.FC = () => {
                 onChange={(e) =>
                   setEditFormData({ ...editFormData, purpose: e.target.value })
                 }
-                placeholder="Enter purpose"
+                placeholder={
+                  activeTab === "staff-type"
+                    ? "Enter staff type"
+                    : "Enter purpose"
+                }
                 className="bg-white border-gray-300 focus:border-[#C72030] focus:ring-0 h-10"
               />
             </div>
@@ -544,8 +651,11 @@ const SmartSecureSetupGeneral: React.FC = () => {
                     <SelectValue placeholder="Select Work Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Society">Society</SelectItem>
-                    <SelectItem value="Personal">Personal</SelectItem>
+                    {workTypeOptions.map((wt) => (
+                      <SelectItem key={wt.value} value={wt.value}>
+                        {wt.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -555,9 +665,10 @@ const SmartSecureSetupGeneral: React.FC = () => {
           <DialogFooter className="p-4 border-t flex justify-start bg-white">
             <Button
               onClick={handleUpdatePurpose}
+              disabled={submitting}
               className="bg-[#00A651] hover:bg-[#008f45] text-white min-w-[100px]"
             >
-              Update
+              {submitting ? "Updating..." : "Update"}
             </Button>
           </DialogFooter>
         </DialogContent>

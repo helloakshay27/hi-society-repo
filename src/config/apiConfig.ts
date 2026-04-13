@@ -56,7 +56,7 @@ export const API_CONFIG = {
     DEPARTMENTS: "/pms/departments.json",
     SITES: "/pms/sites.json",
     UNITS: "/pms/units.json",
-    SOCIETY_STAFF_TYPES: "/pms/society_staff_types.json",
+    SOCIETY_STAFF_TYPES: "/society_staff_types.json",
     SOCIETY_STAFF_DETAILS: "/crm/admin/society_staffs", // Base path, will append /{id}.json
     UPDATE_SOCIETY_STAFF: "/crm/admin/society_staffs", // Base path, will append /{id}.json
     SEND_STAFF_OTP: "/pms/admin/society_staffs/send_otp.json",
@@ -252,11 +252,11 @@ export const API_CONFIG = {
     RECENT_VISITORS: "/pms/admin/visitors/recent_visitors.json",
     // Visitor setup endpoint (visiting purposes, move in/out, staff types, comments)
     VISITOR_SETUP: "/pms/admin/visitors/visitor_setup.json",
-    CREATE_VISIT_PURPOSE: "/pms/soc_visit_purposes.json",
+    CREATE_VISIT_PURPOSE: "/soc_visit_purposes.json",
     EDIT_VISIT_PURPOSE: "/pms/soc_visit_purposes",
-    CREATE_MOVE_IN_OUT_PURPOSE: "/pms/society_mimo_purposes.json",
+    CREATE_MOVE_IN_OUT_PURPOSE: "/society_mimo_purposes.json",
     EDIT_MOVE_IN_OUT_PURPOSE: "/pms/society_mimo_purposes",
-    CREATE_WORK_TYPE: "/pms/society_staff_types.json",
+    CREATE_WORK_TYPE: "/society_staff_types.json",
     EDIT_WORK_TYPE: "/pms/society_staff_types", // Base path, will append /{id}.json
     CREATE_SOCIETY_STAFF: "/crm/admin/society_staffs.json",
     STAFF_SAMPLE_FORMAT: "/crm/admin/society_staffs/sample_format.xlsx",
