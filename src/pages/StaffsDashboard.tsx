@@ -590,15 +590,6 @@ export const StaffsDashboard = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* <h1 className="text-2xl font-bold text-gray-900 mb-6">Society Staffs</h1> */}
       
-      {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center py-8">
-          <div className="text-lg text-gray-600">
-            {isSearching ? 'Searching staffs...' : 'Loading staffs data...'}
-          </div>
-        </div>
-      )}
-
       {/* Error State */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -615,8 +606,7 @@ export const StaffsDashboard = () => {
       )}
 
       {/* Main Content */}
-      {!loading && !error && (
-        <>
+      <>
         {/* Staff Actions Panel */}
         {showActionMenu && (
           <StaffActionsPanel
@@ -704,6 +694,7 @@ export const StaffsDashboard = () => {
             enableSelection={true}
             enableExport={true}
             storageKey="staff-table"
+            loading={loading}
             emptyMessage={activeSearchQuery ? "No staff found for your search" : "No staff found"}
             exportFileName="staff-records"
             selectedItems={selectedStaffs}
@@ -787,7 +778,6 @@ export const StaffsDashboard = () => {
         </TabsContent>
       </Tabs>
       </>
-      )}
       {selectedStaffs.length > 0 && (
         <StaffSelectionPanel
           selectedCount={selectedStaffs.length}
@@ -808,7 +798,7 @@ export const StaffsDashboard = () => {
       )}
       
       {/* Pagination Controls */}
-      {!loading && !error && pagination.total_pages > 1 && (
+      {!error && pagination.total_pages > 1 && (
         <div className="flex justify-center mt-6">
           <Pagination>
             <PaginationContent>

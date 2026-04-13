@@ -403,15 +403,6 @@ const SmartSecureVisitorOut: React.FC = () => {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  if (isLoading) {
-    return (
-      <div className="p-6 flex justify-center items-center py-24">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-400 mr-2" />
-        <span className="text-sm text-gray-500">Loading visitors...</span>
-      </div>
-    );
-  }
-
   if (isError) {
     return (
       <div className="p-6 text-center py-24">
@@ -437,6 +428,7 @@ const SmartSecureVisitorOut: React.FC = () => {
         searchPlaceholder="Search visitors..."
         hideTableExport={false}
         hideColumnsButton={false}
+        loading={isLoading}
         leftActions={<div />}
       />
 
