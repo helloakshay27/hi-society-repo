@@ -160,7 +160,7 @@ export const ResponseEscalationTab: React.FC = () => {
     }
   }
 
-  // Load escalation rules from /crm/admin/assign_escalation.json
+  // Load escalation rules from /crm/admin/response_escalation_rule.json
   const loadEscalationRules = async (
     page = 1,
     issueTypeId = filterIssueTypeId,
@@ -171,13 +171,13 @@ export const ResponseEscalationTab: React.FC = () => {
       const params: Record<string, string | number> = {
         page,
         per_page: ESCALATION_RULES_PER_PAGE,
-        'q[esc_type_eq]': 'response',
-        'q[issue_related_to_eq]': activeFmProjectTab === 'fm' ? 'FM' : 'Project',
+        issue_related_to: activeFmProjectTab === 'fm' ? 'FM' : 'Project',
       }
       if (issueTypeId) params['q[issue_type_id_eq]'] = issueTypeId
       if (categoryId) params['q[category_id_eq]'] = categoryId
-      const data = await ticketManagementAPI.getAssignEscalations(params)
-      setEscalationRulesList(data.complaint_workers || [])
+      
+      const data = await ticketManagementAPI.getResponseEscalationRules(params)
+      setEscalationRulesList(data.response_rules || [])
       if (data.pagination) {
         setEscalationRulesPagination({
           currentPage: data.pagination.current_page,
@@ -281,79 +281,80 @@ export const ResponseEscalationTab: React.FC = () => {
   }
 
   // Handle edit rule
-  const handleEditRule = (rule: any) => {
-    setEditingRule(rule)
+  const handleEditRule = async (ruleListItem: any) => {
+    try {
+      const response = await ticketManagementAPI.getResponseEscalationRuleById(ruleListItem.id)
+      // The API returns an array, find the specific rule or take the first one
+      const rule = response.response_rules?.find((r: any) => r.id === ruleListItem.id) || response.response_rules?.[0] || ruleListItem
+      setEditingRule(rule)
 
-    // Helper to safely parse escalate_to_users
-    const safeParseUsers = (escalateToUsers: any): number[] => {
-      if (!escalateToUsers) return []
-      try {
-        if (Array.isArray(escalateToUsers)) {
-          return escalateToUsers.map(Number).filter(n => !isNaN(n))
-        }
-        if (typeof escalateToUsers === 'string') {
-          const parsed = JSON.parse(escalateToUsers)
-          return Array.isArray(parsed) ? parsed.map(Number).filter(n => !isNaN(n)) : []
-        }
-      } catch {
-        // Might be a comma-separated name string
-        return resolveNamesToIds(escalateToUsers)
-      }
-      return []
-    }
-
-    // Support both old format (escalations) and new API format (escalation_matrix)
-    const escalations = rule.escalations || []
-    const escalationMatrix = rule.escalation_matrix || []
-
-    const findLevel = (levelName: string) => {
-      const oldFormat = escalations.find((e: any) => e.name === levelName)
-      if (oldFormat) return oldFormat
-      const newFormat = escalationMatrix.find((e: any) => e.level === levelName)
-      return newFormat || null
-    }
-
-    const getLevelUsers = (levelName: string): number[] => {
-      const level = findLevel(levelName)
-      if (!level) return []
-      if (level.escalate_to_users) return safeParseUsers(level.escalate_to_users)
-      if (level.escalation_to && typeof level.escalation_to === 'string') {
-        return resolveNamesToIds(level.escalation_to)
-      }
-      return []
-    }
-
-    // Pre-populate form with existing data
-    const formUsers = {
-      e1: getLevelUsers('E1'),
-      e2: getLevelUsers('E2'),
-      e3: getLevelUsers('E3'),
-      e4: getLevelUsers('E4'),
-      e5: getLevelUsers('E5'),
-    }
-
-    form.reset({ escalationLevels: formUsers })
-    setSelectedUsers(formUsers)
-    setEditIssueTypeId(String(rule.issue_type_id || ''))
-    setEditCategoryTypeId(String(rule.category_id || ''))
-    
-    // Parse assign_to
-    let assignToIds: number[] = []
-    if (rule.assign_to) {
-      if (Array.isArray(rule.assign_to)) {
-        assignToIds = rule.assign_to.map(Number).filter((n: number) => !isNaN(n))
-      } else if (typeof rule.assign_to === 'string') {
+      // Helper to safely parse users
+      const safeParseUsers = (users: any): number[] => {
+        if (!users) return []
         try {
-          const parsed = JSON.parse(rule.assign_to)
-          assignToIds = Array.isArray(parsed) ? parsed.map(Number).filter((n: number) => !isNaN(n)) : []
+          if (Array.isArray(users)) {
+            return users.map(Number).filter(n => !isNaN(n))
+          }
+          if (typeof users === 'string') {
+            const parsed = JSON.parse(users)
+            return Array.isArray(parsed) ? parsed.map(Number).filter(n => !isNaN(n)) : []
+          }
         } catch {
-          assignToIds = resolveNamesToIds(rule.assign_to)
+          // Might be a comma-separated name string
+          return resolveNamesToIds(users)
         }
+        return []
       }
+
+      // Support both old format (escalations) and new API format (escalation_matrix)
+      const escalations = rule.escalations || []
+      const escalationMatrix = rule.escalation_matrix || []
+
+      const findLevelData = (levelName: string) => {
+        const oldFormat = escalations.find((e: any) => (e.name || '').toUpperCase() === levelName.toUpperCase())
+        if (oldFormat) return oldFormat
+        const newFormat = escalationMatrix.find((e: any) => (e.level || '').toUpperCase() === levelName.toUpperCase())
+        return newFormat || null
+      }
+
+      const getLevelUsersList = (levelName: string): number[] => {
+        const level = findLevelData(levelName)
+        if (!level) return []
+        // Support newest escalate_to_ids format
+        if (level.escalate_to_ids) return safeParseUsers(level.escalate_to_ids)
+        if (level.escalate_to_users) return safeParseUsers(level.escalate_to_users)
+        if (level.escalation_to && typeof level.escalation_to === 'string') {
+          return resolveNamesToIds(level.escalation_to)
+        }
+        return []
+      }
+
+      // Pre-populate form with existing data
+      const formUsers = {
+        e1: getLevelUsersList('E1'),
+        e2: getLevelUsersList('E2'),
+        e3: getLevelUsersList('E3'),
+        e4: getLevelUsersList('E4'),
+        e5: getLevelUsersList('E5'),
+      }
+
+      form.reset({ escalationLevels: formUsers })
+      setSelectedUsers(formUsers)
+      setEditIssueTypeId(String(rule.issue_type_id || ''))
+      setEditCategoryTypeId(String(rule.category_id || ''))
+      
+      // Parse assign_to
+      let assignToIds: number[] = []
+      if (rule.assign_to) {
+        assignToIds = safeParseUsers(rule.assign_to)
+      }
+      setEditAssignTo(assignToIds)
+      
+      setIsEditDialogOpen(true)
+    } catch (error) {
+      console.error('Error fetching response escalation rule details:', error)
+      toast.error('Failed to fetch rule details!')
     }
-    setEditAssignTo(assignToIds)
-    
-    setIsEditDialogOpen(true)
   }
 
   // Handle update rule
@@ -370,6 +371,15 @@ export const ResponseEscalationTab: React.FC = () => {
     }
 
     try {
+      const escalationMatrixPayload: any = {}
+      const levels = ['e1', 'e2', 'e3', 'e4', 'e5'] as const
+      levels.forEach(level => {
+        escalationMatrixPayload[level] = {
+          level: level.toUpperCase(),
+          escalate_to_ids: selectedUsers[level],
+        }
+      })
+
       const payload = {
         id: editingRule.id,
         complaint_worker: {
@@ -380,23 +390,17 @@ export const ResponseEscalationTab: React.FC = () => {
           category_id: editCategoryTypeId,
           assign_to: editAssignTo.map(String),
         },
-        escalation_matrix: {
-          e1: { name: 'E1', escalate_to_users: selectedUsers.e1.map(Number) },
-          e2: { name: 'E2', escalate_to_users: selectedUsers.e2.map(Number) },
-          e3: { name: 'E3', escalate_to_users: selectedUsers.e3.map(Number) },
-          e4: { name: 'E4', escalate_to_users: selectedUsers.e4.map(Number) },
-          e5: { name: 'E5', escalate_to_users: selectedUsers.e5.map(Number) },
-        },
+        escalation_matrix: escalationMatrixPayload,
       }
 
-      await ticketManagementAPI.createResolutionEscalationRule(payload as any)
+      await ticketManagementAPI.updateResolutionEscalationRule(payload as any)
       toast.success('Response escalation rule updated successfully!')
       setIsEditDialogOpen(false)
       setEditingRule(null)
       loadEscalationRules(escalationRulesPagination.currentPage, filterIssueTypeId, filterCategoryId)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating response escalation:', err)
-      toast.error('Failed to update response escalation. Please try again!')
+      toast.error(err?.response?.data?.message || 'Failed to update response escalation. Please try again!')
     }
   }
 
@@ -425,6 +429,15 @@ export const ResponseEscalationTab: React.FC = () => {
         return
       }
 
+      const escalationMatrixPayload: any = {}
+      const levels = ['e1', 'e2', 'e3', 'e4', 'e5'] as const
+      levels.forEach(level => {
+        escalationMatrixPayload[level] = {
+          level: level.toUpperCase(),
+          escalate_to_ids: data.escalationLevels[level],
+        }
+      })
+
       // Build payload for /crm/admin/create_complaint_worker
       const payload = {
         complaint_worker: {
@@ -435,13 +448,7 @@ export const ResponseEscalationTab: React.FC = () => {
           category_id: selectedCategoryTypeId,
           assign_to: selectedAssignTo.map(Number),
         },
-        escalation_matrix: {
-          e1: { name: 'E1', escalate_to_users: data.escalationLevels.e1.map(Number) },
-          e2: { name: 'E2', escalate_to_users: data.escalationLevels.e2.map(Number) },
-          e3: { name: 'E3', escalate_to_users: data.escalationLevels.e3.map(Number) },
-          e4: { name: 'E4', escalate_to_users: data.escalationLevels.e4.map(Number) },
-          e5: { name: 'E5', escalate_to_users: data.escalationLevels.e5.map(Number) },
-        },
+        escalation_matrix: escalationMatrixPayload,
       }
 
       await ticketManagementAPI.createResolutionEscalationRule(payload as any)
@@ -861,11 +868,24 @@ export const ResponseEscalationTab: React.FC = () => {
                               <div className="space-y-2">
                                 {['E1', 'E2', 'E3', 'E4', 'E5'].map((level) => {
                                   const escalations = rule.escalations || rule.escalation_matrix || []
-                                  const levelData = escalations.find((e: any) => e.name === level || e.level === level)
-                                  const users = levelData?.escalate_to_users || levelData?.escalation_to || null
+                                  const levelData = escalations.find((e: any) => (e.name || '').toUpperCase() === level || (e.level || '').toUpperCase() === level)
+                                  
+                                  let usersDisplay = '-'
+                                  if (levelData) {
+                                    if (levelData.escalate_to_display !== undefined) {
+                                      usersDisplay = levelData.escalate_to_display || '-'
+                                      if (levelData.escalate_to_more_count > 0) {
+                                        usersDisplay += ` +${levelData.escalate_to_more_count} more`
+                                      }
+                                    } else {
+                                      const users = levelData.escalate_to_users || levelData.escalation_to || null
+                                      usersDisplay = getUserNames(users)
+                                    }
+                                  }
+
                                   return (
                                     <div key={level} className="text-sm text-gray-700">
-                                      {getUserNames(users)}
+                                      {usersDisplay}
                                     </div>
                                   )
                                 })}

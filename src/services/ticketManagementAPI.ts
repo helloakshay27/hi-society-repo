@@ -1738,6 +1738,42 @@ export const ticketManagementAPI = {
     return response.data;
   },
 
+  async getAssignRules(params?: Record<string, string | number>) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.get(`/crm/admin/assign_rule.json?token=${token}`, { params });
+    return response.data;
+  },
+
+  async getAssignRuleById(id: string | number) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.get(`/crm/admin/show_assign_rule.json?token=${token}&id=${id}`);
+    return response.data;
+  },
+
+  async getResolutionEscalationRules(params?: Record<string, string | number>) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.get(`/crm/admin/escalation_rule.json?token=${token}`, { params });
+    return response.data;
+  },
+
+  async getResolutionEscalationRuleById(id: string | number) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.get(`/crm/admin/show_escalation_rule.json?token=${token}&id=${id}`);
+    return response.data;
+  },
+
+  async getResponseEscalationRules(params?: Record<string, string | number>) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.get(`/crm/admin/response_escalation_rule.json?token=${token}`, { params });
+    return response.data;
+  },
+
+  async getResponseEscalationRuleById(id: string | number) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.get(`/crm/admin/response_escalation_rule.json?token=${token}&id=${id}`);
+    return response.data;
+  },
+
   async getIssueTypesDropdown() {
     const response = await apiClient.get('/dropdown/issue_types');
     return response.data;
@@ -1762,7 +1798,8 @@ export const ticketManagementAPI = {
       assign_to: string[];
     };
   }) {
-    const response = await apiClient.post('/crm/admin/create_complaint_worker', payload);
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.post(`/crm/admin/create_complaint_worker.json?token=${token}`, payload);
     return response.data;
   },
 
@@ -1774,18 +1811,26 @@ export const ticketManagementAPI = {
       issue_type_id: string;
       category_id: string;
     };
-    escalation_matrix: Record<string, {
-      name: string;
-      escalate_to_users?: string[];
-      copy_to?: string[];
-      p1: string;
-      p2: string;
-      p3: string;
-      p4: string;
-      p5: string;
-    }>;
+    escalation_matrix: any[];
   }) {
-    const response = await apiClient.post('/crm/admin/create_complaint_worker', payload);
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.post(`/crm/admin/create_complaint_worker.json?token=${token}`, payload);
+    return response.data;
+  },
+
+  async updateResolutionEscalationRule(payload: {
+    id: string | number;
+    complaint_worker: {
+      esc_type?: string;
+      issue_related_to?: string;
+      of_phase?: string;
+      issue_type_id: string;
+      category_id: string;
+    };
+    escalation_matrix: any[];
+  }) {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.post(`/crm/admin/update_complaint_worker.json?token=${token}`, payload);
     return response.data;
   },
 
@@ -1797,12 +1842,14 @@ export const ticketManagementAPI = {
       assign_to: string[];
     };
   }) {
-    const response = await apiClient.post('/crm/admin/update_complaint_worker', payload);
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.post(`/crm/admin/update_complaint_worker.json?token=${token}`, payload);
     return response.data;
   },
 
   async deleteComplaintWorker(id: string) {
-    const response = await apiClient.post('/crm/admin/delete_complaint_worker', {
+    const token = API_CONFIG.TOKEN;
+    const response = await apiClient.post(`/crm/admin/delete_complaint_worker.json?token=${token}`, {
       id,
       complaint_worker: { assign: '0' },
     });
