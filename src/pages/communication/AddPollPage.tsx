@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Calendar, Clock, Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, Plus, Trash2, ArrowLeft, Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -34,7 +34,11 @@ import CircularProgress from "@mui/material/CircularProgress";
 interface User {
   id: number;
   name: string;
-  // add other fields if needed
+  user: {
+    firstname: string;
+    lastname: string;
+    email: string;
+  };
 }
 
 const AddPollPage = () => {
@@ -58,6 +62,8 @@ const AddPollPage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const [groupSearch, setGroupSearch] = useState('');
 
 
   useEffect(() => {
@@ -166,15 +172,27 @@ const AddPollPage = () => {
     setSelectedShareWith(value);
     if (value !== 'individual') {
       setSelectedUsers([]);
+      setUserSearch('');
     }
     if (value !== 'group') {
       setSelectedGroups([]);
+      setGroupSearch('');
     }
   };
 
   const toMinutes = (time: string) => {
     const [h, m] = time.split(':').map(Number);
     return h * 60 + m;
+  };
+
+  const formatAmPm = (time: string) => {
+    // Already has AM/PM (e.g. "04:00 AM")
+    if (time.includes('AM') || time.includes('PM')) return time;
+    // 24-hour format from <input type="time"> (e.g. "16:30")
+    const [h, m] = time.split(':').map(Number);
+    const period = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return `${String(hour12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
   };
 
   const isNextDay = (start: string, end: string) => {
@@ -231,12 +249,11 @@ const AddPollPage = () => {
 
     setLoading(true);
     // Format dates and times for API
+    // time is always in 24-hour "HH:MM" from <input type="time">
     const formatDateTime = (date, time) => {
-      const [hours, minutes] = time.split(/[: ]/);
-      const period = time.includes('PM') ? 12 : 0;
-      const hour = parseInt(hours) % 12 + period;
+      const [hours, minutes] = time.split(':').map(Number);
       const dateTime = new Date(date);
-      dateTime.setHours(hour, parseInt(minutes));
+      dateTime.setHours(hours, minutes);
       const year = dateTime.getFullYear();
       const month = String(dateTime.getMonth() + 1).padStart(2, '0');
       const day = String(dateTime.getDate()).padStart(2, '0');
@@ -252,6 +269,8 @@ const AddPollPage = () => {
       enddate: formData.endDate ? formData.endDate.replace(/-/g, '/') : '',
       start: formData.startDate && formData.startTime ? formatDateTime(formData.startDate, formData.startTime) : '',
       end: formData.endDate && formData.endTime ? formatDateTime(formData.endDate, formData.endTime) : '',
+      starttime: formData.startTime ? formatAmPm(formData.startTime) : '',
+      endtime: formData.endTime ? formatAmPm(formData.endTime) : '',
       vote_limit: 'All',
       options: formData.options.filter(opt => opt.trim() !== '').map(name => ({ name })),
       shared: selectedShareWith.charAt(0).toUpperCase() + selectedShareWith.slice(1),
@@ -531,6 +550,28 @@ const AddPollPage = () => {
                     <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
                       Select Users ({selectedUsers.length} selected)
                     </Typography>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      placeholder="Search users..."
+                      value={userSearch}
+                      onChange={(e) => setUserSearch(e.target.value)}
+                      sx={{ mb: 1 }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Search size={16} color="#9e9e9e" />
+                          </InputAdornment>
+                        ),
+                        endAdornment: userSearch ? (
+                          <InputAdornment position="end">
+                            <IconButton size="small" onClick={() => setUserSearch('')} edge="end">
+                              <X size={14} />
+                            </IconButton>
+                          </InputAdornment>
+                        ) : null,
+                      }}
+                    />
                     <Paper
                       variant="outlined"
                       sx={{
@@ -541,7 +582,12 @@ const AddPollPage = () => {
                       }}
                     >
                       <List dense>
-                        {users.map((user) => (
+                        {users.filter((user) => {
+                          const fullName = `${user?.user?.firstname ?? ''} ${user?.user?.lastname ?? ''}`.toLowerCase();
+                          const email = user?.user?.email?.toLowerCase() ?? '';
+                          const q = userSearch.toLowerCase();
+                          return fullName.includes(q) || email.includes(q);
+                        }).map((user) => (
                           <ListItem key={user.id} disablePadding>
                             <ListItemButton
                               onClick={() => handleUserSelection(user.id)}
@@ -617,6 +663,28 @@ const AddPollPage = () => {
                     <Typography variant="body2" sx={{ mb: 2, fontWeight: 500 }}>
                       Select Groups ({selectedGroups.length} selected)
                     </Typography>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      placeholder="Search groups..."
+                      value={groupSearch}
+                      onChange={(e) => setGroupSearch(e.target.value)}
+                      sx={{ mb: 1 }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Search size={16} color="#9e9e9e" />
+                          </InputAdornment>
+                        ),
+                        endAdornment: groupSearch ? (
+                          <InputAdornment position="end">
+                            <IconButton size="small" onClick={() => setGroupSearch('')} edge="end">
+                              <X size={14} />
+                            </IconButton>
+                          </InputAdornment>
+                        ) : null,
+                      }}
+                    />
                     <Paper
                       variant="outlined"
                       sx={{
@@ -627,7 +695,9 @@ const AddPollPage = () => {
                       }}
                     >
                       <List dense>
-                        {groups.map((group) => (
+                        {groups.filter((group) =>
+                          group.name?.toLowerCase().includes(groupSearch.toLowerCase())
+                        ).map((group) => (
                           <ListItem key={group.id} disablePadding>
                             <ListItemButton
                               onClick={() => handleGroupSelection(group.id)}
