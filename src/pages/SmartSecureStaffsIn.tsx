@@ -1,411 +1,287 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Search, Phone, Mail } from "lucide-react";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { Loader2 } from "lucide-react";
 import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
 import { toast } from "sonner";
 
-interface StaffData {
+// ─── Types ─────────────────────────────────────────────────────────────────────
+
+interface AssociatedFlat {
+  block_no: string;
+  flat_no: string;
+  display: string;
+}
+
+interface InPayload {
+  staff_id: number;
+  entry_by_id: number;
+  custom_redirect: string;
+}
+
+interface StaffInData {
   id: number;
-  first_name: string;
-  last_name: string;
-  full_name: string;
+  name: string;
   mobile: string;
-  email: string;
-  soc_staff_id: string | null;
-  staff_image_url: string;
-  department_name: string;
-  work_type_name: string;
-  unit_name: string | null;
-  vendor_name: string | null;
-  status_text: string;
-  number_verified: boolean;
-  staff_workings?: StaffWorking[];
+  staff_type: string;
+  image_url: string;
+  associated_flats_count: number;
+  associated_flats: AssociatedFlat[];
+  in_payload: InPayload;
 }
 
-interface StaffWorking {
-  id: number;
-  check_in: string;
-  check_out: string | null;
-  status: string;
+interface Pagination {
+  page: number;
+  per_page: number;
+  total_count: number;
+  total_pages: number;
 }
 
-// Dummy data for UI preview
-const dummyStaffData: StaffData[] = [
-  {
-    id: 1,
-    first_name: "Sagar",
-    last_name: "Singh",
-    full_name: "Sagar Singh",
-    mobile: "9850562622",
-    email: "sagar.singh@example.com",
-    soc_staff_id: "STF001",
-    staff_image_url: "",
-    department_name: "Security",
-    work_type_name: "Guard",
-    unit_name: "Tower A",
-    vendor_name: "SecureGuard Services",
-    status_text: "Active",
-    number_verified: true,
-    staff_workings: [
-      {
-        id: 1,
-        check_in: "2026-02-11T08:30:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
-  },
-  {
-    id: 2,
-    first_name: "Devesh",
-    last_name: "J",
-    full_name: "Devesh J",
-    mobile: "9564292826",
-    email: "devesh.j@example.com",
-    soc_staff_id: "STF002",
-    staff_image_url: "",
-    department_name: "Housekeeping",
-    work_type_name: "Cleaner",
-    unit_name: null,
-    vendor_name: "CleanPro Ltd",
-    status_text: "Active",
-    number_verified: true,
-    staff_workings: [
-      {
-        id: 2,
-        check_in: "2026-02-11T09:00:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
-  },
-  {
-    id: 3,
-    first_name: "Mathu",
-    last_name: "Pol",
-    full_name: "Mathu Pol",
-    mobile: "8836101019",
-    email: "",
-    soc_staff_id: "STF003",
-    staff_image_url: "",
-    department_name: "Maintenance",
-    work_type_name: "Electrician",
-    unit_name: "Tower B",
-    vendor_name: null,
-    status_text: "Active",
-    number_verified: false,
-    staff_workings: [
-      {
-        id: 3,
-        check_in: "2026-02-11T07:45:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
-  },
-  {
-    id: 4,
-    first_name: "Santosh",
-    last_name: "Yadav",
-    full_name: "Santosh Yadav",
-    mobile: "0123456789",
-    email: "santosh.yadav@example.com",
-    soc_staff_id: "STF004",
-    staff_image_url: "",
-    department_name: "Operations",
-    work_type_name: "Plumber",
-    unit_name: "Tower C",
-    vendor_name: "FixIt Services",
-    status_text: "Approved",
-    number_verified: true,
-    staff_workings: [
-      {
-        id: 4,
-        check_in: "2026-02-11T08:15:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
-  },
-  {
-    id: 5,
-    first_name: "Vikarm",
-    last_name: "Rathod",
-    full_name: "Vikarm Rathod",
-    mobile: "9876543210",
-    email: "vikarm.rathod@example.com",
-    soc_staff_id: "STF005",
-    staff_image_url: "",
-    department_name: "Security",
-    work_type_name: "Supervisor",
-    unit_name: "Main Gate",
-    vendor_name: null,
-    status_text: "Active",
-    number_verified: true,
-    staff_workings: [
-      {
-        id: 5,
-        check_in: "2026-02-11T06:00:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
-  },
-  {
-    id: 6,
-    first_name: "Satyam",
-    last_name: "M",
-    full_name: "Satyam M",
-    mobile: "7895789582",
-    email: "satyam.m@example.com",
-    soc_staff_id: "STF006",
-    staff_image_url: "",
-    department_name: "Gardening",
-    work_type_name: "Gardener",
-    unit_name: null,
-    vendor_name: "GreenScape Services",
-    status_text: "Active",
-    number_verified: false,
-    staff_workings: [
-      {
-        id: 6,
-        check_in: "2026-02-11T07:00:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
-  },
+interface StaffInApiResponse {
+  data: StaffInData[];
+  pagination: Pagination;
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+const getInitials = (name: string): string => {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return name.substring(0, 2).toUpperCase();
+};
+
+const isDefaultImage = (url: string) => !url || url.startsWith("/images/");
+
+// ─── Column Config ─────────────────────────────────────────────────────────────
+
+const staffInColumns: ColumnConfig[] = [
+  { key: "sr_no",            label: "Sr. No.",         sortable: false, hideable: true,  draggable: true  },
+  { key: "photo",            label: "Photo",           sortable: false, hideable: true,  draggable: true  },
+  { key: "name",             label: "Staff Name",      sortable: true,  hideable: true,  draggable: true  },
+  { key: "mobile",           label: "Mobile",          sortable: true,  hideable: true,  draggable: true  },
+  { key: "staff_type",       label: "Staff Type",      sortable: true,  hideable: true,  draggable: true  },
+  { key: "associated_flats", label: "Associated Flats",sortable: false, hideable: true,  draggable: true  },
+  { key: "in_button",        label: "Action",          sortable: false, hideable: false, draggable: false },
 ];
 
-const SmartSecureStaffsIn: React.FC = () => {
-  const [staffsIn, setStaffsIn] = useState<StaffData[]>(dummyStaffData);
-  const [filteredStaffs, setFilteredStaffs] = useState<StaffData[]>(dummyStaffData);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [expandedStaffId, setExpandedStaffId] = useState<number | null>(null);
+// ─── Component ─────────────────────────────────────────────────────────────────
 
-  // Fetch staff in data
-  const fetchStaffsIn = async () => {
+const SmartSecureStaffsIn: React.FC = () => {
+  const [staffList, setStaffList] = useState<StaffInData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loadingInId, setLoadingInId] = useState<number | null>(null);
+
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Fetch list ─────────────────────────────────────────────────────────────
+
+  const fetchStaffIn = useCallback(async (page: number, search: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        getFullUrl("/crm/admin/society_staffs.json"),
-        {
-          headers: {
-            Authorization: getAuthHeader(),
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        // Filter only staff who are currently checked in
-        const staffsInData = (data.society_staffs || []).filter(
-          (staff: StaffData) =>
-            staff.staff_workings &&
-            staff.staff_workings.length > 0 &&
-            staff.staff_workings[0].check_out === null
-        );
-        setStaffsIn(staffsInData);
-        setFilteredStaffs(staffsInData);
+      let url = getFullUrl(`/crm/admin/staff_in.json?page=${page}&per_page=20`);
+      if (search.trim()) {
+        url += `&q[first_name_or_last_name_or_mobile_or_full_name_cont]=${encodeURIComponent(search.trim())}`;
       }
+      const response = await fetch(url, {
+        headers: {
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+      const data: StaffInApiResponse = await response.json();
+      setStaffList(data.data ?? []);
+      setTotalPages(data.pagination?.total_pages ?? 1);
+      setTotalCount(data.pagination?.total_count ?? 0);
     } catch (error) {
-      console.error("Error fetching staffs in:", error);
-      // Using dummy data on error
-      setStaffsIn(dummyStaffData);
-      setFilteredStaffs(dummyStaffData);
+      console.error("Error fetching staff in list:", error);
+      toast.error("Failed to load staff list");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    // Comment out API call to use dummy data
-    // fetchStaffsIn();
   }, []);
 
-  // Search handler
   useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setFilteredStaffs(staffsIn);
-    } else {
-      const filtered = staffsIn.filter(
-        (staff) =>
-          staff.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          staff.mobile.includes(searchTerm) ||
-          staff.department_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          staff.work_type_name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredStaffs(filtered);
+    fetchStaffIn(currentPage, searchQuery);
+  }, [fetchStaffIn, currentPage]);
+
+  // Debounce search — reset to page 1 on new query
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setCurrentPage(1);
+      fetchStaffIn(1, query);
+    }, 400);
+  }, [fetchStaffIn]);
+
+  // ── Mark staff IN ──────────────────────────────────────────────────────────
+
+  const handleMarkIn = useCallback(async (staff: StaffInData) => {
+    setLoadingInId(staff.id);
+    try {
+      const entryTime = new Date().toISOString().replace("Z", "").replace("T", "T");
+      const response = await fetch(getFullUrl("/staff_inouts.json"), {
+        method: "POST",
+        headers: {
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          staff_inout: {
+            entry_time: entryTime,
+            staff_id: String(staff.in_payload.staff_id),
+            entry_by_id: String(staff.in_payload.entry_by_id),
+          },
+        }),
+      });
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+      toast.success(`${staff.name} marked IN successfully`);
+      fetchStaffIn(currentPage, searchQuery);
+    } catch (error) {
+      console.error("Error marking staff in:", error);
+      toast.error(`Failed to mark ${staff.name} IN`);
+    } finally {
+      setLoadingInId(null);
     }
-  }, [searchTerm, staffsIn]);
+  }, [currentPage, fetchStaffIn, searchQuery]);
 
-  const getInitials = (name: string) => {
-    const parts = name.split(" ");
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
+  // ── Cell Renderer ──────────────────────────────────────────────────────────
 
-  const getStatusBadge = (status: string) => {
-    const statusLower = status.toLowerCase();
-    if (statusLower.includes("active") || statusLower.includes("approved")) {
-      return "bg-green-100 text-green-800";
-    } else if (statusLower.includes("pending")) {
-      return "bg-yellow-100 text-yellow-800";
-    } else {
-      return "bg-gray-100 text-gray-800";
-    }
-  };
+  const renderCell = useCallback((staff: StaffInData, columnKey: string) => {
+    switch (columnKey) {
+      case "sr_no": {
+        const idx = staffList.indexOf(staff);
+        const perPage = 20;
+        return (
+          <span className="text-sm text-gray-500 font-medium">
+            {(currentPage - 1) * perPage + idx + 1}
+          </span>
+        );
+      }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-semibold text-gray-900">Staffs In</h1>
-          <Button
-            onClick={fetchStaffsIn}
-            variant="outline"
-            className="border-gray-300"
-          >
-            Refresh
-          </Button>
-        </div>
-
-        {/* Search Bar */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search using staff's name or mobile number"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-10"
-          />
-        </div>
-      </div>
-
-      {/* Staff Cards */}
-      <div className="p-6">
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="text-gray-500">Loading staffs...</div>
-          </div>
-        ) : filteredStaffs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="text-gray-400 text-lg mb-2">No Staff In</div>
-            <div className="text-gray-500 text-sm">
-              {searchTerm
-                ? "No staff found matching your search"
-                : "No staff are currently checked in"}
+      case "photo":
+        return (
+          <div className="flex justify-center">
+            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
+              {!isDefaultImage(staff.image_url) ? (
+                <img
+                  src={staff.image_url}
+                  alt={staff.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                  <span className="text-white font-semibold text-sm">
+                    {getInitials(staff.name)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {filteredStaffs.map((staff) => (
-              <div key={staff.id} className="bg-white border border-gray-200 rounded-none shadow-sm">
-                {/* Main Staff Info Section */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                  <div className="flex items-center gap-4">
-                    {/* Profile Photo */}
-                    {staff.staff_image_url ? (
-                      <img
-                        src={staff.staff_image_url}
-                        alt={staff.full_name}
-                        className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
-                      />
-                    ) : (
-                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center border-2 border-gray-200">
-                        <span className="text-white font-semibold text-2xl">
-                          {getInitials(staff.full_name)}
-                        </span>
-                      </div>
-                    )}
+        );
 
-                    {/* Name, ID, Badge */}
-                    <div>
-                      <h2 className="text-2xl font-normal text-gray-900 mb-1">
-                        {staff.full_name}
-                      </h2>
-                      <p className="text-gray-600 text-base mb-2">
-                        {staff.mobile}
-                      </p>
-                      <Badge className="bg-teal-100 text-teal-700 hover:bg-teal-100 rounded-full px-3 py-1 text-sm font-normal">
-                        Personal
-                      </Badge>
-                    </div>
-                  </div>
+      case "name":
+        return (
+          <span className="font-medium text-gray-900">{staff.name || "--"}</span>
+        );
 
-                  {/* IN Button */}
-                  <div className="border-2 border-green-400 text-green-500 px-8 py-2 text-xl font-semibold rounded">
-                    IN
-                  </div>
-                </div>
+      case "mobile":
+        return (
+          <span className="text-sm text-gray-700">{staff.mobile || "--"}</span>
+        );
 
-                {/* Associated Flats Section */}
-                <div
-                  className={`${
-                    expandedStaffId === staff.id
-                      ? "bg-sky-400"
-                      : "bg-gray-100 hover:bg-gray-200"
-                  } transition-colors cursor-pointer`}
-                  onClick={() =>
-                    setExpandedStaffId(
-                      expandedStaffId === staff.id ? null : staff.id
-                    )
-                  }
-                >
-                  <div className="flex items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-lg font-medium ${
-                          expandedStaffId === staff.id
-                            ? "text-white"
-                            : "text-gray-700"
-                        }`}
-                      >
-                        Associated Flats
-                      </span>
-                      <span
-                        className={`${
-                          expandedStaffId === staff.id
-                            ? "bg-white text-sky-500"
-                            : "bg-orange-400 text-white"
-                        } rounded-full w-7 h-7 flex items-center justify-center text-sm font-semibold`}
-                      >
-                        1
-                      </span>
-                    </div>
-                    <button
-                      className={`text-2xl font-bold ${
-                        expandedStaffId === staff.id
-                          ? "text-white"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      {expandedStaffId === staff.id ? "−" : "+"}
-                    </button>
-                  </div>
+      case "staff_type":
+        return (
+          <span className={`px-2 py-1 text-xs rounded font-medium ${
+            staff.staff_type === "Society"
+              ? "bg-blue-100 text-blue-700"
+              : "bg-purple-100 text-purple-700"
+          }`}>
+            {staff.staff_type || "--"}
+          </span>
+        );
 
-                  {/* Expanded Content */}
-                  {expandedStaffId === staff.id && (
-                    <div className="bg-white px-4 py-3 border-t border-gray-200">
-                      <p className="text-gray-700">
-                        {staff.unit_name || "A - 101"}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
+      case "associated_flats":
+        if (!staff.associated_flats_count) {
+          return <span className="text-sm text-gray-400">--</span>;
+        }
+        return (
+          <div className="flex flex-wrap gap-1">
+            {staff.associated_flats.map((flat) => (
+              <span
+                key={flat.display}
+                className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded border border-gray-200"
+              >
+                {flat.display}
+              </span>
             ))}
           </div>
-        )}
-      </div>
+        );
+
+      case "in_button": {
+        const isThisLoading = loadingInId === staff.id;
+        return (
+          <Button
+            size="sm"
+            onClick={() => handleMarkIn(staff)}
+            disabled={isThisLoading || loadingInId !== null}
+            className="h-8 px-4 text-xs font-semibold hover:bg-green-600 text-white border-0"
+          >
+            {isThisLoading ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              "IN"
+            )}
+          </Button>
+        );
+      }
+
+      default: {
+        const val = (staff as unknown as Record<string, unknown>)[columnKey];
+        return val ? String(val) : "--";
+      }
+    }
+  }, [staffList, currentPage, loadingInId, handleMarkIn]);
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  return (
+    <div className="p-6">
+      <EnhancedTable
+        data={staffList}
+        columns={staffInColumns}
+        renderCell={renderCell}
+        enableSearch={true}
+        enableSelection={false}
+        storageKey="staffs-in-table"
+        emptyMessage="No staff found"
+        searchPlaceholder="Search by name or mobile..."
+        hideTableExport={false}
+        hideColumnsButton={false}
+        loading={isLoading}
+        onSearchChange={handleSearch}
+        searchValue={searchQuery}
+        pagination={totalPages > 1}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        leftActions={
+          <Button
+            onClick={() => fetchStaffIn(currentPage, searchQuery)}
+            variant="outline"
+            className="h-9 px-4 text-sm font-medium border-gray-300"
+            disabled={isLoading}
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Refresh"}
+          </Button>
+        }
+      />
     </div>
   );
 };

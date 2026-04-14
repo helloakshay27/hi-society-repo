@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Camera, X } from 'lucide-react';
-import { staffService, StaffFormData, ScheduleData, StaffAttachments, Unit, Department, WorkType } from '@/services/staffService';
+import { staffService, StaffFormData, ScheduleData, StaffAttachments, StaffFilterOption, StaffFiltersResponse } from '@/services/staffService';
 import { toast } from 'sonner';
 import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
 import { getUser } from '@/utils/auth';
@@ -46,6 +46,7 @@ export const AddStaffPage = () => {
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [isPhotoSaved, setIsPhotoSaved] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -53,14 +54,15 @@ export const AddStaffPage = () => {
     email: '',
     password: '',
     mobile: '',
-    unit: '',
-    department: '',
+    staffType: '',
     workType: '',
+    associateFunctionId: '',
     staffId: '',
     vendorName: '',
     validFrom: '',
     validTill: '',
-    status: ''
+    status: '',
+    notes: ''
   });
 
   const [schedule, setSchedule] = useState({
@@ -76,12 +78,10 @@ export const AddStaffPage = () => {
   const [attachments, setAttachments] = useState<StaffAttachments>({});
   const [documents, setDocuments] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [units, setUnits] = useState<Unit[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [workTypes, setWorkTypes] = useState<WorkType[]>([]);
-  const [loadingUnits, setLoadingUnits] = useState(true);
-  const [loadingDepartments, setLoadingDepartments] = useState(true);
-  const [loadingWorkTypes, setLoadingWorkTypes] = useState(true);
+
+  // Staff filters state (from /crm/admin/staff_filters.json)
+  const [staffFilters, setStaffFilters] = useState<StaffFiltersResponse | null>(null);
+  const [loadingFilters, setLoadingFilters] = useState(true);
 
   // Camera functions
   useEffect(() => {
@@ -140,8 +140,9 @@ export const AddStaffPage = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = newStream;
         videoRef.current.onloadedmetadata = () => {
+          setIsVideoReady(true);
           if (videoRef.current) {
-            videoRef.current.play();
+            videoRef.current.play().catch(console.error);
           }
         };
       }
@@ -153,10 +154,13 @@ export const AddStaffPage = () => {
 
   const handleCameraChange = (deviceId: string) => {
     setSelectedCamera(deviceId);
+    setIsVideoReady(false);
     startCamera(deviceId);
   };
 
   const handleCameraClick = () => {
+    setIsVideoReady(false);
+    setCapturedPhoto(null);
     setShowCameraModal(true);
     initializeCamera();
   };
@@ -165,6 +169,7 @@ export const AddStaffPage = () => {
     setCapturedPhoto(null);
     setIsPhotoSaved(false);
     setShowCameraModal(true);
+    setIsVideoReady(false);
     initializeCamera();
   };
 
@@ -186,6 +191,7 @@ export const AddStaffPage = () => {
         stream.getTracks().forEach((track) => track.stop());
         setStream(null);
         setShowCameraModal(false);
+        setIsVideoReady(false);
         
         toast.success('Photo captured successfully!');
       } else {
@@ -216,6 +222,7 @@ export const AddStaffPage = () => {
         stream.getTracks().forEach((track) => track.stop());
         setStream(null);
         setShowCameraModal(false);
+        setIsVideoReady(false);
         
         toast.success('Photo captured successfully!');
       } else {
@@ -228,28 +235,21 @@ export const AddStaffPage = () => {
     }
   };
 
-  // Fetch units, departments, and work types on component mount
+  // Fetch staff filters on component mount
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchFilters = async () => {
       try {
-        const [unitsData, departmentsData, workTypesData] = await Promise.all([
-          staffService.getUnits(),
-          staffService.getDepartments(),
-          staffService.getWorkTypes()
-        ]);
-        setUnits(unitsData);
-        setDepartments(departmentsData);
-        setWorkTypes(workTypesData);
+        setLoadingFilters(true);
+        const filters = await staffService.getStaffFilters();
+        setStaffFilters(filters);
       } catch (error) {
-        console.error('Failed to fetch dropdown data:', error);
+        console.error('Failed to fetch staff filters:', error);
       } finally {
-        setLoadingUnits(false);
-        setLoadingDepartments(false);
-        setLoadingWorkTypes(false);
+        setLoadingFilters(false);
       }
     };
 
-    fetchData();
+    fetchFilters();
   }, []);
 
   const handleInputChange = (field: string, value: string) => {
@@ -303,19 +303,31 @@ export const AddStaffPage = () => {
 
     setIsSubmitting(true);
     try {
-      const staffDataWithCalculated = {
-        ...formData,
-        validTill,
-        status: formData.status || 'active',
-        userId: currentUser.id // Add current user ID
+      const staffDataToSubmit: StaffFormData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        mobile: formData.mobile,
+        staffType: formData.staffType,
+        workType: formData.workType,
+        associateFunctionId: formData.associateFunctionId,
+        staffId: formData.staffId,
+        vendorName: formData.vendorName,
+        validFrom: formData.validFrom,
+        validTill: validTill,
+        status: formData.status || '1',
+        notes: formData.notes,
+        userId: currentUser.id,
       };
       
-      await staffService.createSocietyStaff(staffDataWithCalculated, schedule, {
+      await staffService.createSocietyStaff(staffDataToSubmit, schedule, {
         profilePicture: attachments.profilePicture,
-        documents: documents
+        documents: documents,
+        capturedPhoto: capturedPhoto || undefined
       });
       toast.success('Society staff created successfully!');
-      navigate('/security/staff'); // Navigate back to staff dashboard
+      navigate('/smartsecure/staff'); // Navigate back to staff dashboard
     } catch (error) {
       console.error('Failed to create staff:', error);
       // Error is already handled in the service with toast
@@ -325,7 +337,7 @@ export const AddStaffPage = () => {
   };
 
   const handleCancel = () => {
-    navigate('/security/staff'); // Go back to staff dashboard
+    navigate('/smartsecure/staff'); // Go back to staff dashboard
   };
 
   const timeOptions = Array.from({ length: 24 }, (_, i) => 
@@ -351,6 +363,7 @@ export const AddStaffPage = () => {
                   setStream(null);
                 }
                 setShowCameraModal(false);
+                setIsVideoReady(false);
               }}
               className="h-6 w-6 p-0 hover:bg-gray-100"
             >
@@ -380,6 +393,11 @@ export const AddStaffPage = () => {
               muted
               className="w-full h-48 object-cover"
             />
+            <div className="absolute top-2 right-2">
+              <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs font-medium">
+                📹 Preview
+              </span>
+            </div>
             <canvas ref={canvasRef} className="hidden" />
           </div>
 
@@ -406,15 +424,17 @@ export const AddStaffPage = () => {
           <div className="space-y-2">
             <Button
               onClick={handleAllowThisTime}
-              className="w-full bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+              className="w-full bg-pink-200 hover:bg-pink-300 text-gray-800 rounded-full"
+              disabled={!stream || !isVideoReady}
             >
-              Allow this time
+              {!isVideoReady ? 'Loading Camera...' : 'Allow this time'}
             </Button>
             <Button
               onClick={handleCaptureAndClose}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full"
+              disabled={!stream || !isVideoReady}
             >
-              Capture & Close
+              {!isVideoReady ? 'Loading Camera...' : 'Capture & Close'}
             </Button>
             <Button
               onClick={() => {
@@ -423,9 +443,10 @@ export const AddStaffPage = () => {
                   setStream(null);
                 }
                 setShowCameraModal(false);
+                setIsVideoReady(false);
               }}
               variant="outline"
-              className="w-full"
+              className="w-full rounded-full"
             >
               Cancel
             </Button>
@@ -535,50 +556,30 @@ export const AddStaffPage = () => {
                 }}
               />
               
+              {/* Staff Type Dropdown - from staff_filters API */}
               <FormControl fullWidth variant="outlined">
                 <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
-                  Unit
+                  Staff Type
                 </InputLabel>
                 <MuiSelect
-                  value={formData.unit}
-                  onChange={(e) => handleInputChange('unit', e.target.value)}
-                  label="Unit"
+                  value={formData.staffType}
+                  onChange={(e) => handleInputChange('staffType', e.target.value)}
+                  label="Staff Type"
                   displayEmpty
                   sx={fieldStyles}
                 >
                   <MenuItem value="" disabled>
-                    {loadingUnits ? "Loading units..." : "Select Unit"}
+                    {loadingFilters ? "Loading..." : "Select Staff Type"}
                   </MenuItem>
-                  {units.map((unit) => (
-                    <MenuItem key={unit.id} value={unit.unit_name}>
-                      {unit.unit_name}
+                  {staffFilters?.staff_types?.map((item, index) => (
+                    <MenuItem key={`staff-type-${index}`} value={String(item.value)}>
+                      {item.label}
                     </MenuItem>
                   ))}
                 </MuiSelect>
               </FormControl>
-              
-              <FormControl fullWidth variant="outlined">
-                <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
-                  Department
-                </InputLabel>
-                <MuiSelect
-                  value={formData.department}
-                  onChange={(e) => handleInputChange('department', e.target.value)}
-                  label="Department"
-                  displayEmpty
-                  sx={fieldStyles}
-                >
-                  <MenuItem value="" disabled>
-                    {loadingDepartments ? "Loading departments..." : "Select Department"}
-                  </MenuItem>
-                  {departments.map((department) => (
-                    <MenuItem key={department.id} value={department.department_name}>
-                      {department.department_name}
-                    </MenuItem>
-                  ))}
-                </MuiSelect>
-              </FormControl>
-              
+
+              {/* Work Type Dropdown - from staff_filters API */}
               <FormControl fullWidth variant="outlined">
                 <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
                   Work Type
@@ -591,11 +592,34 @@ export const AddStaffPage = () => {
                   sx={fieldStyles}
                 >
                   <MenuItem value="" disabled>
-                    {loadingWorkTypes ? "Loading work types..." : "Select Work Type"}
+                    {loadingFilters ? "Loading..." : "Select Work Type"}
                   </MenuItem>
-                  {workTypes.map((workType) => (
-                    <MenuItem key={workType.id} value={workType.id.toString()}>
-                      {workType.staff_type}
+                  {staffFilters?.work_types?.map((item, index) => (
+                    <MenuItem key={`work-type-${index}`} value={String(item.value)}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </MuiSelect>
+              </FormControl>
+
+              {/* Association Type (Function) Dropdown - from staff_filters API */}
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
+                  Association Type
+                </InputLabel>
+                <MuiSelect
+                  value={formData.associateFunctionId}
+                  onChange={(e) => handleInputChange('associateFunctionId', e.target.value)}
+                  label="Association Type"
+                  displayEmpty
+                  sx={fieldStyles}
+                >
+                  <MenuItem value="" disabled>
+                    {loadingFilters ? "Loading..." : "Select Association Type"}
+                  </MenuItem>
+                  {staffFilters?.functions?.map((item, index) => (
+                    <MenuItem key={`function-${index}`} value={String(item.value)}>
+                      {item.label}
                     </MenuItem>
                   ))}
                 </MuiSelect>
@@ -669,6 +693,7 @@ export const AddStaffPage = () => {
                 }}
               />
               
+              {/* Status Dropdown - from staff_filters API */}
               <FormControl fullWidth variant="outlined">
                 <InputLabel shrink sx={{ '&.Mui-focused': { color: '#C72030' } }}>
                   Status
@@ -680,12 +705,50 @@ export const AddStaffPage = () => {
                   displayEmpty
                   sx={fieldStyles}
                 >
-                  <MenuItem value="" disabled>Select Status</MenuItem>
-                  <MenuItem value="1">Approved</MenuItem>
-                  <MenuItem value="pending">Pending</MenuItem>
-                  <MenuItem value="0">Rejected</MenuItem>
+                  <MenuItem value="" disabled>
+                    {loadingFilters ? "Loading..." : "Select Status"}
+                  </MenuItem>
+                  {staffFilters?.statuses?.map((item, index) => (
+                    <MenuItem key={`status-${index}`} value={String(item.value)}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
                 </MuiSelect>
               </FormControl>
+            </div>
+
+            {/* Notes - full width textarea */}
+            <div>
+              <TextField
+                label="Notes"
+                placeholder="Enter notes..."
+                value={formData.notes}
+                onChange={(e) => handleInputChange('notes', e.target.value)}
+                fullWidth
+                variant="outlined"
+                multiline
+                rows={3}
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: {
+                    backgroundColor: '#fff',
+                    borderRadius: '4px',
+                    '& fieldset': {
+                      borderColor: '#ddd',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#C72030',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#C72030',
+                    },
+                  },
+                }}
+              />
             </div>
           </div>
         </div>

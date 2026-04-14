@@ -8,6 +8,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Edit, Printer, ArrowLeft, Loader2, ChevronDown, ChevronUp, User, MapPin, Calendar, FileText, Image, QrCode } from 'lucide-react';
 import { staffService, SocietyStaffDetails } from '@/services/staffService';
 import { toast } from 'sonner';
+import { apiClient } from '@/utils/apiClient';
+import { ENDPOINTS } from '@/config/apiConfig';
 
 export const StaffDetailsPage = () => {
   const { id } = useParams();
@@ -21,6 +23,7 @@ export const StaffDetailsPage = () => {
   const [otp, setOtp] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [sendingOTP, setSendingOTP] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   // State for expandable sections
   const [expandedSections, setExpandedSections] = useState({
@@ -95,7 +98,7 @@ export const StaffDetailsPage = () => {
               Retry
             </Button>
             <Button 
-              onClick={() => navigate('/security/staff')}
+              onClick={() => navigate('/smartsecure/staff')}
               variant="outline"
               size="sm"
             >
@@ -108,12 +111,22 @@ export const StaffDetailsPage = () => {
   }
 
   const handleEdit = () => {
-    navigate(`/security/staff/edit/${staff.id}`);
+    navigate(`/smartsecure/staff/edit/${staff.id}`);
   };
 
-  const handlePrint = () => {
-    console.log('Print QR code for staff:', staff.id);
-    window.print();
+  const handlePrint = async () => {
+    if (!staff) return;
+    setIsPrinting(true);
+    try {
+      await apiClient.post(ENDPOINTS.STAFF_PRINT_QR_CODES, {
+        society_staff_ids: [staff.id.toString()],
+      });
+      toast.success('QR Code print request sent successfully!');
+    } catch {
+      toast.error('Failed to send QR Code print request');
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   const handleVerifyNumber = async () => {
@@ -252,7 +265,7 @@ export const StaffDetailsPage = () => {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-          <button onClick={() => navigate('/security/staff')} className="flex items-center gap-1 hover:text-[#C72030] transition-colors">
+          <button onClick={() => navigate('/smartsecure/staff')} className="flex items-center gap-1 hover:text-[#C72030] transition-colors">
             <ArrowLeft className="w-4 h-4" />
             <span className="font-bold text-[#1a1a1a]">Back to Staff List</span>
           </button>
@@ -505,10 +518,19 @@ export const StaffDetailsPage = () => {
             <Button
               onClick={handlePrint}
               className="bg-[#8B4B8C] hover:bg-[#7A4077] text-white px-6 py-2 flex items-center gap-2 mx-auto"
-              disabled={!staff.qr_code_present}
+              disabled={!staff.qr_code_present || isPrinting}
             >
-              <Printer className="w-4 h-4" />
-              Print QR Code
+              {isPrinting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Printing...
+                </>
+              ) : (
+                <>
+                  <Printer className="w-4 h-4" />
+                  Print QR Code
+                </>
+              )}
             </Button>
           </div>
         </div>

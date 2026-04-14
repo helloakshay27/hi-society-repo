@@ -4995,11 +4995,11 @@ function App() {
                         element={<CheckHierarchy />}
                       />
                       <Route
-                        path="/security/staff/details/:id"
+                        path="/smartsecure/staff/details/:id"
                         element={<StaffDetailsPage />}
                       />
                       <Route
-                        path="/security/staff/edit/:id"
+                        path="/smartsecure/staff/edit/:id"
                         element={<EditStaffPage />}
                       />
                       <Route
@@ -5027,19 +5027,19 @@ function App() {
                         element={<PatrollingDetailPage />}
                       />
                       <Route
-                        path="/security/staff"
+                        path="/smartsecure/staff"
                         element={<StaffsDashboard />}
                       />
                       <Route
-                        path="/security/staff/details/:id"
+                        path="/smartsecure/staff/details/:id"
                         element={<StaffDetailsPage />}
                       />
                       <Route
-                        path="/security/staff/edit/:id"
+                        path="/smartsecure/staff/edit/:id"
                         element={<EditStaffPage />}
                       />
                       <Route
-                        path="/security/staff/add"
+                        path="/smartsecure/staff/add"
                         element={<AddStaffPage />}
                       />
                       <Route

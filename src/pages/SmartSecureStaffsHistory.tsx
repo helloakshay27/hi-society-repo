@@ -1,449 +1,394 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
 import { StaffHistoryFilterDialog, StaffHistoryFilters } from "@/components/StaffHistoryFilterDialog";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
-import { RefreshCw, Download } from "lucide-react";
+import { RefreshCw, X } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-interface StaffWorking {
-  id: number;
-  check_in: string;
-  check_out: string | null;
-  gate_in?: string;
-  gate_out?: string | null;
-  marked_in_by?: string;
-  marked_out_by?: string;
-  created_at: string;
+// ─── API Types ─────────────────────────────────────────────────────────────────
+
+interface AssociatedFlat {
+  block_no: string;
+  flat_no: string;
+  display: string;
 }
 
-interface StaffHistoryData {
+interface StaffInfo {
   id: number;
   name: string;
-  mobile_number: string;
+  mobile: string;
   staff_type: string;
   work_type: string;
-  company_name?: string;
-  society_flat?: {
-    flat_no: string;
-  };
-  staff_workings: StaffWorking[];
+  company_name: string;
+  image_url: string;
+  associated_flats: AssociatedFlat[];
 }
 
-// Dummy data for preview (moved outside component)
-const dummyStaffHistory: StaffHistoryData[] = [
-    {
-      id: 1,
-      name: "Devesh J",
-      mobile_number: "9564292626",
-      staff_type: "Personal",
-      work_type: "Contractor",
-      company_name: "ABC Contractors",
-      society_flat: { flat_no: "A - 101" },
-      staff_workings: [
-        {
-          id: 1,
-          check_in: "2026-02-11T09:30:00",
-          check_out: "2026-02-11T18:45:00",
-          gate_in: "Main Gate",
-          gate_out: "Main Gate",
-          marked_in_by: "Godrej Living",
-          marked_out_by: "Ubaid Hashmat",
-          created_at: "2026-02-11T09:30:00"
-        }
-      ]
-    },
-    {
-      id: 2,
-      name: "Ganesh G",
-      mobile_number: "9619146262",
-      staff_type: "Personal",
-      work_type: "Contractor",
-      company_name: "Lockated",
-      society_flat: { flat_no: "C - 1003, A - 100, A - 101" },
-      staff_workings: [
-        {
-          id: 2,
-          check_in: "2026-02-10T14:15:00",
-          check_out: "2026-02-10T17:30:00",
-          gate_in: "Main Gate",
-          gate_out: "Main Gate",
-          marked_in_by: "Ubaid Hashmat",
-          marked_out_by: "Ubaid Hashmat",
-          created_at: "2026-02-10T14:15:00"
-        }
-      ]
-    },
-    {
-      id: 3,
-      name: "Deepak Gupta",
-      mobile_number: "7379040962",
-      staff_type: "Personal",
-      work_type: "Caretaker",
-      society_flat: { flat_no: "A - 101, B - 201" },
-      staff_workings: [
-        {
-          id: 3,
-          check_in: "2026-02-09T08:00:00",
-          check_out: "2026-02-09T20:00:00",
-          gate_in: "Deepak Gate",
-          gate_out: "Deepak Gate",
-          marked_in_by: "Manoj Prajapati",
-          marked_out_by: "Manoj Prajapati",
-          created_at: "2026-02-09T08:00:00"
-        }
-      ]
-    },
-    {
-      id: 4,
-      name: "Sagar Singh",
-      mobile_number: "7355654056",
-      staff_type: "Personal",
-      work_type: "Caretaker",
-      company_name: "Lockated",
-      society_flat: { flat_no: "A - 101, C - (K) - 101, B - 101" },
-      staff_workings: [
-        {
-          id: 4,
-          check_in: "2026-02-08T10:20:00",
-          check_out: "2026-02-08T19:15:00",
-          gate_in: "Main Gate",
-          gate_out: "Main Gate",
-          marked_in_by: "Manoj Prajapati",
-          marked_out_by: "Manoj Prajapati",
-          created_at: "2026-02-08T10:20:00"
-        }
-      ]
-    },
-    {
-      id: 5,
-      name: "UMESH Gupta",
-      mobile_number: "1316916165",
-      staff_type: "Personal",
-      work_type: "Driver",
-      company_name: "Lockated",
-      staff_workings: [
-        {
-          id: 5,
-          check_in: "2026-02-11T12:00:00",
-          check_out: "2026-02-11T12:40:00",
-          gate_in: "Deepak Gate",
-          gate_out: "Deepak Gate",
-          marked_in_by: "Manoj Prajapati",
-          marked_out_by: "Manoj Prajapati",
-          created_at: "2026-02-11T12:00:00"
-        }
-      ]
-    },
-    {
-      id: 6,
-      name: "Ubaid Hashmat",
-      mobile_number: "9560288500",
-      staff_type: "Personal",
-      work_type: "Contractor",
-      society_flat: { flat_no: "A - 101" },
-      staff_workings: [
-        {
-          id: 6,
-          check_in: "2026-02-11T07:30:00",
-          check_out: "2026-02-11T16:00:00",
-          gate_in: "Main Gate",
-          marked_in_by: "Manoj Prajapati",
-          created_at: "2026-02-11T07:30:00"
-        }
-      ]
-    },
-    {
-      id: 7,
-      name: "Test User",
-      mobile_number: "1800089887",
-      staff_type: "Personal",
-      work_type: "Caretaker",
-      society_flat: { flat_no: "C - 1003, A - 100, A - 101" },
-      staff_workings: [
-        {
-          id: 7,
-          check_in: "2026-01-30T15:45:00",
-          check_out: "2026-01-30T17:50:00",
-          gate_in: "Deepak Gate",
-          gate_out: "Deepak Gate",
-          marked_in_by: "Manoj Prajapati",
-          marked_out_by: "Manoj Prajapati",
-          created_at: "2026-01-30T15:45:00"
-        }
-      ]
-    },
-    {
-      id: 8,
-      name: "Mathu Pol",
-      mobile_number: "9876543210",
-      staff_type: "Personal",
-      work_type: "Housekeeping",
-      company_name: "Clean Services",
-      society_flat: { flat_no: "B - 205" },
-      staff_workings: [
-        {
-          id: 8,
-          check_in: "2026-02-09T11:00:00",
-          check_out: "2026-02-09T18:30:00",
-          gate_in: "Main Gate",
-          gate_out: "Main Gate",
-          marked_in_by: "Security",
-          marked_out_by: "Security",
-          created_at: "2026-02-09T11:00:00"
-        }
-      ]
-    }
-  ];
+interface TimeDetails {
+  date: string | null;
+  time: string | null;
+  gate?: string | null;
+  marked_by?: string | null;
+}
+
+interface StaffHistoryRecord {
+  id: number;
+  staff: StaffInfo;
+  in_details: TimeDetails;
+  out_details: TimeDetails;
+  checkin_details: { date: string | null; time: string | null };
+  checkout_details: { date: string | null; time: string | null };
+  created_on: string;
+}
+
+interface ApiPagination {
+  page: number;
+  per_page: number;
+  total_count: number;
+  total_pages: number;
+}
+
+interface StaffHistoryResponse {
+  data: StaffHistoryRecord[];
+  pagination: ApiPagination;
+  message: string;
+}
+
+// ─── Column Config ─────────────────────────────────────────────────────────────
+
+const columns = [
+  { key: "sr_no", label: "Sr. No.", sortable: false },
+  { key: "image", label: "Image", sortable: false },
+  { key: "name", label: "Name", sortable: true },
+  { key: "mobile", label: "Mobile Number", sortable: true },
+  { key: "staff_type", label: "Staff Type", sortable: true },
+  { key: "work_type", label: "Work Type", sortable: true },
+  { key: "associated_flats", label: "Associated Flats", sortable: false },
+  { key: "company_name", label: "Company Name", sortable: true },
+  { key: "in_date", label: "In Date", sortable: true },
+  { key: "in_time", label: "In Time", sortable: false },
+  { key: "in_gate", label: "In Gate", sortable: true },
+  { key: "marked_in_by", label: "Marked In By", sortable: true },
+  { key: "out_date", label: "Out Date", sortable: true },
+  { key: "out_time", label: "Out Time", sortable: false },
+  { key: "out_gate", label: "Out Gate", sortable: true },
+  { key: "marked_out_by", label: "Marked Out By", sortable: true },
+  { key: "checkin_date", label: "Checkin Date", sortable: true },
+  { key: "checkin_time", label: "Checkin Time", sortable: false },
+  { key: "checkout_date", label: "Checkout Date", sortable: true },
+  { key: "checkout_time", label: "Checkout Time", sortable: false },
+  { key: "created_on", label: "Created On", sortable: true },
+];
+
+// ─── Component ─────────────────────────────────────────────────────────────────
 
 const SmartSecureStaffsHistory: React.FC = () => {
-  const { toast } = useToast();
-  const [staffHistory, setStaffHistory] = useState<StaffHistoryData[]>([]);
-  const [filteredStaffHistory, setFilteredStaffHistory] = useState<StaffHistoryData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportDateFrom, setExportDateFrom] = useState('');
+  const [exportDateTo, setExportDateTo] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [filters, setFilters] = useState<StaffHistoryFilters>({});
   const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
   const [isExporting, setIsExporting] = useState(false);
-  const itemsPerPage = 20;
+  const perPage = 20;
 
-  // Fetch staff history from API
-  const fetchStaffHistory = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // For now, use dummy data
-      // In production, uncomment this API call:
-      // const response = await fetch(getFullUrl('/crm/admin/society_staffs.json'), {
-      //   headers: getAuthHeader()
-      // });
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   setStaffHistory(data.society_staffs || []);
-      //   setFilteredStaffHistory(data.society_staffs || []);
-      // }
-      
-      setStaffHistory(dummyStaffHistory);
-      setFilteredStaffHistory(dummyStaffHistory);
-      setTotalPages(Math.ceil(dummyStaffHistory.length / itemsPerPage));
-    } catch (error) {
-      console.error('Error fetching staff history:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load staff history.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+  // Build Ransack query params from filters
+  const buildQueryParams = useCallback(() => {
+    const params = new URLSearchParams();
+    params.set("page", String(currentPage));
+    params.set("per_page", String(perPage));
+
+    if (filters.work_type_id) {
+      params.append("q[type_id_in][]", filters.work_type_id);
     }
-  }, [toast]);
+    if (filters.staff_type) {
+      params.append("q[staff_type_in][]", filters.staff_type);
+    }
+    if (filters.tower_id) {
+      params.set("q[staff_workings_society_flat_society_block_id_eq]", filters.tower_id);
+    }
+    if (filters.flat_id) {
+      params.append("q[staff_workings_society_flat_id_in][]", filters.flat_id);
+    }
+    if (filters.company_name) {
+      params.set("q[notes_cont]", filters.company_name);
+    }
+    if (filters.date_from) {
+      params.set("q[created_at_gteq]", filters.date_from);
+    }
+    if (filters.date_to) {
+      params.set("q[created_at_lteq]", filters.date_to);
+    }
 
-  useEffect(() => {
-    fetchStaffHistory();
-  }, [fetchStaffHistory]);
+    return params.toString();
+  }, [currentPage, filters]);
 
-  // Handle search
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-    
-    if (query.trim()) {
-      const filtered = staffHistory.filter(staff =>
-        staff.name.toLowerCase().includes(query.toLowerCase()) ||
-        staff.mobile_number.includes(query)
+  // Fetch staff history
+  const { data: apiData, isLoading, refetch } = useQuery<StaffHistoryResponse>({
+    queryKey: ["staff-history", currentPage, filters],
+    queryFn: async () => {
+      const res = await fetch(
+        getFullUrl(`/crm/admin/staff_history.json?${buildQueryParams()}`),
+        { headers: { Authorization: getAuthHeader() } }
       );
-      setFilteredStaffHistory(filtered);
-    } else {
-      setFilteredStaffHistory(staffHistory);
+      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+      return res.json();
+    },
+    staleTime: 30000,
+  });
+
+  const rows = apiData?.data ?? [];
+  const pagination = apiData?.pagination;
+  const totalPages = pagination?.total_pages ?? 1;
+
+  // ── Export ──────────────────────────────────────────────────────────────────
+
+  // Opens the date range modal instead of exporting directly
+  const handleExport = () => {
+    setExportDateFrom('');
+    setExportDateTo('');
+    setIsExportModalOpen(true);
+  };
+
+  const handleExportConfirm = async () => {
+    if (!exportDateFrom || !exportDateTo) {
+      sonnerToast.error('Please select both Date From and Date To');
+      return;
     }
-    
-    setCurrentPage(1);
-  }, [staffHistory]);
 
-  const handleExport = async () => {
-    if (isExporting) return;
+    // Format YYYY-MM-DD → DD/MM/YYYY for the API
+    const formatDate = (iso: string) => {
+      const [y, m, d] = iso.split('-');
+      return `${d}/${m}/${y}`;
+    };
 
+    const dateRange = `${formatDate(exportDateFrom)} - ${formatDate(exportDateTo)}`;
+
+    setIsExportModalOpen(false);
     setIsExporting(true);
-    
-    const loadingToastId = sonnerToast.loading("Preparing staff history export...", {
-      duration: Infinity,
-    });
+    const loadingToastId = sonnerToast.loading("Preparing staff history export...", { duration: Infinity });
 
     try {
-      // In production, implement actual export functionality
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      sonnerToast.success("Staff history exported successfully!", {
-        id: loadingToastId,
-      });
-    } catch (error) {
-      console.error('Export failed:', error);
-      sonnerToast.error("Failed to export staff history", {
-        id: loadingToastId,
-      });
+      const params = new URLSearchParams();
+      params.set("q[date_range]", dateRange);
+
+      const res = await fetch(
+        getFullUrl(`/crm/admin/staffs_data.xlsx?${params.toString()}`),
+        { headers: { Authorization: getAuthHeader() } }
+      );
+      if (!res.ok) throw new Error("Export failed");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "staffs_data.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      sonnerToast.success("Staff history exported successfully!", { id: loadingToastId });
+    } catch {
+      sonnerToast.error("Failed to export staff history", { id: loadingToastId });
     } finally {
       setIsExporting(false);
     }
   };
 
-  // Selection handlers
+  // ── Selection ──────────────────────────────────────────────────────────────
+
   const handleStaffSelection = (staffId: string, isSelected: boolean) => {
-    setSelectedStaff(prev => {
-      if (isSelected) {
-        return [...prev, staffId];
-      } else {
-        return prev.filter(id => id !== staffId);
-      }
-    });
+    setSelectedStaff((prev) =>
+      isSelected ? [...prev, staffId] : prev.filter((id) => id !== staffId)
+    );
   };
 
   const handleSelectAll = (isSelected: boolean) => {
-    if (isSelected) {
-      const allStaffIds = filteredStaffHistory.map(staff => staff.id.toString());
-      setSelectedStaff(allStaffIds);
-    } else {
-      setSelectedStaff([]);
-    }
+    setSelectedStaff(isSelected ? rows.map((r) => r.id.toString()) : []);
   };
 
-  const handleClearSelection = () => {
-    setSelectedStaff([]);
-  };
-
-  // Define columns for EnhancedTable
-  const columns = [
-    { key: 'actions', label: 'Actions', sortable: false },
-    { key: 'name', label: 'Name', sortable: true },
-    { key: 'mobile_number', label: 'Mobile Number', sortable: true },
-    { key: 'staff_type', label: 'Staff Type', sortable: true },
-    { key: 'work_type', label: 'Work Type', sortable: true },
-    { key: 'associated_flats', label: 'Associated Flats', sortable: false },
-    { key: 'company_name', label: 'Company Name', sortable: true },
-    { key: 'in_date', label: 'In Date', sortable: true },
-    { key: 'in_time', label: 'In Time', sortable: false },
-    { key: 'in_gate', label: 'In Gate', sortable: true },
-    { key: 'marked_in_by', label: 'Marked In By', sortable: true },
-    { key: 'out_date', label: 'Out Date', sortable: true },
-    { key: 'out_time', label: 'Out Time', sortable: false },
-    { key: 'out_gate', label: 'Out Gate', sortable: true },
-    { key: 'marked_out_by', label: 'Marked Out By', sortable: true },
-    { key: 'checkin_date', label: 'Checkin Date', sortable: true },
-    { key: 'checkin_time', label: 'Checkin Time', sortable: false },
-    { key: 'checkout_date', label: 'Checkout Date', sortable: true },
-    { key: 'checkout_time', label: 'Checkout Time', sortable: false },
-    { key: 'created_on', label: 'Created On', sortable: true },
-  ];
-
-  // Render cell content
-  const renderCell = (staff: StaffHistoryData, columnKey: string) => {
-    const latestWorking = staff.staff_workings[0] || {};
-    const checkInDateTime = latestWorking.check_in ? formatDateTime(latestWorking.check_in) : { date: '-', time: '-' };
-    const checkOutDateTime = latestWorking.check_out ? formatDateTime(latestWorking.check_out) : { date: '-', time: '-' };
-    const createdDateTime = latestWorking.created_at ? formatDateTime(latestWorking.created_at) : { date: '-', time: '-' };
-
-    switch (columnKey) {
-      case 'actions':
-        return (
-          <Button variant="ghost" size="sm" onClick={() => handleViewDetails(staff.id)}>
-            View
-          </Button>
-        );
-      case 'name':
-        return <span className="font-medium">{staff.name}</span>;
-      case 'mobile_number':
-        return staff.mobile_number;
-      case 'staff_type':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700">
-            {staff.staff_type}
-          </span>
-        );
-      case 'work_type':
-        return staff.work_type;
-      case 'associated_flats':
-        return staff.society_flat?.flat_no || '-';
-      case 'company_name':
-        return staff.company_name || '-';
-      case 'in_date':
-        return checkInDateTime.date;
-      case 'in_time':
-        return checkInDateTime.time;
-      case 'in_gate':
-        return latestWorking.gate_in || '-';
-      case 'marked_in_by':
-        return latestWorking.marked_in_by || '-';
-      case 'out_date':
-        return checkOutDateTime.date;
-      case 'out_time':
-        return checkOutDateTime.time;
-      case 'out_gate':
-        return latestWorking.gate_out || '-';
-      case 'marked_out_by':
-        return latestWorking.marked_out_by || '-';
-      case 'checkin_date':
-        return checkInDateTime.date;
-      case 'checkin_time':
-        return checkInDateTime.time;
-      case 'checkout_date':
-        return checkOutDateTime.date;
-      case 'checkout_time':
-        return checkOutDateTime.time;
-      case 'created_on':
-        return createdDateTime.date;
-      default:
-        return '-';
-    }
-  };
-
-  const handleViewDetails = (staffId: number) => {
-    // Implement view details functionality
-    toast({
-      title: "View Details",
-      description: `Viewing details for staff ID: ${staffId}`,
-    });
-  };
-
-  const renderCustomActions = () => (
-    <div className="flex gap-3">
-      <Button
-        onClick={() => fetchStaffHistory()}
-        variant="outline"
-        className="flex items-center gap-2"
-      >
-        <RefreshCw className="w-4 h-4" />
-        Refresh
-      </Button>
-    </div>
-  );
+  // ── Filter ─────────────────────────────────────────────────────────────────
 
   const handleFilterApply = (newFilters: StaffHistoryFilters) => {
     setFilters(newFilters);
-    // Apply filters to staff history
-    // In production, this would make an API call with filter parameters
+    setCurrentPage(1);
   };
 
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const dateStr = date.toLocaleDateString('en-GB');
-    const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    return { date: dateStr, time: timeStr };
+  // ── Cell Renderer ──────────────────────────────────────────────────────────
+
+  const renderCell = useCallback(
+    (record: StaffHistoryRecord, columnKey: string, index: number) => {
+      const { staff, in_details, out_details, checkin_details, checkout_details } = record;
+
+      switch (columnKey) {
+        case "sr_no":
+          return (
+            <span className="text-sm text-gray-500 font-medium">
+              {(currentPage - 1) * perPage + index + 1}
+            </span>
+          );
+        case "image":
+          return (
+            <img
+              src={staff.image_url || "/images/male.jpg"}
+              alt={staff.name}
+              className="w-9 h-9 rounded-full object-cover"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/images/male.jpg"; }}
+            />
+          );
+        case "name":
+          return <span className="font-medium">{staff.name}</span>;
+        case "mobile":
+          return <span className="text-sm">{staff.mobile}</span>;
+        case "staff_type":
+          return (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700">
+              {staff.staff_type}
+            </span>
+          );
+        case "work_type":
+          return <span className="text-sm">{staff.work_type}</span>;
+        case "associated_flats":
+          return (
+            <span className="text-sm">
+              {staff.associated_flats.length > 0
+                ? staff.associated_flats.map((f) => f.display).join(", ")
+                : "-"}
+            </span>
+          );
+        case "company_name":
+          return <span className="text-sm">{staff.company_name || "-"}</span>;
+        case "in_date":
+          return <span className="text-sm">{in_details.date || "-"}</span>;
+        case "in_time":
+          return <span className="text-sm">{in_details.time || "-"}</span>;
+        case "in_gate":
+          return <span className="text-sm">{in_details.gate || "-"}</span>;
+        case "marked_in_by":
+          return <span className="text-sm">{in_details.marked_by || "-"}</span>;
+        case "out_date":
+          return <span className="text-sm">{out_details.date || "-"}</span>;
+        case "out_time":
+          return <span className="text-sm">{out_details.time || "-"}</span>;
+        case "out_gate":
+          return <span className="text-sm">{out_details.gate || "-"}</span>;
+        case "marked_out_by":
+          return <span className="text-sm">{out_details.marked_by || "-"}</span>;
+        case "checkin_date":
+          return <span className="text-sm">{checkin_details.date || "-"}</span>;
+        case "checkin_time":
+          return <span className="text-sm">{checkin_details.time || "-"}</span>;
+        case "checkout_date":
+          return <span className="text-sm">{checkout_details.date || "-"}</span>;
+        case "checkout_time":
+          return <span className="text-sm">{checkout_details.time || "-"}</span>;
+        case "created_on":
+          return <span className="text-sm">{record.created_on || "-"}</span>;
+        default:
+          return "-";
+      }
+    },
+    [currentPage]
+  );
+
+  // ── Pagination ────────────────────────────────────────────────────────────
+
+  const renderPaginationItems = () => {
+    const items = [];
+
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              onClick={() => setCurrentPage(i)}
+              isActive={currentPage === i}
+              className="cursor-pointer"
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      // First page
+      items.push(
+        <PaginationItem key={1}>
+          <PaginationLink onClick={() => setCurrentPage(1)} isActive={currentPage === 1} className="cursor-pointer">
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      if (currentPage > 4) {
+        items.push(<PaginationItem key="start-ellipsis"><PaginationEllipsis /></PaginationItem>);
+      }
+
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink onClick={() => setCurrentPage(i)} isActive={currentPage === i} className="cursor-pointer">
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+
+      if (currentPage < totalPages - 3) {
+        items.push(<PaginationItem key="end-ellipsis"><PaginationEllipsis /></PaginationItem>);
+      }
+
+      items.push(
+        <PaginationItem key={totalPages}>
+          <PaginationLink onClick={() => setCurrentPage(totalPages)} isActive={currentPage === totalPages} className="cursor-pointer">
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+
+    return items;
   };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">Staff History</h1>
-      </div>
+    <div className="p-6 bg-gray-50 min-h-screen space-y-4">
+      {/* Total Count */}
+      {pagination && (
+        <div className="text-sm font-semibold text-gray-700">
+          Total staffs: {pagination.total_count}
+        </div>
+      )}
 
-      {/* Enhanced Table */}
       <EnhancedTable
-        data={filteredStaffHistory || []}
+        data={rows}
         columns={columns}
         renderCell={renderCell}
-        selectable={true}
+        // selectable={true}
         pagination={false}
         enableExport={true}
         exportFileName="staff-history"
@@ -453,16 +398,21 @@ const SmartSecureStaffsHistory: React.FC = () => {
         selectedItems={selectedStaff}
         onSelectItem={handleStaffSelection}
         onSelectAll={handleSelectAll}
-        getItemId={staff => staff.id.toString()}
+        getItemId={(record) => record.id.toString()}
         leftActions={
-          <div className="flex gap-3">
-            {renderCustomActions()}
-          </div>
+          <Button
+            onClick={() => refetch()}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </Button>
         }
         onFilterClick={() => setIsFilterOpen(true)}
         rightActions={null}
         searchPlaceholder="Search by name or mobile number"
-        onSearchChange={handleSearch}
+        enableSearch={true}
         hideTableExport={false}
         hideColumnsButton={false}
         className="transition-all duration-500 ease-in-out"
@@ -470,72 +420,82 @@ const SmartSecureStaffsHistory: React.FC = () => {
         loadingMessage="Loading staff history..."
       />
 
-      {/* Custom Pagination */}
-      <div className="flex items-center justify-center mt-6 px-4 py-3 bg-white border-t border-gray-200">
-        <div className="flex items-center space-x-1">
-          {/* Previous Button */}
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1 || isLoading}
-            className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          {/* Page Numbers */}
-          <div className="flex items-center space-x-1">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const pageNumber = currentPage <= 3 
-                ? i + 1 
-                : currentPage >= totalPages - 2 
-                  ? totalPages - 4 + i 
-                  : currentPage - 2 + i;
-              
-              if (pageNumber < 1 || pageNumber > totalPages) return null;
-              
-              return (
-                <button
-                  key={pageNumber}
-                  onClick={() => setCurrentPage(pageNumber)}
-                  disabled={isLoading}
-                  className={`w-8 h-8 flex items-center justify-center text-sm rounded transition-colors ${
-                    currentPage === pageNumber
-                      ? 'bg-red-600 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  } disabled:opacity-50`}
-                >
-                  {pageNumber}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Next Button */}
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages || isLoading}
-            className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              {renderPaginationItems()}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
+      )}
 
-        {/* Page info */}
-        <div className="ml-4 text-sm text-gray-600">
-          Page {currentPage} of {totalPages}
-        </div>
-      </div>
-
-      {/* Filter Dialog */}
+      {/* Filter Modal */}
       <StaffHistoryFilterDialog
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
         onApplyFilters={handleFilterApply}
       />
+
+      {/* Export Date Range Modal */}
+      <Dialog open={isExportModalOpen} onOpenChange={(open) => { if (!open) setIsExportModalOpen(false); }}>
+        <DialogContent className="sm:max-w-sm bg-white [&>button]:hidden">
+          <DialogHeader className="flex flex-row items-center justify-between border-b pb-3">
+            <DialogTitle className="text-base font-semibold">Select Date Range to Export</DialogTitle>
+            <Button variant="ghost" size="sm" onClick={() => setIsExportModalOpen(false)} className="h-6 w-6 p-0">
+              <X className="w-4 h-4" />
+            </Button>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium text-gray-700">Date From</Label>
+              <Input
+                type="date"
+                value={exportDateFrom}
+                onChange={(e) => setExportDateFrom(e.target.value)}
+                className="h-10 border-gray-300"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium text-gray-700">Date To</Label>
+              <Input
+                type="date"
+                value={exportDateTo}
+                min={exportDateFrom}
+                onChange={(e) => setExportDateTo(e.target.value)}
+                className="h-10 border-gray-300"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2 border-t">
+            <Button variant="outline" onClick={() => setIsExportModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleExportConfirm}
+              disabled={!exportDateFrom || !exportDateTo || isExporting}
+              className="bg-[#C72030] hover:bg-[#C72030]/90 text-white"
+            >
+              {isExporting ? 'Exporting...' : 'Export'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

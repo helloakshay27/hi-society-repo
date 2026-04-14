@@ -1,303 +1,342 @@
-import React, { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search } from "lucide-react";
+import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
+import { ColumnConfig } from "@/hooks/useEnhancedTable";
+import { Loader2 } from "lucide-react";
 import { getAuthHeader, getFullUrl } from "@/config/apiConfig";
 import { toast } from "sonner";
 
-interface StaffData {
-  id: number;
+// ─── Types ─────────────────────────────────────────────────────────────────────
+
+interface StaffInfo {
   first_name: string;
   last_name: string;
-  full_name: string;
   mobile: string;
-  email: string;
-  soc_staff_id: string | null;
-  staff_image_url: string;
-  department_name: string;
-  work_type_name: string;
-  unit_name: string | null;
-  vendor_name: string | null;
-  status_text: string;
-  number_verified: boolean;
-  staff_workings?: StaffWorking[];
+  document: string;
 }
 
-interface StaffWorking {
+interface StaffInoutRecord {
   id: number;
-  check_in: string;
-  check_out: string | null;
-  status: string;
+  staff_id: number;
+  entry_time: string;
+  exit_time: string | null;
+  entry_gate_id: number | null;
+  exit_gate_id: number | null;
+  checkin_time: string | null;
+  checkout_time: string | null;
+  check_in: boolean;
+  check_out: boolean;
+  entry_gate: string;
+  exit_gate: string;
+  staff: StaffInfo;
 }
 
-// Dummy data for UI preview
-const dummyStaffData: StaffData[] = [
-  {
-    id: 1,
-    first_name: "Devesh",
-    last_name: "J",
-    full_name: "Devesh J",
-    mobile: "9564292826",
-    email: "devesh.j@example.com",
-    soc_staff_id: "STF001",
-    staff_image_url: "",
-    department_name: "Housekeeping",
-    work_type_name: "Cleaner",
-    unit_name: "Tower A",
-    vendor_name: "CleanPro Ltd",
-    status_text: "Active",
-    number_verified: true,
-    staff_workings: [
-      {
-        id: 1,
-        check_in: "2026-02-11T08:30:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
-  },
-  {
-    id: 2,
-    first_name: "Deepak",
-    last_name: "Gupta",
-    full_name: "Deepak Gupta",
-    mobile: "7378490762",
-    email: "deepak.gupta@example.com",
-    soc_staff_id: "STF002",
-    staff_image_url: "",
-    department_name: "Security",
-    work_type_name: "Guard",
-    unit_name: "Main Gate",
-    vendor_name: null,
-    status_text: "Active",
-    number_verified: true,
-    staff_workings: [
-      {
-        id: 2,
-        check_in: "2026-02-11T07:00:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
-  },
-  {
-    id: 3,
-    first_name: "Sagar",
-    last_name: "Singh",
-    full_name: "Sagar Singh",
-    mobile: "1145454884",
-    email: "sagar.singh@example.com",
-    soc_staff_id: "STF003",
-    staff_image_url: "",
-    department_name: "Maintenance",
-    work_type_name: "Electrician",
-    unit_name: "Tower B",
-    vendor_name: "FixIt Services",
-    status_text: "Active",
-    number_verified: true,
-    staff_workings: [
-      {
-        id: 3,
-        check_in: "2026-02-11T09:15:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
-  },
-  {
-    id: 4,
-    first_name: "Ubaid",
-    last_name: "Hashmat",
-    full_name: "Ubaid Hashmat",
-    mobile: "9876543210",
-    email: "ubaid.hashmat@example.com",
-    soc_staff_id: "STF004",
-    staff_image_url: "",
-    department_name: "Operations",
-    work_type_name: "Supervisor",
-    unit_name: "Tower C",
-    vendor_name: null,
-    status_text: "Active",
-    number_verified: false,
-    staff_workings: [
-      {
-        id: 4,
-        check_in: "2026-02-11T08:00:00",
-        check_out: null,
-        status: "in",
-      },
-    ],
-  },
+interface StaffOutApiResponse {
+  data: StaffInoutRecord[];
+  pagination: {
+    page: number;
+    per_page: number;
+    total_count: number;
+    total_pages: number;
+  };
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+const getInitials = (firstName: string, lastName: string): string => {
+  const f = firstName.trim();
+  const l = lastName.trim();
+  if (f && l) return `${f[0]}${l[0]}`.toUpperCase();
+  if (f) return f.substring(0, 2).toUpperCase();
+  return "??";
+};
+
+const formatTime = (iso: string | null): string => {
+  if (!iso) return "--";
+  return new Date(iso).toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+// ─── Column Config ─────────────────────────────────────────────────────────────
+
+const staffOutColumns: ColumnConfig[] = [
+  { key: "sr_no",          label: "Sr. No.",        sortable: false, hideable: true,  draggable: true  },
+  { key: "photo",          label: "Photo",          sortable: false, hideable: true,  draggable: true  },
+  { key: "full_name",      label: "Staff Name",     sortable: true,  hideable: true,  draggable: true  },
+  { key: "mobile",         label: "Mobile",         sortable: true,  hideable: true,  draggable: true  },
+  { key: "entry_gate",     label: "Entry Gate",     sortable: true,  hideable: true,  draggable: true  },
+  { key: "checkin_time",   label: "Check In Time",  sortable: true,  hideable: true,  draggable: true  },
+  { key: "checkout_time",  label: "Check Out Time", sortable: true,  hideable: true,  draggable: true  },
+  { key: "status",         label: "Status",         sortable: false, hideable: true,  draggable: true  },
+  { key: "action",         label: "Action",         sortable: false, hideable: false, draggable: false },
 ];
 
-const SmartSecureStaffsOut: React.FC = () => {
-  const [staffsIn, setStaffsIn] = useState<StaffData[]>(dummyStaffData);
-  const [filteredStaffs, setFilteredStaffs] = useState<StaffData[]>(dummyStaffData);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+// ─── Component ─────────────────────────────────────────────────────────────────
 
-  // Fetch staff in data (who need to check out)
-  const fetchStaffsIn = async () => {
+const SmartSecureStaffsOut: React.FC = () => {
+  const [staffList, setStaffList] = useState<StaffInoutRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loadingIds, setLoadingIds] = useState<Record<number, boolean>>({});
+
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Fetch list ─────────────────────────────────────────────────────────────
+
+  const fetchStaffOut = useCallback(async (page: number, search: string) => {
     setIsLoading(true);
     try {
+      let url = getFullUrl(`/crm/admin/staff_out.json?page=${page}&per_page=20`);
+      if (search.trim()) {
+        url += `&q[first_name_or_last_name_or_mobile_or_full_name_cont]=${encodeURIComponent(search.trim())}`;
+      }
+      const response = await fetch(url, {
+        headers: {
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+      const data: StaffOutApiResponse = await response.json();
+      setStaffList(data.data ?? []);
+      setTotalPages(data.pagination?.total_pages ?? 1);
+      setTotalCount(data.pagination?.total_count ?? 0);
+    } catch (error) {
+      console.error("Error fetching staff out list:", error);
+      toast.error("Failed to load staff list");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStaffOut(currentPage, searchQuery);
+  }, [fetchStaffOut, currentPage]);
+
+  // Debounce search — reset to page 1
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setCurrentPage(1);
+      fetchStaffOut(1, query);
+    }, 400);
+  }, [fetchStaffOut]);
+
+  // ── PATCH check_type ───────────────────────────────────────────────────────
+
+  const handleCheckAction = useCallback(async (record: StaffInoutRecord) => {
+    const checkType: "in" | "out" = record.check_in ? "out" : "in";
+    const staffName = `${record.staff.first_name} ${record.staff.last_name}`.trim();
+
+    setLoadingIds((prev) => ({ ...prev, [record.id]: true }));
+    try {
       const response = await fetch(
-        getFullUrl("/crm/admin/society_staffs.json"),
+        getFullUrl(`/crm/admin/staff_inouts/${record.id}.json`),
         {
+          method: "PATCH",
           headers: {
             Authorization: getAuthHeader(),
             "Content-Type": "application/json",
           },
+          body: JSON.stringify({ staff_inout: { check_type: checkType } }),
         }
       );
-
-      if (response.ok) {
-        const data = await response.json();
-        // Filter only staff who are currently checked in
-        const staffsInData = (data.society_staffs || []).filter(
-          (staff: StaffData) =>
-            staff.staff_workings &&
-            staff.staff_workings.length > 0 &&
-            staff.staff_workings[0].check_out === null
-        );
-        setStaffsIn(staffsInData);
-        setFilteredStaffs(staffsInData);
-      }
-    } catch (error) {
-      console.error("Error fetching staffs in:", error);
-      setStaffsIn(dummyStaffData);
-      setFilteredStaffs(dummyStaffData);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    // Comment out API call to use dummy data
-    // fetchStaffsIn();
-  }, []);
-
-  // Search handler
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setFilteredStaffs(staffsIn);
-    } else {
-      const filtered = staffsIn.filter(
-        (staff) =>
-          staff.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          staff.mobile.includes(searchTerm)
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+      toast.success(
+        checkType === "in"
+          ? `${staffName} checked in successfully`
+          : `${staffName} checked out successfully`
       );
-      setFilteredStaffs(filtered);
+      fetchStaffOut(currentPage, searchQuery);
+    } catch (error) {
+      console.error("Error updating staff check:", error);
+      toast.error(`Failed to update status for ${staffName}`);
+    } finally {
+      setLoadingIds((prev) => ({ ...prev, [record.id]: false }));
     }
-  }, [searchTerm, staffsIn]);
+  }, [currentPage, fetchStaffOut, searchQuery]);
 
-  const getInitials = (name: string) => {
-    const parts = name.split(" ");
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
+  // ── Cell Renderer ──────────────────────────────────────────────────────────
 
-  const handleCheckOut = async (staffId: number) => {
-    toast.success("Check out functionality will be implemented");
-    // TODO: Implement check out API call
-  };
+  const renderCell = useCallback(
+    (record: StaffInoutRecord, columnKey: string, index: number) => {
+      switch (columnKey) {
+        case "sr_no":
+          return (
+            <span className="text-sm text-gray-500 font-medium">
+              {(currentPage - 1) * 20 + index + 1}
+            </span>
+          );
+
+        case "photo":
+          return (
+            <div className="flex justify-center">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-300 to-orange-400 flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-semibold text-sm">
+                  {getInitials(record.staff.first_name, record.staff.last_name)}
+                </span>
+              </div>
+            </div>
+          );
+
+        case "full_name":
+          return (
+            <span className="font-medium text-gray-900">
+              {`${record.staff.first_name} ${record.staff.last_name}`.trim() || "--"}
+            </span>
+          );
+
+        case "mobile":
+          return (
+            <span className="text-sm text-gray-700">
+              {record.staff.mobile || "--"}
+            </span>
+          );
+
+        case "entry_gate":
+          return (
+            <span className="text-sm text-gray-700">
+              {record.entry_gate || "--"}
+            </span>
+          );
+
+        case "checkin_time":
+          return (
+            <span className="text-sm text-gray-600">
+              {formatTime(record.checkin_time)}
+            </span>
+          );
+
+        case "checkout_time":
+          return (
+            <span className="text-sm text-gray-600">
+              {formatTime(record.checkout_time)}
+            </span>
+          );
+
+        case "status": {
+          if (record.check_out) {
+            return (
+              <Badge className="bg-gray-100 text-gray-600 hover:bg-gray-100 text-xs">
+                Completed
+              </Badge>
+            );
+          }
+          if (record.check_in) {
+            return (
+              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-xs">
+                Checked In
+              </Badge>
+            );
+          }
+          return (
+            <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 text-xs">
+              Pending
+            </Badge>
+          );
+        }
+
+        case "action": {
+          const isLoading = !!loadingIds[record.id];
+
+          // Completed — both in and out done
+          if (record.check_out) {
+            return (
+              <span className="inline-block px-3 py-1 text-xs font-semibold text-gray-400 border border-gray-200 rounded">
+                Completed
+              </span>
+            );
+          }
+
+          // check_in = true → next action is Check Out (orange/red)
+          if (record.check_in) {
+            return (
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-red-500 text-red-500 hover:bg-red-50 text-xs px-4 h-8"
+                disabled={isLoading}
+                onClick={() => handleCheckAction(record)}
+              >
+                {isLoading ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  "Check Out"
+                )}
+              </Button>
+            );
+          }
+
+          // check_in = false → next action is Check In (green)
+          return (
+            <Button
+              size="sm"
+              className=" hover:bg-green-600 text-white border-0 text-xs px-4 h-8"
+              disabled={isLoading}
+              onClick={() => handleCheckAction(record)}
+            >
+              {isLoading ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                "Check In"
+              )}
+            </Button>
+          );
+        }
+
+        default: {
+          const val = (record as unknown as Record<string, unknown>)[columnKey];
+          return val ? String(val) : "--";
+        }
+      }
+    },
+    [currentPage, loadingIds, handleCheckAction]
+  );
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-semibold text-gray-900">Staffs Out</h1>
-        </div>
-
-        {/* Search Bar with Go Button */}
-        <div className="flex items-center gap-2 max-w-2xl">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search using staff's name or mobile number"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-10"
-            />
-          </div>
-          <Button className="bg-green-600 hover:bg-green-700 text-white px-6 h-10">
-            Go!
+    <div className="p-6">
+      <EnhancedTable
+        data={staffList}
+        columns={staffOutColumns}
+        renderCell={renderCell}
+        enableSearch={true}
+        enableSelection={false}
+        storageKey="staff-out-table"
+        emptyMessage="No staff records found"
+        searchPlaceholder="Search by name or mobile..."
+        hideTableExport={false}
+        hideColumnsButton={false}
+        loading={isLoading}
+        onSearchChange={handleSearch}
+        searchValue={searchQuery}
+        pagination={totalPages > 1}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        leftActions={
+          <Button
+            onClick={() => fetchStaffOut(currentPage, searchQuery)}
+            variant="outline"
+            className="h-9 px-4 text-sm font-medium border-gray-300"
+            disabled={isLoading}
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Refresh"}
           </Button>
-        </div>
-      </div>
-
-      {/* Staff List */}
-      <div className="p-6">
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="text-gray-500">Loading staffs...</div>
-          </div>
-        ) : filteredStaffs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="text-gray-400 text-lg mb-2">No Staff Available</div>
-            <div className="text-gray-500 text-sm">
-              {searchTerm
-                ? "No staff found matching your search"
-                : "No staff are currently checked in"}
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white border-l-4 border-blue-400 shadow-sm">
-            {filteredStaffs.map((staff, index) => (
-              <div
-                key={staff.id}
-                className={`flex items-center justify-between px-4 py-4 ${
-                  index !== filteredStaffs.length - 1 ? "border-b border-gray-200" : ""
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  {/* Profile Photo */}
-                  {staff.staff_image_url ? (
-                    <img
-                      src={staff.staff_image_url}
-                      alt={staff.full_name}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-300 to-orange-400 flex items-center justify-center border-2 border-gray-200">
-                      <span className="text-white font-semibold text-lg">
-                        {getInitials(staff.full_name)}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Name, Mobile, Badges */}
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-1">
-                      {staff.full_name}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-2">{staff.mobile}</p>
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-teal-100 text-teal-700 hover:bg-teal-100 rounded-full px-3 py-0.5 text-xs font-normal">
-                        Personal
-                      </Badge>
-                      <Badge className="bg-green-500 text-white hover:bg-green-500 rounded px-2 py-0.5 text-xs font-medium">
-                        Check In
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                {/* OUT Button */}
-                <Button
-                  onClick={() => handleCheckOut(staff.id)}
-                  className="border-2 border-orange-500 bg-white text-orange-500 hover:bg-orange-50 px-8 py-2 text-lg font-semibold rounded h-auto"
-                >
-                  OUT
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        }
+      />
     </div>
   );
 };

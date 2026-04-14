@@ -49,6 +49,7 @@ interface VendorForm {
   mobile1: string;
   mobile2: string;
   address: string;
+  active: boolean;
 }
 
 const VendorSetupDetailsPage: React.FC = () => {
@@ -69,6 +70,7 @@ const VendorSetupDetailsPage: React.FC = () => {
     mobile1: '',
     mobile2: '',
     address: '',
+    active: true,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -100,6 +102,7 @@ const VendorSetupDetailsPage: React.FC = () => {
           mobile1: v.mobile1 || '',
           mobile2: v.mobile2 || '',
           address: v.address || '',
+          active: v.active ?? true,
         });
       } else {
         toast.error('Failed to load vendor details');
@@ -126,7 +129,7 @@ const VendorSetupDetailsPage: React.FC = () => {
       const response = await fetch(
         getFullUrl(`/pms/suppliers/${id}.json`),
         {
-          method: 'PUT',
+          method: 'PATCH',
           headers: {
             Authorization: getAuthHeader(),
             'Content-Type': 'application/json',
@@ -142,7 +145,7 @@ const VendorSetupDetailsPage: React.FC = () => {
               mobile1: form.mobile1,
               mobile2: form.mobile2,
               address: form.address,
-              active: true,
+              active: form.active,
             },
           }),
         }
@@ -225,6 +228,16 @@ const VendorSetupDetailsPage: React.FC = () => {
             <DetailRow label="GSTIN Number" value={vendor.gstin_number} />
             <DetailRow label="PAN Number" value={vendor.pan_number} />
             <DetailRow label="Address" value={vendor.address} />
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 min-w-[140px]">Status</span>
+              <span
+                className={`px-2 py-1 text-xs rounded font-medium ${
+                  vendor.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                }`}
+              >
+                {vendor.active ? 'Active' : 'Inactive'}
+              </span>
+            </div>
           </div>
         </div>
       )}
@@ -233,7 +246,7 @@ const VendorSetupDetailsPage: React.FC = () => {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold">Add Vendor</DialogTitle>
+            <DialogTitle className="text-base font-semibold">Edit Vendor</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">

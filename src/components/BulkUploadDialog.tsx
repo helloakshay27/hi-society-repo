@@ -12,7 +12,7 @@ interface BulkUploadDialogProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   uploadType?: "upload" | "update";
-  context?: "assets" | "custom_forms" | "measurements"; // New prop to determine context
+  context?: "assets" | "custom_forms" | "measurements" | "staff"; // New prop to determine context
   onImport?: (file: File) => void;
 }
 
@@ -123,6 +123,9 @@ export const BulkUploadDialog: React.FC<BulkUploadDialogProps> = ({
       } else if (context === "measurements") {
         endpoint = ENDPOINTS.ASSET_MEASUREMENT_SAMPLE;
         filename = 'measurement_sample_format.xlsx';
+      } else if (context === "staff") {
+        endpoint = ENDPOINTS.STAFF_SAMPLE_FORMAT;
+        filename = 'staff_sample_format.xlsx';
       } else {
         endpoint = '/assets/asset.xlsx';
         filename = 'asset_sample_format.xlsx';
@@ -210,6 +213,23 @@ const handleImport = async () => {
       setSelectedFile(null);
       onOpenChange(false);
       return; // ⛔ IMPORTANT: stop here
+    }
+
+    // ==================================
+    // 🔹 STAFF BULK UPLOAD
+    // ==================================
+    if (context === "staff") {
+      const formData = new FormData();
+      formData.append("society_staff_file", selectedFile);
+
+      await apiClient.post(ENDPOINTS.STAFF_BULK_UPLOAD, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success("Staff imported successfully");
+      setSelectedFile(null);
+      onOpenChange(false);
+      return;
     }
 
     // ==================================

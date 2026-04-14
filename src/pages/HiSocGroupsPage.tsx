@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Eye, Edit } from "lucide-react";
+import { Plus, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddHiSocGroupModal } from "@/components/AddHiSocGroupModal";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
@@ -8,7 +8,6 @@ import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { toast } from "sonner";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchCrmUserGroups, updateCrmUserGroup } from "@/store/slices/userGroupSlice";
-import { Switch } from "@/components/ui/switch";
 
 interface Group {
   id: number;
@@ -50,13 +49,6 @@ const columns: ColumnConfig[] = [
     draggable: true,
     defaultVisible: true,
   },
-  {
-    key: "status",
-    label: "Status",
-    sortable: true,
-    draggable: true,
-    defaultVisible: true,
-  },
 ];
 
 export const HiSocGroupsPage = () => {
@@ -70,7 +62,7 @@ export const HiSocGroupsPage = () => {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isEditing, setIsEditing] = useState(false)
   const [groups, setGroups] = useState<Group[]>([]);
-  const [updatingStatus, setUpdatingStatus] = useState<{ [key: string]: boolean }>({});
+  const [deletingGroups, setDeletingGroups] = useState<{ [key: string]: boolean }>({});
 
   const fetchData = async () => {
     try {
@@ -89,14 +81,13 @@ export const HiSocGroupsPage = () => {
     fetchData();
   }, [dispatch, baseUrl, token]);
 
-  const handleCheckboxChange = async (item: any) => {
-    const newStatus = !item.status;
+  const handleDeleteGroup = async (item: any) => {
     const itemId = item.id;
 
-    if (updatingStatus[itemId]) return;
+    if (deletingGroups[itemId]) return;
 
     try {
-      setUpdatingStatus((prev) => ({ ...prev, [itemId]: true }));
+      setDeletingGroups((prev) => ({ ...prev, [itemId]: true }));
 
       await dispatch(
         updateCrmUserGroup({
@@ -105,24 +96,22 @@ export const HiSocGroupsPage = () => {
           id: itemId.toString(),
           data: {
             usergroup: {
-              active: newStatus ? 1 : 0,
+              active: 0,
             },
           },
         })
       ).unwrap();
 
       setGroups((prevData: any[]) =>
-        prevData.map((row) =>
-          row.id === itemId ? { ...row, status: newStatus } : row
-        )
+        prevData.filter((row) => row.id !== itemId)
       );
 
-      toast.success(`Group ${newStatus ? "activated" : "deactivated"} successfully`);
+      toast.success(`Group deleted successfully`);
     } catch (error) {
-      console.error("Error updating active status:", error);
-      toast.error("Failed to update active status. Please try again.");
+      console.error("Error deleting group:", error);
+      toast.error("Failed to delete group. Please try again.");
     } finally {
-      setUpdatingStatus((prev) => ({ ...prev, [itemId]: false }));
+      setDeletingGroups((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
@@ -144,6 +133,15 @@ export const HiSocGroupsPage = () => {
       >
         <Edit className="w-4 h-4" />
       </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-red-600 hover:text-red-700"
+        onClick={() => handleDeleteGroup(group)}
+        disabled={deletingGroups[group.id]}
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
     </div>
   );
 
@@ -153,18 +151,6 @@ export const HiSocGroupsPage = () => {
         <div className="w-10 h-10 rounded-full bg-orange-200 flex items-center justify-center">
           <div className="w-6 h-6 rounded-full bg-orange-400"></div>
         </div>
-      );
-    }
-    if (columnKey === "status") {
-      return (
-        <Switch
-          checked={item.status}
-          onCheckedChange={() =>
-            handleCheckboxChange(item)
-          }
-          className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-          disabled={updatingStatus[item.id]}
-        />
       );
     }
     return item[columnKey as keyof Group];
