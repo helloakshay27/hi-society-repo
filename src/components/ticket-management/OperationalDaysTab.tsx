@@ -18,7 +18,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { ticketManagementAPI, OperationalDay, UserAccountResponse } from '@/services/ticketManagementAPI';
+import { ticketManagementAPI, OperationalDay } from '@/services/ticketManagementAPI';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Upload, Download } from 'lucide-react';
@@ -39,22 +39,10 @@ export const OperationalDaysTab: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [userAccount, setUserAccount] = useState<UserAccountResponse | null>(null);
 
   useEffect(() => {
-    loadUserAccount();
     fetchOperationalDays();
   }, []);
-
-  const loadUserAccount = async () => {
-    try {
-      const account = await ticketManagementAPI.getUserAccount();
-      setUserAccount(account);
-    } catch (error) {
-      console.error('Error loading user account:', error);
-      toast.error('Failed to load user account');
-    }
-  };
 
   const fetchOperationalDays = async () => {
     setIsLoading(true);
@@ -69,12 +57,14 @@ export const OperationalDaysTab: React.FC = () => {
         throw new Error('Failed to fetch operational days');
       }
       const data = await response.json();
-      const operationalDays: OperationalDay[] = Array.isArray(data.helpdesk_operations) ? data.helpdesk_operations : [];
-      
-      // Ensure all days of the week are represented
+      const operationalDays: OperationalDay[] = Array.isArray(data.helpdesk_operations)
+        ? data.helpdesk_operations
+        : [];
+
+      // Ensure all 7 days are present, filling defaults for any missing day
       const completeSchedule = daysOfWeek.map(day => {
-        const existingDay = operationalDays.find(d => d.dayofweek === day);
-        return existingDay || {
+        const existing = operationalDays.find(d => d.dayofweek === day);
+        return existing ?? {
           id: 0,
           dayofweek: day,
           start_hour: 9,
@@ -85,7 +75,7 @@ export const OperationalDaysTab: React.FC = () => {
           active: true,
         };
       });
-      
+
       setSchedule(completeSchedule);
     } catch (error) {
       toast.error('Failed to fetch operational days');
@@ -117,20 +107,15 @@ export const OperationalDaysTab: React.FC = () => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // Ensure user account is loaded to get site_id
-      if (!userAccount) {
-        await loadUserAccount();
-      }
+      // Use op_of_id from the loaded operational day records as the society ID
+      const societyId = schedule.find(d => d.id > 0)?.op_of_id?.toString();
 
-      // Get site_id from user account API response
-      const siteId = userAccount?.site_id?.toString();
-      
-      if (!siteId) {
-        toast.error('Unable to determine site ID from user account. Please refresh and try again.');
+      if (!societyId) {
+        toast.error('Unable to determine society ID. Please refresh and try again.');
         return;
       }
 
-      await ticketManagementAPI.updateOperationalDays(siteId, schedule);
+      await ticketManagementAPI.updateOperationalDays(societyId, schedule);
       toast.success('Operational days saved successfully!');
     } catch (error) {
       toast.error('Failed to save operational days');

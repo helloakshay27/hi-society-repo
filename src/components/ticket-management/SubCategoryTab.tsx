@@ -16,29 +16,18 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
-import { ticketManagementAPI } from '@/services/ticketManagementAPI';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Edit, Trash2, Plus } from 'lucide-react';
 
 interface SubCategoryItem {
   id: number;
-  helpdesk_category_id: number;
-  helpdesk_category_name: string | null;
-  name: string;
-  position: number | null;
-  active: number | null;
-  created_at: string;
-  updated_at: string;
-  issue_type_id: number | null;
+  issue_type_id: number;
+  issue_type: string;
+  category_id: number;
+  category_type: string;
+  sub_category: string;
   helpdesk_text: string;
-  location_enabled: string | null;
-  location_data: string | null;
-  icon_file_name: string | null;
-  icon_content_type: string | null;
-  icon_file_size: number | null;
-  icon_updated_at: string | null;
-  customer_enabled: boolean | null;
 }
 
 interface IssueType {
@@ -57,6 +46,10 @@ export const SubCategoryTab: React.FC = () => {
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const perPage = 20;
 
   // Create form state
   const [selectedIssueType, setSelectedIssueType] = useState('');
@@ -72,61 +65,84 @@ export const SubCategoryTab: React.FC = () => {
   const [editSubCategoryName, setEditSubCategoryName] = useState('');
   const [editHelpdeskText, setEditHelpdeskText] = useState('');
 
-  // Fetch all data from single API
-  const fetchAllData = useCallback(async () => {
+  // Fetch all data from separate APIs
+  const fetchSubCategories = useCallback(async (page = 1) => {
     setIsLoading(true);
     try {
-      const response = await fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
-        headers: {
-          'Authorization': getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        // Set issue types from response
-        setIssueTypes(
-          (data.issue_types || []).map((it: { id: number; name: string }) => ({
-            id: it.id,
-            name: it.name,
-          }))
-        );
-        // Set categories from response
-        setCategories(
-          (data.helpdesk_categories || []).map((cat: { id: number; name: string }) => ({
-            id: cat.id,
-            name: cat.name,
-          }))
-        );
-        // Set sub-categories from response
-        setSubCategories(data.helpdesk_sub_categories || []);
+      const subCategoriesRes = await fetch(
+        getFullUrl(`/crm/admin/helpdesk_sub_categories.json?page=${page}&per_page=${perPage}`),
+        { headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' } },
+      );
+      if (subCategoriesRes.ok) {
+        const data = await subCategoriesRes.json();
+        const subCats = data.helpdesk_sub_categories ?? (Array.isArray(data) ? data : []);
+        setSubCategories(subCats);
+        if (data.pagination) {
+          setCurrentPage(data.pagination.current_page);
+          setTotalPages(data.pagination.total_pages);
+          setTotalCount(data.pagination.total_count);
+        }
       } else {
-        toast.error('Failed to fetch data');
+        toast.error('Failed to fetch sub-categories');
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to fetch data');
+      console.error('Error fetching sub-categories:', error);
+      toast.error('Failed to fetch sub-categories');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
+  const fetchAllData = useCallback(async () => {
+    try {
+      const [issueTypesRes, categoriesRes] = await Promise.all([
+        fetch(getFullUrl('/user/issue_type.json'), {
+          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+        }),
+        fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
+          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+        }),
+      ]);
+
+      if (issueTypesRes.ok) {
+        const data = await issueTypesRes.json();
+        setIssueTypes(
+          (data.data || []).map((it: { id: number; name: string }) => ({
+            id: it.id,
+            name: it.name,
+          }))
+        );
+      }
+
+      if (categoriesRes.ok) {
+        const data = await categoriesRes.json();
+        const cats = Array.isArray(data) ? data : (data.helpdesk_categories || []);
+        setCategories(
+          cats.map((cat: { id: number; name: string }) => ({
+            id: cat.id,
+            name: cat.name,
+          }))
+        );
+      }
+
+      if (!issueTypesRes.ok || !categoriesRes.ok) {
+        toast.error('Failed to fetch some data');
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error('Failed to fetch data');
+    }
+  }, []);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    fetchSubCategories(page);
+  };
+
   useEffect(() => {
     fetchAllData();
-  }, [fetchAllData]);
-
-  // Get issue type name by ID
-  const getIssueTypeName = (issueTypeId: number | null) => {
-    if (!issueTypeId) return '--';
-    const issueType = issueTypes.find(it => it.id === issueTypeId);
-    return issueType?.name || '--';
-  };
-
-  // Get category name by ID
-  const getCategoryName = (categoryId: number) => {
-    const category = categories.find(cat => cat.id === categoryId);
-    return category?.name || '--';
-  };
+    fetchSubCategories(1);
+  }, [fetchAllData, fetchSubCategories]);
 
   // Handle create submit
   const handleCreateSubmit = async () => {
@@ -155,7 +171,7 @@ export const SubCategoryTab: React.FC = () => {
       }
 
       const response = await fetch(
-        getFullUrl('/crm/admin/helpdesk_categories/create_helpdesk_sub_category.json'),
+        getFullUrl('/crm/admin/create_helpdesk_sub_category.json'),
         {
           method: 'POST',
           headers: {
@@ -171,7 +187,7 @@ export const SubCategoryTab: React.FC = () => {
         setSelectedCategory('');
         setSubCategoryName('');
         setHelpdeskText('');
-        fetchAllData();
+        fetchSubCategories(1);
       } else {
         const errorData = await response.json().catch(() => null);
         toast.error(errorData?.message || 'Failed to create sub-category');
@@ -188,8 +204,8 @@ export const SubCategoryTab: React.FC = () => {
   const handleEdit = (subCategory: SubCategoryItem) => {
     setEditingSubCategory(subCategory);
     setEditIssueType(subCategory.issue_type_id?.toString() || '');
-    setEditCategory(subCategory.helpdesk_category_id?.toString() || '');
-    setEditSubCategoryName(subCategory.name || '');
+    setEditCategory(subCategory.category_id?.toString() || '');
+    setEditSubCategoryName(subCategory.sub_category || '');
     setEditHelpdeskText(subCategory.helpdesk_text || '');
     setIsEditModalOpen(true);
   };
@@ -214,16 +230,18 @@ export const SubCategoryTab: React.FC = () => {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('helpdesk_sub_category[issue_type_id]', editIssueType);
-      formData.append('helpdesk_sub_category[name]', editSubCategoryName.trim());
-      formData.append('helpdesk_sub_category[helpdesk_category_id]', editCategory);
+      formData.append('id', editingSubCategory.id.toString());
+      formData.append('name', editSubCategoryName.trim());
+      formData.append('issue_type_id', editIssueType);
+      formData.append('helpdesk_category_id', editCategory);
+      formData.append('active', '1');
 
       if (editHelpdeskText.trim()) {
-        formData.append('helpdesk_sub_category[helpdesk_text]', editHelpdeskText.trim());
+        formData.append('helpdesk_text', editHelpdeskText.trim());
       }
 
       const response = await fetch(
-        getFullUrl(`/crm/admin/helpdesk_categories/modify_helpdesk_sub_category.json?id=${editingSubCategory.id}`),
+        getFullUrl('/crm/admin/modify_helpdesk_sub_category.json'),
         {
           method: 'POST',
           headers: {
@@ -237,7 +255,7 @@ export const SubCategoryTab: React.FC = () => {
         toast.success('Sub-category updated successfully!');
         setIsEditModalOpen(false);
         setEditingSubCategory(null);
-        fetchAllData();
+        fetchSubCategories(currentPage);
       } else {
         const errorData = await response.json().catch(() => null);
         toast.error(errorData?.message || 'Failed to update sub-category');
@@ -257,9 +275,30 @@ export const SubCategoryTab: React.FC = () => {
     }
 
     try {
-      await ticketManagementAPI.deleteSubCategory(subCategory.id.toString());
-      setSubCategories(subCategories.filter(sc => sc.id !== subCategory.id));
-      toast.success('Sub-category deleted successfully!');
+      const formData = new FormData();
+      formData.append('id', subCategory.id.toString());
+      formData.append('name', subCategory.sub_category || '');
+      formData.append('issue_type_id', subCategory.issue_type_id?.toString() || '');
+      formData.append('helpdesk_category_id', subCategory.category_id?.toString() || '');
+      formData.append('active', '0');
+
+      const response = await fetch(
+        getFullUrl('/crm/admin/modify_helpdesk_sub_category.json'),
+        {
+          method: 'POST',
+          headers: { 'Authorization': getAuthHeader() },
+          body: formData,
+        }
+      );
+
+      if (response.ok) {
+        setSubCategories(subCategories.filter(sc => sc.id !== subCategory.id));
+        toast.success('Sub-category deleted successfully!');
+        fetchSubCategories(currentPage);
+      } else {
+        const errorData = await response.json().catch(() => null);
+        toast.error(errorData?.message || 'Failed to delete sub-category');
+      }
     } catch (error) {
       console.error('Error deleting sub-category:', error);
       toast.error('Failed to delete sub-category');
@@ -282,11 +321,11 @@ export const SubCategoryTab: React.FC = () => {
       case 'srno':
         return index + 1;
       case 'issue_type':
-        return getIssueTypeName(item.issue_type_id);
+        return item.issue_type || '--';
       case 'category':
-        return item.helpdesk_category_name || getCategoryName(item.helpdesk_category_id);
+        return item.category_type || '--';
       case 'name':
-        return item.name || '--';
+        return item.sub_category || '--';
       case 'helpdesk_text':
         return item.helpdesk_text || '--';
       default:
@@ -386,15 +425,84 @@ export const SubCategoryTab: React.FC = () => {
               <div className="text-gray-500">Loading sub-categories...</div>
             </div>
           ) : (
-            <EnhancedTable
-              data={subCategories}
-              columns={columns}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey="sub-categories-table"
-              enableSearch={true}
-              searchPlaceholder="Search sub-categories..."
-            />
+            <>
+              <EnhancedTable
+                data={subCategories}
+                columns={columns}
+                renderCell={renderCell}
+                renderActions={renderActions}
+                storageKey="sub-categories-table"
+                enableSearch={true}
+                searchPlaceholder="Search sub-categories..."
+              />
+
+              {/* Pagination */}
+              {subCategories.length > 0 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <div className="text-sm text-gray-500">
+                    Showing {totalCount > 0 ? (currentPage - 1) * perPage + 1 : 0}–{Math.min(currentPage * perPage, totalCount || subCategories.length)} of {totalCount || subCategories.length} sub-categories
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(1)}
+                        disabled={currentPage === 1}
+                      >
+                        «
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        ‹
+                      </Button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                        .reduce<(number | 'ellipsis')[]>((acc, p, idx, arr) => {
+                          if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
+                          acc.push(p);
+                          return acc;
+                        }, [])
+                        .map((p, idx) =>
+                          p === 'ellipsis' ? (
+                            <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">…</span>
+                          ) : (
+                            <Button
+                              key={p}
+                              variant={p === currentPage ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => handlePageChange(p as number)}
+                              className="w-8"
+                            >
+                              {p}
+                            </Button>
+                          )
+                        )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        ›
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={currentPage === totalPages}
+                      >
+                        »
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

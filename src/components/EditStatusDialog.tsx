@@ -69,7 +69,7 @@ export const EditStatusDialog = ({
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        const response = await apiClient.get('/pms/admin/complaint_statuses.json');
+        const response = await apiClient.get('/crm/admin/complaint_statuses.json');
         setStatuses(response.data || []);
       } catch (error) {
         console.error('Failed to fetch statuses:', error);

@@ -94,7 +94,7 @@ export const API_CONFIG = {
     CHANGE_SITE: "/change_site.json",
     HELPDESK_CATEGORIES: "/crm/admin/helpdesk_categories.json",
     HELPDESK_SUBCATEGORIES: "/pms/admin/get_all_helpdesk_sub_categories",
-    COMPLAINT_STATUSES: "/pms/admin/complaint_statuses.json",
+    COMPLAINT_STATUSES: "/crm/admin/complaint_statuses.json",
     CREATE_COMPLAINT_WORKER: "/pms/admin/create_complaint_worker.json",
     COST_APPROVALS: "/pms/admin/cost_approvals.json",
     USER_ACCOUNT: "/api/users/account.json",
@@ -114,8 +114,8 @@ export const API_CONFIG = {
     UPDATE_ISSUE_TYPE: "/crm/admin/helpdesk_categories/modify_issue_type.json",
     DELETE_ISSUE_TYPE: "/crm/admin/helpdesk_categories/delete_issue_type.json",
     ACCOUNTS: "/api/users/account.json",
-    STATUSES: "/pms/admin/create_complaint_statuses.json",
-    STATUSES_LIST: "/pms/admin/complaint_statuses.json",
+    STATUSES: "/crm/admin/create_complaint_statuses.json",
+    STATUSES_LIST: "/crm/admin/complaint_statuses.json",
     STATUSES_UPDATE: "/pms/admin/modify_complaint_status.json",
     MODIFY_COMPLAINT_STATUS: "/pms/admin/modify_complaint_status.json",
     // Holiday Calendar endpoints
@@ -212,7 +212,10 @@ export const API_CONFIG = {
       "/pms/create_cost_approvals_for_complaint.json",
     SURVEY_RESPONSES: "/survey_mapping_responses/all_responses.json",
     SURVEY_DETAILS: "/pms/admin/snag_checklists/survey_details.json",
-    SUPPORT_STAFF_CATEGORIES: "/pms/admin/support_staff_categories.json",
+    SUPPORT_STAFF_CATEGORIES: "/crm/admin/support_staff_categories.json",
+    SUPPORT_STAFF_CATEGORY_DETAILS: "/crm/admin/support_staff_categories", // Base path, will append /{id}.json
+    DELIVERY_SERVICE_PROVIDERS: "/crm/admin/delivery_service_providers.json",
+    DELIVERY_SERVICE_PROVIDER_DETAILS: "/crm/admin/delivery_service_providers", // Base path, will append /{id}.json
     CREATE_VISITOR: "/pms/admin/visitors/new_visitor.json",
     UNEXPECTED_VISITORS: "/pms/admin/visitors/unexpected_visitors.json",
     EXPECTED_VISITORS: "/pms/admin/visitors/expected_visitors.json",
