@@ -723,7 +723,8 @@ export const CategoryTypeTab: React.FC = () => {
     { key: 'srno', label: 'S.No.', sortable: false },
     { key: 'name', label: 'Category Type', sortable: true },
     { key: 'issue_type_id', label: 'Issue Type', sortable: false },
-    { key: 'of_phase', label: 'Phase', sortable: false },
+    { key: 'priority', label: 'Priority', sortable: false },
+    { key: 'project_tat', label: 'Project Response Time', sortable: false },
     { key: 'tat', label: 'Response Time (FM)', sortable: false },
     { key: 'icon_url', label: 'Icon', sortable: false },
   ];
@@ -740,8 +741,10 @@ export const CategoryTypeTab: React.FC = () => {
         const issueType = issueTypes.find((t) => t.id === item.issue_type_id);
         return issueType ? issueType.name : (item.issue_type_id != null ? String(item.issue_type_id) : '--');
       }
-      case 'of_phase':
-        return item.of_phase || '--';
+      case 'priority':
+        return item.priority || '--';
+      case 'project_tat':
+        return item.project_tat || '--';
       case 'assign_to_names':
         // Use the assigned_to_names field directly from the API response
         if (item.assigned_to_names) {
