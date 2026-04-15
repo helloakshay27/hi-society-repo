@@ -231,6 +231,8 @@ export const AddUserPage = () => {
   const [categoryOptions, setCategoryOptions] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
 
   // Get society_id from localStorage (set by header)
   const getSocietyId = () => {
@@ -432,6 +434,11 @@ export const AddUserPage = () => {
       }
     });
 
+    // Append profile image if selected
+    if (profileImageFile) {
+      formDataToSubmit.append("profile_image", profileImageFile);
+    }
+
     // Append multiple agreement documents
     if (formData.agreementDocuments && formData.agreementDocuments.length > 0) {
       formData.agreementDocuments.forEach((file: File) => {
@@ -463,9 +470,13 @@ export const AddUserPage = () => {
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      // Handle image upload logic here
-      console.log("Image uploaded:", file);
+    if (file && file.type.startsWith('image/')) {
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setProfileImage(previewUrl);
+      setProfileImageFile(file);
+    } else if (file) {
+      setError("Please select a valid image file");
     }
   };
   const countryCodes = countries.all
@@ -536,7 +547,15 @@ export const AddUserPage = () => {
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                 <Box sx={{ position: 'relative' }}>
                   <ProfileAvatar>
-                    <UserIcon size={64} />
+                    {profileImage ? (
+                      <img 
+                        src={profileImage} 
+                        alt="profile" 
+                        style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <UserIcon size={64} />
+                    )}
                   </ProfileAvatar>
                   <input
                     type="file"
@@ -545,11 +564,40 @@ export const AddUserPage = () => {
                     id="profile-upload"
                     onChange={handleImageUpload}
                   />
-                  <label htmlFor="profile-upload" style={{ cursor: 'pointer' }}>
-                    <CameraButton>
-                      <Camera size={16} />
-                    </CameraButton>
-                  </label>
+                  <CameraButton
+                    onClick={() => {
+                      const input = document.getElementById('profile-upload') as HTMLInputElement;
+                      input?.click();
+                    }}
+                  >
+                    <Camera size={16} />
+                  </CameraButton>
+                  {profileImage && (
+                    <IconButton
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        top: '-8px',
+                        left: '-8px',
+                        backgroundColor: '#C72030',
+                        color: 'white',
+                        width: '24px',
+                        height: '24px',
+                        '&:hover': {
+                          backgroundColor: '#a01828',
+                        },
+                      }}
+                      onClick={() => {
+                        setProfileImage(null);
+                        setProfileImageFile(null);
+                        // Reset input so same file can be selected again
+                        const input = document.getElementById('profile-upload') as HTMLInputElement;
+                        if (input) input.value = '';
+                      }}
+                    >
+                      <X size={14} />
+                    </IconButton>
+                  )}
                 </Box>
               </Box>
 
