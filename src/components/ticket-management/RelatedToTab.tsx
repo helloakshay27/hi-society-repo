@@ -66,6 +66,7 @@ export const RelatedToTab: React.FC = () => {
     try {
       const payload = {
         name: issueTypeInput.trim(),
+        active: 1,
       };
 
       const response = await fetch(
@@ -231,7 +232,6 @@ export const RelatedToTab: React.FC = () => {
           relatedTo={editingRelatedTo}
           onUpdate={handleUpdate}
           onRefresh={fetchRelatedToItems}
-          editApiEndpoint="/crm/admin/modify_issue_type.json"
         />
       )}
     </div>

@@ -60,6 +60,8 @@ interface CategoryApiResponse {
     selected_icon_url: string;
     response_tat: Record<string, unknown>;
     tat: number | string | null;
+    project_tat?: number | string | null;
+    active?: boolean | number | null;
     assigned_to_names?: string;
     category_email: Array<{
       id: number;
@@ -155,7 +157,7 @@ export const CategoryTypeTab: React.FC = () => {
   const [fmResponseTime, setFmResponseTime] = useState('');
   const [projectResponseTime, setProjectResponseTime] = useState('');
   
-  const priorityOptions = ['P1', 'P2', 'P3', 'P4'];
+  const priorityOptions = ['P1', 'P2', 'P3', 'P4', 'P5'];
   const [accountData, setAccountData] = useState<{
     id?: string;
     company_id?: number;
@@ -173,6 +175,9 @@ export const CategoryTypeTab: React.FC = () => {
   const [editPriority, setEditPriority] = useState('');
   const [editFmResponseTime, setEditFmResponseTime] = useState('');
   const [editProjectResponseTime, setEditProjectResponseTime] = useState('');
+  const [selectedOfPhase, setSelectedOfPhase] = useState('');
+  const [editOfPhase, setEditOfPhase] = useState('');
+  const [editCategoryName, setEditCategoryName] = useState('');
 
   const form = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
@@ -416,6 +421,7 @@ export const CategoryTypeTab: React.FC = () => {
       formData.append('helpdesk_category[tat]', fmResponseTime);
       formData.append('helpdesk_category[project_tat]', projectResponseTime);
       formData.append('helpdesk_category[priority]', selectedPriority);
+      formData.append('helpdesk_category[active]', '1');
       
       if (iconFile) {
         formData.append('helpdesk_category[icon]', iconFile);
@@ -438,6 +444,7 @@ export const CategoryTypeTab: React.FC = () => {
         setSelectedPriority('');
         setFmResponseTime('');
         setProjectResponseTime('');
+        setSelectedOfPhase('');
         setIconFile(null);
         
         fetchCategories(1);
@@ -509,143 +516,76 @@ export const CategoryTypeTab: React.FC = () => {
 
   const handleEdit = (category: CategoryApiResponse['helpdesk_categories'][0]) => {
     setEditingCategory(category);
-    
-    // Populate issue type, priority, and response times from category data
-    if (category.complaint_worker?.issue_type_id) {
-      setEditIssueType(category.complaint_worker.issue_type_id.toString());
-    } else {
-      setEditIssueType('');
-    }
-    
-    // Set response times
-    setEditFmResponseTime(category.tat != null ? String(category.tat) : '');
-    // If you have project_tat in API response, use it:
-    // setEditProjectResponseTime(category.project_tat || '');
-    setEditProjectResponseTime('');
-    
-    // Set priority - you may need to adjust based on where priority is stored
-    setEditPriority('');
-    
-    // Populate FAQ items if available, otherwise default empty FAQ
-    if (category.complaint_faqs && category.complaint_faqs.length > 0) {
-      setEditFaqItems(category.complaint_faqs.map(faq => ({
-        id: faq.id,
-        question: faq.question || '',
-        answer: faq.answer || ''
-      })));
-    } else {
-      setEditFaqItems([{ question: '', answer: '' }]);
-    }
-    
-    // Populate assigned engineers if available
-    if (category.complaint_worker?.assign_to) {
-      let engineerIds: number[] = [];
-      
-      // Handle both array and YAML string cases
-      if (Array.isArray(category.complaint_worker.assign_to)) {
-        engineerIds = category.complaint_worker.assign_to.map(id => parseInt(id));
-      } else if (typeof category.complaint_worker.assign_to === 'string') {
-        // Parse YAML string like "---\n- '33051'\n"
-        const yamlStr = category.complaint_worker.assign_to as string;
-        const matches = yamlStr.match(/'(\d+)'/g);
-        if (matches) {
-          engineerIds = matches.map(match => parseInt(match.replace(/'/g, '')));
-        }
-      }
-      
-      setSelectedEngineers(engineerIds);
-      form.setValue('engineerIds', engineerIds);
-    } else {
-      setSelectedEngineers([]);
-      form.setValue('engineerIds', []);
-    }
-    
-    setEditIconFile(null);
-    setEditVendorEmailEnabled(category.category_email?.length > 0);
-    setEditVendorEmails(category.category_email?.length > 0 ? category.category_email.map(e => e.email) : ['']);
-    
-    // Set the selected site IDs
-    setEditSelectedSiteId(selectedSite?.id.toString() || sites[0]?.id.toString() || '');
-    
+    setEditCategoryName(category.name || '');
     setIsEditModalOpen(true);
+
+    const fetchCategoryDetails = async () => {
+      try {
+        const response = await fetch(getFullUrl(`/crm/admin/helpdesk_categories/${category.id}.json`), {
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+        });
+        if (response.ok) {
+          const json = await response.json();
+          const data = json.helpdesk_category || json;
+          setEditingCategory(data);
+          setEditCategoryName(data.name || '');
+          setEditIssueType(data.issue_type_id ? data.issue_type_id.toString() : '');
+          setEditFmResponseTime(data.tat != null ? String(data.tat) : '');
+          setEditProjectResponseTime(data.project_tat != null ? String(data.project_tat) : '');
+          setEditPriority(data.priority || '');
+          setEditIconFile(null);
+          setEditVendorEmailEnabled(data.category_email?.length > 0);
+          setEditVendorEmails(data.category_email?.length > 0 ? data.category_email.map((e: { email: string }) => e.email) : ['']);
+        }
+      } catch (error) {
+        console.error('Error fetching category details:', error);
+        toast.error('Failed to fetch category details');
+      }
+    };
+    fetchCategoryDetails();
   };
 
-  const handleEditSubmit = async (formData: object) => {
+  const handleEditSubmit = async () => {
     if (!editingCategory) return;
-    
-    // Get category name from input
-    const categoryNameInput = document.querySelector('#edit-category-name') as HTMLInputElement;
-    
-    if (!categoryNameInput?.value?.trim()) {
+
+    if (!editCategoryName.trim()) {
       toast.error('Please enter a category name');
       return;
     }
-    
-    // Validate required fields
+
     if (!editIssueType) {
       toast.error('Please select issue type');
-      return;
-    }
-    if (!editPriority) {
-      toast.error('Please select priority');
       return;
     }
     if (!editFmResponseTime) {
       toast.error('Please enter FM response time');
       return;
     }
-    if (!editProjectResponseTime) {
-      toast.error('Please enter project response time');
-      return;
-    }
-    
-    // if (!editSelectedSiteId) {
-    //   toast.error('Please select a site');
-    //   return;
-    // }
-    
-    // Validate vendor emails if enabled
-    if (editVendorEmailEnabled) {
-      const invalidEmails = editVendorEmails.filter(email => email.trim() && !isValidEmail(email));
-      if (invalidEmails.length > 0) {
-        toast.error('Please enter valid email addresses for all vendor emails.');
-        return;
-      }
-      
-      const validEmails = editVendorEmails.filter(email => email.trim());
-      if (validEmails.length === 0) {
-        toast.error('Please provide at least one vendor email when vendor email is enabled.');
-        return;
-      }
-    }
 
-    // Validate FAQ items
-    const incompleteFaqItems = editFaqItems.filter(item => 
-      !item._destroy && ((item.question.trim() && !item.answer.trim()) || (!item.question.trim() && item.answer.trim()))
-    );
-    
-    if (incompleteFaqItems.length > 0) {
-      toast.error('Please complete all FAQ items. If you enter a question, you must also provide an answer.');
-      return;
-    }
-    
     setIsSubmitting(true);
     try {
       const submitFormData = new FormData();
-      
-      // Helpdesk category data - only the 6 required parameters
+
       submitFormData.append('helpdesk_category[issue_type_id]', editIssueType);
-      submitFormData.append('helpdesk_category[name]', categoryNameInput.value.trim());
+      submitFormData.append('helpdesk_category[name]', editCategoryName.trim());
       submitFormData.append('helpdesk_category[tat]', editFmResponseTime);
-      submitFormData.append('helpdesk_category[project_tat]', editProjectResponseTime);
-      submitFormData.append('helpdesk_category[priority]', editPriority);
-      
-      // Add icon if a new one is selected
+      if (editProjectResponseTime) {
+        submitFormData.append('helpdesk_category[project_tat]', editProjectResponseTime);
+      }
+      if (editPriority) {
+        submitFormData.append('helpdesk_category[priority]', editPriority);
+      }
+      if (editOfPhase) {
+        submitFormData.append('helpdesk_category[of_phase]', editOfPhase);
+      }
       if (editIconFile) {
         submitFormData.append('helpdesk_category[icon]', editIconFile);
       }
 
-      const response = await fetch(getFullUrl(`/pms/admin/modify_helpdesk_category/${editingCategory.id}.json`), {
+      const response = await fetch(getFullUrl(`/crm/admin/helpdesk_categories/${editingCategory.id}.json`), {
         method: 'PATCH',
         headers: {
           'Authorization': getAuthHeader(),
@@ -782,11 +722,10 @@ export const CategoryTypeTab: React.FC = () => {
   const columns = [
     { key: 'srno', label: 'S.No.', sortable: false },
     { key: 'name', label: 'Category Type', sortable: true },
-    // { key: 'assign_to_names', label: 'Assignee', sortable: false },
-    { key: 'tat', label: 'Response Time', sortable: false },
-    // { key: 'category_email', label: 'Vendor Email', sortable: false },
+    { key: 'issue_type_id', label: 'Issue Type', sortable: false },
+    { key: 'of_phase', label: 'Phase', sortable: false },
+    { key: 'tat', label: 'Response Time (FM)', sortable: false },
     { key: 'icon_url', label: 'Icon', sortable: false },
-    // { key: 'selected_icon_url', label: 'Selected Icon', sortable: false },
   ];
 
   const renderCell = (item: CategoryApiResponse['helpdesk_categories'][0], columnKey: string) => {
@@ -797,6 +736,12 @@ export const CategoryTypeTab: React.FC = () => {
         return index + 1;
       case 'name':
         return item.name;
+      case 'issue_type_id': {
+        const issueType = issueTypes.find((t) => t.id === item.issue_type_id);
+        return issueType ? issueType.name : (item.issue_type_id != null ? String(item.issue_type_id) : '--');
+      }
+      case 'of_phase':
+        return item.of_phase || '--';
       case 'assign_to_names':
         // Use the assigned_to_names field directly from the API response
         if (item.assigned_to_names) {
@@ -1374,8 +1319,8 @@ export const CategoryTypeTab: React.FC = () => {
                     Category <span className="text-red-500">*</span>
                   </label>
                   <Input
-                    id="edit-category-name"
-                    defaultValue={editingCategory.name}
+                    value={editCategoryName}
+                    onChange={(e) => setEditCategoryName(e.target.value)}
                     placeholder="Enter category"
                     className="w-full"
                   />
@@ -1678,7 +1623,7 @@ export const CategoryTypeTab: React.FC = () => {
                   Cancel
                 </Button>
                 <Button 
-                  onClick={() => handleEditSubmit({})}
+                  onClick={() => handleEditSubmit()}
                   disabled={isSubmitting}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-8"
                 >

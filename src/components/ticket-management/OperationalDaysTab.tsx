@@ -35,14 +35,55 @@ const daysOfWeek = [
 
 export const OperationalDaysTab: React.FC = () => {
   const [schedule, setSchedule] = useState<OperationalDay[]>([]);
+  const [societyId, setSocietyId] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
 
   useEffect(() => {
+    fetchUserApprovedSocieties();
     fetchOperationalDays();
   }, []);
+
+  const fetchUserApprovedSocieties = async () => {
+    try {
+      // Step 1: get the currently selected user society ID from account
+      const accountResponse = await fetch(getFullUrl('/api/users/account.json'), {
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+      let selectedUserSocietyId: number | null = null;
+      if (accountResponse.ok) {
+        const accountData = await accountResponse.json();
+        selectedUserSocietyId = accountData.selected_user_society ?? null;
+      }
+
+      // Step 2: fetch approved societies and match by the selected_user_society id
+      const response = await fetch(getFullUrl('/user_approved_societies.json'), {
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const userSocieties: { id: number; id_society: string }[] = data.user_societies || [];
+        // Match the entry whose id equals selected_user_society; fall back to first entry
+        const matched =
+          (selectedUserSocietyId
+            ? userSocieties.find(s => s.id === selectedUserSocietyId)
+            : null) || userSocieties[0];
+        if (matched?.id_society) {
+          setSocietyId(matched.id_society);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user approved societies:', error);
+    }
+  };
 
   const fetchOperationalDays = async () => {
     setIsLoading(true);
@@ -61,10 +102,25 @@ export const OperationalDaysTab: React.FC = () => {
         ? data.helpdesk_operations
         : [];
 
+      // Extract society ID from data as a fallback if user account hasn't loaded yet
+      const extractedSocietyId = operationalDays.find(d => d.op_of_id)?.op_of_id?.toString();
+      if (extractedSocietyId) {
+        setSocietyId(extractedSocietyId);
+      }
+
       // Ensure all 7 days are present, filling defaults for any missing day
       const completeSchedule = daysOfWeek.map(day => {
         const existing = operationalDays.find(d => d.dayofweek === day);
-        return existing ?? {
+        if (existing) {
+          return {
+            ...existing,
+            start_hour: existing.start_hour ?? 9,
+            start_min: existing.start_min ?? 0,
+            end_hour: existing.end_hour ?? 17,
+            end_min: existing.end_min ?? 0,
+          };
+        }
+        return {
           id: 0,
           dayofweek: day,
           start_hour: 9,
@@ -105,16 +161,12 @@ export const OperationalDaysTab: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!societyId) {
+      toast.error('Unable to determine society ID. Please refresh and try again.');
+      return;
+    }
     setIsSubmitting(true);
     try {
-      // Use op_of_id from the loaded operational day records as the society ID
-      const societyId = schedule.find(d => d.id > 0)?.op_of_id?.toString();
-
-      if (!societyId) {
-        toast.error('Unable to determine society ID. Please refresh and try again.');
-        return;
-      }
-
       await ticketManagementAPI.updateOperationalDays(societyId, schedule);
       toast.success('Operational days saved successfully!');
     } catch (error) {
@@ -161,8 +213,10 @@ export const OperationalDaysTab: React.FC = () => {
     }
   };
 
-  const formatTime = (hour: number, min: number) => {
-    return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+  const formatTime = (hour: number | null, min: number | null) => {
+    const h = (hour ?? 0).toString().padStart(2, '0');
+    const m = (min ?? 0).toString().padStart(2, '0');
+    return `${h}:${m}`;
   };
 
   const capitalizeDay = (day: string) => {

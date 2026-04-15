@@ -351,6 +351,7 @@ export const AddTicketDashboard = () => {
   const [societyFlats, setSocietyFlats] = useState<SocietyFlatResponse[]>([]);
   const [issueTypes, setIssueTypes] = useState<IssueTypeResponse[]>([]);
   const [flatUsers, setFlatUsers] = useState<Array<[string, number]>>([]);
+  const [currentSocietyId, setCurrentSocietyId] = useState<string>('');
   const [selectedBlock, setSelectedBlock] = useState('');
   const [selectedFlat, setSelectedFlat] = useState('');
   const [selectedIssueType, setSelectedIssueType] = useState('');
@@ -514,7 +515,9 @@ export const AddTicketDashboard = () => {
 
   // Load initial data
   useEffect(() => {
-    loadSocietyBlocks();
+    fetchCurrentSocietyId().then(id => {
+      loadSocietyBlocks(id);
+    });
     loadFMUsersFromStorage();
     loadOccupantUsersFromStorage();
     loadComplaintModes();
@@ -527,11 +530,43 @@ export const AddTicketDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onBehalfOf, loadUserAccountFromStorage]);
 
+  // Fetch the currently selected society ID from account + approved societies
+  const fetchCurrentSocietyId = async (): Promise<string> => {
+    try {
+      const accountResponse = await fetch(getFullUrl('/api/users/account.json'), getAuthenticatedFetchOptions('GET'));
+      let selectedUserSocietyId: number | null = null;
+      if (accountResponse.ok) {
+        const accountData = await accountResponse.json();
+        selectedUserSocietyId = accountData.selected_user_society ?? null;
+      }
+
+      const societiesResponse = await fetch(getFullUrl('/user_approved_societies.json'), getAuthenticatedFetchOptions('GET'));
+      if (societiesResponse.ok) {
+        const data = await societiesResponse.json();
+        const userSocieties: { id: number; id_society: string }[] = data.user_societies || [];
+        const matched =
+          (selectedUserSocietyId
+            ? userSocieties.find(s => s.id === selectedUserSocietyId)
+            : null) || userSocieties[0];
+        if (matched?.id_society) {
+          setCurrentSocietyId(matched.id_society);
+          return matched.id_society;
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching current society ID:', error);
+    }
+    return '';
+  };
+
   // Load society blocks (towers)
-  const loadSocietyBlocks = async () => {
+  const loadSocietyBlocks = async (societyId?: string) => {
     setLoadingBlocks(true);
     try {
-      const url = getFullUrl('/crm/admin/society_blocks.json');
+      const id = societyId || currentSocietyId;
+      const url = id
+        ? getFullUrl(`/get_society_blocks.json?society_id=${id}`)
+        : getFullUrl('/get_society_blocks.json');
       const options = getAuthenticatedFetchOptions('GET');
       const response = await fetch(url, options);
       if (!response.ok) throw new Error('Failed to fetch society blocks');
@@ -549,7 +584,10 @@ export const AddTicketDashboard = () => {
   const loadSocietyFlats = async (blockId: string) => {
     setLoadingFlats(true);
     try {
-      const url = getFullUrl(`/crm/admin/society_flats.json?q[society_block_id_eq]=${blockId}`);
+      const id = currentSocietyId;
+      const url = id
+        ? getFullUrl(`/get_society_flats.json?society_block_id=${blockId}&society_id=${id}`)
+        : getFullUrl(`/get_society_flats.json?society_block_id=${blockId}`);
       const options = getAuthenticatedFetchOptions('GET');
       const response = await fetch(url, options);
       if (!response.ok) throw new Error('Failed to fetch society flats');

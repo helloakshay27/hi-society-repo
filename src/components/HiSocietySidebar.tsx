@@ -647,12 +647,12 @@ export const HiSocietySidebar: React.FC = () => {
         //   icon: LogOut,
         //   path: "/smartsecure/visitor-out",
         // },
-        {
-          id: "visitor-history",
-          label: "Visitors",
-          icon: History,
-          path: "/smartsecure/visitor-history",
-        },
+        // {
+        //   id: "visitor-history",
+        //   label: "Visitors",
+        //   icon: History,
+        //   path: "/smartsecure/visitor-history",
+        // },
         {
           id: "visitors",
           label: "Visitors",

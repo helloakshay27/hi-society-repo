@@ -73,6 +73,8 @@ export const ResponseEscalationTab: React.FC = () => {
   const [editIssueTypeId, setEditIssueTypeId] = useState<string>('')
   const [editCategoryTypeId, setEditCategoryTypeId] = useState<string>('')
   const [editAssignTo, setEditAssignTo] = useState<number[]>([])
+  // Map of user id -> display name for pre-existing edit selections not in userOptions
+  const [editUserLabels, setEditUserLabels] = useState<Record<number, string>>({})
 
   // FM/Project tab state
   const [activeFmProjectTab, setActiveFmProjectTab] = useState<'fm' | 'project'>('fm')
@@ -112,6 +114,14 @@ export const ResponseEscalationTab: React.FC = () => {
 
   // Options for react-select
   const userOptions = serviceEngineerOptions?.map(user => ({ value: user.id, label: user.full_name })) || []
+
+  // Returns userOptions extended with any pre-selected edit users whose IDs aren't in userOptions
+  const getEditLevelOptions = (levelIds: number[]) => {
+    const extra = levelIds
+      .filter(id => !userOptions.find(o => o.value === id) && editUserLabels[id])
+      .map(id => ({ value: id, label: editUserLabels[id] }))
+    return [...userOptions, ...extra]
+  }
 
   // Fetch data on component mount
   useEffect(() => {
@@ -338,6 +348,18 @@ export const ResponseEscalationTab: React.FC = () => {
         e5: getLevelUsersList('E5'),
       }
 
+      // Build id->name map from API escalate_to_display so edit dropdowns show names
+      const userLabels: Record<number, string> = {}
+      ;[...escalations, ...escalationMatrix].forEach((levelItem: any) => {
+        const ids: number[] = levelItem.escalate_to_ids || []
+        const display: string = levelItem.escalate_to_display || ''
+        const names = display.split(',').map((n: string) => n.trim()).filter(Boolean)
+        ids.forEach((id, i) => {
+          if (names[i]) userLabels[id] = names[i]
+        })
+      })
+      setEditUserLabels(userLabels)
+
       form.reset({ escalationLevels: formUsers })
       setSelectedUsers(formUsers)
       setEditIssueTypeId(String(rule.issue_type_id || ''))
@@ -374,9 +396,20 @@ export const ResponseEscalationTab: React.FC = () => {
       const escalationMatrixPayload: any = {}
       const levels = ['e1', 'e2', 'e3', 'e4', 'e5'] as const
       levels.forEach(level => {
+        // Preserve existing p1-p5 priority values from the rule being edited
+        const existingLevel = (editingRule?.escalation_matrix || []).find(
+          (e: any) => (e.level || e.name || '').toLowerCase() === level
+        ) || {}
+
         escalationMatrixPayload[level] = {
-          level: level.toUpperCase(),
-          escalate_to_ids: selectedUsers[level],
+          name: level.toUpperCase(),
+          p1: existingLevel.p1 || '',
+          p2: existingLevel.p2 || '',
+          p3: existingLevel.p3 || '',
+          p4: existingLevel.p4 || '',
+          p5: existingLevel.p5 || '',
+          escalate_to_users: selectedUsers[level],
+          copy_to: existingLevel.copy_to || [],
         }
       })
 
@@ -386,9 +419,9 @@ export const ResponseEscalationTab: React.FC = () => {
           esc_type: 'response',
           issue_related_to: activeFmProjectTab === 'fm' ? 'FM' : 'Project',
           of_phase: 'post_possession',
-          issue_type_id: editIssueTypeId,
-          category_id: editCategoryTypeId,
-          assign_to: editAssignTo.map(String),
+          issue_type_id: Number(editIssueTypeId),
+          category_id: Number(editCategoryTypeId),
+          assign_to: editAssignTo,
         },
         escalation_matrix: escalationMatrixPayload,
       }
@@ -433,8 +466,8 @@ export const ResponseEscalationTab: React.FC = () => {
       const levels = ['e1', 'e2', 'e3', 'e4', 'e5'] as const
       levels.forEach(level => {
         escalationMatrixPayload[level] = {
-          level: level.toUpperCase(),
-          escalate_to_ids: data.escalationLevels[level],
+          name: level.toUpperCase(),
+          escalate_to_users: data.escalationLevels[level],
         }
       })
 
@@ -444,9 +477,9 @@ export const ResponseEscalationTab: React.FC = () => {
           esc_type: 'response',
           issue_related_to: activeFmProjectTab === 'fm' ? 'FM' : 'Project',
           of_phase: 'post_possession',
-          issue_type_id: selectedIssueTypeId,
-          category_id: selectedCategoryTypeId,
-          assign_to: selectedAssignTo.map(Number),
+          issue_type_id: Number(selectedIssueTypeId),
+          category_id: Number(selectedCategoryTypeId),
+          assign_to: selectedAssignTo,
         },
         escalation_matrix: escalationMatrixPayload,
       }
@@ -574,7 +607,7 @@ export const ResponseEscalationTab: React.FC = () => {
               </div>
 
               {/* Assign To Dropdown */}
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label className="text-sm font-medium">Assign To</Label>
                 <ReactSelect
                   isMulti
@@ -617,7 +650,7 @@ export const ResponseEscalationTab: React.FC = () => {
                     })
                   }}
                 />
-              </div>
+              </div> */}
 
               {/* Escalation Matrix Table */}
               <div className="space-y-3">
@@ -969,7 +1002,7 @@ export const ResponseEscalationTab: React.FC = () => {
               </div>
 
               {/* Assign To Dropdown */}
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label className="text-sm font-medium">Assign To</Label>
                 <ReactSelect
                   isMulti
@@ -1012,7 +1045,7 @@ export const ResponseEscalationTab: React.FC = () => {
                     })
                   }}
                 />
-              </div>
+              </div> */}
 
               {/* Escalation Levels */}
               <div className="space-y-3">
@@ -1034,8 +1067,8 @@ export const ResponseEscalationTab: React.FC = () => {
                           <TableCell>
                             <ReactSelect
                               isMulti
-                              options={userOptions}
-                              value={userOptions.filter(option => selectedUsers[level].includes(option.value))}
+                              options={getEditLevelOptions(selectedUsers[level])}
+                              value={getEditLevelOptions(selectedUsers[level]).filter(option => selectedUsers[level].includes(option.value))}
                               onChange={(selected) => {
                                 const newUsers = selected ? selected.map(s => s.value) : []
                                 const updatedUsers = { ...selectedUsers, [level]: newUsers }

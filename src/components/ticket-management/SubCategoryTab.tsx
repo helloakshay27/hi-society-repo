@@ -99,7 +99,7 @@ export const SubCategoryTab: React.FC = () => {
         fetch(getFullUrl('/user/issue_type.json'), {
           headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
         }),
-        fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
+        fetch(getFullUrl('/dropdown/categories.json'), {
           headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
         }),
       ]);
@@ -116,7 +116,7 @@ export const SubCategoryTab: React.FC = () => {
 
       if (categoriesRes.ok) {
         const data = await categoriesRes.json();
-        const cats = Array.isArray(data) ? data : (data.helpdesk_categories || []);
+        const cats = Array.isArray(data) ? data : (data.categories || []);
         setCategories(
           cats.map((cat: { id: number; name: string }) => ({
             id: cat.id,
