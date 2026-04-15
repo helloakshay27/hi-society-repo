@@ -728,7 +728,7 @@ export const ResolutionEscalationTab: React.FC = () => {
     hours: number;
     minutes: number;
   }) => {
-    return `${p.days} day, ${p.hours} hour, ${p.minutes} minute `;
+    return convertToMinutes(p.days, p.hours, p.minutes);
   };
 
   const onSubmit = async (data: ResolutionEscalationFormData) => {
@@ -747,9 +747,9 @@ export const ResolutionEscalationTab: React.FC = () => {
       levels.forEach((level) => {
         const levelData = data.escalationLevels[level];
         escalationMatrixPayload[level] = {
-          level: level.toUpperCase(),
-          escalate_to_ids: levelData.users,
-          copy_to_ids: levelData.copyTo,
+          name: level,
+          escalate_to_users: levelData.users,
+          copy_to: levelData.copyTo,
           p1: formatTimeForPayload(levelData.priorities.p1),
           p2: formatTimeForPayload(levelData.priorities.p2),
           p3: formatTimeForPayload(levelData.priorities.p3),
@@ -958,9 +958,9 @@ export const ResolutionEscalationTab: React.FC = () => {
       levels.forEach((level) => {
         const levelData = data.escalationLevels[level];
         escalationMatrixUpdate[level] = {
-          level: level.toUpperCase(),
-          escalate_to_ids: levelData.users,
-          copy_to_ids: levelData.copyTo,
+          name: level,
+          escalate_to_users: levelData.users,
+          copy_to: levelData.copyTo,
           p1: formatTimeForPayload(levelData.priorities.p1),
           p2: formatTimeForPayload(levelData.priorities.p2),
           p3: formatTimeForPayload(levelData.priorities.p3),

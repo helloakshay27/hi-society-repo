@@ -127,7 +127,7 @@ export const BookingSetupDetailClubPage = () => {
     minGuarantee: "",
     isBookable: true,
     isRequest: false,
-    active: "1",
+    active: 1,
     addSubFacility: false,
     department: "",
     appKey: "",
@@ -367,7 +367,7 @@ export const BookingSetupDetailClubPage = () => {
         minGuarantee: response.min_guarantee || "",
         isBookable: response.fac_type === "bookable" ? true : false,
         isRequest: response.fac_type === "request" ? true : false,
-        active: response.active || "1",
+        active: response.active,
         addSubFacility: response.sub_facility_enabled,
         department: response.department_id ?? "",
         appKey: response.app_key,
@@ -692,10 +692,10 @@ export const BookingSetupDetailClubPage = () => {
                 </span>
               </div>
               <div className="flex items-start">
-                <span className="text-gray-500 min-w-[140px]">Active</span>
+                <span className="text-gray-500 min-w-[140px]">Status</span>
                 <span className="text-gray-500 mx-2">:</span>
                 <span className="text-gray-900 font-medium">
-                  {formData.active === "1" ? "Yes" : "No"}
+                  {formData.active === 1 ? "Active" : "Inactive"}
                 </span>
               </div>
               <div className="flex items-start">
