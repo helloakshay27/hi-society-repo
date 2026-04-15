@@ -132,21 +132,9 @@ export const StatusTab: React.FC = () => {
   const fetchStatuses = async () => {
     setIsLoading(true);
     try {
-      const url = getFullUrl('/crm/admin/helpdesk_categories.json');
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setStatuses(Array.isArray(data.statuses) ? data.statuses : []);
-      } else {
-        toast.error('Failed to fetch statuses');
-      }
+      const data = await ticketManagementAPI.getStatuses();
+      const list = data?.complaint_statuses ?? (Array.isArray(data) ? data : []);
+      setStatuses(Array.isArray(list) ? list : []);
     } catch (error) {
       toast.error('Failed to fetch statuses');
       console.error('Error fetching statuses:', error);

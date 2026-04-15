@@ -79,17 +79,9 @@ export const ComplaintModeTab: React.FC = () => {
   const fetchComplaintModes = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
-        headers: {
-          'Authorization': getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch complaint modes');
-      }
-      const data = await response.json();
-      setComplaintModes(Array.isArray(data.complaint_modes) ? data.complaint_modes : []);
+      const data = await ticketManagementAPI.getComplaintModes();
+      const list = data?.complaint_modes ?? (Array.isArray(data) ? data : []);
+      setComplaintModes(Array.isArray(list) ? list : []);
     } catch (error) {
       toast.error('Failed to fetch complaint modes');
       console.error('Error fetching complaint modes:', error);

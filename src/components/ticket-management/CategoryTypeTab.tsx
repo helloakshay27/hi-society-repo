@@ -50,13 +50,16 @@ interface CategoryApiResponse {
     id: number;
     society_id: number;
     name: string;
+    issue_type_id: number | null;
+    of_phase: string | null;
     position: number | null;
     created_at: string;
     updated_at: string;
     icon_url: string;
-    doc_type: string;
+    doc_type: string | null;
     selected_icon_url: string;
-    tat: string;
+    response_tat: Record<string, unknown>;
+    tat: number | string | null;
     assigned_to_names?: string;
     category_email: Array<{
       id: number;
@@ -94,7 +97,13 @@ interface CategoryApiResponse {
       cloned_at: string | null;
     };
   }>;
-  statuses: Array<{
+  pagination: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    per_page: number;
+  };
+  statuses?: Array<{
     id: number;
     society_id: number;
     name: string;
@@ -130,6 +139,10 @@ export const CategoryTypeTab: React.FC = () => {
   const [sites, setSites] = useState<Site[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const perPage = 20;
   const [faqItems, setFaqItems] = useState<FAQ[]>([{ question: '', answer: '' }]);
   const [vendorEmails, setVendorEmails] = useState<string[]>(['']);
   const [engineers, setEngineers] = useState<{ id: number; full_name: string }[]>([]);
@@ -212,11 +225,26 @@ export const CategoryTypeTab: React.FC = () => {
     }
   }, [form]);
 
-  const fetchCategories = useCallback(async () => {
+  const fetchCategories = useCallback(async (page = 1) => {
     setIsLoading(true);
     try {
-      const response = await ticketManagementAPI.getCategories();
-      setCategories(response.helpdesk_categories || []);
+      const response = await fetch(
+        getFullUrl(`/crm/admin/helpdesk_categories.json?page=${page}`),
+        {
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      const data: CategoryApiResponse = await response.json();
+      setCategories(data.helpdesk_categories || []);
+      if (data.pagination) {
+        setCurrentPage(data.pagination.current_page);
+        setTotalPages(data.pagination.total_pages);
+        setTotalCount(data.pagination.total_count);
+      }
     } catch (error) {
       toast.error('Failed to fetch categories');
       console.error('Error fetching categories:', error);
@@ -263,6 +291,11 @@ export const CategoryTypeTab: React.FC = () => {
     fetchAccountData();
     fetchIssueTypes();
   }, [fetchCategories, fetchAccountData]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    fetchCategories(page);
+  };
 
   const fetchSites = async () => {
     try {
@@ -407,7 +440,7 @@ export const CategoryTypeTab: React.FC = () => {
         setProjectResponseTime('');
         setIconFile(null);
         
-        fetchCategories();
+        fetchCategories(1);
       } else {
         // Try to get the error message from the response
         const errorData = await response.json().catch(() => null);
@@ -485,7 +518,7 @@ export const CategoryTypeTab: React.FC = () => {
     }
     
     // Set response times
-    setEditFmResponseTime(category.tat || '');
+    setEditFmResponseTime(category.tat != null ? String(category.tat) : '');
     // If you have project_tat in API response, use it:
     // setEditProjectResponseTime(category.project_tat || '');
     setEditProjectResponseTime('');
@@ -513,7 +546,8 @@ export const CategoryTypeTab: React.FC = () => {
         engineerIds = category.complaint_worker.assign_to.map(id => parseInt(id));
       } else if (typeof category.complaint_worker.assign_to === 'string') {
         // Parse YAML string like "---\n- '33051'\n"
-        const matches = category.complaint_worker.assign_to.match(/'(\d+)'/g);
+        const yamlStr = category.complaint_worker.assign_to as string;
+        const matches = yamlStr.match(/'(\d+)'/g);
         if (matches) {
           engineerIds = matches.map(match => parseInt(match.replace(/'/g, '')));
         }
@@ -565,10 +599,10 @@ export const CategoryTypeTab: React.FC = () => {
       return;
     }
     
-    if (!editSelectedSiteId) {
-      toast.error('Please select a site');
-      return;
-    }
+    // if (!editSelectedSiteId) {
+    //   toast.error('Please select a site');
+    //   return;
+    // }
     
     // Validate vendor emails if enabled
     if (editVendorEmailEnabled) {
@@ -623,7 +657,7 @@ export const CategoryTypeTab: React.FC = () => {
         toast.success('Category updated successfully!');
         setIsEditModalOpen(false);
         setEditingCategory(null);
-        fetchCategories();
+        fetchCategories(currentPage);
       } else {
         const errorData = await response.json().catch(() => null);
         console.error('API Response Error:', errorData);
@@ -717,6 +751,7 @@ export const CategoryTypeTab: React.FC = () => {
       if (response.ok) {
         setCategories(categories.filter(cat => cat.id !== category.id));
         toast.success('Category deleted successfully!');
+        fetchCategories(currentPage);
       } else {
         const errorData = await response.json().catch(() => null);
         toast.error(errorData?.message || 'Failed to delete category');
@@ -747,9 +782,9 @@ export const CategoryTypeTab: React.FC = () => {
   const columns = [
     { key: 'srno', label: 'S.No.', sortable: false },
     { key: 'name', label: 'Category Type', sortable: true },
-    { key: 'assign_to_names', label: 'Assignee', sortable: false },
+    // { key: 'assign_to_names', label: 'Assignee', sortable: false },
     { key: 'tat', label: 'Response Time', sortable: false },
-    { key: 'category_email', label: 'Vendor Email', sortable: false },
+    // { key: 'category_email', label: 'Vendor Email', sortable: false },
     { key: 'icon_url', label: 'Icon', sortable: false },
     // { key: 'selected_icon_url', label: 'Selected Icon', sortable: false },
   ];
@@ -1225,15 +1260,82 @@ export const CategoryTypeTab: React.FC = () => {
               <div className="text-gray-500">Loading categories...</div>
             </div>
           ) : (
-            <EnhancedTable
-              data={transformedCategories}
-              columns={columns}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey="category-types-table"
-              enableSearch={true}
-              searchPlaceholder="Search categories..."
-            />
+            <>
+              <EnhancedTable
+                data={transformedCategories}
+                columns={columns}
+                renderCell={renderCell}
+                renderActions={renderActions}
+                storageKey="category-types-table"
+                enableSearch={true}
+                searchPlaceholder="Search categories..."
+              />
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <div className="text-sm text-gray-500">
+                    Showing {(currentPage - 1) * perPage + 1}–{Math.min(currentPage * perPage, totalCount)} of {totalCount} categories
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(1)}
+                      disabled={currentPage === 1}
+                    >
+                      «
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      ‹
+                    </Button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                      .reduce<(number | 'ellipsis')[]>((acc, p, idx, arr) => {
+                        if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
+                        acc.push(p);
+                        return acc;
+                      }, [])
+                      .map((p, idx) =>
+                        p === 'ellipsis' ? (
+                          <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">…</span>
+                        ) : (
+                          <Button
+                            key={p}
+                            variant={p === currentPage ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => handlePageChange(p as number)}
+                            className="w-8"
+                          >
+                            {p}
+                          </Button>
+                        )
+                      )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      ›
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(totalPages)}
+                      disabled={currentPage === totalPages}
+                    >
+                      »
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

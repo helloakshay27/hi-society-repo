@@ -87,7 +87,7 @@ export const EditStatusModal: React.FC<EditStatusModalProps> = ({
         setIsLoading(true);
         try {
           // Fetch the specific status data from the API
-          const response = await fetch(getFullUrl('/pms/admin/complaint_statuses.json'), {
+          const response = await fetch(getFullUrl('/crm/admin/complaint_statuses.json'), {
             headers: {
               'Authorization': getAuthHeader(),
               'Content-Type': 'application/json'

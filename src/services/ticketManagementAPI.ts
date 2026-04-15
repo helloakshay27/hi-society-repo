@@ -122,6 +122,7 @@ export interface StatusFormData {
 // Operational Days Types
 export interface OperationalDay {
   id: number;
+  op_of_id?: number;
   dayofweek: string;
   start_hour: number;
   start_min: number;
@@ -931,7 +932,7 @@ export const ticketManagementAPI = {
   },
 
   async getStatuses() {
-    const response = await apiClient.get('/pms/admin/complaint_statuses.json');
+    const response = await apiClient.get('/crm/admin/complaint_statuses.json');
     return response.data;
   },
 
@@ -942,30 +943,20 @@ export const ticketManagementAPI = {
   },
 
   async updateOperationalDays(siteId: string, data: OperationalDay[]) {
-    const response = await apiClient.patch(`/pms/sites/${siteId}.json`, {
-      pms_site: {
-        helpdesk_operations_attributes: data.map(day => {
-          const attributes: any = {
-            op_of: "Pms::Site",
-            op_of_id: siteId,
-            dayofweek: day.dayofweek,
-            of_phase: "pms",
-            is_open: day.is_open ? "1" : "0",
-            start_hour: day.start_hour.toString(),
-            start_min: day.start_min.toString().padStart(2, '0'),
-            end_hour: day.end_hour.toString(),
-            end_min: day.end_min.toString().padStart(2, '0')
-          };
-          
-          // Only include id for existing records (id > 0)
-          if (day.id > 0) {
-            attributes.id = day.id.toString();
-          }
-          
-          return attributes;
-        })
-      },
-      id: siteId
+    const response = await apiClient.put(`/societies/${siteId}.json`, {
+      society: {
+        helpdesk_operations_attributes: data.map(day => ({
+          ...(day.id > 0 ? { id: day.id } : {}),
+          dayofweek: day.dayofweek,
+          active: day.active,
+          is_open: day.is_open,
+          start_hour: day.is_open ? day.start_hour : null,
+          start_min: day.is_open ? day.start_min : null,
+          end_hour: day.is_open ? day.end_hour : null,
+          end_min: day.is_open ? day.end_min : null,
+          of_phase: 'post_possession',
+        }))
+      }
     });
     return response.data;
   },
@@ -996,7 +987,7 @@ export const ticketManagementAPI = {
   },
 
   async getComplaintModes() {
-    const response = await apiClient.get('/pms/admin/complaint_modes.json');
+    const response = await apiClient.get('/crm/admin/complaint_modes.json');
     return response.data;
   },
 

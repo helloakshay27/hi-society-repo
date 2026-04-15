@@ -25,11 +25,11 @@ export const RelatedToTab: React.FC = () => {
   const [editingRelatedTo, setEditingRelatedTo] = useState<RelatedToType | null>(null);
   const [issueTypeInput, setIssueTypeInput] = useState('');
 
-  // Fetch issue types from consolidated API
+  // Fetch issue types from new API
   const fetchRelatedToItems = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
+      const response = await fetch(getFullUrl('/dropdown/issue_types.json'), {
         headers: {
           'Authorization': getAuthHeader(),
           'Content-Type': 'application/json',
@@ -38,7 +38,11 @@ export const RelatedToTab: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setRelatedToItems(data.issue_types || []);
+        // API returns { issue_types: [...] }
+        const list = data.issue_types ?? [];
+        setRelatedToItems(Array.isArray(list) ? list : []);
+      } else {
+        toast.error('Failed to fetch issue types');
       }
     } catch (error) {
       console.error('Error fetching issue types:', error);
@@ -60,17 +64,19 @@ export const RelatedToTab: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('issue_type[name]', issueTypeInput.trim());
+      const payload = {
+        name: issueTypeInput.trim(),
+      };
 
       const response = await fetch(
-        getFullUrl('/crm/admin/helpdesk_categories/create_issue_type.json'),
+        getFullUrl('/crm/admin/create_issue_type.json'),
         {
           method: 'POST',
           headers: {
             'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
           },
-          body: formData,
+          body: JSON.stringify(payload),
         }
       );
 
@@ -98,22 +104,23 @@ export const RelatedToTab: React.FC = () => {
     if (!confirm('Are you sure you want to delete this issue type?')) {
       return;
     }
-    
     try {
-      const formData = new FormData();
-      formData.append('issue_type[active]', '0');
-
+      const payload = {
+        id: relatedTo.id,
+        name: relatedTo.name,
+        active: 0,
+      };
       const response = await fetch(
-        getFullUrl(`/crm/admin/helpdesk_categories/update_issue_type.json?id=${relatedTo.id}`),
+        getFullUrl('/crm/admin/modify_issue_type.json'),
         {
           method: 'POST',
           headers: {
             'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
           },
-          body: formData,
+          body: JSON.stringify(payload),
         }
       );
-
       if (response.ok) {
         toast.success('Issue type deleted successfully!');
         fetchRelatedToItems();
@@ -224,6 +231,7 @@ export const RelatedToTab: React.FC = () => {
           relatedTo={editingRelatedTo}
           onUpdate={handleUpdate}
           onRefresh={fetchRelatedToItems}
+          editApiEndpoint="/crm/admin/modify_issue_type.json"
         />
       )}
     </div>
