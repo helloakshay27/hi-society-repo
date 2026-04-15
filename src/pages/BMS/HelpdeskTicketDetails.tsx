@@ -653,6 +653,7 @@ export const TicketDetailsPage = () => {
     issue_related_to: '',
     complaint_mode_id: '',
     rca_template_ids: [] as number[],
+    rca_text: '',
     additional_notes: '',
     proactive_reactive: '', // <-- Add this property
     review_tracking: '',
@@ -973,7 +974,7 @@ export const TicketDetailsPage = () => {
         setCommunicationTemplates(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Error fetching communication templates:', err);
-        toast.error('Failed to load communication templates');
+        // toast.error('Failed to load communication templates');
       } finally {
         setLoadingTemplates(false);
       }
@@ -990,7 +991,7 @@ export const TicketDetailsPage = () => {
       try {
         setLoadingComplaintModes(true);
         const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        const url = `https://${baseUrl}/pms/admin/complaint_modes.json`;
+        const url = `https://${baseUrl}/crm/admin/complaint_modes.json`;
 
         const response = await fetch(url, {
           method: 'GET',
@@ -1006,7 +1007,7 @@ export const TicketDetailsPage = () => {
 
         const complaintModesResponse = await response.json();
         console.log('Complaint modes response:', complaintModesResponse);
-        setComplaintModes(complaintModesResponse || []);
+        setComplaintModes(complaintModesResponse.complaint_modes || complaintModesResponse || []);
       } catch (err) {
         console.error('Error fetching complaint modes:', err);
         toast.error('Failed to load complaint modes');
@@ -1025,7 +1026,7 @@ export const TicketDetailsPage = () => {
       try {
         setLoadingComplaintStatus(true);
         const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        const url = `https://${baseUrl}/pms/admin/complaint_statuses.json`;
+        const url = `https://${baseUrl}/crm/admin/complaint_statuses.json`;
 
         const response = await fetch(url, {
           method: 'GET',
@@ -1041,7 +1042,7 @@ export const TicketDetailsPage = () => {
 
         const complaintStatusResponse = await response.json();
         console.log('Complaint status response:', complaintStatusResponse);
-        setComplaintStatus(complaintStatusResponse.data || complaintStatusResponse || []);
+        setComplaintStatus(Array.isArray(complaintStatusResponse) ? complaintStatusResponse : (complaintStatusResponse.data || []));
       } catch (err) {
         console.error('Error fetching complaint status:', err);
         toast.error('Failed to load complaint status');
@@ -1061,7 +1062,7 @@ export const TicketDetailsPage = () => {
       try {
         setLoadingResponsiblePersons(true);
         const baseUrl = API_CONFIG.BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        const url = `https://${baseUrl}/pms/users/get_escalate_to_users.json`;
+        const url = `https://${baseUrl}/usergroups/get_members_list.json`;
 
         const response = await fetch(url, {
           method: 'GET',
@@ -1077,7 +1078,14 @@ export const TicketDetailsPage = () => {
 
         const data = await response.json();
         console.log('Responsible persons response:', data);
-        setResponsiblePersons(data.users || []);
+        const members = Array.isArray(data) ? data : [];
+        setResponsiblePersons(
+          members.map((member: { user: { id: number; firstname: string; lastname: string } }) => ({
+            id: member.user.id,
+            employee_type: '',
+            full_name: `${member.user.firstname} ${member.user.lastname}`.trim(),
+          }))
+        );
       } catch (err) {
         console.error('Error fetching responsible persons:', err);
         toast.error('Failed to load responsible persons');
@@ -2505,6 +2513,13 @@ export const TicketDetailsPage = () => {
       issue_related_to: ticketData?.issue_related_to || 'FM',
       complaint_mode_id: findModeId(),
       rca_template_ids: ticketData?.rca_template_ids || [],
+      rca_text: ticketData?.root_cause
+        ? (typeof ticketData.root_cause === 'string'
+            ? ticketData.root_cause
+            : Array.isArray(ticketData.root_cause)
+              ? ticketData.root_cause.join(', ')
+              : '')
+        : '',
       additional_notes: ticketData?.notes || '',
       supplier_id: ticketData?.supplier_id ? ticketData.supplier_id.toString() : '',
       proactive_reactive: ticketData?.proactive_reactive || '',
@@ -2703,11 +2718,9 @@ export const TicketDetailsPage = () => {
         formDataToSend.append('service_id', ticketMgmtFormData.associatedTo.id.toString());
       }
 
-      // Add Root Cause Analysis template IDs under complaint
-      if (ticketMgmtFormData.rca_template_ids && ticketMgmtFormData.rca_template_ids.length > 0) {
-        ticketMgmtFormData.rca_template_ids.forEach((templateId, index) => {
-          formDataToSend.append(`complaint[root_cause_template_ids][${index}]`, String(templateId));
-        });
+      // Add Root Cause Analysis as plain text
+      if (ticketMgmtFormData.rca_text) {
+        formDataToSend.append('complaint[root_cause]', ticketMgmtFormData.rca_text);
       }
 
       console.log('🔄 Submitting ticket management with FormData');
@@ -5416,7 +5429,7 @@ export const TicketDetailsPage = () => {
                             </FormControl>
 
                             {/* Association Selection */}
-                            <div className="space-y-3">
+                            {/* <div className="space-y-3">
                               <FormLabel component="legend" className="text-sm font-medium">
                                 Association Type
                               </FormLabel>
@@ -5437,7 +5450,6 @@ export const TicketDetailsPage = () => {
                                 />
                               </RadioGroup>
 
-                              {/* Conditional Dropdown */}
                               {associationType && (
                                 <FormControl fullWidth size="small">
                                   <InputLabel>
@@ -5476,7 +5488,7 @@ export const TicketDetailsPage = () => {
                                   </MuiSelect>
                                 </FormControl>
                               )}
-                            </div>
+                            </div> */}
 
                           </div>
 
@@ -5558,67 +5570,36 @@ export const TicketDetailsPage = () => {
                           {/* 3️⃣ RIGHT COLUMN - Template Fields */}
                           <div className="space-y-4">
                             {/* Root Cause Analysis */}
-                            <div className="relative">
-                              <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
+                            <div className="relative w-full">
+                              <textarea
+                                id="ticket-rca-text"
+                                value={ticketMgmtFormData.rca_text}
+                                onChange={e => handleTicketMgmtInputChange('rca_text', e.target.value)}
+                                rows={4}
+                                placeholder=" "
+                                className="peer block w-full appearance-none rounded border border-[#DAD7D0] bg-[#F2F2F2] px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
+                                  focus:outline-none
+                                  focus:border-[2px]
+                                  focus:border-[#1976d2]
+                                  hover:border-[#C72030]
+                                  resize-vertical"
+                                style={{ fontSize: '14px', height: '100px' }}
+                              />
+                              <label
+                                htmlFor="ticket-rca-text"
+                                className={`absolute left-3 -top-[10px] px-1 text-sm text-gray-500 z-[1] transition-all duration-200
+                                  peer-focus:bg-white
+                                  ${ticketMgmtFormData.rca_text ? 'bg-white' : ''}
+                                  peer-placeholder-shown:top-4
+                                  peer-placeholder-shown:text-base
+                                  peer-placeholder-shown:text-gray-400
+                                  peer-focus:-top-[10px]
+                                  peer-focus:text-sm`}
+                                style={{ backgroundColor: ticketMgmtFormData.rca_text ? 'white' : undefined }}
+                              >
                                 Root Cause Analysis
                               </label>
-                              <Select
-                                isMulti
-                                value={communicationTemplates
-                                  .filter(
-                                    (t) =>
-                                      t.identifier === 'Root Cause Analysis' && t.active === true &&
-                                      ticketMgmtFormData.rca_template_ids.includes(t.id)
-                                  )
-                                  .map((t) => ({ value: t.id, label: t.identifier_action }))}
-                                onChange={(selected) => {
-                                  const selectedIds = selected ? selected.map((s) => s.value) : [];
-                                  // Only update form data, don't call API immediately
-                                  handleRootCauseFormChange(selectedIds);
-                                }}
-                                options={communicationTemplates
-                                  .filter((t) => t.identifier === 'Root Cause Analysis' && t.active)
-                                  .map((t) => ({ value: t.id, label: t.identifier_action }))}
-                                styles={customStyles}
-                                components={{
-                                  MultiValue: CustomMultiValue,
-                                  MultiValueRemove: () => null,
-                                }}
-                                closeMenuOnSelect={false}
-                                placeholder="Select Root Cause Analysis..."
-                              />
                             </div>
-                            {(ticketMgmtFormData.rca_template_ids && ticketMgmtFormData.rca_template_ids.length > 0) && (
-                              <div
-                                className="space-y-2 min-w-0 mt-4"
-                                style={{ fontSize: "14px", fontWeight: "500" }}
-                              >
-                                {(() => {
-                                  // Use template IDs from form data with duplicate filtering
-                                  const uniqueIds = [...new Set(ticketMgmtFormData.rca_template_ids)];
-
-                                  return uniqueIds.map((templateId, index) => {
-                                    const matchedTemplate = communicationTemplates.find(
-                                      (template) =>
-                                        template.id === templateId &&
-                                        template.identifier === "Root Cause Analysis"
-                                    );
-
-                                    if (!matchedTemplate) return null;
-
-                                    return (
-                                      <div
-                                        key={`rca-display-${templateId}`}
-                                        className="text-[14px] font-medium text-[#000000] leading-[20px] max-h-48 overflow-y-auto pr-1 break-words overflow-wrap-anywhere"
-                                        style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-                                      >
-                                        {matchedTemplate.body || matchedTemplate.identifier_action}
-                                      </div>
-                                    );
-                                  });
-                                })()}
-                              </div>
-                            )}
 
                             {/* Additional Notes */}
                             <div className="relative w-full">
@@ -6209,14 +6190,14 @@ export const TicketDetailsPage = () => {
                               >
                                 Preventive Action
                               </label>
-                              <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[16px] min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
+                              <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[20px] pl-4 min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
                                 {ticketData?.preventive_action ? ticketData.preventive_action : 'Not provided'}
                               </div>
                             </div>
                           </div>
 
                           {/* Short-term Impact - View Only */}
-                          <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                          {/* <div className="bg-[#f2efea] border border-[#f2efea] p-4">
                             <div className="relative w-full pt-4">
                               <label
                                 style={{
@@ -6237,7 +6218,7 @@ export const TicketDetailsPage = () => {
                                 {ticketData?.short_term_impact ? ticketData.short_term_impact : 'Not provided'}
                               </div>
                             </div>
-                          </div>
+                          </div> */}
 
                           {/* Corrective Action - View Only */}
                           <div className="bg-[#f2efea] border border-[#f2efea] p-4">
@@ -6257,14 +6238,14 @@ export const TicketDetailsPage = () => {
                               >
                                 Corrective Action
                               </label>
-                              <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[16px] min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
+                              <div className="space-y-2 text-[14px] font-medium text-[#000000] leading-[20px] pl-4 min-h-16 h-auto pr-1 break-words overflow-wrap-anywhere">
                                 {ticketData?.corrective_action ? ticketData.corrective_action : 'Not provided'}
                               </div>
                             </div>
                           </div>
 
                           {/* Long-term Impact - View Only */}
-                          <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                          {/* <div className="bg-[#f2efea] border border-[#f2efea] p-4">
                             <div className="relative w-full pt-4">
                               <label
                                 style={{
@@ -6285,7 +6266,7 @@ export const TicketDetailsPage = () => {
                                 {ticketData?.long_term_impact ? ticketData.long_term_impact : 'Not provided'}
                               </div>
                             </div>
-                          </div>
+                          </div> */}
                         </div>
 
                         {/* Bottom Row: Review Date & Responsible Person - View Only */}
@@ -6379,7 +6360,7 @@ export const TicketDetailsPage = () => {
                           </div>
 
                           {/* Short-term Impact */}
-                          <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                          {/* <div className="bg-[#f2efea] border border-[#f2efea] p-4">
                             <div className="relative w-full">
                               <label
                                 style={{
@@ -6439,7 +6420,7 @@ export const TicketDetailsPage = () => {
                                 }}
                               />
                             </div>
-                          </div>
+                          </div> */}
 
                           {/* Corrective Action */}
                           <div className="bg-[#f2efea] border border-[#f2efea] p-4">
@@ -6505,7 +6486,7 @@ export const TicketDetailsPage = () => {
                           </div>
 
                           {/* Long-term Impact */}
-                          <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                          {/* <div className="bg-[#f2efea] border border-[#f2efea] p-4">
                             <div className="relative w-full">
                               <label
                                 style={{
@@ -6565,7 +6546,7 @@ export const TicketDetailsPage = () => {
                                 }}
                               />
                             </div>
-                          </div>
+                          </div> */}
                         </div>
 
                         {/* Bottom Row: Review Date & Responsible Person */}
@@ -8337,7 +8318,7 @@ export const TicketDetailsPage = () => {
                         </FormControl>
 
                         {/* Association Selection */}
-                        <div className="space-y-3">
+                        {/* <div className="space-y-3">
                           <FormLabel component="legend" className="text-sm font-medium">
                             Association Type
                           </FormLabel>
@@ -8358,7 +8339,7 @@ export const TicketDetailsPage = () => {
                             />
                           </RadioGroup>
 
-                          {/* Conditional Dropdown */}
+                          
                           {associationType && (
                             <FormControl fullWidth size="small">
                               <InputLabel>
@@ -8397,7 +8378,7 @@ export const TicketDetailsPage = () => {
                               </MuiSelect>
                             </FormControl>
                           )}
-                        </div>
+                        </div> */}
 
                       </div>
 
@@ -8479,67 +8460,36 @@ export const TicketDetailsPage = () => {
                       {/* 3️⃣ RIGHT COLUMN - Template Fields */}
                       <div className="space-y-4">
                         {/* Root Cause Analysis */}
-                        <div className="relative">
-                          <label className="absolute -top-2 left-3 bg-white px-2 text-sm font-medium text-gray-700 z-10">
+                        <div className="relative w-full">
+                          <textarea
+                            id="ticket-rca-text-2"
+                            value={ticketMgmtFormData.rca_text}
+                            onChange={e => handleTicketMgmtInputChange('rca_text', e.target.value)}
+                            rows={4}
+                            placeholder=" "
+                            className="peer block w-full appearance-none rounded border border-[#DAD7D0] bg-[#F2F2F2] px-3 pt-6 pb-2 text-base text-gray-900 placeholder-transparent
+                                  focus:outline-none
+                                  focus:border-[2px]
+                                  focus:border-[#1976d2]
+                                  hover:border-[#C72030]
+                                  resize-vertical"
+                            style={{ fontSize: '14px', height: '100px' }}
+                          />
+                          <label
+                            htmlFor="ticket-rca-text-2"
+                            className={`absolute left-3 -top-[10px] px-1 text-sm text-gray-500 z-[1] transition-all duration-200
+                              peer-focus:bg-white
+                              ${ticketMgmtFormData.rca_text ? 'bg-white' : ''}
+                              peer-placeholder-shown:top-4
+                              peer-placeholder-shown:text-base
+                              peer-placeholder-shown:text-gray-400
+                              peer-focus:-top-[10px]
+                              peer-focus:text-sm`}
+                            style={{ backgroundColor: ticketMgmtFormData.rca_text ? 'white' : undefined }}
+                          >
                             Root Cause Analysis
                           </label>
-                          <Select
-                            isMulti
-                            value={communicationTemplates
-                              .filter(
-                                (t) =>
-                                  t.identifier === 'Root Cause Analysis' && t.active === true &&
-                                  ticketMgmtFormData.rca_template_ids.includes(t.id)
-                              )
-                              .map((t) => ({ value: t.id, label: t.identifier_action }))}
-                            onChange={(selected) => {
-                              const selectedIds = selected ? selected.map((s) => s.value) : [];
-                              // Only update form data, don't call API immediately
-                              handleRootCauseFormChange(selectedIds);
-                            }}
-                            options={communicationTemplates
-                              .filter((t) => t.identifier === 'Root Cause Analysis' && t.active)
-                              .map((t) => ({ value: t.id, label: t.identifier_action }))}
-                            styles={customStyles}
-                            components={{
-                              MultiValue: CustomMultiValue,
-                              MultiValueRemove: () => null,
-                            }}
-                            closeMenuOnSelect={false}
-                            placeholder="Select Root Cause Analysis..."
-                          />
                         </div>
-                        {(ticketMgmtFormData.rca_template_ids && ticketMgmtFormData.rca_template_ids.length > 0) && (
-                          <div
-                            className="space-y-2 min-w-0 mt-4"
-                            style={{ fontSize: "14px", fontWeight: "500" }}
-                          >
-                            {(() => {
-                              // Use template IDs from form data with duplicate filtering
-                              const uniqueIds = [...new Set(ticketMgmtFormData.rca_template_ids)];
-
-                              return uniqueIds.map((templateId, index) => {
-                                const matchedTemplate = communicationTemplates.find(
-                                  (template) =>
-                                    template.id === templateId &&
-                                    template.identifier === "Root Cause Analysis"
-                                );
-
-                                if (!matchedTemplate) return null;
-
-                                return (
-                                  <div
-                                    key={`rca-display-${templateId}`}
-                                    className="text-[14px] font-medium text-[#000000] leading-[20px] max-h-48 overflow-y-auto pr-1 break-words overflow-wrap-anywhere"
-                                    style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-                                  >
-                                    {matchedTemplate.body || matchedTemplate.identifier_action}
-                                  </div>
-                                );
-                              });
-                            })()}
-                          </div>
-                        )}
 
                         {/* Additional Notes */}
                         <div className="relative w-full">
@@ -9102,44 +9052,40 @@ export const TicketDetailsPage = () => {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                       {/* Preventive Action - View Only */}
-                      <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
-                        <div className="relative">
-                          <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-[#6B6B6B] font-medium">Preventive Action</label>
-                          <div className="mt-4 space-y-2 text-[14px] text-[#1A1A1A] break-words overflow-wrap-anywhere">
-                            {ticketData?.preventive_action ? ticketData.preventive_action : 'Not provided'}
-                          </div>
+                      <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                        <label className="block text-[12px] text-[#6B6B6B] font-medium mb-2">Preventive Action</label>
+                        <div className="text-[14px] text-[#1A1A1A] break-words">
+                          {ticketData?.preventive_action ? ticketData.preventive_action : 'Not provided'}
                         </div>
                       </div>
 
                       {/* Short-term Impact - View Only */}
-                      <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
+                      {/* <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
                         <div className="relative">
                           <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-[#6B6B6B] font-medium">Short-term Impact</label>
                           <div className="mt-4 space-y-2 text-[14px] text-[#1A1A1A] break-words overflow-wrap-anywhere">
                             {ticketData?.short_term_impact ? ticketData.short_term_impact : 'Not provided'}
                           </div>
                         </div>
-                      </div>
+                      </div> */}
 
                       {/* Corrective Action - View Only */}
-                      <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
-                        <div className="relative">
-                          <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-[#6B6B6B] font-medium">Corrective Action</label>
-                          <div className="mt-4 space-y-2 text-[14px] text-[#1A1A1A] break-words overflow-wrap-anywhere">
-                            {ticketData?.corrective_action ? ticketData.corrective_action : 'Not provided'}
-                          </div>
+                      <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                        <label className="block text-[12px] text-[#6B6B6B] font-medium mb-2">Corrective Action</label>
+                        <div className="text-[14px] text-[#1A1A1A] break-words">
+                          {ticketData?.corrective_action ? ticketData.corrective_action : 'Not provided'}
                         </div>
                       </div>
 
                       {/* Long-term Impact - View Only */}
-                      <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
+                      {/* <div className="relative w-full pt-4 bg-[#f2efea] border border-[#f2efea] p-4">
                         <div className="relative">
                           <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-[#6B6B6B] font-medium">Long-term Impact</label>
                           <div className="mt-4 space-y-2 text-[14px] text-[#1A1A1A] break-words overflow-wrap-anywhere">
                             {ticketData?.long_term_impact ? ticketData.long_term_impact : 'Not provided'}
                           </div>
                         </div>
-                      </div>
+                      </div> */}
                     </div>
 
                     {/* Bottom Row: Review Date & Responsible Person - View Only */}
@@ -9233,7 +9179,7 @@ export const TicketDetailsPage = () => {
                       </div>
 
                       {/* Short-term Impact */}
-                      <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                      {/* <div className="bg-[#f2efea] border border-[#f2efea] p-4">
                         <div className="relative w-full">
                           <label
                             style={{
@@ -9318,7 +9264,7 @@ export const TicketDetailsPage = () => {
                             ));
                           })()}
                         </div>
-                      </div>
+                      </div> */}
 
                       {/* Corrective Action */}
                       <div className="bg-[#f2efea] border border-[#f2efea] p-4">
@@ -9408,8 +9354,8 @@ export const TicketDetailsPage = () => {
                         </div>
                       </div>
 
-                      {/* Long-term Impact */}
-                      <div className="bg-[#f2efea] border border-[#f2efea] p-4">
+                  
+                      {/* <div className="bg-[#f2efea] border border-[#f2efea] p-4">
                         <div className="relative w-full">
                           <label
                             style={{
@@ -9494,7 +9440,7 @@ export const TicketDetailsPage = () => {
                             ));
                           })()}
                         </div>
-                      </div>
+                      </div> */}
                     </div>
 
                     {/* Bottom Row: Review Date & Responsible Person */}

@@ -69,6 +69,10 @@ export const StatusTab: React.FC = () => {
   const [userAccount, setUserAccount] = useState<UserAccountResponse | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<StatusType | null>(null);
+  const [closeByUser, setCloseByUser] = useState(false);
+  const [autoComplaintClose, setAutoComplaintClose] = useState(false);
+  const [isSavingTicketSettings, setIsSavingTicketSettings] = useState(false);
+  const [settingsSocietyId, setSettingsSocietyId] = useState<number | null>(null);
 
   const currentSiteId =
     accounts && accounts.length > 0
@@ -88,7 +92,7 @@ export const StatusTab: React.FC = () => {
   useEffect(() => {
     fetchStatuses();
     loadUserAccount();
-    fetchReopenData();
+    fetchComplaintSettings();
   }, []);
 
   const loadUserAccount = async () => {
@@ -101,10 +105,45 @@ export const StatusTab: React.FC = () => {
     }
   };
 
-  const fetchReopenData = async () => {
+  const handleSaveTicketSettings = async () => {
+    const societyId = settingsSocietyId || userAccount?.company_id;
+    if (!societyId) {
+      toast.error('Unable to determine society ID. Please refresh and try again.');
+      return;
+    }
+    setIsSavingTicketSettings(true);
     try {
-      const url = getFullUrl('/pms/admin/reopen_data.json');
+      const url = getFullUrl(`/societies/${societyId}.json`);
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          society: {
+            auto_complaint_close: autoComplaintClose,
+            close_by_user: closeByUser,
+          },
+        }),
+      });
+      if (response.ok) {
+        toast.success('Ticket settings updated successfully!');
+      } else {
+        const errorData = await response.json().catch(() => null);
+        toast.error(errorData?.message || 'Failed to update ticket settings');
+      }
+    } catch (error) {
+      console.error('Error saving ticket settings:', error);
+      toast.error('Failed to update ticket settings');
+    } finally {
+      setIsSavingTicketSettings(false);
+    }
+  };
 
+  const fetchComplaintSettings = async () => {
+    try {
+      const url = getFullUrl('/crm/admin/complaint_settings_index.json');
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -112,20 +151,31 @@ export const StatusTab: React.FC = () => {
           'Content-Type': 'application/json',
         },
       });
-
       if (response.ok) {
         const data = await response.json();
 
-        // Check if data exists and populate the form
-        if (data && data.period_type && data.time_period) {
+        // Populate reopen settings
+        const reopen = data.reopen_status;
+        if (reopen && reopen.period_type && reopen.time_period) {
           setAllowReopen(true);
-          setPeriodType(data.period_type as 'days' | 'hours' | 'minutes');
-          setTimePeriod(data.time_period.toString());
+          setPeriodType(reopen.period_type as 'days' | 'hours' | 'minutes');
+          setTimePeriod(reopen.time_period.toString());
+        } else {
+          setAllowReopen(false);
+        }
+
+        // Populate society ticket settings
+        const societySettings = data.society_settings;
+        if (societySettings) {
+          setCloseByUser(societySettings.close_by_user || false);
+          setAutoComplaintClose(societySettings.auto_complaint_close || false);
+          if (societySettings.society_id) {
+            setSettingsSocietyId(societySettings.society_id);
+          }
         }
       }
     } catch (error) {
-      console.error('Error fetching reopen data:', error);
-      // Don't show error toast as this might be expected if no data exists yet
+      console.error('Error fetching complaint settings:', error);
     }
   };
 
@@ -236,7 +286,7 @@ export const StatusTab: React.FC = () => {
     }
 
     try {
-      const url = getFullUrl('/pms/admin/create_reopen.json');
+      const url = getFullUrl('/crm/admin/create_reopen.json');
 
       const response = await fetch(url, {
         method: 'POST',
@@ -252,11 +302,7 @@ export const StatusTab: React.FC = () => {
 
       if (response.ok) {
         toast.success('Reopen settings saved successfully!');
-        // Store current tab and refresh page
-        localStorage.setItem('ticketManagementActiveTab', 'status');
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        await fetchComplaintSettings();
       } else {
         const errorData = await response.json().catch(() => null);
         toast.error(errorData?.message || 'Failed to save reopen settings');
@@ -322,7 +368,7 @@ export const StatusTab: React.FC = () => {
     { key: 'name', label: 'Status', sortable: true },
     { key: 'fixed_state', label: 'Fixed State', sortable: true },
     { key: 'color_code', label: 'Color', sortable: false },
-    { key: 'email', label: 'Email', sortable: true },
+    // { key: 'email', label: 'Email', sortable: true },
   ];
 
   const renderCell = (item: any, columnKey: string) => {
@@ -531,6 +577,38 @@ export const StatusTab: React.FC = () => {
                   )}
                 </div>
               )}
+
+              <div className="pt-4 border-t space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="closeByUser"
+                    checked={closeByUser}
+                    onCheckedChange={(checked) => setCloseByUser(checked === true)}
+                  />
+                  <label htmlFor="closeByUser" className="text-sm font-medium">
+                    Close Tickets by User
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="autoComplaintClose"
+                    checked={autoComplaintClose}
+                    onCheckedChange={(checked) => setAutoComplaintClose(checked === true)}
+                  />
+                  <label htmlFor="autoComplaintClose" className="text-sm font-medium">
+                    Auto Close Tickets
+                  </label>
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleSaveTicketSettings}
+                    disabled={isSavingTicketSettings}
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    {isSavingTicketSettings ? 'Saving...' : 'Update'}
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent >

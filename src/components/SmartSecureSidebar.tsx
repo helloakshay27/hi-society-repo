@@ -93,11 +93,11 @@ export const SmartSecureSidebar: React.FC = () => {
 
           {/* Visitor History */}
           <button
-            onClick={() => handleNavigation("/smartsecure/visitor-history")}
+            onClick={() => handleNavigation("/smartsecure/visitor-in")}
             className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-[#DBC2A9] relative overflow-hidden text-[#1a1a1a]"
             title="Visitor History"
           >
-            {isActive("/smartsecure/visitor-history") && (
+            {isActive("/smartsecure/visitor-in") && (
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C72030]" />
             )}
             <History className="w-5 h-5 flex-shrink-0 text-[#1a1a1a]" />
