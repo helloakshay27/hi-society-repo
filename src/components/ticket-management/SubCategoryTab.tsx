@@ -16,29 +16,19 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
-import { ticketManagementAPI } from '@/services/ticketManagementAPI';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Edit, Trash2, Plus } from 'lucide-react';
 
 interface SubCategoryItem {
   id: number;
-  helpdesk_category_id: number;
-  helpdesk_category_name: string | null;
-  name: string;
-  position: number | null;
-  active: number | null;
-  created_at: string;
-  updated_at: string;
   issue_type_id: number | null;
+  issue_type: string | null;
+  category_id: number;
+  category_type: string | null;
+  sub_category: string;
   helpdesk_text: string;
-  location_enabled: string | null;
-  location_data: string | null;
-  icon_file_name: string | null;
-  icon_content_type: string | null;
-  icon_file_size: number | null;
-  icon_updated_at: string | null;
-  customer_enabled: boolean | null;
+  active: number | null;
 }
 
 interface IssueType {
@@ -72,36 +62,50 @@ export const SubCategoryTab: React.FC = () => {
   const [editSubCategoryName, setEditSubCategoryName] = useState('');
   const [editHelpdeskText, setEditHelpdeskText] = useState('');
 
-  // Fetch all data from single API
+  // Fetch all data from separate APIs
   const fetchAllData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
-        headers: {
-          'Authorization': getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        // Set issue types from response
+      const [issueTypesRes, categoriesRes, subCategoriesRes] = await Promise.all([
+        fetch(getFullUrl('/user/issue_type.json'), {
+          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+        }),
+        fetch(getFullUrl('/crm/admin/helpdesk_categories.json'), {
+          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+        }),
+        fetch(getFullUrl('/crm/admin/helpdesk_sub_categories.json'), {
+          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+        }),
+      ]);
+
+      if (issueTypesRes.ok) {
+        const data = await issueTypesRes.json();
         setIssueTypes(
-          (data.issue_types || []).map((it: { id: number; name: string }) => ({
+          (data.data || []).map((it: { id: number; name: string }) => ({
             id: it.id,
             name: it.name,
           }))
         );
-        // Set categories from response
+      }
+
+      if (categoriesRes.ok) {
+        const data = await categoriesRes.json();
+        const cats = Array.isArray(data) ? data : (data.helpdesk_categories || []);
         setCategories(
-          (data.helpdesk_categories || []).map((cat: { id: number; name: string }) => ({
+          cats.map((cat: { id: number; name: string }) => ({
             id: cat.id,
             name: cat.name,
           }))
         );
-        // Set sub-categories from response
+      }
+
+      if (subCategoriesRes.ok) {
+        const data = await subCategoriesRes.json();
         setSubCategories(data.helpdesk_sub_categories || []);
-      } else {
-        toast.error('Failed to fetch data');
+      }
+
+      if (!issueTypesRes.ok || !categoriesRes.ok || !subCategoriesRes.ok) {
+        toast.error('Failed to fetch some data');
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -145,23 +149,27 @@ export const SubCategoryTab: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('helpdesk_sub_category[issue_type_id]', selectedIssueType);
-      formData.append('helpdesk_sub_category[name]', subCategoryName.trim());
-      formData.append('helpdesk_sub_category[helpdesk_category_id]', selectedCategory);
+      const body: Record<string, unknown> = {
+        helpdesk_sub_category: {
+          issue_type_id: selectedIssueType,
+          helpdesk_category_id: selectedCategory,
+          name: subCategoryName.trim(),
+        },
+      };
 
       if (helpdeskText.trim()) {
-        formData.append('helpdesk_sub_category[helpdesk_text]', helpdeskText.trim());
+        (body.helpdesk_sub_category as Record<string, unknown>).helpdesk_text = helpdeskText.trim();
       }
 
       const response = await fetch(
-        getFullUrl('/crm/admin/helpdesk_categories/create_helpdesk_sub_category.json'),
+        getFullUrl('/crm/admin/create_helpdesk_sub_category.json'),
         {
           method: 'POST',
           headers: {
             'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
           },
-          body: formData,
+          body: JSON.stringify(body),
         }
       );
 
@@ -188,8 +196,8 @@ export const SubCategoryTab: React.FC = () => {
   const handleEdit = (subCategory: SubCategoryItem) => {
     setEditingSubCategory(subCategory);
     setEditIssueType(subCategory.issue_type_id?.toString() || '');
-    setEditCategory(subCategory.helpdesk_category_id?.toString() || '');
-    setEditSubCategoryName(subCategory.name || '');
+    setEditCategory(subCategory.category_id?.toString() || '');
+    setEditSubCategoryName(subCategory.sub_category || '');
     setEditHelpdeskText(subCategory.helpdesk_text || '');
     setIsEditModalOpen(true);
   };
@@ -213,23 +221,27 @@ export const SubCategoryTab: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('helpdesk_sub_category[issue_type_id]', editIssueType);
-      formData.append('helpdesk_sub_category[name]', editSubCategoryName.trim());
-      formData.append('helpdesk_sub_category[helpdesk_category_id]', editCategory);
+      const body: Record<string, unknown> = {
+        id: editingSubCategory.id,
+        name: editSubCategoryName.trim(),
+        issue_type_id: editIssueType,
+        helpdesk_category_id: editCategory,
+        active: 1,
+      };
 
       if (editHelpdeskText.trim()) {
-        formData.append('helpdesk_sub_category[helpdesk_text]', editHelpdeskText.trim());
+        body.helpdesk_text = editHelpdeskText.trim();
       }
 
       const response = await fetch(
-        getFullUrl(`/crm/admin/helpdesk_categories/modify_helpdesk_sub_category.json?id=${editingSubCategory.id}`),
+        getFullUrl('/crm/admin/modify_helpdesk_sub_category.json'),
         {
           method: 'POST',
           headers: {
             'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
           },
-          body: formData,
+          body: JSON.stringify(body),
         }
       );
 
@@ -257,9 +269,31 @@ export const SubCategoryTab: React.FC = () => {
     }
 
     try {
-      await ticketManagementAPI.deleteSubCategory(subCategory.id.toString());
-      setSubCategories(subCategories.filter(sc => sc.id !== subCategory.id));
-      toast.success('Sub-category deleted successfully!');
+      const response = await fetch(
+        getFullUrl('/crm/admin/modify_helpdesk_sub_category.json'),
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: subCategory.id,
+            name: subCategory.sub_category,
+            issue_type_id: subCategory.issue_type_id?.toString() || '',
+            helpdesk_category_id: subCategory.category_id.toString(),
+            active: 0,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        setSubCategories(subCategories.filter(sc => sc.id !== subCategory.id));
+        toast.success('Sub-category deleted successfully!');
+      } else {
+        const errorData = await response.json().catch(() => null);
+        toast.error(errorData?.message || 'Failed to delete sub-category');
+      }
     } catch (error) {
       console.error('Error deleting sub-category:', error);
       toast.error('Failed to delete sub-category');
@@ -282,11 +316,11 @@ export const SubCategoryTab: React.FC = () => {
       case 'srno':
         return index + 1;
       case 'issue_type':
-        return getIssueTypeName(item.issue_type_id);
+        return item.issue_type || getIssueTypeName(item.issue_type_id);
       case 'category':
-        return item.helpdesk_category_name || getCategoryName(item.helpdesk_category_id);
+        return item.category_type || getCategoryName(item.category_id);
       case 'name':
-        return item.name || '--';
+        return item.sub_category || '--';
       case 'helpdesk_text':
         return item.helpdesk_text || '--';
       default:
