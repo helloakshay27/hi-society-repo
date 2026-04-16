@@ -1348,7 +1348,7 @@ export const AddTicketDashboard = () => {
 
       // Add file attachments
       attachedFiles.forEach((file, index) => {
-        formDataToSubmit.append(`complaint[attachments][]`, file);
+        formDataToSubmit.append(`complaint[documents][]`, file);
       });
 
       console.log('Submitting ticket with FormData:');
@@ -1394,7 +1394,7 @@ export const AddTicketDashboard = () => {
       } else if (currentPath.includes("tickets")) {
         navigate("/tickets");
       } else {
-        navigate("bms/helpdesk");
+        navigate("/bms/helpdesk");
       }
     } catch (error) {
       console.error('Error creating ticket:', error);
@@ -1545,11 +1545,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Ticket Type*</InputLabel>
+                      <InputLabel shrink>Ticket Type</InputLabel>
                       <MuiSelect
                         value={ticketType}
                         onChange={(e) => setTicketType(e.target.value)}
-                        label="Ticket Type*"
+                        label="Ticket Type"
                         notched
                         displayEmpty
                       >
@@ -1566,11 +1566,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Select Tower*</InputLabel>
+                      <InputLabel shrink>Select Tower</InputLabel>
                       <MuiSelect
                         value={selectedBlock}
                         onChange={(e) => handleBlockChange(e.target.value)}
-                        label="Select Tower*"
+                        label="Select Tower"
                         notched
                         displayEmpty
                         disabled={loadingBlocks}
@@ -1592,11 +1592,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Select Flat*</InputLabel>
+                      <InputLabel shrink>Select Flat</InputLabel>
                       <MuiSelect
                         value={selectedFlat}
                         onChange={(e) => handleFlatChange(e.target.value)}
-                        label="Select Flat*"
+                        label="Select Flat"
                         notched
                         displayEmpty
                         disabled={loadingFlats || !selectedBlock}
@@ -1622,11 +1622,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Related To*</InputLabel>
+                      <InputLabel shrink>Related To</InputLabel>
                       <MuiSelect
                         value={selectedIssueType}
                         onChange={(e) => handleIssueTypeChange(e.target.value)}
-                        label="Related To*"
+                        label="Related To"
                         notched
                         displayEmpty
                         disabled={loadingIssueTypes}
@@ -1648,11 +1648,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Select Category*</InputLabel>
+                      <InputLabel shrink>Select Category</InputLabel>
                       <MuiSelect
                         value={formData.categoryType}
                         onChange={(e) => handleCategoryChange(e.target.value)}
-                        label="Select Category*"
+                        label="Select Category"
                         notched
                         displayEmpty
                         disabled={loadingCategories || !selectedIssueType}
@@ -1675,11 +1675,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Select Sub Category*</InputLabel>
+                      <InputLabel shrink>Select Sub Category</InputLabel>
                       <MuiSelect
                         value={formData.subCategoryType}
                         onChange={(e) => setFormData({ ...formData, subCategoryType: e.target.value })}
-                        label="Select Sub Category*"
+                        label="Select Sub Category"
                         notched
                         displayEmpty
                         disabled={loadingSubcategories}
@@ -1726,7 +1726,7 @@ if (currentPath.includes("/club-management/helpdesk")) {
                     </FormControl>
 
                     <TextField
-                      label="Title*"
+                      label="Title"
                       placeholder="Enter title"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -1749,11 +1749,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Select Type*</InputLabel>
+                      <InputLabel shrink>Select Type</InputLabel>
                       <MuiSelect
                         value={formData.proactiveReactive}
                         onChange={(e) => setFormData({ ...formData, proactiveReactive: e.target.value })}
-                        label="Select Type*"
+                        label="Select Type"
                         notched
                         displayEmpty
                       >
@@ -1777,11 +1777,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Ticket Type*</InputLabel>
+                      <InputLabel shrink>Ticket Type</InputLabel>
                       <MuiSelect
                         value={ticketType}
                         onChange={(e) => setTicketType(e.target.value)}
-                        label="Ticket Type*"
+                        label="Ticket Type"
                         notched
                         displayEmpty
                       >
@@ -1798,11 +1798,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Select Tower*</InputLabel>
+                      <InputLabel shrink>Select Tower</InputLabel>
                       <MuiSelect
                         value={selectedBlock}
                         onChange={(e) => handleBlockChange(e.target.value)}
-                        label="Select Tower*"
+                        label="Select Tower"
                         notched
                         displayEmpty
                         disabled={loadingBlocks}
@@ -1824,11 +1824,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Select Flat*</InputLabel>
+                      <InputLabel shrink>Select Flat</InputLabel>
                       <MuiSelect
                         value={selectedFlat}
                         onChange={(e) => handleFlatChange(e.target.value)}
-                        label="Select Flat*"
+                        label="Select Flat"
                         notched
                         displayEmpty
                         disabled={loadingFlats || !selectedBlock}
@@ -1854,14 +1854,14 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Select User*</InputLabel>
+                      <InputLabel shrink>Select User</InputLabel>
                       <MuiSelect
                         value={selectedUser}
                         onChange={(e) => {
                           setSelectedUser(e.target.value);
                           setSelectedUserId(parseInt(e.target.value));
                         }}
-                        label="Select User*"
+                        label="Select User"
                         notched
                         displayEmpty
                         disabled={loadingFlatUsers || !selectedFlat}
@@ -1884,11 +1884,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Related To*</InputLabel>
+                      <InputLabel shrink>Related To</InputLabel>
                       <MuiSelect
                         value={selectedIssueType}
                         onChange={(e) => handleIssueTypeChange(e.target.value)}
-                        label="Related To*"
+                        label="Related To"
                         notched
                         displayEmpty
                         disabled={loadingIssueTypes}
@@ -1910,11 +1910,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Select Category*</InputLabel>
+                      <InputLabel shrink>Select Category</InputLabel>
                       <MuiSelect
                         value={formData.categoryType}
                         onChange={(e) => handleCategoryChange(e.target.value)}
-                        label="Select Category*"
+                        label="Select Category"
                         notched
                         displayEmpty
                         disabled={loadingCategories || !selectedIssueType}
@@ -1939,11 +1939,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Select Sub Category*</InputLabel>
+                      <InputLabel shrink>Select Sub Category</InputLabel>
                       <MuiSelect
                         value={formData.subCategoryType}
                         onChange={(e) => setFormData({ ...formData, subCategoryType: e.target.value })}
-                        label="Select Sub Category*"
+                        label="Select Sub Category"
                         notched
                         displayEmpty
                         disabled={loadingSubcategories}
@@ -1960,7 +1960,7 @@ if (currentPath.includes("/club-management/helpdesk")) {
                     </FormControl>
 
                     <TextField
-                      label="Title*"
+                      label="Title"
                       placeholder="Enter title"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -1983,11 +1983,11 @@ if (currentPath.includes("/club-management/helpdesk")) {
                       required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
-                      <InputLabel shrink>Select Type*</InputLabel>
+                      <InputLabel shrink>Select Type</InputLabel>
                       <MuiSelect
                         value={formData.proactiveReactive}
                         onChange={(e) => setFormData({ ...formData, proactiveReactive: e.target.value })}
-                        label="Select Type*"
+                        label="Select Type"
                         notched
                         displayEmpty
                       >
