@@ -4931,13 +4931,14 @@ export const TicketDetailsPage = () => {
                             { label: 'Issue Type', value: capitalizeWords(ticketData.issue_type) },
                             { label: 'Assigned To', value: ticketData.assigned_to || '-' },
                             { label: 'Behalf Of', value: ticketData.on_behalf_of || '-' },
-                            { label: 'Source', value: ticketData.asset_service || '-' },
+                            { label: 'Identification', value: ticketData.proactive_reactive || '-' },
+                            // { label: 'Source', value: ticketData.asset_service || '-' },
                           ],
                           [
                             { label: 'Created By', value: ticketData.created_by_name || '-' },
                             { label: 'Updated By', value: ticketData.updated_by || '-' },
                             { label: 'Mode', value: ticketData.complaint_mode || '-' },
-                            { label: 'Identification', value: ticketData.proactive_reactive || '-' },
+                            
                           ],
                         ].map((row, rIdx) => (
                           <div
@@ -5219,7 +5220,6 @@ export const TicketDetailsPage = () => {
                                   ? ticketData.vendors.map(v => v.name || v).join(', ')
                                   : '-')
                           }, { label: 'Assigned To', value: ticketData.assigned_to || '-' },
-                          { label: 'Association', value: ticketData.asset_service || '-' },
 
                           { label: 'Expected Visit Date', value: ticketData.visit_date ? ticketData.visit_date : '-' },
                           { label: 'Expected Completion Date', value: ticketData.expected_completion_date ? formatDate(ticketData.expected_completion_date) : '-' },
@@ -5261,56 +5261,10 @@ export const TicketDetailsPage = () => {
                                     Root Cause Analysis
                                   </div>
                                   <div className="flex-1 text-[14px] font-semibold text-[#1A1A1A] break-words overflow-wrap-anywhere min-w-0">
-                                    {ticketData.rca_template_ids && ticketData.rca_template_ids.length > 0
-                                      ? (() => {
-                                        const uniqueIds = [...new Set(ticketData.rca_template_ids)];
-                                        return uniqueIds.map((templateId) => {
-                                          const matchedTemplate = communicationTemplates.find(
-                                            (template) =>
-                                              template.id === templateId &&
-                                              template.identifier === "Root Cause Analysis"
-                                          );
-                                          return matchedTemplate ? matchedTemplate.identifier_action : null;
-                                        }).filter(Boolean).join(', ');
-                                      })()
-                                      : '-'
-                                    }
+                                    {ticketData.root_cause ? ticketData.root_cause : '-'}
                                   </div>
                                 </div>
                               </div>
-                              {(ticketData.rca_template_ids && ticketData.rca_template_ids.length > 0) && (
-                                <div
-                                  className="space-y-2 min-w-0 mt-4"
-                                  style={{ fontSize: "14px", fontWeight: "500" }}
-                                >
-                                  {(() => {
-                                    // Use template IDs from API with duplicate filtering
-                                    const uniqueIds = [...new Set(ticketData.rca_template_ids)];
-
-                                    return uniqueIds.map((templateId, index) => {
-                                      const matchedTemplate = communicationTemplates.find(
-                                        (template) =>
-                                          template.id === templateId &&
-                                          template.identifier === "Root Cause Analysis"
-                                      );
-
-                                      if (!matchedTemplate) return null;
-
-                                      return (
-                                        <div key={`rca-display-${templateId}`}>
-                                          {index > 0 && <div className="my-2 border-t border-gray-300"></div>}
-                                          <div
-                                            className="text-[14px] font-medium text-[#000000] leading-[20px] max-h-48 overflow-y-auto pr-1 break-words overflow-wrap-anywhere"
-                                            style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-                                          >
-                                            {matchedTemplate.body || matchedTemplate.identifier_action}
-                                          </div>
-                                        </div>
-                                      );
-                                    });
-                                  })()}
-                                </div>
-                              )}
                               <div className="flex flex-col min-w-0 mt-4">
                                 <span className="text-[11px] tracking-wide text-[#6B6B6B] mb-1">
                                   Additional Notes
@@ -8108,7 +8062,6 @@ export const TicketDetailsPage = () => {
                               ? ticketData.vendors.map(v => v.name || v).join(', ')
                               : '-')
                       }, { label: 'Assigned To', value: ticketData.assigned_to || '-' },
-                      { label: 'Association', value: ticketData.asset_service || 'Asset' },
 
                       { label: 'Expected Visit Date', value: ticketData.visit_date ? ticketData.visit_date : '-' },
                       { label: 'Expected Completion Date', value: ticketData.expected_completion_date ? formatDate(ticketData.expected_completion_date) : '-' },
@@ -8150,56 +8103,10 @@ export const TicketDetailsPage = () => {
                                 Root Cause Analysis
                               </div>
                               <div className="flex-1 text-[14px] font-semibold text-[#1A1A1A] break-words overflow-wrap-anywhere min-w-0">
-                                {ticketData.rca_template_ids && ticketData.rca_template_ids.length > 0
-                                  ? (() => {
-                                    const uniqueIds = [...new Set(ticketData.rca_template_ids)];
-                                    return uniqueIds.map((templateId) => {
-                                      const matchedTemplate = communicationTemplates.find(
-                                        (template) =>
-                                          template.id === templateId &&
-                                          template.identifier === "Root Cause Analysis"
-                                      );
-                                      return matchedTemplate ? matchedTemplate.identifier_action : null;
-                                    }).filter(Boolean).join(', ');
-                                  })()
-                                  : '-'
-                                }
+                                {ticketData.root_cause ? ticketData.root_cause : '-'}
                               </div>
                             </div>
                           </div>
-                          {(ticketData.rca_template_ids && ticketData.rca_template_ids.length > 0) && (
-                            <div
-                              className="space-y-2 min-w-0 mt-4"
-                              style={{ fontSize: "14px", fontWeight: "500" }}
-                            >
-                              {(() => {
-                                // Use template IDs from API with duplicate filtering
-                                const uniqueIds = [...new Set(ticketData.rca_template_ids)];
-
-                                return uniqueIds.map((templateId, index) => {
-                                  const matchedTemplate = communicationTemplates.find(
-                                    (template) =>
-                                      template.id === templateId &&
-                                      template.identifier === "Root Cause Analysis"
-                                  );
-
-                                  if (!matchedTemplate) return null;
-
-                                  return (
-                                    <div key={`rca-display-${templateId}`}>
-                                      {index > 0 && <div className="my-2 border-t border-gray-300"></div>}
-                                      <div
-                                        className="text-[14px] font-medium text-[#000000] leading-[20px] max-h-48 overflow-y-auto pr-1 break-words overflow-wrap-anywhere"
-                                        style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-                                      >
-                                        {matchedTemplate.body || matchedTemplate.identifier_action}
-                                      </div>
-                                    </div>
-                                  );
-                                });
-                              })()}
-                            </div>
-                          )}
                           <div className="flex flex-col min-w-0 mt-4">
                             <span className="text-[11px] tracking-wide text-[#6B6B6B] mb-1">
                               Additional Notes

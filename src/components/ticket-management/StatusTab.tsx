@@ -131,11 +131,15 @@ export const StatusTab: React.FC = () => {
         toast.success('Ticket settings updated successfully!');
       } else {
         const errorData = await response.json().catch(() => null);
-        toast.error(errorData?.message || 'Failed to update ticket settings');
+        toast.error(errorData?.message || errorData?.error || 'Failed to update ticket settings');
       }
-    } catch (error) {
+    } catch (error: any) {
+      const msg = error?.response?.data?.message
+        || error?.response?.data?.error
+        || error?.message
+        || 'Failed to update ticket settings';
       console.error('Error saving ticket settings:', error);
-      toast.error('Failed to update ticket settings');
+      toast.error(msg);
     } finally {
       setIsSavingTicketSettings(false);
     }
@@ -185,8 +189,12 @@ export const StatusTab: React.FC = () => {
       const data = await ticketManagementAPI.getStatuses();
       const list = data?.complaint_statuses ?? (Array.isArray(data) ? data : []);
       setStatuses(Array.isArray(list) ? list : []);
-    } catch (error) {
-      toast.error('Failed to fetch statuses');
+    } catch (error: any) {
+      const msg = error?.response?.data?.message
+        || error?.response?.data?.error
+        || error?.message
+        || 'Failed to fetch statuses';
+      toast.error(msg);
       console.error('Error fetching statuses:', error);
     } finally {
       setIsLoading(false);
@@ -261,8 +269,12 @@ export const StatusTab: React.FC = () => {
       toast.success('Status created successfully!');
       form.reset();
       fetchStatuses();
-    } catch (error) {
-      toast.error('Failed to create status');
+    } catch (error: any) {
+      const msg = error?.response?.data?.message
+        || error?.response?.data?.error
+        || error?.message
+        || 'Failed to create status';
+      toast.error(msg);
       console.error('Error creating status:', error);
     } finally {
       setIsSubmitting(false);
@@ -305,11 +317,15 @@ export const StatusTab: React.FC = () => {
         await fetchComplaintSettings();
       } else {
         const errorData = await response.json().catch(() => null);
-        toast.error(errorData?.message || 'Failed to save reopen settings');
+        toast.error(errorData?.message || errorData?.error || 'Failed to save reopen settings');
       }
-    } catch (error) {
+    } catch (error: any) {
+      const msg = error?.response?.data?.message
+        || error?.response?.data?.error
+        || error?.message
+        || 'Failed to save reopen settings';
       console.error('Error saving reopen settings:', error);
-      toast.error('Failed to save reopen settings');
+      toast.error(msg);
     }
   };
 
@@ -354,11 +370,15 @@ export const StatusTab: React.FC = () => {
         toast.success('Status deleted successfully!');
       } else {
         const errorData = await response.json().catch(() => null);
-        toast.error(errorData?.message || 'Failed to delete status');
+        toast.error(errorData?.message || errorData?.error || 'Failed to delete status');
       }
-    } catch (error) {
+    } catch (error: any) {
+      const msg = error?.response?.data?.message
+        || error?.response?.data?.error
+        || error?.message
+        || 'Failed to delete status';
       console.error('Error deleting status:', error);
-      toast.error('Failed to delete status');
+      toast.error(msg);
     }
   };
 
