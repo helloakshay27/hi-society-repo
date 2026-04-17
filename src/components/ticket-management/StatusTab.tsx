@@ -22,11 +22,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { ticketManagementAPI, UserAccountResponse } from '@/services/ticketManagementAPI';
 import { EditStatusModal } from './modals/EditStatusModal';
 import { toast } from 'sonner';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchStatuses, createStatus, updateStatus, deleteStatus, fetchAccounts } from '@/store/slices/statusesSlice';
 import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
@@ -73,6 +80,7 @@ export const StatusTab: React.FC = () => {
   const [autoComplaintClose, setAutoComplaintClose] = useState(false);
   const [isSavingTicketSettings, setIsSavingTicketSettings] = useState(false);
   const [settingsSocietyId, setSettingsSocietyId] = useState<number | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const currentSiteId =
     accounts && accounts.length > 0
@@ -202,42 +210,30 @@ export const StatusTab: React.FC = () => {
   };
 
   const handleCreateSubmit = async () => {
-    // Get form values directly from the form inputs
-    const statusNameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
-    const colorCodeInput = document.querySelector('input[placeholder="#000000"]') as HTMLInputElement;
-    const positionInput = document.querySelector('input[type="number"]') as HTMLInputElement;
-    const fixedStateValue = form.getValues('fixedState');
+    const values = form.getValues();
 
-    // Check for required fields with specific messages
-    if (!statusNameInput?.value?.trim()) {
+    if (!values.name?.trim()) {
       toast.error('Please enter a status name');
       return;
     }
 
-    // if (!fixedStateValue) {
-    //   toast.error('Please select a fixed state');
-    //   return;
-    // }
-
-    if (!colorCodeInput?.value?.trim()) {
+    if (!values.colorCode?.trim()) {
       toast.error('Please enter a color code');
       return;
     }
 
-    if (!positionInput?.value?.trim()) {
+    if (!values.position) {
       toast.error('Please enter an order number');
       return;
     }
 
-    // Get the form data
     const data: StatusFormData = {
-      name: statusNameInput.value.trim(),
-      fixedState: fixedStateValue as 'closed' | 'reopen' | 'complete' | '',
-      colorCode: colorCodeInput.value.trim(),
-      position: parseInt(positionInput.value) || 0,
+      name: values.name.trim(),
+      fixedState: values.fixedState as 'closed' | 'reopen' | 'complete' | '',
+      colorCode: values.colorCode.trim(),
+      position: values.position,
     };
 
-    // Continue with the rest of the validation and submission logic
     await handleSubmit(data);
   };
 
@@ -268,6 +264,7 @@ export const StatusTab: React.FC = () => {
       await ticketManagementAPI.createStatus(statusData);
       toast.success('Status created successfully!');
       form.reset();
+      setAddDialogOpen(false);
       fetchStatuses();
     } catch (error: any) {
       const msg = error?.response?.data?.message
@@ -425,233 +422,226 @@ export const StatusTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Status</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* Add Status Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+        setAddDialogOpen(open);
+        if (!open) form.reset();
+      }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Status</DialogTitle>
+          </DialogHeader>
           <Form {...form}>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status <span className="text-red-500">*</span></FormLabel>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status <span className="text-red-500">*</span></FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter status" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="fixedState"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fixed State</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <Input placeholder="Enter status" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="fixedState"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fixed State
-                        {/* <span className="text-red-500">*</span> */}
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select fixed state" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {fixedStates.map((state) => (
-                            <SelectItem key={state.value} value={state.value}>
-                              {state.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem >
-                  )}
-                />
-
-                < FormField
-                  control={form.control}
-                  name="colorCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Color Code <span className="text-red-500">*</span></FormLabel>
-                      <FormControl>
-                        <div className="flex gap-2">
-                          <Input
-                            type="color"
-                            className="w-16 h-10 p-1 border rounded"
-                            {...field}
-                          />
-                          <Input
-                            placeholder="#000000"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                < FormField
-                  control={form.control}
-                  name="position"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Order <span className="text-red-500">*</span></FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter order"
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div >
-
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleCreateSubmit}
-                  disabled={isSubmitting || loading}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
-                >
-                  {isSubmitting || loading ? 'Saving...' : 'Submit'}
-                </Button>
-              </div>
-            </div >
-          </Form >
-
-          <div className="mt-6 pt-6 border-t">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="allowReopen"
-                  checked={allowReopen}
-                  onCheckedChange={handleAllowReopenChange}
-                />
-                <label htmlFor="allowReopen" className="text-sm font-medium">
-                  Allow User to reopen ticket after closure
-                </label>
-              </div>
-
-              {allowReopen && (
-                <div className="ml-6 space-y-4 p-4 bg-gray-50 rounded-lg border">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">
-                        Period Type <span className="text-red-500">*</span>
-                      </label>
-                      <Select value={periodType} onValueChange={(value: 'days' | 'hours' | 'minutes') => {
-                        setPeriodType(value);
-                        setTimePeriod(''); // Reset time period when period type changes
-                      }}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select period type" />
+                          <SelectValue placeholder="Select fixed state" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="days">Days</SelectItem>
-                          <SelectItem value="hours">Hours</SelectItem>
-                          <SelectItem value="minutes">Minutes</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">
-                        Time Period <span className="text-red-500">*</span>
-                      </label>
+                      </FormControl>
+                      <SelectContent>
+                        {fixedStates.map((state) => (
+                          <SelectItem key={state.value} value={state.value}>
+                            {state.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="colorCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Color Code <span className="text-red-500">*</span></FormLabel>
+                    <FormControl>
+                      <div className="flex gap-2">
+                        <Input type="color" className="w-16 h-10 p-1 border rounded" {...field} />
+                        <Input placeholder="#000000" {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="position"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Order <span className="text-red-500">*</span></FormLabel>
+                    <FormControl>
                       <Input
                         type="number"
-                        placeholder="Enter time period"
-                        value={timePeriod}
-                        onChange={(e) => setTimePeriod(e.target.value)}
-                        min="1"
+                        placeholder="Enter order"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                       />
-                    </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </Form>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setAddDialogOpen(false); form.reset(); }} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => { await handleCreateSubmit(); }}
+              disabled={isSubmitting || loading}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              {isSubmitting || loading ? 'Saving...' : 'Add'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Main Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <EnhancedTable
+          data={statuses}
+          columns={columns}
+          renderCell={renderCell}
+          renderActions={renderActions}
+          storageKey="status-table"
+          enableSearch={true}
+          searchPlaceholder="Search statuses..."
+          leftActions={
+            <Button
+              onClick={() => setAddDialogOpen(true)}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </Button>
+          }
+        />
+      </div>
+
+      {/* Reopen & Ticket Settings Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Ticket Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="allowReopen"
+                checked={allowReopen}
+                onCheckedChange={handleAllowReopenChange}
+              />
+              <label htmlFor="allowReopen" className="text-sm font-medium">
+                Allow User to reopen ticket after closure
+              </label>
+            </div>
+
+            {allowReopen && (
+              <div className="ml-6 space-y-4 p-4 bg-gray-50 rounded-lg border">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      Period Type <span className="text-red-500">*</span>
+                    </label>
+                    <Select value={periodType} onValueChange={(value: 'days' | 'hours' | 'minutes') => {
+                      setPeriodType(value);
+                      setTimePeriod('');
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select period type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="days">Days</SelectItem>
+                        <SelectItem value="hours">Hours</SelectItem>
+                        <SelectItem value="minutes">Minutes</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-
-                  <div className="flex justify-end">
-                    <Button
-                      onClick={handleSaveReopen}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      Save Reopen Settings
-                    </Button>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      Time Period <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="Enter time period"
+                      value={timePeriod}
+                      onChange={(e) => setTimePeriod(e.target.value)}
+                      min="1"
+                    />
                   </div>
-
-                  {timePeriod && (
-                    <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                      <p className="text-sm text-black-800">
-                        <span className="font-semibold">Selected Time Period:</span> {timePeriod} {periodType}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="pt-4 border-t space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="closeByUser"
-                    checked={closeByUser}
-                    onCheckedChange={(checked) => setCloseByUser(checked === true)}
-                  />
-                  <label htmlFor="closeByUser" className="text-sm font-medium">
-                    Close Tickets by User
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="autoComplaintClose"
-                    checked={autoComplaintClose}
-                    onCheckedChange={(checked) => setAutoComplaintClose(checked === true)}
-                  />
-                  <label htmlFor="autoComplaintClose" className="text-sm font-medium">
-                    Auto Close Tickets
-                  </label>
                 </div>
                 <div className="flex justify-end">
-                  <Button
-                    onClick={handleSaveTicketSettings}
-                    disabled={isSavingTicketSettings}
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                  >
-                    {isSavingTicketSettings ? 'Saving...' : 'Update'}
+                  <Button onClick={handleSaveReopen} className="bg-[#C72030] hover:bg-[#a01828] text-white">
+                    Save Reopen Settings
                   </Button>
                 </div>
+                {timePeriod && (
+                  <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p className="text-sm">
+                      <span className="font-semibold">Selected Time Period:</span> {timePeriod} {periodType}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="pt-4 border-t space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="closeByUser"
+                  checked={closeByUser}
+                  onCheckedChange={(checked) => setCloseByUser(checked === true)}
+                />
+                <label htmlFor="closeByUser" className="text-sm font-medium">
+                  Close Tickets by User
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="autoComplaintClose"
+                  checked={autoComplaintClose}
+                  onCheckedChange={(checked) => setAutoComplaintClose(checked === true)}
+                />
+                <label htmlFor="autoComplaintClose" className="text-sm font-medium">
+                  Auto Close Tickets
+                </label>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleSaveTicketSettings}
+                  disabled={isSavingTicketSettings}
+                  className="bg-[#C72030] hover:bg-[#a01828] text-white"
+                >
+                  {isSavingTicketSettings ? 'Saving...' : 'Update'}
+                </Button>
               </div>
             </div>
           </div>
-        </CardContent >
-      </Card >
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Status List</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading statuses...</div>
-            </div>
-          ) : (
-            <EnhancedTable
-              data={statuses}
-              columns={columns}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey="status-table"
-            />
-          )}
         </CardContent>
       </Card>
 
@@ -661,6 +651,6 @@ export const StatusTab: React.FC = () => {
         status={selectedStatus}
         onUpdate={handleStatusUpdated}
       />
-    </div >
+    </div>
   );
 };

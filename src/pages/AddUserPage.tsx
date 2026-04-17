@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { countries } from "country-data";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { Camera, User as UserIcon, Info, Plus, X, FileText, FileSpreadsheet, File as GenericFile } from "lucide-react";
+import { Camera, User as UserIcon, Info, Plus, X, FileText, FileSpreadsheet, File as GenericFile, Upload, Video } from "lucide-react";
 import {
   Box,
   Paper,
@@ -23,6 +23,7 @@ import {
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { getFullUrl } from "@/config/apiConfig";
 import axios from "axios";
+import { toast } from "sonner";
 
 // Styled Components
 const SectionCard = styled(Paper)(({ theme }) => ({
@@ -230,9 +231,17 @@ export const AddUserPage = () => {
   const [flatOptions, setFlatOptions] = useState<{ id: number; flat_no: string }[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+
+  // Camera capture state
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
+  const [selectedCamera, setSelectedCamera] = useState<string | undefined>(undefined);
+  const [isVideoReady, setIsVideoReady] = useState(false);
 
   // Get society_id from localStorage (set by header)
   const getSocietyId = () => {
@@ -344,24 +353,21 @@ export const AddUserPage = () => {
             fetchFlats(parseInt(formDataState.tower));
           }
         })
-        .catch(() => setError("Failed to load user data."))
+        .catch(() => toast.error("Failed to load user data."))
         .finally(() => setLoading(false));
     }
   }, [isEdit, userId]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (error) setError(null);
   };
 
   const handleFileChange = (files: File[]) => {
     setFormData((prev) => ({ ...prev, agreementDocuments: files }));
-    if (error) setError(null);
   };
 
   const validateForm = (): string | null => {
-    if (!formData.title) {
+    if (!isEdit && !formData.title) {
       return "Please select a title";
     }
     if (!formData.firstName.trim()) {
@@ -404,9 +410,6 @@ export const AddUserPage = () => {
     if (!formData.flat) {
       return "Please select a flat";
     }
-    if (!formData.category) {
-      return "Please select a category";
-    }
     return null;
   };
 
@@ -414,12 +417,11 @@ export const AddUserPage = () => {
     // Validate form before submission
     const validationError = validateForm();
     if (validationError) {
-      setError(validationError);
+      toast.error(validationError);
       return;
     }
 
     setLoading(true);
-    setError(null);
     const payload = mapFormDataToApiPayload(formData, flatOptions);
     const url = isEdit && userId ? getEditApiUrl(userId) : getCreateApiUrl();
     const method = isEdit ? "patch" : "post";
@@ -458,7 +460,7 @@ export const AddUserPage = () => {
       navigate("/settings/manage-users");
     } catch (e) {
       console.error("Submission error:", e);
-      setError("Failed to submit. Please try again.");
+      toast.error("Failed to submit. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -471,13 +473,107 @@ export const AddUserPage = () => {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
-      // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setProfileImage(previewUrl);
       setProfileImageFile(file);
     } else if (file) {
-      setError("Please select a valid image file");
+      toast.error("Please select a valid image file");
     }
+  };
+
+  // Camera functions
+  const stopCameraStream = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+  };
+
+  const startCamera = async (deviceId?: string) => {
+    try {
+      stopCameraStream();
+      const constraints = {
+        video: deviceId ? { deviceId: { exact: deviceId } } : true,
+        audio: false,
+      };
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      setCameraStream(newStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = newStream;
+        videoRef.current.onloadedmetadata = () => {
+          setIsVideoReady(true);
+          videoRef.current?.play().catch(console.error);
+        };
+      }
+    } catch (error) {
+      console.error("Error starting camera:", error);
+      toast.error("Failed to access camera. Please check permissions.");
+    }
+  };
+
+  const initializeCamera = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter((d) => d.kind === "videoinput");
+      setCameras(videoDevices);
+      if (videoDevices.length > 0) {
+        const defaultCamera = videoDevices[0].deviceId;
+        setSelectedCamera(defaultCamera);
+        await startCamera(defaultCamera);
+      } else {
+        toast.error("No camera devices found.");
+      }
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      toast.error("Camera permission denied. Please allow camera access.");
+    }
+  };
+
+  const handleOpenCamera = () => {
+    setIsVideoReady(false);
+    setShowCameraModal(true);
+    initializeCamera();
+  };
+
+  const handleCapturePhoto = () => {
+    if (videoRef.current && canvasRef.current && cameraStream) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      if (ctx && video.videoWidth > 0 && video.videoHeight > 0) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL("image/jpeg", 0.8);
+        // Convert base64 to File for the same profileImageFile parameter
+        fetch(imageData)
+          .then((res) => res.blob())
+          .then((blob) => {
+            const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
+            setProfileImage(imageData);
+            setProfileImageFile(file);
+          });
+        stopCameraStream();
+        setShowCameraModal(false);
+        toast.success("Photo captured successfully!");
+      } else {
+        toast.error("Failed to capture photo. Please try again.");
+      }
+    } else {
+      toast.error("Camera not ready. Please try again.");
+    }
+  };
+
+  const handleCameraChange = (deviceId: string) => {
+    setSelectedCamera(deviceId);
+    setIsVideoReady(false);
+    startCamera(deviceId);
+  };
+
+  const closeCameraModal = () => {
+    stopCameraStream();
+    setShowCameraModal(false);
   };
   const countryCodes = countries.all
     .map((country) => ({
@@ -519,9 +615,6 @@ export const AddUserPage = () => {
             {isEdit ? "Edit User" : "Add User"}
           </h1>
         </Paper>
-        {error && (
-          <Box sx={{ color: "#C72030", mb: 2, fontWeight: 500 }}>{error}</Box>
-        )}
         {/* Primary Details Section */}
         <SectionCard>
           <SectionHeader>
@@ -562,16 +655,9 @@ export const AddUserPage = () => {
                     accept="image/*"
                     style={{ display: 'none' }}
                     id="profile-upload"
+                    title="Upload profile image"
                     onChange={handleImageUpload}
                   />
-                  <CameraButton
-                    onClick={() => {
-                      const input = document.getElementById('profile-upload') as HTMLInputElement;
-                      input?.click();
-                    }}
-                  >
-                    <Camera size={16} />
-                  </CameraButton>
                   {profileImage && (
                     <IconButton
                       size="small"
@@ -590,7 +676,6 @@ export const AddUserPage = () => {
                       onClick={() => {
                         setProfileImage(null);
                         setProfileImageFile(null);
-                        // Reset input so same file can be selected again
                         const input = document.getElementById('profile-upload') as HTMLInputElement;
                         if (input) input.value = '';
                       }}
@@ -599,13 +684,135 @@ export const AddUserPage = () => {
                     </IconButton>
                   )}
                 </Box>
+                {/* Camera & Upload Buttons */}
+                <Box sx={{ display: 'flex', gap: '8px', mt: '4px' }}>
+                  <IconButton
+                    size="small"
+                    title="Capture from camera"
+                    onClick={handleOpenCamera}
+                    sx={{
+                      backgroundColor: '#C72030',
+                      color: 'white',
+                      width: '36px',
+                      height: '36px',
+                      '&:hover': { backgroundColor: '#a01828' },
+                    }}
+                  >
+                    <Video size={18} />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    title="Upload image"
+                    onClick={() => {
+                      const input = document.getElementById('profile-upload') as HTMLInputElement;
+                      input?.click();
+                    }}
+                    sx={{
+                      backgroundColor: '#C72030',
+                      color: 'white',
+                      width: '36px',
+                      height: '36px',
+                      '&:hover': { backgroundColor: '#a01828' },
+                    }}
+                  >
+                    <Upload size={18} />
+                  </IconButton>
+                </Box>
               </Box>
+
+              {/* Camera Modal */}
+              {showCameraModal && (
+                <Box
+                  sx={{
+                    position: 'fixed',
+                    top: '80px',
+                    left: '24px',
+                    zIndex: 1300,
+                    width: '340px',
+                    backgroundColor: 'white',
+                    borderRadius: '8px',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                    border: '1px solid #e5e7eb',
+                    p: 2,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Camera</h3>
+                    <IconButton size="small" onClick={closeCameraModal}>
+                      <X size={16} />
+                    </IconButton>
+                  </Box>
+
+                  <Box sx={{ position: 'relative', mb: 2, backgroundColor: '#111', borderRadius: '8px', overflow: 'hidden' }}>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                    />
+                    <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
+                      <span style={{ 
+                        backgroundColor: '#f97316', color: 'white', padding: '2px 8px', 
+                        borderRadius: '4px', fontSize: '12px', fontWeight: 500 
+                      }}>
+                        📹 Preview
+                      </span>
+                    </Box>
+                  </Box>
+
+                  {cameras.length > 1 && (
+                    <FormControl fullWidth size="small" sx={{ mb: 2, ...fieldStyles }}>
+                      <InputLabel>Select Camera</InputLabel>
+                      <Select
+                        value={selectedCamera || ''}
+                        onChange={(e) => handleCameraChange(e.target.value)}
+                        label="Select Camera"
+                      >
+                        {cameras.map((cam) => (
+                          <MenuItem key={cam.deviceId} value={cam.deviceId}>
+                            {cam.label || `Camera ${cameras.indexOf(cam) + 1}`}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <MuiButton
+                      fullWidth
+                      variant="contained"
+                      onClick={handleCapturePhoto}
+                      disabled={!cameraStream || !isVideoReady}
+                      sx={{
+                        backgroundColor: '#C72030',
+                        borderRadius: '20px',
+                        textTransform: 'none',
+                        '&:hover': { backgroundColor: '#a01828' },
+                        '&.Mui-disabled': { backgroundColor: '#e5e7eb' },
+                      }}
+                    >
+                      {!isVideoReady ? 'Loading Camera...' : 'Capture Photo'}
+                    </MuiButton>
+                    <MuiButton
+                      fullWidth
+                      variant="outlined"
+                      onClick={closeCameraModal}
+                      sx={{ borderRadius: '20px', textTransform: 'none' }}
+                    >
+                      Close
+                    </MuiButton>
+                  </Box>
+
+                  <canvas ref={canvasRef} style={{ display: 'none' }} />
+                </Box>
+              )}
 
               {/* Form Fields */}
               <Box sx={{ flex: 1, display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: '16px' }}>
                 {/* Title */}
                 <FormControl fullWidth size="small" sx={fieldStyles}>
-                  <InputLabel required>Select Title</InputLabel>
+                  <InputLabel required={!isEdit}>Select Title</InputLabel>
                   <Select
                     value={formData.title}
                     label="Select Title"
@@ -730,7 +937,8 @@ export const AddUserPage = () => {
                     label="Select Status"
                     onChange={(e) => handleInputChange("status", e.target.value)}
                   >
-                    <MenuItem value="1">Approved</MenuItem>
+                    <MenuItem value="1">Approve</MenuItem>
+                    <MenuItem value="0">Reject</MenuItem>
                   </Select>
                 </FormControl>
 
@@ -774,7 +982,7 @@ export const AddUserPage = () => {
                 </FormControl>
 
                 {/* Category */}
-                <FormControl fullWidth required size="small" sx={fieldStyles}>
+                <FormControl fullWidth size="small" sx={fieldStyles}>
                   <InputLabel>Select Category</InputLabel>
                   <Select
                     value={formData.category}

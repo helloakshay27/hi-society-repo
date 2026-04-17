@@ -36,7 +36,7 @@ const columns: ColumnConfig[] = [
   { key: "tower", label: "Tower", sortable: true, draggable: true },
   { key: "flat", label: "Flat", sortable: true, draggable: true },
   { key: "occupancy", label: "Occupancy", sortable: true, draggable: true },
-  { key: "title", label: "Title", sortable: true, draggable: true },
+  // { key: "title", label: "Title", sortable: true, draggable: true },
   { key: "name", label: "Name", sortable: true, draggable: true },
   { key: "mobileNumber", label: "Mobile Number", sortable: true, draggable: true },
   { key: "email", label: "Email", sortable: true, draggable: true },
@@ -626,7 +626,7 @@ const ManageUsersPage = () => {
       case "flat":
         return <span className="text-sm">{user.flat}</span>;
       case "tower":
-        return <span className="text-sm">{user.block_no}</span>;
+        return <span className="text-sm">{user.tower}</span>;
       case "status":
         return (
           <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded">

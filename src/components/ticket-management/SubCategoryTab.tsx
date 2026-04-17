@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -14,7 +13,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
@@ -64,6 +65,7 @@ export const SubCategoryTab: React.FC = () => {
   const [editCategory, setEditCategory] = useState('');
   const [editSubCategoryName, setEditSubCategoryName] = useState('');
   const [editHelpdeskText, setEditHelpdeskText] = useState('');
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   // Fetch all data from separate APIs
   const fetchSubCategories = useCallback(async (page = 1) => {
@@ -187,6 +189,7 @@ export const SubCategoryTab: React.FC = () => {
         setSelectedCategory('');
         setSubCategoryName('');
         setHelpdeskText('');
+        setAddDialogOpen(false);
         fetchSubCategories(1);
       } else {
         const errorData = await response.json().catch(() => null);
@@ -346,14 +349,23 @@ export const SubCategoryTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Sub-Category</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-end gap-3">
-            {/* Issue Type Dropdown */}
-            <div className="flex-1">
+      {/* Add Sub-Category Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+        setAddDialogOpen(open);
+        if (!open) {
+          setSelectedIssueType('');
+          setSelectedCategory('');
+          setSubCategoryName('');
+          setHelpdeskText('');
+        }
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Sub-Category</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Select Issue Type <span className="text-red-500">*</span></Label>
               <Select value={selectedIssueType} onValueChange={setSelectedIssueType}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Issue Type" />
@@ -367,9 +379,8 @@ export const SubCategoryTab: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Category Dropdown */}
-            <div className="flex-1">
+            <div className="space-y-2">
+              <Label>Select Category <span className="text-red-500">*</span></Label>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Category" />
@@ -383,61 +394,64 @@ export const SubCategoryTab: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Sub-category Name */}
-            <div className="flex-1">
+            <div className="space-y-2">
+              <Label>Sub-category Name <span className="text-red-500">*</span></Label>
               <Input
                 placeholder="Enter Sub-category"
                 value={subCategoryName}
                 onChange={(e) => setSubCategoryName(e.target.value)}
               />
             </div>
-
-            {/* Helpdesk Text */}
-            <div className="flex-1">
+            <div className="space-y-2">
+              <Label>Text</Label>
               <Input
                 placeholder="Enter text"
                 value={helpdeskText}
                 onChange={(e) => setHelpdeskText(e.target.value)}
               />
             </div>
-
-            {/* Add Button */}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setAddDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
             <Button
               onClick={handleCreateSubmit}
               disabled={isSubmitting}
-              className="bg-green-600 hover:bg-green-700 text-white px-6"
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
             >
-              <Plus className="h-4 w-4 mr-1" />
               {isSubmitting ? 'Adding...' : 'Add'}
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Sub Categories</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading sub-categories...</div>
-            </div>
-          ) : (
-            <>
-              <EnhancedTable
-                data={subCategories}
-                columns={columns}
-                renderCell={renderCell}
-                renderActions={renderActions}
-                storageKey="sub-categories-table"
-                enableSearch={true}
-                searchPlaceholder="Search sub-categories..."
-              />
-
-              {/* Pagination */}
-              {subCategories.length > 0 && (
+      {/* Main Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <EnhancedTable
+          data={subCategories}
+          columns={columns}
+          renderCell={renderCell}
+          renderActions={renderActions}
+          storageKey="sub-categories-table"
+          enableSearch={true}
+          searchPlaceholder="Search sub-categories..."
+          leftActions={
+            <Button
+              onClick={() => setAddDialogOpen(true)}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </Button>
+          }
+        />
+        {/* Pagination */}
+        {subCategories.length > 0 && totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="text-sm text-gray-500">
                     Showing {totalCount > 0 ? (currentPage - 1) * perPage + 1 : 0}–{Math.min(currentPage * perPage, totalCount || subCategories.length)} of {totalCount || subCategories.length} sub-categories
@@ -462,7 +476,7 @@ export const SubCategoryTab: React.FC = () => {
                       </Button>
                       {Array.from({ length: totalPages }, (_, i) => i + 1)
                         .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-                        .reduce<(number | 'ellipsis')[]>((acc, p, idx, arr) => {
+                        .reduce((acc: Array<number | 'ellipsis'>, p, idx, arr) => {
                           if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
                           acc.push(p);
                           return acc;
@@ -502,10 +516,7 @@ export const SubCategoryTab: React.FC = () => {
                   )}
                 </div>
               )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Edit Sub-Category Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
@@ -594,9 +605,9 @@ export const SubCategoryTab: React.FC = () => {
                 <Button
                   onClick={handleEditSubmit}
                   disabled={isSubmitting}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+                  className="bg-[#C72030] hover:bg-[#a01828] text-white px-8"
                 >
-                  {isSubmitting ? 'Updating...' : 'Submit'}
+                  {isSubmitting ? 'Updating...' : 'Update'}
                 </Button>
               </div>
             </div>

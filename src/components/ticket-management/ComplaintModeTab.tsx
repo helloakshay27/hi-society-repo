@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -14,11 +13,18 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { EditComplaintModeModal } from './modals/EditComplaintModeModal';
 import { ticketManagementAPI, UserAccountResponse } from '@/services/ticketManagementAPI';
 import { toast } from 'sonner';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { API_CONFIG, getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import {
@@ -53,6 +59,7 @@ export const ComplaintModeTab: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingComplaintMode, setEditingComplaintMode] = useState<any>(null);
   const [userAccount, setUserAccount] = useState<UserAccountResponse | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const form = useForm<ComplaintModeFormData>({
     resolver: zodResolver(complaintModeSchema),
@@ -134,6 +141,7 @@ export const ComplaintModeTab: React.FC = () => {
 
       toast.success('Complaint mode created successfully!');
       form.reset();
+      setAddDialogOpen(false);
       fetchComplaintModes();
     } catch (error: any) {
       console.error('Error creating complaint mode:', error);
@@ -209,17 +217,19 @@ export const ComplaintModeTab: React.FC = () => {
     </div>
   );
 
-  console.log('complaintModes', complaintModes);
-
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Complaint Mode</CardTitle>
-        </CardHeader>
-        <CardContent>
+    <div className="space-y-4">
+      {/* Add Complaint Mode Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+        setAddDialogOpen(open);
+        if (!open) form.reset();
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Complaint Mode</DialogTitle>
+          </DialogHeader>
           <Form {...form}>
-            <div className="space-y-4">
+            <div className="py-2">
               <FormField
                 control={form.control}
                 name="complaintMode"
@@ -233,41 +243,48 @@ export const ComplaintModeTab: React.FC = () => {
                   </FormItem>
                 )}
               />
-              <div className="flex justify-end">
-                <Button 
-                  onClick={handleCreateSubmit}
-                  disabled={isSubmitting || loading}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8"
-                >
-                  {isSubmitting || loading ? 'Saving...' : 'Submit'}
-                </Button>
-              </div>
             </div>
           </Form>
-          {error && <div className="text-red-500 mt-2">{error}</div>}
-        </CardContent>
-      </Card>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => { setAddDialogOpen(false); form.reset(); }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => { await handleCreateSubmit(); if (!isSubmitting) setAddDialogOpen(false); }}
+              disabled={isSubmitting}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              {isSubmitting ? 'Saving...' : 'Add'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Complaint Modes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading complaint modes...</div>
-            </div>
-          ) : (
-            <EnhancedTable
-              data={complaintModes}
-              columns={columns}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey="complaint-modes-table"
-            />
-          )}
-        </CardContent>
-      </Card>
+      {/* Main Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <EnhancedTable
+          data={complaintModes}
+          columns={columns}
+          renderCell={renderCell}
+          renderActions={renderActions}
+          storageKey="complaint-modes-table"
+          enableSearch={true}
+          searchPlaceholder="Search complaint modes..."
+          leftActions={
+            <Button
+              onClick={() => setAddDialogOpen(true)}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </Button>
+          }
+        />
+      </div>
 
       <EditComplaintModeModal
         open={editModalOpen}

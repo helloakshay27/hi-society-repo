@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -12,7 +18,7 @@ import {
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
-import { Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 interface LocationLevel {
   level: 1 | 2 | 3;
@@ -58,6 +64,7 @@ export const LocationTab: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   // Form state
   const [selectedLevel1, setSelectedLevel1] = useState('');
@@ -227,6 +234,7 @@ export const LocationTab: React.FC = () => {
         setInputValue('');
         setSelectedLevel1('');
         setSelectedLevel2('');
+        setAddDialogOpen(false);
         refetchCurrentLevel();
         // Also re-fetch all so dropdowns stay fresh
         if (activeLevel === 1) fetchLevel1();
@@ -339,31 +347,24 @@ export const LocationTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Add Form Card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-4">
-            {levels.map((level) => (
-              <Button
-                key={level.level}
-                onClick={() => handleLevelChange(level.level)}
-                className={`px-6 py-2 rounded-md font-medium transition-colors ${
-                  activeLevel === level.level
-                    ? 'bg-[#4A90E2] text-white hover:bg-[#357ABD]'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                {level.label}
-              </Button>
-            ))}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-end gap-3 flex-wrap">
+      {/* Add Location Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setInputValue('');
+          setSelectedLevel1('');
+          setSelectedLevel2('');
+        }
+        setAddDialogOpen(open);
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add {levels[activeLevel - 1].label}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
             {/* Level 1 Dropdown — shown for Level 2 and Level 3 */}
             {activeLevel >= 2 && (
-              <div className="flex-1 min-w-[180px]">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Level 1</label>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">Level 1</label>
                 <Select value={selectedLevel1} onValueChange={handleLevel1Change}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Level 1" />
@@ -381,8 +382,8 @@ export const LocationTab: React.FC = () => {
 
             {/* Level 2 Dropdown — shown only for Level 3 */}
             {activeLevel === 3 && (
-              <div className="flex-1 min-w-[180px]">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Level 2</label>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">Level 2</label>
                 <Select value={selectedLevel2} onValueChange={setSelectedLevel2} disabled={!selectedLevel1}>
                   <SelectTrigger>
                     <SelectValue placeholder={selectedLevel1 ? 'Select Level 2' : 'Select Level 1 first'} />
@@ -399,8 +400,8 @@ export const LocationTab: React.FC = () => {
             )}
 
             {/* Name Input */}
-            <div className="flex-1 min-w-[180px]">
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">
                 {levels[activeLevel - 1].label} Name
               </label>
               <Input
@@ -410,42 +411,63 @@ export const LocationTab: React.FC = () => {
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
               />
             </div>
-
-            {/* Add Button */}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAddDialogOpen(false)}
+            >
+              Cancel
+            </Button>
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="bg-green-600 hover:bg-green-700 text-white px-8 self-end"
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
             >
               {isSubmitting ? 'Adding...' : 'Add'}
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Table Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{levels[activeLevel - 1].label} List</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading...</div>
-            </div>
-          ) : (
-            <EnhancedTable
-              data={currentLocations}
-              columns={getColumns()}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey={`location-level-${activeLevel}-table`}
-              enableSearch={true}
-              searchPlaceholder={`Search ${levels[activeLevel - 1].label}...`}
-            />
-          )}
-        </CardContent>
-      </Card>
+      {/* Level Tabs + Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        {/* Level toggle buttons */}
+        <div className="flex items-center gap-3 mb-4">
+          {levels.map((level) => (
+            <Button
+              key={level.level}
+              onClick={() => handleLevelChange(level.level)}
+              className={`px-6 py-2 rounded-md font-medium transition-colors ${
+                activeLevel === level.level
+                  ? 'bg-[#4A90E2] text-white hover:bg-[#357ABD]'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {level.label}
+            </Button>
+          ))}
+        </div>
+
+        <EnhancedTable
+          data={currentLocations}
+          columns={getColumns()}
+          renderCell={renderCell}
+          renderActions={renderActions}
+          storageKey={`location-level-${activeLevel}-table`}
+          enableSearch={true}
+          searchPlaceholder={`Search ${levels[activeLevel - 1].label}...`}
+          leftActions={
+            <Button
+              onClick={() => setAddDialogOpen(true)}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </Button>
+          }
+        />
+      </div>
     </div>
   );
 };

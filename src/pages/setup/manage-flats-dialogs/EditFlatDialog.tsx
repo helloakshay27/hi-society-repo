@@ -431,7 +431,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                 />
               </div>
 
-              <div className="relative">
+              {/* <div className="relative">
                 <Label
                   htmlFor="rmUser"
                   className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10"
@@ -450,7 +450,7 @@ export const EditFlatDialog: React.FC<EditFlatDialogProps> = ({
                     }
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
             </div>
 
             <div className="flex justify-center pt-4">
