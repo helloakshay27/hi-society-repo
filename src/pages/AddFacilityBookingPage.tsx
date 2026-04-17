@@ -527,7 +527,7 @@ const AddFacilityBookingPage = () => {
       let url = "";
 
       if (facilityDetails?.fac_type === "bookable") {
-        url = `https://${baseUrl}/get_schedules_admin_facility.json?id=${selectedFacilitySetup}&q[on_date]=${formattedDate}&user_society_id=${societyId}`;
+        url = `https://${baseUrl}/get_schedules_admin_facility.json?id=${selectedFacilitySetup}&q[on_date]=${formattedDate}&user_society_id=${selectedUserId}`;
       } else if (facilityDetails?.fac_type === "request") {
         url = `https://${baseUrl}/requestable_slots.json?id=${selectedFacilitySetup}&q[on_date]=${formattedDate}`;
       }
