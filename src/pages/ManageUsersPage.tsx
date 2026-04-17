@@ -45,14 +45,14 @@ const columns: ColumnConfig[] = [
   { key: "livesHere", label: "Lives Here", sortable: true, draggable: true },
   { key: "membership_type", label: "Membership Type", sortable: true, draggable: true },
   { key: "status", label: "Status", sortable: true, draggable: true },
-  { key: "staff", label: "Staff", sortable: true, draggable: true },
-  { key: "vehicle", label: "Vehicle", sortable: true, draggable: true },
+  // { key: "staff", label: "Staff", sortable: true, draggable: true },
+  // { key: "vehicle", label: "Vehicle", sortable: true, draggable: true },
   { key: "appDownloaded", label: "App Downloaded", sortable: true, draggable: true },
-  { key: "alternateEmail1", label: "Alternate Email -1", sortable: true, draggable: true },
-  { key: "alternateEmail2", label: "Alternate Email -2", sortable: true, draggable: true },
-  { key: "alternateAddress", label: "Alternate Address", sortable: true, draggable: true },
-  { key: "landlineNumber", label: "Landline Number", sortable: true, draggable: true },
-  { key: "intercomNumber", label: "Intercom Number", sortable: true, draggable: true },
+  // { key: "alternateEmail1", label: "Alternate Email -1", sortable: true, draggable: true },
+  // { key: "alternateEmail2", label: "Alternate Email -2", sortable: true, draggable: true },
+  // { key: "alternateAddress", label: "Alternate Address", sortable: true, draggable: true },
+  // { key: "landlineNumber", label: "Landline Number", sortable: true, draggable: true },
+  // { key: "intercomNumber", label: "Intercom Number", sortable: true, draggable: true },
   { key: "gstNumber", label: "GST Number", sortable: true, draggable: true },
   { key: "panNumber", label: "PAN Number", sortable: true, draggable: true },
   { key: "clubMembership", label: "Club Membership", sortable: true, draggable: true },
@@ -633,6 +633,8 @@ const ManageUsersPage = () => {
             {user.status}
           </span>
         );
+      case "membership_type":
+        return user.is_primary ? "Primary" : "Secondary";
       default:
         return <span className="text-sm">{user[columnKey] || "-"}</span>;
     }
