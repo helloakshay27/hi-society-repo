@@ -396,7 +396,17 @@ const FitoutRequestDetails: React.FC = () => {
     try {
       const response = await apiClient.get(`/crm/admin/fitout_requests/${id}/feeds.json`);
       console.log('Logs Response:', response.data);
-      setLogs(response.data || []);
+      const data = response.data;
+      const logsArray = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.feeds)
+          ? data.feeds
+          : Array.isArray(data?.logs)
+            ? data.logs
+            : Array.isArray(data?.data)
+              ? data.data
+              : [];
+      setLogs(logsArray);
     } catch (error: any) {
       console.error('Error fetching logs:', error);
       toast.error(`Failed to load logs: ${error.message || 'Unknown error'}`, {
@@ -3933,7 +3943,7 @@ const FitoutRequestDetails: React.FC = () => {
                 <Loader2 className="w-8 h-8 animate-spin text-[#C72030]" />
                 <span className="ml-2 text-gray-600">Loading logs...</span>
               </div>
-            ) : logs.length === 0 ? (
+            ) : !Array.isArray(logs) || logs.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 No logs available
               </div>
