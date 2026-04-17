@@ -229,7 +229,7 @@ export const OperationalDaysTab: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Operational Days Setup</span>
-            <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+            {/* <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
                   <Upload className="h-4 w-4 mr-2" />
@@ -260,7 +260,7 @@ export const OperationalDaysTab: React.FC = () => {
                   </Button>
                 </div>
               </DialogContent>
-            </Dialog>
+            </Dialog> */}
           </CardTitle>
         </CardHeader>
         <CardContent>

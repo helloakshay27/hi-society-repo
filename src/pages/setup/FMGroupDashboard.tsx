@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Eye, Edit, Plus, ArrowLeft } from 'lucide-react';
+import { Eye, Edit, Plus, ArrowLeft, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AddGroupModal } from '@/components/AddGroupModal';
 import axios from 'axios';
@@ -40,14 +40,14 @@ export const FMGroupDashboard = () => {
     fetchGroups();
   }, []);
 
-  const handleToggleStatus = async (groupId: number, currentStatus: boolean | number) => {
+  const handleDeleteGroup = async (groupId: number) => {
+    if (!confirm('Are you sure you want to delete this group?')) return;
     try {
-      const nextActive = currentStatus ? 0 : 1;
       await axios.put(
         `${baseURL}/crm/usergroups/${groupId}.json`,
         {
           usergroup: {
-            active: nextActive
+            active: 0
           }
         },
         {
@@ -56,11 +56,11 @@ export const FMGroupDashboard = () => {
           },
         }
       );
-      toast.success("Status updated successfully");
+      toast.success("Group deleted successfully");
       fetchGroups();
     } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error("Failed to update status");
+      console.error('Error deleting group:', error);
+      toast.error("Failed to delete group");
     }
   };
 
@@ -76,11 +76,12 @@ export const FMGroupDashboard = () => {
         },
       });
       
+      const data = response.data;
       const groupData = {
-        id: response.data.id,
-        groupName: response.data.name,
-        membersList: response.data.groupmembers || [],
-        active: response.data.active
+        id: data.id,
+        groupName: data.name,
+        membersList: data.groupmembers || [],
+        active: data.active
       };
       
       setSelectedGroup(groupData);
@@ -145,7 +146,6 @@ export const FMGroupDashboard = () => {
                   {/* <TableHead>Profile</TableHead> */}
                   <TableHead>Group Name</TableHead>
                   <TableHead>Members</TableHead>
-                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -167,6 +167,14 @@ export const FMGroupDashboard = () => {
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => handleDeleteGroup(group.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{group.id}</TableCell>
@@ -177,14 +185,6 @@ export const FMGroupDashboard = () => {
                     </TableCell> */}
                     <TableCell>{group.name}</TableCell>
                     <TableCell>{group.members_count}</TableCell>
-                    <TableCell>
-                      <button
-                        onClick={() => handleToggleStatus(group.id, group.active)}
-                        className={`w-8 h-5 rounded-full flex items-center ${group.active ? 'bg-green-500' : 'bg-gray-300'}`}
-                      >
-                        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${group.active ? 'translate-x-3' : 'translate-x-0.5'}`} />
-                      </button>
-                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
