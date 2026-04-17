@@ -502,7 +502,7 @@ export const StaffsDashboard = () => {
         />
       </div>
     ),
-    id: <span className="font-medium text-blue-600">{staff.id}</span>,
+    id: <span className="font-medium">{staff.id}</span>,
     name: staff.name,
     associatedFlats: staff.associatedFlats,
     email: staff.email !== '--' ? <span className="text-blue-600">{staff.email}</span> : '--',
