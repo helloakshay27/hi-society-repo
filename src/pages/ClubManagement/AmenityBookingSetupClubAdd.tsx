@@ -3238,7 +3238,9 @@ export const AddBookingSetupClubPage = () => {
                     >
                       <MenuItem value="Select">Select</MenuItem>
                       <MenuItem value="day">Day</MenuItem>
-                      <MenuItem value="week">Week</MenuItem>
+                      <MenuItem value="weekly">Weekly</MenuItem>
+                      <MenuItem value="quarterly">Quarterly</MenuItem>
+                      <MenuItem value="annually">Annually</MenuItem>
                     </Select>
                     <span>by</span>
                     <Select

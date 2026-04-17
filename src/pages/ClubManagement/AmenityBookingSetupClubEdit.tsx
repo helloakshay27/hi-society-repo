@@ -3360,7 +3360,9 @@ export const EditBookingSetupClubPage = () => {
                                         >
                                             <MenuItem value="Select">Select</MenuItem>
                                             <MenuItem value="day">Day</MenuItem>
-                                            <MenuItem value="week">Week</MenuItem>
+                                            <MenuItem value="weekly">Weekly</MenuItem>
+                                            <MenuItem value="quarterly">Quarterly</MenuItem>
+                                            <MenuItem value="annually">Annually</MenuItem>
                                         </Select>
                                         <span>by</span>
                                         <Select
@@ -3597,7 +3599,7 @@ export const EditBookingSetupClubPage = () => {
                                 <div className="flex items-center space-x-2">
                                     <Checkbox
                                         id="prepaid"
-                                        checked={formData.prepaid === true}
+                                        checked={formData.prepaid}
                                         onCheckedChange={(checked) =>
                                             setFormData({ ...formData, prepaid: !!checked })
                                         }
@@ -3607,7 +3609,7 @@ export const EditBookingSetupClubPage = () => {
                                 <div className="flex items-center space-x-2">
                                     <Checkbox
                                         id="payOnFacility"
-                                        checked={formData.payOnFacility === true}
+                                        checked={formData.payOnFacility}
                                         onCheckedChange={(checked) =>
                                             setFormData({ ...formData, payOnFacility: !!checked })
                                         }
@@ -3617,7 +3619,7 @@ export const EditBookingSetupClubPage = () => {
                                 <div className="flex items-center space-x-2">
                                     <Checkbox
                                         id="complimentary"
-                                        checked={formData.complimentary === true}
+                                        checked={formData.complimentary}
                                         onCheckedChange={(checked) =>
                                             setFormData({ ...formData, complimentary: !!checked })
                                         }

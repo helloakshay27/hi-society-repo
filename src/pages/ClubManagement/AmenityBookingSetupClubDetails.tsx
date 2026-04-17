@@ -1376,7 +1376,15 @@ export const BookingSetupDetailClubPage = () => {
               </h3>
             </div>
 
-            <div className="flex flex-wrap gap-6 mb-4">
+            {/* <div className="flex flex-wrap gap-6 mb-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="postpaid"
+                  checked={!!formData.postpaid}
+                  disabled
+                />
+                <label htmlFor="postpaid">Postpaid</label>
+              </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="prepaid"
@@ -1401,7 +1409,7 @@ export const BookingSetupDetailClubPage = () => {
                 />
                 <label htmlFor="complimentary">Complimentary</label>
               </div>
-            </div>
+            </div> */}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="flex items-start">
