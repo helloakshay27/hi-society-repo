@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,7 +18,7 @@ import {
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2 } from 'lucide-react';
 
 interface AgingRule {
   id: number;
@@ -115,6 +114,7 @@ export const AgingRuleTab: React.FC = () => {
   const [editingRule, setEditingRule] = useState<AgingRule | null>(null);
   const [editColor, setEditColor] = useState('#00C853');
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   // Fetch aging rules
   const fetchAgingRules = useCallback(async () => {
@@ -188,6 +188,7 @@ export const AgingRuleTab: React.FC = () => {
       if (response.ok) {
         toast.success('Aging rule created successfully!');
         setForm(defaultForm);
+        setAddDialogOpen(false);
         fetchAgingRules();
       } else {
         const errorData = await response.json().catch(() => null);
@@ -333,7 +334,95 @@ export const AgingRuleTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Edit Color Dialog */}
+      {/* Add Aging Rule Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+        setAddDialogOpen(open);
+        if (!open) setForm(defaultForm);
+      }}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Aging Rule</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-wrap gap-4 py-4">
+            <div className="flex-1 min-w-[140px]">
+              <label className="block text-sm font-medium mb-1">Rule Type</label>
+              <Select value={form.rule_type} onValueChange={(v) => updateForm('rule_type', v)}>
+                <SelectTrigger><SelectValue placeholder="Select Rule Type" /></SelectTrigger>
+                <SelectContent>
+                  {ruleTypeOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1 min-w-[160px]">
+              <label className="block text-sm font-medium mb-1">Rule Unit</label>
+              <Select value={form.rule_unit} onValueChange={(v) => updateForm('rule_unit', v)}>
+                <SelectTrigger><SelectValue placeholder="Select Rule Unit" /></SelectTrigger>
+                <SelectContent>
+                  {ruleUnitOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {showBetween ? (
+              <>
+                <div className="flex-1 min-w-[100px]">
+                  <label className="block text-sm font-medium mb-1">From</label>
+                  <Input type="number" placeholder="From" value={form.from} onChange={(e) => updateForm('from', e.target.value)} />
+                </div>
+                <div className="flex-1 min-w-[100px]">
+                  <label className="block text-sm font-medium mb-1">To</label>
+                  <Input type="number" placeholder="To" value={form.to} onChange={(e) => updateForm('to', e.target.value)} />
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-sm font-medium mb-1">Value</label>
+                <Input type="number" placeholder="Enter value" value={form.value} onChange={(e) => updateForm('value', e.target.value)} />
+              </div>
+            )}
+            <div className="w-full">
+              <label className="block text-sm font-medium mb-1">Color</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.color_code}
+                  onChange={(e) => updateForm('color_code', e.target.value)}
+                  className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
+                  title="Choose color"
+                />
+                <div className="flex gap-1 flex-wrap">
+                  {colorOptions.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => updateForm('color_code', color)}
+                      className={`w-6 h-6 rounded border-2 transition-all ${
+                        form.color_code === color ? 'border-gray-800 scale-110' : 'border-gray-300 hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setAddDialogOpen(false); setForm(defaultForm); }} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              {isSubmitting ? 'Adding...' : 'Add'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -394,146 +483,27 @@ export const AgingRuleTab: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Aging Rule</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-end gap-3 flex-wrap">
-            {/* Rule Type */}
-            <div className="flex-1 min-w-[140px]">
-              <label className="block text-sm font-medium mb-1">Rule Type</label>
-              <Select value={form.rule_type} onValueChange={(v) => updateForm('rule_type', v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Rule Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ruleTypeOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Rule Unit */}
-            <div className="flex-1 min-w-[160px]">
-              <label className="block text-sm font-medium mb-1">Rule Unit</label>
-              <Select value={form.rule_unit} onValueChange={(v) => updateForm('rule_unit', v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Rule Unit" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ruleUnitOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Value or From/To */}
-            {showBetween ? (
-              <>
-                <div className="flex-1 min-w-[100px]">
-                  <label className="block text-sm font-medium mb-1">From</label>
-                  <Input
-                    type="number"
-                    placeholder="From"
-                    value={form.from}
-                    onChange={(e) => updateForm('from', e.target.value)}
-                  />
-                </div>
-                <div className="flex-1 min-w-[100px]">
-                  <label className="block text-sm font-medium mb-1">To</label>
-                  <Input
-                    type="number"
-                    placeholder="To"
-                    value={form.to}
-                    onChange={(e) => updateForm('to', e.target.value)}
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 min-w-[120px]">
-                <label className="block text-sm font-medium mb-1">Value</label>
-                <Input
-                  type="number"
-                  placeholder="Enter value"
-                  value={form.value}
-                  onChange={(e) => updateForm('value', e.target.value)}
-                />
-              </div>
-            )}
-
-            {/* Color Picker */}
-            <div className="flex-1 min-w-[220px]">
-              <label className="block text-sm font-medium mb-1">Color</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={form.color_code}
-                  onChange={(e) => updateForm('color_code', e.target.value)}
-                  className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
-                  title="Choose color"
-                />
-                <div className="flex gap-1 flex-wrap">
-                  {colorOptions.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => updateForm('color_code', color)}
-                      className={`w-6 h-6 rounded border-2 transition-all ${
-                        form.color_code === color
-                          ? 'border-gray-800 scale-110'
-                          : 'border-gray-300 hover:scale-105'
-                      }`}
-                      style={{ backgroundColor: color }}
-                      title={color}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Add Button */}
-            <div className="flex items-end">
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="bg-green-600 hover:bg-green-700 text-white px-8"
-              >
-                {isSubmitting ? 'Adding...' : 'Add'}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Aging Rules</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading aging rules...</div>
-            </div>
-          ) : (
-            <EnhancedTable
-              data={agingRules}
-              columns={columns}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey="aging-rules-table"
-              enableSearch={true}
-              searchPlaceholder="Search aging rules..."
-            />
-          )}
-        </CardContent>
-      </Card>
+      {/* Main Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <EnhancedTable
+          data={agingRules}
+          columns={columns}
+          renderCell={renderCell}
+          renderActions={renderActions}
+          storageKey="aging-rules-table"
+          enableSearch={true}
+          searchPlaceholder="Search aging rules..."
+          leftActions={
+            <Button
+              onClick={() => setAddDialogOpen(true)}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </Button>
+          }
+        />
+      </div>
     </div>
   );
 };

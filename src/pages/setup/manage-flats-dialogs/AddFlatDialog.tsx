@@ -364,7 +364,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
             </div>
 
             {/* Rm User */}
-            <div className="relative">
+            {/* <div className="relative">
               <Label htmlFor="rmUser" className="absolute left-2 -top-2.5 text-xs font-medium text-gray-600 bg-white px-2 z-10">Rm User</Label>
               <SearchableSelect
                 value={formData.rmUser}
@@ -376,7 +376,7 @@ export const AddFlatDialog: React.FC<AddFlatDialogProps> = ({
                 placeholder="Select"
                 className="pt-2"
               />
-            </div>
+            </div> */}
           </div>
 
           {/* Submit Button */}

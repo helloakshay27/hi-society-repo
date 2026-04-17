@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
-import { Trash2, Edit, X } from 'lucide-react';
+import { Trash2, Edit, Plus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -27,8 +26,11 @@ interface ProjectEmail {
 export const ProjectEmailsTab: React.FC = () => {
   const [emails, setEmails] = useState<ProjectEmail[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Add dialog state
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [emailInput, setEmailInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -103,6 +105,7 @@ export const ProjectEmailsTab: React.FC = () => {
       if (response.ok) {
         toast.success('Email added successfully!');
         setEmailInput('');
+        setAddDialogOpen(false);
         fetchProjectEmails();
       } else {
         const errorData = await response.json().catch(() => null);
@@ -235,7 +238,49 @@ export const ProjectEmailsTab: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Add Email Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+        setAddDialogOpen(open);
+        if (!open) setEmailInput('');
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Project Email</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <Input
+              type="email"
+              placeholder="Enter Email Id"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSubmit();
+              }}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAddDialogOpen(false);
+                setEmailInput('');
+              }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              {isSubmitting ? 'Adding...' : 'Add'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Email Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -276,61 +321,27 @@ export const ProjectEmailsTab: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Project Email</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-end gap-3">
-            {/* Email Input */}
-            <div className="flex-1">
-              <Input
-                type="email"
-                placeholder="Enter Email Id"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSubmit();
-                  }
-                }}
-              />
-            </div>
-
-            {/* Add Button */}
+      {/* Main Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <EnhancedTable
+          data={emails}
+          columns={columns}
+          renderCell={renderCell}
+          renderActions={renderActions}
+          storageKey="project-emails-table"
+          enableSearch={true}
+          searchPlaceholder="Search emails..."
+          leftActions={
             <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="bg-green-600 hover:bg-green-700 text-white px-8"
+              onClick={() => setAddDialogOpen(true)}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
             >
-              {isSubmitting ? 'Adding...' : 'Add'}
+              <Plus className="h-4 w-4 mr-2" />
+              Add
             </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Project Emails</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading project emails...</div>
-            </div>
-          ) : (
-            <EnhancedTable
-              data={emails}
-              columns={columns}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey="project-emails-table"
-              enableSearch={true}
-              searchPlaceholder="Search emails..."
-            />
-          )}
-        </CardContent>
-      </Card>
+          }
+        />
+      </div>
     </div>
   );
 };

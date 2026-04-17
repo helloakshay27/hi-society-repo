@@ -12,7 +12,7 @@ import { LocationTab } from '@/components/ticket-management/LocationTab';
 import { ProjectEmailsTab } from '@/components/ticket-management/ProjectEmailsTab';
 
 export const TicketManagementSetupPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('category-type');
+  const [activeTab, setActiveTab] = useState('related-to');
 
   useEffect(() => {
     // Check if there's a saved tab in localStorage

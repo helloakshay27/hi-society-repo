@@ -1,12 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { EditRelatedToModal } from './modals/EditRelatedToModal';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Plus } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 interface RelatedToType {
   id: number;
@@ -21,9 +27,14 @@ export const RelatedToTab: React.FC = () => {
   const [relatedToItems, setRelatedToItems] = useState<RelatedToType[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Add dialog state
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [issueTypeInput, setIssueTypeInput] = useState('');
+
+  // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingRelatedTo, setEditingRelatedTo] = useState<RelatedToType | null>(null);
-  const [issueTypeInput, setIssueTypeInput] = useState('');
 
   // Fetch issue types from new API
   const fetchRelatedToItems = useCallback(async () => {
@@ -84,6 +95,7 @@ export const RelatedToTab: React.FC = () => {
       if (response.ok) {
         toast.success('Issue type created successfully!');
         setIssueTypeInput('');
+        setAddDialogOpen(false);
         fetchRelatedToItems();
       } else {
         const errorData = await response.json().catch(() => null);
@@ -166,61 +178,69 @@ export const RelatedToTab: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Related To</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-end gap-3">
-            {/* Issue Type Input */}
-            <div className="flex-1">
-              <Input
-                placeholder="Enter issue type"
-                value={issueTypeInput}
-                onChange={(e) => setIssueTypeInput(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleCreateSubmit();
-                  }
-                }}
-              />
-            </div>
-
-            {/* Create Button */}
+    <div className="space-y-4">
+      {/* Add Issue Type Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+        setAddDialogOpen(open);
+        if (!open) setIssueTypeInput('');
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Related To</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <Input
+              placeholder="Enter issue type"
+              value={issueTypeInput}
+              onChange={(e) => setIssueTypeInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleCreateSubmit();
+              }}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAddDialogOpen(false);
+                setIssueTypeInput('');
+              }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
             <Button
               onClick={handleCreateSubmit}
               disabled={isSubmitting}
-              className="bg-green-600 hover:bg-green-700 text-white px-8"
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
             >
               {isSubmitting ? 'Creating...' : 'Add'}
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Related To List</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-500">Loading issue types...</div>
-            </div>
-          ) : (
-            <EnhancedTable
-              data={relatedToItems}
-              columns={columns}
-              renderCell={renderCell}
-              renderActions={renderActions}
-              storageKey="related-to-table"
-              enableSearch={true}
-              searchPlaceholder="Search issue types..."
-            />
-          )}
-        </CardContent>
-      </Card>
+      {/* Main Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <EnhancedTable
+          data={relatedToItems}
+          columns={columns}
+          renderCell={renderCell}
+          renderActions={renderActions}
+          storageKey="related-to-table"
+          enableSearch={true}
+          searchPlaceholder="Search issue types..."
+          leftActions={
+            <Button
+              onClick={() => setAddDialogOpen(true)}
+              className="bg-[#C72030] hover:bg-[#a01828] text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </Button>
+          }
+        />
+      </div>
 
       {editModalOpen && editingRelatedTo && (
         <EditRelatedToModal
