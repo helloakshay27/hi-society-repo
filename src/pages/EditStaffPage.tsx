@@ -126,7 +126,8 @@ export const EditStaffPage = () => {
     validFrom: '',
     validTill: '',
     status: '',
-    notes: ''
+    notes: '',
+    companyName: ''
   });
 
   // Update form data when staff data and filters are loaded
@@ -185,14 +186,44 @@ export const EditStaffPage = () => {
         mobile: staff.mobile || '',
         staffType: staffTypeValue,
         workType: workTypeValue,
-        associateFunctionId: '', // Will be set if available from API
+        associateFunctionId: staff.associate_function_id ? String(staff.associate_function_id) : '',
         staffId: staff.soc_staff_id || '',
         vendorName: staff.vendor_name || '',
         validFrom: staff.valid_from || '',
         validTill: staff.expiry || '',
         status: statusValue,
-        notes: staff.notes || ''
+        notes: staff.notes || '',
+        companyName: staff.vendor_name || ''
       });
+
+      // Populate schedule from helpdesk_operations
+      if (staff.helpdesk_operations && staff.helpdesk_operations.length > 0) {
+        const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const updatedSchedule = dayOrder.map(dayName => {
+          const op = staff.helpdesk_operations.find(
+            o => o.day?.toLowerCase() === dayName.toLowerCase()
+          );
+          if (op && op.is_open) {
+            return {
+              day: dayName,
+              enabled: true,
+              startHour: String(op.start_hour ?? 0).padStart(2, '0'),
+              startMinute: String(op.start_min ?? 0).padStart(2, '0'),
+              endHour: String(op.end_hour ?? 0).padStart(2, '0'),
+              endMinute: String(op.end_min ?? 0).padStart(2, '0'),
+            };
+          }
+          return {
+            day: dayName,
+            enabled: false,
+            startHour: '00',
+            startMinute: '00',
+            endHour: '00',
+            endMinute: '00',
+          };
+        });
+        setSchedule(updatedSchedule);
+      }
     }
   }, [staff, staffFilters]);
 
@@ -208,8 +239,8 @@ export const EditStaffPage = () => {
 
   const [attachments, setAttachments] = useState({
     profilePicture: null as File | null,
-    manuals: null as File | null
   });
+  const [documents, setDocuments] = useState<File[]>([]);
 
   // Loading state
   if (loading) {
@@ -268,6 +299,10 @@ export const EditStaffPage = () => {
     }));
   };
 
+  const handleDocumentsChange = (files: File[]) => {
+    setDocuments(prev => [...prev, ...files]);
+  };
+
   const handleSubmit = async () => {
     if (!id || !staff) {
       toast.error('Staff ID not available');
@@ -303,12 +338,13 @@ export const EditStaffPage = () => {
         validFrom: formData.validFrom,
         validTill: formData.validTill,
         status: formData.status,
-        notes: formData.notes
+        notes: formData.notes,
+        companyName: formData.companyName
       };
 
       await staffService.updateStaff(id, formDataToSubmit, scheduleData, {
         profilePicture: attachments.profilePicture || undefined,
-        documents: [],
+        documents: documents,
         capturedPhoto: undefined
       });
       
@@ -355,6 +391,22 @@ export const EditStaffPage = () => {
           </div>
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <TextField
+                label="Company Name"
+                placeholder="Enter Company Name"
+                value={formData.companyName}
+                onChange={(e) => handleInputChange('companyName', e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
               <TextField
                 label="First Name*"
                 value={formData.firstName}
@@ -404,7 +456,7 @@ export const EditStaffPage = () => {
                 }}
               />
               
-              <TextField
+              {/* <TextField
                 label="Password"
                 type="password"
                 placeholder="Leave empty to keep current password"
@@ -420,7 +472,7 @@ export const EditStaffPage = () => {
                 InputProps={{
                   sx: fieldStyles,
                 }}
-              />
+              /> */}
               
               <TextField
                 label="Mobile*"
@@ -598,40 +650,6 @@ export const EditStaffPage = () => {
                 </MuiSelect>
               </FormControl>
             </div>
-
-            {/* Notes - full width textarea */}
-            <div>
-              <TextField
-                label="Notes"
-                placeholder="Enter notes..."
-                value={formData.notes}
-                onChange={(e) => handleInputChange('notes', e.target.value)}
-                fullWidth
-                variant="outlined"
-                multiline
-                rows={3}
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: {
-                    backgroundColor: '#fff',
-                    borderRadius: '4px',
-                    '& fieldset': {
-                      borderColor: '#ddd',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#C72030',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#C72030',
-                    },
-                  },
-                }}
-              />
-            </div>
           </div>
         </div>
 
@@ -646,6 +664,44 @@ export const EditStaffPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label className="text-sm font-medium text-gray-700 mb-2 block">Profile Picture Upload</Label>
+                
+                {/* Existing profile image from API */}
+                {staff.staff_image_url && !attachments.profilePicture && (
+                  <div className="mb-4 p-4 border-2 border-blue-300 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-blue-600">Current Photo</span>
+                    </div>
+                    <img
+                      src={staff.staff_image_url}
+                      alt="Current Profile"
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+
+                {/* New uploaded image preview */}
+                {attachments.profilePicture && (
+                  <div className="mb-4 p-4 border-2 border-green-500 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-green-600">New Photo</span>
+                      <Button
+                        type="button"
+                        onClick={() => handleFileUpload('profilePicture', null)}
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs text-[#C72030] hover:bg-[#C72030]/10"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                    <img
+                      src={URL.createObjectURL(attachments.profilePicture)}
+                      alt="New Profile"
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
                   <input
                     type="file"
@@ -673,8 +729,9 @@ export const EditStaffPage = () => {
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
                   <input
                     type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => handleFileUpload('manuals', e.target.files?.[0] || null)}
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    multiple
+                    onChange={(e) => handleDocumentsChange(e.target.files ? Array.from(e.target.files) : [])}
                     className="hidden"
                     id="manuals-upload"
                   />
@@ -687,9 +744,31 @@ export const EditStaffPage = () => {
                     <p className="text-sm text-gray-600">
                       Drag & Drop or <span className="text-red-500 cursor-pointer font-medium">Choose File</span>
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">PDF, DOC up to 10MB</p>
+                    <p className="text-xs mt-1">
+                      {documents.length > 0 ? (
+                        <span className="text-red-600 font-medium">{documents.length} file(s) selected</span>
+                      ) : (
+                        <span className="text-gray-500">PDF, DOC up to 10MB</span>
+                      )}
+                    </p>
                   </label>
                 </div>
+                {documents.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {documents.map((file, i) => (
+                      <li key={i} className="flex items-center justify-between text-xs text-gray-600 bg-gray-50 px-3 py-1 rounded">
+                        <span className="truncate">{file.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setDocuments(prev => prev.filter((_, idx) => idx !== i))}
+                          className="ml-2 text-[#C72030] hover:text-red-700 font-medium flex-shrink-0"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
           </div>

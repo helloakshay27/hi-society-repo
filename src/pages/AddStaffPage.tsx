@@ -62,7 +62,8 @@ export const AddStaffPage = () => {
     validFrom: '',
     validTill: '',
     status: '',
-    notes: ''
+    notes: '',
+    companyName: ''
   });
 
   const [schedule, setSchedule] = useState({
@@ -318,6 +319,7 @@ export const AddStaffPage = () => {
         validTill: validTill,
         status: formData.status || '1',
         notes: formData.notes,
+        companyName: formData.companyName,
         userId: currentUser.id,
       };
       
@@ -469,6 +471,22 @@ export const AddStaffPage = () => {
           </div>
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <TextField
+                label="Company Name"
+                placeholder="Enter Company Name"
+                value={formData.companyName}
+                onChange={(e) => handleInputChange('companyName', e.target.value)}
+                fullWidth
+                variant="outlined"
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                InputProps={{
+                  sx: fieldStyles,
+                }}
+              />
               <TextField
                 label="First Name*"
                 placeholder="First Name"
@@ -642,7 +660,7 @@ export const AddStaffPage = () => {
                 }}
               />
               
-              <TextField
+              {/* <TextField
                 label="Vendor Name"
                 placeholder="Vendor Name"
                 value={formData.vendorName}
@@ -657,7 +675,7 @@ export const AddStaffPage = () => {
                 InputProps={{
                   sx: fieldStyles,
                 }}
-              />
+              /> */}
               
               <TextField
                 label="Valid From*"
@@ -715,40 +733,6 @@ export const AddStaffPage = () => {
                   ))}
                 </MuiSelect>
               </FormControl>
-            </div>
-
-            {/* Notes - full width textarea */}
-            <div>
-              <TextField
-                label="Notes"
-                placeholder="Enter notes..."
-                value={formData.notes}
-                onChange={(e) => handleInputChange('notes', e.target.value)}
-                fullWidth
-                variant="outlined"
-                multiline
-                rows={3}
-                slotProps={{
-                  inputLabel: {
-                    shrink: true,
-                  },
-                }}
-                InputProps={{
-                  sx: {
-                    backgroundColor: '#fff',
-                    borderRadius: '4px',
-                    '& fieldset': {
-                      borderColor: '#ddd',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#C72030',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#C72030',
-                    },
-                  },
-                }}
-              />
             </div>
           </div>
         </div>

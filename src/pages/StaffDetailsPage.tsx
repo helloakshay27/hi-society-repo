@@ -207,9 +207,9 @@ export const StaffDetailsPage = () => {
   };
 
   // Format time for display
-  const formatTime = (hour: string | null, minute: string | null) => {
-    if (!hour || !minute) return '00:00';
-    return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
+  const formatTime = (hour: string | number | null, minute: string | number | null) => {
+    if (hour === null || hour === undefined || minute === null || minute === undefined) return '00:00';
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
   };
 
   // Expandable Section Component (similar to ticket details)
@@ -349,7 +349,7 @@ export const StaffDetailsPage = () => {
             
             {hasData(staff.vendor_name) && (
               <div className="flex items-start">
-                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Vendor Name</span>
+                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Company Name</span>
                 <span className="text-gray-500 mx-3">:</span>
                 <span className="text-gray-900 font-semibold flex-1">{staff.vendor_name}</span>
               </div>
@@ -368,6 +368,14 @@ export const StaffDetailsPage = () => {
                 <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Valid From</span>
                 <span className="text-gray-500 mx-3">:</span>
                 <span className="text-gray-900 font-semibold flex-1">{formatDate(staff.valid_from)}</span>
+              </div>
+            )}
+
+            {hasData(staff.expiry) && (
+              <div className="flex items-start">
+                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Valid Till</span>
+                <span className="text-gray-500 mx-3">:</span>
+                <span className="text-gray-900 font-semibold flex-1">{formatDate(staff.expiry!)}</span>
               </div>
             )}
 
@@ -412,6 +420,22 @@ export const StaffDetailsPage = () => {
                 <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Work Type</span>
                 <span className="text-gray-500 mx-3">:</span>
                 <span className="text-gray-900 font-semibold flex-1">{staff.work_type_name}</span>
+              </div>
+            )}
+
+            {hasData(staff.staff_type) && (
+              <div className="flex items-start">
+                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Staff Type</span>
+                <span className="text-gray-500 mx-3">:</span>
+                <span className="text-gray-900 font-semibold flex-1">{staff.staff_type}</span>
+              </div>
+            )}
+
+            {hasData(staff.associate_function_name) && (
+              <div className="flex items-start">
+                <span className="text-gray-500 w-40 flex-shrink-0 font-medium">Association Type</span>
+                <span className="text-gray-500 mx-3">:</span>
+                <span className="text-gray-900 font-semibold flex-1 capitalize">{staff.associate_function_name}</span>
               </div>
             )}
             

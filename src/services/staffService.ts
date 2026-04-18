@@ -16,6 +16,7 @@ export interface StaffFormData {
   validTill: string;
   status: string;
   notes: string;
+  companyName: string;
   resourceId?: string;
   resourceType?: string;
   departmentId?: string;
@@ -137,6 +138,8 @@ export interface SocietyStaffDetails {
   active: boolean | null;
   staff_type: string | null;
   status: string;
+  associate_function_id: number | null;
+  associate_function_name: string | null;
   resource_id: number;
   resource_type: string;
   department_id: number;
@@ -205,11 +208,19 @@ export interface StaffDetailsApiResponse {
   data: {
     id: number;
     name: string;
+    first_name?: string;
+    last_name?: string;
     email: string | null;
     mobile: string;
     staff_id: string;
+    type_id?: number;
     work_type: string;
+    associate_function_id?: number;
+    associate_function_name?: string | null;
     company_name: string;
+    notes?: string;
+    valid_from?: string;
+    expiry?: string;
     created_at: string;
     created_at_formatted: string;
     staff_type: string;
@@ -219,6 +230,7 @@ export interface StaffDetailsApiResponse {
     documents: unknown[];
     staff_documents: unknown[];
     gallery_documents: unknown[];
+    helpdesk_operations?: HelpdeskOperation[];
     status: {
       value: number;
       label: string;
@@ -378,6 +390,19 @@ export const staffService = {
         });
       }
 
+      // Convert documents to base64 array for attachments[]
+      const attachmentsBase64: string[] = [];
+      if (attachments.documents && attachments.documents.length > 0) {
+        for (const doc of attachments.documents) {
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(doc);
+          });
+          attachmentsBase64.push(base64);
+        }
+      }
+
       // Build the payload matching the API structure
       const payload = {
         society_staff: {
@@ -394,8 +419,9 @@ export const staffService = {
           valid_from: convertDateFormat(staffData.validFrom),
           expiry: convertDateFormat(staffData.validTill),
           status: staffData.status || '1',
-          notes: staffData.notes || '',
+          notes: staffData.companyName || '',
           helpdesk_operations_attributes: helpdeskOperations,
+          attachments: attachmentsBase64,
         }
       };
 
@@ -450,10 +476,19 @@ export const staffService = {
       const lastName = nameParts.slice(1).join(' ');
 
       // Convert new CRM API format to SocietyStaffDetails for compatibility
+      // Parse expiry date to YYYY-MM-DD
+      const parseDate = (dateStr: string | undefined | null): string => {
+        if (!dateStr) return '';
+        // If already YYYY-MM-DD
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+        // If ISO datetime, extract date part
+        return dateStr.split('T')[0];
+      };
+
       const convertedStaff: SocietyStaffDetails = {
         id: staff.id,
-        first_name: firstName,
-        last_name: lastName,
+        first_name: staff.first_name || firstName,
+        last_name: staff.last_name || lastName,
         full_name: staff.name,
         mobile: staff.mobile,
         email: staff.email || '',
@@ -462,19 +497,21 @@ export const staffService = {
         active: null,
         staff_type: staff.staff_type,
         status: staff.status.value.toString(),
+        associate_function_id: staff.associate_function_id ?? null,
+        associate_function_name: staff.associate_function_name ?? null,
         resource_id: 0,
         resource_type: '',
         department_id: 0,
-        type_id: 0,
+        type_id: staff.type_id ?? 0,
         pms_unit_id: null,
         created_by: 0,
         expiry_type: 'days',
         expiry_value: 90,
         number_verified: false,
         otp: null,
-        notes: '',
-        valid_from: '',
-        expiry: null,
+        notes: staff.notes || '',
+        valid_from: parseDate(staff.valid_from),
+        expiry: parseDate(staff.expiry),
         created_at: staff.created_at,
         updated_at: staff.created_at,
         user_id: 0,
@@ -485,7 +522,7 @@ export const staffService = {
         staff_image_url: staff.image_url,
         qr_code_present: !!staff.qr_code_url,
         qr_code_url: staff.qr_code_url,
-        helpdesk_operations: [],
+        helpdesk_operations: staff.helpdesk_operations || [],
         staff_workings: [],
         documents: []
       };
@@ -660,7 +697,8 @@ export const staffService = {
           validFrom: '',
           validTill: '',
           status: '',
-          notes: ''
+          notes: '',
+          companyName: ''
         };
       } else {
         staffFormData = formData;
@@ -696,6 +734,19 @@ export const staffService = {
         });
       }
 
+      // Convert documents to base64 array for attachments[]
+      const attachmentsBase64: string[] = [];
+      if (attachments?.documents && attachments.documents.length > 0) {
+        for (const doc of attachments.documents) {
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(doc);
+          });
+          attachmentsBase64.push(base64);
+        }
+      }
+
       // Build the payload matching the API structure
       const payload = {
         society_staff: {
@@ -712,8 +763,9 @@ export const staffService = {
           valid_from: convertDateFormat(staffFormData.validFrom),
           expiry: convertDateFormat(staffFormData.validTill),
           status: staffFormData.status || '1',
-          notes: staffFormData.notes || '',
+          notes: staffFormData.companyName || '',
           helpdesk_operations_attributes: helpdeskOperations,
+          attachments: attachmentsBase64,
         }
       };
 
