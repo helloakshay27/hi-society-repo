@@ -3359,9 +3359,10 @@ export const EditBookingSetupClubPage = () => {
                                             style={{ width: "140px" }}
                                         >
                                             <MenuItem value="Select">Select</MenuItem>
-                                            <MenuItem value="day">Day</MenuItem>
+                                            <MenuItem value="daily">Daily</MenuItem>
                                             <MenuItem value="weekly">Weekly</MenuItem>
                                             <MenuItem value="quarterly">Quarterly</MenuItem>
+                                            <MenuItem value="half_yearly">Half-Yearly</MenuItem>
                                             <MenuItem value="annually">Annually</MenuItem>
                                         </Select>
                                         <span>by</span>
