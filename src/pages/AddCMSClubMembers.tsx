@@ -52,6 +52,19 @@ const fieldStyles = {
     },
 };
 
+const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            // Extract base64 string from data URL
+            const base64String = (reader.result as string);
+            resolve(base64String);
+        };
+        reader.onerror = (error) => reject(error);
+    });
+};
+
 const AddCMSClubMembers = () => {
     const navigate = useNavigate();
 
@@ -396,7 +409,42 @@ const AddCMSClubMembers = () => {
             formData.append("club_member_allocation[allocation_payment_detail_attributes][payment_status]", "pending");
             // formData.append("club_member_allocation[allocation_payment_detail_attributes][payment_mode]", "online");
 
-            members.forEach((member, idx) => {
+            // members.forEach((member, idx) => {
+            //     formData.append(
+            //         `members[${idx}][user_society_id]`,
+            //         member.selectedUser
+            //     );
+            //     formData.append(`members[${idx}][first_name]`, member.firstName);
+            //     formData.append(`members[${idx}][last_name]`, member.lastName);
+            //     formData.append(`members[${idx}][email]`, member.email);
+            //     formData.append(`members[${idx}][mobile]`, member.mobile);
+            //     formData.append(`members[${idx}][resident_type]`, member.residentType);
+            //     formData.append(
+            //         `members[${idx}][club_member_check]`,
+            //         member.isClubMembership ? "true" : "false"
+            //     );
+            //     formData.append(
+            //         `members[${idx}][membership_number]`,
+            //         member.membershipNumber
+            //     );
+            //     formData.append(
+            //         `members[${idx}][access_card_check]`,
+            //         member.isAccessCardAllocated ? "true" : "false"
+            //     );
+            //     formData.append(`members[${idx}][access_card_id]`, member.accessCardId);
+            //     formData.append(
+            //         `members[${idx}][identification_image_attributes][document]`,
+            //         member.idCard
+            //     );
+            //     formData.append(
+            //         `members[${idx}][flat_attachments][document]`,
+            //         member.residentPhoto
+            //     );
+            // });
+
+            for (let idx = 0; idx < members.length; idx++) {
+                const member = members[idx];
+
                 formData.append(
                     `members[${idx}][user_society_id]`,
                     member.selectedUser
@@ -406,28 +454,42 @@ const AddCMSClubMembers = () => {
                 formData.append(`members[${idx}][email]`, member.email);
                 formData.append(`members[${idx}][mobile]`, member.mobile);
                 formData.append(`members[${idx}][resident_type]`, member.residentType);
+
                 formData.append(
                     `members[${idx}][club_member_check]`,
                     member.isClubMembership ? "true" : "false"
                 );
+
                 formData.append(
                     `members[${idx}][membership_number]`,
                     member.membershipNumber
                 );
+
                 formData.append(
                     `members[${idx}][access_card_check]`,
                     member.isAccessCardAllocated ? "true" : "false"
                 );
-                formData.append(`members[${idx}][access_card_id]`, member.accessCardId);
+
                 formData.append(
-                    `members[${idx}][identification_image_attributes][document]`,
-                    member.idCard
+                    `members[${idx}][access_card_id]`,
+                    member.accessCardId
                 );
-                formData.append(
-                    `members[${idx}][profile_image_attributes][document]`,
-                    member.residentPhoto
-                );
-            });
+
+                if (member.idCard) {
+                    formData.append(
+                        `members[${idx}][identification_image_attributes][document]`,
+                        member.idCard
+                    );
+                }
+
+                if (member.residentPhoto) {
+                    const photoBase64 = await fileToBase64(member.residentPhoto);
+                    formData.append(
+                        `members[${idx}][flat_attachments][]`,
+                        photoBase64
+                    );
+                }
+            }
 
             await axios.post(
                 `https://${baseUrl}/club_member_allocations.json`,
