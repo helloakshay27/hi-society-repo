@@ -9,17 +9,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { toast } from 'sonner';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
+import { TextField } from '@mui/material';
+import { fieldStyles } from '../fieldStyles';
 
 const relatedToSchema = z.object({
   issueType: z.string().min(1, 'Issue type is required'),
@@ -111,7 +111,7 @@ export const EditRelatedToModal: React.FC<EditRelatedToModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} modal={false} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Related To</DialogTitle>
@@ -124,12 +124,16 @@ export const EditRelatedToModal: React.FC<EditRelatedToModalProps> = ({
               name="issueType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Issue Type</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Enter issue type" 
-                      {...field}
-                      className="h-10"
+                    <TextField
+                      label="Issue Type"
+                      placeholder="Enter issue type"
+                      value={field.value}
+                      onChange={field.onChange}
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
                     />
                   </FormControl>
                   <FormMessage />

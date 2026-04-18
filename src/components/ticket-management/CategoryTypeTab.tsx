@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
@@ -13,13 +12,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -33,6 +25,8 @@ import { API_CONFIG, getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import ReactSelect from 'react-select';
 import { Label } from "@/components/ui/label";
+import { TextField, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from './fieldStyles';
 import { Edit, Plus, Trash2, Upload, X } from 'lucide-react';
 
 const categorySchema = z.object({
@@ -335,11 +329,6 @@ export const CategoryTypeTab: React.FC = () => {
     
     if (!categoryNameValue?.trim()) {
       toast.error('Please enter a category name');
-      return;
-    }
-    
-    if (!iconFile) {
-      toast.error('Please select an icon');
       return;
     }
     
@@ -819,7 +808,7 @@ export const CategoryTypeTab: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Add Category Dialog */}
-      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
         if (!open) {
           form.reset();
           setSelectedIssueType('');
@@ -838,23 +827,24 @@ export const CategoryTypeTab: React.FC = () => {
             <div className="space-y-4 py-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Issue Type Dropdown */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Select Issue Type <span className="text-red-500">*</span>
-                  </label>
-                  <Select value={selectedIssueType} onValueChange={setSelectedIssueType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Issue Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {issueTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Issue Type <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={selectedIssueType}
+                    onChange={(e) => setSelectedIssueType(e.target.value)}
+                    displayEmpty
+                    label="Select Issue Type *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                    {issueTypes.map((type) => (
+                      <MenuItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </MuiFormControl>
 
                 {/* Category Name */}
                 <FormField
@@ -862,9 +852,17 @@ export const CategoryTypeTab: React.FC = () => {
                   name="categoryName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Enter category <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter category" {...field} />
+                        <TextField
+                          label={<>Enter category <span style={{ color: 'red' }}>*</span></>}
+                          placeholder="Enter category"
+                          value={field.value}
+                          onChange={field.onChange}
+                          fullWidth
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{ sx: fieldStyles }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -873,20 +871,21 @@ export const CategoryTypeTab: React.FC = () => {
 
                 {/* FM Response Time */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Enter FM response time <span className="text-red-500">*</span>
-                  </label>
                   <div className="flex gap-2">
-                    <Input
+                    <TextField
+                      label={<>Enter FM response time <span style={{ color: 'red' }}>*</span></>}
                       type="number"
                       placeholder="Enter FM response time"
                       value={fmResponseTime}
                       onChange={(e) => setFmResponseTime(e.target.value)}
-                      min="0"
+                      inputProps={{ min: 0 }}
                       onKeyDown={(e) => {
                         if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
                       }}
-                      className="flex-1"
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
                     />
                     <div className="w-16 flex items-center justify-center bg-gray-100 border border-gray-300 rounded px-3">
                       Min
@@ -896,20 +895,21 @@ export const CategoryTypeTab: React.FC = () => {
 
                 {/* Project Response Time */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Enter Project response time <span className="text-red-500">*</span>
-                  </label>
                   <div className="flex gap-2">
-                    <Input
+                    <TextField
+                      label={<>Enter Project response time <span style={{ color: 'red' }}>*</span></>}
                       type="number"
                       placeholder="Enter Project response time"
                       value={projectResponseTime}
                       onChange={(e) => setProjectResponseTime(e.target.value)}
-                      min="0"
+                      inputProps={{ min: 0 }}
                       onKeyDown={(e) => {
                         if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault();
                       }}
-                      className="flex-1"
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
                     />
                     <div className="w-16 flex items-center justify-center bg-gray-100 border border-gray-300 rounded px-3">
                       Min
@@ -918,28 +918,29 @@ export const CategoryTypeTab: React.FC = () => {
                 </div>
 
                 {/* Priority Dropdown */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Select Priority <span className="text-red-500">*</span>
-                  </label>
-                  <Select value={selectedPriority} onValueChange={setSelectedPriority}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {priorityOptions.map((priority) => (
-                        <SelectItem key={priority} value={priority}>
-                          {priority}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Priority <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={selectedPriority}
+                    onChange={(e) => setSelectedPriority(e.target.value)}
+                    displayEmpty
+                    label="Select Priority *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Priority</em></MenuItem>
+                    {priorityOptions.map((priority) => (
+                      <MenuItem key={priority} value={priority}>
+                        {priority}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </MuiFormControl>
 
                 {/* Upload Icon */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium">
-                    Upload Icon <span className="text-red-500">*</span>
+                    Upload Icon
                   </label>
                   <div className="flex items-center gap-2">
                     <label htmlFor="icon-upload" className="cursor-pointer flex-1">
@@ -1041,7 +1042,7 @@ export const CategoryTypeTab: React.FC = () => {
       </div>
 
       {/* Edit Category Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+      <Dialog open={isEditModalOpen} modal={false} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Edit Category</DialogTitle>
@@ -1050,55 +1051,58 @@ export const CategoryTypeTab: React.FC = () => {
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Issue Type Dropdown */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Select Issue Type <span className="text-red-500">*</span>
-                  </label>
-                  <Select value={editIssueType} onValueChange={setEditIssueType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Issue Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {issueTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Issue Type <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={editIssueType}
+                    onChange={(e) => setEditIssueType(e.target.value)}
+                    displayEmpty
+                    label="Select Issue Type *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                    {issueTypes.map((type) => (
+                      <MenuItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </MuiFormControl>
 
                 {/* Category Name */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <Input
+                  <TextField
+                    label={<>Category <span style={{ color: 'red' }}>*</span></>}
                     value={editCategoryName}
                     onChange={(e) => setEditCategoryName(e.target.value)}
                     placeholder="Enter category"
-                    className="w-full"
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
                   />
                 </div>
 
                 {/* FM Response Time */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Enter FM response time <span className="text-red-500">*</span>
-                  </label>
                   <div className="flex gap-2">
-                    <Input 
-                      type="number" 
-                      placeholder="Enter FM response time" 
+                    <TextField
+                      label={<>Enter FM response time <span style={{ color: 'red' }}>*</span></>}
+                      type="number"
+                      placeholder="Enter FM response time"
                       value={editFmResponseTime}
                       onChange={(e) => setEditFmResponseTime(e.target.value)}
-                      min="0"
+                      inputProps={{ min: 0 }}
                       onKeyDown={(e) => {
                         if (e.key === '-' || e.key === 'e' || e.key === 'E') {
                           e.preventDefault();
                         }
                       }}
-                      className="flex-1"
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
                     />
                     <div className="w-16 flex items-center justify-center bg-gray-100 border border-gray-300 rounded px-3">
                       Min
@@ -1108,22 +1112,23 @@ export const CategoryTypeTab: React.FC = () => {
 
                 {/* Project Response Time */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Enter Project response time <span className="text-red-500">*</span>
-                  </label>
                   <div className="flex gap-2">
-                    <Input 
-                      type="number" 
-                      placeholder="Enter Project response time" 
+                    <TextField
+                      label={<>Enter Project response time <span style={{ color: 'red' }}>*</span></>}
+                      type="number"
+                      placeholder="Enter Project response time"
                       value={editProjectResponseTime}
                       onChange={(e) => setEditProjectResponseTime(e.target.value)}
-                      min="0"
+                      inputProps={{ min: 0 }}
                       onKeyDown={(e) => {
                         if (e.key === '-' || e.key === 'e' || e.key === 'E') {
                           e.preventDefault();
                         }
                       }}
-                      className="flex-1"
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ sx: fieldStyles }}
                     />
                     <div className="w-16 flex items-center justify-center bg-gray-100 border border-gray-300 rounded px-3">
                       Min
@@ -1132,23 +1137,24 @@ export const CategoryTypeTab: React.FC = () => {
                 </div>
 
                 {/* Priority Dropdown */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Select Priority <span className="text-red-500">*</span>
-                  </label>
-                  <Select value={editPriority} onValueChange={setEditPriority}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {priorityOptions.map((priority) => (
-                        <SelectItem key={priority} value={priority}>
-                          {priority}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Select Priority <span style={{ color: 'red' }}>*</span></InputLabel>
+                  <MuiSelect
+                    value={editPriority}
+                    onChange={(e) => setEditPriority(e.target.value)}
+                    displayEmpty
+                    label="Select Priority *"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Priority</em></MenuItem>
+                    {priorityOptions.map((priority) => (
+                      <MenuItem key={priority} value={priority}>
+                        {priority}
+                      </MenuItem>
+                    ))}
+                  </MuiSelect>
+                </MuiFormControl>
 
                 {/* Upload Icon */}
                 <div className="space-y-2">
@@ -1258,11 +1264,15 @@ export const CategoryTypeTab: React.FC = () => {
                     {editVendorEmails.map((email, index) => (
                       <div key={index} className="flex gap-2">
                         <div className="flex-1">
-                          <Input
+                          <TextField
                             type="email"
                             placeholder="Enter vendor email"
                             value={email}
                             onChange={(e) => handleEditVendorEmailChange(index, e.target.value)}
+                            fullWidth
+                            variant="outlined"
+                            InputLabelProps={{ shrink: true }}
+                            InputProps={{ sx: fieldStyles }}
                           />
                         </div>
                         {editVendorEmails.length > 1 && (

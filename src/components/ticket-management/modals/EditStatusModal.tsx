@@ -9,7 +9,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
@@ -19,15 +18,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { toast } from 'sonner';
 import { getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { TextField, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from '../fieldStyles';
 
 const statusSchema = z.object({
   name: z.string().min(1, 'Status name is required'),
@@ -221,7 +215,7 @@ export const EditStatusModal: React.FC<EditStatusModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} modal={false} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Status</DialogTitle>
@@ -240,9 +234,18 @@ export const EditStatusModal: React.FC<EditStatusModalProps> = ({
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status<span className="text-red-500">*</span></FormLabel>
                       <FormControl>
-                        <Input id="edit-status-name" placeholder="Enter status name" {...field} />
+                        <TextField
+                          id="edit-status-name"
+                          label={<>Status<span style={{ color: 'red' }}>*</span></>}
+                          placeholder="Enter status name"
+                          value={field.value}
+                          onChange={field.onChange}
+                          fullWidth
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{ sx: fieldStyles }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -254,14 +257,18 @@ export const EditStatusModal: React.FC<EditStatusModalProps> = ({
                   name="position"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Order<span className="text-red-500">*</span></FormLabel>
                       <FormControl>
-                        <Input
+                        <TextField
                           id="edit-position"
+                          label={<>Order<span style={{ color: 'red' }}>*</span></>}
                           type="number"
                           placeholder="Enter order"
-                          {...field}
+                          value={field.value}
                           onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          fullWidth
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{ sx: fieldStyles }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -275,23 +282,24 @@ export const EditStatusModal: React.FC<EditStatusModalProps> = ({
                 name="fixedState"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Fixed State
-                      {/* <span className="text-red-500">*</span> */}
-                      </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select fixed state" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
+                    <MuiFormControl fullWidth variant="outlined">
+                      <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Fixed State</InputLabel>
+                      <MuiSelect
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        displayEmpty
+                        label="Fixed State"
+                        sx={fieldStyles}
+                        MenuProps={menuProps}
+                      >
+                        <MenuItem value=""><em>Select fixed state</em></MenuItem>
                         {fixedStates.map((state) => (
-                          <SelectItem key={state.value} value={state.value}>
+                          <MenuItem key={state.value} value={state.value}>
                             {state.label}
-                          </SelectItem>
+                          </MenuItem>
                         ))}
-                      </SelectContent>
-                    </Select>
+                      </MuiSelect>
+                    </MuiFormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -311,11 +319,15 @@ export const EditStatusModal: React.FC<EditStatusModalProps> = ({
                           onChange={field.onChange}
                           className="w-16 h-10 border border-gray-300 rounded cursor-pointer"
                         />
-                        <Input
+                        <TextField
                           id="edit-color-code"
                           placeholder="#000000"
-                          {...field}
-                          className="flex-1"
+                          value={field.value}
+                          onChange={field.onChange}
+                          fullWidth
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{ sx: fieldStyles }}
                         />
                       </div>
                     </FormControl>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -8,17 +7,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
+import { TextField, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from './fieldStyles';
 
 interface LocationLevel {
   level: 1 | 2 | 3;
@@ -348,7 +342,7 @@ export const LocationTab: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Add Location Dialog */}
-      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
         if (!open) {
           setInputValue('');
           setSelectedLevel1('');
@@ -364,51 +358,64 @@ export const LocationTab: React.FC = () => {
             {/* Level 1 Dropdown — shown for Level 2 and Level 3 */}
             {activeLevel >= 2 && (
               <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-700">Level 1</label>
-                <Select value={selectedLevel1} onValueChange={handleLevel1Change}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Level 1" />
-                  </SelectTrigger>
-                  <SelectContent>
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Level 1</InputLabel>
+                  <MuiSelect
+                    value={selectedLevel1}
+                    onChange={(e) => handleLevel1Change(e.target.value)}
+                    displayEmpty
+                    label="Level 1"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Level 1</em></MenuItem>
                     {level1Items.map((item) => (
-                      <SelectItem key={item.id} value={item.id.toString()}>
+                      <MenuItem key={item.id} value={item.id.toString()}>
                         {item.name}
-                      </SelectItem>
+                      </MenuItem>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </MuiSelect>
+                </MuiFormControl>
               </div>
             )}
 
             {/* Level 2 Dropdown — shown only for Level 3 */}
             {activeLevel === 3 && (
               <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-700">Level 2</label>
-                <Select value={selectedLevel2} onValueChange={setSelectedLevel2} disabled={!selectedLevel1}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={selectedLevel1 ? 'Select Level 2' : 'Select Level 1 first'} />
-                  </SelectTrigger>
-                  <SelectContent>
+                <MuiFormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Level 2</InputLabel>
+                  <MuiSelect
+                    value={selectedLevel2}
+                    onChange={(e) => setSelectedLevel2(e.target.value)}
+                    displayEmpty
+                    disabled={!selectedLevel1}
+                    label="Level 2"
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>{selectedLevel1 ? 'Select Level 2' : 'Select Level 1 first'}</em></MenuItem>
                     {filteredLevel2ForDropdown.map((item) => (
-                      <SelectItem key={item.id} value={item.id.toString()}>
+                      <MenuItem key={item.id} value={item.id.toString()}>
                         {item.name}
-                      </SelectItem>
+                      </MenuItem>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </MuiSelect>
+                </MuiFormControl>
               </div>
             )}
 
             {/* Name Input */}
             <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">
-                {levels[activeLevel - 1].label} Name
-              </label>
-              <Input
+              <TextField
+                label={`${levels[activeLevel - 1].label} Name`}
                 placeholder={levels[activeLevel - 1].placeholder}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
               />
             </div>
           </div>

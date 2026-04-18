@@ -1672,7 +1672,6 @@ if (currentPath.includes("/club-management/helpdesk")) {
                     <FormControl
                       fullWidth
                       variant="outlined"
-                      required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
                       <InputLabel shrink>Select Sub Category</InputLabel>
@@ -1685,7 +1684,7 @@ if (currentPath.includes("/club-management/helpdesk")) {
                         disabled={loadingSubcategories}
                       >
                         <MenuItem value="">
-                          {loadingSubcategories ? "Loading..." : "Select Sub Category*"}
+                          {loadingSubcategories ? "Loading..." : "Select Sub Category"}
                         </MenuItem>
                         {subcategories.map((subcategory) => (
                           <MenuItem key={subcategory.id} value={subcategory.id.toString()}>
@@ -1710,18 +1709,10 @@ if (currentPath.includes("/club-management/helpdesk")) {
                         label="Select Issue Related To"
                         notched
                         displayEmpty
-                        disabled={loadingIssueTypes}
                       >
-                        <MenuItem value="">
-                          {loadingIssueTypes ? "Loading..." : "Select Issue Related To"}
-                        </MenuItem>
+                        <MenuItem value="">Select Issue Related To</MenuItem>
                         <MenuItem value="fm">FM</MenuItem>
                         <MenuItem value="project">Project</MenuItem>
-                        {issueTypes.filter(type => type.active === 1).map((issueType) => (
-                          <MenuItem key={issueType.id} value={issueType.id.toString()}>
-                            {issueType.name}
-                          </MenuItem>
-                        ))}
                       </MuiSelect>
                     </FormControl>
 
@@ -1936,7 +1927,6 @@ if (currentPath.includes("/club-management/helpdesk")) {
                     <FormControl
                       fullWidth
                       variant="outlined"
-                      required
                       sx={{ '& .MuiInputBase-root': fieldStyles }}
                     >
                       <InputLabel shrink>Select Sub Category</InputLabel>
@@ -1949,7 +1939,7 @@ if (currentPath.includes("/club-management/helpdesk")) {
                         disabled={loadingSubcategories}
                       >
                         <MenuItem value="">
-                          {loadingSubcategories ? "Loading..." : "Select Sub Category*"}
+                          {loadingSubcategories ? "Loading..." : "Select Sub Category"}
                         </MenuItem>
                         {subcategories.map((subcategory) => (
                           <MenuItem key={subcategory.id} value={subcategory.id.toString()}>

@@ -1,13 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +11,8 @@ import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Edit, Plus, Trash2 } from 'lucide-react';
+import { TextField, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from './fieldStyles';
 
 interface AgingRule {
   id: number;
@@ -335,7 +329,7 @@ export const AgingRuleTab: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Add Aging Rule Dialog */}
-      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
         setAddDialogOpen(open);
         if (!open) setForm(defaultForm);
       }}>
@@ -345,42 +339,83 @@ export const AgingRuleTab: React.FC = () => {
           </DialogHeader>
           <div className="flex flex-wrap gap-4 py-4">
             <div className="flex-1 min-w-[140px]">
-              <label className="block text-sm font-medium mb-1">Rule Type</label>
-              <Select value={form.rule_type} onValueChange={(v) => updateForm('rule_type', v)}>
-                <SelectTrigger><SelectValue placeholder="Select Rule Type" /></SelectTrigger>
-                <SelectContent>
+              <MuiFormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Rule Type</InputLabel>
+                <MuiSelect
+                  value={form.rule_type}
+                  onChange={(e) => updateForm('rule_type', e.target.value)}
+                  displayEmpty
+                  label="Rule Type"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value="" disabled><em>Select Rule Type</em></MenuItem>
                   {ruleTypeOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
                   ))}
-                </SelectContent>
-              </Select>
+                </MuiSelect>
+              </MuiFormControl>
             </div>
             <div className="flex-1 min-w-[160px]">
-              <label className="block text-sm font-medium mb-1">Rule Unit</label>
-              <Select value={form.rule_unit} onValueChange={(v) => updateForm('rule_unit', v)}>
-                <SelectTrigger><SelectValue placeholder="Select Rule Unit" /></SelectTrigger>
-                <SelectContent>
+              <MuiFormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Rule Unit</InputLabel>
+                <MuiSelect
+                  value={form.rule_unit}
+                  onChange={(e) => updateForm('rule_unit', e.target.value)}
+                  displayEmpty
+                  label="Rule Unit"
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value="" disabled><em>Select Rule Unit</em></MenuItem>
                   {ruleUnitOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
                   ))}
-                </SelectContent>
-              </Select>
+                </MuiSelect>
+              </MuiFormControl>
             </div>
             {showBetween ? (
               <>
                 <div className="flex-1 min-w-[100px]">
-                  <label className="block text-sm font-medium mb-1">From</label>
-                  <Input type="number" placeholder="From" value={form.from} onChange={(e) => updateForm('from', e.target.value)} />
+                  <TextField
+                    label="From"
+                    type="number"
+                    placeholder="From"
+                    value={form.from}
+                    onChange={(e) => updateForm('from', e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
                 </div>
                 <div className="flex-1 min-w-[100px]">
-                  <label className="block text-sm font-medium mb-1">To</label>
-                  <Input type="number" placeholder="To" value={form.to} onChange={(e) => updateForm('to', e.target.value)} />
+                  <TextField
+                    label="To"
+                    type="number"
+                    placeholder="To"
+                    value={form.to}
+                    onChange={(e) => updateForm('to', e.target.value)}
+                    fullWidth
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{ sx: fieldStyles }}
+                  />
                 </div>
               </>
             ) : (
               <div className="flex-1 min-w-[120px]">
-                <label className="block text-sm font-medium mb-1">Value</label>
-                <Input type="number" placeholder="Enter value" value={form.value} onChange={(e) => updateForm('value', e.target.value)} />
+                <TextField
+                  label="Value"
+                  type="number"
+                  placeholder="Enter value"
+                  value={form.value}
+                  onChange={(e) => updateForm('value', e.target.value)}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
               </div>
             )}
             <div className="w-full">
@@ -423,7 +458,7 @@ export const AgingRuleTab: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      <Dialog open={editDialogOpen} modal={false} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Aging Rule</DialogTitle>
