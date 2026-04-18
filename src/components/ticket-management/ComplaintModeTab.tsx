@@ -4,13 +4,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import {
@@ -34,6 +32,8 @@ import {
   deleteComplaintMode,
   fetchAccounts
 } from '@/store/slices/complaintModeSlice';
+import { TextField } from '@mui/material';
+import { fieldStyles } from './fieldStyles';
 
 const complaintModeSchema = z.object({
   complaintMode: z.string().min(1, 'Complaint mode is required'),
@@ -220,7 +220,7 @@ export const ComplaintModeTab: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Add Complaint Mode Dialog */}
-      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
         setAddDialogOpen(open);
         if (!open) form.reset();
       }}>
@@ -235,9 +235,17 @@ export const ComplaintModeTab: React.FC = () => {
                 name="complaintMode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Complaint Mode <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter complaint mode" {...field} />
+                      <TextField
+                        label={<>Complaint Mode <span style={{ color: 'red' }}>*</span></>}
+                        placeholder="Enter complaint mode"
+                        value={field.value}
+                        onChange={field.onChange}
+                        fullWidth
+                        variant="outlined"
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

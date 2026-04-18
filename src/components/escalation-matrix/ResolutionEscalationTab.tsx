@@ -1086,7 +1086,7 @@ export const ResolutionEscalationTab: React.FC = () => {
                 Automatic
               </span>
             </div>
-            <div className="flex gap-2">
+            {isAutomatic && <div className="flex gap-2">
               <Button
                 onClick={() => setIsAddAssignRuleOpen(true)}
                 className="bg-[#1a1a2e] hover:bg-[#16213e] text-white flex items-center gap-1 h-9 px-4 text-sm"
@@ -1112,11 +1112,11 @@ export const ResolutionEscalationTab: React.FC = () => {
                   </span>
                 )}
               </Button>
-            </div>
+            </div>}
           </div>
 
-          {/* Assign Rule Table */}
-          <div className="border rounded-md overflow-hidden">
+          {/* Assign Rule Table - only shown in Automatic mode */}
+          {isAutomatic && <div className="border rounded-md overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
@@ -1232,10 +1232,10 @@ export const ResolutionEscalationTab: React.FC = () => {
                 )}
               </TableBody>
             </Table>
-          </div>
+          </div>}
 
           {/* Pagination */}
-          {!assignRulesLoading && assignRulesPagination.totalPages > 1 && (
+          {isAutomatic && !assignRulesLoading && assignRulesPagination.totalPages > 1 && (
             <div className="flex items-center justify-between pt-3">
               <p className="text-sm text-gray-500">
                 Showing{" "}

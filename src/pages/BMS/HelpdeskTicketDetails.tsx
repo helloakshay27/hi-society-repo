@@ -5456,6 +5456,7 @@ export const TicketDetailsPage = () => {
                               value={ticketMgmtFormData.visit_date}
                               onChange={(e) => handleTicketMgmtInputChange('visit_date', e.target.value)}
                               InputLabelProps={{ shrink: true }}
+                              inputProps={{ min: new Date().toISOString().split('T')[0] }}
                             />
 
                             <TextField
@@ -5466,6 +5467,7 @@ export const TicketDetailsPage = () => {
                               value={ticketMgmtFormData.expected_completion_date}
                               onChange={(e) => handleTicketMgmtInputChange('expected_completion_date', e.target.value)}
                               InputLabelProps={{ shrink: true }}
+                              inputProps={{ min: new Date().toISOString().split('T')[0] }}
                             />
 
                             <FormControl fullWidth size="small">
@@ -6539,7 +6541,8 @@ export const TicketDetailsPage = () => {
                                   style: { display: 'none' } // Hide default label since we have floating label
                                 }}
                                 inputProps={{
-                                  style: { fontSize: '14px' }
+                                  style: { fontSize: '14px' },
+                                  min: new Date().toISOString().split('T')[0]
                                 }}
                                 sx={{
                                   '& .MuiInputBase-root': {
@@ -8299,6 +8302,7 @@ export const TicketDetailsPage = () => {
                           value={ticketMgmtFormData.visit_date}
                           onChange={(e) => handleTicketMgmtInputChange('visit_date', e.target.value)}
                           InputLabelProps={{ shrink: true }}
+                          inputProps={{ min: new Date().toISOString().split('T')[0] }}
                         />
 
                         <TextField
@@ -8309,6 +8313,7 @@ export const TicketDetailsPage = () => {
                           value={ticketMgmtFormData.expected_completion_date}
                           onChange={(e) => handleTicketMgmtInputChange('expected_completion_date', e.target.value)}
                           InputLabelProps={{ shrink: true }}
+                          inputProps={{ min: new Date().toISOString().split('T')[0] }}
                         />
 
                         <FormControl fullWidth size="small">
@@ -9386,7 +9391,8 @@ export const TicketDetailsPage = () => {
                               style: { display: 'none' } // Hide default label since we have floating label
                             }}
                             inputProps={{
-                              style: { fontSize: '14px' }
+                              style: { fontSize: '14px' },
+                              min: new Date().toISOString().split('T')[0]
                             }}
                             sx={{
                               '& .MuiInputBase-root': {

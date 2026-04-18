@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
@@ -12,6 +11,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { TextField } from '@mui/material';
+import { fieldStyles } from './fieldStyles';
 
 interface ProjectEmail {
   id: number;
@@ -240,7 +241,7 @@ export const ProjectEmailsTab: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Add Email Dialog */}
-      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
         setAddDialogOpen(open);
         if (!open) setEmailInput('');
       }}>
@@ -249,7 +250,8 @@ export const ProjectEmailsTab: React.FC = () => {
             <DialogTitle>Add Project Email</DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            <Input
+            <TextField
+              label="Email"
               type="email"
               placeholder="Enter Email Id"
               value={emailInput}
@@ -257,6 +259,10 @@ export const ProjectEmailsTab: React.FC = () => {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleSubmit();
               }}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
             />
           </div>
           <DialogFooter className="gap-2">
@@ -282,13 +288,14 @@ export const ProjectEmailsTab: React.FC = () => {
       </Dialog>
 
       {/* Edit Email Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      <Dialog open={editDialogOpen} modal={false} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Email</DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            <Input
+            <TextField
+              label="Email"
               type="email"
               placeholder="Enter Email Id"
               value={editEmailInput}
@@ -296,6 +303,10 @@ export const ProjectEmailsTab: React.FC = () => {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleEditSubmit();
               }}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
             />
           </div>
           <DialogFooter className="gap-2">

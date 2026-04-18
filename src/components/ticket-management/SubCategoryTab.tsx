@@ -1,13 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +12,8 @@ import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
 import { toast } from 'sonner';
 import { Edit, Trash2, Plus } from 'lucide-react';
+import { TextField, FormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from './fieldStyles';
 
 interface SubCategoryItem {
   id: number;
@@ -350,7 +344,7 @@ export const SubCategoryTab: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Add Sub-Category Dialog */}
-      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
         setAddDialogOpen(open);
         if (!open) {
           setSelectedIssueType('');
@@ -364,52 +358,63 @@ export const SubCategoryTab: React.FC = () => {
             <DialogTitle>Add Sub-Category</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-            <div className="space-y-2">
-              <Label>Select Issue Type <span className="text-red-500">*</span></Label>
-              <Select value={selectedIssueType} onValueChange={setSelectedIssueType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Issue Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {issueTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Select Category <span className="text-red-500">*</span></Label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Sub-category Name <span className="text-red-500">*</span></Label>
-              <Input
-                placeholder="Enter Sub-category"
-                value={subCategoryName}
-                onChange={(e) => setSubCategoryName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Text</Label>
-              <Input
-                placeholder="Enter text"
-                value={helpdeskText}
-                onChange={(e) => setHelpdeskText(e.target.value)}
-              />
-            </div>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                Select Issue Type <span style={{ color: '#ef4444' }}>*</span>
+              </InputLabel>
+              <MuiSelect
+                label="Select Issue Type *"
+                displayEmpty
+                value={selectedIssueType}
+                onChange={(e) => setSelectedIssueType(e.target.value)}
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                {issueTypes.map((type) => (
+                  <MenuItem key={type.id} value={type.id.toString()}>{type.name}</MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                Select Category <span style={{ color: '#ef4444' }}>*</span>
+              </InputLabel>
+              <MuiSelect
+                label="Select Category *"
+                displayEmpty
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                sx={fieldStyles}
+                MenuProps={menuProps}
+              >
+                <MenuItem value="" disabled><em>Select Category</em></MenuItem>
+                {categories.map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id.toString()}>{cat.name}</MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+            <TextField
+              label="Sub-category Name"
+              placeholder="Enter Sub-category"
+              value={subCategoryName}
+              onChange={(e) => setSubCategoryName(e.target.value)}
+              fullWidth
+              variant="outlined"
+              required
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
+            <TextField
+              label="Text"
+              placeholder="Enter text"
+              value={helpdeskText}
+              onChange={(e) => setHelpdeskText(e.target.value)}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
+            />
           </div>
           <DialogFooter className="gap-2">
             <Button
@@ -519,7 +524,7 @@ export const SubCategoryTab: React.FC = () => {
       </div>
 
       {/* Edit Sub-Category Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+      <Dialog open={isEditModalOpen} modal={false} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Edit Sub-Category</DialogTitle>
@@ -528,66 +533,69 @@ export const SubCategoryTab: React.FC = () => {
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Issue Type Dropdown */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Select Issue Type <span className="text-red-500">*</span>
-                  </label>
-                  <Select value={editIssueType} onValueChange={setEditIssueType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Issue Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {issueTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                    Select Issue Type <span style={{ color: '#ef4444' }}>*</span>
+                  </InputLabel>
+                  <MuiSelect
+                    label="Select Issue Type *"
+                    displayEmpty
+                    value={editIssueType}
+                    onChange={(e) => setEditIssueType(e.target.value)}
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Issue Type</em></MenuItem>
+                    {issueTypes.map((type) => (
+                      <MenuItem key={type.id} value={type.id.toString()}>{type.name}</MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Category Dropdown */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Select Category <span className="text-red-500">*</span>
-                  </label>
-                  <Select value={editCategory} onValueChange={setEditCategory}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id.toString()}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                    Select Category <span style={{ color: '#ef4444' }}>*</span>
+                  </InputLabel>
+                  <MuiSelect
+                    label="Select Category *"
+                    displayEmpty
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Category</em></MenuItem>
+                    {categories.map((cat) => (
+                      <MenuItem key={cat.id} value={cat.id.toString()}>{cat.name}</MenuItem>
+                    ))}
+                  </MuiSelect>
+                </FormControl>
 
                 {/* Sub-category Name */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Sub-category Name <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    value={editSubCategoryName}
-                    onChange={(e) => setEditSubCategoryName(e.target.value)}
-                    placeholder="Enter Sub-category"
-                  />
-                </div>
+                <TextField
+                  label="Sub-category Name"
+                  placeholder="Enter Sub-category"
+                  value={editSubCategoryName}
+                  onChange={(e) => setEditSubCategoryName(e.target.value)}
+                  fullWidth
+                  variant="outlined"
+                  required
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
 
                 {/* Helpdesk Text */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">
-                    Text
-                  </label>
-                  <Input
-                    value={editHelpdeskText}
-                    onChange={(e) => setEditHelpdeskText(e.target.value)}
-                    placeholder="Enter text"
-                  />
-                </div>
+                <TextField
+                  label="Text"
+                  placeholder="Enter text"
+                  value={editHelpdeskText}
+                  onChange={(e) => setEditHelpdeskText(e.target.value)}
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{ sx: fieldStyles }}
+                />
               </div>
 
               <div className="flex justify-end gap-3 pt-4">

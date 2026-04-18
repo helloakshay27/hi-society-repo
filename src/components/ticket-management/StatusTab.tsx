@@ -5,8 +5,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Form,
   FormControl,
@@ -15,13 +22,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +37,8 @@ import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchStatuses, createStatus, updateStatus, deleteStatus, fetchAccounts } from '@/store/slices/statusesSlice';
 import { API_CONFIG, getFullUrl, getAuthHeader } from '@/config/apiConfig';
+import { TextField, FormControl as MuiFormControl, InputLabel, Select as MuiSelect, MenuItem } from '@mui/material';
+import { fieldStyles, menuProps } from './fieldStyles';
 
 const statusSchema = z.object({
   name: z.string().min(1, 'Status is required'),
@@ -423,7 +425,7 @@ export const StatusTab: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Add Status Dialog */}
-      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
         setAddDialogOpen(open);
         if (!open) form.reset();
       }}>
@@ -438,9 +440,17 @@ export const StatusTab: React.FC = () => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter status" {...field} />
+                      <TextField
+                        label={<>Status <span style={{ color: 'red' }}>*</span></>}
+                        placeholder="Enter status"
+                        value={field.value}
+                        onChange={field.onChange}
+                        fullWidth
+                        variant="outlined"
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ sx: fieldStyles }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -451,21 +461,24 @@ export const StatusTab: React.FC = () => {
                 name="fixedState"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Fixed State</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select fixed state" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
+                    <MuiFormControl fullWidth variant="outlined">
+                      <InputLabel shrink sx={{ backgroundColor: 'white', px: 1 }}>Fixed State</InputLabel>
+                      <MuiSelect
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        displayEmpty
+                        label="Fixed State"
+                        sx={fieldStyles}
+                        MenuProps={menuProps}
+                      >
+                        <MenuItem value=""><em>Select fixed state</em></MenuItem>
                         {fixedStates.map((state) => (
-                          <SelectItem key={state.value} value={state.value}>
+                          <MenuItem key={state.value} value={state.value}>
                             {state.label}
-                          </SelectItem>
+                          </MenuItem>
                         ))}
-                      </SelectContent>
-                    </Select>
+                      </MuiSelect>
+                    </MuiFormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -475,11 +488,18 @@ export const StatusTab: React.FC = () => {
                 name="colorCode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Color Code <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <div className="flex gap-2">
-                        <Input type="color" className="w-16 h-10 p-1 border rounded" {...field} />
-                        <Input placeholder="#000000" {...field} />
+                        <input type="color" className="w-16 h-10 p-1 border rounded" value={field.value} onChange={field.onChange} />
+                        <TextField
+                          placeholder="#000000"
+                          value={field.value}
+                          onChange={field.onChange}
+                          fullWidth
+                          variant="outlined"
+                          InputLabelProps={{ shrink: true }}
+                          InputProps={{ sx: fieldStyles }}
+                        />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -491,13 +511,17 @@ export const StatusTab: React.FC = () => {
                 name="position"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Order <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
-                      <Input
+                      <TextField
+                        label={<>Order <span style={{ color: 'red' }}>*</span></>}
                         type="number"
                         placeholder="Enter order"
-                        {...field}
+                        value={field.value}
                         onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        fullWidth
+                        variant="outlined"
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{ sx: fieldStyles }}
                       />
                     </FormControl>
                     <FormMessage />

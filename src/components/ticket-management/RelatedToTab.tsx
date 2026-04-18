@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { EnhancedTable } from '@/components/enhanced-table/EnhancedTable';
 import { EditRelatedToModal } from './modals/EditRelatedToModal';
 import { getAuthHeader, getFullUrl } from '@/config/apiConfig';
@@ -13,6 +12,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { TextField } from '@mui/material';
+import { fieldStyles } from './fieldStyles';
 
 interface RelatedToType {
   id: number;
@@ -180,7 +181,7 @@ export const RelatedToTab: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Add Issue Type Dialog */}
-      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+      <Dialog open={addDialogOpen} modal={false} onOpenChange={(open) => {
         setAddDialogOpen(open);
         if (!open) setIssueTypeInput('');
       }}>
@@ -189,13 +190,18 @@ export const RelatedToTab: React.FC = () => {
             <DialogTitle>Add Related To</DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            <Input
+            <TextField
+              label="Issue Type"
               placeholder="Enter issue type"
               value={issueTypeInput}
               onChange={(e) => setIssueTypeInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleCreateSubmit();
               }}
+              fullWidth
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ sx: fieldStyles }}
             />
           </div>
           <DialogFooter className="gap-2">
