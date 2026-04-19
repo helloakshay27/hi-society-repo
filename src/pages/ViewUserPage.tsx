@@ -353,6 +353,7 @@ export const ViewUserPage = () => {
                     <InfoField label="Resident Type" value={user?.resident_type || "-"} />
                     <InfoField label="Lives Here" value={user?.lives_here === "true" ? "Yes" : "No"} />
                     <InfoField label="Membership Type" value={user?.is_primary ? "Primary" : "Secondary"} />
+                     <InfoField label="Move In Date" value={user?.movein_date || "-"} />
                   </Box>
                 </Paper>
               </Box>
@@ -373,6 +374,7 @@ export const ViewUserPage = () => {
                     <InfoField label="Children Residing" value={user?.children || "-"} />
                     <InfoField label="Pets" value={user?.pets || "-"} />
                     <InfoField label="EV Connection" value={user?.ev_connection ? "Yes" : "No"} />
+                   
                   </Box>
                 </Paper>
               </Box>
