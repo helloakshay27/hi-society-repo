@@ -139,7 +139,7 @@ const mapFormDataToApiPayload = (formData: any, flatOptions: { id: number; flat_
   // Find the flat name from flatOptions using the flat ID
   const selectedFlat = flatOptions.find(f => f.id.toString() === formData.flat.toString());
   const flatName = selectedFlat ? selectedFlat.flat_no : formData.flat;
-  
+
   const payload: any = {
     email: formData.email,
     mobile: formData.mobile,
@@ -163,7 +163,7 @@ const mapFormDataToApiPayload = (formData: any, flatOptions: { id: number; flat_
     landline_number: formData.landlineNumber,
     agreement_start_date: formData.agreementStartDate || "",
     agreement_expire_date: formData.agreementExpireDate || "",
-    approve: formData.status === "1",
+    approve: formData.status === "1" ? true : (formData.status === "0" ? false : null),
     is_primary: formData.membershipType === "Primary" ? 1 : 0,
     birthday: formData.birthDate,
     anniversary: formData.anniversary,
@@ -318,7 +318,7 @@ export const AddUserPage = () => {
             mobile: user.mobile_number || "",
             password: "", // don't prefill password
             phase: user.display_view || "",
-            status: user.approved ? "1" : "",
+            status: user.approved === true ? "1" : (user.approved === false ? "0" : "null"),
             tower: user.society_block_id ? user.society_block_id.toString() : "",
             flat: user.society_flat_id || "",
             category: user.user_category_id || "",
@@ -641,9 +641,9 @@ export const AddUserPage = () => {
                 <Box sx={{ position: 'relative' }}>
                   <ProfileAvatar>
                     {profileImage ? (
-                      <img 
-                        src={profileImage} 
-                        alt="profile" 
+                      <img
+                        src={profileImage}
+                        alt="profile"
                         style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                       />
                     ) : (
@@ -752,9 +752,9 @@ export const AddUserPage = () => {
                       style={{ width: '100%', height: '200px', objectFit: 'cover' }}
                     />
                     <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
-                      <span style={{ 
-                        backgroundColor: '#f97316', color: 'white', padding: '2px 8px', 
-                        borderRadius: '4px', fontSize: '12px', fontWeight: 500 
+                      <span style={{
+                        backgroundColor: '#f97316', color: 'white', padding: '2px 8px',
+                        borderRadius: '4px', fontSize: '12px', fontWeight: 500
                       }}>
                         📹 Preview
                       </span>
@@ -937,6 +937,7 @@ export const AddUserPage = () => {
                     label="Select Status"
                     onChange={(e) => handleInputChange("status", e.target.value)}
                   >
+                    <MenuItem value="null">Pending</MenuItem>
                     <MenuItem value="1">Approve</MenuItem>
                     <MenuItem value="0">Reject</MenuItem>
                   </Select>
@@ -1029,8 +1030,8 @@ export const AddUserPage = () => {
                     value={formData.residentType}
                     onChange={(e) => handleInputChange("residentType", e.target.value)}
                   >
-                    <FormControlLabel value="Owner" control={<Radio size="small" />} label="Owner" />
-                    <FormControlLabel value="Tenant" control={<Radio size="small" />} label="Tenant" />
+                    <FormControlLabel value="owner" control={<Radio size="small" />} label="Owner" />
+                    <FormControlLabel value="tenant" control={<Radio size="small" />} label="Tenant" />
                   </RadioGroup>
                 </FormControl>
 

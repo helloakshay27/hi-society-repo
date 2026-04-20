@@ -75,7 +75,7 @@ const formattedResponse = (data) => {
     residentType: item.resident_type || "-",
     phase: item.display_view || "-",
     livesHere: (item.lives_here === "1" || item.lives_here === "true") ? "Yes" : "No",
-    membershipType: item?.membership_type || "-",
+    membershipType: item?.is_primary ? "Primary" : "Secondary",
     status: item.approve ? "Approved" : item.approve === false ? "Rejected" : "Pending",
     staff: item.staff || "-",
     vehicle: item.vehicle || "-",
@@ -726,7 +726,7 @@ const ManageUsersPage = () => {
         );
       }
       case "membership_type":
-        return user.is_primary ? "Primary" : "Secondary";
+        return user.membershipType;
       default:
         return <span className="text-sm">{user[columnKey] || "-"}</span>;
     }
