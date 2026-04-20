@@ -45,6 +45,7 @@ export const SubCategoryTab: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const perPage = 20;
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
   // Create form state
   const [selectedIssueType, setSelectedIssueType] = useState('');
@@ -60,6 +61,33 @@ export const SubCategoryTab: React.FC = () => {
   const [editSubCategoryName, setEditSubCategoryName] = useState('');
   const [editHelpdeskText, setEditHelpdeskText] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+
+  // Fetch categories filtered by issue type
+  const fetchCategoriesByIssueType = useCallback(async (issueTypeId: string) => {
+    if (!issueTypeId) {
+      setCategories([]);
+      return;
+    }
+    setLoadingCategories(true);
+    try {
+      const res = await fetch(
+        getFullUrl(`/dropdown/categories.json?q[issue_type_id_eq]=${issueTypeId}`),
+        { headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' } },
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const cats = Array.isArray(data) ? data : (data.categories || []);
+        setCategories(cats.map((cat: { id: number; name: string }) => ({ id: cat.id, name: cat.name })));
+      } else {
+        toast.error('Failed to fetch categories');
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast.error('Failed to fetch categories');
+    } finally {
+      setLoadingCategories(false);
+    }
+  }, []);
 
   // Fetch all data from separate APIs
   const fetchSubCategories = useCallback(async (page = 1) => {
@@ -91,14 +119,9 @@ export const SubCategoryTab: React.FC = () => {
 
   const fetchAllData = useCallback(async () => {
     try {
-      const [issueTypesRes, categoriesRes] = await Promise.all([
-        fetch(getFullUrl('/user/issue_type.json'), {
-          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-        }),
-        fetch(getFullUrl('/dropdown/categories.json'), {
-          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-        }),
-      ]);
+      const issueTypesRes = await fetch(getFullUrl('/user/issue_type.json'), {
+        headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+      });
 
       if (issueTypesRes.ok) {
         const data = await issueTypesRes.json();
@@ -108,25 +131,12 @@ export const SubCategoryTab: React.FC = () => {
             name: it.name,
           }))
         );
-      }
-
-      if (categoriesRes.ok) {
-        const data = await categoriesRes.json();
-        const cats = Array.isArray(data) ? data : (data.categories || []);
-        setCategories(
-          cats.map((cat: { id: number; name: string }) => ({
-            id: cat.id,
-            name: cat.name,
-          }))
-        );
-      }
-
-      if (!issueTypesRes.ok || !categoriesRes.ok) {
-        toast.error('Failed to fetch some data');
+      } else {
+        toast.error('Failed to fetch issue types');
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to fetch data');
+      console.error('Error fetching issue types:', error);
+      toast.error('Failed to fetch issue types');
     }
   }, []);
 
@@ -199,11 +209,13 @@ export const SubCategoryTab: React.FC = () => {
 
   // Handle edit
   const handleEdit = (subCategory: SubCategoryItem) => {
+    const issueTypeId = subCategory.issue_type_id?.toString() || '';
     setEditingSubCategory(subCategory);
-    setEditIssueType(subCategory.issue_type_id?.toString() || '');
+    setEditIssueType(issueTypeId);
     setEditCategory(subCategory.category_id?.toString() || '');
     setEditSubCategoryName(subCategory.sub_category || '');
     setEditHelpdeskText(subCategory.helpdesk_text || '');
+    if (issueTypeId) fetchCategoriesByIssueType(issueTypeId);
     setIsEditModalOpen(true);
   };
 
@@ -366,7 +378,12 @@ export const SubCategoryTab: React.FC = () => {
                 label="Select Issue Type *"
                 displayEmpty
                 value={selectedIssueType}
-                onChange={(e) => setSelectedIssueType(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedIssueType(val);
+                  setSelectedCategory('');
+                  fetchCategoriesByIssueType(val);
+                }}
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
@@ -385,10 +402,13 @@ export const SubCategoryTab: React.FC = () => {
                 displayEmpty
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
+                disabled={!selectedIssueType || loadingCategories}
                 sx={fieldStyles}
                 MenuProps={menuProps}
               >
-                <MenuItem value="" disabled><em>Select Category</em></MenuItem>
+                <MenuItem value="" disabled>
+                  <em>{loadingCategories ? 'Loading...' : !selectedIssueType ? 'Select issue type first' : 'Select Category'}</em>
+                </MenuItem>
                 {categories.map((cat) => (
                   <MenuItem key={cat.id} value={cat.id.toString()}>{cat.name}</MenuItem>
                 ))}
@@ -541,7 +561,12 @@ export const SubCategoryTab: React.FC = () => {
                     label="Select Issue Type *"
                     displayEmpty
                     value={editIssueType}
-                    onChange={(e) => setEditIssueType(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditIssueType(val);
+                      setEditCategory('');
+                      fetchCategoriesByIssueType(val);
+                    }}
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
@@ -562,10 +587,13 @@ export const SubCategoryTab: React.FC = () => {
                     displayEmpty
                     value={editCategory}
                     onChange={(e) => setEditCategory(e.target.value)}
+                    disabled={!editIssueType || loadingCategories}
                     sx={fieldStyles}
                     MenuProps={menuProps}
                   >
-                    <MenuItem value="" disabled><em>Select Category</em></MenuItem>
+                    <MenuItem value="" disabled>
+                      <em>{loadingCategories ? 'Loading...' : !editIssueType ? 'Select issue type first' : 'Select Category'}</em>
+                    </MenuItem>
                     {categories.map((cat) => (
                       <MenuItem key={cat.id} value={cat.id.toString()}>{cat.name}</MenuItem>
                     ))}
