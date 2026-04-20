@@ -226,6 +226,55 @@ export const BookingSetupDetailClubPage = () => {
     },
   ]);
 
+  // Helper function to format facility booking rules dynamically
+  const getDurationUnitLabel = (unit: string): string => {
+    const unitMap: Record<string, string> = {
+      daily: "Day",
+      weekly: "Week",
+      monthly: "Month",
+      quarterly: "Quarter",
+      "half-yearly": "Half-Year",
+      annually: "Year",
+      yearly: "Year",
+      "half_yearly": "Half-Year",
+    };
+    return unitMap[unit?.toLowerCase()] || unit;
+  };
+
+  const formatFacilityBookingRules = (rules: any[]): string => {
+    if (!rules || !Array.isArray(rules) || rules.length === 0) {
+      return "-";
+    }
+
+    try {
+      // Extract facility_booking_rule from each item
+      const ruleData = rules
+        .map((item) => {
+          const rule = item.facility_booking_rule || item;
+          return {
+            enumerator: rule.enumerator || 0,
+            duration_unit: rule.duration_unit?.toLowerCase() || "day",
+            active: rule.active,
+          };
+        })
+        .filter((rule) => rule.active !== false); // Only show active rules
+
+      if (ruleData.length === 0) return "-";
+
+      // Format each rule as "X per Y" where Y is readable format
+      const formattedRules = ruleData.map((rule) => {
+        const { enumerator, duration_unit } = rule;
+        const readableUnit = getDurationUnitLabel(duration_unit);
+        return `${enumerator} per ${readableUnit}`;
+      });
+
+      return formattedRules.join(" | ");
+    } catch (error) {
+      console.error("Error formatting facility booking rules:", error);
+      return "-";
+    }
+  };
+
   const handleDownloadQr = async () => {
     try {
       const response = await axios.get(
@@ -396,7 +445,7 @@ export const BookingSetupDetailClubPage = () => {
         },
         allowMultipleSlots: response.multi_slot,
         maximumSlots: response.max_slots,
-        facilityBookedTimes: response.booking_limit,
+        facilityBookedTimes: formatFacilityBookingRules(response.facility_booking_rules),
         description: response.description,
         termsConditions: response.terms,
         cancellationText: response.cancellation_policy,
@@ -1119,7 +1168,7 @@ export const BookingSetupDetailClubPage = () => {
                     </div>
                   )}
                   <div className="flex items-start">
-                    <span className="text-gray-500 min-w-[160px]">Facility Booked Times Per Day</span>
+                    <span className="text-gray-500 min-w-[160px]">Facility Booked Times</span>
                     <span className="text-gray-500 mx-2">:</span>
                     <span className="text-gray-900 font-medium">
                       {formData.facilityBookedTimes || "-"}
