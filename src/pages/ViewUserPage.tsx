@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Paper, Box, Avatar, Typography, Grid, Divider, Tabs, Tab } from "@mui/material";
-import { ArrowLeft, User as UserIcon, Mail, Phone, Home, Calendar, Info, FileText, Edit, Download, File, FileJson, Image, FileCode, Users, Files } from "lucide-react";
+import { ArrowLeft, User as UserIcon, Mail, Phone, Home, Calendar, Info, FileText, Edit, Download, File, FileJson, Image, FileCode, Users, Files, X } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddToAnotherFlatModal } from "@/components/AddToAnotherFlatModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -78,6 +81,15 @@ export const ViewUserPage = () => {
   const [tabValue, setTabValue] = useState(0);
   const [members, setMembers] = useState<any[]>([]);
   const [isAddToAnotherFlatModalOpen, setIsAddToAnotherFlatModalOpen] = useState(false);
+  const [isConfigureDetailsModalOpen, setIsConfigureDetailsModalOpen] = useState(false);
+  const [clubFormData, setClubFormData] = useState({
+    clubMembershipChecked: false,
+    membershipNumber: "",
+    startDate: "",
+    endDate: "",
+    accessCardChecked: false,
+    accessCardId: "",
+  });
 
   useEffect(() => {
     if (!userId || !baseUrl || !token) return;
@@ -164,6 +176,113 @@ export const ViewUserPage = () => {
       return;
     }
     window.open(documentUrl, "_blank");
+  };
+
+  const handleClubFormChange = (field: string, value: any) => {
+    setClubFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Helper function to format date from API response
+  const formatDateFromAPI = (dateString: string | null | undefined): string => {
+    if (!dateString) return "-";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+      });
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  const handleSubmitClubDetails = async () => {
+    try {
+      if (!baseUrl || !token || !user) {
+        toast.error("Missing authentication details.");
+        return;
+      }
+
+      // Validate form inputs
+      if (clubFormData.clubMembershipChecked && !clubFormData.membershipNumber.trim()) {
+        toast.error("Please enter Membership Number");
+        return;
+      }
+      if (!clubFormData.startDate) {
+        toast.error("Please select Start Date");
+        return;
+      }
+      if (!clubFormData.endDate) {
+        toast.error("Please select End Date");
+        return;
+      }
+      if (clubFormData.endDate < clubFormData.startDate) {
+        toast.error("End Date must be on or after Start Date");
+        return;
+      }
+      if (clubFormData.accessCardChecked && !clubFormData.accessCardId.trim()) {
+        toast.error("Please enter Access Card ID");
+        return;
+      }
+
+      const societyId = localStorage.getItem("selectedUserSociety");
+      if (!societyId) {
+        toast.error("Society ID not found");
+        return;
+      }
+
+      const formData = new FormData();
+
+      // Add club_member_allocation details
+      formData.append("club_member_allocation[society_id]", societyId);
+      formData.append("club_member_allocation[society_flat_id]", user.society_flat_id || "");
+      formData.append("club_member_allocation[status]", "active");
+      formData.append("club_member_allocation[start_date]", clubFormData.startDate);
+      formData.append("club_member_allocation[end_date]", clubFormData.endDate);
+
+      // Add member (current user)
+      formData.append("members[0][user_society_id]", userId);
+      formData.append("members[0][first_name]", user.firstname);
+      formData.append("members[0][last_name]", user.lastname || "");
+      formData.append("members[0][email]", user.email || "");
+      formData.append("members[0][mobile]", user.mobile || "");
+      formData.append("members[0][resident_type]", user.resident_type || "owner");
+
+      // Add club membership details
+      formData.append(
+        "members[0][club_member_check]",
+        clubFormData.clubMembershipChecked ? "true" : "false"
+      );
+      formData.append("members[0][membership_number]", clubFormData.membershipNumber);
+
+      // Add access card details
+      formData.append(
+        "members[0][access_card_check]",
+        clubFormData.accessCardChecked ? "true" : "false"
+      );
+      formData.append("members[0][access_card_id]", clubFormData.accessCardId);
+
+      await axios.post(
+        `https://${baseUrl}/club_member_allocations.json`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      toast.success("Club membership configured successfully!");
+      setIsConfigureDetailsModalOpen(false);
+      // Refresh user data
+      window.location.reload();
+    } catch (error) {
+      console.error("Error saving club details:", error);
+      const errorMessage = error.response?.data?.errors?.[0] || "Failed to save club details. Please try again.";
+      toast.error(errorMessage);
+    }
   };
 
   return (
@@ -353,7 +472,7 @@ export const ViewUserPage = () => {
                     <InfoField label="Resident Type" value={user?.resident_type || "-"} />
                     <InfoField label="Lives Here" value={user?.lives_here === "true" ? "Yes" : "No"} />
                     <InfoField label="Membership Type" value={user?.is_primary ? "Primary" : "Secondary"} />
-                     <InfoField label="Move In Date" value={user?.movein_date || "-"} />
+                    <InfoField label="Move In Date" value={user?.movein_date || "-"} />
                   </Box>
                 </Paper>
               </Box>
@@ -374,7 +493,7 @@ export const ViewUserPage = () => {
                     <InfoField label="Children Residing" value={user?.children || "-"} />
                     <InfoField label="Pets" value={user?.pets || "-"} />
                     <InfoField label="EV Connection" value={user?.ev_connection ? "Yes" : "No"} />
-                   
+
                   </Box>
                 </Paper>
               </Box>
@@ -546,9 +665,47 @@ export const ViewUserPage = () => {
         {
           tabValue === 1 && (
             <Box sx={{ p: 3 }}>
-              <Typography variant="body1" sx={{ color: "#666" }}>
-                Club information will be displayed here
-              </Typography>
+              {!user?.club_member ? (
+                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                  <Typography variant="body1" sx={{ color: "#666" }}>
+                    No club membership details configured
+                  </Typography>
+                  <Button
+                    onClick={() => setIsConfigureDetailsModalOpen(true)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    Configure Details
+                  </Button>
+                </Box>
+              ) : (
+                <Box>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <InfoField label="Membership Number" value={user?.club_member?.membership_number || "-"} />
+                    </div>
+                    <div>
+                      <InfoField label="Start Date" value={formatDateFromAPI(user?.club_member?.startdate)} />
+                    </div>
+                    <div>
+                      <InfoField label="End Date" value={formatDateFromAPI(user?.club_member?.enddate)} />
+                    </div>
+                    <div>
+                      <InfoField label="Access Card ID" value={user?.club_member?.access_card_id || "-"} />
+                    </div>
+                    {user?.club_member?.club_member_check && (
+                      <div>
+                        <InfoField label="Club Membership" value="Active" />
+                      </div>
+                    )}
+                    {user?.club_member?.access_card_check && (
+                      <div>
+                        <InfoField label="Access Card" value="Allocated" />
+                      </div>
+                    )}
+                  </div>
+
+                </Box>
+              )}
             </Box>
           )
         }
@@ -560,6 +717,142 @@ export const ViewUserPage = () => {
         onClose={() => setIsAddToAnotherFlatModalOpen(false)}
         userData={user}
       />
+
+      {/* Configure Club Details Modal */}
+      <Dialog open={isConfigureDetailsModalOpen} onOpenChange={setIsConfigureDetailsModalOpen}>
+        <DialogContent className="max-w-[500px] p-0 overflow-hidden bg-white border-none shadow-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="bg-[#EAEAEA] py-3 px-6 flex flex-row items-center justify-between shrink-0">
+            <DialogTitle className="text-base font-bold text-gray-800 text-center w-full">Configure Details</DialogTitle>
+            <button
+              onClick={() => setIsConfigureDetailsModalOpen(false)}
+              className="text-red-500 hover:text-red-700 transition-colors absolute right-4"
+            >
+              <X className="h-5 w-5 fill-current" />
+            </button>
+          </DialogHeader>
+
+          <div className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+            {/* Club Membership Section */}
+            <div className="space-y-3 border-b pb-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="clubMembership"
+                  checked={clubFormData.clubMembershipChecked}
+                  onChange={(e) =>
+                    handleClubFormChange("clubMembershipChecked", e.target.checked)
+                  }
+                  className="w-4 h-4 cursor-pointer"
+                />
+                <label
+                  htmlFor="clubMembership"
+                  className="text-sm font-medium text-gray-700 cursor-pointer"
+                >
+                  Club Membership
+                </label>
+              </div>
+              {clubFormData.clubMembershipChecked && (
+                <div className="space-y-3 ml-6">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Membership Number</Label>
+                    <Input
+                      placeholder="Enter membership number"
+                      value={clubFormData.membershipNumber}
+                      onChange={(e) =>
+                        handleClubFormChange("membershipNumber", e.target.value)
+                      }
+                      className="h-9 border-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-gray-400 text-sm mt-1.5"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Start Date</Label>
+                    <div className="flex items-center h-9 border border-gray-300 rounded-md bg-white overflow-hidden mt-1.5">
+                      <div className="px-3 border-r border-gray-300 h-full flex items-center bg-white shrink-0">
+                        <Calendar className="w-4 h-4 text-gray-600" />
+                      </div>
+                      <Input
+                        type="date"
+                        value={clubFormData.startDate}
+                        onChange={(e) =>
+                          handleClubFormChange("startDate", e.target.value)
+                        }
+                        className="border-none shadow-none focus-visible:ring-0 text-gray-500 h-full w-full bg-transparent p-2 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">End Date</Label>
+                    <div className="flex items-center h-9 border border-gray-300 rounded-md bg-white overflow-hidden mt-1.5">
+                      <div className="px-3 border-r border-gray-300 h-full flex items-center bg-white shrink-0">
+                        <Calendar className="w-4 h-4 text-gray-600" />
+                      </div>
+                      <Input
+                        type="date"
+                        value={clubFormData.endDate}
+                        onChange={(e) =>
+                          handleClubFormChange("endDate", e.target.value)
+                        }
+                        className="border-none shadow-none focus-visible:ring-0 text-gray-500 h-full w-full bg-transparent p-2 text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Access Card Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="accessCard"
+                  checked={clubFormData.accessCardChecked}
+                  onChange={(e) =>
+                    handleClubFormChange("accessCardChecked", e.target.checked)
+                  }
+                  className="w-4 h-4 cursor-pointer"
+                />
+                <label
+                  htmlFor="accessCard"
+                  className="text-sm font-medium text-gray-700 cursor-pointer"
+                >
+                  Access Card Allocated
+                </label>
+              </div>
+              {clubFormData.accessCardChecked && (
+                <div className="ml-6">
+                  <Label className="text-sm font-medium text-gray-600">Access Card ID</Label>
+                  <Input
+                    placeholder="Enter access card ID"
+                    value={clubFormData.accessCardId}
+                    onChange={(e) =>
+                      handleClubFormChange("accessCardId", e.target.value)
+                    }
+                    className="h-9 border-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-gray-400 text-sm mt-1.5"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-center gap-4 p-4 border-t bg-white">
+            <Button
+              onClick={() => setIsConfigureDetailsModalOpen(false)}
+              variant="outline"
+              className="px-8 h-9 border-[#00A65A] text-[#00A65A] hover:bg-[#00A65A]/10 font-semibold text-sm rounded shadow-sm"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitClubDetails}
+              className="px-8 h-9 bg-[#00A65A] hover:bg-[#008D4C] text-white font-semibold text-sm rounded shadow-sm"
+            >
+              Submit
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Box >
   );
 };
