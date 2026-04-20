@@ -109,9 +109,8 @@ export const ExecutiveEscalationTab: React.FC = () => {
   const loadEscalationUsers = async () => {
     setLoadingUsers(true);
     try {
-      const response = await ticketManagementAPI.getEscalationUsers();
-      setEscalationUsers(response.users || []);
-      console.log('Escalation users loaded:', response.users);
+      const response = await ticketManagementAPI.getServiceEngineers();
+      setEscalationUsers(response.service_engineers || []);
     } catch (error) {
       console.error('Error loading escalation users:', error);
       toast.error('Failed to load escalation users');
