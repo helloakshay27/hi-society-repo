@@ -1711,8 +1711,8 @@ if (currentPath.includes("/club-management/helpdesk")) {
                         displayEmpty
                       >
                         <MenuItem value="">Select Issue Related To</MenuItem>
-                        <MenuItem value="fm">FM</MenuItem>
-                        <MenuItem value="project">Project</MenuItem>
+                        <MenuItem value="FM">FM</MenuItem>
+                        <MenuItem value="Project">Project</MenuItem>
                       </MuiSelect>
                     </FormControl>
 
