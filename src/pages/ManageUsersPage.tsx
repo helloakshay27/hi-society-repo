@@ -290,6 +290,36 @@ const ManageUsersPage = () => {
     }
   };
 
+  const handleDownloadUsers = async (endpoint: string, fileName: string) => {
+    try {
+      if (!baseUrl || !token) {
+        toast.error('Missing authentication details. Please login again.');
+        return;
+      }
+
+      const response = await axios.get(`https://${baseUrl}${endpoint}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success(`${fileName} downloaded successfully.`);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast.error('Failed to download file. Please try again.');
+    }
+  };
+
   const handleImportUsers = async () => {
     if (!selectedImportFile) {
       toast.error('Please select a file to import.');
@@ -742,30 +772,35 @@ const ManageUsersPage = () => {
             value={dashboardData.total_users.toString()}
             icon={<Users className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx', 'total_users.xlsx')}
           />
           <StatsCard
             title="Pending Users"
             value={dashboardData.pending_users.toString()}
             icon={<Clock className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[approve_eq]=null', 'pending_users.xlsx')}
           />
           <StatsCard
             title="Approved Users"
             value={dashboardData.approved_users.toString()}
             icon={<UserCheck className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[approve_eq]=true', 'approved_users.xlsx')}
           />
           <StatsCard
             title="Rejected Users"
             value={dashboardData.rejected_users.toString()}
             icon={<UserX className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[approve_eq]=false', 'rejected_users.xlsx')}
           />
           <StatsCard
             title="Total No. Of Downloads"
             value={dashboardData.app_downloads.toString()}
             icon={<MonitorSmartphone className="w-5 h-5 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?app_download=yes', 'app_downloaded.xlsx')}
           />
         </div>
 
@@ -776,30 +811,35 @@ const ManageUsersPage = () => {
             value={dashboardData.total_flat_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?app_download=no', 'not_downloaded.xlsx')}
           />
           <StatsCard
             title="Total No. Of Owners Downloads"
             value={dashboardData.total_owner_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[user_flat_ownership_eq]=owner', 'owners.xlsx')}
           />
           <StatsCard
             title="Total No. Of Tenants Downloads"
             value={dashboardData.total_tenant_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[user_flat_ownership_eq]=tenant', 'tenants.xlsx')}
           />
           <StatsCard
             title="Post Sale Downloads"
             value={dashboardData.post_sale_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[display_view_eq]=Pre Sales', 'pre_sales.xlsx')}
           />
           <StatsCard
             title="Post Possession Downloads"
             value={dashboardData.post_possession_downloads.toString()}
             icon={<Download className="w-4 h-4 text-[#C72030]" />}
             downloadData={[]}
+            onDownload={() => handleDownloadUsers('/crm/admin/user_societies.xlsx?q[display_view_eq]=Post Sales', 'post_sales.xlsx')}
           />
         </div>
 
