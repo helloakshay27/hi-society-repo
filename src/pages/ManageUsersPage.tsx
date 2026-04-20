@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Eye, Plus, Download, Users, UserCheck, UserX, Clock, MonitorSmartphone, Calendar, Filter, X, Edit } from "lucide-react";
+import { FormControl, MenuItem, Select as MuiSelect } from "@mui/material";
 import { EnhancedTable } from "@/components/enhanced-table/EnhancedTable";
 import { ColumnConfig } from "@/hooks/useEnhancedTable";
 import { SelectionPanel } from "@/components/water-asset-details/PannelTab";
@@ -595,6 +596,51 @@ const ManageUsersPage = () => {
     setShowActionPanel(true);
   };
 
+  const handleUpdateUserStatus = async (userId: string, newStatus: string) => {
+    try {
+      if (!baseUrl || !token) {
+        toast.error('Missing authentication details. Please login again.');
+        return;
+      }
+
+      // Convert status display value to API value
+      const statusMap: { [key: string]: boolean | null } = {
+        'Approved': true,
+        'Rejected': false,
+        'Pending': null,
+      };
+
+      const approve = statusMap[newStatus];
+      const payload = { approve };
+
+      const response = await axios.patch(
+        `https://${baseUrl}/crm/admin/user_societies/${userId}.json`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.data) {
+        toast.success(`User status updated to ${newStatus}`);
+        // Update the local state
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user.id === userId ? { ...user, status: newStatus } : user
+          )
+        );
+        // Refresh dashboard data
+        // fetchUsers(pagination.current_page);
+      }
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      toast.error('Failed to update user status. Please try again.');
+    }
+  };
+
   // Render cell content based on column key
   const renderCell = (user: any, columnKey: string) => {
     switch (columnKey) {
@@ -627,12 +673,58 @@ const ManageUsersPage = () => {
         return <span className="text-sm">{user.flat}</span>;
       case "tower":
         return <span className="text-sm">{user.tower}</span>;
-      case "status":
+      case "status": {
+        const statusColorMap = {
+          Pending: { dot: "bg-amber-500" },
+          Approved: { dot: "bg-emerald-600" },
+          Rejected: { dot: "bg-red-500" },
+        };
+
+        const colors = statusColorMap[user.status as keyof typeof statusColorMap] || statusColorMap.Pending;
+
         return (
-          <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded">
-            {user.status}
-          </span>
+          <FormControl
+            variant="standard"
+            sx={{
+              minWidth: 120,
+            }}
+          >
+            <MuiSelect
+              value={user.status ?? ""}
+              onChange={(e) =>
+                handleUpdateUserStatus(user.id, e.target.value as string)
+              }
+              disableUnderline
+              renderValue={(value) => (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span className={`inline-block w-2 h-2 rounded-full ${colors.dot}`}></span>
+                  <span>{value}</span>
+                </div>
+              )}
+              sx={{
+                fontSize: "0.875rem",
+                cursor: "pointer",
+                "& .MuiSelect-select": {
+                  padding: "4px 0",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                },
+              }}
+            >
+              {["Pending", "Approved", "Rejected"].map((status) => {
+                const statusColors = statusColorMap[status as keyof typeof statusColorMap];
+                return (
+                  <MenuItem key={status} value={status} sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span className={`inline-block w-2 h-2 rounded-full ${statusColors?.dot || "bg-gray-500"}`}></span>
+                    <span>{status}</span>
+                  </MenuItem>
+                );
+              })}
+            </MuiSelect>
+          </FormControl>
         );
+      }
       case "membership_type":
         return user.is_primary ? "Primary" : "Secondary";
       default:
