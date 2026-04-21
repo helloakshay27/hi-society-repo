@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { countries } from "country-data";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { Camera, User as UserIcon, Info, Plus, X, FileText, FileSpreadsheet, File as GenericFile, Upload, Video } from "lucide-react";
+import { User as UserIcon, Info, Plus, X, FileText, FileSpreadsheet, File as GenericFile, Upload, Video } from "lucide-react";
 import {
   Box,
   Paper,
@@ -216,9 +216,28 @@ const defaultFormData = {
   agreementStartDate: "",
   agreementExpireDate: "",
   agreementDocuments: [] as File[],
+  existingDocuments: [] as { id: number; document_url: string }[]
 };
 
 const todayStr = new Date().toISOString().split('T')[0];
+
+// Helper function to detect file type from URL
+const getFileType = (url: string): string => {
+  const lowercaseUrl = url.toLowerCase();
+  if (lowercaseUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) return "image";
+  if (lowercaseUrl.match(/\.pdf$/i)) return "pdf";
+  if (lowercaseUrl.match(/\.(doc|docx)$/i)) return "doc";
+  if (lowercaseUrl.match(/\.(xls|xlsx|csv)$/i)) return "sheet";
+  return "file";
+};
+
+// Helper function to get filename from URL
+const getFilenameFromUrl = (url: string): string => {
+  const urlParts = url.split("/");
+  const filename = urlParts[urlParts.length - 1];
+  // Remove query parameters if any
+  return filename?.split("?")[0] || "Attachment";
+};
 
 export const AddUserPage = () => {
   const navigate = useNavigate();
@@ -332,8 +351,8 @@ export const AddUserPage = () => {
             spouseBirthDate: user.spouse_birthday || "",
             alternateEmail1: user.alternate_email_1 || "",
             alternateEmail2: user.alternate_email_2 || "",
-            landlineNumber: user.landline_number || "",
-            intercomNumber: user.intercom_number || "",
+            landlineNumber: user.user_flat?.landline || "",
+            intercomNumber: user.intercom || "",
             gstNumber: user.gst_number || "",
             panNumber: user.pan_number || "",
             evConnection: user.ev_connection ? "Yes" : "No",
@@ -345,6 +364,7 @@ export const AddUserPage = () => {
             agreementStartDate: user.user_flat?.agreement_start_date?.split("T")[0] || "",
             agreementExpireDate: user.user_flat?.agreement_expire_date?.split("T")[0] || "",
             agreementDocuments: [], // Set appropriately if editing
+            existingDocuments: user.user_flat_documents || [],
           };
           setFormData(formDataState);
 
@@ -1104,7 +1124,7 @@ export const AddUserPage = () => {
                   </RadioGroup>
                 </FormControl>
 
-                {formData.residentType === "Tenant" && (
+                {formData.residentType === "tenant" && (
                   <>
                     <Box sx={{ gridColumn: { md: 'span 1' } }}>
                       <FormLabel
@@ -1149,115 +1169,184 @@ export const AddUserPage = () => {
                         InputLabelProps={{ shrink: true }}
                       />
                     </Box>
+                  </>
+                )}
 
-                    <Box sx={{ gridColumn: 'span 3', mt: 2 }}>
-                      <FormLabel
-                        sx={{
-                          fontSize: '14px',
-                          color: 'rgba(0, 0, 0, 0.6)',
-                          marginBottom: '8px',
-                          display: 'block',
-                        }}
-                      >
-                        Document
-                      </FormLabel>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                        {formData.agreementDocuments.map((file, index) => {
-                          const isImage = file.type.startsWith('image/');
-                          const isExcel = file.name.includes('.xls') || file.name.includes('.xlsx') || file.name.includes('.csv');
-                          const isPDF = file.name.includes('.pdf');
+                {(formData.residentType === "tenant" || formData.existingDocuments.length > 0 || formData.agreementDocuments.length > 0) && (
+                  <Box sx={{ gridColumn: 'span 3', mt: 2 }}>
+                    <FormLabel
+                      sx={{
+                        fontSize: '14px',
+                        color: 'rgba(0, 0, 0, 0.6)',
+                        marginBottom: '8px',
+                        display: 'block',
+                      }}
+                    >
+                      Attachments
+                    </FormLabel>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                      {/* Existing Documents */}
+                      {formData.existingDocuments.map((doc, index) => {
+                        const fileType = getFileType(doc.document_url);
+                        const isImage = fileType === "image";
+                        const isExcel = fileType === "sheet";
+                        const isPDF = fileType === "pdf";
+                        const filename = getFilenameFromUrl(doc.document_url);
 
-                          return (
-                            <Box
-                              key={index}
+                        return (
+                          <Box
+                            key={`existing-${doc.id || index}`}
+                            sx={{
+                              width: '80px',
+                              height: '80px',
+                              border: '1px solid #ddd',
+                              borderRadius: '4px',
+                              position: 'relative',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: '#fff',
+                              overflow: 'hidden',
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => window.open(doc.document_url, '_blank')}
+                            title={filename}
+                          >
+                            <IconButton
+                              size="small"
                               sx={{
-                                width: '80px',
-                                height: '80px',
-                                border: '1px solid #ddd',
-                                borderRadius: '4px',
-                                position: 'relative',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
                                 backgroundColor: '#fff',
-                                overflow: 'hidden',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                padding: '2px',
+                                '&:hover': { backgroundColor: '#f5f5f5' },
+                                zIndex: 1,
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newExisting = [...formData.existingDocuments];
+                                newExisting.splice(index, 1);
+                                setFormData(prev => ({ ...prev, existingDocuments: newExisting }));
                               }}
                             >
-                              <IconButton
-                                size="small"
-                                sx={{
-                                  position: 'absolute',
-                                  top: 0,
-                                  right: 0,
-                                  backgroundColor: '#fff',
-                                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                                  padding: '2px',
-                                  '&:hover': { backgroundColor: '#f5f5f5' },
-                                  zIndex: 1,
-                                }}
-                                onClick={() => {
-                                  const newDocs = [...formData.agreementDocuments];
-                                  newDocs.splice(index, 1);
-                                  handleFileChange(newDocs);
-                                }}
-                              >
-                                <X size={12} color="#C72030" />
-                              </IconButton>
+                              <X size={12} color="#C72030" />
+                            </IconButton>
 
-                              {isImage ? (
-                                <img
-                                  src={URL.createObjectURL(file)}
-                                  alt="preview"
-                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                />
-                              ) : isExcel ? (
-                                <FileSpreadsheet size={32} color="#1D6F42" />
-                              ) : isPDF ? (
-                                <FileText size={32} color="#C72030" />
-                              ) : (
-                                <GenericFile size={32} color="#666" />
-                              )}
-                            </Box>
-                          );
-                        })}
+                            {isImage ? (
+                              <img
+                                src={doc.document_url}
+                                alt="preview"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : isExcel ? (
+                              <FileSpreadsheet size={32} color="#1D6F42" />
+                            ) : isPDF ? (
+                              <FileText size={32} color="#C72030" />
+                            ) : (
+                              <GenericFile size={32} color="#666" />
+                            )}
+                          </Box>
+                        );
+                      })}
 
-                        <Box
-                          sx={{
-                            width: '80px',
-                            height: '80px',
-                            border: '1px dashed #ccc',
-                            borderRadius: '4px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            backgroundColor: '#fff',
-                            '&:hover': {
-                              borderColor: '#C72030',
-                              backgroundColor: '#fafafa',
-                            },
-                          }}
-                          onClick={() => document.getElementById('agreement-document-upload').click()}
-                        >
-                          <Plus size={24} color="#666" />
-                        </Box>
-                      </Box>
-                      <input
-                        type="file"
-                        id="agreement-document-upload"
-                        style={{ display: 'none' }}
-                        multiple
-                        onChange={(e) => {
-                          const files = Array.from(e.target.files || []);
-                          if (files.length > 0) {
-                            handleFileChange([...formData.agreementDocuments, ...files]);
-                          }
-                          // Reset input so same file can be selected again if removed
-                          e.target.value = '';
+                      {/* New Agreement Documents */}
+                      {formData.agreementDocuments.map((file, index) => {
+                        const isImage = file.type.startsWith('image/');
+                        const isExcel = file.name.includes('.xls') || file.name.includes('.xlsx') || file.name.includes('.csv');
+                        const isPDF = file.name.includes('.pdf');
+
+                        return (
+                          <Box
+                            key={`new-${index}`}
+                            sx={{
+                              width: '80px',
+                              height: '80px',
+                              border: '1px solid #ddd',
+                              borderRadius: '4px',
+                              position: 'relative',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: '#fff',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <IconButton
+                              size="small"
+                              sx={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                backgroundColor: '#fff',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                padding: '2px',
+                                '&:hover': { backgroundColor: '#f5f5f5' },
+                                zIndex: 1,
+                              }}
+                              onClick={() => {
+                                const newDocs = [...formData.agreementDocuments];
+                                newDocs.splice(index, 1);
+                                handleFileChange(newDocs);
+                              }}
+                            >
+                              <X size={12} color="#C72030" />
+                            </IconButton>
+
+                            {isImage ? (
+                              <img
+                                src={URL.createObjectURL(file)}
+                                alt="preview"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : isExcel ? (
+                              <FileSpreadsheet size={32} color="#1D6F42" />
+                            ) : isPDF ? (
+                              <FileText size={32} color="#C72030" />
+                            ) : (
+                              <GenericFile size={32} color="#666" />
+                            )}
+                          </Box>
+                        );
+                      })}
+
+                      <Box
+                        sx={{
+                          width: '80px',
+                          height: '80px',
+                          border: '1px dashed #ccc',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          backgroundColor: '#fff',
+                          '&:hover': {
+                            borderColor: '#C72030',
+                            backgroundColor: '#fafafa',
+                          },
                         }}
-                      />
+                        onClick={() => document.getElementById('agreement-document-upload').click()}
+                      >
+                        <Plus size={24} color="#666" />
+                      </Box>
                     </Box>
-                  </>
+                    <input
+                      type="file"
+                      id="agreement-document-upload"
+                      style={{ display: 'none' }}
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 0) {
+                          handleFileChange([...formData.agreementDocuments, ...files]);
+                        }
+                        // Reset input so same file can be selected again if removed
+                        e.target.value = '';
+                      }}
+                    />
+                  </Box>
                 )}
               </Box>
             </Box>
