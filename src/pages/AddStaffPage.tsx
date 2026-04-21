@@ -317,7 +317,7 @@ export const AddStaffPage = () => {
         vendorName: formData.vendorName,
         validFrom: formData.validFrom,
         validTill: validTill,
-        status: formData.status || '1',
+        status: formData.status,
         notes: formData.notes,
         companyName: formData.companyName,
         userId: currentUser.id,

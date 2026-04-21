@@ -30,6 +30,7 @@ import {
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { getFullUrl, getAuthHeader } from "@/config/apiConfig";
+import { fieldStyles, menuProps } from "@/components/ticket-management/fieldStyles";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
 
@@ -112,15 +113,24 @@ const formatDateTime = (val: string | null | undefined): string => {
   return val;
 };
 
+const toFilterDate = (isoDate: string): string => {
+  // Convert YYYY-MM-DD → DD/MM/YYYY for the API date_range param
+  const [y, m, d] = isoDate.split("-");
+  return `${d}/${m}/${y}`;
+};
+
 const buildQueryString = (page: number, filters: FilterState): string => {
   const params = new URLSearchParams();
   params.set("page", String(page));
   params.set("per_page", "20");
-  if (filters.building) params.set("building_id", filters.building);
-  if (filters.tower) params.set("tower_id", filters.tower);
-  if (filters.flat) params.set("flat_id", filters.flat);
-  if (filters.from_date) params.set("created_date_range[from]", filters.from_date);
-  if (filters.to_date) params.set("created_date_range[to]", filters.to_date);
+  if (filters.building)
+    params.append("q[user_society_id_society_in][]", filters.building);
+  if (filters.tower)
+    params.append("q[user_society_user_flat_society_flat_society_block_id_in][]", filters.tower);
+  if (filters.flat)
+    params.append("q[user_society_user_flat_society_flat_id_in][]", filters.flat);
+  if (filters.from_date && filters.to_date)
+    params.set("q[date_range]", `${toFilterDate(filters.from_date)} - ${toFilterDate(filters.to_date)}`);
   return params.toString();
 };
 
@@ -138,19 +148,6 @@ const vehicleHistoryColumns: ColumnConfig[] = [
   { key: "in_time",       label: "In",            sortable: true,  hideable: true,  draggable: true },
   { key: "out_time",      label: "Out",           sortable: true,  hideable: true,  draggable: true },
 ];
-
-// ─── MUI field style (matches AddStaffPage) ───────────────────────────────────
-
-const fieldSx = {
-  backgroundColor: "#fff",
-  borderRadius: "4px",
-  "& .MuiOutlinedInput-root": {
-    "& fieldset": { borderColor: "#ddd" },
-    "&:hover fieldset": { borderColor: "#C72030" },
-    "&.Mui-focused fieldset": { borderColor: "#C72030" },
-  },
-  "& .MuiInputLabel-root": { "&.Mui-focused": { color: "#C72030" } },
-};
 
 // ─── Add Vehicle dropdown option ──────────────────────────────────────────────
 
@@ -197,15 +194,16 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ open, onClose, onSucc
     const load = async () => {
       setLoadingOptions(true);
       try {
-        const res = await fetch(getFullUrl("/crm/admin/vehicle_histories/new.json"), {
+        const res = await fetch(getFullUrl("/crm/admin/visitors_vehicle_history_filters.json"), {
           headers: { Authorization: getAuthHeader() },
         });
         if (res.ok) {
-          const data = await res.json();
-          setHosts(data.hosts || []);
-          setGuests(data.guests || []);
-          setParkingSlots(data.parking_slots || []);
-          setEntryGates(data.entry_gates || []);
+          const json = await res.json();
+          const d = json.data || {};
+          setHosts((d.host_names || []).map((h: { id: number; name: string }) => ({ id: h.id, name: h.name })));
+          setGuests((d.guest_names || []).map((g: { id: number; name: string }) => ({ id: g.id, name: g.name })));
+          setParkingSlots((d.parking_slots || []).map((p: { id: number; name: string }) => ({ id: p.id, name: p.name })));
+          setEntryGates((d.entry_gates || []).map((e: { id: number; name: string }) => ({ id: e.id, name: e.name })));
         }
       } catch { /* silently ignore — dropdowns stay empty */ }
       finally { setLoadingOptions(false); }
@@ -223,18 +221,24 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ open, onClose, onSucc
 
     setSubmitting(true);
     try {
-      const fd = new FormData();
-      fd.append("vehicle_history[vehicle_type]", form.vehicle_type);
-      fd.append("vehicle_history[vehicle_number]", form.vehicle_number.toUpperCase());
-      if (form.vehicle_type === "host" && form.host_name) fd.append("vehicle_history[host_id]", form.host_name);
-      if (form.vehicle_type === "guest" && form.guest_name) fd.append("vehicle_history[guest_id]", form.guest_name);
-      if (form.parking_slot) fd.append("vehicle_history[parking_slot_id]", form.parking_slot);
-      if (form.entry_gate) fd.append("vehicle_history[entry_gate_id]", form.entry_gate);
+      const payload = {
+        visitor_type: form.vehicle_type,
+        visitor_vehicle_in_out: {
+          user_society_id: form.vehicle_type === "host" ? form.host_name : "",
+          gatekeeper_id: form.vehicle_type === "guest" ? form.guest_name : "",
+          vehicle_number: form.vehicle_number.toUpperCase(),
+          visitor_parking_slot_id: form.parking_slot || "",
+          entry_gate_id: form.entry_gate || "",
+        },
+      };
 
-      const res = await fetch(getFullUrl("/crm/admin/vehicle_histories.json"), {
+      const res = await fetch(getFullUrl("/crm/admin/visitor_vehicle_in_outs.json"), {
         method: "POST",
-        headers: { Authorization: getAuthHeader() },
-        body: fd,
+        headers: {
+          Authorization: getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         toast.success("Vehicle added successfully!");
@@ -249,10 +253,10 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ open, onClose, onSucc
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog open={open} modal={false} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">Add Vehicle</DialogTitle>
+          <DialogTitle>Add Vehicle</DialogTitle>
         </DialogHeader>
 
         {loadingOptions ? (
@@ -260,104 +264,116 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ open, onClose, onSucc
             <Loader2 className="w-6 h-6 animate-spin text-[#C72030]" />
           </div>
         ) : (
-          <div className="space-y-5 py-2">
+          <div className="py-4 space-y-4">
             {/* Type */}
-            <div className="grid grid-cols-4 items-center gap-3">
-              <label className="text-sm font-medium text-gray-700 col-span-1">Type</label>
-              <div className="col-span-3">
-                <RadioGroup
-                  row
-                  value={form.vehicle_type}
-                  onChange={(e) => set("vehicle_type", e.target.value as "host" | "guest")}
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-gray-700">Type</label>
+              <RadioGroup
+                row
+                value={form.vehicle_type}
+                onChange={(e) => set("vehicle_type", e.target.value as "host" | "guest")}
+              >
+                <FormControlLabel value="host" control={<Radio size="small" sx={{ "&.Mui-checked": { color: "#1a73e8" } }} />} label="Host" />
+                <FormControlLabel value="guest" control={<Radio size="small" sx={{ "&.Mui-checked": { color: "#1a73e8" } }} />} label="Guest" />
+              </RadioGroup>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Host Name */}
+              {form.vehicle_type === "host" && (
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                    Select Host Name <span style={{ color: '#ef4444' }}>*</span>
+                  </InputLabel>
+                  <MuiSelect
+                    label="Select Host Name *"
+                    displayEmpty
+                    value={form.host_name}
+                    onChange={(e) => set("host_name", e.target.value)}
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Host Name</em></MenuItem>
+                    {hosts.length === 0
+                      ? <MenuItem disabled value="__none">No hosts available</MenuItem>
+                      : hosts.map((h) => <MenuItem key={h.id} value={String(h.id)}>{h.name}</MenuItem>)
+                    }
+                  </MuiSelect>
+                </FormControl>
+              )}
+
+              {/* Guest Name */}
+              {form.vehicle_type === "guest" && (
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                    Select Guest Name <span style={{ color: '#ef4444' }}>*</span>
+                  </InputLabel>
+                  <MuiSelect
+                    label="Select Guest Name *"
+                    displayEmpty
+                    value={form.guest_name}
+                    onChange={(e) => set("guest_name", e.target.value)}
+                    sx={fieldStyles}
+                    MenuProps={menuProps}
+                  >
+                    <MenuItem value="" disabled><em>Select Guest Name</em></MenuItem>
+                    {guests.length === 0
+                      ? <MenuItem disabled value="__none">No guests available</MenuItem>
+                      : guests.map((g) => <MenuItem key={g.id} value={String(g.id)}>{g.name}</MenuItem>)
+                    }
+                  </MuiSelect>
+                </FormControl>
+              )}
+
+              {/* Vehicle Number */}
+              <TextField
+                label="Vehicle Number"
+                placeholder="Enter Vehicle Number"
+                value={form.vehicle_number}
+                onChange={(e) => set("vehicle_number", e.target.value.toUpperCase())}
+                fullWidth
+                variant="outlined"
+                required
+                inputProps={{ maxLength: 20 }}
+                InputLabelProps={{ shrink: true }}
+                InputProps={{ sx: fieldStyles }}
+              />
+
+              {/* Parking Slot */}
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                  Select Parking Slot
+                </InputLabel>
+                <MuiSelect
+                  label="Select Parking Slot"
+                  displayEmpty
+                  value={form.parking_slot}
+                  onChange={(e) => set("parking_slot", e.target.value)}
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
                 >
-                  <FormControlLabel value="host" control={<Radio sx={{ "&.Mui-checked": { color: "#1a73e8" } }} />} label="Host" />
-                  <FormControlLabel value="guest" control={<Radio sx={{ "&.Mui-checked": { color: "#1a73e8" } }} />} label="Guest" />
-                </RadioGroup>
-              </div>
-            </div>
+                  <MenuItem value=""><em>None</em></MenuItem>
+                  {parkingSlots.map((s) => <MenuItem key={s.id} value={String(s.id)}>{s.name}</MenuItem>)}
+                </MuiSelect>
+              </FormControl>
 
-            {/* Host Name */}
-            {form.vehicle_type === "host" && (
-              <div className="grid grid-cols-4 items-center gap-3">
-                <label className="text-sm font-medium text-gray-700 col-span-1">
-                  Host Name <span className="text-red-500">*</span>
-                </label>
-                <div className="col-span-3">
-                  <FormControl fullWidth sx={fieldSx} size="small">
-                    <InputLabel>Select Host Name</InputLabel>
-                    <MuiSelect value={form.host_name} label="Select Host Name" onChange={(e) => set("host_name", e.target.value)} MenuProps={{ PaperProps: { style: { maxHeight: 260 } } }}>
-                      {hosts.length === 0
-                        ? <MenuItem disabled value="">No hosts available</MenuItem>
-                        : hosts.map((h) => <MenuItem key={h.id} value={String(h.id)}>{h.name}</MenuItem>)
-                      }
-                    </MuiSelect>
-                  </FormControl>
-                </div>
-              </div>
-            )}
-
-            {/* Guest Name */}
-            {form.vehicle_type === "guest" && (
-              <div className="grid grid-cols-4 items-center gap-3">
-                <label className="text-sm font-medium text-gray-700 col-span-1">
-                  Guest Name <span className="text-red-500">*</span>
-                </label>
-                <div className="col-span-3">
-                  <FormControl fullWidth sx={fieldSx} size="small">
-                    <InputLabel>Select Guest Name</InputLabel>
-                    <MuiSelect value={form.guest_name} label="Select Guest Name" onChange={(e) => set("guest_name", e.target.value)} MenuProps={{ PaperProps: { style: { maxHeight: 260 } } }}>
-                      {guests.length === 0
-                        ? <MenuItem disabled value="">No guests available</MenuItem>
-                        : guests.map((g) => <MenuItem key={g.id} value={String(g.id)}>{g.name}</MenuItem>)
-                      }
-                    </MuiSelect>
-                  </FormControl>
-                </div>
-              </div>
-            )}
-
-            {/* Vehicle Number */}
-            <div className="grid grid-cols-4 items-center gap-3">
-              <label className="text-sm font-medium text-gray-700 col-span-1">
-                Vehicle Number <span className="text-red-500">*</span>
-              </label>
-              <div className="col-span-3">
-                <TextField
-                  fullWidth size="small" label="Vehicle Number" placeholder="Vehicle Number"
-                  value={form.vehicle_number}
-                  onChange={(e) => set("vehicle_number", e.target.value.toUpperCase())}
-                  inputProps={{ maxLength: 20 }}
-                  sx={fieldSx}
-                />
-              </div>
-            </div>
-
-            {/* Parking Slot */}
-            <div className="grid grid-cols-4 items-center gap-3">
-              <label className="text-sm font-medium text-gray-700 col-span-1">Parking Slot</label>
-              <div className="col-span-3">
-                <FormControl fullWidth sx={fieldSx} size="small">
-                  <InputLabel>Select Parking Slot</InputLabel>
-                  <MuiSelect value={form.parking_slot} label="Select Parking Slot" onChange={(e) => set("parking_slot", e.target.value)} MenuProps={{ PaperProps: { style: { maxHeight: 260 } } }}>
-                    <MenuItem value=""><em>None</em></MenuItem>
-                    {parkingSlots.map((s) => <MenuItem key={s.id} value={String(s.id)}>{s.name}</MenuItem>)}
-                  </MuiSelect>
-                </FormControl>
-              </div>
-            </div>
-
-            {/* Entry Gate */}
-            <div className="grid grid-cols-4 items-center gap-3">
-              <label className="text-sm font-medium text-gray-700 col-span-1">Entry Gate</label>
-              <div className="col-span-3">
-                <FormControl fullWidth sx={fieldSx} size="small">
-                  <InputLabel>Select Entry Gate</InputLabel>
-                  <MuiSelect value={form.entry_gate} label="Select Entry Gate" onChange={(e) => set("entry_gate", e.target.value)} MenuProps={{ PaperProps: { style: { maxHeight: 260 } } }}>
-                    <MenuItem value=""><em>None</em></MenuItem>
-                    {entryGates.map((g) => <MenuItem key={g.id} value={String(g.id)}>{g.name}</MenuItem>)}
-                  </MuiSelect>
-                </FormControl>
-              </div>
+              {/* Entry Gate */}
+              <FormControl fullWidth variant="outlined">
+                <InputLabel shrink sx={{ backgroundColor: 'white', px: 1, '&.Mui-focused': { color: '#C72030' } }}>
+                  Select Entry Gate
+                </InputLabel>
+                <MuiSelect
+                  label="Select Entry Gate"
+                  displayEmpty
+                  value={form.entry_gate}
+                  onChange={(e) => set("entry_gate", e.target.value)}
+                  sx={fieldStyles}
+                  MenuProps={menuProps}
+                >
+                  <MenuItem value=""><em>None</em></MenuItem>
+                  {entryGates.map((g) => <MenuItem key={g.id} value={String(g.id)}>{g.name}</MenuItem>)}
+                </MuiSelect>
+              </FormControl>
             </div>
           </div>
         )}
@@ -388,15 +404,21 @@ interface FilterDialogProps {
   open: boolean;
   filters: FilterState;
   options: { buildings?: FilterOption[]; towers?: FilterOption[]; flats?: FilterOption[] } | null;
+  loadingOptions?: boolean;
   onClose: () => void;
   onApply: (f: FilterState) => void;
   onReset: () => void;
 }
 
 const FilterDialog: React.FC<FilterDialogProps> = ({
-  open, filters, options, onClose, onApply, onReset,
+  open, filters, options, loadingOptions, onClose, onApply, onReset,
 }) => {
   const [local, setLocal] = useState<FilterState>(filters);
+
+  // Sync local state whenever the dialog opens with latest active filters
+  useEffect(() => {
+    if (open) setLocal(filters);
+  }, [open, filters]);
 
   const set = (key: keyof FilterState, val: string) =>
     setLocal((prev) => ({ ...prev, [key]: val }));
@@ -408,6 +430,11 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
           <DialogTitle>Filter Vehicle History</DialogTitle>
         </DialogHeader>
 
+        {loadingOptions ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="w-5 h-5 animate-spin text-[#C72030]" />
+          </div>
+        ) : (
         <div className="grid gap-4 py-2">
           {/* Building */}
           <div className="grid gap-1.5">
@@ -484,6 +511,7 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
             </div>
           </div>
         </div>
+        )}
 
         <DialogFooter className="gap-2">
           <Button
@@ -506,11 +534,43 @@ const FilterDialog: React.FC<FilterDialogProps> = ({
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
+interface FilterOptions {
+  buildings: FilterOption[];
+  towers: FilterOption[];
+  flats: FilterOption[];
+}
+
 const SmartSecureVehiclesHistory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filterOpen, setFilterOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState>(defaultFilters);
+  const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
+  const [loadingFilterOptions, setLoadingFilterOptions] = useState(false);
+
+  // Fetch filter dropdown options once on mount
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      setLoadingFilterOptions(true);
+      try {
+        const res = await fetch(
+          getFullUrl("/crm/admin/visitors_vehicle_history_filters.json"),
+          { headers: { Authorization: getAuthHeader() } }
+        );
+        if (res.ok) {
+          const json = await res.json();
+          const d = json.data || {};
+          setFilterOptions({
+            buildings: (d.buildings || []).map((b: { id: number; name: string }) => ({ label: b.name, value: b.id })),
+            towers:    (d.blocks    || []).map((b: { id: number; name: string }) => ({ label: b.name, value: b.id })),
+            flats:     (d.flats     || []).map((f: { id: number; flat_no: string }) => ({ label: f.flat_no, value: f.id })),
+          });
+        }
+      } catch { /* silently ignore — filters will stay empty */ }
+      finally { setLoadingFilterOptions(false); }
+    };
+    loadFilterOptions();
+  }, []);
 
   const { data: apiData, isLoading, isError, error, refetch } = useQuery<ApiResponse>({
     queryKey: ["vehicle-history-list", currentPage, activeFilters],    queryFn: async () => {
@@ -530,7 +590,6 @@ const SmartSecureVehiclesHistory: React.FC = () => {
   const totalPages = pagination?.total_pages ?? 1;
   const totalCount = pagination?.total_count ?? 0;
   const perPage = pagination?.per_page ?? 20;
-  const filterOptions = null;
 
   const handleApplyFilter = (f: FilterState) => {
     setActiveFilters(f);
@@ -542,6 +601,46 @@ const SmartSecureVehiclesHistory: React.FC = () => {
   const handleResetFilter = () => {
     setActiveFilters(defaultFilters);
     setCurrentPage(1);
+  };
+
+  // ── Export Handler ─────────────────────────────────────────────────────────
+
+  const handleExport = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (activeFilters.building)
+        params.append("q[user_society_id_society_in][]", activeFilters.building);
+      if (activeFilters.tower)
+        params.append("q[user_society_user_flat_society_flat_society_block_id_in][]", activeFilters.tower);
+      if (activeFilters.flat)
+        params.append("q[user_society_user_flat_society_flat_id_in][]", activeFilters.flat);
+      params.set(
+        "q[date_range]",
+        activeFilters.from_date && activeFilters.to_date
+          ? `${toFilterDate(activeFilters.from_date)} - ${toFilterDate(activeFilters.to_date)}`
+          : ""
+      );
+      params.set("format", "xlsx");
+
+      const res = await fetch(
+        getFullUrl(`/crm/admin/visitors_vehicle_history?${params.toString()}`),
+        { headers: { Authorization: getAuthHeader() } }
+      );
+      if (!res.ok) throw new Error(`Export failed: ${res.status}`);
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `vehicle_history_${new Date().toISOString().split("T")[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Export downloaded successfully");
+    } catch (e) {
+      toast.error((e as Error)?.message || "Failed to export");
+    }
   };
 
   // ── Cell Renderer ──────────────────────────────────────────────────────────
@@ -663,6 +762,8 @@ const SmartSecureVehiclesHistory: React.FC = () => {
         searchPlaceholder="Search vehicle history..."
         hideTableExport={false}
         hideColumnsButton={false}
+        enableExport={true}
+        handleExport={handleExport}
         loading={isLoading}
         onFilterClick={() => setFilterOpen(true)}
         leftActions={
@@ -717,6 +818,7 @@ const SmartSecureVehiclesHistory: React.FC = () => {
         open={filterOpen}
         filters={activeFilters}
         options={filterOptions}
+        loadingOptions={loadingFilterOptions}
         onClose={() => setFilterOpen(false)}
         onApply={handleApplyFilter}
         onReset={handleResetFilter}
